@@ -4,4 +4,6 @@ export enum ApiError {
   InternalServerError = "InternalServerError",
   EmailAlreadyExists = "EmailAlreadyExists",
   EmailOrPasswordIncorrect = "EmailOrPasswordIncorrect",
+  MissingRequiredFields = "MissingRequiredFields",
+  ResourceNotFound = "ResourceNotFound"
 }

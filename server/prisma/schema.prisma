@@ -18,3 +18,29 @@ model accounts {
   updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
   status     Int
 }
+
+model workspaces {
+  id         String    @id @db.VarChar(30)
+  name       String    @db.VarChar(256)
+  attrs      Json?     @default("null")
+  createdAt  DateTime  @db.Timestamptz(6) @map("created_at")
+  createdBy  String    @db.VarChar(30) @map("created_by")
+  updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
+  updatedBy  String?   @db.VarChar(30) @map("updated_by")
+  status     Int
+}
+
+model workspaceAccounts {
+  workspaceId   String    @db.VarChar(30) @map("workspace_id")
+  accountId     String    @db.VarChar(30) @map("account_id")
+  role          Int
+  attrs         Json?     @default("null")
+  createdAt     DateTime  @db.Timestamptz(6) @map("created_at")
+  createdBy     String    @db.VarChar(30) @map("created_by")
+  updatedAt     DateTime? @db.Timestamptz(6) @map("updated_at")
+  updatedBy     String?   @db.VarChar(30) @map("updated_by")
+  status        Int
+
+  @@map("workspace_accounts")
+  @@id([workspaceId, accountId])
+}

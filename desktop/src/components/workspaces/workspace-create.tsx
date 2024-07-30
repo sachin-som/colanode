@@ -44,13 +44,7 @@ export function WorkspaceCreate() {
     try {
       const { data } = await axios.post<Workspace>('v1/workspaces', values);
       if (data) {
-        await window.globalDb.addWorkspace({
-          id: data.id,
-          name: data.name,
-          role: 'owner',
-          avatar: null,
-          description: data.description,
-        });
+        await window.globalDb.addWorkspace(data);
         dispatch(addWorkspace(data));
         navigate(`/${data.id}`);
       } else {

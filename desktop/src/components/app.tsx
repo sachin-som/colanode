@@ -24,7 +24,7 @@ export function App() {
       });
     }
 
-  }, [])
+  }, [account, workspaces])
 
   if (!account) {
     return <Login />;

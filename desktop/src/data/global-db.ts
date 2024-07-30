@@ -5,28 +5,60 @@ import {Workspace} from "@/types/workspaces";
 const path = app.getPath('userData');
 const globalDb = new database(`${path}/global.db`);
 
-export function initGlobalDb() {
-  const createWorkspacesTable = `
+const createWorkspacesTableQuery = `
   CREATE TABLE IF NOT EXISTS workspaces (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    description TEXT,
     avatar TEXT,
-    role TEXT NOT NULL,
-    created_at DATE NOT NULL
+    version_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    role INTEGER NOT NULL,
+    user_node_id TEXT NOT NULL
   );
 `;
 
-  globalDb.exec(createWorkspacesTable);
+const selectWorkspacesQuery = `
+  SELECT 
+    id, 
+    name, 
+    description, 
+    avatar,
+    version_id as versionId,
+    account_id as accountId,
+    role, 
+    user_node_id as userNodeId
+  FROM workspaces
+`;
+
+const insertWorkspaceQuery = `
+  INSERT INTO workspaces 
+  (
+    id, 
+    name, 
+    description, 
+    avatar, 
+    version_id, 
+    account_id, 
+    role, 
+    user_node_id
+  ) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+function getWorkspaces(): Workspace[] {
+  const stmt = globalDb.prepare<[], Workspace>(selectWorkspacesQuery);
+  return stmt.all();
 }
 
-export function getWorkspaces(): Workspace[] {
-  const stmt = globalDb.prepare<[], Workspace>('SELECT id, name, avatar, role FROM workspaces');
-  return  stmt.all();
+function addWorkspace(workspace: Workspace) {
+  const stmt = globalDb.prepare(insertWorkspaceQuery);
+  console.log('workspace', workspace);
+  stmt.run(workspace.id, workspace.name, workspace.description, workspace.avatar, workspace.versionId, workspace.accountId, workspace.role, workspace.userNodeId);
 }
 
-export function addWorkspace(workspace: Workspace) {
-  const stmt = globalDb.prepare('INSERT INTO workspaces (id, name, avatar, role, created_at) VALUES (?, ?, ?, ?, ?)');
-  stmt.run(workspace.id, workspace.name, workspace.avatar, workspace.role, new Date().toISOString());
+export function initGlobalDb() {
+  globalDb.exec(createWorkspacesTableQuery);
 }
 
 export function defineGlobalDbHandlers() {

@@ -8,5 +8,7 @@ export function generateId(type: IdType) {
 
 export enum IdType {
   Account = 'ac',
-  Workspace = 'wc'
+  Workspace = 'wc',
+  User = 'us',
+  Version = 've'
 }

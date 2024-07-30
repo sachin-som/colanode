@@ -13,7 +13,7 @@ model accounts {
   email      String    @unique(map: "IX_accounts_email") @db.VarChar(256)
   avatar     String?   @db.VarChar(256)
   password   String?   @db.VarChar(256)
-  attrs      Json?     @default("null")
+  attrs      Json?
   createdAt  DateTime  @db.Timestamptz(6) @map("created_at")
   updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
   status     Int
@@ -22,14 +22,17 @@ model accounts {
 }
 
 model workspaces {
-  id         String    @id @db.VarChar(30)
-  name       String    @db.VarChar(256)
-  attrs      Json?     @default("null")
-  createdAt  DateTime  @db.Timestamptz(6) @map("created_at")
-  createdBy  String    @db.VarChar(30) @map("created_by")
-  updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
-  updatedBy  String?   @db.VarChar(30) @map("updated_by")
-  status     Int
+  id          String    @id @db.VarChar(30)
+  name        String    @db.VarChar(256)
+  description String?   @db.VarChar(256)
+  avatar      String?   @db.VarChar(256)
+  attrs       Json?
+  createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
+  createdBy   String    @db.VarChar(30) @map("created_by")
+  updatedAt   DateTime? @db.Timestamptz(6) @map("updated_at")
+  updatedBy   String?   @db.VarChar(30) @map("updated_by")
+  status      Int
+  versionId   String    @db.VarChar(30) @map("version_id")
 
   @@map("workspaces")
 }
@@ -37,13 +40,15 @@ model workspaces {
 model workspaceAccounts {
   workspaceId   String    @db.VarChar(30) @map("workspace_id")
   accountId     String    @db.VarChar(30) @map("account_id")
+  userNodeId    String    @db.VarChar(30) @map("user_node_id")
   role          Int
-  attrs         Json?     @default("null")
+  attrs         Json?
   createdAt     DateTime  @db.Timestamptz(6) @map("created_at")
   createdBy     String    @db.VarChar(30) @map("created_by")
   updatedAt     DateTime? @db.Timestamptz(6) @map("updated_at")
   updatedBy     String?   @db.VarChar(30) @map("updated_by")
   status        Int
+  versionId     String    @db.VarChar(30) @map("version_id")
 
   @@map("workspace_accounts")
   @@id([workspaceId, accountId])

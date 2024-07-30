@@ -3,6 +3,7 @@ import cors from 'cors';
 import {accounts} from "@/routes/accounts";
 import {workspaces} from "@/routes/workspaces";
 import {transactions} from "@/routes/transactions";
+import {authMiddleware} from "@/middlewares/auth";
 
 const app = express();
 const port = 3000;
@@ -20,10 +21,11 @@ app.post('/v1/accounts/login/email', accounts.loginWithEmail);
 app.post('/v1/accounts/register/email', accounts.registerWithEmail);
 
 //workspaces
-app.post('/v1/workspaces', workspaces.createWorkspace);
-app.put('/v1/workspaces/:id', workspaces.updateWorkspace);
-app.delete('/v1/workspaces/:id', workspaces.deleteWorkspace);
-app.get('/v1/workspaces/:id', workspaces.getWorkspace);
+app.get('/v1/workspaces', authMiddleware, workspaces.getWorkspaces);
+app.post('/v1/workspaces', authMiddleware, workspaces.createWorkspace);
+app.put('/v1/workspaces/:id', authMiddleware, workspaces.updateWorkspace);
+app.delete('/v1/workspaces/:id', authMiddleware, workspaces.deleteWorkspace);
+app.get('/v1/workspaces/:id', authMiddleware, workspaces.getWorkspace);
 
 //transactions
 app.post('/v1/transactions', transactions.applyTransactions);

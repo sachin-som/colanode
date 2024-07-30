@@ -1,3 +1,5 @@
+import { Request, Response, NextFunction } from "express";
+
 export enum ApiError {
   GoogleAuthFailed = "GoogleAuthFailed",
   UserPendingActivation = "UserPendingActivation",
@@ -5,5 +7,16 @@ export enum ApiError {
   EmailAlreadyExists = "EmailAlreadyExists",
   EmailOrPasswordIncorrect = "EmailOrPasswordIncorrect",
   MissingRequiredFields = "MissingRequiredFields",
-  ResourceNotFound = "ResourceNotFound"
+  ResourceNotFound = "ResourceNotFound",
+  Unauthorized = "Unauthorized",
+  Forbidden = "Forbidden",
 }
+
+
+export type NeuronRequest = Request & {
+  accountId?: string | null;
+};
+
+export type NeuronResponse = Response;
+
+export type NeuronNextFunction = NextFunction;

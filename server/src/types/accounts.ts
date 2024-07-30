@@ -24,6 +24,9 @@ export type GoogleUserInfo = {
 
 export type LoginOutput = {
   token: string;
+  id: string;
+  name: string;
+  email: string;
 };
 
 export enum AccountStatus {

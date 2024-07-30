@@ -17,6 +17,8 @@ model accounts {
   createdAt  DateTime  @db.Timestamptz(6) @map("created_at")
   updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
   status     Int
+
+  @@map("accounts")
 }
 
 model workspaces {
@@ -28,6 +30,8 @@ model workspaces {
   updatedAt  DateTime? @db.Timestamptz(6) @map("updated_at")
   updatedBy  String?   @db.VarChar(30) @map("updated_by")
   status     Int
+
+  @@map("workspaces")
 }
 
 model workspaceAccounts {
@@ -43,4 +47,20 @@ model workspaceAccounts {
 
   @@map("workspace_accounts")
   @@id([workspaceId, accountId])
+}
+
+model nodes {
+  id          String    @id @db.VarChar(30)
+  workspaceId String    @db.VarChar(30) @map("workspace_id")
+  parentId    String?   @db.VarChar(30) @map("parent_id")
+  type        String    @db.VarChar(30)
+  attrs       Json?
+  content     Json?
+  createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
+  createdBy   String    @db.VarChar(30) @map("created_by")
+  updatedAt   DateTime? @db.Timestamptz(6) @map("updated_at")
+  updatedBy   String?   @db.VarChar(30) @map("updated_by")
+  versionId   String    @db.VarChar(30) @map("version_id")
+
+  @@map("nodes")
 }

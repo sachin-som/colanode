@@ -35,7 +35,10 @@ function buildLoginOutput(id: string, name: string, email: string): LoginOutput 
   const token = jwt.sign(payload, JwtSecretKey, signOptions);
 
   return {
-    token
+    token,
+    id,
+    name,
+    email
   };
 }
 

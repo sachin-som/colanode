@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { accountReducer } from "@/store/account-slice";
+import { workspacesReducer } from "@/store/workspaces-slice";
 
 export const store = configureStore({
   reducer: {
     account: accountReducer,
+    workspaces: workspacesReducer,
   },
 })
 

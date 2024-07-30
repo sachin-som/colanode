@@ -1,29 +1,38 @@
 import React from "react";
-import { createRoot } from 'react-dom/client';
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
-import {AppLayout} from "@/components/app-layout";
-import {TooltipProvider} from "@/components/ui/tooltip";
-import {Toaster} from "@/components/ui/toaster";
-import { Provider as ReduxProvider } from "react-redux";
-import { store } from "@/store";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/store";
+import {Login} from "@/components/accounts/login";
+import {AppLoading} from "@/components/app-loading";
+import {setWorkspaces} from "@/store/workspaces-slice";
+import {Outlet} from "react-router-dom";
 
-const router = createBrowserRouter([
-  {
-     path: '',
-    element: <AppLayout />
+export function App() {
+  const account = useSelector((state: RootState) => state.account);
+  const workspaces = useSelector((state: RootState) => state.workspaces);
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    if (!account) {
+      return;
+    }
+
+    if (!workspaces.loaded) {
+      // load workspaces async
+      window.globalDb.getWorkspaces().then((workspaces) => {
+        // dispatch action to store workspaces
+        dispatch(setWorkspaces(workspaces));
+      });
+    }
+
+  }, [])
+
+  if (!account) {
+    return <Login />;
   }
-])
 
-function App() {
-  return (
-    <ReduxProvider store={store}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
-      <Toaster />
-    </ReduxProvider>
-  );
+  if (!workspaces.loaded) {
+    return <AppLoading />
+  }
+
+  return <Outlet />
 }
-
-const root = createRoot(document.body);
-root.render(<App />);

@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import {defineGlobalDbHandlers, initGlobalDb} from "@/data/global-db";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -7,6 +8,8 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = () => {
+  initGlobalDb();
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     fullscreen: true,
@@ -24,6 +27,8 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  defineGlobalDbHandlers();
 };
 
 // This method will be called when Electron has finished

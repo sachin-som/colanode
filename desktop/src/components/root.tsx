@@ -3,17 +3,17 @@ import { createRoot } from 'react-dom/client';
 import {App} from "@/components/app";
 import {TooltipProvider} from "@/components/ui/tooltip";
 import {Toaster} from "@/components/ui/toaster";
-import {Provider as ReduxProvider} from "react-redux";
+import {StoreContext} from "@/contexts/store";
 import {store} from "@/store";
 
-function Root() {
+export const Root = () => {
   return (
-    <ReduxProvider store={store}>
+    <StoreContext.Provider value={store}>
       <TooltipProvider>
         <App />
       </TooltipProvider>
       <Toaster />
-    </ReduxProvider>
+    </StoreContext.Provider>
   );
 }
 

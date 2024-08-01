@@ -1,10 +1,10 @@
 import {Node} from "@/types/nodes";
-import {setNode} from "@/store/app-slice";
 import {CreateNodeTransactionInput, Transaction} from "@/types/transactions";
 import {generateId, IdType} from "@/lib/id";
+import {store} from "@/store";
 
 export async function createNode(accountId: string, node: Node) {
-  setNode(node);
+  store.setNode(node);
 
   const transactionInput: CreateNodeTransactionInput = {
     id: node.id,

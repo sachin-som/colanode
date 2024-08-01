@@ -3,12 +3,15 @@ import {useWorkspace} from "@/contexts/workspace";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Icon} from "@/components/ui/icon";
 import {Avatar} from "@/components/ui/avatar";
-import {useSelector} from "@/store";
+import {useStore} from "@/contexts/store";
+import {observer} from "mobx-react-lite";
 
-export function SidebarHeader() {
+export const SidebarHeader = observer(() => {
+  const store = useStore();
   const workspace = useWorkspace();
-  const account = useSelector(state => state.app.accounts)[0];
-  const workspaces = useSelector(state => state.app.workspaces);
+
+  const account = store.accounts[0];
+  const workspaces = store.workspaces;
 
   return (
     <Popover>
@@ -68,4 +71,4 @@ export function SidebarHeader() {
     </Popover>
 
   )
-}
+});

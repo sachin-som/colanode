@@ -2,10 +2,12 @@ import React from "react";
 import {Sidebar} from "@/components/workspaces/sidebar";
 import {WorkspaceCreate} from "@/components/workspaces/workspace-create";
 import {WorkspaceContext} from "@/contexts/workspace";
-import {useSelector} from "@/store";
+import {useStore} from "@/contexts/store";
+import {observer} from "mobx-react-lite";
 
-export function Workspace() {
-  const workspaces = useSelector(state => state.app.workspaces);
+export const Workspace = observer(() => {
+  const store = useStore();
+  const workspaces = store.workspaces;
   if (workspaces.length === 0) {
     return <WorkspaceCreate />;
   }
@@ -24,4 +26,4 @@ export function Workspace() {
       </div>
     </WorkspaceContext.Provider>
   )
-}
+});

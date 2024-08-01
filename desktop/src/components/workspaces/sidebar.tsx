@@ -23,7 +23,7 @@ const layouts: LayoutItem[] = [
   }
 ];
 
-export function Sidebar() {
+export const Sidebar = () => {
   const currentLayout = 'spaces';
 
   return (

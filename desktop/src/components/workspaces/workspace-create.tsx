@@ -17,17 +17,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import {parseApiError} from "@/lib/axios";
 import {Workspace} from "@/types/workspaces";
-import {useDispatch} from "react-redux";
-import {addWorkspace} from "@/store/app-slice";
 import {useAxios} from "@/contexts/axios";
+import {useStore} from "@/contexts/store";
+import {observer} from "mobx-react-lite";
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
   description: z.string(),
 });
 
-export function WorkspaceCreate() {
+export const WorkspaceCreate = observer(() => {
+  const store = useStore();
   const axios = useAxios();
+
   const [isPending, setIsPending] = React.useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,14 +39,12 @@ export function WorkspaceCreate() {
     },
   });
 
-  const dispatch = useDispatch();
-
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsPending(true);
     try {
       const { data } = await axios.post<Workspace>('v1/workspaces', values);
       if (data) {
-        dispatch(addWorkspace(data));
+        store.addWorkspace(data);
         await window.globalDb.addWorkspace(data);
       } else {
         toast({
@@ -120,4 +120,4 @@ export function WorkspaceCreate() {
       </div>
     </div>
   )
-}
+});

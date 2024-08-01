@@ -16,7 +16,7 @@ import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
 import {parseApiError} from "@/lib/axios";
 import {Icon} from "@/components/ui/icon";
-import Axios from "axios";
+import axios from "axios";
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -29,7 +29,7 @@ interface EmailRegisterProps {
   onRegister: (output: LoginOutput) => void;
 }
 
-export function EmailRegister({ serverUrl, onRegister }: EmailRegisterProps) {
+export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => {
   const [isPending, setIsPending] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,14 +44,9 @@ export function EmailRegister({ serverUrl, onRegister }: EmailRegisterProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsPending(true);
     try {
-
-      const axios = Axios.create({
-        baseURL: serverUrl,
-      });
-
       const { data } = await axios.post<LoginOutput>(
-        'v1/accounts/register/email',
-        values,
+        `${serverUrl}/v1/accounts/register/email`,
+        values
       );
 
       onRegister(data);

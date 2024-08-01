@@ -1,7 +1,7 @@
 import React from 'react';
 import {SpaceCreateButton} from "@/components/spaces/space-create-button";
 
-export function SidebarSpaces() {
+export const SidebarSpaces = () => {
   const canAddEntities = true;
 
   return (

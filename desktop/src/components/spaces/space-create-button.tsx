@@ -2,7 +2,7 @@ import React from "react";
 import {SpaceCreateDialog} from "@/components/spaces/space-create-dialog";
 import {Icon} from "@/components/ui/icon";
 
-export function SpaceCreateButton() {
+export const SpaceCreateButton = () => {
   const [open, setOpen] = React.useState(false);
   return (
     <React.Fragment>

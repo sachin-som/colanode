@@ -25,13 +25,15 @@ const formSchema = z.object({
   description: z.string(),
 });
 
-export function SpaceCreateDialog({
- open,
- onOpenChange,
-}: {
+interface SpaceCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}){
+}
+
+export const SpaceCreateDialog = ({
+ open,
+ onOpenChange,
+}: SpaceCreateDialogProps) => {
   const workspace = useWorkspace();
   const [isPending, setIsPending] = React.useState(false);
   const form = useForm<z.infer<typeof formSchema>>({

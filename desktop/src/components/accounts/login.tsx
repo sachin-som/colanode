@@ -2,20 +2,22 @@ import React from 'react';
 import { EmailLogin } from '@/components/accounts/email-login';
 import { LoginOutput } from '@/types/accounts';
 import { EmailRegister } from '@/components/accounts/email-register';
-import {addAccount, addWorkspace} from "@/store/app-slice";
+import { useStore } from "@/contexts/store";
+import { observer } from "mobx-react-lite";
 
 const serverUrl = 'http://localhost:3000';
 
-export function Login() {
+export const Login = observer(() => {
+  const store = useStore();
   const [showRegister, setShowRegister] = React.useState(false);
 
   async function handleLogin(output: LoginOutput) {
-    addAccount(output.account);
+    store.addAccount(output.account);
     await window.globalDb.addAccount(output.account);
 
     if (output.workspaces.length > 0) {
       for (const workspace of output.workspaces) {
-        addWorkspace(workspace);
+        store.addWorkspace(workspace);
         await window.globalDb.addWorkspace(workspace);
       }
     }
@@ -57,4 +59,4 @@ export function Login() {
       </div>
     </div>
   );
-}
+});

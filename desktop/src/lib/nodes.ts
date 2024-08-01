@@ -3,7 +3,7 @@ import {CreateNodeTransactionInput, Transaction} from "@/types/transactions";
 import {generateId, IdType} from "@/lib/id";
 import {store} from "@/store";
 
-export async function createNode(accountId: string, node: Node) {
+export const createNode = async (accountId: string, node: Node) => {
   store.setNode(node);
 
   const transactionInput: CreateNodeTransactionInput = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn, hashCode } from '@/lib/utils';
 
-function getAvatarSizeClasses(size?: string) {
+const getAvatarSizeClasses = (size?: string) => {
   if (size === 'small') {
     return 'w-5 h-5';
   }
@@ -31,7 +31,7 @@ const colors = [
   'rgb(156 163 175)',
 ];
 
-function getColorForId(id: string) {
+const getColorForId = (id: string) => {
   const index = Math.abs(hashCode(id)) % colors.length;
   return colors[index];
 }

@@ -41,7 +41,7 @@ export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => 
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
     try {
       const { data } = await axios.post<LoginOutput>(

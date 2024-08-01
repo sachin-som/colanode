@@ -44,12 +44,12 @@ export const SpaceCreateDialog = ({
     },
   });
 
-  function handleCancel(){
+  const handleCancel = () => {
     form.reset();
     onOpenChange(false);
   }
 
-  async function handleSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
 
     const node: Node = {

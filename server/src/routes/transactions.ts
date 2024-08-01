@@ -7,7 +7,7 @@ import {
 } from "@/types/transactions";
 import {prisma} from "@/data/db";
 
-async function applyTransactions(req: Request, res: Response) {
+const applyTransactions = async (req: Request, res: Response) => {
   const transactions: Transaction[] = req.body.transactions;
 
   const appliedTransactionIds: string[] = [];

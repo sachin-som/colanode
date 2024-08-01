@@ -20,7 +20,7 @@ const JwtAudience = process.env.JWT_AUDIENCE ?? '';
 const JwtIssuer = process.env.JWT_ISSUER ?? '';
 const SaltRounds = 10;
 
-async function buildLoginOutput(id: string, name: string, email: string): Promise<LoginOutput> {
+const buildLoginOutput = async (id: string, name: string, email: string): Promise<LoginOutput> => {
   const signOptions: jwt.SignOptions = {
     issuer: JwtIssuer,
     audience: JwtAudience,
@@ -84,7 +84,7 @@ async function buildLoginOutput(id: string, name: string, email: string): Promis
   };
 }
 
-async function registerWithEmail(req: Request, res: Response) {
+const registerWithEmail = async (req: Request, res: Response) => {
   const input: EmailRegisterInput = req.body;
   let existingAccount = await prisma
     .accounts
@@ -119,7 +119,7 @@ async function registerWithEmail(req: Request, res: Response) {
   return res.json(buildLoginOutput(account.id, account.name, account.email));
 }
 
-async function loginWithEmail(req: Request, res: Response) {
+const loginWithEmail = async (req: Request, res: Response) => {
   const input: EmailLoginInput = req.body;
   let account = await prisma
     .accounts
@@ -164,7 +164,7 @@ async function loginWithEmail(req: Request, res: Response) {
     .json(output);
 }
 
-async function loginWithGoogle(req: Request, res: Response) {
+const loginWithGoogle = async (req: Request, res: Response) => {
   const input: GoogleLoginInput = req.body;
   const url = `${GoogleUserInfoUrl}?access_token=${input.access_token}`;
   const userInfoResponse = await axios.get(url);

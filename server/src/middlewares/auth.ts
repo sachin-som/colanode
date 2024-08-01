@@ -5,7 +5,7 @@ const JwtSecretKey = process.env.JWT_SECRET ?? '';
 const JwtAudience = process.env.JWT_AUDIENCE ?? '';
 const JwtIssuer = process.env.JWT_ISSUER ?? '';
 
-export function authMiddleware(req: NeuronRequest, res: NeuronResponse, next: NeuronNextFunction) {
+export const authMiddleware = (req: NeuronRequest, res: NeuronResponse, next: NeuronNextFunction) => {
   const token = req.header('Authorization')?.split(' ')[1];
 
   if (!token) {

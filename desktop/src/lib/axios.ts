@@ -1,11 +1,7 @@
-import Axios, { isAxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 import { ApiErrorOutput } from '@/types/errors';
 
-// export const axios = Axios.create({
-//   baseURL: 'http://localhost:3000',
-// });
-
-export function parseApiError(error: unknown): ApiErrorOutput {
+export const parseApiError = (error: unknown): ApiErrorOutput => {
   if (isAxiosError(error) && error.response) {
     if (
       error.response.data &&

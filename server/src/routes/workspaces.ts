@@ -11,7 +11,7 @@ import {generateId, IdType} from "@/lib/id";
 import {prisma} from "@/data/db";
 import {Node} from "@/types/nodes";
 
-async function createWorkspace(req: NeuronRequest, res: NeuronResponse) {
+const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const input: WorkspaceInput = req.body;
 
   if (!req.accountId) {
@@ -123,7 +123,7 @@ async function createWorkspace(req: NeuronRequest, res: NeuronResponse) {
     .json(output);
 }
 
-async function updateWorkspace(req: NeuronRequest, res: NeuronResponse) {
+const updateWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const id = req.params.id;
   const input: WorkspaceInput = req.body;
 
@@ -209,7 +209,7 @@ async function updateWorkspace(req: NeuronRequest, res: NeuronResponse) {
     .json(output);
 }
 
-async function deleteWorkspace(req: NeuronRequest, res: NeuronResponse) {
+const deleteWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const id = req.params.id;
 
   if (!req.accountId) {
@@ -271,7 +271,7 @@ async function deleteWorkspace(req: NeuronRequest, res: NeuronResponse) {
     });
 }
 
-async function getWorkspace(req: NeuronRequest, res: NeuronResponse) {
+const getWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const id = req.params.id;
 
   if (!req.accountId) {
@@ -334,7 +334,7 @@ async function getWorkspace(req: NeuronRequest, res: NeuronResponse) {
     .json(output);
 }
 
-export async function getWorkspaces(req: NeuronRequest, res: NeuronResponse) {
+const getWorkspaces = async (req: NeuronRequest, res: NeuronResponse) => {
   if (!req.accountId) {
     return res
       .status(401)

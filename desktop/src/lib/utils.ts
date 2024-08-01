@@ -1,11 +1,11 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
 }
 
-export function hashCode(str: string) {
+export const hashCode = (str: string) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const character = str.charCodeAt(i);

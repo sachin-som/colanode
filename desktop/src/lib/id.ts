@@ -2,7 +2,7 @@ import { monotonicFactory } from 'ulid'
 
 const ulid = monotonicFactory()
 
-export function generateId(type: IdType) {
+export const generateId = (type: IdType) => {
   return ulid().toLowerCase() + type
 }
 

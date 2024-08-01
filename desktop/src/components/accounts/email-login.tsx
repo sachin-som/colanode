@@ -38,7 +38,7 @@ export const EmailLogin = ({ serverUrl, onLogin }: EmailLoginProps) => {
     },
   });
 
-  async function handleSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
     try {
       const { data } = await axios.post<LoginOutput>(

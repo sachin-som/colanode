@@ -106,12 +106,13 @@ const deleteTransactionsQuery = `
   DELETE FROM transactions WHERE id IN (?)
 `;
 
-export function addAccount(account: Account) {
+
+const addAccount = (account: Account) => {
   const stmt = globalDb.prepare(insertAccountQuery);
   stmt.run(account.id, account.name, account.email, account.avatar, account.token);
 }
 
-export function getAccounts(): Account[] {
+const getAccounts = (): Account[] => {
   const stmt = globalDb.prepare<[], AccountDbModel>(selectAccountsQuery);
   const accounts = stmt.all();
 
@@ -124,7 +125,7 @@ export function getAccounts(): Account[] {
   }));
 }
 
-function getWorkspaces(): Workspace[] {
+const getWorkspaces = (): Workspace[] => {
   const stmt = globalDb.prepare<[], WorkspaceDbModel>(selectWorkspacesQuery);
   const workspaces = stmt.all();
 
@@ -140,18 +141,18 @@ function getWorkspaces(): Workspace[] {
   }));
 }
 
-function addWorkspace(workspace: Workspace) {
+const addWorkspace = (workspace: Workspace) => {
   const stmt = globalDb.prepare(insertWorkspaceQuery);
   stmt.run(workspace.id, workspace.name, workspace.description, workspace.avatar, workspace.versionId, workspace.accountId, workspace.role, workspace.userNodeId);
 }
 
-function enqueueTransaction(transaction: Transaction) {
+const enqueueTransaction = (transaction: Transaction) => {
   const stmt = globalDb.prepare(insertTransactionQuery);
   const inputJson = JSON.stringify(transaction.input);
   stmt.run(transaction.id, transaction.workspaceId, transaction.accountId, transaction.type, transaction.nodeId, inputJson, transaction.createdAt.toISOString());
 }
 
-export function getGroupedAccountTransactions(count: number): AccountTransactions[] {
+export const getGroupedAccountTransactions = (count: number): AccountTransactions[] => {
   const stmt = globalDb.prepare<[], TransactionDbModel>(`SELECT * FROM transactions ORDER BY id LIMIT ${count} `);
   const transactions = stmt.all();
 
@@ -196,18 +197,18 @@ export function getGroupedAccountTransactions(count: number): AccountTransaction
   }));
 }
 
-export function deleteTransactions(ids: string[]) {
+export const deleteTransactions = (ids: string[]) => {
   const stmt = globalDb.prepare(deleteTransactionsQuery);
   stmt.run(ids.join(','));
 }
 
-export function initGlobalDb() {
+export const initGlobalDb = () => {
   globalDb.exec(createWorkspacesTableQuery);
   globalDb.exec(createTransactionsTableQuery);
   globalDb.exec(createAccountsTableQuery);
 }
 
-export function defineGlobalDbHandlers() {
+export const defineGlobalDbHandlers = () => {
   ipcMain.handle('get-accounts', () => getAccounts());
   ipcMain.handle('add-account', (_, account: Account) => addAccount(account));
   ipcMain.handle('get-workspaces', () => getWorkspaces());

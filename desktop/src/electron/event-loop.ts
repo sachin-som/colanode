@@ -1,12 +1,12 @@
 import {deleteTransactions, getGroupedAccountTransactions} from "@/electron/global-db";
 
-export function initEventLoop() {
+export const initEventLoop = () => {
   setInterval(async () => {
     await sendTransactions();
   }, 10000);
 }
 
-async function sendTransactions() {
+const sendTransactions = async () => {
   const groupedAccountTransactions = getGroupedAccountTransactions(10);
 
   for (const accountTransactions of groupedAccountTransactions) {

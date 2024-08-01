@@ -11,7 +11,7 @@ export const Login = observer(() => {
   const store = useStore();
   const [showRegister, setShowRegister] = React.useState(false);
 
-  async function handleLogin(output: LoginOutput) {
+  const handleLogin = async (output: LoginOutput) => {
     store.addAccount(output.account);
     await window.globalDb.addAccount(output.account);
 

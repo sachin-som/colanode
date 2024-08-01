@@ -1,3 +1,5 @@
+import {WorkspaceOutput} from "@/types/workspaces";
+
 export type GoogleLoginInput = {
   access_token: string;
   token_type: string;
@@ -23,10 +25,16 @@ export type GoogleUserInfo = {
 };
 
 export type LoginOutput = {
-  token: string;
+  account: AccountOutput;
+  workspaces: WorkspaceOutput[];
+};
+
+export type AccountOutput = {
   id: string;
   name: string;
   email: string;
+  avatar?: string | null;
+  token: string;
 };
 
 export enum AccountStatus {

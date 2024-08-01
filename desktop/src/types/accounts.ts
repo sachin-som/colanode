@@ -1,6 +1,14 @@
+import {Workspace} from "@/types/workspaces";
+
 export type LoginOutput = {
-  token: string;
+  account: Account;
+  workspaces: Workspace[];
+};
+
+export type Account = {
   id: string;
   name: string;
   email: string;
+  avatar?: string | null;
+  token: string;
 };

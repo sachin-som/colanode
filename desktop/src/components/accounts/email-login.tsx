@@ -12,10 +12,11 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MailIcon } from 'lucide-react';
 import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
-import {axios, parseApiError} from "@/lib/axios";
+import {parseApiError} from "@/lib/axios";
+import {Icon} from "@/components/ui/icon";
+import Axios from "axios";
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
@@ -23,10 +24,11 @@ const formSchema = z.object({
 });
 
 interface EmailLoginProps {
+  serverUrl: string;
   onLogin: (output: LoginOutput) => void;
 }
 
-export function EmailLogin({ onLogin }: EmailLoginProps) {
+export function EmailLogin({ serverUrl, onLogin }: EmailLoginProps) {
   const [isPending, setIsPending] = React.useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,6 +41,9 @@ export function EmailLogin({ onLogin }: EmailLoginProps) {
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsPending(true);
     try {
+      const axios = Axios.create({
+        baseURL: serverUrl,
+      });
 
       const { data } = await axios.post<LoginOutput>(
         'v1/accounts/login/email',
@@ -94,7 +99,7 @@ export function EmailLogin({ onLogin }: EmailLoginProps) {
           {isPending ? (
             <Spinner className="mr-2 h-4 w-4" />
           ) : (
-            <MailIcon className="mr-2 h-4 w-4" />
+            <Icon name="mail-line" className="mr-2 h-4 w-4" />
           )}
           Login
         </Button>

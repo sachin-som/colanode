@@ -15,11 +15,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import {axios, parseApiError} from "@/lib/axios";
+import {parseApiError} from "@/lib/axios";
 import {Workspace} from "@/types/workspaces";
 import {useDispatch} from "react-redux";
-import {addWorkspace} from "@/store/workspaces-slice";
-import {useNavigate} from "react-router-dom";
+import {addWorkspace} from "@/store/app-slice";
+import {useAxios} from "@/contexts/axios";
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -27,6 +27,7 @@ const formSchema = z.object({
 });
 
 export function WorkspaceCreate() {
+  const axios = useAxios();
   const [isPending, setIsPending] = React.useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,16 +38,14 @@ export function WorkspaceCreate() {
   });
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsPending(true);
     try {
       const { data } = await axios.post<Workspace>('v1/workspaces', values);
       if (data) {
-        await window.globalDb.addWorkspace(data);
         dispatch(addWorkspace(data));
-        navigate(`/${data.id}`);
+        await window.globalDb.addWorkspace(data);
       } else {
         toast({
           title: 'Failed to create workspace',

@@ -1,11 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { accountReducer } from "@/store/account-slice";
-import { workspacesReducer } from "@/store/workspaces-slice";
+import {useSelector as useReduxSelector} from "react-redux";
+import {appReducer} from "@/store/app-slice";
 
 export const store = configureStore({
   reducer: {
-    account: accountReducer,
-    workspaces: workspacesReducer,
+    app: appReducer,
   },
 })
 
@@ -13,3 +12,7 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch
+
+export function useSelector<T>(selector: (state: RootState) => T) {
+  return useReduxSelector(selector);
+}

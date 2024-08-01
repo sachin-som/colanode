@@ -1,18 +1,24 @@
 import React from 'react';
 import { EmailLogin } from '@/components/accounts/email-login';
 import { LoginOutput } from '@/types/accounts';
-import { saveAccount } from '@/lib/storage';
 import { EmailRegister } from '@/components/accounts/email-register';
-import { useDispatch } from "react-redux";
-import { setAccount } from "@/store/account-slice";
+import {addAccount, addWorkspace} from "@/store/app-slice";
+
+const serverUrl = 'http://localhost:3000';
 
 export function Login() {
   const [showRegister, setShowRegister] = React.useState(false);
-  const dispatch = useDispatch();
 
-  function handleLogin(output: LoginOutput) {
-    saveAccount(output);
-    dispatch(setAccount(output));
+  async function handleLogin(output: LoginOutput) {
+    addAccount(output.account);
+    await window.globalDb.addAccount(output.account);
+
+    if (output.workspaces.length > 0) {
+      for (const workspace of output.workspaces) {
+        addWorkspace(workspace);
+        await window.globalDb.addWorkspace(workspace);
+      }
+    }
   }
 
   return (
@@ -32,9 +38,9 @@ export function Login() {
           </div>
           <div className="flex flex-col gap-4">
             {showRegister ? (
-              <EmailRegister onRegister={handleLogin} />
+              <EmailRegister serverUrl={serverUrl} onRegister={handleLogin} />
             ) : (
-              <EmailLogin onLogin={handleLogin} />
+              <EmailLogin serverUrl={serverUrl} onLogin={handleLogin} />
             )}
             <p
               className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"

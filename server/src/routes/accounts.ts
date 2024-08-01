@@ -12,6 +12,7 @@ import {generateId, IdType} from "@/lib/id";
 import jwt from "jsonwebtoken";
 import {prisma} from "@/data/db";
 import bcrypt from "bcrypt";
+import {WorkspaceOutput} from "@/types/workspaces";
 
 const GoogleUserInfoUrl = "https://www.googleapis.com/oauth2/v1/userinfo";
 const JwtSecretKey = process.env.JWT_SECRET ?? '';
@@ -19,7 +20,7 @@ const JwtAudience = process.env.JWT_AUDIENCE ?? '';
 const JwtIssuer = process.env.JWT_ISSUER ?? '';
 const SaltRounds = 10;
 
-function buildLoginOutput(id: string, name: string, email: string): LoginOutput {
+async function buildLoginOutput(id: string, name: string, email: string): Promise<LoginOutput> {
   const signOptions: jwt.SignOptions = {
     issuer: JwtIssuer,
     audience: JwtAudience,
@@ -34,11 +35,52 @@ function buildLoginOutput(id: string, name: string, email: string): LoginOutput 
 
   const token = jwt.sign(payload, JwtSecretKey, signOptions);
 
+  const accountWorkspaces = await prisma
+    .workspaceAccounts
+    .findMany({
+      where: {
+        accountId: id
+      }
+    });
+
+  const workspaceIds = accountWorkspaces.map(wa => wa.workspaceId);
+  const workspaces = await prisma
+    .workspaces
+    .findMany({
+      where: {
+        id: {
+          in: workspaceIds
+        }
+      }
+    });
+
+  const workspaceOutputs: WorkspaceOutput[] = [];
+  for (const accountWorkspace of accountWorkspaces) {
+    const workspace = workspaces.find(w => w.id === accountWorkspace.workspaceId);
+    if (!workspace) {
+      continue;
+    }
+
+    workspaceOutputs.push({
+      id: workspace.id,
+      name: workspace.name,
+      role: accountWorkspace.role,
+      userNodeId: accountWorkspace.userNodeId,
+      versionId: accountWorkspace.versionId,
+      accountId: accountWorkspace.accountId,
+      avatar: workspace.avatar,
+      description: workspace.description,
+    });
+  }
+
   return {
-    token,
-    id,
-    name,
-    email
+    account: {
+      token,
+      id,
+      name,
+      email
+    },
+    workspaces: workspaceOutputs
   };
 }
 
@@ -116,7 +158,10 @@ async function loginWithEmail(req: Request, res: Response) {
     });
   }
 
-  return res.json(buildLoginOutput(account.id, account.name, account.email));
+  const output = await buildLoginOutput(account.id, account.name, account.email);
+  return res
+    .status(200)
+    .json(output);
 }
 
 async function loginWithGoogle(req: Request, res: Response) {
@@ -171,7 +216,10 @@ async function loginWithGoogle(req: Request, res: Response) {
         });
     }
 
-    return res.json(buildLoginOutput(existingAccount.id, existingAccount.name, existingAccount.email));
+    const output = await buildLoginOutput(existingAccount.id, existingAccount.name, existingAccount.email);
+    return res
+      .status(200)
+      .json(output);
   }
 
   const newAccount = await prisma
@@ -186,7 +234,10 @@ async function loginWithGoogle(req: Request, res: Response) {
       }
     });
 
-  return res.json(buildLoginOutput(newAccount.id, newAccount.name, newAccount.email));
+  const output = await buildLoginOutput(newAccount.id, newAccount.name, newAccount.email);
+  return res
+    .status(200)
+    .json(output);
 }
 
 export const accounts = {

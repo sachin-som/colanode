@@ -1,22 +1,9 @@
 import Axios, { isAxiosError } from 'axios';
 import { ApiErrorOutput } from '@/types/errors';
-import {readAccount} from "@/lib/storage";
 
-export const axios = Axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-axios.interceptors.request.use((config) => {
-  config.headers['Content-Type'] = 'application/json';
-  config.headers.Accept = 'application/json';
-
-  const account = readAccount();
-  if (account) {
-    config.headers.authorization = `Bearer ${account.token}`;
-  }
-
-  return config;
-});
+// export const axios = Axios.create({
+//   baseURL: 'http://localhost:3000',
+// });
 
 export function parseApiError(error: unknown): ApiErrorOutput {
   if (isAxiosError(error) && error.response) {

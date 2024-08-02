@@ -19,14 +19,17 @@ export const Workspace = observer(() => {
       ...workspace,
       addNode: async (node) => {
         await window.workspaceDb.addNode(workspace.accountId, workspace.id, node);
+        workspace.setNode(node);
       },
       getNodes: async () => {
         return await window.workspaceDb.getNodes(workspace.accountId, workspace.id);
       },
       updateNode: async (node) => {
+        workspace.setNode(node);
         await window.workspaceDb.updateNode(workspace.accountId, workspace.id, node);
       },
       deleteNode: async (nodeId) => {
+        workspace.deleteNode(nodeId);
         await window.workspaceDb.deleteNode(workspace.accountId, workspace.id, nodeId);
       },
     }}>

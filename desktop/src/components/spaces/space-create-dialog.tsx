@@ -18,7 +18,6 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Node} from "@/types/nodes";
 import {generateId, IdType} from "@/lib/id";
-import {createNode} from "@/lib/nodes";
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -65,7 +64,7 @@ export const SpaceCreateDialog = ({
       versionId: generateId(IdType.Version)
     }
 
-    await createNode(workspace.accountId, node);
+    await workspace.addNode(node);
     setIsPending(false);
     onOpenChange(false);
   }

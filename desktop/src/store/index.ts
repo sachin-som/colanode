@@ -1,19 +1,17 @@
 import {Account} from "@/types/accounts";
 import {Workspace} from "@/types/workspaces";
-import {Node} from "@/types/nodes";
 import {makeAutoObservable} from "mobx";
+import {WorkspaceStore} from "@/store/workspace";
 
 export class AppStore {
   loaded: boolean;
   accounts: Account[];
-  workspaces: Workspace[];
-  nodes: Record<string, Node>;
+  workspaces: WorkspaceStore[];
 
   constructor() {
     this.loaded = false;
     this.accounts = [];
     this.workspaces = [];
-    this.nodes = {};
 
     makeAutoObservable(this);
   }
@@ -31,26 +29,11 @@ export class AppStore {
   }
 
   setWorkspaces(workspaces: Workspace[]) {
-    this.workspaces = workspaces;
+    this.workspaces = workspaces.map(workspace => new WorkspaceStore(workspace));
   }
 
   addWorkspace(workspace: Workspace) {
-    this.workspaces.push(workspace);
-  }
-
-  setNodes(nodes: Node[]) {
-    this.nodes = nodes.reduce((acc, node) => {
-      acc[node.id] = node;
-      return acc;
-    }, {} as Record<string, Node>);
-  }
-
-  setNode(node: Node) {
-    this.nodes[node.id] = node;
-  }
-
-  removeNode(nodeId: string) {
-    delete this.nodes[nodeId];
+    this.workspaces.push(new WorkspaceStore(workspace));
   }
 }
 

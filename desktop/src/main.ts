@@ -58,4 +58,24 @@ ipcMain.handle('get-workspaces', async () => globalDatabase.getWorkspaces());
 ipcMain.handle('add-workspace', async (_, workspace) => globalDatabase.addWorkspace(workspace));
 ipcMain.handle('add-transaction', async (_, transaction) => globalDatabase.addTransaction(transaction));
 
+ipcMain.handle('add-node', async (_, accountId, workspaceId, node) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  await workspaceDb.addNode(node);
+});
+
+ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  return workspaceDb.getNodes();
+});
+
+ipcMain.handle('update-node', async (_, accountId, workspaceId, node) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  await workspaceDb.updateNode(node);
+});
+
+ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  await workspaceDb.deleteNode(nodeId);
+});
+
 initEventLoop();

@@ -5,8 +5,8 @@ export interface NodesTableSchema {
   type: string;
   attrs: string | null;
   content: string | null;
-  created_at: Date;
-  updated_at: Date | null;
+  created_at: string;
+  updated_at: string | null;
   created_by: string;
   updated_by: string | null;
   version_id: string;

@@ -1,14 +1,24 @@
 import {app} from "electron";
 import SQLite from "better-sqlite3";
 import {Kysely, Migration, Migrator, SqliteDialect} from "kysely";
-import { GlobalDatabaseSchema } from "@/electron/database/global/schema";
+import {WorkspaceDatabaseSchema} from "@/electron/database/workspace/schema";
 import {workspaceDatabaseMigrations} from "@/electron/database/workspace/migrations";
 import * as fs from "node:fs";
+import {GlobalDatabase} from "@/electron/database/global";
+import {Node} from "@/types/nodes";
+import {generateId, IdType} from "@/lib/id";
 
-class WorkspaceDatabase {
-  database: Kysely<GlobalDatabaseSchema>;
+export class WorkspaceDatabase {
+  accountId: string;
+  workspaceId: string;
+  database: Kysely<WorkspaceDatabaseSchema>;
+  globalDatabase: GlobalDatabase;
 
-  constructor(accountId: string, workspaceId: string) {
+  constructor(accountId: string, workspaceId: string, globalDatabase: GlobalDatabase) {
+    this.accountId = accountId;
+    this.workspaceId = workspaceId;
+    this.globalDatabase = globalDatabase
+
     const appPath = app.getPath('userData');
     const accountPath = `${appPath}/account_${accountId}`;
     if (!fs.existsSync(accountPath)) {
@@ -19,8 +29,100 @@ class WorkspaceDatabase {
       database: new SQLite(`${accountPath}/workspace_${workspaceId}.db`),
     });
 
-    this.database = new Kysely<GlobalDatabaseSchema>({
+    this.database = new Kysely<WorkspaceDatabaseSchema>({
       dialect,
+    });
+  }
+
+  getNodes = async (): Promise<Node[]> => {
+    const nodes =  await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .execute();
+
+    return nodes.map(node => ({
+      id: node.id,
+      type: node.type,
+      parentId: node.parent_id,
+      workspaceId: node.workspace_id,
+      attrs: JSON.parse(node.attrs),
+      content: JSON.parse(node.content),
+      createdAt: new Date(node.created_at),
+      createdBy: node.created_by,
+      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
+      updatedBy: node.updated_by,
+      versionId: node.version_id,
+    }));
+  }
+
+  addNode = async (node: Node) => {
+    await this.database
+      .insertInto('nodes')
+      .values({
+        id: node.id,
+        type: node.type,
+        parent_id: node.parentId,
+        workspace_id: this.workspaceId,
+        created_at: node.createdAt.toISOString(),
+        created_by: node.createdBy,
+        version_id: node.versionId,
+        attrs: JSON.stringify(node.attrs),
+        content: JSON.stringify(node.content),
+      })
+      .execute();
+
+    await this.globalDatabase.
+      addTransaction({
+        id: generateId(IdType.Transaction),
+        nodeId: node.id,
+        type: 'create_node',
+        workspaceId: node.workspaceId,
+        accountId: this.accountId,
+        input: JSON.stringify(node),
+        createdAt: new Date(),
+      });
+  }
+
+  updateNode = async (node: Node) => {
+    await this.database
+      .updateTable('nodes')
+      .set({
+        type: node.type,
+        parent_id: node.parentId,
+        updated_at: node.updatedAt.toISOString(),
+        updated_by: node.updatedBy,
+        version_id: node.versionId,
+        attrs: JSON.stringify(node.attrs),
+        content: JSON.stringify(node.content),
+      })
+      .where('id', '=', node.id)
+      .executeTakeFirst();
+
+    await this.globalDatabase.addTransaction({
+      id: generateId(IdType.Transaction),
+      nodeId: node.id,
+      type: 'update_node',
+      workspaceId: node.workspaceId,
+      accountId: this.accountId,
+      input: JSON.stringify(node),
+      createdAt: new Date(),
+    });
+  }
+
+  deleteNode = async (nodeId: string) => {
+    await this.database
+      .deleteFrom('nodes')
+      .where('id', '=', nodeId)
+      .execute();
+
+    await this.globalDatabase.addTransaction({
+      id: generateId(IdType.Transaction),
+      nodeId: nodeId,
+      type: 'delete_node',
+      workspaceId: this.workspaceId,
+      accountId: this.accountId,
+      input: null,
+      createdAt: new Date(),
     });
   }
 
@@ -36,17 +138,4 @@ class WorkspaceDatabase {
 
     await migrator.migrateToLatest();
   }
-}
-
-const workspaceDatabasesMap = new Map<string, WorkspaceDatabase>();
-
-export const getWorkspaceDatabase = async (accountId: string, workspaceId: string) => {
-  const key = `${accountId}/${workspaceId}`;
-  if (!workspaceDatabasesMap.has(key)) {
-    const workspaceDatabase = new WorkspaceDatabase(accountId, workspaceId);
-    await workspaceDatabase.migrate();
-    workspaceDatabasesMap.set(key, workspaceDatabase);
-  }
-
-  return workspaceDatabasesMap.get(key)!;
 }

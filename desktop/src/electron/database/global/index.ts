@@ -7,9 +7,11 @@ import {Workspace} from "@/types/workspaces";
 import {AccountTransactions, Transaction} from "@/types/transactions";
 import {globalDatabaseMigrations} from "@/electron/database/global/migrations";
 import {GlobalDatabaseData} from "@/types/global";
+import {WorkspaceDatabase} from "@/electron/database/workspace";
 
-class GlobalDatabase {
+export class GlobalDatabase {
   database: Kysely<GlobalDatabaseSchema>;
+  workspaceDatabases: Map<string, WorkspaceDatabase> = new Map();
 
   constructor() {
     const appPath = app.getPath('userData');
@@ -28,6 +30,10 @@ class GlobalDatabase {
     const accounts = await this.getAccounts();
     const workspaces = await this.getWorkspaces();
 
+    for (const workspace of workspaces) {
+      await this.initWorkspaceDatabase(workspace);
+    }
+
     return {
       accounts,
       workspaces
@@ -45,6 +51,27 @@ class GlobalDatabase {
     })
 
     await migrator.migrateToLatest();
+  }
+
+  getWorkspaceDatabase = (accountId: string, workspaceId: string): WorkspaceDatabase => {
+    const key = `${accountId}_${workspaceId}`;
+    const workspaceDatabase = this.workspaceDatabases.get(key);
+    if (!workspaceDatabase) {
+      throw new Error(`Workspace database not found for workspace ID: ${workspaceId}`);
+    }
+
+    return workspaceDatabase;
+  }
+
+  initWorkspaceDatabase = async (workspace: Workspace) => {
+    const key = `${workspace.accountId}_${workspace.id}`;
+    if (this.workspaceDatabases.has(key)) {
+      return;
+    }
+
+    const workspaceDatabase = new WorkspaceDatabase(workspace.accountId, workspace.id, this);
+    await workspaceDatabase.migrate();
+    this.workspaceDatabases.set(key, workspaceDatabase);
   }
 
   getAccounts = async (): Promise<Account[]> => {
@@ -101,10 +128,11 @@ class GlobalDatabase {
         user_node_id: workspace.userNodeId
       })
       .execute();
+
+    await this.initWorkspaceDatabase(workspace);
   }
 
   addTransaction = async (transaction: Transaction) => {
-    console.log(transaction);
     await this.database
       .insertInto('transactions')
       .values({

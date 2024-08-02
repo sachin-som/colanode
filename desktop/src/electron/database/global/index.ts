@@ -1,13 +1,13 @@
-import {app} from "electron";
-import SQLite from "better-sqlite3";
-import {Kysely, Migration, Migrator, SqliteDialect} from "kysely";
-import { GlobalDatabaseSchema } from "@/electron/database/global/schema";
-import {Account} from "@/types/accounts";
-import {Workspace} from "@/types/workspaces";
-import {AccountTransactions, Transaction} from "@/types/transactions";
-import {globalDatabaseMigrations} from "@/electron/database/global/migrations";
-import {GlobalDatabaseData, WorkspaceDatabaseData} from "@/types/global";
-import {WorkspaceDatabase} from "@/electron/database/workspace";
+import { app } from 'electron';
+import SQLite from 'better-sqlite3';
+import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
+import { GlobalDatabaseSchema } from '@/electron/database/global/schema';
+import { Account } from '@/types/accounts';
+import { Workspace } from '@/types/workspaces';
+import { AccountTransactions, Transaction } from '@/types/transactions';
+import { globalDatabaseMigrations } from '@/electron/database/global/migrations';
+import { GlobalDatabaseData, WorkspaceDatabaseData } from '@/types/global';
+import { WorkspaceDatabase } from '@/electron/database/workspace';
 
 export class GlobalDatabase {
   database: Kysely<GlobalDatabaseSchema>;
@@ -20,7 +20,7 @@ export class GlobalDatabase {
     });
 
     this.database = new Kysely<GlobalDatabaseSchema>({
-      dialect
+      dialect,
     });
   }
 
@@ -38,9 +38,9 @@ export class GlobalDatabase {
 
     return {
       accounts,
-      workspaces: workspaceDatabaseData
+      workspaces: workspaceDatabaseData,
     };
-  }
+  };
 
   migrate = async () => {
     const migrator = new Migrator({
@@ -48,35 +48,46 @@ export class GlobalDatabase {
       provider: {
         getMigrations(): Promise<Record<string, Migration>> {
           return Promise.resolve(globalDatabaseMigrations);
-        }
-      }
-    })
+        },
+      },
+    });
 
     await migrator.migrateToLatest();
-  }
+  };
 
-  getWorkspaceDatabase = (accountId: string, workspaceId: string): WorkspaceDatabase => {
+  getWorkspaceDatabase = (
+    accountId: string,
+    workspaceId: string,
+  ): WorkspaceDatabase => {
     const key = `${accountId}_${workspaceId}`;
     const workspaceDatabase = this.workspaceDatabases.get(key);
     if (!workspaceDatabase) {
-      throw new Error(`Workspace database not found for workspace ID: ${workspaceId}`);
+      throw new Error(
+        `Workspace database not found for workspace ID: ${workspaceId}`,
+      );
     }
 
     return workspaceDatabase;
-  }
+  };
 
-  initWorkspaceDatabase = async (workspace: Workspace): Promise<WorkspaceDatabaseData> => {
+  initWorkspaceDatabase = async (
+    workspace: Workspace,
+  ): Promise<WorkspaceDatabaseData> => {
     const key = `${workspace.accountId}_${workspace.id}`;
-    const workspaceDatabase = new WorkspaceDatabase(workspace.accountId, workspace.id, this);
+    const workspaceDatabase = new WorkspaceDatabase(
+      workspace.accountId,
+      workspace.id,
+      this,
+    );
     await workspaceDatabase.migrate();
     this.workspaceDatabases.set(key, workspaceDatabase);
 
     const nodes = await workspaceDatabase.getNodes();
     return {
       workspace,
-      nodes
+      nodes,
     };
-  }
+  };
 
   getAccounts = async (): Promise<Account[]> => {
     const accounts = await this.database
@@ -89,16 +100,13 @@ export class GlobalDatabase {
       name: account.name,
       email: account.email,
       avatar: account.avatar,
-      token: account.token
+      token: account.token,
     }));
-  }
+  };
 
   addAccount = async (account: Account) => {
-    await this.database
-      .insertInto('accounts')
-      .values(account)
-      .execute();
-  }
+    await this.database.insertInto('accounts').values(account).execute();
+  };
 
   getWorkspaces = async (): Promise<Workspace[]> => {
     const workspaces = await this.database
@@ -106,7 +114,7 @@ export class GlobalDatabase {
       .selectAll()
       .execute();
 
-    return workspaces.map(workspace => ({
+    return workspaces.map((workspace) => ({
       id: workspace.id,
       name: workspace.name,
       description: workspace.description,
@@ -114,9 +122,9 @@ export class GlobalDatabase {
       versionId: workspace.version_id,
       accountId: workspace.account_id,
       role: workspace.role,
-      userNodeId: workspace.user_node_id
+      userNodeId: workspace.user_node_id,
     }));
-  }
+  };
 
   addWorkspace = async (workspace: Workspace) => {
     await this.database
@@ -129,12 +137,12 @@ export class GlobalDatabase {
         version_id: workspace.versionId,
         account_id: workspace.accountId,
         role: workspace.role,
-        user_node_id: workspace.userNodeId
+        user_node_id: workspace.userNodeId,
       })
       .execute();
 
     await this.initWorkspaceDatabase(workspace);
-  }
+  };
 
   addTransaction = async (transaction: Transaction) => {
     await this.database
@@ -146,12 +154,14 @@ export class GlobalDatabase {
         input: transaction.input,
         node_id: transaction.nodeId,
         created_at: transaction.createdAt.toISOString(),
-        workspace_id: transaction.workspaceId
+        workspace_id: transaction.workspaceId,
       })
       .execute();
-  }
+  };
 
-  getGroupedAccountTransactions = async (count: number): Promise<AccountTransactions[]> => {
+  getGroupedAccountTransactions = async (
+    count: number,
+  ): Promise<AccountTransactions[]> => {
     const transactions = await this.database
       .selectFrom('transactions')
       .selectAll()
@@ -162,7 +172,9 @@ export class GlobalDatabase {
       return [];
     }
 
-    const accountIds = transactions.map(transaction => transaction.account_id);
+    const accountIds = transactions.map(
+      (transaction) => transaction.account_id,
+    );
     const accounts = await this.database
       .selectFrom('accounts')
       .selectAll()
@@ -170,7 +182,7 @@ export class GlobalDatabase {
       .execute();
 
     const transactionsMap = new Map<string, Transaction[]>();
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const input = JSON.parse(transaction.input);
       const transactionObj = {
         id: transaction.id,
@@ -179,7 +191,7 @@ export class GlobalDatabase {
         type: transaction.type,
         nodeId: transaction.node_id,
         input: input,
-        createdAt: new Date(transaction.created_at)
+        createdAt: new Date(transaction.created_at),
       };
 
       if (transactionsMap.has(transaction.account_id)) {
@@ -189,24 +201,24 @@ export class GlobalDatabase {
       }
     });
 
-    return accounts.map(account => ({
+    return accounts.map((account) => ({
       account: {
         id: account.id,
         name: account.name,
         email: account.email,
         avatar: account.avatar,
-        token: account.token
+        token: account.token,
       },
-      transactions: transactionsMap.get(account.id) || []
+      transactions: transactionsMap.get(account.id) || [],
     }));
-  }
+  };
 
   deleteTransactions = async (ids: string[]) => {
     await this.database
       .deleteFrom('transactions')
       .where('id', 'in', ids)
       .execute();
-  }
+  };
 }
 
 export const globalDatabase = new GlobalDatabase();

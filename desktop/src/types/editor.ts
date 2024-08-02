@@ -4,11 +4,9 @@ export type EditorCommandProps = {
   editor: Editor;
   range: Range;
   context: EditorCommandContext | null;
-}
+};
 
-export type EditorCommandContext = {
-
-}
+export type EditorCommandContext = {};
 
 export type EditorCommand = {
   key: string;
@@ -18,4 +16,4 @@ export type EditorCommand = {
   icon: string;
   handler: (props: EditorCommandProps) => void;
   disabled?: boolean;
-}
+};

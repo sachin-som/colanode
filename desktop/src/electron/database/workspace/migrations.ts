@@ -1,4 +1,4 @@
-import {Migration} from "kysely";
+import { Migration } from 'kysely';
 
 const createNodesTable: Migration = {
   up: async (db) => {
@@ -15,13 +15,13 @@ const createNodesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_by', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
-      .execute()
+      .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('nodes').execute()
-  }
-}
+    await db.schema.dropTable('nodes').execute();
+  },
+};
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
-  '202408011756_create_nodes_table': createNodesTable
-}
+  '202408011756_create_nodes_table': createNodesTable,
+};

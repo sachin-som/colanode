@@ -1,7 +1,7 @@
-import {Account} from "@/types/accounts";
-import {Workspace} from "@/types/workspaces";
-import {makeAutoObservable} from "mobx";
-import {WorkspaceStore} from "@/store/workspace";
+import { Account } from '@/types/accounts';
+import { Workspace } from '@/types/workspaces';
+import { makeAutoObservable } from 'mobx';
+import { WorkspaceStore } from '@/store/workspace';
 
 export class AppStore {
   loaded: boolean;
@@ -29,11 +29,13 @@ export class AppStore {
   }
 
   getWorkspace(id: string) {
-    return this.workspaces.find(workspace => workspace.id === id);
+    return this.workspaces.find((workspace) => workspace.id === id);
   }
 
   setWorkspaces(workspaces: Workspace[]) {
-    this.workspaces = workspaces.map(workspace => new WorkspaceStore(workspace));
+    this.workspaces = workspaces.map(
+      (workspace) => new WorkspaceStore(workspace),
+    );
   }
 
   addWorkspace(workspace: Workspace) {

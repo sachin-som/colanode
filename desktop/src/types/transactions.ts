@@ -1,4 +1,4 @@
-import {Account} from "@/types/accounts";
+import { Account } from '@/types/accounts';
 
 export type Transaction = {
   id: string;
@@ -8,7 +8,7 @@ export type Transaction = {
   nodeId: string;
   input: any;
   createdAt: Date;
-}
+};
 
 export type CreateNodeTransactionInput = {
   id: string;
@@ -29,9 +29,9 @@ export type UpdateNodeTransactionInput = {
 
 export type DeleteNodeTransactionInput = {
   id: string;
-}
+};
 
 export type AccountTransactions = {
   account: Account;
   transactions: Transaction[];
-}
+};

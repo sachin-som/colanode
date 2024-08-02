@@ -1,4 +1,4 @@
-import {Migration} from "kysely";
+import { Migration } from 'kysely';
 
 const createAccountsTable: Migration = {
   up: async (db) => {
@@ -9,12 +9,12 @@ const createAccountsTable: Migration = {
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
       .addColumn('token', 'text', (col) => col.notNull())
-      .execute()
+      .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('accounts').execute()
-  }
-}
+    await db.schema.dropTable('accounts').execute();
+  },
+};
 
 const createWorkspacesTable: Migration = {
   up: async (db) => {
@@ -28,12 +28,12 @@ const createWorkspacesTable: Migration = {
       .addColumn('account_id', 'integer', (col) => col.notNull())
       .addColumn('role', 'integer', (col) => col.notNull())
       .addColumn('user_node_id', 'text', (col) => col.notNull())
-      .execute()
+      .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('workspaces').execute()
-  }
-}
+    await db.schema.dropTable('workspaces').execute();
+  },
+};
 
 const createTransactionsTable: Migration = {
   up: async (db) => {
@@ -46,15 +46,15 @@ const createTransactionsTable: Migration = {
       .addColumn('node_id', 'text', (col) => col.notNull())
       .addColumn('input', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
-      .execute()
+      .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('transactions').execute()
-  }
-}
+    await db.schema.dropTable('transactions').execute();
+  },
+};
 
 export const globalDatabaseMigrations: Record<string, Migration> = {
   '202408011709_create_accounts_table': createAccountsTable,
   '202408011712_create_workspaces_table': createWorkspacesTable,
-  '202408011715_create_transactions_table': createTransactionsTable
-}
+  '202408011715_create_transactions_table': createTransactionsTable,
+};

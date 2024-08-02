@@ -1,9 +1,9 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export const cn = (...inputs: ClassValue[]) => {
-  return twMerge(clsx(inputs))
-}
+  return twMerge(clsx(inputs));
+};
 
 export const hashCode = (str: string) => {
   let hash = 0;
@@ -13,7 +13,7 @@ export const hashCode = (str: string) => {
     hash |= 0; // Convert to 32bit integer
   }
   return hash;
-}
+};
 
 export const updateScrollView = (container: HTMLElement, item: HTMLElement) => {
   const containerHeight = container.offsetHeight;
@@ -27,4 +27,4 @@ export const updateScrollView = (container: HTMLElement, item: HTMLElement) => {
   } else if (bottom > containerHeight + container.scrollTop) {
     container.scrollTop += bottom - containerHeight - container.scrollTop + 5;
   }
-}
+};

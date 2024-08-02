@@ -1,12 +1,12 @@
-import {app} from "electron";
-import SQLite from "better-sqlite3";
-import {Kysely, Migration, Migrator, SqliteDialect} from "kysely";
-import {WorkspaceDatabaseSchema} from "@/electron/database/workspace/schema";
-import {workspaceDatabaseMigrations} from "@/electron/database/workspace/migrations";
-import * as fs from "node:fs";
-import {GlobalDatabase} from "@/electron/database/global";
-import {Node} from "@/types/nodes";
-import {NeuronId} from "@/lib/id";
+import { app } from 'electron';
+import SQLite from 'better-sqlite3';
+import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
+import { WorkspaceDatabaseSchema } from '@/electron/database/workspace/schema';
+import { workspaceDatabaseMigrations } from '@/electron/database/workspace/migrations';
+import * as fs from 'node:fs';
+import { GlobalDatabase } from '@/electron/database/global';
+import { Node } from '@/types/nodes';
+import { NeuronId } from '@/lib/id';
 
 export class WorkspaceDatabase {
   accountId: string;
@@ -14,10 +14,14 @@ export class WorkspaceDatabase {
   database: Kysely<WorkspaceDatabaseSchema>;
   globalDatabase: GlobalDatabase;
 
-  constructor(accountId: string, workspaceId: string, globalDatabase: GlobalDatabase) {
+  constructor(
+    accountId: string,
+    workspaceId: string,
+    globalDatabase: GlobalDatabase,
+  ) {
     this.accountId = accountId;
     this.workspaceId = workspaceId;
-    this.globalDatabase = globalDatabase
+    this.globalDatabase = globalDatabase;
 
     const appPath = app.getPath('userData');
     const accountPath = `${appPath}/account_${accountId}`;
@@ -35,12 +39,9 @@ export class WorkspaceDatabase {
   }
 
   getNodes = async (): Promise<Node[]> => {
-    const nodes =  await this.database
-      .selectFrom('nodes')
-      .selectAll()
-      .execute();
+    const nodes = await this.database.selectFrom('nodes').selectAll().execute();
 
-    return nodes.map(node => ({
+    return nodes.map((node) => ({
       id: node.id,
       type: node.type,
       parentId: node.parent_id,
@@ -53,7 +54,7 @@ export class WorkspaceDatabase {
       updatedBy: node.updated_by,
       versionId: node.version_id,
     }));
-  }
+  };
 
   addNode = async (node: Node) => {
     await this.database
@@ -71,23 +72,22 @@ export class WorkspaceDatabase {
       })
       .execute();
 
-    await this.globalDatabase.
-      addTransaction({
-        id: NeuronId.generate(NeuronId.Type.Transaction),
-        nodeId: node.id,
-        type: 'create_node',
-        workspaceId: node.workspaceId,
-        accountId: this.accountId,
-        input: JSON.stringify(node),
-        createdAt: new Date(),
-      });
-  }
+    await this.globalDatabase.addTransaction({
+      id: NeuronId.generate(NeuronId.Type.Transaction),
+      nodeId: node.id,
+      type: 'create_node',
+      workspaceId: node.workspaceId,
+      accountId: this.accountId,
+      input: JSON.stringify(node),
+      createdAt: new Date(),
+    });
+  };
 
   addNodes = async (nodes: Node[]) => {
     await this.database
       .insertInto('nodes')
       .values(
-        nodes.map(node => ({
+        nodes.map((node) => ({
           id: node.id,
           type: node.type,
           parent_id: node.parentId,
@@ -97,7 +97,7 @@ export class WorkspaceDatabase {
           version_id: node.versionId,
           attrs: JSON.stringify(node.attrs),
           content: JSON.stringify(node.content),
-        }))
+        })),
       )
       .execute();
 
@@ -113,7 +113,7 @@ export class WorkspaceDatabase {
         createdAt: new Date(),
       });
     }
-  }
+  };
 
   updateNode = async (node: Node) => {
     await this.database
@@ -139,13 +139,10 @@ export class WorkspaceDatabase {
       input: JSON.stringify(node),
       createdAt: new Date(),
     });
-  }
+  };
 
   deleteNode = async (nodeId: string) => {
-    await this.database
-      .deleteFrom('nodes')
-      .where('id', '=', nodeId)
-      .execute();
+    await this.database.deleteFrom('nodes').where('id', '=', nodeId).execute();
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -156,7 +153,7 @@ export class WorkspaceDatabase {
       input: null,
       createdAt: new Date(),
     });
-  }
+  };
 
   migrate = async () => {
     const migrator = new Migrator({
@@ -164,10 +161,10 @@ export class WorkspaceDatabase {
       provider: {
         getMigrations(): Promise<Record<string, Migration>> {
           return Promise.resolve(workspaceDatabaseMigrations);
-        }
-      }
-    })
+        },
+      },
+    });
 
     await migrator.migrateToLatest();
-  }
+  };
 }

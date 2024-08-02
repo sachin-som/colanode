@@ -1,4 +1,4 @@
-import {Workspace} from "@/types/workspaces";
+import { Workspace } from '@/types/workspaces';
 
 export type LoginOutput = {
   account: Account;

@@ -233,9 +233,12 @@ const parseNodes = (
       };
     })
     .flat();
-}
+};
 
-export const highlightCode = (code: string, language?: string): CodeHighlight | null => {
+export const highlightCode = (
+  code: string,
+  language?: string,
+): CodeHighlight | null => {
   try {
     const result =
       language && lowlightLanguages.includes(language)
@@ -251,4 +254,4 @@ export const highlightCode = (code: string, language?: string): CodeHighlight | 
     console.error('highlightCode', error, code, language);
     return null;
   }
-}
+};

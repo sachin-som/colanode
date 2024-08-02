@@ -27,4 +27,4 @@
  */
 
 import './styles/index.css';
-import './components/root'
+import './components/root';

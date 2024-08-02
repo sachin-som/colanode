@@ -1,7 +1,7 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
-import { globalDatabase } from "@/electron/database/global";
-import {initEventLoop} from "@/electron/event-loop";
+import { globalDatabase } from '@/electron/database/global';
+import { initEventLoop } from '@/electron/event-loop';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -21,7 +21,9 @@ const createWindow = () => {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(
+      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
+    );
   }
 
   // Open the DevTools.
@@ -53,33 +55,54 @@ app.on('activate', () => {
 // inter process handlers
 ipcMain.handle('init', async () => globalDatabase.init());
 ipcMain.handle('get-accounts', async () => globalDatabase.getAccounts());
-ipcMain.handle('add-account', async (_, account) => globalDatabase.addAccount(account));
+ipcMain.handle('add-account', async (_, account) =>
+  globalDatabase.addAccount(account),
+);
 ipcMain.handle('get-workspaces', async () => globalDatabase.getWorkspaces());
-ipcMain.handle('add-workspace', async (_, workspace) => globalDatabase.addWorkspace(workspace));
-ipcMain.handle('add-transaction', async (_, transaction) => globalDatabase.addTransaction(transaction));
+ipcMain.handle('add-workspace', async (_, workspace) =>
+  globalDatabase.addWorkspace(workspace),
+);
+ipcMain.handle('add-transaction', async (_, transaction) =>
+  globalDatabase.addTransaction(transaction),
+);
 
 ipcMain.handle('add-node', async (_, accountId, workspaceId, node) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
   await workspaceDb.addNode(node);
 });
 
 ipcMain.handle('add-nodes', async (_, accountId, workspaceId, nodes) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
   await workspaceDb.addNodes(nodes);
 });
 
 ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
   return workspaceDb.getNodes();
 });
 
 ipcMain.handle('update-node', async (_, accountId, workspaceId, node) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
   await workspaceDb.updateNode(node);
 });
 
 ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
   await workspaceDb.deleteNode(nodeId);
 });
 

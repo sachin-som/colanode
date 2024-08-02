@@ -44,4 +44,4 @@ export const parseApiError = (error: unknown): ApiErrorOutput => {
     code: 'UNKNOWN',
     message: 'An unknown error occurred',
   };
-}
+};

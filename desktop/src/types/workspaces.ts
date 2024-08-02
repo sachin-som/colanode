@@ -2,7 +2,7 @@ export enum WorkspaceRole {
   Owner = 1,
   Admin = 2,
   Collaborator = 3,
-  Viewer = 4
+  Viewer = 4,
 }
 
 export type Workspace = {

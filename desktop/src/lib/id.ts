@@ -1,6 +1,6 @@
-import { monotonicFactory } from 'ulid'
+import { monotonicFactory } from 'ulid';
 
-const ulid = monotonicFactory()
+const ulid = monotonicFactory();
 
 enum IdType {
   Account = 'ac',
@@ -16,7 +16,7 @@ enum IdType {
 
 export class NeuronId {
   public static generate(type: IdType): string {
-    return ulid().toLowerCase() + type
+    return ulid().toLowerCase() + type;
   }
 
   public static is(id: string, type: IdType): boolean {
@@ -52,4 +52,3 @@ export class NeuronId {
 
   public static Type = IdType;
 }
-

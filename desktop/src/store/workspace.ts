@@ -1,6 +1,6 @@
-import {Node} from "@/types/nodes";
-import {makeAutoObservable} from "mobx";
-import {Workspace, WorkspaceRole} from "@/types/workspaces";
+import { Node } from '@/types/nodes';
+import { makeAutoObservable } from 'mobx';
+import { Workspace, WorkspaceRole } from '@/types/workspaces';
 
 export class WorkspaceStore {
   id: string;
@@ -38,10 +38,13 @@ export class WorkspaceStore {
   }
 
   setNodes(nodes: Node[]) {
-    this.nodes = nodes.reduce((acc, node) => {
-      acc[node.id] = node;
-      return acc;
-    }, {} as Record<string, Node>);
+    this.nodes = nodes.reduce(
+      (acc, node) => {
+        acc[node.id] = node;
+        return acc;
+      },
+      {} as Record<string, Node>,
+    );
   }
 
   setNode(node: Node) {

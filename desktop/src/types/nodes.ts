@@ -22,4 +22,4 @@ export type NodeContent = {
 export type NodeContentMarks = {
   type: string;
   attrs: any;
-}
+};

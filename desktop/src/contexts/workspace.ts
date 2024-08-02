@@ -4,7 +4,7 @@ import {Node} from "@/types/nodes";
 
 interface WorkspaceContext extends Workspace {
   addNode: (node: Node) => Promise<void>
-  getNodes: () => Promise<Node[]>
+  getNodes: () => Node[]
   updateNode: (node: Node) => Promise<void>
   deleteNode: (nodeId: string) => Promise<void>
 }

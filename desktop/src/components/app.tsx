@@ -18,7 +18,14 @@ export const App = observer(() => {
       window.globalDb.init()
         .then(({accounts, workspaces}) => {
           store.setAccounts(accounts);
-          store.setWorkspaces(workspaces);
+
+          workspaces.forEach((workspace) => {
+            store.addWorkspace(workspace.workspace);
+
+            const workspaceStore = store.getWorkspace(workspace.workspace.id);
+            workspaceStore.setNodes(workspace.nodes);
+          });
+
           store.setLoaded();
         })
         .catch((error) => {

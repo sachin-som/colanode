@@ -27,6 +27,14 @@ export class WorkspaceStore {
     makeAutoObservable(this);
   }
 
+  getNode(nodeId: string) {
+    return this.nodes[nodeId];
+  }
+
+  getNodes() {
+    return Object.values(this.nodes);
+  }
+
   setNodes(nodes: Node[]) {
     this.nodes = nodes.reduce((acc, node) => {
       acc[node.id] = node;

@@ -21,8 +21,8 @@ export const Workspace = observer(() => {
         await window.workspaceDb.addNode(workspace.accountId, workspace.id, node);
         workspace.setNode(node);
       },
-      getNodes: async () => {
-        return await window.workspaceDb.getNodes(workspace.accountId, workspace.id);
+      getNodes: () => {
+        return workspace.getNodes()
       },
       updateNode: async (node) => {
         workspace.setNode(node);

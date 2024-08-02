@@ -6,7 +6,7 @@ import {Account} from "@/types/accounts";
 import {Workspace} from "@/types/workspaces";
 import {AccountTransactions, Transaction} from "@/types/transactions";
 import {globalDatabaseMigrations} from "@/electron/database/global/migrations";
-import {GlobalDatabaseData} from "@/types/global";
+import {GlobalDatabaseData, WorkspaceDatabaseData} from "@/types/global";
 import {WorkspaceDatabase} from "@/electron/database/workspace";
 
 export class GlobalDatabase {
@@ -29,14 +29,16 @@ export class GlobalDatabase {
 
     const accounts = await this.getAccounts();
     const workspaces = await this.getWorkspaces();
+    const workspaceDatabaseData: WorkspaceDatabaseData[] = [];
 
     for (const workspace of workspaces) {
-      await this.initWorkspaceDatabase(workspace);
+      const data = await this.initWorkspaceDatabase(workspace);
+      workspaceDatabaseData.push(data);
     }
 
     return {
       accounts,
-      workspaces
+      workspaces: workspaceDatabaseData
     };
   }
 
@@ -63,15 +65,17 @@ export class GlobalDatabase {
     return workspaceDatabase;
   }
 
-  initWorkspaceDatabase = async (workspace: Workspace) => {
+  initWorkspaceDatabase = async (workspace: Workspace): Promise<WorkspaceDatabaseData> => {
     const key = `${workspace.accountId}_${workspace.id}`;
-    if (this.workspaceDatabases.has(key)) {
-      return;
-    }
-
     const workspaceDatabase = new WorkspaceDatabase(workspace.accountId, workspace.id, this);
     await workspaceDatabase.migrate();
     this.workspaceDatabases.set(key, workspaceDatabase);
+
+    const nodes = await workspaceDatabase.getNodes();
+    return {
+      workspace,
+      nodes
+    };
   }
 
   getAccounts = async (): Promise<Account[]> => {

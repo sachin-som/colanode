@@ -28,6 +28,10 @@ export class AppStore {
     this.accounts.push(account);
   }
 
+  getWorkspace(id: string) {
+    return this.workspaces.find(workspace => workspace.id === id);
+  }
+
   setWorkspaces(workspaces: Workspace[]) {
     this.workspaces = workspaces.map(workspace => new WorkspaceStore(workspace));
   }

@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('globalDb', {
 
 contextBridge.exposeInMainWorld('workspaceDb', {
   addNode: (accountId: string, workspaceId: string, node: Node) => ipcRenderer.invoke('add-node', accountId, workspaceId, node),
+  addNodes: (accountId: string, workspaceId: string, nodes: Node[]) => ipcRenderer.invoke('add-nodes', accountId, workspaceId, nodes),
   getNodes: (accountId: string, workspaceId: string) => ipcRenderer.invoke('get-nodes', accountId, workspaceId),
   updateNode: (accountId: string, workspaceId: string, node: Node) => ipcRenderer.invoke('update-node', accountId, workspaceId, node),
   deleteNode: (accountId: string, workspaceId: string, nodeId: string) => ipcRenderer.invoke('delete-node', accountId, workspaceId, nodeId),

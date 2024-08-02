@@ -63,6 +63,11 @@ ipcMain.handle('add-node', async (_, accountId, workspaceId, node) => {
   await workspaceDb.addNode(node);
 });
 
+ipcMain.handle('add-nodes', async (_, accountId, workspaceId, nodes) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
+  await workspaceDb.addNodes(nodes);
+});
+
 ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(accountId, workspaceId);
   return workspaceDb.getNodes();

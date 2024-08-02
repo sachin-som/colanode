@@ -17,7 +17,7 @@ import {Spinner} from "@/components/ui/spinner";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Node} from "@/types/nodes";
-import {generateId, IdType} from "@/lib/id";
+import {NeuronId} from "@/lib/id";
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -51,20 +51,57 @@ export const SpaceCreateDialog = ({
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
 
-    const node: Node = {
-      id: generateId(IdType.Space),
+    const spaceId = NeuronId.generate(NeuronId.Type.Space);
+    const pageNode: Node = {
+      id: NeuronId.generate(NeuronId.Type.Page),
+      type: 'page',
+      attrs: {
+        name: 'Home'
+      },
+      workspaceId: workspace.id,
+      parentId: spaceId,
+      createdAt: new Date(),
+      createdBy: workspace.userNodeId,
+      versionId: NeuronId.generate(NeuronId.Type.Version)
+    };
+
+    const channelNode: Node = {
+      id: NeuronId.generate(NeuronId.Type.Channel),
+      type: 'channel',
+      attrs: {
+        name: 'Discussions'
+      },
+      workspaceId: workspace.id,
+      parentId: spaceId,
+      createdAt: new Date(),
+      createdBy: workspace.userNodeId,
+      versionId: NeuronId.generate(NeuronId.Type.Version)
+    };
+
+    const spaceNode: Node = {
+      id: NeuronId.generate(NeuronId.Type.Space),
       type: 'space',
       attrs: {
         name: values.name,
         description: values.description,
       },
+      content: [
+        {
+          type: 'page',
+          id: pageNode.id
+        },
+        {
+          type: 'channel',
+          id: channelNode.id
+        }
+      ],
       workspaceId: workspace.id,
       createdAt: new Date(),
       createdBy: workspace.userNodeId,
-      versionId: generateId(IdType.Version)
-    }
+      versionId: NeuronId.generate(NeuronId.Type.Version)
+    };
 
-    await workspace.addNode(node);
+    await workspace.addNodes([spaceNode, pageNode, channelNode]);
     setIsPending(false);
     onOpenChange(false);
   }

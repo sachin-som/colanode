@@ -13,6 +13,8 @@ export class WorkspaceStore {
   userNodeId: string;
   nodes: Record<string, Node>;
 
+  containerNodeId?: string | null;
+
   constructor(workspace: Workspace) {
     this.id = workspace.id;
     this.name = workspace.name;
@@ -48,5 +50,9 @@ export class WorkspaceStore {
 
   deleteNode(nodeId: string) {
     delete this.nodes[nodeId];
+  }
+
+  setContainerNode(nodeId?: string | null) {
+    this.containerNodeId = nodeId;
   }
 }

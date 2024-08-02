@@ -6,7 +6,7 @@ import {workspaceDatabaseMigrations} from "@/electron/database/workspace/migrati
 import * as fs from "node:fs";
 import {GlobalDatabase} from "@/electron/database/global";
 import {Node} from "@/types/nodes";
-import {generateId, IdType} from "@/lib/id";
+import {NeuronId} from "@/lib/id";
 
 export class WorkspaceDatabase {
   accountId: string;
@@ -73,7 +73,7 @@ export class WorkspaceDatabase {
 
     await this.globalDatabase.
       addTransaction({
-        id: generateId(IdType.Transaction),
+        id: NeuronId.generate(NeuronId.Type.Transaction),
         nodeId: node.id,
         type: 'create_node',
         workspaceId: node.workspaceId,
@@ -81,6 +81,38 @@ export class WorkspaceDatabase {
         input: JSON.stringify(node),
         createdAt: new Date(),
       });
+  }
+
+  addNodes = async (nodes: Node[]) => {
+    await this.database
+      .insertInto('nodes')
+      .values(
+        nodes.map(node => ({
+          id: node.id,
+          type: node.type,
+          parent_id: node.parentId,
+          workspace_id: this.workspaceId,
+          created_at: node.createdAt.toISOString(),
+          created_by: node.createdBy,
+          version_id: node.versionId,
+          attrs: JSON.stringify(node.attrs),
+          content: JSON.stringify(node.content),
+        }))
+      )
+      .execute();
+
+    // TODO: insert as single transaction
+    for (const node of nodes) {
+      await this.globalDatabase.addTransaction({
+        id: NeuronId.generate(NeuronId.Type.Transaction),
+        nodeId: node.id,
+        type: 'create_node',
+        workspaceId: node.workspaceId,
+        accountId: this.accountId,
+        input: JSON.stringify(node),
+        createdAt: new Date(),
+      });
+    }
   }
 
   updateNode = async (node: Node) => {
@@ -99,7 +131,7 @@ export class WorkspaceDatabase {
       .executeTakeFirst();
 
     await this.globalDatabase.addTransaction({
-      id: generateId(IdType.Transaction),
+      id: NeuronId.getType(NeuronId.Type.Transaction),
       nodeId: node.id,
       type: 'update_node',
       workspaceId: node.workspaceId,
@@ -116,7 +148,7 @@ export class WorkspaceDatabase {
       .execute();
 
     await this.globalDatabase.addTransaction({
-      id: generateId(IdType.Transaction),
+      id: NeuronId.generate(NeuronId.Type.Transaction),
       nodeId: nodeId,
       type: 'delete_node',
       workspaceId: this.workspaceId,

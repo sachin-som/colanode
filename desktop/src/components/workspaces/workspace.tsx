@@ -4,6 +4,7 @@ import {WorkspaceCreate} from "@/components/workspaces/workspace-create";
 import {WorkspaceContext} from "@/contexts/workspace";
 import {useStore} from "@/contexts/store";
 import {observer} from "mobx-react-lite";
+import {Container} from "@/components/workspaces/container";
 
 export const Workspace = observer(() => {
   const store = useStore();
@@ -21,6 +22,10 @@ export const Workspace = observer(() => {
         await window.workspaceDb.addNode(workspace.accountId, workspace.id, node);
         workspace.setNode(node);
       },
+      addNodes: async (nodes) => {
+        await window.workspaceDb.addNodes(workspace.accountId, workspace.id, nodes);
+        nodes.forEach(node => workspace.setNode(node));
+      },
       getNodes: () => {
         return workspace.getNodes()
       },
@@ -32,13 +37,16 @@ export const Workspace = observer(() => {
         workspace.deleteNode(nodeId);
         await window.workspaceDb.deleteNode(workspace.accountId, workspace.id, nodeId);
       },
+      setContainerNode: (nodeId) => {
+        workspace.setContainerNode(nodeId);
+      }
     }}>
       <div className="flex h-screen max-h-screen flex-row">
         <div className="w-96">
           <Sidebar />
         </div>
         <main className="h-full w-full min-w-128 flex-grow overflow-hidden bg-white">
-          <p>content goes here.</p>
+          {workspace.containerNodeId && <Container nodeId={workspace.containerNodeId} />}
         </main>
       </div>
     </WorkspaceContext.Provider>

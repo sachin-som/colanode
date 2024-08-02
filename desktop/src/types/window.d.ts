@@ -15,6 +15,7 @@ export interface GlobalDbApi {
 
 export interface WorkspaceDbApi {
   addNode: (accountId: string, workspaceId: string, node: Node) => Promise<void>
+  addNodes: (accountId: string, workspaceId: string, nodes: Node[]) => Promise<void>
   getNodes: (accountId: string, workspaceId: string) => Promise<Node[]>
   updateNode: (accountId: string, workspaceId: string, node: Node) => Promise<void>
   deleteNode: (accountId: string, workspaceId: string, nodeId: string) => Promise<void>

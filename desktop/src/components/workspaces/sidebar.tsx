@@ -27,7 +27,7 @@ export const Sidebar = () => {
   const currentLayout = 'spaces';
 
   return (
-    <div className="grid h-full max-h-screen w-full grid-cols-[4rem_1fr] grid-rows-[auto_1fr_auto]">
+    <div className="grid h-full max-h-screen w-full grid-cols-[4rem_1fr] grid-rows-[auto_1fr_auto] border-r border-gray-200">
       <div className="col-span-2 h-12">
         <SidebarHeader />
       </div>

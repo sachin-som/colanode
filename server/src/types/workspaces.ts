@@ -1,18 +1,18 @@
 export enum WorkspaceStatus {
   Active = 1,
-  Inactive = 2
+  Inactive = 2,
 }
 
 export enum WorkspaceRole {
   Owner = 1,
   Admin = 2,
   Collaborator = 3,
-  Viewer = 4
+  Viewer = 4,
 }
 
 export enum WorkspaceAccountStatus {
   Active = 1,
-  Inactive = 2
+  Inactive = 2,
 }
 
 export type Workspace = {
@@ -37,7 +37,7 @@ export type WorkspaceAccount = {
   createdBy: string;
   updatedAt?: Date | null;
   updatedBy?: string | null;
-  status: WorkspaceAccountStatus,
+  status: WorkspaceAccountStatus;
   versionId: string;
 };
 

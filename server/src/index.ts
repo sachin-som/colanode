@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import {accounts} from "@/routes/accounts";
-import {workspaces} from "@/routes/workspaces";
-import {transactions} from "@/routes/transactions";
-import {authMiddleware} from "@/middlewares/auth";
+import { accounts } from '@/routes/accounts';
+import { workspaces } from '@/routes/workspaces';
+import { transactions } from '@/routes/transactions';
+import { authMiddleware } from '@/middlewares/auth';
 
 const app = express();
 const port = 3000;

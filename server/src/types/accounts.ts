@@ -1,4 +1,4 @@
-import {WorkspaceOutput} from "@/types/workspaces";
+import { WorkspaceOutput } from '@/types/workspaces';
 
 export type GoogleLoginInput = {
   access_token: string;

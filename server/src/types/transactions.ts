@@ -16,9 +16,11 @@ export type CreateNodeTransaction = Transaction & {
   };
 };
 
-export const isCreateNodeTransaction = (transaction: Transaction): transaction is CreateNodeTransaction => {
+export const isCreateNodeTransaction = (
+  transaction: Transaction,
+): transaction is CreateNodeTransaction => {
   return transaction.type === 'create_node';
-}
+};
 
 export type UpdateNodeTransaction = Transaction & {
   type: 'update_node';
@@ -31,9 +33,11 @@ export type UpdateNodeTransaction = Transaction & {
   };
 };
 
-export const isUpdateNodeTransaction = (transaction: Transaction): transaction is UpdateNodeTransaction => {
+export const isUpdateNodeTransaction = (
+  transaction: Transaction,
+): transaction is UpdateNodeTransaction => {
   return transaction.type === 'update_node';
-}
+};
 
 export type DeleteNodeTransaction = Transaction & {
   type: 'delete_node';
@@ -42,6 +46,8 @@ export type DeleteNodeTransaction = Transaction & {
   };
 };
 
-export const isDeleteNodeTransaction = (transaction: Transaction): transaction is DeleteNodeTransaction => {
+export const isDeleteNodeTransaction = (
+  transaction: Transaction,
+): transaction is DeleteNodeTransaction => {
   return transaction.type === 'delete_node';
-}
+};

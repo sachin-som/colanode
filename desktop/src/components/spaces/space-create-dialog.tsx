@@ -119,7 +119,7 @@ export const SpaceCreateDialog = ({
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isPending}>
                 {isPending && <Spinner className="mr-1" />}
                 Create
               </Button>

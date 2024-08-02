@@ -38,11 +38,11 @@ export const SidebarHeader = observer(() => {
         </div>
         <hr className="-mx-1 my-1 h-px bg-muted"/>
         <h2 className="text-sm font-semibold">Workspaces</h2>
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-0.5">
           {workspaces.map((w) => {
             return (
               <li key={w.id}
-                  className="flex flex-row p-2 pl-0 items-center gap-2 hover:cursor-pointer hover:bg-gray-100 rounded-md">
+                  className="flex flex-row p-2 pl-1 items-center gap-2 hover:cursor-pointer hover:bg-gray-100 rounded-md">
                 <Avatar id={w.id} name={w.name} className="h-7 w-7"/>
                 <p>{w.name}</p>
               </li>
@@ -69,6 +69,5 @@ export const SidebarHeader = observer(() => {
         </div>
       </PopoverContent>
     </Popover>
-
   )
 });

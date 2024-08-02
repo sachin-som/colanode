@@ -1,13 +1,24 @@
-import {deleteTransactions, getGroupedAccountTransactions} from "@/electron/global-db";
+import {globalDatabase} from "@/electron/database/global";
+import {getWorkspaceDatabase} from "@/electron/database/workspace";
 
 export const initEventLoop = () => {
   setInterval(async () => {
+    await initWorkspaceDatabases();
     await sendTransactions();
   }, 10000);
 }
 
+const initWorkspaceDatabases = async () => {
+  const workspaces = await globalDatabase.getWorkspaces();
+
+  for (const workspace of workspaces) {
+    const workspaceDatabase = await getWorkspaceDatabase(workspace.accountId, workspace.id);
+    await workspaceDatabase.migrate();
+  }
+}
+
 const sendTransactions = async () => {
-  const groupedAccountTransactions = getGroupedAccountTransactions(10);
+  const groupedAccountTransactions = await globalDatabase.getGroupedAccountTransactions(20);
 
   for (const accountTransactions of groupedAccountTransactions) {
     const transactionIds = accountTransactions.transactions.map(t => t.id);
@@ -23,7 +34,7 @@ const sendTransactions = async () => {
     });
 
     if (response.ok) {
-      deleteTransactions(transactionIds);
+      await globalDatabase.deleteTransactions(transactionIds);
     }
   }
 }

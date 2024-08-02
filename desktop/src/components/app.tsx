@@ -15,17 +15,16 @@ export const App = observer(() => {
 
   React.useEffect(() => {
     if (!store.loaded) {
-      Promise.all([
-        window.globalDb.getAccounts(),
-        window.globalDb.getWorkspaces(),
-      ]).then(([accounts, workspaces]) => {
-        store.setAccounts(accounts);
-        store.setWorkspaces(workspaces);
-        store.setLoaded();
-      }).catch((error) => {
-        // Handle any errors if needed
-        console.error("Error loading data: ", error);
-      });
+      window.globalDb.init()
+        .then(({accounts, workspaces}) => {
+          store.setAccounts(accounts);
+          store.setWorkspaces(workspaces);
+          store.setLoaded();
+        })
+        .catch((error) => {
+          // Handle any errors if needed
+          console.error("Error loading data: ", error);
+        });
     }
   }, [store.loaded]);
 

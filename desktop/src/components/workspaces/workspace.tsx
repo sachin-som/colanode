@@ -15,7 +15,21 @@ export const Workspace = observer(() => {
   const workspace = workspaces[0];
 
   return (
-    <WorkspaceContext.Provider value={workspace}>
+    <WorkspaceContext.Provider value={{
+      ...workspace,
+      addNode: async (node) => {
+        await window.workspaceDb.addNode(workspace.accountId, workspace.id, node);
+      },
+      getNodes: async () => {
+        return await window.workspaceDb.getNodes(workspace.accountId, workspace.id);
+      },
+      updateNode: async (node) => {
+        await window.workspaceDb.updateNode(workspace.accountId, workspace.id, node);
+      },
+      deleteNode: async (nodeId) => {
+        await window.workspaceDb.deleteNode(workspace.accountId, workspace.id, nodeId);
+      },
+    }}>
       <div className="flex h-screen max-h-screen flex-row">
         <div className="w-96">
           <Sidebar />

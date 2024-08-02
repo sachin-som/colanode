@@ -24,5 +24,5 @@ export const createNode = async (accountId: string, node: Node) => {
     workspaceId: node.workspaceId,
     accountId: accountId
   }
-  await window.globalDb.enqueueTransaction(transaction);
+  await window.globalDb.addTransaction(transaction);
 }

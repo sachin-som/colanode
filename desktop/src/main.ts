@@ -1,6 +1,6 @@
-import { app, BrowserWindow } from 'electron';
+import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
-import {defineGlobalDbHandlers, initGlobalDb} from "@/electron/global-db";
+import { globalDatabase } from "@/electron/database/global";
 import {initEventLoop} from "@/electron/event-loop";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -9,8 +9,6 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = () => {
-  initGlobalDb();
-
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     fullscreen: true,
@@ -28,8 +26,6 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-
-  defineGlobalDbHandlers();
 };
 
 // This method will be called when Electron has finished
@@ -54,7 +50,12 @@ app.on('activate', () => {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+// inter process handlers
+ipcMain.handle('init', async () => globalDatabase.init());
+ipcMain.handle('get-accounts', async () => globalDatabase.getAccounts());
+ipcMain.handle('add-account', async (_, account) => globalDatabase.addAccount(account));
+ipcMain.handle('get-workspaces', async () => globalDatabase.getWorkspaces());
+ipcMain.handle('add-workspace', async (_, workspace) => globalDatabase.addWorkspace(workspace));
+ipcMain.handle('add-transaction', async (_, transaction) => globalDatabase.addTransaction(transaction));
 
 initEventLoop();

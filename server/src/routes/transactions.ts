@@ -1,10 +1,6 @@
 import { Request, Response } from 'express';
-import {
-  isCreateNodeTransaction,
-  isDeleteNodeTransaction,
-  isUpdateNodeTransaction,
-  Transaction,
-} from '@/types/transactions';
+import { Transaction } from '@/types/transactions';
+import { Node } from '@/types/nodes';
 import { prisma } from '@/data/db';
 
 const applyTransactions = async (req: Request, res: Response) => {
@@ -12,41 +8,44 @@ const applyTransactions = async (req: Request, res: Response) => {
 
   const appliedTransactionIds: string[] = [];
   for (const transaction of transactions) {
-    if (isCreateNodeTransaction(transaction)) {
-      // create node
+    if (transaction.type === 'create_node') {
+      const node = JSON.parse(transaction.input) as Node;
       await prisma.nodes.create({
         data: {
-          id: transaction.input.id,
-          parentId: transaction.input.parentId,
-          workspaceId: transaction.workspaceId,
-          type: transaction.input.type,
-          attrs: transaction.input.attrs,
-          createdAt: transaction.input.createdAt,
-          createdBy: transaction.input.createdBy,
-          versionId: transaction.id,
+          id: node.id,
+          parentId: node.parentId,
+          workspaceId: node.workspaceId,
+          type: node.type,
+          attrs: node.attrs,
+          createdAt: node.createdAt,
+          createdBy: node.createdBy,
+          versionId: node.versionId,
+          content: JSON.stringify(node.content),
         },
       });
 
       appliedTransactionIds.push(transaction.id);
-    } else if (isUpdateNodeTransaction(transaction)) {
+    } else if (transaction.type === 'update_node') {
+      const node = JSON.parse(transaction.input) as Node;
       await prisma.nodes.update({
         where: {
-          id: transaction.input.id,
+          id: node.id,
         },
         data: {
-          parentId: transaction.input.parentId,
-          attrs: transaction.input.attrs,
-          updatedAt: transaction.input.updatedAt,
-          updatedBy: transaction.input.updatedBy,
+          parentId: node.parentId,
+          attrs: node.attrs,
+          content: JSON.stringify(node.content),
+          updatedAt: node.updatedAt,
+          updatedBy: node.updatedBy,
         },
       });
 
       appliedTransactionIds.push(transaction.id);
-    } else if (isDeleteNodeTransaction(transaction)) {
+    } else if (transaction.type === 'delete_node') {
       // delete node
       await prisma.nodes.delete({
         where: {
-          id: transaction.input.id,
+          id: transaction.nodeId,
         },
       });
 

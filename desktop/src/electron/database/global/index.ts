@@ -183,14 +183,13 @@ export class GlobalDatabase {
 
     const transactionsMap = new Map<string, Transaction[]>();
     transactions.forEach((transaction) => {
-      const input = JSON.parse(transaction.input);
       const transactionObj = {
         id: transaction.id,
         workspaceId: transaction.workspace_id,
         accountId: transaction.account_id,
         type: transaction.type,
         nodeId: transaction.node_id,
-        input: input,
+        input: transaction.input,
         createdAt: new Date(transaction.created_at),
       };
 

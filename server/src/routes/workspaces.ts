@@ -10,7 +10,6 @@ import {
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { generateId, IdType } from '@/lib/id';
 import { prisma } from '@/data/db';
-import { Node } from '@/types/nodes';
 
 const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const input: WorkspaceInput = req.body;
@@ -54,20 +53,6 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   };
 
   const userNodeId = generateId(IdType.User);
-  const userNode: Node = {
-    id: userNodeId,
-    workspaceId: workspace.id,
-    type: 'user',
-    attrs: {
-      id: account.id,
-      name: account.name,
-      avatar: account.avatar,
-    },
-    createdAt: new Date(),
-    createdBy: userNodeId,
-    versionId: generateId(IdType.Version),
-  };
-
   const workspaceAccount: WorkspaceAccount = {
     accountId: req.accountId,
     workspaceId: workspace.id,
@@ -84,7 +69,19 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
       data: workspace,
     }),
     prisma.nodes.create({
-      data: userNode,
+      data: {
+        id: userNodeId,
+        workspaceId: workspace.id,
+        type: 'user',
+        attrs: {
+          id: account.id,
+          name: account.name,
+          avatar: account.avatar,
+        },
+        createdAt: new Date(),
+        createdBy: userNodeId,
+        versionId: generateId(IdType.Version),
+      },
     }),
     prisma.workspaceAccounts.create({
       data: workspaceAccount,

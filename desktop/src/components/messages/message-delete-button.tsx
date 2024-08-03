@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageDeleteButtonProps {
   id: string;
@@ -17,6 +18,7 @@ interface MessageDeleteButtonProps {
 
 export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const workspace = useWorkspace();
 
   return (
     <React.Fragment>
@@ -34,7 +36,13 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="destructive" onClick={() => {}}>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                await workspace.deleteNode(id);
+                setShowDeleteModal(false);
+              }}
+            >
               Delete
             </Button>
           </AlertDialogFooter>

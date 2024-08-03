@@ -150,7 +150,7 @@ export class WorkspaceDatabase {
       type: 'delete_node',
       workspaceId: this.workspaceId,
       accountId: this.accountId,
-      input: null,
+      input: JSON.stringify({ nodeId }),
       createdAt: new Date(),
     });
   };

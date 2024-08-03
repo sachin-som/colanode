@@ -12,6 +12,7 @@ enum IdType {
   Page = 'pg',
   Channel = 'ch',
   Node = 'nd',
+  Message = 'ms',
 }
 
 export class NeuronId {

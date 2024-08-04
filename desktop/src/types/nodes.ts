@@ -1,7 +1,7 @@
 export type Node = {
   id: string;
   workspaceId: string;
-  parentId?: string;
+  parentId?: string | null;
   type: string;
   attrs: any;
   content?: NodeContent[] | null;

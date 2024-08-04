@@ -4,7 +4,7 @@ const createAccountsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('accounts')
-      .addColumn('id', 'text', (col) => col.notNull())
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
@@ -39,7 +39,7 @@ const createTransactionsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('transactions')
-      .addColumn('id', 'text', (col) => col.notNull())
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'text', (col) => col.notNull())
       .addColumn('account_id', 'text', (col) => col.notNull())
       .addColumn('type', 'text', (col) => col.notNull())

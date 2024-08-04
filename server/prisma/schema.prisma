@@ -67,5 +67,8 @@ model nodes {
   updatedBy   String?   @db.VarChar(30) @map("updated_by")
   versionId   String    @db.VarChar(30) @map("version_id")
 
+  parent nodes? @relation("node_parent_child", fields: [parentId], references: [id], onDelete: Cascade)
+  children nodes[] @relation("node_parent_child")
+
   @@map("nodes")
 }

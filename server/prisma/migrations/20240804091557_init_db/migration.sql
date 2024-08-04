@@ -66,3 +66,6 @@ CREATE TABLE "nodes" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "IX_accounts_email" ON "accounts"("email");
+
+-- AddForeignKey
+ALTER TABLE "nodes" ADD CONSTRAINT "nodes_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;

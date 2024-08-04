@@ -4,9 +4,11 @@ const createNodesTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('nodes')
-      .addColumn('id', 'text', (col) => col.notNull())
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'text', (col) => col.notNull())
-      .addColumn('parent_id', 'text')
+      .addColumn('parent_id', 'text', (col) =>
+        col.references('nodes.id').onDelete('cascade'),
+      )
       .addColumn('type', 'text', (col) => col.notNull())
       .addColumn('attrs', 'text')
       .addColumn('content', 'text')

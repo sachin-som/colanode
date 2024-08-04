@@ -10,6 +10,8 @@ import {
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { generateId, IdType } from '@/lib/id';
 import { prisma } from '@/data/db';
+import { Request, Response } from 'express';
+import { Node } from '@/types/nodes';
 
 const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   const input: WorkspaceInput = req.body;
@@ -322,10 +324,68 @@ const getWorkspaces = async (req: NeuronRequest, res: NeuronResponse) => {
   return res.status(200).json(outputs);
 };
 
+const getNodes = async (req: Request, res: Response) => {
+  const workspaceId = req.params.id as string;
+  const from = req.query.from as string;
+  const nodes = await getNodesFromDatabase(workspaceId, from);
+  const outputs: Node[] = nodes.map((node) => {
+    return {
+      id: node.id,
+      parentId: node.parentId,
+      workspaceId: node.workspaceId,
+      type: node.type,
+      attrs: node.attrs,
+      createdAt: node.createdAt,
+      createdBy: node.createdBy,
+      versionId: node.versionId,
+      content: node.content ? JSON.parse(node.content as string) : null,
+      updatedAt: node.updatedAt,
+      updatedBy: node.updatedBy,
+    };
+  });
+
+  res.status(200).json({
+    nodes: outputs,
+  });
+};
+
+const getNodesFromDatabase = async (
+  workspaceId: string,
+  from?: string | null,
+) => {
+  if (from) {
+    const date = new Date(from);
+    return prisma.nodes.findMany({
+      where: {
+        workspaceId,
+        OR: [
+          {
+            createdAt: {
+              gte: date,
+            },
+          },
+          {
+            updatedAt: {
+              gte: date,
+            },
+          },
+        ],
+      },
+    });
+  } else {
+    return prisma.nodes.findMany({
+      where: {
+        workspaceId,
+      },
+    });
+  }
+};
+
 export const workspaces = {
   getWorkspaces,
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
   getWorkspace,
+  getNodes,
 };

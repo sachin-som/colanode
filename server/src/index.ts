@@ -26,6 +26,7 @@ app.post('/v1/workspaces', authMiddleware, workspaces.createWorkspace);
 app.put('/v1/workspaces/:id', authMiddleware, workspaces.updateWorkspace);
 app.delete('/v1/workspaces/:id', authMiddleware, workspaces.deleteWorkspace);
 app.get('/v1/workspaces/:id', authMiddleware, workspaces.getWorkspace);
+app.get('/v1/workspaces/:id/nodes', authMiddleware, workspaces.getNodes);
 
 //transactions
 app.post('/v1/transactions', transactions.applyTransactions);

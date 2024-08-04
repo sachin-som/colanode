@@ -14,4 +14,5 @@ export type Workspace = {
   accountId: string;
   role: WorkspaceRole;
   userNodeId: string;
+  syncedAt?: Date | null;
 };

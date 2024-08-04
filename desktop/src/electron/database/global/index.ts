@@ -4,7 +4,7 @@ import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import { GlobalDatabaseSchema } from '@/electron/database/global/schema';
 import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
-import { AccountTransactions, Transaction } from '@/types/transactions';
+import { Transaction } from '@/types/transactions';
 import { globalDatabaseMigrations } from '@/electron/database/global/migrations';
 import { GlobalDatabaseData, WorkspaceDatabaseData } from '@/types/global';
 import { WorkspaceDatabase } from '@/electron/database/workspace';
@@ -123,6 +123,7 @@ export class GlobalDatabase {
       accountId: workspace.account_id,
       role: workspace.role,
       userNodeId: workspace.user_node_id,
+      syncedAt: workspace.synced_at ? new Date(workspace.synced_at) : null,
     }));
   };
 
@@ -138,6 +139,7 @@ export class GlobalDatabase {
         account_id: workspace.accountId,
         role: workspace.role,
         user_node_id: workspace.userNodeId,
+        synced_at: workspace.syncedAt?.toISOString(),
       })
       .execute();
 
@@ -159,56 +161,21 @@ export class GlobalDatabase {
       .execute();
   };
 
-  getGroupedAccountTransactions = async (
-    count: number,
-  ): Promise<AccountTransactions[]> => {
+  getTransactions = async (count: number): Promise<Transaction[]> => {
     const transactions = await this.database
       .selectFrom('transactions')
       .selectAll()
       .limit(count)
       .execute();
 
-    if (transactions.length === 0) {
-      return [];
-    }
-
-    const accountIds = transactions.map(
-      (transaction) => transaction.account_id,
-    );
-    const accounts = await this.database
-      .selectFrom('accounts')
-      .selectAll()
-      .where('id', 'in', accountIds)
-      .execute();
-
-    const transactionsMap = new Map<string, Transaction[]>();
-    transactions.forEach((transaction) => {
-      const transactionObj = {
-        id: transaction.id,
-        workspaceId: transaction.workspace_id,
-        accountId: transaction.account_id,
-        type: transaction.type,
-        nodeId: transaction.node_id,
-        input: transaction.input,
-        createdAt: new Date(transaction.created_at),
-      };
-
-      if (transactionsMap.has(transaction.account_id)) {
-        transactionsMap.get(transaction.account_id)?.push(transactionObj);
-      } else {
-        transactionsMap.set(transaction.account_id, [transactionObj]);
-      }
-    });
-
-    return accounts.map((account) => ({
-      account: {
-        id: account.id,
-        name: account.name,
-        email: account.email,
-        avatar: account.avatar,
-        token: account.token,
-      },
-      transactions: transactionsMap.get(account.id) || [],
+    return transactions.map((transaction) => ({
+      id: transaction.id,
+      workspaceId: transaction.workspace_id,
+      accountId: transaction.account_id,
+      type: transaction.type,
+      nodeId: transaction.node_id,
+      input: transaction.input,
+      createdAt: new Date(transaction.created_at),
     }));
   };
 
@@ -216,6 +183,14 @@ export class GlobalDatabase {
     await this.database
       .deleteFrom('transactions')
       .where('id', 'in', ids)
+      .execute();
+  };
+
+  updateWorkspaceSyncedAt = async (workspaceId: string, date: Date) => {
+    await this.database
+      .updateTable('workspaces')
+      .set('synced_at', date.toISOString())
+      .where('id', '=', workspaceId)
       .execute();
   };
 }

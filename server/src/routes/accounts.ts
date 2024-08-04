@@ -115,7 +115,13 @@ const registerWithEmail = async (req: Request, res: Response) => {
     },
   });
 
-  return res.json(buildLoginOutput(account.id, account.name, account.email));
+  const output = await buildLoginOutput(
+    account.id,
+    account.name,
+    account.email,
+  );
+
+  return res.status(200).json(output);
 };
 
 const loginWithEmail = async (req: Request, res: Response) => {

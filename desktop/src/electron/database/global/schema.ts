@@ -15,6 +15,7 @@ export interface WorkspacesTableSchema {
   account_id: string;
   role: number;
   user_node_id: string;
+  synced_at: string | null;
 }
 
 export interface TransactionsTableSchema {

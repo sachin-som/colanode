@@ -64,11 +64,15 @@ export class WorkspaceDatabase {
         type: node.type,
         parent_id: node.parentId,
         workspace_id: this.workspaceId,
-        created_at: node.createdAt.toISOString(),
+        created_at: new Date(node.createdAt).toISOString(),
         created_by: node.createdBy,
         version_id: node.versionId,
         attrs: JSON.stringify(node.attrs),
         content: JSON.stringify(node.content),
+        updated_at: node.updatedAt
+          ? new Date(node.updatedAt).toISOString()
+          : null,
+        updated_by: node.updatedBy,
       })
       .execute();
 
@@ -153,6 +157,56 @@ export class WorkspaceDatabase {
       input: JSON.stringify({ nodeId }),
       createdAt: new Date(),
     });
+  };
+
+  syncNodes = async (nodes: Node[]) => {
+    const nodeIds = nodes.map((node) => node.id);
+    const existingNodes = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', 'in', nodeIds)
+      .execute();
+
+    for (const node of nodes) {
+      const existingNode = existingNodes.find((n) => n.id === node.id);
+      if (!existingNode) {
+        await this.database
+          .insertInto('nodes')
+          .values({
+            id: node.id,
+            type: node.type,
+            parent_id: node.parentId,
+            workspace_id: this.workspaceId,
+            created_at: new Date(node.createdAt).toISOString(),
+            created_by: node.createdBy,
+            version_id: node.versionId,
+            attrs: JSON.stringify(node.attrs),
+            content: JSON.stringify(node.content),
+            updated_at: node.updatedAt
+              ? new Date(node.updatedAt).toISOString()
+              : null,
+            updated_by: node.updatedBy,
+          })
+          .execute();
+      } else if (
+        existingNode.version_id != node.versionId &&
+        new Date(existingNode.updated_at) <= node.updatedAt
+      ) {
+        await this.database
+          .updateTable('nodes')
+          .set({
+            type: node.type,
+            parent_id: node.parentId,
+            updated_at: node.updatedAt.toISOString(),
+            updated_by: node.updatedBy,
+            version_id: node.versionId,
+            attrs: JSON.stringify(node.attrs),
+            content: JSON.stringify(node.content),
+          })
+          .where('id', '=', node.id)
+          .executeTakeFirst();
+      }
+    }
   };
 
   migrate = async () => {

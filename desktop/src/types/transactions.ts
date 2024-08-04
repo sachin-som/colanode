@@ -1,5 +1,3 @@
-import { Account } from '@/types/accounts';
-
 export type Transaction = {
   id: string;
   workspaceId: string;
@@ -8,9 +6,4 @@ export type Transaction = {
   nodeId: string;
   input: string;
   createdAt: Date;
-};
-
-export type AccountTransactions = {
-  account: Account;
-  transactions: Transaction[];
 };

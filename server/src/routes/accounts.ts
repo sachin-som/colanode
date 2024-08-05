@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import {
   AccountStatus,
   EmailLoginInput,
@@ -9,7 +9,7 @@ import {
 } from '@/types/accounts';
 import axios from 'axios';
 import { ApiError } from '@/types/api';
-import { generateId, IdType } from '@/lib/id';
+import { NeuronId } from '@/lib/id';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/data/db';
 import bcrypt from 'bcrypt';
@@ -21,73 +21,9 @@ const JwtAudience = process.env.JWT_AUDIENCE ?? '';
 const JwtIssuer = process.env.JWT_ISSUER ?? '';
 const SaltRounds = 10;
 
-const buildLoginOutput = async (
-  id: string,
-  name: string,
-  email: string,
-): Promise<LoginOutput> => {
-  const signOptions: jwt.SignOptions = {
-    issuer: JwtIssuer,
-    audience: JwtAudience,
-    subject: id,
-    expiresIn: '1y',
-  };
+export const accountsRouter = Router();
 
-  const payload = {
-    name: name,
-    email: email,
-  };
-
-  const token = jwt.sign(payload, JwtSecretKey, signOptions);
-
-  const accountWorkspaces = await prisma.workspaceAccounts.findMany({
-    where: {
-      accountId: id,
-    },
-  });
-
-  const workspaceIds = accountWorkspaces.map((wa) => wa.workspaceId);
-  const workspaces = await prisma.workspaces.findMany({
-    where: {
-      id: {
-        in: workspaceIds,
-      },
-    },
-  });
-
-  const workspaceOutputs: WorkspaceOutput[] = [];
-  for (const accountWorkspace of accountWorkspaces) {
-    const workspace = workspaces.find(
-      (w) => w.id === accountWorkspace.workspaceId,
-    );
-    if (!workspace) {
-      continue;
-    }
-
-    workspaceOutputs.push({
-      id: workspace.id,
-      name: workspace.name,
-      role: accountWorkspace.role,
-      userNodeId: accountWorkspace.userNodeId,
-      versionId: accountWorkspace.versionId,
-      accountId: accountWorkspace.accountId,
-      avatar: workspace.avatar,
-      description: workspace.description,
-    });
-  }
-
-  return {
-    account: {
-      token,
-      id,
-      name,
-      email,
-    },
-    workspaces: workspaceOutputs,
-  };
-};
-
-const registerWithEmail = async (req: Request, res: Response) => {
+accountsRouter.post('/register/email', async (req: Request, res: Response) => {
   const input: EmailRegisterInput = req.body;
   let existingAccount = await prisma.accounts.findUnique({
     where: {
@@ -106,7 +42,7 @@ const registerWithEmail = async (req: Request, res: Response) => {
   const password = await bcrypt.hash(input.password, salt);
   const account = await prisma.accounts.create({
     data: {
-      id: generateId(IdType.Account),
+      id: NeuronId.generate(NeuronId.Type.Account),
       name: input.name,
       email: input.email,
       password: password,
@@ -122,9 +58,9 @@ const registerWithEmail = async (req: Request, res: Response) => {
   );
 
   return res.status(200).json(output);
-};
+});
 
-const loginWithEmail = async (req: Request, res: Response) => {
+accountsRouter.post('/login/email', async (req: Request, res: Response) => {
   const input: EmailLoginInput = req.body;
   let account = await prisma.accounts.findUnique({
     where: {
@@ -167,9 +103,9 @@ const loginWithEmail = async (req: Request, res: Response) => {
     account.email,
   );
   return res.status(200).json(output);
-};
+});
 
-const loginWithGoogle = async (req: Request, res: Response) => {
+accountsRouter.post('/login/google', async (req: Request, res: Response) => {
   const input: GoogleLoginInput = req.body;
   const url = `${GoogleUserInfoUrl}?access_token=${input.access_token}`;
   const userInfoResponse = await axios.get(url);
@@ -227,7 +163,7 @@ const loginWithGoogle = async (req: Request, res: Response) => {
 
   const newAccount = await prisma.accounts.create({
     data: {
-      id: generateId(IdType.Account),
+      id: NeuronId.generate(NeuronId.Type.Account),
       name: googleUser.name,
       email: googleUser.email,
       status: AccountStatus.Active,
@@ -241,10 +177,81 @@ const loginWithGoogle = async (req: Request, res: Response) => {
     newAccount.email,
   );
   return res.status(200).json(output);
-};
+});
 
-export const accounts = {
-  loginWithGoogle,
-  loginWithEmail,
-  registerWithEmail,
+const buildLoginOutput = async (
+  id: string,
+  name: string,
+  email: string,
+): Promise<LoginOutput> => {
+  const signOptions: jwt.SignOptions = {
+    issuer: JwtIssuer,
+    audience: JwtAudience,
+    subject: id,
+    expiresIn: '1y',
+  };
+
+  const payload = {
+    name: name,
+    email: email,
+  };
+
+  const token = jwt.sign(payload, JwtSecretKey, signOptions);
+
+  const accountWorkspaces = await prisma.workspaceAccounts.findMany({
+    where: {
+      accountId: id,
+    },
+  });
+
+  const workspaceIds = accountWorkspaces.map((wa) => wa.workspaceId);
+  const workspaces = await prisma.workspaces.findMany({
+    where: {
+      id: {
+        in: workspaceIds,
+      },
+    },
+  });
+
+  const workspaceOutputs: WorkspaceOutput[] = [];
+  for (const accountWorkspace of accountWorkspaces) {
+    const workspace = workspaces.find(
+      (w) => w.id === accountWorkspace.workspaceId,
+    );
+    if (!workspace) {
+      continue;
+    }
+
+    workspaceOutputs.push({
+      id: workspace.id,
+      name: workspace.name,
+      role: accountWorkspace.role,
+      userNodeId: accountWorkspace.userNodeId,
+      versionId: accountWorkspace.versionId,
+      accountId: accountWorkspace.accountId,
+      avatar: workspace.avatar,
+      description: workspace.description,
+    });
+  }
+
+  const accountDevice = await prisma.accountDevices.create({
+    data: {
+      id: NeuronId.generate(NeuronId.Type.Device),
+      account_id: id,
+      type: 1,
+      createdAt: new Date(),
+      version: '0.1.0',
+    },
+  });
+
+  return {
+    account: {
+      token,
+      id,
+      name,
+      email,
+      deviceId: accountDevice.id,
+    },
+    workspaces: workspaceOutputs,
+  };
 };

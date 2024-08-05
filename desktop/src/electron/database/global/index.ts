@@ -101,11 +101,22 @@ export class GlobalDatabase {
       email: account.email,
       avatar: account.avatar,
       token: account.token,
+      deviceId: account.device_id,
     }));
   };
 
   addAccount = async (account: Account) => {
-    await this.database.insertInto('accounts').values(account).execute();
+    await this.database
+      .insertInto('accounts')
+      .values({
+        id: account.id,
+        name: account.name,
+        avatar: account.avatar,
+        email: account.email,
+        token: account.token,
+        device_id: account.deviceId,
+      })
+      .execute();
   };
 
   getWorkspaces = async (): Promise<Workspace[]> => {

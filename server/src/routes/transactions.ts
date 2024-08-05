@@ -1,9 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import { Transaction } from '@/types/transactions';
 import { Node } from '@/types/nodes';
 import { prisma } from '@/data/db';
 
-const applyTransactions = async (req: Request, res: Response) => {
+export const transactionsRouter = Router();
+
+transactionsRouter.post('/', async (req: Request, res: Response) => {
   const transactions: Transaction[] = req.body.transactions;
 
   const appliedTransactionIds: string[] = [];
@@ -58,8 +60,4 @@ const applyTransactions = async (req: Request, res: Response) => {
   res.json({
     appliedTransactionIds,
   });
-};
-
-export const transactions = {
-  applyTransactions,
-};
+});

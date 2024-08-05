@@ -35,6 +35,7 @@ export type AccountOutput = {
   email: string;
   avatar?: string | null;
   token: string;
+  deviceId: string;
 };
 
 export enum AccountStatus {

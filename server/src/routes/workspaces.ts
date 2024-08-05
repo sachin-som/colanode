@@ -8,12 +8,14 @@ import {
   WorkspaceStatus,
 } from '@/types/workspaces';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { generateId, IdType } from '@/lib/id';
+import { NeuronId } from '@/lib/id';
 import { prisma } from '@/data/db';
-import { Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import { Node } from '@/types/nodes';
 
-const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
+export const workspacesRouter = Router();
+
+workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const input: WorkspaceInput = req.body;
 
   if (!req.accountId) {
@@ -44,17 +46,17 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   }
 
   const workspace: Workspace = {
-    id: generateId(IdType.Workspace),
+    id: NeuronId.generate(NeuronId.Type.Workspace),
     name: input.name,
     description: input.description,
     avatar: input.avatar,
     createdAt: new Date(),
     createdBy: req.accountId,
     status: WorkspaceStatus.Active,
-    versionId: generateId(IdType.Version),
+    versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
-  const userNodeId = generateId(IdType.User);
+  const userNodeId = NeuronId.generate(NeuronId.Type.User);
   const workspaceAccount: WorkspaceAccount = {
     accountId: req.accountId,
     workspaceId: workspace.id,
@@ -63,7 +65,7 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
     createdAt: new Date(),
     createdBy: req.accountId,
     status: WorkspaceAccountStatus.Active,
-    versionId: generateId(IdType.Version),
+    versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
   await prisma.$transaction([
@@ -82,7 +84,7 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
         },
         createdAt: new Date(),
         createdBy: userNodeId,
-        versionId: generateId(IdType.Version),
+        versionId: NeuronId.generate(NeuronId.Type.Version),
       },
     }),
     prisma.workspaceAccounts.create({
@@ -102,127 +104,133 @@ const createWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   };
 
   return res.status(200).json(output);
-};
+});
 
-const updateWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
-  const id = req.params.id;
-  const input: WorkspaceInput = req.body;
+workspacesRouter.put(
+  '/:id',
+  async (req: NeuronRequest, res: NeuronResponse) => {
+    const id = req.params.id;
+    const input: WorkspaceInput = req.body;
 
-  if (!req.accountId) {
-    return res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
+    if (!req.accountId) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    const workspace = await prisma.workspaces.findUnique({
+      where: {
+        id: id,
+      },
     });
-  }
 
-  const workspace = await prisma.workspaces.findUnique({
-    where: {
-      id: id,
-    },
-  });
+    if (!workspace) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Workspace not found.',
+      });
+    }
 
-  if (!workspace) {
-    return res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Workspace not found.',
+    const workspaceAccount = await prisma.workspaceAccounts.findFirst({
+      where: {
+        workspaceId: id,
+        accountId: req.accountId,
+      },
     });
-  }
 
-  const workspaceAccount = await prisma.workspaceAccounts.findFirst({
-    where: {
-      workspaceId: id,
+    if (!workspaceAccount) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
+
+    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
+
+    const updatedWorkspace = await prisma.workspaces.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: input.name,
+        updatedAt: new Date(),
+        updatedBy: req.accountId,
+      },
+    });
+
+    const output: WorkspaceOutput = {
+      id: updatedWorkspace.id,
+      name: updatedWorkspace.name,
+      description: updatedWorkspace.description,
+      avatar: updatedWorkspace.avatar,
+      versionId: updatedWorkspace.versionId,
       accountId: req.accountId,
-    },
-  });
+      role: workspaceAccount.role,
+      userNodeId: workspaceAccount.userNodeId,
+    };
 
-  if (!workspaceAccount) {
-    return res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return res.status(200).json(output);
+  },
+);
+
+workspacesRouter.delete(
+  '/:id',
+  async (req: NeuronRequest, res: NeuronResponse) => {
+    const id = req.params.id;
+
+    if (!req.accountId) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    const workspace = await prisma.workspaces.findUnique({
+      where: {
+        id: id,
+      },
     });
-  }
 
-  if (workspaceAccount.role !== WorkspaceRole.Owner) {
-    return res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    if (!workspace) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Workspace not found.',
+      });
+    }
+
+    const workspaceAccount = await prisma.workspaceAccounts.findFirst({
+      where: {
+        workspaceId: id,
+        accountId: req.accountId,
+      },
     });
-  }
 
-  const updatedWorkspace = await prisma.workspaces.update({
-    where: {
-      id: id,
-    },
-    data: {
-      name: input.name,
-      updatedAt: new Date(),
-      updatedBy: req.accountId,
-    },
-  });
+    if (!workspaceAccount) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
 
-  const output: WorkspaceOutput = {
-    id: updatedWorkspace.id,
-    name: updatedWorkspace.name,
-    description: updatedWorkspace.description,
-    avatar: updatedWorkspace.avatar,
-    versionId: updatedWorkspace.versionId,
-    accountId: req.accountId,
-    role: workspaceAccount.role,
-    userNodeId: workspaceAccount.userNodeId,
-  };
-
-  return res.status(200).json(output);
-};
-
-const deleteWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
-  const id = req.params.id;
-
-  if (!req.accountId) {
-    return res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
+    await prisma.workspaces.delete({
+      where: {
+        id: id,
+      },
     });
-  }
 
-  const workspace = await prisma.workspaces.findUnique({
-    where: {
-      id: id,
-    },
-  });
-
-  if (!workspace) {
-    return res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Workspace not found.',
+    return res.status(200).json({
+      id: workspace.id,
     });
-  }
+  },
+);
 
-  const workspaceAccount = await prisma.workspaceAccounts.findFirst({
-    where: {
-      workspaceId: id,
-      accountId: req.accountId,
-    },
-  });
-
-  if (!workspaceAccount) {
-    return res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
-    });
-  }
-
-  await prisma.workspaces.delete({
-    where: {
-      id: id,
-    },
-  });
-
-  return res.status(200).json({
-    id: workspace.id,
-  });
-};
-
-const getWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
+workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
   const id = req.params.id;
 
   if (!req.accountId) {
@@ -271,9 +279,9 @@ const getWorkspace = async (req: NeuronRequest, res: NeuronResponse) => {
   };
 
   return res.status(200).json(output);
-};
+});
 
-const getWorkspaces = async (req: NeuronRequest, res: NeuronResponse) => {
+workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
   if (!req.accountId) {
     return res.status(401).json({
       code: ApiError.Unauthorized,
@@ -322,9 +330,9 @@ const getWorkspaces = async (req: NeuronRequest, res: NeuronResponse) => {
   }
 
   return res.status(200).json(outputs);
-};
+});
 
-const getNodes = async (req: Request, res: Response) => {
+workspacesRouter.get('/:id/nodes', async (req: Request, res: Response) => {
   const workspaceId = req.params.id as string;
   const from = req.query.from as string;
   const nodes = await getNodesFromDatabase(workspaceId, from);
@@ -349,7 +357,7 @@ const getNodes = async (req: Request, res: Response) => {
   res.status(200).json({
     nodes: outputs,
   });
-};
+});
 
 const getNodesFromDatabase = async (
   workspaceId: string,
@@ -381,13 +389,4 @@ const getNodesFromDatabase = async (
       },
     });
   }
-};
-
-export const workspaces = {
-  getWorkspaces,
-  createWorkspace,
-  updateWorkspace,
-  deleteWorkspace,
-  getWorkspace,
-  getNodes,
 };

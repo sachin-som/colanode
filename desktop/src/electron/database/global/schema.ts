@@ -4,6 +4,7 @@ export interface AccountsTableSchema {
   email: string;
   avatar: string | null;
   token: string;
+  device_id: string;
 }
 
 export interface WorkspacesTableSchema {

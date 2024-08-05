@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { accounts } from '@/routes/accounts';
-import { workspaces } from '@/routes/workspaces';
-import { transactions } from '@/routes/transactions';
+import { accountsRouter } from '@/routes/accounts';
+import { workspacesRouter } from '@/routes/workspaces';
+import { transactionsRouter } from '@/routes/transactions';
 import { authMiddleware } from '@/middlewares/auth';
 
 const app = express();
@@ -15,21 +15,9 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Neuron');
 });
 
-//accounts
-app.post('/v1/accounts/login/google', accounts.loginWithGoogle);
-app.post('/v1/accounts/login/email', accounts.loginWithEmail);
-app.post('/v1/accounts/register/email', accounts.registerWithEmail);
-
-//workspaces
-app.get('/v1/workspaces', authMiddleware, workspaces.getWorkspaces);
-app.post('/v1/workspaces', authMiddleware, workspaces.createWorkspace);
-app.put('/v1/workspaces/:id', authMiddleware, workspaces.updateWorkspace);
-app.delete('/v1/workspaces/:id', authMiddleware, workspaces.deleteWorkspace);
-app.get('/v1/workspaces/:id', authMiddleware, workspaces.getWorkspace);
-app.get('/v1/workspaces/:id/nodes', authMiddleware, workspaces.getNodes);
-
-//transactions
-app.post('/v1/transactions', transactions.applyTransactions);
+app.use('/v1/accounts', accountsRouter);
+app.use('/v1/workspaces', authMiddleware, workspacesRouter);
+app.use('/v1/transactions', authMiddleware, transactionsRouter);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

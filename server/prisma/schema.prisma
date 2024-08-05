@@ -74,3 +74,18 @@ model nodes {
 
   @@map("nodes")
 }
+
+model accountDevices {
+  id            String    @id @db.VarChar(30)
+  account_id    String    @db.VarChar(30)
+  type          Int
+  version       String    @db.VarChar(30) @map("version")
+  platform      String?   @db.VarChar(30)
+  cpu           String?   @db.VarChar(30)
+  hostname      String?   @db.VarChar(30)
+  createdAt     DateTime  @db.Timestamptz(6) @map("created_at")
+  lastOnlineAt  DateTime? @db.Timestamptz(6) @map("last_online_at")
+  lastActiveAt  DateTime? @db.Timestamptz(6) @map("last_active_at")
+
+  @@map("account_devices")
+}

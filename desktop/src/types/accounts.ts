@@ -11,4 +11,5 @@ export type Account = {
   email: string;
   avatar?: string | null;
   token: string;
+  deviceId: string;
 };

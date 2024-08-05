@@ -16,11 +16,13 @@ const applyTransactions = async (req: Request, res: Response) => {
           parentId: node.parentId,
           workspaceId: node.workspaceId,
           type: node.type,
+          index: node.index,
           attrs: node.attrs,
           createdAt: node.createdAt,
           createdBy: node.createdBy,
           versionId: node.versionId,
           content: JSON.stringify(node.content),
+          state: node.state,
         },
       });
 

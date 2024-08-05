@@ -3,44 +3,28 @@ export type Node = {
   workspaceId: string;
   parentId?: string | null;
   type: string;
+  index?: string | null;
   attrs: any;
-  content?: NodeContent[] | null;
+  content?: NodeBlock[] | null;
   createdAt: Date;
   createdBy: string;
   updatedAt?: Date | null;
   updatedBy?: string | null;
   versionId: string;
+  state?: string | null;
 };
 
-export type NodeContent = {
+export type NodeBlock = {
   type: string;
-  id?: string | null;
   text?: string | null;
-  marks?: NodeContentMark[];
+  marks?: NodeBlockMark[];
 };
 
-export type NodeContentMark = {
+export type NodeBlockMark = {
   type: string;
   attrs: any;
 };
 
-export type NodeTree = {
-  id: string;
-  workspaceId: string;
-  parentId?: string;
-  type: string;
-  attrs: any;
-  content: NodeContentTree[] | null;
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date | null;
-  updatedBy?: string | null;
-  versionId: string;
-};
-
-export type NodeContentTree = {
-  type: string;
-  text?: string | null;
-  marks?: NodeContentMark[];
-  node?: NodeTree;
+export type NodeWithChildren = Node & {
+  children: NodeWithChildren[];
 };

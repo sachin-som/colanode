@@ -11,11 +11,11 @@ import { ParagraphRenderer } from '@/editor/renderers/paragraph';
 import { TaskItemRenderer } from '@/editor/renderers/task-item';
 import { TaskListRenderer } from '@/editor/renderers/task-list';
 import { TextRenderer } from '@/editor/renderers/text';
-import { NodeTree } from '@/types/nodes';
+import { NodeWithChildren } from '@/types/nodes';
 import { match } from 'ts-pattern';
 
 interface NodeRendererProps {
-  node: NodeTree;
+  node: NodeWithChildren;
   keyPrefix: string | null;
 }
 

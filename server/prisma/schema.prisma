@@ -59,6 +59,7 @@ model nodes {
   workspaceId String    @db.VarChar(30) @map("workspace_id")
   parentId    String?   @db.VarChar(30) @map("parent_id")
   type        String    @db.VarChar(30)
+  index       String?    @db.VarChar(30)
   attrs       Json?
   content     Json?
   createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
@@ -66,6 +67,7 @@ model nodes {
   updatedAt   DateTime? @db.Timestamptz(6) @map("updated_at")
   updatedBy   String?   @db.VarChar(30) @map("updated_by")
   versionId   String    @db.VarChar(30) @map("version_id")
+  state       String?    @db.Text()
 
   parent nodes? @relation("node_parent_child", fields: [parentId], references: [id], onDelete: Cascade)
   children nodes[] @relation("node_parent_child")

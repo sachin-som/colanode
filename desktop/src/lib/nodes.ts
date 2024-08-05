@@ -1,60 +1,30 @@
-import { Node, NodeContent, NodeTree, NodeContentTree } from '@/types/nodes';
+import { Node, NodeWithChildren, NodeBlock } from '@/types/nodes';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
+import { generateKeyBetween } from 'fractional-indexing-jittered';
 
-export const buildNodeTree = (node: Node, allNodes: Node[]): NodeTree => {
-  const content: NodeContentTree[] = [];
-  if (node.content) {
-    content.push(...buildNodeContentTreeRecursive(node.content, allNodes));
-  }
+export const buildNodeWithChildren = (
+  node: Node,
+  allNodes: Node[],
+): NodeWithChildren => {
+  const children: NodeWithChildren[] = allNodes
+    .filter((n) => n.parentId === node.id)
+    .map((n) => buildNodeWithChildren(n, allNodes));
 
   return {
-    id: node.id,
-    workspaceId: node.workspaceId,
-    parentId: node.parentId,
-    type: node.type,
-    content: content,
-    attrs: node.attrs,
-    createdAt: node.createdAt,
-    updatedAt: node.updatedAt,
-    createdBy: node.createdBy,
-    updatedBy: node.updatedBy,
-    versionId: node.versionId,
+    ...node,
+    children: children,
   };
-};
-
-const buildNodeContentTreeRecursive = (
-  content: NodeContent[],
-  allNodes: Node[],
-): NodeContentTree[] => {
-  const childrenContent: NodeContentTree[] = [];
-  for (const child of content) {
-    if (child.id) {
-      const childNode = allNodes.find((n) => n.id === child.id);
-      if (childNode) {
-        childrenContent.push({
-          type: child.type,
-          node: buildNodeTree(childNode, allNodes),
-        });
-      }
-    } else {
-      childrenContent.push({
-        type: child.type,
-        text: child.text,
-        marks: child.marks,
-      });
-    }
-  }
-
-  return childrenContent;
 };
 
 export const buildChildNodes = (parent: Node, content: JSONContent): Node[] => {
   const nodes: Node[] = [];
 
   if (content.content && content.content.length > 0) {
+    let index: string | null = null;
     for (const child of content.content) {
-      buildChildNode(parent, child, nodes);
+      index = generateKeyBetween(index, null);
+      buildChildNode(parent, child, nodes, index);
     }
   }
 
@@ -65,6 +35,7 @@ const buildChildNode = (
   parent: Node,
   content: JSONContent,
   nodes: Node[],
+  index?: string | null,
 ): void => {
   let id = content.attrs.id;
   if (id) {
@@ -78,6 +49,7 @@ const buildChildNode = (
     workspaceId: parent.workspaceId,
     parentId: parent.id,
     type: content.type,
+    index: index,
     content: [],
     attrs: content.attrs,
     createdAt: new Date(),
@@ -85,21 +57,13 @@ const buildChildNode = (
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
-  if (!parent.content) {
-    parent.content = [];
-  }
-
-  parent.content.push({
-    type: content.type,
-    id: node.id,
-  });
-
   nodes.push(node);
 
   if (content.content && content.content.length > 0) {
+    let index = null;
     for (const child of content.content) {
-      if (!child.content) {
-        const nodeContent: NodeContent = {
+      if (isNodeBlock(child)) {
+        const nodeBlock: NodeBlock = {
           type: child.type,
           text: child.text,
           marks: [],
@@ -107,17 +71,22 @@ const buildChildNode = (
 
         if (child.marks) {
           child.marks.forEach((mark) => {
-            nodeContent.marks.push({
+            nodeBlock.marks.push({
               type: mark.type,
               attrs: mark.attrs,
             });
           });
         }
 
-        node.content.push(nodeContent);
+        node.content.push(nodeBlock);
       } else {
-        buildChildNode(node, child, nodes);
+        index = generateKeyBetween(index, null);
+        buildChildNode(node, child, nodes, index);
       }
     }
   }
+};
+
+const isNodeBlock = (content: JSONContent): boolean => {
+  return content.type === 'text';
 };

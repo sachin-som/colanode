@@ -44,6 +44,7 @@ export class WorkspaceDatabase {
     return nodes.map((node) => ({
       id: node.id,
       type: node.type,
+      index: node.index,
       parentId: node.parent_id,
       workspaceId: node.workspace_id,
       attrs: JSON.parse(node.attrs),
@@ -62,6 +63,7 @@ export class WorkspaceDatabase {
       .values({
         id: node.id,
         type: node.type,
+        index: node.index,
         parent_id: node.parentId,
         workspace_id: this.workspaceId,
         created_at: new Date(node.createdAt).toISOString(),
@@ -94,6 +96,7 @@ export class WorkspaceDatabase {
         nodes.map((node) => ({
           id: node.id,
           type: node.type,
+          index: node.index,
           parent_id: node.parentId,
           workspace_id: this.workspaceId,
           created_at: node.createdAt.toISOString(),
@@ -124,6 +127,7 @@ export class WorkspaceDatabase {
       .updateTable('nodes')
       .set({
         type: node.type,
+        index: node.index,
         parent_id: node.parentId,
         updated_at: node.updatedAt.toISOString(),
         updated_by: node.updatedBy,
@@ -175,6 +179,7 @@ export class WorkspaceDatabase {
           .values({
             id: node.id,
             type: node.type,
+            index: node.index,
             parent_id: node.parentId,
             workspace_id: this.workspaceId,
             created_at: new Date(node.createdAt).toISOString(),
@@ -196,6 +201,7 @@ export class WorkspaceDatabase {
           .updateTable('nodes')
           .set({
             type: node.type,
+            index: node.index,
             parent_id: node.parentId,
             updated_at: node.updatedAt.toISOString(),
             updated_by: node.updatedBy,

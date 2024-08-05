@@ -53,6 +53,7 @@ CREATE TABLE "nodes" (
     "workspace_id" VARCHAR(30) NOT NULL,
     "parent_id" VARCHAR(30),
     "type" VARCHAR(30) NOT NULL,
+    "index" VARCHAR(30),
     "attrs" JSONB,
     "content" JSONB,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
@@ -60,6 +61,7 @@ CREATE TABLE "nodes" (
     "updated_at" TIMESTAMPTZ(6),
     "updated_by" VARCHAR(30),
     "version_id" VARCHAR(30) NOT NULL,
+    "state" TEXT,
 
     CONSTRAINT "nodes_pkey" PRIMARY KEY ("id")
 );

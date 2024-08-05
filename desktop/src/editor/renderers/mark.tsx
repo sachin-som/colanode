@@ -1,9 +1,9 @@
 import React from 'react';
 import { defaultClasses } from '@/editor/classes';
-import { NodeContentTree } from '@/types/nodes';
+import { NodeBlock } from '@/types/nodes';
 
 interface MarkRendererProps {
-  node: NodeContentTree;
+  node: NodeBlock;
   children: any | any[];
 }
 

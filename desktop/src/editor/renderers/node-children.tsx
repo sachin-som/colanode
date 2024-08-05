@@ -1,10 +1,11 @@
 import React from 'react';
 
-import { NodeTree } from '@/types/nodes';
-import { NodeContentRenderer } from '@/editor/renderers/node-content';
+import { NodeWithChildren } from '@/types/nodes';
+import { NodeBlockRenderer } from '@/editor/renderers/node-block';
+import { NodeRenderer } from '@/editor/renderers/node';
 
 interface NodeChildrenRendererProps {
-  node: NodeTree;
+  node: NodeWithChildren;
   keyPrefix: string | null;
 }
 
@@ -12,18 +13,20 @@ export const NodeChildrenRenderer = ({
   node,
   keyPrefix,
 }: NodeChildrenRendererProps) => {
-  if (!node.content) {
-    return null;
+  if (node.children && node.children.length > 0) {
+    return (
+      <React.Fragment>
+        {node.children.map((nodeChild, index) => (
+          <NodeRenderer node={nodeChild} keyPrefix={keyPrefix} key={index} />
+        ))}
+      </React.Fragment>
+    );
   }
 
   return (
     <React.Fragment>
-      {node.content.map((innerNode, index) => (
-        <NodeContentRenderer
-          node={innerNode}
-          keyPrefix={keyPrefix}
-          key={index}
-        />
+      {node.content.map((nodeBlock, index) => (
+        <NodeBlockRenderer node={nodeBlock} keyPrefix={keyPrefix} key={index} />
       ))}
     </React.Fragment>
   );

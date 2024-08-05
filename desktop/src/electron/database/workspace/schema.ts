@@ -3,6 +3,7 @@ export interface NodesTableSchema {
   workspace_id: string;
   parent_id: string | null;
   type: string;
+  index: string | null;
   attrs: string | null;
   content: string | null;
   created_at: string;
@@ -10,6 +11,7 @@ export interface NodesTableSchema {
   created_by: string;
   updated_by: string | null;
   version_id: string;
+  state: string | null;
 }
 
 export interface WorkspaceDatabaseSchema {

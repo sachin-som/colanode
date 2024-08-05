@@ -2,11 +2,11 @@ import React from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { defaultClasses } from '@/editor/classes';
-import { NodeTree } from '@/types/nodes';
+import { NodeWithChildren } from '@/types/nodes';
 import { highlightCode, languages } from '@/lib/lowlight';
 
 interface CodeBlockRendererProps {
-  node: NodeTree;
+  node: NodeWithChildren;
   keyPrefix: string | null;
 }
 

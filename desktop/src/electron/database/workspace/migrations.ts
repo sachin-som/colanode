@@ -10,6 +10,7 @@ const createNodesTable: Migration = {
         col.references('nodes.id').onDelete('cascade'),
       )
       .addColumn('type', 'text', (col) => col.notNull())
+      .addColumn('index', 'text')
       .addColumn('attrs', 'text')
       .addColumn('content', 'text')
       .addColumn('created_at', 'text', (col) => col.notNull())
@@ -17,6 +18,7 @@ const createNodesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_by', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
+      .addColumn('state', 'text')
       .execute();
   },
   down: async (db) => {

@@ -25,6 +25,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Node } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
+import { generateKeyBetween } from 'fractional-indexing-jittered';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -58,15 +59,28 @@ export const SpaceCreateDialog = ({
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
 
-    const spaceId = NeuronId.generate(NeuronId.Type.Space);
+    const spaceNode: Node = {
+      id: NeuronId.generate(NeuronId.Type.Space),
+      type: 'space',
+      parentId: null,
+      attrs: {
+        name: values.name,
+        description: values.description,
+      },
+      workspaceId: workspace.id,
+      createdAt: new Date(),
+      createdBy: workspace.userNodeId,
+      versionId: NeuronId.generate(NeuronId.Type.Version),
+    };
     const pageNode: Node = {
       id: NeuronId.generate(NeuronId.Type.Page),
       type: 'page',
       attrs: {
         name: 'Home',
       },
+      index: generateKeyBetween(null, null),
       workspaceId: workspace.id,
-      parentId: spaceId,
+      parentId: spaceNode.id,
       createdAt: new Date(),
       createdBy: workspace.userNodeId,
       versionId: NeuronId.generate(NeuronId.Type.Version),
@@ -78,32 +92,9 @@ export const SpaceCreateDialog = ({
       attrs: {
         name: 'Discussions',
       },
+      index: generateKeyBetween(pageNode.index, null),
       workspaceId: workspace.id,
-      parentId: spaceId,
-      createdAt: new Date(),
-      createdBy: workspace.userNodeId,
-      versionId: NeuronId.generate(NeuronId.Type.Version),
-    };
-
-    const spaceNode: Node = {
-      id: spaceId,
-      type: 'space',
-      parentId: null,
-      attrs: {
-        name: values.name,
-        description: values.description,
-      },
-      content: [
-        {
-          type: 'page',
-          id: pageNode.id,
-        },
-        {
-          type: 'channel',
-          id: channelNode.id,
-        },
-      ],
-      workspaceId: workspace.id,
+      parentId: spaceNode.id,
       createdAt: new Date(),
       createdBy: workspace.userNodeId,
       versionId: NeuronId.generate(NeuronId.Type.Version),

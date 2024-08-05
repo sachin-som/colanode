@@ -334,6 +334,7 @@ const getNodes = async (req: Request, res: Response) => {
       parentId: node.parentId,
       workspaceId: node.workspaceId,
       type: node.type,
+      index: node.index,
       attrs: node.attrs,
       createdAt: node.createdAt,
       createdBy: node.createdBy,
@@ -341,6 +342,7 @@ const getNodes = async (req: Request, res: Response) => {
       content: node.content ? JSON.parse(node.content as string) : null,
       updatedAt: node.updatedAt,
       updatedBy: node.updatedBy,
+      state: node.state,
     };
   });
 

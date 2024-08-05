@@ -15,7 +15,7 @@ import { MessageDeleteButton } from '@/components/messages/message-delete-button
 import { MessageReference } from '@/components/messages/message-reference';
 import { MessageReactions } from '@/components/messages/message-reactions';
 import { useWorkspace } from '@/contexts/workspace';
-import { buildNodeTree } from '@/lib/nodes';
+import { buildNodeWithChildren } from '@/lib/nodes';
 import { NodeRenderer } from '@/editor/renderers/node';
 
 interface MessageProps {
@@ -44,7 +44,7 @@ export const Message = observer(
     const canEdit = true;
     const canDelete = true;
     const canReplyInThread = true;
-    const nodeTree = buildNodeTree(message, nodes);
+    const nodeWithChildren = buildNodeWithChildren(message, nodes);
 
     return (
       <div
@@ -122,7 +122,7 @@ export const Message = observer(
             </ul>
             {/*{data.messageReference && <MessageReference />}*/}
             <div className="text-foreground">
-              <NodeRenderer node={nodeTree} keyPrefix={message.id} />
+              <NodeRenderer node={nodeWithChildren} keyPrefix={message.id} />
             </div>
             {/*<MessageReactions*/}
             {/*  message={message}*/}

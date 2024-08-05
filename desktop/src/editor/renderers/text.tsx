@@ -1,6 +1,6 @@
 import React from 'react';
-import { NodeContentTree } from '@/types/nodes';
+import { NodeBlock } from '@/types/nodes';
 
-export const TextRenderer = ({ node }: { node: NodeContentTree }) => {
+export const TextRenderer = ({ node }: { node: NodeBlock }) => {
   return <React.Fragment>{node.text ?? ''}</React.Fragment>;
 };

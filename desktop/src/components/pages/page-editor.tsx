@@ -1,8 +1,8 @@
 import React from 'react';
 import type { JSONContent } from '@tiptap/core';
-import '@/styles/editor.css'
+import '@/styles/editor.css';
 import { useEditor, EditorContent } from '@tiptap/react';
-import {Node} from '@/types/nodes'
+import { Node } from '@/types/nodes';
 import {
   ParagraphCommand,
   BlockquoteCommand,
@@ -47,15 +47,13 @@ import {
 } from '@/editor/extensions';
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { EditorCommandContext } from '@/types/editor';
-import {observer} from "mobx-react-lite";
+import { observer } from 'mobx-react-lite';
 
 interface PageEditorProps {
   node: Node;
 }
 
 export const PageEditor = observer(({ node }: PageEditorProps) => {
-
   const editor = useEditor(
     {
       extensions: [
@@ -92,7 +90,7 @@ export const PageEditor = observer(({ node }: PageEditorProps) => {
             CodeBlockCommand,
             OrderedListCommand,
             DividerCommand,
-            TodoCommand
+            TodoCommand,
           ],
           context: {},
         }),
@@ -112,10 +110,10 @@ export const PageEditor = observer(({ node }: PageEditorProps) => {
         },
       },
       shouldRerenderOnTransaction: false,
-      onUpdate: (e) => {
-        console.log(e.editor.getJSON());
+      onUpdate: ({ editor }) => {
+        console.log(editor.getJSON());
       },
-      autofocus: 'start'
+      autofocus: 'start',
     },
     [node.id],
   );

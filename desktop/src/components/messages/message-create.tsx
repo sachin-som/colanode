@@ -6,7 +6,7 @@ import { JSONContent } from '@tiptap/core';
 import { Node } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
 import { NodeTypes } from '@/lib/constants';
-import { buildChildNodes } from '@/lib/nodes';
+import { buildNodes } from '@/editor/utils';
 
 interface MessageCreateProps {
   nodeId: string;
@@ -29,7 +29,7 @@ export const MessageCreate = observer(({ nodeId }: MessageCreateProps) => {
       versionId: NeuronId.generate(NeuronId.Type.Version),
     };
 
-    const childNodes = buildChildNodes(message, content);
+    const childNodes = buildNodes(workspace, message, content.content, []);
 
     const newNodes = [message, ...childNodes];
     await workspace.addNodes(newNodes);

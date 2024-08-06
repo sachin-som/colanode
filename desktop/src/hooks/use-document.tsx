@@ -31,16 +31,16 @@ export const useDocument = (node: Node): useNodeResult => {
           childNodes,
         );
 
-        for (const newNode of newNodes) {
-          const existingNode = childNodes.find((n) => n.id === newNode.id);
-          if (existingNode) {
-            newNode.updatedBy = workspace.userNodeId;
-            newNode.updatedAt = new Date();
-            await workspace.updateNode(newNode);
-          } else {
-            await workspace.addNode(newNode);
-          }
-        }
+        // for (const newNode of newNodes) {
+        //   const existingNode = childNodes.find((n) => n.id === newNode.id);
+        //   if (existingNode) {
+        //     newNode.updatedBy = workspace.userNodeId;
+        //     newNode.updatedAt = new Date();
+        //     await workspace.updateNode(newNode);
+        //   } else {
+        //     await workspace.addNode(newNode);
+        //   }
+        // }
 
         const nodesToDelete = childNodes.filter(
           (n) => n.id != node.id && !newNodes.find((nn) => nn.id === n.id),

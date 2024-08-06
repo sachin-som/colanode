@@ -1,7 +1,7 @@
 import { Workspace } from '@/types/workspaces';
 import { Transaction } from '@/types/transactions';
 import { Account } from '@/types/accounts';
-import { Node } from '@/types/nodes';
+import { CreateNodeInput, Node } from '@/types/nodes';
 import { GlobalDatabaseData } from '@/types/global';
 
 export interface GlobalDbApi {
@@ -14,15 +14,15 @@ export interface GlobalDbApi {
 }
 
 export interface WorkspaceDbApi {
-  addNode: (
+  createNode: (
     accountId: string,
     workspaceId: string,
-    node: Node,
+    input: CreateNodeInput,
   ) => Promise<void>;
-  addNodes: (
+  createNodes: (
     accountId: string,
     workspaceId: string,
-    nodes: Node[],
+    inputs: CreateNodeInput[],
   ) => Promise<void>;
   getNodes: (accountId: string, workspaceId: string) => Promise<Node[]>;
   updateNode: (
@@ -35,6 +35,14 @@ export interface WorkspaceDbApi {
     workspaceId: string,
     nodeId: string,
   ) => Promise<void>;
+
+  getConversationNodes: (
+    accountId: string,
+    workspaceId: string,
+    conversationId: string,
+    count: number,
+    after?: string | null,
+  ) => Promise<Node[]>;
 }
 
 declare global {

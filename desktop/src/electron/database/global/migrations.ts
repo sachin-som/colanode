@@ -44,8 +44,8 @@ const createTransactionsTable: Migration = {
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'text', (col) => col.notNull())
       .addColumn('account_id', 'text', (col) => col.notNull())
+      .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('type', 'text', (col) => col.notNull())
-      .addColumn('node_id', 'text', (col) => col.notNull())
       .addColumn('input', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .execute();

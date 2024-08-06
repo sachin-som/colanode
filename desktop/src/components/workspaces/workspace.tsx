@@ -19,21 +19,19 @@ export const Workspace = observer(() => {
     <WorkspaceContext.Provider
       value={{
         ...workspace,
-        addNode: async (node) => {
-          await window.workspaceDb.addNode(
+        createNode: async (input) => {
+          await window.workspaceDb.createNode(
             workspace.accountId,
             workspace.id,
-            node,
+            input,
           );
-          workspace.setNode(node);
         },
-        addNodes: async (nodes) => {
-          await window.workspaceDb.addNodes(
+        createNodes: async (inputs) => {
+          await window.workspaceDb.createNodes(
             workspace.accountId,
             workspace.id,
-            nodes,
+            inputs,
           );
-          nodes.forEach((node) => workspace.setNode(node));
         },
         getNodes: () => {
           return workspace.getNodes();
@@ -56,6 +54,15 @@ export const Workspace = observer(() => {
         },
         setContainerNode: (nodeId) => {
           workspace.setContainerNode(nodeId);
+        },
+        getConversationNodes: async (conversationId, count, after) => {
+          return await window.workspaceDb.getConversationNodes(
+            workspace.accountId,
+            workspace.id,
+            conversationId,
+            count,
+            after,
+          );
         },
       }}
     >

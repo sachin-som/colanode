@@ -23,6 +23,7 @@ export interface TransactionsTableSchema {
   id: string;
   workspace_id: string;
   account_id: string;
+  user_id: string;
   type: string;
   node_id: string;
   input: string;

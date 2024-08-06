@@ -21,13 +21,11 @@ import { NodeRenderer } from '@/editor/renderers/node';
 interface MessageProps {
   message: Node;
   previousMessage?: Node;
+  nodes: Node[];
 }
 
 export const Message = observer(
-  ({ message, previousMessage }: MessageProps) => {
-    const workspace = useWorkspace();
-    const nodes = workspace.getNodes();
-
+  ({ message, previousMessage, nodes }: MessageProps) => {
     const author = nodes.find((node) => node.id === message.createdBy) ?? {
       attrs: {
         id: message.createdBy,
@@ -36,6 +34,17 @@ export const Message = observer(
     };
 
     const shouldDisplayUserInfo = () => {
+      if (!previousMessage) {
+        return true;
+      }
+
+      const previousMessageDate = new Date(previousMessage.createdAt);
+      const currentMessageDate = new Date(message.createdAt);
+
+      if (previousMessageDate.getDate() !== currentMessageDate.getDate()) {
+        return true;
+      }
+
       return (
         !previousMessage || previousMessage.createdBy !== message.createdBy
       );
@@ -104,7 +113,11 @@ export const Message = observer(
                 </li>
               )}
               <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-                <MessageReactionPicker onEmojiSelect={() => {}} />
+                <MessageReactionPicker
+                  onEmojiSelect={(emoji) => {
+                    console.log(emoji);
+                  }}
+                />
               </li>
               <li
                 className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200"

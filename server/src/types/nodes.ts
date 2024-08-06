@@ -24,3 +24,7 @@ export type NodeBlockMark = {
   type: string;
   attrs: any;
 };
+
+export type DeleteNodeTransactionInput = {
+  id: string;
+};

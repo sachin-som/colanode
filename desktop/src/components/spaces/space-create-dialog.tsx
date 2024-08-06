@@ -23,9 +23,10 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Node } from '@/types/nodes';
+import { CreateNodeInput, Node } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
+import { NodeTypes } from '@/lib/constants';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -59,48 +60,37 @@ export const SpaceCreateDialog = ({
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsPending(true);
 
-    const spaceNode: Node = {
+    const spaceInput: CreateNodeInput = {
       id: NeuronId.generate(NeuronId.Type.Space),
-      type: 'space',
+      type: NodeTypes.Space,
       parentId: null,
       attrs: {
         name: values.name,
         description: values.description,
       },
-      workspaceId: workspace.id,
-      createdAt: new Date(),
-      createdBy: workspace.userNodeId,
-      versionId: NeuronId.generate(NeuronId.Type.Version),
     };
-    const pageNode: Node = {
+
+    const pageInput: CreateNodeInput = {
       id: NeuronId.generate(NeuronId.Type.Page),
-      type: 'page',
+      type: NodeTypes.Page,
       attrs: {
         name: 'Home',
       },
       index: generateKeyBetween(null, null),
-      workspaceId: workspace.id,
-      parentId: spaceNode.id,
-      createdAt: new Date(),
-      createdBy: workspace.userNodeId,
-      versionId: NeuronId.generate(NeuronId.Type.Version),
+      parentId: spaceInput.id,
     };
 
-    const channelNode: Node = {
+    const channelInput: CreateNodeInput = {
       id: NeuronId.generate(NeuronId.Type.Channel),
-      type: 'channel',
+      type: NodeTypes.Channel,
       attrs: {
         name: 'Discussions',
       },
-      index: generateKeyBetween(pageNode.index, null),
-      workspaceId: workspace.id,
-      parentId: spaceNode.id,
-      createdAt: new Date(),
-      createdBy: workspace.userNodeId,
-      versionId: NeuronId.generate(NeuronId.Type.Version),
+      index: generateKeyBetween(pageInput.index, null),
+      parentId: spaceInput.id,
     };
 
-    await workspace.addNodes([spaceNode, pageNode, channelNode]);
+    await workspace.createNodes([spaceInput, pageInput, channelInput]);
     setIsPending(false);
     onOpenChange(false);
   };

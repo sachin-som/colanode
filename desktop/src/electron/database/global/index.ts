@@ -4,7 +4,7 @@ import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import { GlobalDatabaseSchema } from '@/electron/database/global/schema';
 import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
-import { Transaction } from '@/types/transactions';
+import { Transaction, TransactionType } from '@/types/transactions';
 import { globalDatabaseMigrations } from '@/electron/database/global/migrations';
 import { GlobalDatabaseData, WorkspaceDatabaseData } from '@/types/global';
 import { WorkspaceDatabase } from '@/electron/database/workspace';
@@ -77,6 +77,7 @@ export class GlobalDatabase {
     const workspaceDatabase = new WorkspaceDatabase(
       workspace.accountId,
       workspace.id,
+      workspace.userNodeId,
       this,
     );
     await workspaceDatabase.migrate();
@@ -164,8 +165,8 @@ export class GlobalDatabase {
         id: transaction.id,
         type: transaction.type,
         account_id: transaction.accountId,
+        user_id: transaction.userId,
         input: transaction.input,
-        node_id: transaction.nodeId,
         created_at: transaction.createdAt.toISOString(),
         workspace_id: transaction.workspaceId,
       })
@@ -183,7 +184,8 @@ export class GlobalDatabase {
       id: transaction.id,
       workspaceId: transaction.workspace_id,
       accountId: transaction.account_id,
-      type: transaction.type,
+      userId: transaction.user_id,
+      type: transaction.type as TransactionType,
       nodeId: transaction.node_id,
       input: transaction.input,
       createdAt: new Date(transaction.created_at),

@@ -14,9 +14,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
-import {parseApiError} from "@/lib/axios";
-import {Icon} from "@/components/ui/icon";
-import axios from "axios";
+import { parseApiError } from '@/lib/axios';
+import { Icon } from '@/components/ui/icon';
+import axios from 'axios';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
@@ -57,7 +57,7 @@ export const EmailLogin = ({ serverUrl, onLogin }: EmailLoginProps) => {
     } finally {
       setIsPending(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
@@ -102,4 +102,4 @@ export const EmailLogin = ({ serverUrl, onLogin }: EmailLoginProps) => {
       </form>
     </Form>
   );
-}
+};

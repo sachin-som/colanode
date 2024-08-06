@@ -1,20 +1,26 @@
 import React from 'react';
+import { Node } from '@/types/nodes';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/components/messages/message';
-import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageListProps {
-  nodeId: string;
+  conversationId: string;
+  nodes: Node[];
 }
 
-export const MessageList = ({ nodeId }: MessageListProps) => {
-  const workspace = useWorkspace();
-  const nodes = workspace.getNodes();
-
-  const messages = nodes.filter(
-    (node) => node.type === 'message' && node.parentId === nodeId,
-  );
+export const MessageList = ({ conversationId, nodes }: MessageListProps) => {
+  const messages = nodes
+    .filter((node) => node.type === 'message')
+    .sort((a, b) => {
+      if (a.id > b.id) {
+        return 1;
+      } else if (a.id < b.id) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
 
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -52,9 +58,7 @@ export const MessageList = ({ nodeId }: MessageListProps) => {
         }
       };
     }
-
-    return () => {};
-  }, [nodeId]);
+  }, [conversationId]);
 
   const handleScroll = () => {
     if (viewportRef.current) {
@@ -106,7 +110,11 @@ export const MessageList = ({ nodeId }: MessageListProps) => {
                   <div className="flex-grow border-t border-gray-100" />
                 </div>
               )}
-              <Message message={message} previousMessage={previousMessage} />
+              <Message
+                message={message}
+                previousMessage={previousMessage}
+                nodes={nodes}
+              />
             </React.Fragment>
           );
         })}

@@ -24,7 +24,7 @@ export class NeuronId {
     return id.endsWith(type);
   }
 
-  public static getType(id: string): IdType {
+  public static getNodeTypeFromId(id: string): IdType {
     return id.substring(id.length - 2) as IdType;
   }
 

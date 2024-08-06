@@ -66,20 +66,20 @@ ipcMain.handle('add-transaction', async (_, transaction) =>
   globalDatabase.addTransaction(transaction),
 );
 
-ipcMain.handle('add-node', async (_, accountId, workspaceId, node) => {
+ipcMain.handle('create-node', async (_, accountId, workspaceId, input) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(
     accountId,
     workspaceId,
   );
-  await workspaceDb.addNode(node);
+  await workspaceDb.createNode(input);
 });
 
-ipcMain.handle('add-nodes', async (_, accountId, workspaceId, nodes) => {
+ipcMain.handle('create-nodes', async (_, accountId, workspaceId, inputs) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(
     accountId,
     workspaceId,
   );
-  await workspaceDb.addNodes(nodes);
+  await workspaceDb.createNodes(inputs);
 });
 
 ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
@@ -104,6 +104,14 @@ ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
     workspaceId,
   );
   await workspaceDb.deleteNode(nodeId);
+});
+
+ipcMain.handle('get-conversation-nodes', async (_, accountId, workspaceId, conversationId, count, after) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
+  return await workspaceDb.getConversationNodes(conversationId, count, after);
 });
 
 initEventLoop();

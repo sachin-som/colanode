@@ -28,3 +28,12 @@ export type NodeBlockMark = {
 export type NodeWithChildren = Node & {
   children: NodeWithChildren[];
 };
+
+export type CreateNodeInput = {
+  id: string;
+  type: string;
+  parentId?: string | null;
+  index?: string | null;
+  attrs: any;
+  content?: NodeBlock[] | null;
+};

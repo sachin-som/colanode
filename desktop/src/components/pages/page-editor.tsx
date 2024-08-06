@@ -1,5 +1,4 @@
 import React from 'react';
-import type { JSONContent } from '@tiptap/core';
 import '@/styles/editor.css';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Node } from '@/types/nodes';
@@ -17,7 +16,7 @@ import {
 } from '@/editor/commands';
 import {
   IdExtension,
-  DocumentNode,
+  PageNode,
   TextNode,
   ParagraphNode,
   HeadingNode,
@@ -48,17 +47,20 @@ import {
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
 import { observer } from 'mobx-react-lite';
+import { useDocument } from '@/hooks/use-document';
 
 interface PageEditorProps {
   node: Node;
 }
 
 export const PageEditor = observer(({ node }: PageEditorProps) => {
+  const { content, onUpdate } = useDocument(node);
+
   const editor = useEditor(
     {
       extensions: [
         IdExtension,
-        DocumentNode,
+        PageNode,
         TextNode,
         ParagraphNode,
         HeadingNode,
@@ -110,8 +112,11 @@ export const PageEditor = observer(({ node }: PageEditorProps) => {
         },
       },
       shouldRerenderOnTransaction: false,
-      onUpdate: ({ editor }) => {
-        console.log(editor.getJSON());
+      content: content,
+      onUpdate: ({ editor, transaction }) => {
+        if (transaction.docChanged) {
+          onUpdate(editor.getJSON());
+        }
       },
       autofocus: 'start',
     },

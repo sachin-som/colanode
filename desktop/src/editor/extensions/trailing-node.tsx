@@ -4,9 +4,9 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 const nodeEqualsType = ({ types, node }: { types: NodeType[]; node: any }) => {
   return (
-    (Array.isArray(types) && types.includes(node.type)) || node.type === types
+    (Array.isArray(types) && types.includes(node?.type)) || node?.type === types
   );
-}
+};
 
 export interface TrailingNodeOptions {
   node: string;

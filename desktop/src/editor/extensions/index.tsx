@@ -28,6 +28,7 @@ import { TabKeymapExtension } from '@/editor/extensions/tab-keymap';
 import { TaskItemNode } from '@/editor/extensions/task-item';
 import { TaskListNode } from '@/editor/extensions/task-list';
 import { TrailingNode } from '@/editor/extensions/trailing-node';
+import { PageNode } from '@/editor/extensions/page';
 
 export {
   IdExtension,
@@ -59,4 +60,5 @@ export {
   TrailingNode,
   UnderlineMark,
   DropcursorExtension,
+  PageNode,
 };

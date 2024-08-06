@@ -3,6 +3,7 @@ import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { Workspace } from '@/types/workspaces';
+import { LeafNodeTypes } from '@/lib/constants';
 
 export const mapToEditorContent = (
   parent: Node,
@@ -146,7 +147,10 @@ const buildNodeWithChildren = (
   };
 };
 
-const enumerateNodes = (nodeWithChildren: NodeWithChildren, nodes: Node[]) => {
+export const enumerateNodes = (
+  nodeWithChildren: NodeWithChildren,
+  nodes: Node[],
+) => {
   nodes.push(nodeWithChildren);
   nodeWithChildren.children.forEach((child) => {
     enumerateNodes(child, nodes);
@@ -154,5 +158,5 @@ const enumerateNodes = (nodeWithChildren: NodeWithChildren, nodes: Node[]) => {
 };
 
 const isLeafNode = (type: string) => {
-  return type === 'paragraph' || type === 'heading' || type === 'blockquote';
+  return LeafNodeTypes.includes(type);
 };

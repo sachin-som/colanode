@@ -139,7 +139,7 @@ export class WorkspaceDatabase {
       .executeTakeFirst();
 
     await this.globalDatabase.addTransaction({
-      id: NeuronId.getType(NeuronId.Type.Transaction),
+      id: NeuronId.generate(NeuronId.Type.Transaction),
       nodeId: node.id,
       type: 'update_node',
       workspaceId: node.workspaceId,

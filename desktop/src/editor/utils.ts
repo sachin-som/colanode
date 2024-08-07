@@ -6,7 +6,17 @@ export const mapToDocumentContent = (
   nodes: Node[],
 ): JSONContent => {
   const contents: JSONContent[] = [];
-  const childrenNodes = nodes.filter((node) => node.parentId === parentId);
+  const childrenNodes = nodes
+    .filter((node) => node.parentId === parentId)
+    .sort((a, b) => {
+      if (a.index < b.index) {
+        return -1;
+      } else if (a.index > b.index) {
+        return 1;
+      }
+
+      return 0;
+    });
 
   for (const child of childrenNodes) {
     const content = mapNodeToEditorContent(child, nodes);
@@ -34,6 +44,7 @@ const mapNodeToEditorContent = (parent: Node, nodes: Node[]): JSONContent => {
   const parentContent: JSONContent = {
     type: parent.type,
     attrs: {
+      ...parent.attrs,
       id: parent.id,
       index: parent.index,
     },
@@ -61,11 +72,21 @@ const mapNodeToEditorContent = (parent: Node, nodes: Node[]): JSONContent => {
   if (parent.content && parent.content.length > 0) {
     parentContent.content = parentContent.content || [];
     parent.content.forEach((child) => {
-      parentContent.content.push({
+      const childContent: JSONContent = {
         type: child.type,
-        marks: child.marks,
         text: child.text,
-      });
+      };
+
+      if (child.marks && child.marks.length > 0) {
+        childContent.marks = child.marks.map((mark) => {
+          return {
+            type: mark.type,
+            attrs: mark.attrs,
+          };
+        });
+      }
+
+      parentContent.content.push(childContent);
     });
   }
 

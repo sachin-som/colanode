@@ -253,9 +253,11 @@ const validateIndexes = (nodes: NodeFromEditor[]) => {
       }
     }
 
-    // extra check to make sure that the beforeIndex and afterIndex are different
-    // because if they are the same the fractional index library will throw an error
-    if (beforeIndex === afterIndex) {
+    // extra check to make sure that the beforeIndex is less than the afterIndex
+    // because otherwise the fractional index library will throw an error
+    if (afterIndex < beforeIndex) {
+      afterIndex = generateNodeIndex(null, beforeIndex);
+    } else if (beforeIndex === afterIndex) {
       afterIndex = generateNodeIndex(beforeIndex, null);
     }
 

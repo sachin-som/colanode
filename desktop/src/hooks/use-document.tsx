@@ -74,7 +74,7 @@ export const useDocument = (node: Node): useNodeResult => {
               attrs: editorNode.attrs,
               content: editorNode.content,
             });
-          } else if (hasChanged({ ...existingNode }, editorNode)) {
+          } else if (hasChanged(existingNode, editorNode)) {
             nodesToUpdate.push({
               id: editorNode.id,
               parentId: editorNode.parentId,
@@ -164,16 +164,21 @@ const buildNodeFromEditor = (
   if (LeafNodeTypes.includes(content.type)) {
     nodeFromEditor.content = [];
     for (const child of content.content) {
-      nodeFromEditor.content.push({
+      const nodeBlock: NodeBlock = {
         type: child.type,
         text: child.text,
-        marks: child.marks?.map((mark) => {
+      };
+
+      if (child.marks && child.marks.length > 0) {
+        nodeBlock.marks = child.marks.map((mark) => {
           return {
             type: mark.type,
             attrs: mark.attrs,
           };
-        }),
-      });
+        });
+      }
+
+      nodeFromEditor.content.push(nodeBlock);
     }
   } else {
     nodeFromEditor.children = [];

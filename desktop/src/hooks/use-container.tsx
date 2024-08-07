@@ -67,12 +67,15 @@ export const useContainer = (containerId: string): useContainerResult => {
 };
 
 const buildBreadcrumb = (store: ContainerStore, node?: Node | null): Node[] => {
-  const breadcrumb = [];
+  if (!node) {
+    return [];
+  }
 
-  let current = node;
-  while (current) {
-    breadcrumb.unshift(current);
-    current = store.getNode(current.parentId);
+  const breadcrumb = [];
+  let parent = store.getNode(node.parentId);
+  while (parent) {
+    breadcrumb.unshift(parent);
+    parent = store.getNode(parent.parentId);
   }
 
   return breadcrumb;

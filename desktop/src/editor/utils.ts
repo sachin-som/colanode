@@ -26,11 +26,6 @@ export const mapToDocumentContent = (
   if (!contents.length) {
     contents.push({
       type: 'paragraph',
-      content: [
-        {
-          type: 'text',
-        },
-      ],
     });
   }
 

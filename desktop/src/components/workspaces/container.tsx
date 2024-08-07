@@ -10,7 +10,7 @@ import { useContainer } from '@/hooks/use-container';
 
 export const Container = observer(() => {
   const { nodeId } = useParams<{ nodeId: string }>();
-  const { node } = useContainer(nodeId);
+  const { node, breadcrumb } = useContainer(nodeId);
 
   if (!node) {
     return null;
@@ -18,7 +18,7 @@ export const Container = observer(() => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <ContainerHeader node={node} />
+      <ContainerHeader node={node} breadcrumbNodes={breadcrumb} />
       {match(node.type)
         .with(NodeTypes.Channel, () => <ChannelContainerNode node={node} />)
         .with(NodeTypes.Page, () => <PageContainerNode node={node} />)

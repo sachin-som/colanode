@@ -13,6 +13,7 @@ enum IdType {
   Channel = 'ch',
   Node = 'nd',
   Message = 'ms',
+  Subscriber = 'sb',
 }
 
 export class NeuronId {

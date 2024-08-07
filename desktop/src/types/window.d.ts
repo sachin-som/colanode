@@ -3,6 +3,7 @@ import { Transaction } from '@/types/transactions';
 import { Account } from '@/types/accounts';
 import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { GlobalDatabaseData } from '@/types/global';
+import { EventBus } from '@/lib/event-bus';
 
 export interface GlobalDbApi {
   init: () => Promise<GlobalDatabaseData>;
@@ -60,5 +61,6 @@ declare global {
   interface Window {
     globalDb: GlobalDbApi;
     workspaceDb: WorkspaceDbApi;
+    eventBus: EventBus;
   }
 }

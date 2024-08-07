@@ -12,6 +12,7 @@ import { DocumentStore } from '@/store/document';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes } from '@/lib/constants';
 import { generateNodeIndex } from '@/lib/nodes';
+import { useEventBus } from '@/hooks/use-event-bus';
 
 interface useNodeResult {
   isLoading: boolean;
@@ -31,10 +32,11 @@ export type NodeFromEditor = {
 
 export const useDocument = (node: Node): useNodeResult => {
   const workspace = useWorkspace();
+  const eventBus = useEventBus();
   const store = React.useMemo(() => new DocumentStore(), [node.id]);
 
   React.useEffect(() => {
-    const fetchNode = async () => {
+    const fetchNodes = async () => {
       store.setIsLoading(true);
 
       const nodes = await workspace.getDocumentNodes(node.id);
@@ -43,7 +45,35 @@ export const useDocument = (node: Node): useNodeResult => {
       store.setIsLoading(false);
     };
 
-    fetchNode();
+    fetchNodes();
+
+    const subscriptionId = eventBus.subscribe((event) => {
+      if (event.event === 'node_created') {
+        const createdNode = event.payload as Node;
+        if (store.getNode(createdNode.id) || createdNode.parentId === node.id) {
+          store.setNode(createdNode);
+        } else {
+          const parent = store.getNode(createdNode.parentId);
+          if (parent) {
+            store.setNode(createdNode);
+          }
+        }
+      } else if (event.event === 'node_updated') {
+        const updatedNode = event.payload as Node;
+        if (store.getNode(updatedNode.id)) {
+          store.setNode(updatedNode);
+        }
+      } else if (event.event === 'node-deleted') {
+        const deletedNode = event.payload as Node;
+        if (store.getNode(deletedNode.id)) {
+          store.deleteNode(deletedNode.id);
+        }
+      }
+    });
+
+    return () => {
+      window.eventBus.unsubscribe(subscriptionId);
+    };
   }, [node.id]);
 
   const onUpdate = React.useMemo(
@@ -97,9 +127,9 @@ export const useDocument = (node: Node): useNodeResult => {
         }
 
         if (nodesToUpdate.length > 0) {
-          nodesToUpdate.forEach((nodeToUpdate) => {
-            workspace.updateNode(nodeToUpdate);
-          });
+          for (const nodeToUpdate of nodesToUpdate) {
+            await workspace.updateNode(nodeToUpdate);
+          }
         }
 
         if (nodesToDelete.length > 0) {
@@ -261,13 +291,25 @@ const hasChanged = (existingNode: Node, editorNode: NodeFromEditor) => {
     return true;
   }
 
-  if (!isEqual(existingNode.attrs, editorNode.attrs)) {
+  if (deepHasChanged(existingNode.attrs, editorNode.attrs)) {
     return true;
   }
 
-  if (!isEqual(existingNode.content, editorNode.content)) {
+  if (deepHasChanged(existingNode.content, editorNode.content)) {
     return true;
   }
 
   return false;
+};
+
+const deepHasChanged = (a: any, b: any): boolean => {
+  if (a === b) {
+    return false;
+  }
+
+  if ((a === null || a === undefined) && (b === null || b === undefined)) {
+    return false;
+  }
+
+  return !isEqual(a, b);
 };

@@ -3,6 +3,7 @@ import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { Transaction } from '@/types/transactions';
 import { CreateNodeInput, UpdateNodeInput } from '@/types/nodes';
+import { eventBus, Event } from '@/lib/event-bus';
 
 contextBridge.exposeInMainWorld('globalDb', {
   init: () => ipcRenderer.invoke('init'),
@@ -34,4 +35,14 @@ contextBridge.exposeInMainWorld('workspaceDb', {
 
   getDocumentNodes: (accountId: string, workspaceId: string, documentId: string) =>
     ipcRenderer.invoke('get-document-nodes', accountId, workspaceId, documentId),
+});
+
+contextBridge.exposeInMainWorld('eventBus', {
+  subscribe: (callback: (event: Event) => void) => eventBus.subscribe(callback),
+  unsubscribe: (id: string) => eventBus.unsubscribe(id),
+  publish: (event: Event) => eventBus.publish(event),
+});
+
+ipcRenderer.on('event', (_, event) => {
+  eventBus.publish(event);
 });

@@ -6,6 +6,7 @@ import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes } from '@/lib/constants';
 import { generateNodeIndex } from '@/lib/nodes';
+import { useEventBus } from './use-event-bus';
 
 interface useConversationResult {
   isLoading: boolean;
@@ -20,6 +21,7 @@ export const useConversation = (
   conversationId: string,
 ): useConversationResult => {
   const workspace = useWorkspace();
+  const eventBus = useEventBus();
   const store = React.useMemo(() => new ConversationStore(), [conversationId]);
 
   React.useEffect(() => {
@@ -35,6 +37,14 @@ export const useConversation = (
     };
 
     fetchNodes();
+
+    const subscriptionId = eventBus.subscribe((event) => {
+      console.log('event', event);
+    });
+
+    return () => {
+      eventBus.unsubscribe(subscriptionId);
+    };
   }, [conversationId]);
 
   const createMessage = async (content: JSONContent) => {

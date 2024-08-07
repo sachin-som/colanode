@@ -2,6 +2,9 @@ import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { globalDatabase } from '@/electron/database/global';
 import { initEventLoop } from '@/electron/event-loop';
+import { eventBus } from '@/lib/event-bus';
+
+let subscriptionId: string | null = null;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -28,6 +31,10 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  subscriptionId = eventBus.subscribe((event) => {
+    mainWindow.webContents.send('event', event);
+  });
 };
 
 // This method will be called when Electron has finished
@@ -49,6 +56,12 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+app.on('before-quit', () => {
+  if (subscriptionId) {
+    eventBus.unsubscribe(subscriptionId);
   }
 });
 

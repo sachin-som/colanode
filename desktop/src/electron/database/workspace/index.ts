@@ -8,6 +8,7 @@ import { GlobalDatabase } from '@/electron/database/global';
 import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes, RootNodeTypes } from '@/lib/constants';
+import { eventBus } from '@/lib/event-bus';
 
 export class WorkspaceDatabase {
   accountId: string;
@@ -103,6 +104,11 @@ export class WorkspaceDatabase {
       input: JSON.stringify(node),
       createdAt: new Date(),
     });
+
+    eventBus.publish({
+      event: 'node_created',
+      payload: node,
+    })
   };
 
   createNodes = async (inputs: CreateNodeInput[]) => {
@@ -148,6 +154,13 @@ export class WorkspaceDatabase {
       accountId: this.accountId,
       input: JSON.stringify(nodes),
       createdAt: new Date(),
+    });
+
+    nodes.forEach((node) => {
+      eventBus.publish({
+        event: 'node_created',
+        payload: node,
+      });
     });
   }
 
@@ -205,10 +218,19 @@ export class WorkspaceDatabase {
       input: JSON.stringify(input),
       createdAt: new Date(),
     });
+
+    eventBus.publish({
+      event: 'node_updated',
+      payload: node,
+    });
   };
 
   deleteNode = async (nodeId: string) => {
-    await this.database.deleteFrom('nodes').where('id', '=', nodeId).execute();
+    const deletedRow = await this.database
+      .deleteFrom('nodes')
+      .where('id', '=', nodeId)
+      .returningAll()
+      .executeTakeFirst();
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -219,10 +241,34 @@ export class WorkspaceDatabase {
       input: nodeId,
       createdAt: new Date(),
     });
+
+    const node: Node = {
+      id: deletedRow.id,
+      type: deletedRow.type,
+      index: deletedRow.index,
+      parentId: deletedRow.parent_id,
+      workspaceId: deletedRow.workspace_id,
+      attrs: deletedRow.attrs && JSON.parse(deletedRow.attrs),
+      content: deletedRow.content && JSON.parse(deletedRow.content),
+      createdAt: new Date(deletedRow.created_at),
+      createdBy: deletedRow.created_by,
+      updatedAt: deletedRow.updated_at ? new Date(deletedRow.updated_at) : null,
+      updatedBy: deletedRow.updated_by,
+      versionId: deletedRow.version_id,
+    };
+
+    eventBus.publish({
+      event: 'node_deleted',
+      payload: node,
+    });
   };
 
   deleteNodes = async (nodeIds: string[]) => {
-    await this.database.deleteFrom('nodes').where('id', 'in', nodeIds).execute();
+    const deletedRows = await this.database
+      .deleteFrom('nodes')
+      .where('id', 'in', nodeIds)
+      .returningAll()
+      .execute();
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -232,6 +278,28 @@ export class WorkspaceDatabase {
       userId: this.userId,
       input: JSON.stringify(nodeIds),
       createdAt: new Date(),
+    });
+
+    const nodes = deletedRows.map((node) => ({
+      id: node.id,
+      type: node.type,
+      index: node.index,
+      parentId: node.parent_id,
+      workspaceId: node.workspace_id,
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
+      createdAt: new Date(node.created_at),
+      createdBy: node.created_by,
+      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
+      updatedBy: node.updated_by,
+      versionId: node.version_id,
+    }));
+
+    nodes.forEach((node) => {
+      eventBus.publish({
+        event: 'node_deleted',
+        payload: node,
+      });
     });
   }
 

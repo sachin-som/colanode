@@ -1,12 +1,13 @@
 import React from 'react';
 import { Node } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
+import { observer } from 'mobx-react-lite';
 
 interface ContainerHeaderProps {
   node: Node;
 }
 
-export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
+export const ContainerHeader = observer(({ node }: ContainerHeaderProps) => {
   const name = node.attrs.name ?? 'Untitled';
   const avatar = node.attrs.avatar;
   return (
@@ -17,4 +18,4 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
       </div>
     </div>
   );
-};
+});

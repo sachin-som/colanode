@@ -19,14 +19,7 @@ export const App = observer(() => {
         .init()
         .then(({ accounts, workspaces }) => {
           store.setAccounts(accounts);
-
-          workspaces.forEach((workspace) => {
-            store.addWorkspace(workspace.workspace);
-
-            const workspaceStore = store.getWorkspace(workspace.workspace.id);
-            workspaceStore.setNodes(workspace.nodes);
-          });
-
+          store.setWorkspaces(workspaces);
           store.setLoaded();
         })
         .catch((error) => {

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Node } from '@/types/nodes';
 import { observer } from 'mobx-react-lite';
-import { useWorkspace } from '@/contexts/workspace';
 import { SidebarNode } from '@/components/workspaces/sidebar-node';
+import { useSidebar } from '@/contexts/sidebar';
 
 interface SidebarNodeChildrenProps {
   node: Node;
@@ -10,9 +10,8 @@ interface SidebarNodeChildrenProps {
 
 export const SidebarNodeChildren = observer(
   ({ node }: SidebarNodeChildrenProps) => {
-    const workspace = useWorkspace();
-    const children: Node[] = workspace
-      .getNodes()
+    const sidebar = useSidebar();
+    const children: Node[] = sidebar.nodes
       .filter((n) => n.parentId === node.id)
       .sort((a, b) => {
         if (a.index < b.index) {

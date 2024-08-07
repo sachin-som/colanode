@@ -1,8 +1,9 @@
 import React from 'react';
 import { useStore } from '@/contexts/store';
 import { useNavigate } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
 
-export function WorkspaceRedirect(): React.ReactElement {
+export const WorkspaceRedirect = observer(() => {
   const store = useStore();
   const workspaces = store.workspaces;
   const navigate = useNavigate();
@@ -17,4 +18,4 @@ export function WorkspaceRedirect(): React.ReactElement {
   }, [workspaces, navigate]);
 
   return null;
-}
+});

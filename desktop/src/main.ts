@@ -127,20 +127,45 @@ ipcMain.handle('delete-nodes', async (_, accountId, workspaceId, nodeIds) => {
   await workspaceDb.deleteNodes(nodeIds);
 });
 
-ipcMain.handle('get-conversation-nodes', async (_, accountId, workspaceId, conversationId, count, after) => {
+ipcMain.handle('get-sidebar-nodes', async (_, accountId, workspaceId) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(
     accountId,
     workspaceId,
   );
-  return await workspaceDb.getConversationNodes(conversationId, count, after);
+  return await workspaceDb.getSidebarNodes();
 });
 
-ipcMain.handle('get-document-nodes', async (_, accountId, workspaceId, documentId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  return await workspaceDb.getDocumentNodes(documentId);
-});
+ipcMain.handle(
+  'get-conversation-nodes',
+  async (_, accountId, workspaceId, conversationId, count, after) => {
+    const workspaceDb = globalDatabase.getWorkspaceDatabase(
+      accountId,
+      workspaceId,
+    );
+    return await workspaceDb.getConversationNodes(conversationId, count, after);
+  },
+);
+
+ipcMain.handle(
+  'get-document-nodes',
+  async (_, accountId, workspaceId, documentId) => {
+    const workspaceDb = globalDatabase.getWorkspaceDatabase(
+      accountId,
+      workspaceId,
+    );
+    return await workspaceDb.getDocumentNodes(documentId);
+  },
+);
+
+ipcMain.handle(
+  'get-container-nodes',
+  async (_, accountId, workspaceId, containerId) => {
+    const workspaceDb = globalDatabase.getWorkspaceDatabase(
+      accountId,
+      workspaceId,
+    );
+    return await workspaceDb.getContainerNodes(containerId);
+  },
+);
 
 initEventLoop();

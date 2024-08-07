@@ -1,13 +1,12 @@
 import React from 'react';
-import {SpaceCreateButton} from "@/components/spaces/space-create-button";
-import {useWorkspace} from "@/contexts/workspace";
-import {SidebarNode} from "@/components/workspaces/sidebar-node";
-import {observer} from "mobx-react-lite";
+import { SpaceCreateButton } from '@/components/spaces/space-create-button';
+import { SidebarNode } from '@/components/workspaces/sidebar-node';
+import { observer } from 'mobx-react-lite';
+import { useSidebar } from '@/contexts/sidebar';
 
 export const SidebarSpaces = observer(() => {
-  const workspace = useWorkspace();
-  const spaces =  workspace.getNodes()
-    .filter((node) => node.type === 'space');
+  const sidebar = useSidebar();
+  const spaces = sidebar.nodes.filter((node) => node.type === 'space');
 
   return (
     <div className="pt-3 first:pt-0">
@@ -21,5 +20,5 @@ export const SidebarSpaces = observer(() => {
         ))}
       </div>
     </div>
-  )
+  );
 });

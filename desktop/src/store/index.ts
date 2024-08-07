@@ -1,12 +1,11 @@
 import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { makeAutoObservable } from 'mobx';
-import { WorkspaceStore } from '@/store/workspace';
 
 export class AppStore {
   loaded: boolean;
   accounts: Account[];
-  workspaces: WorkspaceStore[];
+  workspaces: Workspace[];
 
   constructor() {
     this.loaded = false;
@@ -33,13 +32,11 @@ export class AppStore {
   }
 
   setWorkspaces(workspaces: Workspace[]) {
-    this.workspaces = workspaces.map(
-      (workspace) => new WorkspaceStore(workspace),
-    );
+    this.workspaces = workspaces;
   }
 
   addWorkspace(workspace: Workspace) {
-    this.workspaces.push(new WorkspaceStore(workspace));
+    this.workspaces.push(workspace);
   }
 }
 

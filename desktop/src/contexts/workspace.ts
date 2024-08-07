@@ -5,15 +5,20 @@ import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 interface WorkspaceContext extends Workspace {
   createNode: (input: CreateNodeInput) => Promise<void>;
   createNodes: (inputs: CreateNodeInput[]) => Promise<void>;
-  getNodes: () => Node[];
   updateNode: (input: UpdateNodeInput) => Promise<void>;
   deleteNode: (nodeId: string) => Promise<void>;
   deleteNodes: (nodeIds: string[]) => Promise<void>;
 
   navigateToNode: (nodeId: string) => void;
 
-  getConversationNodes: (conversationId: string, count: number, after?: string | null) => Promise<Node[]>;
+  getSidebarNodes: () => Promise<Node[]>;
+  getConversationNodes: (
+    conversationId: string,
+    count: number,
+    after?: string | null,
+  ) => Promise<Node[]>;
   getDocumentNodes: (documentId: string) => Promise<Node[]>;
+  getContainerNodes: (containerId: string) => Promise<Node[]>;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

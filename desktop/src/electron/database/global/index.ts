@@ -6,7 +6,7 @@ import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { Transaction, TransactionType } from '@/types/transactions';
 import { globalDatabaseMigrations } from '@/electron/database/global/migrations';
-import { GlobalDatabaseData, WorkspaceDatabaseData } from '@/types/global';
+import { GlobalDatabaseData } from '@/types/global';
 import { WorkspaceDatabase } from '@/electron/database/workspace';
 
 export class GlobalDatabase {
@@ -29,16 +29,14 @@ export class GlobalDatabase {
 
     const accounts = await this.getAccounts();
     const workspaces = await this.getWorkspaces();
-    const workspaceDatabaseData: WorkspaceDatabaseData[] = [];
 
     for (const workspace of workspaces) {
-      const data = await this.initWorkspaceDatabase(workspace);
-      workspaceDatabaseData.push(data);
+      await this.initWorkspaceDatabase(workspace);
     }
 
     return {
       accounts,
-      workspaces: workspaceDatabaseData,
+      workspaces
     };
   };
 
@@ -72,7 +70,7 @@ export class GlobalDatabase {
 
   initWorkspaceDatabase = async (
     workspace: Workspace,
-  ): Promise<WorkspaceDatabaseData> => {
+  ): Promise<void> => {
     const key = `${workspace.accountId}_${workspace.id}`;
     const workspaceDatabase = new WorkspaceDatabase(
       workspace.accountId,
@@ -82,12 +80,6 @@ export class GlobalDatabase {
     );
     await workspaceDatabase.migrate();
     this.workspaceDatabases.set(key, workspaceDatabase);
-
-    const nodes = await workspaceDatabase.getNodes();
-    return {
-      workspace,
-      nodes,
-    };
   };
 
   getAccounts = async (): Promise<Account[]> => {

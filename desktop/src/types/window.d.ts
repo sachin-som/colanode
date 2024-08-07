@@ -42,6 +42,8 @@ export interface WorkspaceDbApi {
     nodeIds: string[],
   ) => Promise<void>;
 
+  getSidebarNodes: (accountId: string, workspaceId: string) => Promise<Node[]>;
+
   getConversationNodes: (
     accountId: string,
     workspaceId: string,
@@ -54,6 +56,12 @@ export interface WorkspaceDbApi {
     accountId: string,
     workspaceId: string,
     documentId: string,
+  ) => Promise<Node[]>;
+
+  getContainerNodes: (
+    accountId: string,
+    workspaceId: string,
+    containerId: string,
   ) => Promise<Node[]>;
 }
 

@@ -1,13 +1,16 @@
 import { app } from 'electron';
 import SQLite from 'better-sqlite3';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
-import { WorkspaceDatabaseSchema } from '@/electron/database/workspace/schema';
+import {
+  NodesTableSchema,
+  WorkspaceDatabaseSchema,
+} from '@/electron/database/workspace/schema';
 import { workspaceDatabaseMigrations } from '@/electron/database/workspace/migrations';
 import * as fs from 'node:fs';
 import { GlobalDatabase } from '@/electron/database/global';
 import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
-import { LeafNodeTypes, RootNodeTypes } from '@/lib/constants';
+import { LeafNodeTypes, NodeTypes, RootNodeTypes } from '@/lib/constants';
 import { eventBus } from '@/lib/event-bus';
 
 export class WorkspaceDatabase {
@@ -75,11 +78,11 @@ export class WorkspaceDatabase {
         created_by: this.userId,
         version_id: NeuronId.generate(NeuronId.Type.Version),
         attrs: input.attrs && JSON.stringify(input.attrs),
-        content: input.content && JSON.stringify(input.content)
+        content: input.content && JSON.stringify(input.content),
       })
       .returningAll()
       .executeTakeFirst();
-    
+
     const node: Node = {
       id: insertedRow.id,
       type: insertedRow.type,
@@ -90,10 +93,12 @@ export class WorkspaceDatabase {
       content: insertedRow.content && JSON.parse(insertedRow.content),
       createdAt: new Date(insertedRow.created_at),
       createdBy: insertedRow.created_by,
-      updatedAt: insertedRow.updated_at ? new Date(insertedRow.updated_at) : null,
+      updatedAt: insertedRow.updated_at
+        ? new Date(insertedRow.updated_at)
+        : null,
       updatedBy: insertedRow.updated_by,
       versionId: insertedRow.version_id,
-    }
+    };
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -108,7 +113,7 @@ export class WorkspaceDatabase {
     eventBus.publish({
       event: 'node_created',
       payload: node,
-    })
+    });
   };
 
   createNodes = async (inputs: CreateNodeInput[]) => {
@@ -130,7 +135,7 @@ export class WorkspaceDatabase {
       )
       .returningAll()
       .execute();
-    
+
     const nodes = insertedRows.map((node) => ({
       id: node.id,
       type: node.type,
@@ -145,7 +150,7 @@ export class WorkspaceDatabase {
       updatedBy: node.updated_by,
       versionId: node.version_id,
     }));
-    
+
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
       type: 'create_nodes',
@@ -162,23 +167,27 @@ export class WorkspaceDatabase {
         payload: node,
       });
     });
-  }
+  };
 
   updateNode = async (input: UpdateNodeInput) => {
-    let updateDefinition = this.database
-      .updateTable('nodes')
-      .set({
-        updated_at: new Date().toISOString(),
-        updated_by: this.userId,
-        version_id: NeuronId.generate(NeuronId.Type.Version),
-      });
-    
+    let updateDefinition = this.database.updateTable('nodes').set({
+      updated_at: new Date().toISOString(),
+      updated_by: this.userId,
+      version_id: NeuronId.generate(NeuronId.Type.Version),
+    });
+
     if (input.attrs !== undefined) {
-      updateDefinition = updateDefinition.set('attrs', JSON.stringify(input.attrs));
+      updateDefinition = updateDefinition.set(
+        'attrs',
+        JSON.stringify(input.attrs),
+      );
     }
 
     if (input.content !== undefined) {
-      updateDefinition = updateDefinition.set('content', JSON.stringify(input.content));
+      updateDefinition = updateDefinition.set(
+        'content',
+        JSON.stringify(input.content),
+      );
     }
 
     if (input.index !== undefined) {
@@ -193,21 +202,8 @@ export class WorkspaceDatabase {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    
-    const node: Node = {
-      id: updatedRow.id,
-      type: updatedRow.type,
-      index: updatedRow.index,
-      parentId: updatedRow.parent_id,
-      workspaceId: updatedRow.workspace_id,
-      attrs: updatedRow.attrs && JSON.parse(updatedRow.attrs),
-      content: updatedRow.content && JSON.parse(updatedRow.content),
-      createdAt: new Date(updatedRow.created_at),
-      createdBy: updatedRow.created_by,
-      updatedAt: updatedRow.updated_at ? new Date(updatedRow.updated_at) : null,
-      updatedBy: updatedRow.updated_by,
-      versionId: updatedRow.version_id,
-    };
+
+    const node: Node = this.mapToNode(updatedRow);
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -242,21 +238,7 @@ export class WorkspaceDatabase {
       createdAt: new Date(),
     });
 
-    const node: Node = {
-      id: deletedRow.id,
-      type: deletedRow.type,
-      index: deletedRow.index,
-      parentId: deletedRow.parent_id,
-      workspaceId: deletedRow.workspace_id,
-      attrs: deletedRow.attrs && JSON.parse(deletedRow.attrs),
-      content: deletedRow.content && JSON.parse(deletedRow.content),
-      createdAt: new Date(deletedRow.created_at),
-      createdBy: deletedRow.created_by,
-      updatedAt: deletedRow.updated_at ? new Date(deletedRow.updated_at) : null,
-      updatedBy: deletedRow.updated_by,
-      versionId: deletedRow.version_id,
-    };
-
+    const node: Node = this.mapToNode(deletedRow);
     eventBus.publish({
       event: 'node_deleted',
       payload: node,
@@ -280,28 +262,14 @@ export class WorkspaceDatabase {
       createdAt: new Date(),
     });
 
-    const nodes = deletedRows.map((node) => ({
-      id: node.id,
-      type: node.type,
-      index: node.index,
-      parentId: node.parent_id,
-      workspaceId: node.workspace_id,
-      attrs: node.attrs && JSON.parse(node.attrs),
-      content: node.content && JSON.parse(node.content),
-      createdAt: new Date(node.created_at),
-      createdBy: node.created_by,
-      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
-      updatedBy: node.updated_by,
-      versionId: node.version_id,
-    }));
-
+    const nodes = deletedRows.map((node) => this.mapToNode(node));
     nodes.forEach((node) => {
       eventBus.publish({
         event: 'node_deleted',
         payload: node,
       });
     });
-  }
+  };
 
   syncNodes = async (nodes: Node[]) => {
     const nodeIds = nodes.map((node) => node.id);
@@ -355,108 +323,148 @@ export class WorkspaceDatabase {
     }
   };
 
-  getConversationNodes = async (conversationId: string, count: number, after?: string | null): Promise<Node[]> => {
+  getSidebarNodes: () => Promise<Node[]> = async () => {
+    const spaceRows = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('type', '=', NodeTypes.Space)
+      .execute();
+
+    const spaceIds = spaceRows.map((space) => space.id);
+    const childRows = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('parent_id', 'in', spaceIds)
+      .execute();
+
+    const rows = [...spaceRows, ...childRows];
+    return rows.map((row) => this.mapToNode(row));
+  };
+
+  getConversationNodes = async (
+    conversationId: string,
+    count: number,
+    after?: string | null,
+  ): Promise<Node[]> => {
     const messageQuery = this.database
       .selectFrom('nodes')
       .selectAll()
       .where('type', '=', 'message')
       .where('parent_id', '=', conversationId);
-    
+
     if (after) {
       messageQuery.where('id', '<', after);
     }
 
-    const messages = await messageQuery
+    const messageRows = await messageQuery
       .orderBy('created_at', 'desc')
       .limit(count)
       .execute();
-    
-    const authorIds = messages.map((message) => message.created_by);
-    const authors = await this.database
+
+    const authorIds = messageRows.map((message) => message.created_by);
+    const authorRows = await this.database
       .selectFrom('nodes')
       .selectAll()
       .where('id', 'in', authorIds)
       .execute();
-    
-    const parentIds = messages.map((message) => message.id);
-    const nodes = [...messages, ...authors];
-    
+
+    const parentIds = messageRows.map((message) => message.id);
+    const rows = [...messageRows, ...authorRows];
+
     while (parentIds.length > 0) {
-      const childNodes = await this.database
+      const childRows = await this.database
         .selectFrom('nodes')
         .selectAll()
         .where('parent_id', 'in', parentIds)
         .execute();
-      
-      nodes.push(...childNodes);
+
+      rows.push(...childRows);
       parentIds.splice(0, parentIds.length);
 
-      const newParentIds = childNodes
-        .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
-        .map((node) => node.id);
-      
+      const newParentIds = childRows
+        .filter(
+          (row) =>
+            !RootNodeTypes.includes(row.type) &&
+            !LeafNodeTypes.includes(row.type),
+        )
+        .map((row) => row.id);
+
       parentIds.push(...newParentIds);
     }
-    
-    return nodes.map((node) => ({
-      id: node.id,
-      type: node.type,
-      index: node.index,
-      parentId: node.parent_id,
-      workspaceId: node.workspace_id,
-      attrs: node.attrs && JSON.parse(node.attrs),
-      content: node.content && JSON.parse(node.content),
-      createdAt: new Date(node.created_at),
-      createdBy: node.created_by,
-      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
-      updatedBy: node.updated_by,
-      versionId: node.version_id,
-    }));
-  }
 
-  getDocumentNodes = async (documentId: string): Promise<Node[]> => {   
-    const nodes = await this.database
+    return rows.map((row) => this.mapToNode(row));
+  };
+
+  getDocumentNodes = async (documentId: string): Promise<Node[]> => {
+    const rows = await this.database
       .selectFrom('nodes')
       .selectAll()
       .where('parent_id', '=', documentId)
       .execute();
-    
-    const parentIds = nodes
-      .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
-      .map((node) => node.id);
-    
+
+    const parentIds = rows
+      .filter(
+        (row) =>
+          !RootNodeTypes.includes(row.type) &&
+          !LeafNodeTypes.includes(row.type),
+      )
+      .map((row) => row.id);
+
     while (parentIds.length > 0) {
-      const newChildNodes = await this.database
+      const childRows = await this.database
         .selectFrom('nodes')
         .selectAll()
         .where('parent_id', 'in', parentIds)
         .execute();
-      
-      nodes.push(...newChildNodes);
+
+      rows.push(...childRows);
       parentIds.splice(0, parentIds.length);
 
-      const newParentIds = newChildNodes
-        .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
-        .map((node) => node.id);
-      
-      parentIds.push(...newParentIds);
+      const childParentIds = childRows
+        .filter(
+          (row) =>
+            !RootNodeTypes.includes(row.type) &&
+            !LeafNodeTypes.includes(row.type),
+        )
+        .map((row) => row.id);
+
+      parentIds.push(...childParentIds);
     }
-    
-    return nodes.map((node) => ({
-      id: node.id,
-      type: node.type,
-      index: node.index,
-      parentId: node.parent_id,
-      workspaceId: node.workspace_id,
-      attrs: node.attrs && JSON.parse(node.attrs),
-      content: node.content && JSON.parse(node.content),
-      createdAt: new Date(node.created_at),
-      createdBy: node.created_by,
-      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
-      updatedBy: node.updated_by,
-      versionId: node.version_id,
-    }));
-  }
+
+    return rows.map((row) => this.mapToNode(row));
+  };
+
+  getContainerNodes = async (containerId: string): Promise<Node[]> => {
+    const containerRow = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', containerId)
+      .executeTakeFirst();
+
+    if (!containerRow) {
+      return [];
+    }
+
+    const rows = [containerRow];
+    let parentId = containerRow.parent_id;
+
+    while (parentId) {
+      const parentRow = await this.database
+        .selectFrom('nodes')
+        .selectAll()
+        .where('id', '=', parentId)
+        .executeTakeFirst();
+
+      if (!parentRow) {
+        break;
+      }
+
+      rows.push(parentRow);
+      parentId = parentRow.parent_id;
+    }
+
+    return rows.map((row) => this.mapToNode(row));
+  };
 
   migrate = async () => {
     const migrator = new Migrator({
@@ -469,5 +477,22 @@ export class WorkspaceDatabase {
     });
 
     await migrator.migrateToLatest();
+  };
+
+  mapToNode = (node: NodesTableSchema): Node => {
+    return {
+      id: node.id,
+      type: node.type,
+      index: node.index,
+      parentId: node.parent_id,
+      workspaceId: node.workspace_id,
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
+      createdAt: new Date(node.created_at),
+      createdBy: node.created_by,
+      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
+      updatedBy: node.updated_by,
+      versionId: node.version_id,
+    };
   };
 }

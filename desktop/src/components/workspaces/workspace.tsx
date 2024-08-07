@@ -33,9 +33,6 @@ export const Workspace = observer(() => {
             inputs,
           );
         },
-        getNodes: () => {
-          return workspace.getNodes();
-        },
         updateNode: async (node) => {
           await window.workspaceDb.updateNode(
             workspace.accountId,
@@ -71,6 +68,19 @@ export const Workspace = observer(() => {
             workspace.accountId,
             workspace.id,
             documentId,
+          );
+        },
+        getContainerNodes(containerId) {
+          return window.workspaceDb.getContainerNodes(
+            workspace.accountId,
+            workspace.id,
+            containerId,
+          );
+        },
+        getSidebarNodes() {
+          return window.workspaceDb.getSidebarNodes(
+            workspace.accountId,
+            workspace.id,
           );
         },
         navigateToNode(nodeId) {

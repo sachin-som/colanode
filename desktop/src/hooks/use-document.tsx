@@ -63,7 +63,7 @@ export const useDocument = (node: Node): useNodeResult => {
         if (store.getNode(updatedNode.id)) {
           store.setNode(updatedNode);
         }
-      } else if (event.event === 'node-deleted') {
+      } else if (event.event === 'node_deleted') {
         const deletedNode = event.payload as Node;
         if (store.getNode(deletedNode.id)) {
           store.deleteNode(deletedNode.id);

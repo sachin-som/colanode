@@ -12,9 +12,11 @@ import {
   OrderedListCommand,
   DividerCommand,
   TodoCommand,
+  PageCommand,
 } from '@/editor/commands';
 import {
   IdExtension,
+  DocumentNode,
   PageNode,
   TextNode,
   ParagraphNode,
@@ -61,6 +63,7 @@ export const DocumentEditor = ({
     {
       extensions: [
         IdExtension,
+        DocumentNode,
         PageNode,
         TextNode,
         ParagraphNode,
@@ -85,6 +88,7 @@ export const DocumentEditor = ({
         CommanderExtension.configure({
           commands: [
             ParagraphCommand,
+            PageCommand,
             BlockquoteCommand,
             Heading1Command,
             Heading2Command,

@@ -8,6 +8,7 @@ import { Heading3Command } from '@/editor/commands/heading3';
 import { OrderedListCommand } from '@/editor/commands/ordered-list';
 import { ParagraphCommand } from '@/editor/commands/paragraph';
 import { TodoCommand } from '@/editor/commands/todo';
+import { PageCommand } from '@/editor/commands/page';
 import { EditorCommand, EditorCommandProps } from '@/types/editor';
 
 export type { EditorCommand, EditorCommandProps };
@@ -22,5 +23,6 @@ export {
   OrderedListCommand,
   ParagraphCommand,
   DividerCommand,
-  TodoCommand
+  TodoCommand,
+  PageCommand,
 };

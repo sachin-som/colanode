@@ -3,11 +3,11 @@ import { makeAutoObservable } from 'mobx';
 
 export class DocumentStore {
   public nodes: Record<string, Node>;
-  public isLoading: boolean;
+  public isLoaded: boolean;
 
   constructor() {
     this.nodes = {};
-    this.isLoading = false;
+    this.isLoaded = false;
 
     makeAutoObservable(this);
   }
@@ -26,8 +26,8 @@ export class DocumentStore {
     delete this.nodes[nodeId];
   }
 
-  public setIsLoading(isLoading: boolean) {
-    this.isLoading = isLoading;
+  public setIsLoaded(isLoaded: boolean) {
+    this.isLoaded = isLoaded;
   }
 
   public getNode(nodeId: string) {

@@ -1,10 +1,36 @@
 import { Node } from '@/types/nodes';
 import { JSONContent } from '@tiptap/core';
 
-export const mapToEditorContent = (
-  parent: Node,
+export const mapToDocumentContent = (
+  parentId: string,
   nodes: Node[],
 ): JSONContent => {
+  const contents: JSONContent[] = [];
+  const childrenNodes = nodes.filter((node) => node.parentId === parentId);
+
+  for (const child of childrenNodes) {
+    const content = mapNodeToEditorContent(child, nodes);
+    contents.push(content);
+  }
+
+  if (!contents.length) {
+    contents.push({
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+        },
+      ],
+    });
+  }
+
+  return {
+    type: 'doc',
+    content: contents,
+  };
+};
+
+const mapNodeToEditorContent = (parent: Node, nodes: Node[]): JSONContent => {
   const parentContent: JSONContent = {
     type: parent.type,
     attrs: {
@@ -28,7 +54,7 @@ export const mapToEditorContent = (
   if (childrenNodes.length > 0) {
     parentContent.content = parentContent.content || [];
     childrenNodes.forEach((child) => {
-      parentContent.content.push(mapToEditorContent(child, nodes));
+      parentContent.content.push(mapNodeToEditorContent(child, nodes));
     });
   }
 

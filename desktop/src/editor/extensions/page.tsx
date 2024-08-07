@@ -1,7 +1,34 @@
-import { Node } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { PageNodeView } from '@/editor/views';
 
-export const PageNode = Node.create({
+const PageNode = Node.create({
   name: 'page',
-  topNode: true,
-  content: 'block+',
+  group: 'block',
+  atom: true,
+  defining: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      id: {
+        default: null,
+      },
+      name: {
+        default: null,
+      },
+      avatar: {
+        default: null,
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['page', mergeAttributes(HTMLAttributes)];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(PageNodeView, {
+      as: 'page',
+    });
+  },
 });
+
+export { PageNode };

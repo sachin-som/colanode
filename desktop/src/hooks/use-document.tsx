@@ -15,7 +15,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { useEventBus } from '@/hooks/use-event-bus';
 
 interface useNodeResult {
-  isLoading: boolean;
+  isLoaded: boolean;
   nodes: Node[];
   onUpdate: (content: JSONContent) => void;
 }
@@ -37,12 +37,10 @@ export const useDocument = (node: Node): useNodeResult => {
 
   React.useEffect(() => {
     const fetchNodes = async () => {
-      store.setIsLoading(true);
-
       const nodes = await workspace.getDocumentNodes(node.id);
       store.setNodes(nodes);
 
-      store.setIsLoading(false);
+      store.setIsLoaded(true);
     };
 
     fetchNodes();
@@ -92,7 +90,7 @@ export const useDocument = (node: Node): useNodeResult => {
         fillIndexesFromNodes(childrenNodes, currentNodes);
         validateIndexes(childrenNodes);
 
-        const editorNodes = flatenNodesFromEditor(childrenNodes);
+        const editorNodes = flattenNodesFromEditor(childrenNodes);
         for (const editorNode of editorNodes) {
           const existingNode = currentNodes[editorNode.id];
           if (!existingNode) {
@@ -140,7 +138,7 @@ export const useDocument = (node: Node): useNodeResult => {
   );
 
   return {
-    isLoading: store.isLoading,
+    isLoaded: store.isLoaded,
     nodes: store.getNodes(),
     onUpdate,
   };
@@ -239,9 +237,27 @@ const fillIndexesFromNodes = (
 
 const validateIndexes = (nodes: NodeFromEditor[]) => {
   for (let i = 0; i < nodes.length; i++) {
-    const beforeIndex = i === 0 ? null : nodes[i - 1].index;
-    const afterIndex = i === nodes.length - 1 ? null : nodes[i + 1].index;
     const currentIndex = nodes[i].index;
+    const beforeIndex = i === 0 ? null : nodes[i - 1].index;
+
+    // find the lowest index after the current node
+    // we do this because sometimes nodes can be ordered in such a way that
+    // the current node's index is higher than one of its siblings
+    // after the next sibling
+    // for example:  1, {current}, 4, 3
+    let afterIndex = i === nodes.length - 1 ? null : nodes[i + 1].index;
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (nodes[j].index < afterIndex) {
+        afterIndex = nodes[j].index;
+        break;
+      }
+    }
+
+    // extra check to make sure that the beforeIndex and afterIndex are different
+    // because if they are the same the fractional index library will throw an error
+    if (beforeIndex === afterIndex) {
+      afterIndex = generateNodeIndex(beforeIndex, null);
+    }
 
     if (
       !currentIndex ||
@@ -257,7 +273,7 @@ const validateIndexes = (nodes: NodeFromEditor[]) => {
   }
 };
 
-const flatenNodesFromEditor = (
+const flattenNodesFromEditor = (
   nodesFromEditor: NodeFromEditor[],
 ): NodeFromEditor[] => {
   const nodes: Node[] = [];

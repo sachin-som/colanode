@@ -1,12 +1,12 @@
-import React from "react";
-import {Login} from "@/components/accounts/login";
-import {AppLoading} from "@/components/app-loading";
-import {Workspace} from "@/components/workspaces/workspace";
-import {AccountContext} from "@/contexts/account";
-import Axios from "axios";
-import {AxiosContext} from "@/contexts/axios";
-import {useStore} from "@/contexts/store";
-import {observer} from "mobx-react-lite";
+import React from 'react';
+import { Login } from '@/components/accounts/login';
+import { AppLoading } from '@/components/app-loading';
+import { AccountContext } from '@/contexts/account';
+import Axios from 'axios';
+import { AxiosContext } from '@/contexts/axios';
+import { useStore } from '@/contexts/store';
+import { observer } from 'mobx-react-lite';
+import { Outlet } from 'react-router-dom';
 
 const serverUrl = 'http://localhost:3000';
 
@@ -15,8 +15,9 @@ export const App = observer(() => {
 
   React.useEffect(() => {
     if (!store.loaded) {
-      window.globalDb.init()
-        .then(({accounts, workspaces}) => {
+      window.globalDb
+        .init()
+        .then(({ accounts, workspaces }) => {
           store.setAccounts(accounts);
 
           workspaces.forEach((workspace) => {
@@ -30,7 +31,7 @@ export const App = observer(() => {
         })
         .catch((error) => {
           // Handle any errors if needed
-          console.error("Error loading data: ", error);
+          console.error('Error loading data: ', error);
         });
     }
   }, [store.loaded]);
@@ -54,7 +55,7 @@ export const App = observer(() => {
   return (
     <AccountContext.Provider value={account}>
       <AxiosContext.Provider value={axios}>
-        <Workspace />
+        <Outlet />
       </AxiosContext.Provider>
     </AccountContext.Provider>
   );

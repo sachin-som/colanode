@@ -1,19 +1,19 @@
 import React from 'react';
 import { Sidebar } from '@/components/workspaces/sidebar';
-import { WorkspaceCreate } from '@/components/workspaces/workspace-create';
 import { WorkspaceContext } from '@/contexts/workspace';
 import { useStore } from '@/contexts/store';
 import { observer } from 'mobx-react-lite';
-import { Container } from '@/components/workspaces/container';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 export const Workspace = observer(() => {
+  const { workspaceId } = useParams<{ workspaceId: string }>();
   const store = useStore();
-  const workspaces = store.workspaces;
-  if (workspaces.length === 0) {
-    return <WorkspaceCreate />;
-  }
+  const navigate = useNavigate();
 
-  const workspace = workspaces[0];
+  const workspace = store.getWorkspace(workspaceId);
+  if (!workspace) {
+    return <p>Workspace not found</p>;
+  }
 
   return (
     <WorkspaceContext.Provider
@@ -57,9 +57,6 @@ export const Workspace = observer(() => {
             nodeIds,
           );
         },
-        setContainerNode: (nodeId) => {
-          workspace.setContainerNode(nodeId);
-        },
         getConversationNodes: async (conversationId, count, after) => {
           return await window.workspaceDb.getConversationNodes(
             workspace.accountId,
@@ -76,6 +73,9 @@ export const Workspace = observer(() => {
             documentId,
           );
         },
+        navigateToNode(nodeId) {
+          navigate(`/${workspaceId}/${nodeId}`);
+        },
       }}
     >
       <div className="flex h-screen max-h-screen flex-row">
@@ -83,9 +83,7 @@ export const Workspace = observer(() => {
           <Sidebar />
         </div>
         <main className="min-w-128 h-full w-full flex-grow overflow-hidden bg-white">
-          {workspace.containerNodeId && (
-            <Container nodeId={workspace.containerNodeId} />
-          )}
+          <Outlet />
         </main>
       </div>
     </WorkspaceContext.Provider>

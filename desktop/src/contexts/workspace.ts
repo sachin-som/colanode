@@ -9,7 +9,8 @@ interface WorkspaceContext extends Workspace {
   updateNode: (input: UpdateNodeInput) => Promise<void>;
   deleteNode: (nodeId: string) => Promise<void>;
   deleteNodes: (nodeIds: string[]) => Promise<void>;
-  setContainerNode: (nodeId?: string | null) => void;
+
+  navigateToNode: (nodeId: string) => void;
 
   getConversationNodes: (conversationId: string, count: number, after?: string | null) => Promise<Node[]>;
   getDocumentNodes: (documentId: string) => Promise<Node[]>;

@@ -6,13 +6,12 @@ import { NodeTypes } from '@/lib/constants';
 import { PageContainerNode } from '@/components/pages/page-container-node';
 import { ChannelContainerNode } from '@/components/channels/channel-container-node';
 import { ContainerHeader } from '@/components/workspaces/container-header';
+import { useParams } from 'react-router-dom';
 
-interface ContainerProps {
-  nodeId: string;
-}
-
-export const Container = observer(({ nodeId }: ContainerProps) => {
+export const Container = observer(() => {
+  const { nodeId } = useParams<{ nodeId: string }>();
   const workspace = useWorkspace();
+
   const node = workspace.getNodes().find((node) => node.id === nodeId);
   if (node == null) {
     return <p>Node not found.</p>;

@@ -1,16 +1,16 @@
-import React from "react";
-import {Node} from '@/types/nodes';
-import {cn} from "@/lib/utils";
-import {Avatar} from "@/components/ui/avatar";
-import {Icon} from "@/components/ui/icon";
-import {observer} from "mobx-react-lite";
-import {useWorkspace} from "@/contexts/workspace";
+import React from 'react';
+import { Node } from '@/types/nodes';
+import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
+import { Icon } from '@/components/ui/icon';
+import { observer } from 'mobx-react-lite';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface PageSidebarNodeProps {
   node: Node;
 }
 
-export const PageSidebarNode = observer(({node}: PageSidebarNodeProps) => {
+export const PageSidebarNode = observer(({ node }: PageSidebarNodeProps) => {
   const workspace = useWorkspace();
   const isActive = false;
   const isUnread = false;
@@ -26,7 +26,7 @@ export const PageSidebarNode = observer(({node}: PageSidebarNodeProps) => {
         isActive && 'bg-gray-100',
       )}
       onClick={() => {
-        workspace.setContainerNode(node.id);
+        workspace.navigateToNode(node.id);
       }}
     >
       <Avatar id={node.id} avatar={avatar} name={name} size="small" />

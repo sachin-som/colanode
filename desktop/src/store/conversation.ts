@@ -26,6 +26,10 @@ export class ConversationStore {
     });
   }
 
+  public deleteNode(nodeId: string) {
+    delete this.nodes[nodeId];
+  }
+
   public setIsLoading(isLoading: boolean) {
     this.isLoading = isLoading;
   }

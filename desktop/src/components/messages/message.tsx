@@ -55,6 +55,10 @@ export const Message = observer(
     const canReplyInThread = true;
     const nodeWithChildren = buildNodeWithChildren(message, nodes);
 
+    if (!nodeWithChildren.children || nodeWithChildren.children.length === 0) {
+      return null;
+    }
+
     return (
       <div
         id={`message-${message.id}`}

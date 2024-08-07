@@ -39,7 +39,30 @@ export const useConversation = (
     fetchNodes();
 
     const subscriptionId = eventBus.subscribe((event) => {
-      console.log('event', event);
+      if (event.event === 'node_created') {
+        const createdNode = event.payload as Node;
+        if (
+          store.getNode(createdNode.id) ||
+          createdNode.parentId === conversationId
+        ) {
+          store.setNode(createdNode);
+        } else {
+          const parent = store.getNode(createdNode.parentId);
+          if (parent) {
+            store.setNode(createdNode);
+          }
+        }
+      } else if (event.event === 'node_updated') {
+        const updatedNode = event.payload as Node;
+        if (store.getNode(updatedNode.id)) {
+          store.setNode(updatedNode);
+        }
+      } else if (event.event === 'node-deleted') {
+        const deletedNode = event.payload as Node;
+        if (store.getNode(deletedNode.id)) {
+          store.deleteNode(deletedNode.id);
+        }
+      }
     });
 
     return () => {

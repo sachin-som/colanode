@@ -1,4 +1,4 @@
-export type TransactionType = 'create_node' | 'create_nodes' | 'update_node' | 'delete_node';
+export type TransactionType = 'create_node' | 'create_nodes' | 'update_node' | 'delete_node' | 'delete_nodes';
 
 export type Transaction = {
   id: string;

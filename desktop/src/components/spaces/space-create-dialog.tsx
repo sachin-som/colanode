@@ -25,8 +25,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateNodeInput, Node } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
-import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
+import { generateNodeIndex } from '@/lib/nodes';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -76,7 +76,7 @@ export const SpaceCreateDialog = ({
       attrs: {
         name: 'Home',
       },
-      index: generateKeyBetween(null, null),
+      index: generateNodeIndex(null, null),
       parentId: spaceInput.id,
     };
 
@@ -86,7 +86,7 @@ export const SpaceCreateDialog = ({
       attrs: {
         name: 'Discussions',
       },
-      index: generateKeyBetween(pageInput.index, null),
+      index: generateNodeIndex(pageInput.index, null),
       parentId: spaceInput.id,
     };
 

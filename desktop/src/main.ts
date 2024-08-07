@@ -90,12 +90,12 @@ ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
   return workspaceDb.getNodes();
 });
 
-ipcMain.handle('update-node', async (_, accountId, workspaceId, node) => {
+ipcMain.handle('update-node', async (_, accountId, workspaceId, input) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(
     accountId,
     workspaceId,
   );
-  await workspaceDb.updateNode(node);
+  await workspaceDb.updateNode(input);
 });
 
 ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
@@ -106,12 +106,28 @@ ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
   await workspaceDb.deleteNode(nodeId);
 });
 
+ipcMain.handle('delete-nodes', async (_, accountId, workspaceId, nodeIds) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
+  await workspaceDb.deleteNodes(nodeIds);
+});
+
 ipcMain.handle('get-conversation-nodes', async (_, accountId, workspaceId, conversationId, count, after) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(
     accountId,
     workspaceId,
   );
   return await workspaceDb.getConversationNodes(conversationId, count, after);
+});
+
+ipcMain.handle('get-document-nodes', async (_, accountId, workspaceId, documentId) => {
+  const workspaceDb = globalDatabase.getWorkspaceDatabase(
+    accountId,
+    workspaceId,
+  );
+  return await workspaceDb.getDocumentNodes(documentId);
 });
 
 initEventLoop();

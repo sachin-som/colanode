@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { Transaction } from '@/types/transactions';
-import { DeleteNodeTransactionInput, Node } from '@/types/nodes';
+import { Node } from '@/types/nodes';
 import { prisma } from '@/data/db';
 
 export const transactionsRouter = Router();
@@ -65,10 +65,20 @@ transactionsRouter.post('/', async (req: Request, res: Response) => {
 
       appliedTransactionIds.push(transaction.id);
     } else if (transaction.type === 'delete_node') {
-      const input = JSON.parse(transaction.input) as DeleteNodeTransactionInput;
       await prisma.nodes.delete({
         where: {
-          id: input.id,
+          id: transaction.input,
+        },
+      });
+
+      appliedTransactionIds.push(transaction.id);
+    } else if (transaction.type === 'delete_nodes') {
+      const input = JSON.parse(transaction.input) as string[];
+      await prisma.nodes.deleteMany({
+        where: {
+          id: {
+            in: input,
+          },
         },
       });
 

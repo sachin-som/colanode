@@ -1,7 +1,6 @@
 import React from 'react';
 import '@/styles/editor.css';
-import { useEditor, EditorContent } from '@tiptap/react';
-import { Node } from '@/types/nodes';
+import { useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import {
   ParagraphCommand,
   BlockquoteCommand,
@@ -46,16 +45,18 @@ import {
 } from '@/editor/extensions';
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { observer } from 'mobx-react-lite';
-import { useDocument } from '@/hooks/use-document';
 
-interface PageEditorProps {
-  node: Node;
+interface DocumentEditorProps {
+  id: string;
+  content: JSONContent;
+  onUpdate: (content: JSONContent) => void;
 }
 
-export const PageEditor = observer(({ node }: PageEditorProps) => {
-  const { content, onUpdate } = useDocument(node);
-
+export const DocumentEditor = ({
+  id,
+  content,
+  onUpdate,
+}: DocumentEditorProps) => {
   const editor = useEditor(
     {
       extensions: [
@@ -120,7 +121,7 @@ export const PageEditor = observer(({ node }: PageEditorProps) => {
       },
       autofocus: 'start',
     },
-    [node.id],
+    [id],
   );
 
   return (
@@ -133,4 +134,4 @@ export const PageEditor = observer(({ node }: PageEditorProps) => {
       <EditorContent editor={editor} />
     </div>
   );
-});
+};

@@ -1,4 +1,5 @@
 import { Node, NodeWithChildren } from '@/types/nodes';
+import { generateKeyBetween } from 'fractional-indexing-jittered';
 
 export const buildNodeWithChildren = (
   node: Node,
@@ -13,3 +14,10 @@ export const buildNodeWithChildren = (
     children: children,
   };
 };
+
+export const generateNodeIndex = (before?: string | null, after?: string | null) => {
+  const lower = before === undefined ? null : before;
+  const upper = after === undefined ? null : after;
+
+  return generateKeyBetween(lower, upper);
+}

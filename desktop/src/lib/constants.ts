@@ -22,3 +22,10 @@ export const LeafNodeTypes: string[] = [
   NodeTypes.Divider,
   NodeTypes.CodeBlock,
 ];
+
+export const RootNodeTypes: string[] = [
+  NodeTypes.Space,
+  NodeTypes.Message,
+  NodeTypes.Page,
+  NodeTypes.Channel,
+];

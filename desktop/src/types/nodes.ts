@@ -37,3 +37,11 @@ export type CreateNodeInput = {
   attrs: any;
   content?: NodeBlock[] | null;
 };
+
+export type UpdateNodeInput = {
+  id: string;
+  parentId?: string | null;
+  index?: string | null;
+  attrs?: any | null;
+  content?: NodeBlock[] | null;
+};

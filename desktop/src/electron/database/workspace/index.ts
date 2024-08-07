@@ -5,8 +5,9 @@ import { WorkspaceDatabaseSchema } from '@/electron/database/workspace/schema';
 import { workspaceDatabaseMigrations } from '@/electron/database/workspace/migrations';
 import * as fs from 'node:fs';
 import { GlobalDatabase } from '@/electron/database/global';
-import { CreateNodeInput, Node } from '@/types/nodes';
+import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
+import { LeafNodeTypes, RootNodeTypes } from '@/lib/constants';
 
 export class WorkspaceDatabase {
   accountId: string;
@@ -150,46 +151,89 @@ export class WorkspaceDatabase {
     });
   }
 
-  updateNode = async (node: Node) => {
-    await this.database
+  updateNode = async (input: UpdateNodeInput) => {
+    let updateDefinition = this.database
       .updateTable('nodes')
       .set({
-        type: node.type,
-        index: node.index,
-        parent_id: node.parentId,
-        updated_at: node.updatedAt.toISOString(),
-        updated_by: node.updatedBy,
-        version_id: node.versionId,
-        attrs: JSON.stringify(node.attrs),
-        content: JSON.stringify(node.content),
-      })
-      .where('id', '=', node.id)
-      .executeTakeFirst();
+        updated_at: new Date().toISOString(),
+        updated_by: this.userId,
+        version_id: NeuronId.generate(NeuronId.Type.Version),
+      });
+    
+    if (input.attrs !== undefined) {
+      updateDefinition = updateDefinition.set('attrs', JSON.stringify(input.attrs));
+    }
 
-    // await this.globalDatabase.addTransaction({
-    //   id: NeuronId.generate(NeuronId.Type.Transaction),
-    //   nodeId: node.id,
-    //   type: 'update_node',
-    //   workspaceId: node.workspaceId,
-    //   accountId: this.accountId,
-    //   input: JSON.stringify(node),
-    //   createdAt: new Date(),
-    // });
+    if (input.content !== undefined) {
+      updateDefinition = updateDefinition.set('content', JSON.stringify(input.content));
+    }
+
+    if (input.index !== undefined) {
+      updateDefinition = updateDefinition.set('index', input.index);
+    }
+
+    if (input.parentId !== undefined) {
+      updateDefinition = updateDefinition.set('parent_id', input.parentId);
+    }
+
+    const updatedRow = await updateDefinition
+      .where('id', '=', input.id)
+      .returningAll()
+      .executeTakeFirst();
+    
+    const node: Node = {
+      id: updatedRow.id,
+      type: updatedRow.type,
+      index: updatedRow.index,
+      parentId: updatedRow.parent_id,
+      workspaceId: updatedRow.workspace_id,
+      attrs: updatedRow.attrs && JSON.parse(updatedRow.attrs),
+      content: updatedRow.content && JSON.parse(updatedRow.content),
+      createdAt: new Date(updatedRow.created_at),
+      createdBy: updatedRow.created_by,
+      updatedAt: updatedRow.updated_at ? new Date(updatedRow.updated_at) : null,
+      updatedBy: updatedRow.updated_by,
+      versionId: updatedRow.version_id,
+    };
+
+    await this.globalDatabase.addTransaction({
+      id: NeuronId.generate(NeuronId.Type.Transaction),
+      type: 'update_node',
+      workspaceId: node.workspaceId,
+      accountId: this.accountId,
+      userId: this.userId,
+      input: JSON.stringify(input),
+      createdAt: new Date(),
+    });
   };
 
   deleteNode = async (nodeId: string) => {
     await this.database.deleteFrom('nodes').where('id', '=', nodeId).execute();
 
-    // await this.globalDatabase.addTransaction({
-    //   id: NeuronId.generate(NeuronId.Type.Transaction),
-    //   nodeId: nodeId,
-    //   type: 'delete_node',
-    //   workspaceId: this.workspaceId,
-    //   accountId: this.accountId,
-    //   input: JSON.stringify({ nodeId }),
-    //   createdAt: new Date(),
-    // });
+    await this.globalDatabase.addTransaction({
+      id: NeuronId.generate(NeuronId.Type.Transaction),
+      type: 'delete_node',
+      workspaceId: this.workspaceId,
+      accountId: this.accountId,
+      userId: this.userId,
+      input: nodeId,
+      createdAt: new Date(),
+    });
   };
+
+  deleteNodes = async (nodeIds: string[]) => {
+    await this.database.deleteFrom('nodes').where('id', 'in', nodeIds).execute();
+
+    await this.globalDatabase.addTransaction({
+      id: NeuronId.generate(NeuronId.Type.Transaction),
+      type: 'delete_nodes',
+      workspaceId: this.workspaceId,
+      accountId: this.accountId,
+      userId: this.userId,
+      input: JSON.stringify(nodeIds),
+      createdAt: new Date(),
+    });
+  }
 
   syncNodes = async (nodes: Node[]) => {
     const nodeIds = nodes.map((node) => node.id);
@@ -278,7 +322,12 @@ export class WorkspaceDatabase {
       
       nodes.push(...childNodes);
       parentIds.splice(0, parentIds.length);
-      parentIds.push(...childNodes.map((node) => node.id));
+
+      const newParentIds = childNodes
+        .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
+        .map((node) => node.id);
+      
+      parentIds.push(...newParentIds);
     }
     
     return nodes.map((node) => ({
@@ -287,8 +336,52 @@ export class WorkspaceDatabase {
       index: node.index,
       parentId: node.parent_id,
       workspaceId: node.workspace_id,
-      attrs: JSON.parse(node.attrs),
-      content: JSON.parse(node.content),
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
+      createdAt: new Date(node.created_at),
+      createdBy: node.created_by,
+      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
+      updatedBy: node.updated_by,
+      versionId: node.version_id,
+    }));
+  }
+
+  getDocumentNodes = async (documentId: string): Promise<Node[]> => {   
+    const nodes = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('parent_id', '=', documentId)
+      .execute();
+    
+    const parentIds = nodes
+      .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
+      .map((node) => node.id);
+    
+    while (parentIds.length > 0) {
+      const newChildNodes = await this.database
+        .selectFrom('nodes')
+        .selectAll()
+        .where('parent_id', 'in', parentIds)
+        .execute();
+      
+      nodes.push(...newChildNodes);
+      parentIds.splice(0, parentIds.length);
+
+      const newParentIds = newChildNodes
+        .filter((node) => !RootNodeTypes.includes(node.type) && !LeafNodeTypes.includes(node.type))
+        .map((node) => node.id);
+      
+      parentIds.push(...newParentIds);
+    }
+    
+    return nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      index: node.index,
+      parentId: node.parent_id,
+      workspaceId: node.workspace_id,
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
       createdAt: new Date(node.created_at),
       createdBy: node.created_by,
       updatedAt: node.updated_at ? new Date(node.updated_at) : null,

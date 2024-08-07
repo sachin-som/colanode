@@ -37,7 +37,6 @@ export const Workspace = observer(() => {
           return workspace.getNodes();
         },
         updateNode: async (node) => {
-          workspace.setNode(node);
           await window.workspaceDb.updateNode(
             workspace.accountId,
             workspace.id,
@@ -45,11 +44,17 @@ export const Workspace = observer(() => {
           );
         },
         deleteNode: async (nodeId) => {
-          workspace.deleteNode(nodeId);
           await window.workspaceDb.deleteNode(
             workspace.accountId,
             workspace.id,
             nodeId,
+          );
+        },
+        deleteNodes: async (nodeIds) => {
+          await window.workspaceDb.deleteNodes(
+            workspace.accountId,
+            workspace.id,
+            nodeIds,
           );
         },
         setContainerNode: (nodeId) => {
@@ -62,6 +67,13 @@ export const Workspace = observer(() => {
             conversationId,
             count,
             after,
+          );
+        },
+        getDocumentNodes: async (documentId) => {
+          return await window.workspaceDb.getDocumentNodes(
+            workspace.accountId,
+            workspace.id,
+            documentId,
           );
         },
       }}

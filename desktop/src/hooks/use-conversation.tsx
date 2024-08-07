@@ -5,7 +5,7 @@ import { ConversationStore } from '@/store/conversation';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes } from '@/lib/constants';
-import { generateKeyBetween } from 'fractional-indexing-jittered';
+import { generateNodeIndex } from '@/lib/nodes';
 
 interface useConversationResult {
   isLoading: boolean;
@@ -101,7 +101,7 @@ const buildMessageCreateInput = (
   } else {
     let lastIndex: string | null = null;
     for (const child of content.content) {
-      lastIndex = generateKeyBetween(lastIndex, null);
+      lastIndex = generateNodeIndex(lastIndex, null);
       buildMessageCreateInput(child, id, queue, lastIndex);
     }
   }

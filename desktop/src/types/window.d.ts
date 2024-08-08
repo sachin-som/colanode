@@ -12,6 +12,7 @@ export interface GlobalDbApi {
   getWorkspaces: () => Promise<Workspace[]>;
   addWorkspace: (workspace: Workspace) => Promise<void>;
   addTransaction: (transaction: Transaction) => Promise<void>;
+  logout: (accountId: string) => Promise<void>;
 }
 
 export interface WorkspaceDbApi {

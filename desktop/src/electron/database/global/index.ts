@@ -8,15 +8,17 @@ import { Transaction, TransactionType } from '@/types/transactions';
 import { globalDatabaseMigrations } from '@/electron/database/global/migrations';
 import { GlobalDatabaseData } from '@/types/global';
 import { WorkspaceDatabase } from '@/electron/database/workspace';
+import * as fs from 'node:fs';
 
 export class GlobalDatabase {
+  appPath: string;
   database: Kysely<GlobalDatabaseSchema>;
   workspaceDatabases: Map<string, WorkspaceDatabase> = new Map();
 
   constructor() {
-    const appPath = app.getPath('userData');
+    this.appPath = app.getPath('userData');
     const dialect = new SqliteDialect({
-      database: new SQLite(`${appPath}/global.db`),
+      database: new SQLite(`${this.appPath}/global.db`),
     });
 
     this.database = new Kysely<GlobalDatabaseSchema>({
@@ -36,7 +38,7 @@ export class GlobalDatabase {
 
     return {
       accounts,
-      workspaces
+      workspaces,
     };
   };
 
@@ -68,15 +70,23 @@ export class GlobalDatabase {
     return workspaceDatabase;
   };
 
-  initWorkspaceDatabase = async (
-    workspace: Workspace,
-  ): Promise<void> => {
+  initWorkspaceDatabase = async (workspace: Workspace): Promise<void> => {
     const key = `${workspace.accountId}_${workspace.id}`;
+    const accountPath = this.buildAccountDirectoryPath(workspace.accountId);
+    if (!fs.existsSync(accountPath)) {
+      fs.mkdirSync(accountPath);
+    }
+
+    const workspaceDatabasePath = this.buildWorkspaceDatabasePath(
+      workspace.accountId,
+      workspace.id,
+    );
     const workspaceDatabase = new WorkspaceDatabase(
       workspace.accountId,
       workspace.id,
       workspace.userNodeId,
       this,
+      workspaceDatabasePath,
     );
     await workspaceDatabase.migrate();
     this.workspaceDatabases.set(key, workspaceDatabase);
@@ -110,6 +120,32 @@ export class GlobalDatabase {
         device_id: account.deviceId,
       })
       .execute();
+  };
+
+  logout = async (accountId: string) => {
+    await this.database
+      .deleteFrom('accounts')
+      .where('id', '=', accountId)
+      .execute();
+
+    await this.database
+      .deleteFrom('workspaces')
+      .where('account_id', '=', accountId)
+      .execute();
+
+    await this.database
+      .deleteFrom('transactions')
+      .where('account_id', '=', accountId)
+      .execute();
+
+    const accountDirectoryPath = this.buildAccountDirectoryPath(accountId);
+    if (fs.existsSync(accountDirectoryPath)) {
+      fs.rm(accountDirectoryPath, { recursive: true, force: true }, (err) => {
+        if (err) {
+          console.error('Error deleting account directory: ', err);
+        }
+      });
+    }
   };
 
   getWorkspaces = async (): Promise<Workspace[]> => {
@@ -197,6 +233,14 @@ export class GlobalDatabase {
       .set('synced_at', date.toISOString())
       .where('id', '=', workspaceId)
       .execute();
+  };
+
+  buildAccountDirectoryPath = (accountId: string) => {
+    return `${this.appPath}/account_${accountId}`;
+  };
+
+  buildWorkspaceDatabasePath = (accountId: string, workspaceId: string) => {
+    return `${this.buildAccountDirectoryPath(accountId)}/workspace_${workspaceId}.db`;
   };
 }
 

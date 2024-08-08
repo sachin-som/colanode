@@ -9,13 +9,14 @@ import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { useStore } from '@/contexts/store';
 import { observer } from 'mobx-react-lite';
+import { useAccount } from '@/contexts/account';
 
 export const SidebarHeader = observer(() => {
   const store = useStore();
   const workspace = useWorkspace();
+  const account = useAccount();
 
-  const account = store.accounts[0];
-  const workspaces = store.workspaces;
+  const allWorkspaces = store.workspaces;
 
   return (
     <Popover>
@@ -32,7 +33,7 @@ export const SidebarHeader = observer(() => {
           <Icon name="expand-up-down-line" />
         </div>
       </PopoverTrigger>
-      <PopoverContent align="start" className="flex w-96 flex-col gap-2 p-3">
+      <PopoverContent align="start" className="flex w-96 flex-col gap-2 p-2">
         <h2 className="text-sm font-semibold">Account</h2>
         <div className="flex flex-grow items-start gap-2">
           <Avatar
@@ -48,7 +49,7 @@ export const SidebarHeader = observer(() => {
         <hr className="-mx-1 my-1 h-px bg-muted" />
         <h2 className="text-sm font-semibold">Workspaces</h2>
         <ul className="flex flex-col gap-0.5">
-          {workspaces.map((w) => {
+          {allWorkspaces.map((w) => {
             return (
               <li
                 key={w.id}
@@ -61,7 +62,7 @@ export const SidebarHeader = observer(() => {
           })}
         </ul>
         <hr />
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col">
           <button className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100">
             <Icon name="add-line" />
             <span>Create workspace</span>
@@ -70,7 +71,12 @@ export const SidebarHeader = observer(() => {
             <Icon name="settings-4-line" />
             <span>Settings</span>
           </button>
-          <button className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100">
+          <button
+            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
+            onClick={() => {
+              account.logout();
+            }}
+          >
             <Icon name="logout-circle-r-line" />
             <span>Logout</span>
           </button>

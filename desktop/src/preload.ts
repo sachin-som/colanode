@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('globalDb', {
     ipcRenderer.invoke('add-workspace', workspace),
   addTransaction: (transaction: Transaction) =>
     ipcRenderer.invoke('add-transaction', transaction),
+  logout: (accountId: string) => ipcRenderer.invoke('logout', accountId),
 });
 
 contextBridge.exposeInMainWorld('workspaceDb', {

@@ -7,11 +7,13 @@ import { AxiosContext } from '@/contexts/axios';
 import { useStore } from '@/contexts/store';
 import { observer } from 'mobx-react-lite';
 import { Outlet } from 'react-router-dom';
+import { AccountLogout } from '@/components/accounts/account-logout';
 
 const serverUrl = 'http://localhost:3000';
 
 export const App = observer(() => {
   const store = useStore();
+  const [showLogout, setShowLogout] = React.useState(false);
 
   React.useEffect(() => {
     if (!store.loaded) {
@@ -46,10 +48,25 @@ export const App = observer(() => {
   });
 
   return (
-    <AccountContext.Provider value={account}>
+    <AccountContext.Provider
+      value={{
+        ...account,
+        logout: () => {
+          setShowLogout(true);
+        },
+      }}
+    >
       <AxiosContext.Provider value={axios}>
         <Outlet />
       </AxiosContext.Provider>
+      {showLogout && (
+        <AccountLogout
+          id={account.id}
+          onCancel={() => {
+            setShowLogout(false);
+          }}
+        />
+      )}
     </AccountContext.Provider>
   );
 });

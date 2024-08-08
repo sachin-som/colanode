@@ -1,4 +1,3 @@
-import { app } from 'electron';
 import SQLite from 'better-sqlite3';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import {
@@ -6,7 +5,6 @@ import {
   WorkspaceDatabaseSchema,
 } from '@/electron/database/workspace/schema';
 import { workspaceDatabaseMigrations } from '@/electron/database/workspace/migrations';
-import * as fs from 'node:fs';
 import { GlobalDatabase } from '@/electron/database/global';
 import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
@@ -25,20 +23,15 @@ export class WorkspaceDatabase {
     workspaceId: string,
     userId: string,
     globalDatabase: GlobalDatabase,
+    path: string,
   ) {
     this.accountId = accountId;
     this.workspaceId = workspaceId;
     this.globalDatabase = globalDatabase;
     this.userId = userId;
 
-    const appPath = app.getPath('userData');
-    const accountPath = `${appPath}/account_${accountId}`;
-    if (!fs.existsSync(accountPath)) {
-      fs.mkdirSync(accountPath);
-    }
-
     const dialect = new SqliteDialect({
-      database: new SQLite(`${accountPath}/workspace_${workspaceId}.db`),
+      database: new SQLite(path),
     });
 
     this.database = new Kysely<WorkspaceDatabaseSchema>({

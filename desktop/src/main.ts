@@ -78,6 +78,9 @@ ipcMain.handle('add-workspace', async (_, workspace) =>
 ipcMain.handle('add-transaction', async (_, transaction) =>
   globalDatabase.addTransaction(transaction),
 );
+ipcMain.handle('logout', async (_, accountId) =>
+  globalDatabase.logout(accountId),
+);
 
 ipcMain.handle('create-node', async (_, accountId, workspaceId, input) => {
   const workspaceDb = globalDatabase.getWorkspaceDatabase(

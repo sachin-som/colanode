@@ -4,7 +4,7 @@ export type Node = {
   parentId?: string | null;
   type: string;
   index: string | null;
-  attrs: any;
+  attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
   createdAt: Date;
   createdBy: string;

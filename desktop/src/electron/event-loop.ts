@@ -5,9 +5,9 @@ import { Node } from '@/types/nodes';
 
 export const initEventLoop = () => {
   setInterval(async () => {
-    // const accounts = await globalDatabase.getAccounts();
-    // await sendTransactions(accounts);
-    // await syncWorkspaces(accounts);
+    const accounts = await globalDatabase.getAccounts();
+    await sendTransactions(accounts);
+    await syncWorkspaces(accounts);
   }, 10000);
 };
 

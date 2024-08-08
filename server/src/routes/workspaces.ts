@@ -9,9 +9,9 @@ import {
 } from '@/types/workspaces';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { NeuronId } from '@/lib/id';
-import { prisma } from '@/data/db';
+import { prisma } from '@/data/prisma';
 import { Request, Response, Router } from 'express';
-import { Node } from '@/types/nodes';
+import { Node, NodeBlock } from '@/types/nodes';
 
 export const workspacesRouter = Router();
 
@@ -343,11 +343,11 @@ workspacesRouter.get('/:id/nodes', async (req: Request, res: Response) => {
       workspaceId: node.workspaceId,
       type: node.type,
       index: node.index,
-      attrs: node.attrs,
+      attrs: node.attrs as Record<string, any>,
       createdAt: node.createdAt,
       createdBy: node.createdBy,
       versionId: node.versionId,
-      content: node.content ? JSON.parse(node.content as string) : null,
+      content: node.content as NodeBlock[],
       updatedAt: node.updatedAt,
       updatedBy: node.updatedBy,
       state: node.state,

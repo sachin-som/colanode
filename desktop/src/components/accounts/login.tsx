@@ -2,26 +2,24 @@ import React from 'react';
 import { EmailLogin } from '@/components/accounts/email-login';
 import { LoginOutput } from '@/types/accounts';
 import { EmailRegister } from '@/components/accounts/email-register';
-import { useStore } from "@/contexts/store";
-import { observer } from "mobx-react-lite";
+import { observer } from 'mobx-react-lite';
 
 const serverUrl = 'http://localhost:3000';
 
 export const Login = observer(() => {
-  const store = useStore();
   const [showRegister, setShowRegister] = React.useState(false);
 
   const handleLogin = async (output: LoginOutput) => {
-    store.addAccount(output.account);
     await window.globalDb.addAccount(output.account);
 
     if (output.workspaces.length > 0) {
       for (const workspace of output.workspaces) {
-        store.addWorkspace(workspace);
         await window.globalDb.addWorkspace(workspace);
       }
     }
-  }
+
+    window.location.href = '/';
+  };
 
   return (
     <div className="grid h-screen min-h-screen w-full grid-cols-5">

@@ -10,6 +10,10 @@ import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes, NodeTypes, RootNodeTypes } from '@/lib/constants';
 import { eventBus } from '@/lib/event-bus';
+import {
+  CreateNodeTransactionInput,
+  UpdateNodeTransactionInput,
+} from '@/types/transactions';
 
 export class WorkspaceDatabase {
   accountId: string;
@@ -76,33 +80,18 @@ export class WorkspaceDatabase {
       .returningAll()
       .executeTakeFirst();
 
-    const node: Node = {
-      id: insertedRow.id,
-      type: insertedRow.type,
-      index: insertedRow.index,
-      parentId: insertedRow.parent_id,
-      workspaceId: insertedRow.workspace_id,
-      attrs: insertedRow.attrs && JSON.parse(insertedRow.attrs),
-      content: insertedRow.content && JSON.parse(insertedRow.content),
-      createdAt: new Date(insertedRow.created_at),
-      createdBy: insertedRow.created_by,
-      updatedAt: insertedRow.updated_at
-        ? new Date(insertedRow.updated_at)
-        : null,
-      updatedBy: insertedRow.updated_by,
-      versionId: insertedRow.version_id,
-    };
-
+    const transactionInput = this.mapToCreateNodeTransactionInput(insertedRow);
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
       type: 'create_node',
       workspaceId: this.workspaceId,
       userId: this.userId,
       accountId: this.accountId,
-      input: JSON.stringify(node),
+      input: JSON.stringify(transactionInput),
       createdAt: new Date(),
     });
 
+    const node = this.mapToNode(insertedRow);
     eventBus.publish({
       event: 'node_created',
       payload: node,
@@ -129,32 +118,21 @@ export class WorkspaceDatabase {
       .returningAll()
       .execute();
 
-    const nodes = insertedRows.map((node) => ({
-      id: node.id,
-      type: node.type,
-      index: node.index,
-      parentId: node.parent_id,
-      workspaceId: node.workspace_id,
-      attrs: node.attrs && JSON.parse(node.attrs),
-      content: node.content && JSON.parse(node.content),
-      createdAt: new Date(node.created_at),
-      createdBy: node.created_by,
-      updatedAt: node.updated_at ? new Date(node.updated_at) : null,
-      updatedBy: node.updated_by,
-      versionId: node.version_id,
-    }));
-
+    const transactionInputs = insertedRows.map((node) =>
+      this.mapToCreateNodeTransactionInput(node),
+    );
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
       type: 'create_nodes',
       workspaceId: this.workspaceId,
       userId: this.userId,
       accountId: this.accountId,
-      input: JSON.stringify(nodes),
+      input: JSON.stringify(transactionInputs),
       createdAt: new Date(),
     });
 
-    nodes.forEach((node) => {
+    insertedRows.forEach((row) => {
+      const node = this.mapToNode(row);
       eventBus.publish({
         event: 'node_created',
         payload: node,
@@ -163,6 +141,16 @@ export class WorkspaceDatabase {
   };
 
   updateNode = async (input: UpdateNodeInput) => {
+    const row = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', input.id)
+      .executeTakeFirst();
+
+    if (!row) {
+      return;
+    }
+
     let updateDefinition = this.database.updateTable('nodes').set({
       updated_at: new Date().toISOString(),
       updated_by: this.userId,
@@ -170,17 +158,22 @@ export class WorkspaceDatabase {
     });
 
     if (input.attrs !== undefined) {
+      const existingAttrs = row.attrs && JSON.parse(row.attrs);
+      const updatedAttrs = {
+        ...existingAttrs,
+        ...input.attrs,
+      };
+
       updateDefinition = updateDefinition.set(
         'attrs',
-        JSON.stringify(input.attrs),
+        JSON.stringify(updatedAttrs),
       );
     }
 
     if (input.content !== undefined) {
-      updateDefinition = updateDefinition.set(
-        'content',
-        JSON.stringify(input.content),
-      );
+      const content =
+        input.content === null ? null : JSON.stringify(input.content);
+      updateDefinition = updateDefinition.set('content', content);
     }
 
     if (input.index !== undefined) {
@@ -196,18 +189,18 @@ export class WorkspaceDatabase {
       .returningAll()
       .executeTakeFirst();
 
-    const node: Node = this.mapToNode(updatedRow);
-
+    const transactionInput = this.mapToUpdateNodeTransactionInput(updatedRow);
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
       type: 'update_node',
-      workspaceId: node.workspaceId,
+      workspaceId: updatedRow.workspace_id,
       accountId: this.accountId,
       userId: this.userId,
-      input: JSON.stringify(input),
+      input: JSON.stringify(transactionInput),
       createdAt: new Date(),
     });
 
+    const node: Node = this.mapToNode(updatedRow);
     eventBus.publish({
       event: 'node_updated',
       payload: node,
@@ -220,6 +213,10 @@ export class WorkspaceDatabase {
       .where('id', '=', nodeId)
       .returningAll()
       .executeTakeFirst();
+
+    if (!deletedRow) {
+      return;
+    }
 
     await this.globalDatabase.addTransaction({
       id: NeuronId.generate(NeuronId.Type.Transaction),
@@ -484,6 +481,38 @@ export class WorkspaceDatabase {
       createdAt: new Date(node.created_at),
       createdBy: node.created_by,
       updatedAt: node.updated_at ? new Date(node.updated_at) : null,
+      updatedBy: node.updated_by,
+      versionId: node.version_id,
+    };
+  };
+
+  mapToCreateNodeTransactionInput = (
+    node: NodesTableSchema,
+  ): CreateNodeTransactionInput => {
+    return {
+      id: node.id,
+      workspaceId: node.workspace_id,
+      parentId: node.parent_id,
+      type: node.type,
+      index: node.index,
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
+      createdAt: new Date(node.created_at),
+      createdBy: node.created_by,
+      versionId: node.version_id,
+    };
+  };
+
+  mapToUpdateNodeTransactionInput = (
+    node: NodesTableSchema,
+  ): UpdateNodeTransactionInput => {
+    return {
+      id: node.id,
+      parentId: node.parent_id,
+      index: node.index,
+      attrs: node.attrs && JSON.parse(node.attrs),
+      content: node.content && JSON.parse(node.content),
+      updatedAt: new Date(node.updated_at),
       updatedBy: node.updated_by,
       versionId: node.version_id,
     };

@@ -4,7 +4,7 @@ export type Node = {
   parentId?: string | null;
   type: string;
   index?: string | null;
-  attrs: any;
+  attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
   createdAt: Date;
   createdBy: string;
@@ -34,7 +34,7 @@ export type CreateNodeInput = {
   type: string;
   parentId?: string | null;
   index?: string | null;
-  attrs: any;
+  attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
 };
 
@@ -42,6 +42,6 @@ export type UpdateNodeInput = {
   id: string;
   parentId?: string | null;
   index?: string | null;
-  attrs?: any | null;
+  attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
 };

@@ -11,7 +11,7 @@ import axios from 'axios';
 import { ApiError } from '@/types/api';
 import { NeuronId } from '@/lib/id';
 import jwt from 'jsonwebtoken';
-import { prisma } from '@/data/db';
+import { prisma } from '@/data/prisma';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput } from '@/types/workspaces';
 

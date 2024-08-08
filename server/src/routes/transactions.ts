@@ -1,92 +1,27 @@
 import { Request, Response, Router } from 'express';
 import { Transaction } from '@/types/transactions';
-import { Node } from '@/types/nodes';
-import { prisma } from '@/data/db';
+import { producer, TOPIC_NAMES } from '@/data/kafka';
 
 export const transactionsRouter = Router();
 
 transactionsRouter.post('/', async (req: Request, res: Response) => {
   const transactions: Transaction[] = req.body.transactions;
 
-  const appliedTransactionIds: string[] = [];
-  for (const transaction of transactions) {
-    if (transaction.type === 'create_node') {
-      const node = JSON.parse(transaction.input) as Node;
-      await prisma.nodes.create({
-        data: {
-          id: node.id,
-          parentId: node.parentId,
-          workspaceId: node.workspaceId,
-          type: node.type,
-          index: node.index,
-          attrs: node.attrs,
-          createdAt: node.createdAt,
-          createdBy: node.createdBy,
-          versionId: node.versionId,
-          content: JSON.stringify(node.content),
-          state: node.state,
-        },
-      });
+  const messages = transactions.map((transaction) => ({
+    key: transaction.id,
+    value: JSON.stringify(transaction),
+  }));
 
-      appliedTransactionIds.push(transaction.id);
-    } else if (transaction.type === 'create_nodes') {
-      const nodes = JSON.parse(transaction.input) as Node[];
-      await prisma.nodes.createMany({
-        data: nodes.map((node) => ({
-          id: node.id,
-          parentId: node.parentId,
-          workspaceId: node.workspaceId,
-          type: node.type,
-          index: node.index,
-          attrs: node.attrs,
-          createdAt: node.createdAt,
-          createdBy: node.createdBy,
-          versionId: node.versionId,
-          content: JSON.stringify(node.content),
-          state: node.state,
-        })),
-      });
+  await producer.sendBatch({
+    topicMessages: [
+      {
+        topic: TOPIC_NAMES.TRANSACTIONS,
+        messages: messages,
+      },
+    ],
+  });
 
-      appliedTransactionIds.push(transaction.id);
-    } else if (transaction.type === 'update_node') {
-      const node = JSON.parse(transaction.input) as Node;
-      await prisma.nodes.update({
-        where: {
-          id: node.id,
-        },
-        data: {
-          parentId: node.parentId,
-          attrs: node.attrs,
-          content: JSON.stringify(node.content),
-          updatedAt: node.updatedAt,
-          updatedBy: node.updatedBy,
-        },
-      });
-
-      appliedTransactionIds.push(transaction.id);
-    } else if (transaction.type === 'delete_node') {
-      await prisma.nodes.delete({
-        where: {
-          id: transaction.input,
-        },
-      });
-
-      appliedTransactionIds.push(transaction.id);
-    } else if (transaction.type === 'delete_nodes') {
-      const input = JSON.parse(transaction.input) as string[];
-      await prisma.nodes.deleteMany({
-        where: {
-          id: {
-            in: input,
-          },
-        },
-      });
-
-      appliedTransactionIds.push(transaction.id);
-    }
-  }
-
-  res.json({
-    appliedTransactionIds,
+  res.status(200).json({
+    appliedTransactionIds: transactions.map((transaction) => transaction.id),
   });
 });

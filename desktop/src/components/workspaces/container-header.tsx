@@ -19,59 +19,33 @@ import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/contexts/workspace';
 import { cn } from '@/lib/utils';
 
+interface BreadcrumbNodeProps {
+  node: Node;
+  className?: string;
+}
+
+const BreadcrumbNode = observer(({ node, className }: BreadcrumbNodeProps) => {
+  const name = node.attrs.name ?? 'Untitled';
+  const avatar = node.attrs.avatar;
+
+  return (
+    <div className={cn('flex items-center space-x-1', className)}>
+      {avatar && (
+        <Avatar size="small" id={node.id} name={name} avatar={avatar} />
+      )}
+      <span>{name}</span>
+    </div>
+  );
+});
+
 interface ContainerHeaderProps {
   node: Node;
   breadcrumbNodes: Node[];
 }
 
-const BreadcrumbNode = observer(({ node }: { node: Node }) => {
-  const workspace = useWorkspace();
-  const name = node.attrs.name ?? 'Untitled';
-  const avatar = node.attrs.avatar;
-  const isClickable = node.type !== NodeTypes.Space;
-
-  return (
-    <React.Fragment>
-      <BreadcrumbItem
-        className={cn(
-          'flex items-center space-x-1',
-          isClickable && 'hover:cursor-pointer hover:text-foreground',
-        )}
-        onClick={() => {
-          if (isClickable) {
-            workspace.navigateToNode(node.id);
-          }
-        }}
-      >
-        {avatar && (
-          <Avatar size="small" id={node.id} name={name} avatar={avatar} />
-        )}
-        <span>{name}</span>
-      </BreadcrumbItem>
-      <BreadcrumbSeparator />
-    </React.Fragment>
-  );
-});
-
-const DropdownNode = observer(({ node }: { node: Node }) => {
-  const workspace = useWorkspace();
-  const name = node.attrs.name ?? 'Untitled';
-
-  return (
-    <DropdownMenuItem
-      onClick={() => {
-        workspace.navigateToNode(node.id);
-      }}
-    >
-      {name}
-    </DropdownMenuItem>
-  );
-});
-
 export const ContainerHeader = observer(
   ({ node, breadcrumbNodes }: ContainerHeaderProps) => {
-    const nodeName = node.attrs.name ?? 'Untitled';
-    const nodeAvatar = node.attrs.avatar;
+    const workspace = useWorkspace();
 
     const showEllipsis = breadcrumbNodes.length > 2;
     const firstNodes = showEllipsis
@@ -80,12 +54,35 @@ export const ContainerHeader = observer(
     const ellipsisNodes = showEllipsis ? breadcrumbNodes.slice(1, -1) : [];
     const lastNodes = showEllipsis ? breadcrumbNodes.slice(-1) : [];
 
+    const isClickable = (node: Node) => node.type !== NodeTypes.Space;
+
     return (
       <Breadcrumb className="mx-1 flex h-12 items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80">
         <BreadcrumbList>
-          {firstNodes.map((breadcrumbNode) => (
-            <BreadcrumbNode key={breadcrumbNode.id} node={breadcrumbNode} />
-          ))}
+          {firstNodes.map((breadcrumbNode) => {
+            return (
+              <React.Fragment>
+                <BreadcrumbItem
+                  onClick={() => {
+                    if (isClickable(breadcrumbNode)) {
+                      workspace.navigateToNode(breadcrumbNode.id);
+                    }
+                  }}
+                >
+                  <BreadcrumbNode
+                    key={breadcrumbNode.id}
+                    node={breadcrumbNode}
+                    className={
+                      isClickable(breadcrumbNode)
+                        ? 'hover:cursor-pointer hover:text-foreground'
+                        : ''
+                    }
+                  />
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </React.Fragment>
+            );
+          })}
           {showEllipsis && (
             <BreadcrumbItem>
               <DropdownMenu>
@@ -93,31 +90,59 @@ export const ContainerHeader = observer(
                   <BreadcrumbEllipsis className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  {ellipsisNodes.map((breadcrumbNode) => (
-                    <DropdownNode
-                      key={breadcrumbNode.id}
-                      node={breadcrumbNode}
-                    />
-                  ))}
+                  {ellipsisNodes.map((breadcrumbNode) => {
+                    return (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (isClickable(breadcrumbNode)) {
+                            workspace.navigateToNode(breadcrumbNode.id);
+                          }
+                        }}
+                      >
+                        <BreadcrumbNode
+                          key={breadcrumbNode.id}
+                          node={breadcrumbNode}
+                          className={
+                            isClickable(breadcrumbNode)
+                              ? 'hover:cursor-pointer hover:text-foreground'
+                              : ''
+                          }
+                        />
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             </BreadcrumbItem>
           )}
           {showEllipsis &&
             lastNodes.length > 0 &&
-            lastNodes.map((breadcrumbNode) => (
-              <BreadcrumbNode key={breadcrumbNode.id} node={breadcrumbNode} />
-            ))}
+            lastNodes.map((breadcrumbNode) => {
+              return (
+                <React.Fragment>
+                  <BreadcrumbItem
+                    onClick={() => {
+                      if (isClickable(breadcrumbNode)) {
+                        workspace.navigateToNode(breadcrumbNode.id);
+                      }
+                    }}
+                  >
+                    <BreadcrumbNode
+                      key={breadcrumbNode.id}
+                      node={breadcrumbNode}
+                      className={
+                        isClickable(breadcrumbNode)
+                          ? 'hover:cursor-pointer hover:text-foreground'
+                          : ''
+                      }
+                    />
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </React.Fragment>
+              );
+            })}
           <BreadcrumbItem>
-            {nodeAvatar && (
-              <Avatar
-                size="small"
-                id={node.id}
-                name={nodeName}
-                avatar={nodeAvatar}
-              />
-            )}
-            <span>{nodeName}</span>
+            <BreadcrumbNode node={node} />
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

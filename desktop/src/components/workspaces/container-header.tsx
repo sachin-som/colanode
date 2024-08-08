@@ -15,9 +15,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/contexts/workspace';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { debounce } from 'lodash';
 
 interface BreadcrumbNodeProps {
   node: Node;
@@ -37,6 +44,44 @@ const BreadcrumbNode = observer(({ node, className }: BreadcrumbNodeProps) => {
     </div>
   );
 });
+
+interface BreadcrumbNodeEditorProps {
+  node: Node;
+}
+
+export const BreadcrumbNodeEditor = observer(
+  ({ node }: BreadcrumbNodeEditorProps) => {
+    const workspace = useWorkspace();
+    const [name, setName] = React.useState(node.attrs.name ?? '');
+
+    const handleNameChange = React.useMemo(
+      () =>
+        debounce(async (newName: string) => {
+          await workspace.updateNode({
+            id: node.id,
+            attrs: {
+              name: newName,
+            },
+          });
+        }, 500),
+      [node.id],
+    );
+
+    return (
+      <div>
+        <Input
+          placeholder="Name"
+          value={name}
+          onChange={async (e) => {
+            const newName = e.target.value;
+            setName(newName);
+            await handleNameChange(newName);
+          }}
+        />
+      </div>
+    );
+  },
+);
 
 interface ContainerHeaderProps {
   node: Node;
@@ -61,7 +106,7 @@ export const ContainerHeader = observer(
         <BreadcrumbList>
           {firstNodes.map((breadcrumbNode) => {
             return (
-              <React.Fragment>
+              <React.Fragment key={breadcrumbNode.id}>
                 <BreadcrumbItem
                   onClick={() => {
                     if (isClickable(breadcrumbNode)) {
@@ -70,7 +115,6 @@ export const ContainerHeader = observer(
                   }}
                 >
                   <BreadcrumbNode
-                    key={breadcrumbNode.id}
                     node={breadcrumbNode}
                     className={
                       isClickable(breadcrumbNode)
@@ -93,6 +137,7 @@ export const ContainerHeader = observer(
                   {ellipsisNodes.map((breadcrumbNode) => {
                     return (
                       <DropdownMenuItem
+                        key={breadcrumbNode.id}
                         onClick={() => {
                           if (isClickable(breadcrumbNode)) {
                             workspace.navigateToNode(breadcrumbNode.id);
@@ -100,7 +145,6 @@ export const ContainerHeader = observer(
                         }}
                       >
                         <BreadcrumbNode
-                          key={breadcrumbNode.id}
                           node={breadcrumbNode}
                           className={
                             isClickable(breadcrumbNode)
@@ -119,7 +163,7 @@ export const ContainerHeader = observer(
             lastNodes.length > 0 &&
             lastNodes.map((breadcrumbNode) => {
               return (
-                <React.Fragment>
+                <React.Fragment key={breadcrumbNode.id}>
                   <BreadcrumbItem
                     onClick={() => {
                       if (isClickable(breadcrumbNode)) {
@@ -128,7 +172,6 @@ export const ContainerHeader = observer(
                     }}
                   >
                     <BreadcrumbNode
-                      key={breadcrumbNode.id}
                       node={breadcrumbNode}
                       className={
                         isClickable(breadcrumbNode)
@@ -141,8 +184,15 @@ export const ContainerHeader = observer(
                 </React.Fragment>
               );
             })}
-          <BreadcrumbItem>
-            <BreadcrumbNode node={node} />
+          <BreadcrumbItem className="hover:cursor-pointer hover:text-foreground">
+            <Popover>
+              <PopoverTrigger>
+                <BreadcrumbNode node={node} />
+              </PopoverTrigger>
+              <PopoverContent>
+                <BreadcrumbNodeEditor node={node} />
+              </PopoverContent>
+            </Popover>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

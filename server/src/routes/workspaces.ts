@@ -85,6 +85,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
         createdAt: new Date(),
         createdBy: userNodeId,
         versionId: NeuronId.generate(NeuronId.Type.Version),
+        serverCreatedAt: new Date(),
       },
     }),
     prisma.workspaceAccounts.create({
@@ -350,6 +351,8 @@ workspacesRouter.get('/:id/nodes', async (req: Request, res: Response) => {
       content: node.content as NodeBlock[],
       updatedAt: node.updatedAt,
       updatedBy: node.updatedBy,
+      serverCreatedAt: node.serverCreatedAt,
+      serverUpdatedAt: node.serverUpdatedAt,
       state: node.state,
     };
   });

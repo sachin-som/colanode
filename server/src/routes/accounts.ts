@@ -10,15 +10,12 @@ import {
 import axios from 'axios';
 import { ApiError } from '@/types/api';
 import { NeuronId } from '@/lib/id';
-import jwt from 'jsonwebtoken';
 import { prisma } from '@/data/prisma';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput } from '@/types/workspaces';
+import { createJwtToken } from '@/lib/jwt';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
-const JwtSecretKey = process.env.JWT_SECRET ?? '';
-const JwtAudience = process.env.JWT_AUDIENCE ?? '';
-const JwtIssuer = process.env.JWT_ISSUER ?? '';
 const SaltRounds = 10;
 
 export const accountsRouter = Router();
@@ -184,19 +181,11 @@ const buildLoginOutput = async (
   name: string,
   email: string,
 ): Promise<LoginOutput> => {
-  const signOptions: jwt.SignOptions = {
-    issuer: JwtIssuer,
-    audience: JwtAudience,
-    subject: id,
-    expiresIn: '1y',
-  };
-
-  const payload = {
-    name: name,
-    email: email,
-  };
-
-  const token = jwt.sign(payload, JwtSecretKey, signOptions);
+  const token = createJwtToken({
+    id,
+    name,
+    email,
+  });
 
   const accountWorkspaces = await prisma.workspaceAccounts.findMany({
     where: {
@@ -237,7 +226,7 @@ const buildLoginOutput = async (
   const accountDevice = await prisma.accountDevices.create({
     data: {
       id: NeuronId.generate(NeuronId.Type.Device),
-      account_id: id,
+      accountId: id,
       type: 1,
       createdAt: new Date(),
       version: '0.1.0',

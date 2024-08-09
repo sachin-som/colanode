@@ -55,19 +55,21 @@ model workspaceAccounts {
 }
 
 model nodes {
-  id          String    @id @db.VarChar(30)
-  workspaceId String    @db.VarChar(30) @map("workspace_id")
-  parentId    String?   @db.VarChar(30) @map("parent_id")
-  type        String    @db.VarChar(30)
-  index       String?    @db.VarChar(30)
-  attrs       Json?
-  content     Json?
-  createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
-  createdBy   String    @db.VarChar(30) @map("created_by")
-  updatedAt   DateTime? @db.Timestamptz(6) @map("updated_at")
-  updatedBy   String?   @db.VarChar(30) @map("updated_by")
-  versionId   String    @db.VarChar(30) @map("version_id")
-  state       String?    @db.Text()
+  id              String    @id @db.VarChar(30)
+  workspaceId     String    @db.VarChar(30) @map("workspace_id")
+  parentId        String?   @db.VarChar(30) @map("parent_id")
+  type            String    @db.VarChar(30)
+  index           String?   @db.VarChar(30)
+  attrs           Json?
+  content         Json?
+  createdAt       DateTime  @db.Timestamptz(6) @map("created_at")
+  createdBy       String    @db.VarChar(30) @map("created_by")
+  updatedAt       DateTime? @db.Timestamptz(6) @map("updated_at")
+  updatedBy       String?   @db.VarChar(30) @map("updated_by")
+  versionId       String    @db.VarChar(30) @map("version_id")
+  serverCreatedAt DateTime  @db.Timestamptz(6) @map("server_created_at")
+  serverUpdatedAt DateTime? @db.Timestamptz(6) @map("server_updated_at")
+  state           String?   @db.Text()
 
   parent nodes? @relation("node_parent_child", fields: [parentId], references: [id], onDelete: Cascade)
   children nodes[] @relation("node_parent_child")
@@ -77,7 +79,7 @@ model nodes {
 
 model accountDevices {
   id            String    @id @db.VarChar(30)
-  account_id    String    @db.VarChar(30)
+  accountId     String    @db.VarChar(30) @map("account_id")
   type          Int
   version       String    @db.VarChar(30) @map("version")
   platform      String?   @db.VarChar(30)
@@ -88,4 +90,15 @@ model accountDevices {
   lastActiveAt  DateTime? @db.Timestamptz(6) @map("last_active_at")
 
   @@map("account_devices")
+}
+
+model updates {
+  id          String    @id @db.VarChar(30)
+  workspaceId String    @db.VarChar(30) @map("workspace_id")
+  type        String    @db.VarChar(30)
+  content     Json?
+  createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
+  devices     String[]
+
+  @@map("updates")
 }

@@ -18,6 +18,8 @@ const createNodesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_by', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
+      .addColumn('server_created_at', 'text')
+      .addColumn('server_updated_at', 'text')
       .addColumn('state', 'text')
       .execute();
   },

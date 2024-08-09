@@ -10,6 +10,8 @@ const createAccountsTable: Migration = {
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
       .addColumn('token', 'text', (col) => col.notNull())
+      .addColumn('last_update_id', 'text')
+      .addColumn('last_update_at', 'text')
       .execute();
   },
   down: async (db) => {

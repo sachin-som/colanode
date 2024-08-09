@@ -1,4 +1,4 @@
-import { kafka, TOPIC_NAMES, KAFKA_CONSUMER_GROUP } from '@/data/kafka';
+import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
 import {
   CreateNodeTransactionInput,
   Transaction,
@@ -8,7 +8,7 @@ import { prisma } from '@/data/prisma';
 import { Prisma } from '@prisma/client';
 
 export const initTransactionsConsumer = async () => {
-  const consumer = kafka.consumer({ groupId: KAFKA_CONSUMER_GROUP });
+  const consumer = kafka.consumer({ groupId: CONSUMER_IDS.TRANSACTIONS });
   await consumer.connect();
 
   await consumer.subscribe({ topic: TOPIC_NAMES.TRANSACTIONS });
@@ -55,6 +55,7 @@ const handleCreateNodeTransaction = async (transaction: Transaction) => {
     createdAt: input.createdAt,
     createdBy: input.createdBy,
     versionId: input.versionId,
+    serverCreatedAt: new Date(),
   };
 
   if (input.attrs !== undefined && input.attrs !== null) {
@@ -82,6 +83,7 @@ const handleCreateNodesTransaction = async (transaction: Transaction) => {
       createdAt: node.createdAt,
       createdBy: node.createdBy,
       versionId: node.versionId,
+      serverCreatedAt: new Date(),
     };
 
     if (node.attrs !== undefined && node.attrs !== null) {
@@ -118,6 +120,7 @@ const handleUpdateNodeTransaction = async (transaction: Transaction) => {
     updatedAt: input.updatedAt,
     updatedBy: input.updatedBy,
     versionId: input.versionId,
+    serverUpdatedAt: new Date(),
   };
 
   if (input.attrs !== undefined) {

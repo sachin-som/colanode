@@ -4,10 +4,6 @@ const KAFKA_CLIENT_ID = process.env.KAFKA_CLIENT_ID ?? 'neuron';
 const KAFKA_BROKERS = process.env.KAFKA_BROKERS ?? '';
 const KAFKA_USERNAME = process.env.KAFKA_USERNAME;
 const KAFKA_PASSWORD = process.env.KAFKA_PASSWORD;
-const KAFKA_TRANSACTIONS_TOPIC_NAME =
-  process.env.KAFKA_TRANSACTIONS_TOPIC_NAME ?? 'neuron_transactions';
-export const KAFKA_CONSUMER_GROUP =
-  process.env.KAFKA_CONSUMER_GROUP ?? 'neuron';
 
 export const kafka = new Kafka({
   clientId: KAFKA_CLIENT_ID,
@@ -25,7 +21,24 @@ export const kafka = new Kafka({
 export const producer = kafka.producer();
 
 export const TOPIC_NAMES = {
-  TRANSACTIONS: KAFKA_TRANSACTIONS_TOPIC_NAME,
+  TRANSACTIONS:
+    process.env.KAFKA_TRANSACTIONS_TOPIC_NAME ?? 'neuron_transactions',
+  NODE_CHANGES:
+    process.env.KAFKA_NODE_CHANGES_TOPIC_NAME ?? 'neuron_node_changes',
+  UPDATE_CHANGES:
+    process.env.KAFKA_UPDATE_CHANGES_TOPIC_NAME ?? 'neuron_update_changes',
+};
+
+export const CONSUMER_IDS = {
+  TRANSACTIONS:
+    process.env.KAFKA_TRANSACTIONS_CONSUMER_ID ??
+    'neuron_transactions_consumer',
+  NODE_CHANGES:
+    process.env.KAFKA_NODE_CHANGES_CONSUMER_ID ??
+    'neuron_node_changes_consumer',
+  UPDATE_CHANGES:
+    process.env.KAFKA_UPDATE_CHANGES_CONSUMER_ID ??
+    'neuron_update_changes_consumer',
 };
 
 const connectProducer = async () => {

@@ -1,14 +1,10 @@
-import jwt from 'jsonwebtoken';
 import {
   ApiError,
   NeuronNextFunction,
   NeuronRequest,
   NeuronResponse,
 } from '@/types/api';
-
-const JwtSecretKey = process.env.JWT_SECRET ?? '';
-const JwtAudience = process.env.JWT_AUDIENCE ?? '';
-const JwtIssuer = process.env.JWT_ISSUER ?? '';
+import { verifyJwtToken } from '@/lib/jwt';
 
 export const authMiddleware = (
   req: NeuronRequest,
@@ -24,18 +20,14 @@ export const authMiddleware = (
     });
   }
 
-  try {
-    const decoded = jwt.verify(token, JwtSecretKey, {
-      issuer: JwtIssuer,
-      audience: JwtAudience,
-    });
-
-    req.accountId = decoded.sub as string;
-    next();
-  } catch (err) {
-    res.status(400).json({
+  const payload = verifyJwtToken(token);
+  if (!payload) {
+    return res.status(400).json({
       code: ApiError.Unauthorized,
       message: 'Invalid Token',
     });
   }
+
+  req.accountId = payload.id as string;
+  next();
 };

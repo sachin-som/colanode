@@ -14,6 +14,7 @@ enum IdType {
   Node = 'nd',
   Message = 'ms',
   Device = 'dv',
+  Update = 'up',
 }
 
 export class NeuronId {
@@ -47,6 +48,12 @@ export class NeuronId {
         return IdType.Page;
       case 'channel':
         return IdType.Channel;
+      case 'message':
+        return IdType.Message;
+      case 'device':
+        return IdType.Device;
+      case 'update':
+        return IdType.Update;
       default:
         return IdType.Node;
     }

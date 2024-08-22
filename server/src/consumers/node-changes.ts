@@ -72,7 +72,7 @@ const handleNodeChange = async (change: ChangeMessage<NodeChangeData>) => {
     serverUpdatedAt: changeData.server_updated_at
       ? new Date(changeData.server_updated_at)
       : null,
-    state: changeData.state,
+    serverVersionId: changeData.server_version_id,
   };
 
   await prisma.updates.create({

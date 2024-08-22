@@ -1,24 +1,16 @@
 import { createContext, useContext } from 'react';
 import { Workspace } from '@/types/workspaces';
-import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
+import { CompiledQuery, Kysely, QueryResult } from 'kysely';
+import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 
 interface WorkspaceContext extends Workspace {
-  createNode: (input: CreateNodeInput) => Promise<void>;
-  createNodes: (inputs: CreateNodeInput[]) => Promise<void>;
-  updateNode: (input: UpdateNodeInput) => Promise<void>;
-  deleteNode: (nodeId: string) => Promise<void>;
-  deleteNodes: (nodeIds: string[]) => Promise<void>;
-
+  schema: Kysely<WorkspaceDatabaseSchema>;
+  executeQuery: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
+  executeQueryAndSubscribe: <R>(
+    queryId: string,
+    query: CompiledQuery<R>,
+  ) => Promise<QueryResult<R>>;
   navigateToNode: (nodeId: string) => void;
-
-  getSidebarNodes: () => Promise<Node[]>;
-  getConversationNodes: (
-    conversationId: string,
-    count: number,
-    after?: string | null,
-  ) => Promise<Node[]>;
-  getDocumentNodes: (documentId: string) => Promise<Node[]>;
-  getContainerNodes: (containerId: string) => Promise<Node[]>;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

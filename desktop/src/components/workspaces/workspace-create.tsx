@@ -15,23 +15,31 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import {parseApiError} from "@/lib/axios";
-import {Workspace} from "@/types/workspaces";
-import {useAxios} from "@/contexts/axios";
-import {useStore} from "@/contexts/store";
-import {observer} from "mobx-react-lite";
+import { parseApiError } from '@/lib/axios';
+import { observer } from 'mobx-react-lite';
+import { useMutation } from '@tanstack/react-query';
+import { Workspace } from '@/types/workspaces';
+import { useAppDatabase } from '@/contexts/app-database';
+import { useAxios } from '@/contexts/axios';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
   description: z.string(),
 });
 
-export const WorkspaceCreate = observer(() => {
-  const store = useStore();
-  const axios = useAxios();
+type formSchemaType = z.infer<typeof formSchema>;
 
-  const [isPending, setIsPending] = React.useState(false);
-  const form = useForm<z.infer<typeof formSchema>>({
+export const WorkspaceCreate = observer(() => {
+  const appDatabase = useAppDatabase();
+  const axios = useAxios();
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (input: formSchemaType) => {
+      const { data } = await axios.post<Workspace>('v1/workspaces', input);
+      return data;
+    },
+  });
+
+  const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -39,31 +47,38 @@ export const WorkspaceCreate = observer(() => {
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsPending(true);
-    try {
-      const { data } = await axios.post<Workspace>('v1/workspaces', values);
-      if (data) {
-        store.addWorkspace(data);
-        await window.globalDb.addWorkspace(data);
-      } else {
+  const handleSubmit = async (values: formSchemaType) => {
+    mutate(values, {
+      onSuccess: async (data) => {
+        const insertWorkspaceQuery = appDatabase.database
+          .insertInto('workspaces')
+          .values({
+            id: data.id,
+            account_id: data.accountId,
+            name: data.name,
+            description: data.description,
+            avatar: data.avatar,
+            role: data.role,
+            synced_at: new Date().toISOString(),
+            user_id: data.userId,
+            version_id: data.versionId,
+          })
+          .compile();
+
+        await appDatabase.executeQuery(insertWorkspaceQuery);
+
+        window.location.href = '/';
+      },
+      onError: (error) => {
+        const apiError = parseApiError(error);
         toast({
           title: 'Failed to create workspace',
-          description: 'Invalid response from server',
+          description: apiError.message,
           variant: 'destructive',
         });
-      }
-    } catch (error) {
-      const apiError = parseApiError(error);
-      toast({
-        title: 'Failed to create workspace',
-        description: apiError.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPending(false);
-    }
-  }
+      },
+    });
+  };
 
   return (
     <div className="container flex flex-row justify-center">
@@ -82,20 +97,20 @@ export const WorkspaceCreate = observer(() => {
               <FormField
                 control={form.control}
                 name="name"
-                render={({field}) => (
+                render={({ field }) => (
                   <FormItem className="flex-1">
                     <FormLabel>Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="Name" {...field} />
                     </FormControl>
-                    <FormMessage/>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
                 name="description"
-                render={({field}) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
@@ -104,14 +119,14 @@ export const WorkspaceCreate = observer(() => {
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage/>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             <div className="flex flex-row justify-end gap-2">
               <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner className="mr-1"/>}
+                {isPending && <Spinner className="mr-1" />}
                 Create
               </Button>
             </div>
@@ -119,5 +134,5 @@ export const WorkspaceCreate = observer(() => {
         </Form>
       </div>
     </div>
-  )
+  );
 });

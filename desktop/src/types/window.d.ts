@@ -1,75 +1,35 @@
-import { Workspace } from '@/types/workspaces';
-import { Transaction } from '@/types/transactions';
-import { Account } from '@/types/accounts';
-import { CreateNodeInput, Node, UpdateNodeInput } from '@/types/nodes';
 import { GlobalDatabaseData } from '@/types/global';
 import { EventBus } from '@/lib/event-bus';
+import { CompiledQuery, QueryResult } from 'kysely';
 
-export interface GlobalDbApi {
+interface NeuronApi {
   init: () => Promise<GlobalDatabaseData>;
-  getAccounts: () => Promise<Account[]>;
-  addAccount: (account: Account) => Promise<void>;
-  getWorkspaces: () => Promise<Workspace[]>;
-  addWorkspace: (workspace: Workspace) => Promise<void>;
-  addTransaction: (transaction: Transaction) => Promise<void>;
   logout: (accountId: string) => Promise<void>;
-}
+  executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
 
-export interface WorkspaceDbApi {
-  createNode: (
+  executeWorkspaceQuery: (
     accountId: string,
     workspaceId: string,
-    input: CreateNodeInput,
-  ) => Promise<void>;
-  createNodes: (
-    accountId: string,
-    workspaceId: string,
-    inputs: CreateNodeInput[],
-  ) => Promise<void>;
-  getNodes: (accountId: string, workspaceId: string) => Promise<Node[]>;
-  updateNode: (
-    accountId: string,
-    workspaceId: string,
-    input: UpdateNodeInput,
-  ) => Promise<void>;
-  deleteNode: (
-    accountId: string,
-    workspaceId: string,
-    nodeId: string,
-  ) => Promise<void>;
-  deleteNodes: (
-    accountId: string,
-    workspaceId: string,
-    nodeIds: string[],
-  ) => Promise<void>;
+    query: CompiledQuery<R>,
+  ) => Promise<QueryResult<R>>;
 
-  getSidebarNodes: (accountId: string, workspaceId: string) => Promise<Node[]>;
-
-  getConversationNodes: (
+  executeWorkspaceQueryAndSubscribe: (
     accountId: string,
     workspaceId: string,
-    conversationId: string,
-    count: number,
-    after?: string | null,
-  ) => Promise<Node[]>;
+    queryId: string,
+    query: CompiledQuery<R>,
+  ) => Promise<QueryResult<R>>;
 
-  getDocumentNodes: (
+  unsubscribeWorkspaceQuery: (
     accountId: string,
     workspaceId: string,
-    documentId: string,
-  ) => Promise<Node[]>;
-
-  getContainerNodes: (
-    accountId: string,
-    workspaceId: string,
-    containerId: string,
-  ) => Promise<Node[]>;
+    queryId: string,
+  ) => Promise<void>;
 }
 
 declare global {
   interface Window {
-    globalDb: GlobalDbApi;
-    workspaceDb: WorkspaceDbApi;
+    neuron: NeuronApi;
     eventBus: EventBus;
   }
 }

@@ -41,7 +41,7 @@ export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
             disabled={isDeleting}
             onClick={async () => {
               setIsDeleting(true);
-              await window.globalDb.logout(id);
+              await window.neuron.logout(id);
               window.location.href = '/';
             }}
           >

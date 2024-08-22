@@ -1,6 +1,5 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { Node } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
 import {
   Tooltip,
@@ -12,21 +11,17 @@ import { InView } from 'react-intersection-observer';
 import { MessageReactionPicker } from '@/components/messages/message-reaction-picker';
 import { Icon } from '@/components/ui/icon';
 import { MessageDeleteButton } from '@/components/messages/message-delete-button';
-import { MessageReference } from '@/components/messages/message-reference';
-import { MessageReactions } from '@/components/messages/message-reactions';
-import { useWorkspace } from '@/contexts/workspace';
-import { buildNodeWithChildren } from '@/lib/nodes';
 import { NodeRenderer } from '@/editor/renderers/node';
+import { MessageNode } from '@/types/messages';
 
 interface MessageProps {
-  message: Node;
-  previousMessage?: Node;
-  nodes: Node[];
+  message: MessageNode;
+  previousMessage?: MessageNode;
 }
 
 export const Message = observer(
-  ({ message, previousMessage, nodes }: MessageProps) => {
-    const author = nodes.find((node) => node.id === message.createdBy) ?? {
+  ({ message, previousMessage }: MessageProps) => {
+    const author = message.author ?? {
       attrs: {
         id: message.createdBy,
         name: 'Deleted user',
@@ -53,9 +48,8 @@ export const Message = observer(
     const canEdit = true;
     const canDelete = true;
     const canReplyInThread = true;
-    const nodeWithChildren = buildNodeWithChildren(message, nodes);
 
-    if (!nodeWithChildren.children || nodeWithChildren.children.length === 0) {
+    if (!message.children || message.children.length === 0) {
       return null;
     }
 
@@ -139,7 +133,7 @@ export const Message = observer(
             </ul>
             {/*{data.messageReference && <MessageReference />}*/}
             <div className="text-foreground">
-              <NodeRenderer node={nodeWithChildren} keyPrefix={message.id} />
+              <NodeRenderer node={message} keyPrefix={message.id} />
             </div>
             {/*<MessageReactions*/}
             {/*  message={message}*/}

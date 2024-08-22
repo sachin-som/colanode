@@ -1,11 +1,6 @@
 import React from 'react';
 import { debounce, isEqual } from 'lodash';
-import {
-  CreateNodeInput,
-  Node,
-  NodeBlock,
-  UpdateNodeInput,
-} from '@/types/nodes';
+import { Node, NodeBlock } from '@/types/nodes';
 import { useWorkspace } from '@/contexts/workspace';
 import { JSONContent } from '@tiptap/core';
 import { DocumentStore } from '@/store/document';
@@ -37,8 +32,8 @@ export const useDocument = (node: Node): useNodeResult => {
 
   React.useEffect(() => {
     const fetchNodes = async () => {
-      const nodes = await workspace.getDocumentNodes(node.id);
-      store.setNodes(nodes);
+      // const nodes = await workspace.getDocumentNodes(node.id);
+      // store.setNodes(nodes);
 
       store.setIsLoaded(true);
     };
@@ -77,62 +72,62 @@ export const useDocument = (node: Node): useNodeResult => {
   const onUpdate = React.useMemo(
     () =>
       debounce(async (updatedContent: JSONContent) => {
-        const childrenNodes = buildNodesFromEditor(
-          updatedContent.content,
-          node.id,
-        );
-
-        const nodesToCreate: CreateNodeInput[] = [];
-        const nodesToUpdate: UpdateNodeInput[] = [];
-        const nodesToDelete: string[] = [];
-
-        const currentNodes = store.nodes;
-        fillIndexesFromNodes(childrenNodes, currentNodes);
-        validateIndexes(childrenNodes);
-
-        const editorNodes = flattenNodesFromEditor(childrenNodes);
-        for (const editorNode of editorNodes) {
-          const existingNode = currentNodes[editorNode.id];
-          if (!existingNode) {
-            nodesToCreate.push({
-              id: editorNode.id,
-              type: editorNode.type,
-              parentId: editorNode.parentId,
-              index: editorNode.index,
-              attrs: editorNode.attrs,
-              content: editorNode.content,
-            });
-          } else if (hasChanged(existingNode, editorNode)) {
-            nodesToUpdate.push({
-              id: editorNode.id,
-              parentId: editorNode.parentId,
-              index: editorNode.index,
-              attrs: editorNode.attrs,
-              content: editorNode.content,
-            });
-          }
-        }
-
-        const currentNodeIds = Object.keys(currentNodes);
-        for (const nodeId of currentNodeIds) {
-          if (!editorNodes.find((node) => node.id === nodeId)) {
-            nodesToDelete.push(nodeId);
-          }
-        }
-
-        if (nodesToCreate.length > 0) {
-          await workspace.createNodes(nodesToCreate);
-        }
-
-        if (nodesToUpdate.length > 0) {
-          for (const nodeToUpdate of nodesToUpdate) {
-            await workspace.updateNode(nodeToUpdate);
-          }
-        }
-
-        if (nodesToDelete.length > 0) {
-          await workspace.deleteNodes(nodesToDelete);
-        }
+        // const childrenNodes = buildNodesFromEditor(
+        //   updatedContent.content,
+        //   node.id,
+        // );
+        //
+        // const nodesToCreate: CreateNodeInput[] = [];
+        // const nodesToUpdate: UpdateNodeInput[] = [];
+        // const nodesToDelete: string[] = [];
+        //
+        // const currentNodes = store.nodes;
+        // fillIndexesFromNodes(childrenNodes, currentNodes);
+        // validateIndexes(childrenNodes);
+        //
+        // const editorNodes = flattenNodesFromEditor(childrenNodes);
+        // for (const editorNode of editorNodes) {
+        //   const existingNode = currentNodes[editorNode.id];
+        //   if (!existingNode) {
+        //     nodesToCreate.push({
+        //       id: editorNode.id,
+        //       type: editorNode.type,
+        //       parentId: editorNode.parentId,
+        //       index: editorNode.index,
+        //       attrs: editorNode.attrs,
+        //       content: editorNode.content,
+        //     });
+        //   } else if (hasChanged(existingNode, editorNode)) {
+        //     nodesToUpdate.push({
+        //       id: editorNode.id,
+        //       parentId: editorNode.parentId,
+        //       index: editorNode.index,
+        //       attrs: editorNode.attrs,
+        //       content: editorNode.content,
+        //     });
+        //   }
+        // }
+        //
+        // const currentNodeIds = Object.keys(currentNodes);
+        // for (const nodeId of currentNodeIds) {
+        //   if (!editorNodes.find((node) => node.id === nodeId)) {
+        //     nodesToDelete.push(nodeId);
+        //   }
+        // }
+        //
+        // if (nodesToCreate.length > 0) {
+        //   await workspace.createNodes(nodesToCreate);
+        // }
+        //
+        // if (nodesToUpdate.length > 0) {
+        //   for (const nodeToUpdate of nodesToUpdate) {
+        //     await workspace.updateNode(nodeToUpdate);
+        //   }
+        // }
+        //
+        // if (nodesToDelete.length > 0) {
+        //   await workspace.deleteNodes(nodesToDelete);
+        // }
       }, 500),
     [node.id],
   );

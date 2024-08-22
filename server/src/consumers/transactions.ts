@@ -1,9 +1,5 @@
 import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
-import {
-  CreateNodeTransactionInput,
-  Transaction,
-  UpdateNodeTransactionInput,
-} from '@/types/transactions';
+import { NodeTransactionData, Transaction } from '@/types/transactions';
 import { prisma } from '@/data/prisma';
 import { Prisma } from '@prisma/client';
 
@@ -17,45 +13,55 @@ export const initTransactionsConsumer = async () => {
     eachMessage: async ({ message }) => {
       if (message.value === null) return;
 
-      const transaction: Transaction = JSON.parse(message.value.toString());
-      await handleTransaction(transaction);
+      try {
+        const transaction: Transaction = JSON.parse(message.value.toString());
+        await handleTransaction(transaction);
+      } catch (error) {
+        console.error('Error processing transaction:', error);
+      }
     },
   });
 };
 
 const handleTransaction = async (transaction: Transaction) => {
-  switch (transaction.type) {
-    case 'create_node':
-      await handleCreateNodeTransaction(transaction);
-      break;
-    case 'create_nodes':
-      await handleCreateNodesTransaction(transaction);
-      break;
-    case 'update_node':
-      await handleUpdateNodeTransaction(transaction);
-      break;
-    case 'delete_node':
-      await handleDeleteNodeTransaction(transaction);
-      break;
-    case 'delete_nodes':
-      await handleDeleteNodesTransaction(transaction);
+  switch (transaction.table) {
+    case 'nodes':
+      await handleNodeTransaction(transaction);
       break;
   }
 };
 
-const handleCreateNodeTransaction = async (transaction: Transaction) => {
-  const input = JSON.parse(transaction.input) as CreateNodeTransactionInput;
+const handleNodeTransaction = async (transaction: Transaction) => {
+  switch (transaction.action) {
+    case 'insert':
+      await handleInsertNodeTransaction(transaction);
+      break;
+    case 'update':
+      await handleUpdateNodeTransaction(transaction);
+      break;
+    case 'delete':
+      await handleDeleteNodeTransaction(transaction);
+      break;
+  }
+};
 
+const handleInsertNodeTransaction = async (transaction: Transaction) => {
+  if (!transaction.after) {
+    return;
+  }
+
+  const input = JSON.parse(transaction.after) as NodeTransactionData;
   const data: Prisma.nodesUncheckedCreateInput = {
     id: input.id,
-    parentId: input.parentId,
-    workspaceId: input.workspaceId,
+    parentId: input.parent_id,
+    workspaceId: input.workspace_id,
     type: input.type,
     index: input.index,
-    createdAt: input.createdAt,
-    createdBy: input.createdBy,
-    versionId: input.versionId,
+    createdAt: input.created_at,
+    createdBy: input.created_by,
+    versionId: input.version_id,
     serverCreatedAt: new Date(),
+    serverVersionId: input.version_id,
   };
 
   if (input.attrs !== undefined && input.attrs !== null) {
@@ -71,40 +77,12 @@ const handleCreateNodeTransaction = async (transaction: Transaction) => {
   });
 };
 
-const handleCreateNodesTransaction = async (transaction: Transaction) => {
-  const nodes = JSON.parse(transaction.input) as CreateNodeTransactionInput[];
-  const data: Prisma.nodesUncheckedCreateInput[] = nodes.map((node) => {
-    const data: Prisma.nodesUncheckedCreateInput = {
-      id: node.id,
-      parentId: node.parentId,
-      workspaceId: node.workspaceId,
-      type: node.type,
-      index: node.index,
-      createdAt: node.createdAt,
-      createdBy: node.createdBy,
-      versionId: node.versionId,
-      serverCreatedAt: new Date(),
-    };
-
-    if (node.attrs !== undefined && node.attrs !== null) {
-      data.attrs = node.attrs;
-    }
-
-    if (node.content !== undefined && node.content !== null) {
-      data.content = node.content;
-    }
-
-    return data;
-  });
-
-  await prisma.nodes.createMany({
-    data: data,
-  });
-};
-
 const handleUpdateNodeTransaction = async (transaction: Transaction) => {
-  const input = JSON.parse(transaction.input) as UpdateNodeTransactionInput;
+  if (!transaction.after) {
+    return;
+  }
 
+  const input = JSON.parse(transaction.after) as NodeTransactionData;
   const existingNode = await prisma.nodes.findUnique({
     where: {
       id: input.id,
@@ -116,11 +94,12 @@ const handleUpdateNodeTransaction = async (transaction: Transaction) => {
   }
 
   const data: Prisma.nodesUncheckedUpdateInput = {
-    parentId: input.parentId,
-    updatedAt: input.updatedAt,
-    updatedBy: input.updatedBy,
-    versionId: input.versionId,
+    parentId: input.parent_id,
+    updatedAt: input.updated_at,
+    updatedBy: input.updated_by,
+    versionId: input.version_id,
     serverUpdatedAt: new Date(),
+    serverVersionId: input.version_id,
   };
 
   if (input.attrs !== undefined) {
@@ -132,9 +111,10 @@ const handleUpdateNodeTransaction = async (transaction: Transaction) => {
           ? (existingNode.attrs as Record<string, any>)
           : {};
 
+      const updatedAttrs = JSON.parse(input.attrs) as Record<string, any>;
       const newAttrs = {
         ...existingAttrs,
-        ...input.attrs,
+        ...updatedAttrs,
       };
 
       const hasAttrs = Object.keys(newAttrs).length > 0;
@@ -159,20 +139,14 @@ const handleUpdateNodeTransaction = async (transaction: Transaction) => {
 };
 
 const handleDeleteNodeTransaction = async (transaction: Transaction) => {
+  if (!transaction.before) {
+    return;
+  }
+
+  const input = JSON.parse(transaction.before) as NodeTransactionData;
   await prisma.nodes.delete({
     where: {
-      id: transaction.input,
-    },
-  });
-};
-
-const handleDeleteNodesTransaction = async (transaction: Transaction) => {
-  const input = JSON.parse(transaction.input) as string[];
-  await prisma.nodes.deleteMany({
-    where: {
-      id: {
-        in: input,
-      },
+      id: input.id,
     },
   });
 };

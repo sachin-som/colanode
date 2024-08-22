@@ -18,6 +18,7 @@ interface MessageDeleteButtonProps {
 
 export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const workspace = useWorkspace();
 
   return (
@@ -38,8 +39,17 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
               variant="destructive"
+              disabled={isDeleting}
               onClick={async () => {
-                await workspace.deleteNode(id);
+                setIsDeleting(true);
+
+                const query = workspace.schema
+                  .deleteFrom('nodes')
+                  .where('id', '=', id)
+                  .compile();
+
+                await workspace.executeQuery(query);
+                setIsDeleting(false);
                 setShowDeleteModal(false);
               }}
             >

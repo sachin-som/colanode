@@ -11,7 +11,8 @@ export type Node = {
   updatedAt?: Date | null;
   updatedBy?: string | null;
   versionId: string;
-  state?: string | null;
+  serverCreatedAt?: Date | null;
+  serverUpdatedAt?: Date | null;
 };
 
 export type NodeBlock = {
@@ -27,21 +28,4 @@ export type NodeBlockMark = {
 
 export type NodeWithChildren = Node & {
   children: NodeWithChildren[];
-};
-
-export type CreateNodeInput = {
-  id: string;
-  type: string;
-  parentId?: string | null;
-  index?: string | null;
-  attrs?: Record<string, any> | null;
-  content?: NodeBlock[] | null;
-};
-
-export type UpdateNodeInput = {
-  id: string;
-  parentId?: string | null;
-  index?: string | null;
-  attrs?: Record<string, any> | null;
-  content?: NodeBlock[] | null;
 };

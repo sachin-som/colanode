@@ -1,21 +1,20 @@
 import React from 'react';
-import { useStore } from '@/contexts/store';
 import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
+import { useAccount } from '@/contexts/account';
 
 export const WorkspaceRedirect = observer(() => {
-  const store = useStore();
-  const workspaces = store.workspaces;
+  const account = useAccount();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (workspaces.length == 0) {
+    if (account.workspaces.length == 0) {
       navigate('/create');
       return;
     }
 
-    navigate(`/${workspaces[0].id}`);
-  }, [workspaces, navigate]);
+    navigate(`/${account.workspaces[0].id}`);
+  }, [account.workspaces, navigate]);
 
   return null;
 });

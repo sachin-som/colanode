@@ -11,7 +11,9 @@ export type Node = {
   updatedAt?: Date | null;
   updatedBy?: string | null;
   versionId: string;
-  state: string | null;
+  serverCreatedAt: Date;
+  serverUpdatedAt?: Date | null;
+  serverVersionId: string;
 };
 
 export type NodeBlock = {

@@ -40,7 +40,7 @@ model workspaces {
 model workspaceAccounts {
   workspaceId   String    @db.VarChar(30) @map("workspace_id")
   accountId     String    @db.VarChar(30) @map("account_id")
-  userNodeId    String    @db.VarChar(30) @map("user_node_id")
+  userId    String    @db.VarChar(30) @map("user_id")
   role          Int
   attrs         Json?
   createdAt     DateTime  @db.Timestamptz(6) @map("created_at")
@@ -69,7 +69,7 @@ model nodes {
   versionId       String    @db.VarChar(30) @map("version_id")
   serverCreatedAt DateTime  @db.Timestamptz(6) @map("server_created_at")
   serverUpdatedAt DateTime? @db.Timestamptz(6) @map("server_updated_at")
-  state           String?   @db.Text()
+  serverVersionId String    @db.VarChar(30) @map("server_version_id")
 
   parent nodes? @relation("node_parent_child", fields: [parentId], references: [id], onDelete: Cascade)
   children nodes[] @relation("node_parent_child")

@@ -1,83 +1,55 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { Account } from '@/types/accounts';
-import { Workspace } from '@/types/workspaces';
-import { Transaction } from '@/types/transactions';
-import { CreateNodeInput, UpdateNodeInput } from '@/types/nodes';
 import { eventBus, Event } from '@/lib/event-bus';
+import { CompiledQuery, QueryResult } from 'kysely';
 
-contextBridge.exposeInMainWorld('globalDb', {
+contextBridge.exposeInMainWorld('neuron', {
   init: () => ipcRenderer.invoke('init'),
-  getAccounts: () => ipcRenderer.invoke('get-accounts'),
-  addAccount: (account: Account) => ipcRenderer.invoke('add-account', account),
-  getWorkspaces: () => ipcRenderer.invoke('get-workspaces'),
-  addWorkspace: (workspace: Workspace) =>
-    ipcRenderer.invoke('add-workspace', workspace),
-  addTransaction: (transaction: Transaction) =>
-    ipcRenderer.invoke('add-transaction', transaction),
   logout: (accountId: string) => ipcRenderer.invoke('logout', accountId),
-});
+  executeAppQuery: <R>(query: CompiledQuery<R>): Promise<QueryResult<R>> =>
+    ipcRenderer.invoke('execute-app-query', query),
 
-contextBridge.exposeInMainWorld('workspaceDb', {
-  createNode: (accountId: string, workspaceId: string, node: CreateNodeInput) =>
-    ipcRenderer.invoke('create-node', accountId, workspaceId, node),
-  createNodes: (
+  executeAccountQuery: <R>(
+    accountId: string,
+    query: CompiledQuery<R>,
+  ): Promise<QueryResult<R>> =>
+    ipcRenderer.invoke('execute-account-query', accountId, query),
+
+  executeWorkspaceQuery: <R>(
     accountId: string,
     workspaceId: string,
-    nodes: CreateNodeInput[],
-  ) => ipcRenderer.invoke('create-nodes', accountId, workspaceId, nodes),
-  getNodes: (accountId: string, workspaceId: string) =>
-    ipcRenderer.invoke('get-nodes', accountId, workspaceId),
-  updateNode: (
-    accountId: string,
-    workspaceId: string,
-    input: UpdateNodeInput,
-  ) => ipcRenderer.invoke('update-node', accountId, workspaceId, input),
-  deleteNode: (accountId: string, workspaceId: string, nodeId: string) =>
-    ipcRenderer.invoke('delete-node', accountId, workspaceId, nodeId),
-  deleteNodes: (accountId: string, workspaceId: string, nodeIds: string[]) =>
-    ipcRenderer.invoke('delete-nodes', accountId, workspaceId, nodeIds),
-
-  getSidebarNodes: (accountId: string, workspaceId: string) =>
-    ipcRenderer.invoke('get-sidebar-nodes', accountId, workspaceId),
-
-  getConversationNodes: (
-    accountId: string,
-    workspaceId: string,
-    conversationId: string,
-    count: number,
-    after?: string | null,
-  ) =>
+    query: CompiledQuery<R>,
+  ): Promise<QueryResult<R>> =>
     ipcRenderer.invoke(
-      'get-conversation-nodes',
+      'execute-workspace-query',
       accountId,
       workspaceId,
-      conversationId,
-      count,
-      after,
+      query,
     ),
 
-  getDocumentNodes: (
+  executeWorkspaceQueryAndSubscribe: <R>(
     accountId: string,
     workspaceId: string,
-    documentId: string,
-  ) =>
+    queryId: string,
+    query: CompiledQuery<R>,
+  ): Promise<QueryResult<R>> =>
     ipcRenderer.invoke(
-      'get-document-nodes',
+      'execute-workspace-query-and-subscribe',
       accountId,
       workspaceId,
-      documentId,
+      queryId,
+      query,
     ),
 
-  getContainerNodes: (
+  unsubscribeWorkspaceQuery: (
     accountId: string,
     workspaceId: string,
-    containerId: string,
+    queryId: string,
   ) =>
     ipcRenderer.invoke(
-      'get-container-nodes',
+      'unsubscribe-workspace-query',
       accountId,
       workspaceId,
-      containerId,
+      queryId,
     ),
 });
 

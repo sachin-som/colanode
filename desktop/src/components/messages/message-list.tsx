@@ -1,27 +1,15 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/components/messages/message';
+import { MessageNode } from '@/types/messages';
 
 interface MessageListProps {
   conversationId: string;
-  nodes: Node[];
+  messages: MessageNode[];
 }
 
-export const MessageList = ({ conversationId, nodes }: MessageListProps) => {
-  const messages = nodes
-    .filter((node) => node.type === 'message')
-    .sort((a, b) => {
-      if (a.id > b.id) {
-        return 1;
-      } else if (a.id < b.id) {
-        return -1;
-      } else {
-        return 0;
-      }
-    });
-
+export const MessageList = ({ conversationId, messages }: MessageListProps) => {
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const observerRef = React.useRef<ResizeObserver | null>(null);
@@ -110,11 +98,7 @@ export const MessageList = ({ conversationId, nodes }: MessageListProps) => {
                   <div className="flex-grow border-t border-gray-100" />
                 </div>
               )}
-              <Message
-                message={message}
-                previousMessage={previousMessage}
-                nodes={nodes}
-              />
+              <Message message={message} previousMessage={previousMessage} />
             </React.Fragment>
           );
         })}

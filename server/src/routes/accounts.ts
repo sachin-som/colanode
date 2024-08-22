@@ -215,7 +215,7 @@ const buildLoginOutput = async (
       id: workspace.id,
       name: workspace.name,
       role: accountWorkspace.role,
-      userNodeId: accountWorkspace.userNodeId,
+      userId: accountWorkspace.userId,
       versionId: accountWorkspace.versionId,
       accountId: accountWorkspace.accountId,
       avatar: workspace.avatar,

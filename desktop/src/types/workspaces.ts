@@ -13,6 +13,6 @@ export type Workspace = {
   versionId: string;
   accountId: string;
   role: WorkspaceRole;
-  userNodeId: string;
+  userId: string;
   syncedAt?: Date | null;
 };

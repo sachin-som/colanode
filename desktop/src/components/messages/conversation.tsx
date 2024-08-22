@@ -9,7 +9,7 @@ interface ConversationProps {
 }
 
 export const Conversation = observer(({ nodeId }: ConversationProps) => {
-  const { nodes, isLoading, createMessage } = useConversation(nodeId);
+  const { messages, isLoading, createMessage } = useConversation(nodeId);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -17,7 +17,7 @@ export const Conversation = observer(({ nodeId }: ConversationProps) => {
 
   return (
     <React.Fragment>
-      <MessageList conversationId={nodeId} nodes={nodes} />
+      <MessageList conversationId={nodeId} messages={messages} />
       <MessageCreate nodeId={nodeId} onSubmit={createMessage} />
     </React.Fragment>
   );

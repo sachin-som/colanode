@@ -3,13 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { App } from '@/components/app';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
-import { StoreContext } from '@/contexts/store';
-import { store } from '@/store';
 import { WorkspaceCreate } from '@/components/workspaces/workspace-create';
 import { Workspace } from '@/components/workspaces/workspace';
 import { WorkspaceRedirect } from '@/components/workspaces/workspace-redirect';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/components/workspaces/container';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const router = createBrowserRouter([
   {
@@ -38,14 +37,22 @@ const router = createBrowserRouter([
   },
 ]);
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 export const Root = () => {
   return (
-    <StoreContext.Provider value={store}>
+    <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <RouterProvider router={router} />
       </TooltipProvider>
       <Toaster />
-    </StoreContext.Provider>
+    </QueryClientProvider>
   );
 };
 

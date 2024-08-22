@@ -25,6 +25,10 @@ import { useWorkspace } from '@/contexts/workspace';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { debounce } from 'lodash';
+import { sql } from 'kysely';
+import { mapNode } from '@/lib/nodes';
+import { useQuery } from '@tanstack/react-query';
+import { NodesTableSchema } from '@/data/schemas/workspace';
 
 interface BreadcrumbNodeProps {
   node: Node;
@@ -57,12 +61,13 @@ export const BreadcrumbNodeEditor = observer(
     const handleNameChange = React.useMemo(
       () =>
         debounce(async (newName: string) => {
-          await workspace.updateNode({
-            id: node.id,
-            attrs: {
-              name: newName,
-            },
-          });
+          const query = workspace.schema
+            .updateTable('nodes')
+            .set('attrs', sql`json_set(attrs, '$.name', ${newName})`)
+            .where('id', '=', node.id)
+            .compile();
+
+          await workspace.executeQuery(query);
         }, 500),
       [node.id],
     );
@@ -85,26 +90,106 @@ export const BreadcrumbNodeEditor = observer(
 
 interface ContainerHeaderProps {
   node: Node;
-  breadcrumbNodes: Node[];
 }
 
-export const ContainerHeader = observer(
-  ({ node, breadcrumbNodes }: ContainerHeaderProps) => {
-    const workspace = useWorkspace();
+export const ContainerHeader = observer(({ node }: ContainerHeaderProps) => {
+  const workspace = useWorkspace();
+  const { data, isPending } = useQuery({
+    queryKey: [`breadcrumb:${node.id}`],
+    queryFn: async ({ queryKey }) => {
+      const query = sql<NodesTableSchema>`
+        WITH RECURSIVE breadcrumb AS (
+          SELECT *
+          FROM nodes
+          WHERE id = ${node.parentId}
+          UNION ALL
+          SELECT n.*
+          FROM nodes n
+          INNER JOIN breadcrumb b ON n.id = b.parent_id
+        )
+        SELECT * FROM breadcrumb;
+      `.compile(workspace.schema);
 
-    const showEllipsis = breadcrumbNodes.length > 2;
-    const firstNodes = showEllipsis
-      ? breadcrumbNodes.slice(0, 1)
-      : breadcrumbNodes;
-    const ellipsisNodes = showEllipsis ? breadcrumbNodes.slice(1, -1) : [];
-    const lastNodes = showEllipsis ? breadcrumbNodes.slice(-1) : [];
+      const queryId = queryKey[0];
+      return await workspace.executeQueryAndSubscribe(queryId, query);
+    },
+  });
 
-    const isClickable = (node: Node) => node.type !== NodeTypes.Space;
+  if (isPending) {
+    return null;
+  }
 
-    return (
-      <Breadcrumb className="mx-1 flex h-12 items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80">
-        <BreadcrumbList>
-          {firstNodes.map((breadcrumbNode) => {
+  const breadcrumbNodes = data?.rows.map((row) => mapNode(row)) ?? [];
+  const showEllipsis = breadcrumbNodes.length > 2;
+  const firstNodes = showEllipsis
+    ? breadcrumbNodes.slice(0, 1)
+    : breadcrumbNodes;
+  const ellipsisNodes = showEllipsis ? breadcrumbNodes.slice(1, -1) : [];
+  const lastNodes = showEllipsis ? breadcrumbNodes.slice(-1) : [];
+
+  const isClickable = (node: Node) => node.type !== NodeTypes.Space;
+
+  return (
+    <Breadcrumb className="mx-1 flex h-12 items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80">
+      <BreadcrumbList>
+        {firstNodes.map((breadcrumbNode) => {
+          return (
+            <React.Fragment key={breadcrumbNode.id}>
+              <BreadcrumbItem
+                onClick={() => {
+                  if (isClickable(breadcrumbNode)) {
+                    workspace.navigateToNode(breadcrumbNode.id);
+                  }
+                }}
+              >
+                <BreadcrumbNode
+                  node={breadcrumbNode}
+                  className={
+                    isClickable(breadcrumbNode)
+                      ? 'hover:cursor-pointer hover:text-foreground'
+                      : ''
+                  }
+                />
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </React.Fragment>
+          );
+        })}
+        {showEllipsis && (
+          <BreadcrumbItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1">
+                <BreadcrumbEllipsis className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {ellipsisNodes.map((breadcrumbNode) => {
+                  return (
+                    <DropdownMenuItem
+                      key={breadcrumbNode.id}
+                      onClick={() => {
+                        if (isClickable(breadcrumbNode)) {
+                          workspace.navigateToNode(breadcrumbNode.id);
+                        }
+                      }}
+                    >
+                      <BreadcrumbNode
+                        node={breadcrumbNode}
+                        className={
+                          isClickable(breadcrumbNode)
+                            ? 'hover:cursor-pointer hover:text-foreground'
+                            : ''
+                        }
+                      />
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </BreadcrumbItem>
+        )}
+        {showEllipsis &&
+          lastNodes.length > 0 &&
+          lastNodes.map((breadcrumbNode) => {
             return (
               <React.Fragment key={breadcrumbNode.id}>
                 <BreadcrumbItem
@@ -127,75 +212,17 @@ export const ContainerHeader = observer(
               </React.Fragment>
             );
           })}
-          {showEllipsis && (
-            <BreadcrumbItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1">
-                  <BreadcrumbEllipsis className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {ellipsisNodes.map((breadcrumbNode) => {
-                    return (
-                      <DropdownMenuItem
-                        key={breadcrumbNode.id}
-                        onClick={() => {
-                          if (isClickable(breadcrumbNode)) {
-                            workspace.navigateToNode(breadcrumbNode.id);
-                          }
-                        }}
-                      >
-                        <BreadcrumbNode
-                          node={breadcrumbNode}
-                          className={
-                            isClickable(breadcrumbNode)
-                              ? 'hover:cursor-pointer hover:text-foreground'
-                              : ''
-                          }
-                        />
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </BreadcrumbItem>
-          )}
-          {showEllipsis &&
-            lastNodes.length > 0 &&
-            lastNodes.map((breadcrumbNode) => {
-              return (
-                <React.Fragment key={breadcrumbNode.id}>
-                  <BreadcrumbItem
-                    onClick={() => {
-                      if (isClickable(breadcrumbNode)) {
-                        workspace.navigateToNode(breadcrumbNode.id);
-                      }
-                    }}
-                  >
-                    <BreadcrumbNode
-                      node={breadcrumbNode}
-                      className={
-                        isClickable(breadcrumbNode)
-                          ? 'hover:cursor-pointer hover:text-foreground'
-                          : ''
-                      }
-                    />
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                </React.Fragment>
-              );
-            })}
-          <BreadcrumbItem className="hover:cursor-pointer hover:text-foreground">
-            <Popover>
-              <PopoverTrigger>
-                <BreadcrumbNode node={node} />
-              </PopoverTrigger>
-              <PopoverContent>
-                <BreadcrumbNodeEditor node={node} />
-              </PopoverContent>
-            </Popover>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-    );
-  },
-);
+        <BreadcrumbItem className="hover:cursor-pointer hover:text-foreground">
+          <Popover>
+            <PopoverTrigger>
+              <BreadcrumbNode node={node} />
+            </PopoverTrigger>
+            <PopoverContent>
+              <BreadcrumbNodeEditor node={node} />
+            </PopoverContent>
+          </Popover>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+});

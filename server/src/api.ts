@@ -5,9 +5,10 @@ import { WebSocketServer } from 'ws';
 
 import { accountsRouter } from '@/routes/accounts';
 import { workspacesRouter } from '@/routes/workspaces';
-import { transactionsRouter } from '@/routes/transactions';
 import { authMiddleware } from '@/middlewares/auth';
 import { sockets } from '@/lib/sockets';
+import { SocketMessage } from '@/types/sockets';
+import { producer, TOPIC_NAMES } from '@/data/kafka';
 
 export const initApi = () => {
   const app = express();
@@ -22,16 +23,16 @@ export const initApi = () => {
 
   app.use('/v1/accounts', accountsRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
-  app.use('/v1/transactions', authMiddleware, transactionsRouter);
 
   const server = http.createServer(app);
 
   const wss = new WebSocketServer({
     server,
-    path: '/synapse',
+    path: '/v1/synapse',
   });
 
   wss.on('connection', (socket, req) => {
+    console.log('New connection', req.url);
     const deviceId = req.url?.split('device_id=')[1];
     if (!deviceId) {
       socket.close();
@@ -40,8 +41,28 @@ export const initApi = () => {
 
     sockets.addSocket(deviceId, socket);
 
-    socket.on('message', (message) => {
-      console.log(`Received message: ${message}`);
+    socket.on('message', async (message) => {
+      const socketMessage: SocketMessage = JSON.parse(message.toString());
+      if (socketMessage.type === 'transaction') {
+        await producer.send({
+          topic: TOPIC_NAMES.TRANSACTIONS,
+          messages: [
+            {
+              key: socketMessage.payload.id,
+              value: JSON.stringify(socketMessage.payload),
+            },
+          ],
+        });
+
+        const ackMessage: SocketMessage = {
+          type: 'transaction_ack',
+          payload: {
+            id: socketMessage.payload.id,
+            workspaceId: socketMessage.payload.workspaceId,
+          },
+        };
+        socket.send(JSON.stringify(ackMessage));
+      }
     });
 
     socket.on('close', () => {

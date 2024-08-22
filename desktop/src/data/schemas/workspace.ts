@@ -11,9 +11,21 @@ export interface NodesTableSchema {
   created_by: string;
   updated_by: string | null;
   version_id: string;
-  state: string | null;
+  server_created_at: string | null;
+  server_updated_at: string | null;
+  server_version_id: string | null;
+}
+
+export interface TransactionsTableSchema {
+  id: string;
+  action: string;
+  table: string;
+  after?: string | null;
+  before?: string | null;
+  created_at: string;
 }
 
 export interface WorkspaceDatabaseSchema {
   nodes: NodesTableSchema;
+  transactions: TransactionsTableSchema;
 }

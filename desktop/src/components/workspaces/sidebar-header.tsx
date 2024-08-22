@@ -7,16 +7,12 @@ import {
 } from '@/components/ui/popover';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
-import { useStore } from '@/contexts/store';
 import { observer } from 'mobx-react-lite';
 import { useAccount } from '@/contexts/account';
 
 export const SidebarHeader = observer(() => {
-  const store = useStore();
   const workspace = useWorkspace();
   const account = useAccount();
-
-  const allWorkspaces = store.workspaces;
 
   return (
     <Popover>
@@ -49,7 +45,7 @@ export const SidebarHeader = observer(() => {
         <hr className="-mx-1 my-1 h-px bg-muted" />
         <h2 className="text-sm font-semibold">Workspaces</h2>
         <ul className="flex flex-col gap-0.5">
-          {allWorkspaces.map((w) => {
+          {account.workspaces.map((w) => {
             return (
               <li
                 key={w.id}

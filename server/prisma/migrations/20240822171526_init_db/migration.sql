@@ -34,7 +34,7 @@ CREATE TABLE "workspaces" (
 CREATE TABLE "workspace_accounts" (
     "workspace_id" VARCHAR(30) NOT NULL,
     "account_id" VARCHAR(30) NOT NULL,
-    "user_node_id" VARCHAR(30) NOT NULL,
+    "user_id" VARCHAR(30) NOT NULL,
     "role" INTEGER NOT NULL,
     "attrs" JSONB,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE "nodes" (
     "version_id" VARCHAR(30) NOT NULL,
     "server_created_at" TIMESTAMPTZ(6) NOT NULL,
     "server_updated_at" TIMESTAMPTZ(6),
-    "state" TEXT,
+    "server_version_id" VARCHAR(30) NOT NULL,
 
     CONSTRAINT "nodes_pkey" PRIMARY KEY ("id")
 );

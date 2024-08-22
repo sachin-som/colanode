@@ -1,8 +1,8 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
-import { globalDatabase } from '@/electron/database/global';
-import { initEventLoop } from '@/electron/event-loop';
 import { eventBus } from '@/lib/event-bus';
+import { appManager } from '@/data/app-manager';
+import { CompiledQuery } from 'kysely';
 
 let subscriptionId: string | null = null;
 
@@ -66,109 +66,66 @@ app.on('before-quit', () => {
 });
 
 // inter process handlers
-ipcMain.handle('init', async () => globalDatabase.init());
-ipcMain.handle('get-accounts', async () => globalDatabase.getAccounts());
-ipcMain.handle('add-account', async (_, account) =>
-  globalDatabase.addAccount(account),
-);
-ipcMain.handle('get-workspaces', async () => globalDatabase.getWorkspaces());
-ipcMain.handle('add-workspace', async (_, workspace) =>
-  globalDatabase.addWorkspace(workspace),
-);
-ipcMain.handle('add-transaction', async (_, transaction) =>
-  globalDatabase.addTransaction(transaction),
-);
-ipcMain.handle('logout', async (_, accountId) =>
-  globalDatabase.logout(accountId),
-);
+ipcMain.handle('init', async () => appManager.init());
+ipcMain.handle('logout', async (_, accountId) => appManager.logout(accountId));
 
-ipcMain.handle('create-node', async (_, accountId, workspaceId, input) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  await workspaceDb.createNode(input);
-});
-
-ipcMain.handle('create-nodes', async (_, accountId, workspaceId, inputs) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  await workspaceDb.createNodes(inputs);
-});
-
-ipcMain.handle('get-nodes', async (_, accountId, workspaceId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  return workspaceDb.getNodes();
-});
-
-ipcMain.handle('update-node', async (_, accountId, workspaceId, input) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  await workspaceDb.updateNode(input);
-});
-
-ipcMain.handle('delete-node', async (_, accountId, workspaceId, nodeId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  await workspaceDb.deleteNode(nodeId);
-});
-
-ipcMain.handle('delete-nodes', async (_, accountId, workspaceId, nodeIds) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  await workspaceDb.deleteNodes(nodeIds);
-});
-
-ipcMain.handle('get-sidebar-nodes', async (_, accountId, workspaceId) => {
-  const workspaceDb = globalDatabase.getWorkspaceDatabase(
-    accountId,
-    workspaceId,
-  );
-  return await workspaceDb.getSidebarNodes();
+ipcMain.handle('execute-app-query', async (_, query: CompiledQuery) => {
+  return await appManager.execute(query);
 });
 
 ipcMain.handle(
-  'get-conversation-nodes',
-  async (_, accountId, workspaceId, conversationId, count, after) => {
-    const workspaceDb = globalDatabase.getWorkspaceDatabase(
-      accountId,
-      workspaceId,
-    );
-    return await workspaceDb.getConversationNodes(conversationId, count, after);
+  'execute-workspace-query',
+  async (_, accountId: string, workspaceId: string, query: CompiledQuery) => {
+    const accountManager = await appManager.getAccount(accountId);
+    if (!accountManager) {
+      throw new Error(`Account not found: ${accountId}`);
+    }
+
+    const workspaceManager = accountManager.getWorkspace(workspaceId);
+    if (!workspaceManager) {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+
+    return await workspaceManager.execute(query);
   },
 );
 
 ipcMain.handle(
-  'get-document-nodes',
-  async (_, accountId, workspaceId, documentId) => {
-    const workspaceDb = globalDatabase.getWorkspaceDatabase(
-      accountId,
-      workspaceId,
-    );
-    return await workspaceDb.getDocumentNodes(documentId);
+  'execute-workspace-query-and-subscribe',
+  async (
+    _,
+    accountId: string,
+    workspaceId: string,
+    queryId: string,
+    query: CompiledQuery,
+  ) => {
+    const accountManager = await appManager.getAccount(accountId);
+    if (!accountManager) {
+      throw new Error(`Account not found: ${accountId}`);
+    }
+
+    const workspaceManager = accountManager.getWorkspace(workspaceId);
+    if (!workspaceManager) {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+
+    return await workspaceManager.executeAndSubscribe(queryId, query);
   },
 );
 
 ipcMain.handle(
-  'get-container-nodes',
-  async (_, accountId, workspaceId, containerId) => {
-    const workspaceDb = globalDatabase.getWorkspaceDatabase(
-      accountId,
-      workspaceId,
-    );
-    return await workspaceDb.getContainerNodes(containerId);
+  'unsubscribe-workspace-query',
+  async (_, accountId: string, workspaceId: string, queryId: string) => {
+    const accountManager = await appManager.getAccount(accountId);
+    if (!accountManager) {
+      throw new Error(`Account not found: ${accountId}`);
+    }
+
+    const workspaceManager = accountManager.getWorkspace(workspaceId);
+    if (!workspaceManager) {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+
+    workspaceManager.unsubscribe(queryId);
   },
 );
-
-initEventLoop();

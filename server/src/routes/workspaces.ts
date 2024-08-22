@@ -56,11 +56,12 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
-  const userNodeId = NeuronId.generate(NeuronId.Type.User);
+  const userId = NeuronId.generate(NeuronId.Type.User);
+  const userVersionId = NeuronId.generate(NeuronId.Type.Version);
   const workspaceAccount: WorkspaceAccount = {
     accountId: req.accountId,
     workspaceId: workspace.id,
-    userNodeId: userNodeId,
+    userId: userId,
     role: WorkspaceRole.Owner,
     createdAt: new Date(),
     createdBy: req.accountId,
@@ -74,18 +75,19 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     }),
     prisma.nodes.create({
       data: {
-        id: userNodeId,
+        id: userId,
         workspaceId: workspace.id,
         type: 'user',
         attrs: {
-          id: account.id,
+          accountId: account.id,
           name: account.name,
           avatar: account.avatar,
         },
         createdAt: new Date(),
-        createdBy: userNodeId,
-        versionId: NeuronId.generate(NeuronId.Type.Version),
+        createdBy: userId,
+        versionId: userVersionId,
         serverCreatedAt: new Date(),
+        serverVersionId: userVersionId,
       },
     }),
     prisma.workspaceAccounts.create({
@@ -101,7 +103,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     versionId: workspace.versionId,
     accountId: account.id,
     role: workspaceAccount.role,
-    userNodeId: userNodeId,
+    userId: userId,
   };
 
   return res.status(200).json(output);
@@ -173,7 +175,7 @@ workspacesRouter.put(
       versionId: updatedWorkspace.versionId,
       accountId: req.accountId,
       role: workspaceAccount.role,
-      userNodeId: workspaceAccount.userNodeId,
+      userId: workspaceAccount.userId,
     };
 
     return res.status(200).json(output);
@@ -276,7 +278,7 @@ workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
     versionId: workspace.versionId,
     accountId: req.accountId,
     role: workspaceAccount.role,
-    userNodeId: workspaceAccount.userNodeId,
+    userId: workspaceAccount.userId,
   };
 
   return res.status(200).json(output);
@@ -324,7 +326,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
       versionId: workspace.versionId,
       accountId: req.accountId,
       role: workspaceAccount.role,
-      userNodeId: workspaceAccount.userNodeId,
+      userId: workspaceAccount.userId,
     };
 
     outputs.push(output);
@@ -353,7 +355,7 @@ workspacesRouter.get('/:id/nodes', async (req: Request, res: Response) => {
       updatedBy: node.updatedBy,
       serverCreatedAt: node.serverCreatedAt,
       serverUpdatedAt: node.serverUpdatedAt,
-      state: node.state,
+      serverVersionId: node.serverVersionId,
     };
   });
 

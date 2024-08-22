@@ -3,19 +3,48 @@ import { EmailLogin } from '@/components/accounts/email-login';
 import { LoginOutput } from '@/types/accounts';
 import { EmailRegister } from '@/components/accounts/email-register';
 import { observer } from 'mobx-react-lite';
+import { useAppDatabase } from '@/contexts/app-database';
 
 const serverUrl = 'http://localhost:3000';
 
 export const Login = observer(() => {
+  const appDatabase = useAppDatabase();
   const [showRegister, setShowRegister] = React.useState(false);
 
   const handleLogin = async (output: LoginOutput) => {
-    await window.globalDb.addAccount(output.account);
+    const insertAccountQuery = appDatabase.database
+      .insertInto('accounts')
+      .values({
+        id: output.account.id,
+        name: output.account.name,
+        avatar: output.account.avatar,
+        device_id: output.account.deviceId,
+        email: output.account.email,
+        token: output.account.token,
+      })
+      .compile();
+
+    await appDatabase.executeQuery(insertAccountQuery);
 
     if (output.workspaces.length > 0) {
-      for (const workspace of output.workspaces) {
-        await window.globalDb.addWorkspace(workspace);
-      }
+      const insertWorkspacesQuery = appDatabase.database
+        .insertInto('workspaces')
+        .values(
+          output.workspaces.map((workspace) => ({
+            id: workspace.id,
+            name: workspace.name,
+            account_id: output.account.id,
+            avatar: workspace.avatar,
+            role: workspace.role,
+            description: workspace.description,
+            synced_at: workspace.syncedAt,
+            user_id: workspace.userId,
+            version_id: workspace.versionId,
+          })),
+        )
+        .compile();
+
+      await appDatabase.executeQuery(insertWorkspacesQuery);
     }
 
     window.location.href = '/';

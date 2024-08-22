@@ -40,7 +40,7 @@ export type NodeChangeData = {
   version_id: string;
   server_created_at: string;
   server_updated_at?: string | null;
-  state: string | null;
+  server_version_id: string;
 };
 
 export type UpdateChangeData = {

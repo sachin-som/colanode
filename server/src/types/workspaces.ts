@@ -31,7 +31,7 @@ export type Workspace = {
 export type WorkspaceAccount = {
   workspaceId: string;
   accountId: string;
-  userNodeId: string;
+  userId: string;
   role: WorkspaceRole;
   createdAt: Date;
   createdBy: string;
@@ -55,5 +55,5 @@ export type WorkspaceOutput = {
   versionId: string;
   accountId: string;
   role: WorkspaceRole;
-  userNodeId: string;
+  userId: string;
 };

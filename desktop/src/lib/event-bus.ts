@@ -9,7 +9,7 @@ export interface Event {
 }
 
 export interface EventBus {
-  subscribe(callback: (payload: any) => void): string;
+  subscribe(callback: (event: Event) => void): string;
   unsubscribe(subscriptionId: string): void;
   publish(event: Event): void;
 }
@@ -23,7 +23,7 @@ export class EventBusService {
   }
 
   public subscribe(callback: (event: Event) => void): string {
-    const id = (this.id++).toLocaleString(); 
+    const id = (this.id++).toLocaleString();
     this.subscriptions.set(id, {
       callback,
       id,

@@ -3,12 +3,13 @@ import { SidebarHeader } from '@/components/workspaces/sidebar-header';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/icon';
 import { SidebarSpaces } from '@/components/workspaces/sidebar-spaces';
-import { useWorkspace } from '@/contexts/workspace';
-import { useEventBus } from '@/hooks/use-event-bus';
 import { Node } from '@/types/nodes';
 import { SidebarContext } from '@/contexts/sidebar';
-import { SidebarStore } from '@/store/sidebar';
 import { observer } from 'mobx-react-lite';
+import { Spinner } from '@/components/ui/spinner';
+import { mapNode } from '@/lib/nodes';
+import { useQuery } from '@tanstack/react-query';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface LayoutItem {
   name: string;
@@ -31,56 +32,40 @@ const layouts: LayoutItem[] = [
 
 export const Sidebar = observer(() => {
   const workspace = useWorkspace();
-  const eventBus = useEventBus();
-  const store = React.useMemo(() => new SidebarStore(), [workspace.id]);
+  const { data, isPending } = useQuery({
+    queryKey: [`sidebar:${workspace.id}`],
+    queryFn: async ({ queryKey }) => {
+      const query = workspace.schema
+        .selectFrom('nodes')
+        .selectAll()
+        .where((qb) =>
+          qb.or([
+            qb.eb('type', '=', 'space'),
+            qb.eb(
+              'parent_id',
+              'in',
+              qb.selectFrom('nodes').select('id').where('type', '=', 'space'),
+            ),
+          ]),
+        )
+        .compile();
 
-  React.useEffect(() => {
-    const fetchNodes = async () => {
-      store.setIsLoading(true);
+      const queryId = queryKey[0];
+      return await workspace.executeQueryAndSubscribe(queryId, query);
+    },
+  });
 
-      const nodes = await workspace.getSidebarNodes();
-      store.setNodes(nodes);
-
-      store.setIsLoading(false);
-    };
-
-    fetchNodes();
-
-    const subscriptionId = eventBus.subscribe((event) => {
-      if (event.event === 'node_created') {
-        const createdNode = event.payload as Node;
-        if (store.getNode(createdNode.id) || !createdNode.parentId) {
-          store.setNode(createdNode);
-        } else {
-          const parent = store.getNode(createdNode.parentId);
-          if (parent) {
-            store.setNode(createdNode);
-          }
-        }
-      }
-
-      if (event.event === 'node_updated') {
-        const updatedNode = event.payload as Node;
-        store.setNode(updatedNode);
-      }
-
-      if (event.event === 'node_deleted') {
-        const deletedNodeId = event.payload as string;
-        store.deleteNode(deletedNodeId);
-      }
-    });
-
-    return () => {
-      eventBus.unsubscribe(subscriptionId);
-    };
-  }, [workspace.id]);
+  if (isPending) {
+    return <Spinner />;
+  }
 
   const currentLayout = 'spaces';
+  const nodes: Node[] = data?.rows.map((row) => mapNode(row)) ?? [];
 
   return (
     <SidebarContext.Provider
       value={{
-        nodes: store.getNodes(),
+        nodes: nodes,
       }}
     >
       <div className="grid h-full max-h-screen w-full grid-cols-[4rem_1fr] grid-rows-[auto_1fr_auto] border-r border-gray-200">

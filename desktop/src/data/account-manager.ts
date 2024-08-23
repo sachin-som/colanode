@@ -3,16 +3,19 @@ import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { WorkspaceManager } from '@/data/workspace-manager';
 import { SocketManager } from '@/data/socket-manager';
+import { Update } from '@/types/updates';
 
 export class AccountManager {
   private readonly accountPath: string;
   private readonly socket: SocketManager;
   private readonly workspaces: Map<string, WorkspaceManager>;
   private interval: NodeJS.Timeout;
+  private sentTransactions: Set<string>;
 
   constructor(account: Account, appPath: string, workspaces: Workspace[]) {
     this.socket = new SocketManager(account);
     this.workspaces = new Map<string, WorkspaceManager>();
+    this.sentTransactions = new Set<string>();
 
     this.accountPath = `${appPath}/${account.id}`;
     if (!fs.existsSync(this.accountPath)) {
@@ -43,6 +46,19 @@ export class AccountManager {
 
       const workspace = this.workspaces.get(workspaceId);
       await workspace?.acknowledgeTransaction(transactionId);
+      this.sentTransactions.delete(transactionId);
+    });
+
+    this.socket.on('update', async (payload) => {
+      const update = payload as Update;
+      const workspaceId = update.workspaceId;
+
+      if (!this.workspaces.has(workspaceId)) {
+        return;
+      }
+
+      const workspace = this.workspaces.get(workspaceId);
+      await workspace?.applyUpdate(update);
     });
 
     this.startEventLoop();
@@ -94,6 +110,11 @@ export class AccountManager {
       }
 
       for (const transaction of transactions) {
+        if (this.sentTransactions.has(transaction.id)) {
+          continue;
+        }
+
+        this.sentTransactions.add(transaction.id);
         this.socket.send({
           type: 'transaction',
           payload: transaction,

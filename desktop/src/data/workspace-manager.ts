@@ -23,6 +23,8 @@ import {
   TransactionTable,
 } from '@/types/transactions';
 import { eventBus } from '@/lib/event-bus';
+import { Update } from '@/types/updates';
+import { Node } from '@/types/nodes';
 
 export class WorkspaceManager {
   private readonly account: Account;
@@ -142,6 +144,68 @@ export class WorkspaceManager {
       .deleteFrom('transactions')
       .where('id', '=', transactionId)
       .execute();
+  }
+
+  public async applyUpdate(update: Update) {
+    if (update.type === 'node_sync') {
+      await this.handleNodeSync(update);
+    }
+  }
+
+  private async handleNodeSync(update: Update) {
+    const node = JSON.parse(JSON.parse(update.content)) as Node;
+    const existingNode = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', node.id)
+      .executeTakeFirst();
+
+    if (!existingNode) {
+      const query = this.database
+        .insertInto('nodes')
+        .values({
+          id: node.id,
+          type: node.type,
+          parent_id: node.parentId,
+          workspace_id: this.workspace.id,
+          index: node.index,
+          content: node.content as any,
+          attrs: node.attrs as any,
+          created_at: node.createdAt,
+          created_by: node.createdBy,
+          updated_at: node.updatedAt,
+          updated_by: node.updatedBy,
+          version_id: node.versionId,
+          server_created_at: node.serverCreatedAt,
+          server_updated_at: node.serverUpdatedAt,
+          server_version_id: node.serverVersionId,
+        })
+        .compile();
+      console.log('query', query);
+
+      await this.execute(query);
+    } else {
+      //TODO: check if the local version has changes before updating
+      const query = this.database
+        .updateTable('nodes')
+        .set({
+          type: node.type,
+          parent_id: node.parentId,
+          index: node.index,
+          content: node.content as any,
+          attrs: node.attrs as any,
+          updated_at: node.updatedAt,
+          updated_by: node.updatedBy,
+          version_id: node.versionId,
+          server_created_at: node.serverCreatedAt,
+          server_updated_at: node.serverUpdatedAt,
+          server_version_id: node.serverVersionId,
+        })
+        .where('id', '=', node.id)
+        .compile();
+
+      await this.execute(query);
+    }
   }
 
   private async migrate() {

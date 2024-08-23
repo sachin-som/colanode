@@ -13,15 +13,28 @@ export class SocketManager {
   private socket: WebSocket | null;
   private closingCount: number;
   private listeners: Map<string, ((payload: any) => void)[]>;
+  private lastInitAt: number;
 
   constructor(account: Account) {
     this.account = account;
     this.socket = null;
     this.closingCount = 0;
     this.listeners = new Map();
+    this.lastInitAt = 0;
   }
 
   public init() {
+    if (this.isConnected()) {
+      return;
+    }
+
+    // Prevent multiple init calls in a short period
+    // init only once in 5 seconds
+    if (Date.now() - this.lastInitAt < 5000) {
+      return;
+    }
+
+    this.lastInitAt = Date.now();
     this.closingCount = 0;
     this.socket = new WebSocket(
       `${SOCKET_URL}/v1/synapse?device_id=${this.account.deviceId}`,

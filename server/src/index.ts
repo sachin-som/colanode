@@ -18,7 +18,7 @@ initUpdateChangesConsumer().then(() => {
 
 initRedis().then(() => {
   console.log('Redis initialized');
-  // initUpdatesSubscriber().then(() => {
-  //   console.log('Updates subscriber started');
-  // });
+  initUpdatesSubscriber().then(() => {
+    console.log('Updates subscriber started');
+  });
 });

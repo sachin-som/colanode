@@ -65,11 +65,11 @@ const handleInsertNodeTransaction = async (transaction: Transaction) => {
   };
 
   if (input.attrs !== undefined && input.attrs !== null) {
-    data.attrs = input.attrs;
+    data.attrs = JSON.parse(input.attrs);
   }
 
   if (input.content !== undefined && input.content !== null) {
-    data.content = input.content;
+    data.content = JSON.parse(input.content);
   }
 
   await prisma.nodes.create({

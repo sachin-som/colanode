@@ -16,12 +16,15 @@ export const buildNodeWithChildren = (
   };
 };
 
-export const generateNodeIndex = (before?: string | null, after?: string | null) => {
+export const generateNodeIndex = (
+  before?: string | null,
+  after?: string | null,
+) => {
   const lower = before === undefined ? null : before;
   const upper = after === undefined ? null : after;
 
   return generateKeyBetween(lower, upper);
-}
+};
 
 export const mapNode = (row: NodesTableSchema): Node => {
   return {
@@ -32,16 +35,12 @@ export const mapNode = (row: NodesTableSchema): Node => {
     workspaceId: row.workspace_id,
     attrs: row.attrs && JSON.parse(row.attrs),
     content: row.content && JSON.parse(row.content),
-    createdAt: new Date(row.created_at),
+    createdAt: row.created_at,
     createdBy: row.created_by,
-    updatedAt: row.updated_at ? new Date(row.updated_at) : null,
+    updatedAt: row.updated_at,
     updatedBy: row.updated_by,
     versionId: row.version_id,
-    serverCreatedAt: row.server_created_at
-      ? new Date(row.server_created_at)
-      : null,
-    serverUpdatedAt: row.server_updated_at
-      ? new Date(row.server_updated_at)
-      : null,
+    serverCreatedAt: row.server_created_at,
+    serverUpdatedAt: row.server_updated_at,
   };
-}
+};

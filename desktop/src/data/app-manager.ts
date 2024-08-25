@@ -20,6 +20,8 @@ import { Workspace } from '@/types/workspaces';
 import { SubscribedQueryData } from '@/types/databases';
 import { eventBus } from '@/lib/event-bus';
 
+const EVENT_LOOP_INTERVAL = 1000;
+
 class AppManager {
   private readonly accounts: Map<string, AccountManager>;
   private readonly appPath: string;
@@ -50,7 +52,7 @@ class AppManager {
 
   public async init(): Promise<void> {
     if (!this.initPromise) {
-      this.initPromise = this.startInit();
+      this.initPromise = this.executeInit();
     }
 
     await this.initPromise;
@@ -191,13 +193,13 @@ class AppManager {
 
   private async waitForInit(): Promise<void> {
     if (!this.initPromise) {
-      this.initPromise = this.startInit();
+      this.initPromise = this.executeInit();
     }
 
     await this.initPromise;
   }
 
-  private async startInit(): Promise<void> {
+  private async executeInit(): Promise<void> {
     await this.migrate();
 
     const accounts = await this.getAccounts();
@@ -216,6 +218,16 @@ class AppManager {
 
       this.accounts.set(account.id, accountManager);
     }
+
+    setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
+  }
+
+  private async executeEventLoop(): Promise<void> {
+    for (const accountManager of this.accounts.values()) {
+      await accountManager.executeEventLoop();
+    }
+
+    setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 
   private async migrate(): Promise<void> {

@@ -17,7 +17,6 @@ export class AccountManager {
   private readonly axios: AxiosInstance;
   private readonly workspaces: Map<string, WorkspaceManager>;
   private readonly database: Kysely<AppDatabaseSchema>;
-  private interval: NodeJS.Timeout;
 
   constructor(
     account: Account,
@@ -71,7 +70,6 @@ export class AccountManager {
     }
 
     this.socket.init();
-    this.startEventLoop();
   }
 
   public getWorkspace(workspaceId: string): WorkspaceManager | undefined {
@@ -101,23 +99,9 @@ export class AccountManager {
     if (this.socket) {
       this.socket.close();
     }
-
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
   }
 
-  private startEventLoop(): void {
-    this.interval = setInterval(async () => {
-      try {
-        await this.executeEventLoop();
-      } catch (error) {
-        console.error('Error in event loop: ', error);
-      }
-    }, 1000);
-  }
-
-  private async executeEventLoop(): Promise<void> {
+  public async executeEventLoop(): Promise<void> {
     this.socket.checkConnection();
 
     for (const workspace of this.workspaces.values()) {

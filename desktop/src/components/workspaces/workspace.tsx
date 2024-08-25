@@ -88,13 +88,19 @@ export const Workspace = observer(() => {
         value={{
           ...workspace,
           schema: workspaceDatabase,
-          executeQuery: (query) =>
+          mutate: (input) =>
+            window.neuron.executeWorkspaceMutation(
+              workspace.accountId,
+              workspace.id,
+              input,
+            ),
+          query: (query) =>
             window.neuron.executeWorkspaceQuery(
               workspace.accountId,
               workspace.id,
               query,
             ),
-          executeQueryAndSubscribe: (queryId, query) =>
+          queryAndSubscribe: (queryId, query) =>
             window.neuron.executeWorkspaceQueryAndSubscribe(
               workspace.accountId,
               workspace.id,

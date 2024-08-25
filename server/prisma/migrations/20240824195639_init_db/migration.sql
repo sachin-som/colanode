@@ -85,15 +85,16 @@ CREATE TABLE "account_devices" (
 );
 
 -- CreateTable
-CREATE TABLE "updates" (
+CREATE TABLE "mutations" (
     "id" VARCHAR(30) NOT NULL,
-    "workspace_id" VARCHAR(30) NOT NULL,
     "type" VARCHAR(30) NOT NULL,
-    "content" JSONB,
+    "workspace_id" VARCHAR(30) NOT NULL,
+    "data" JSONB,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
+    "device_id" VARCHAR(30),
     "devices" TEXT[],
 
-    CONSTRAINT "updates_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "mutations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex

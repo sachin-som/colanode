@@ -43,11 +43,12 @@ export type NodeChangeData = {
   server_version_id: string;
 };
 
-export type UpdateChangeData = {
+export type MutationChangeData = {
   id: string;
-  workspace_id: string;
-  devices: string[];
   type: string;
-  content: string;
+  workspace_id: string;
+  data: string;
   created_at: string;
+  device_id: string;
+  devices: string[] | null;
 };

@@ -14,5 +14,5 @@ export const initRedis = async () => {
 };
 
 export const CHANNEL_NAMES = {
-  UPDATES: process.env.REDIS_UPDATES_CHANNEL_NAME || 'neuron_updates',
+  MUTATIONS: process.env.REDIS_MUTATIONS_CHANNEL_NAME || 'neuron_mutations',
 };

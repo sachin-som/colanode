@@ -21,24 +21,19 @@ export const kafka = new Kafka({
 export const producer = kafka.producer();
 
 export const TOPIC_NAMES = {
-  TRANSACTIONS:
-    process.env.KAFKA_TRANSACTIONS_TOPIC_NAME ?? 'neuron_transactions',
   NODE_CHANGES:
     process.env.KAFKA_NODE_CHANGES_TOPIC_NAME ?? 'neuron_node_changes',
-  UPDATE_CHANGES:
-    process.env.KAFKA_UPDATE_CHANGES_TOPIC_NAME ?? 'neuron_update_changes',
+  MUTATION_CHANGES:
+    process.env.KAFKA_MUTATION_CHANGES_TOPIC_NAME ?? 'neuron_mutation_changes',
 };
 
 export const CONSUMER_IDS = {
-  TRANSACTIONS:
-    process.env.KAFKA_TRANSACTIONS_CONSUMER_ID ??
-    'neuron_transactions_consumer',
   NODE_CHANGES:
     process.env.KAFKA_NODE_CHANGES_CONSUMER_ID ??
     'neuron_node_changes_consumer',
-  UPDATE_CHANGES:
-    process.env.KAFKA_UPDATE_CHANGES_CONSUMER_ID ??
-    'neuron_update_changes_consumer',
+  MUTATION_CHANGES:
+    process.env.KAFKA_MUTATION_CHANGES_CONSUMER_ID ??
+    'neuron_mutation_changes_consumer',
 };
 
 const connectProducer = async () => {

@@ -5,10 +5,11 @@ import { WebSocketServer } from 'ws';
 
 import { accountsRouter } from '@/routes/accounts';
 import { workspacesRouter } from '@/routes/workspaces';
+import { mutationsRouter } from '@/routes/mutations';
 import { authMiddleware } from '@/middlewares/auth';
 import { sockets } from '@/lib/sockets';
 import { SocketMessage } from '@/types/sockets';
-import { producer, TOPIC_NAMES } from '@/data/kafka';
+import { prisma } from '@/data/prisma';
 
 export const initApi = () => {
   const app = express();
@@ -23,6 +24,7 @@ export const initApi = () => {
 
   app.use('/v1/accounts', accountsRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
+  app.use('/v1/mutations', authMiddleware, mutationsRouter);
 
   const server = http.createServer(app);
 
@@ -43,25 +45,17 @@ export const initApi = () => {
 
     socket.on('message', async (message) => {
       const socketMessage: SocketMessage = JSON.parse(message.toString());
-      if (socketMessage.type === 'transaction') {
-        await producer.send({
-          topic: TOPIC_NAMES.TRANSACTIONS,
-          messages: [
-            {
-              key: socketMessage.payload.id,
-              value: JSON.stringify(socketMessage.payload),
-            },
-          ],
-        });
+      if (socketMessage.type === 'mutation_ack') {
+        const mutationId = socketMessage.payload.id;
+        if (!mutationId) {
+          return;
+        }
 
-        const ackMessage: SocketMessage = {
-          type: 'transaction_ack',
-          payload: {
-            id: socketMessage.payload.id,
-            workspaceId: socketMessage.payload.workspaceId,
-          },
-        };
-        socket.send(JSON.stringify(ackMessage));
+        await prisma.$executeRaw`
+          UPDATE mutations
+          SET devices = array_remove(devices, ${deviceId})
+          WHERE id = ${mutationId};
+        `;
       }
     });
 

@@ -5,7 +5,7 @@ import { EmailRegister } from '@/components/accounts/email-register';
 import { observer } from 'mobx-react-lite';
 import { useAppDatabase } from '@/contexts/app-database';
 
-const serverUrl = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3000';
 
 export const Login = observer(() => {
   const appDatabase = useAppDatabase();
@@ -67,9 +67,9 @@ export const Login = observer(() => {
           </div>
           <div className="flex flex-col gap-4">
             {showRegister ? (
-              <EmailRegister serverUrl={serverUrl} onRegister={handleLogin} />
+              <EmailRegister serverUrl={SERVER_URL} onRegister={handleLogin} />
             ) : (
-              <EmailLogin serverUrl={serverUrl} onLogin={handleLogin} />
+              <EmailLogin serverUrl={SERVER_URL} onLogin={handleLogin} />
             )}
             <p
               className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"

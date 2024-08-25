@@ -2,11 +2,13 @@ import { createContext, useContext } from 'react';
 import { Workspace } from '@/types/workspaces';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
 import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
+import { LocalMutation } from '@/types/mutations';
 
 interface WorkspaceContext extends Workspace {
   schema: Kysely<WorkspaceDatabaseSchema>;
-  executeQuery: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
-  executeQueryAndSubscribe: <R>(
+  mutate: (mutation: LocalMutation) => Promise<void>;
+  query: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
+  queryAndSubscribe: <R>(
     queryId: string,
     query: CompiledQuery<R>,
   ) => Promise<QueryResult<R>>;

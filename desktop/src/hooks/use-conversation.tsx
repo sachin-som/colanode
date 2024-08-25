@@ -1,4 +1,4 @@
-import { Node } from '@/types/nodes';
+import { Node, NodeBlock } from '@/types/nodes';
 import { useWorkspace } from '@/contexts/workspace';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
@@ -9,6 +9,7 @@ import { sql } from 'kysely';
 import { NodesTableSchema } from '@/data/schemas/workspace';
 import { hashCode } from '@/lib/utils';
 import { MessageNode } from '@/types/messages';
+import { LocalCreateNodesMutation } from '@/types/mutations';
 
 interface useConversationResult {
   isLoading: boolean;
@@ -17,15 +18,6 @@ interface useConversationResult {
   loadMore: () => void;
   isLoadingMore: boolean;
   createMessage: (content: JSONContent) => void;
-}
-
-interface CreateNodeInput {
-  id: string;
-  parentId: string;
-  type: string;
-  attrs: Record<string, any>;
-  content?: JSONContent[];
-  index?: string | null;
 }
 
 export const useConversation = (
@@ -53,7 +45,7 @@ export const useConversation = (
       `.compile(workspace.schema);
 
       const queryId = queryKey[0];
-      return await workspace.executeQueryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe(queryId, query);
     },
   });
 
@@ -77,33 +69,27 @@ export const useConversation = (
         .compile();
 
       const queryId = queryKey[0];
-      return await workspace.executeQueryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe(queryId, query);
     },
   });
 
   const createMessage = async (content: JSONContent) => {
-    const inputs = buildMessageCreateInputs(conversationId, content);
-    const createMessageQuery = workspace.schema
-      .insertInto('nodes')
-      .values(
-        inputs.map((input) => {
-          return {
-            id: input.id,
-            type: input.type,
-            index: input.index,
-            parent_id: input.parentId,
-            workspace_id: workspace.id,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-            attrs: input.attrs && JSON.stringify(input.attrs),
-            content: input.content && JSON.stringify(input.content),
-          };
-        }),
-      )
-      .compile();
+    const mutation: LocalCreateNodesMutation = {
+      type: 'create_nodes',
+      data: {
+        nodes: [],
+      },
+    };
 
-    await workspace.executeQuery(createMessageQuery);
+    buildMessageCreateNodes(
+      mutation,
+      workspace.userId,
+      workspace.id,
+      conversationId,
+      content,
+    );
+
+    await workspace.mutate(mutation);
   };
 
   const conversationNodes =
@@ -155,42 +141,32 @@ const buildMessages = (nodes: Node[], authors: Node[]): MessageNode[] => {
   });
 };
 
-const buildMessageCreateInputs = (
-  conversationId: string,
-  content: JSONContent,
-): CreateNodeInput[] => {
-  const inputs: CreateNodeInput[] = [];
-  buildMessageCreateInput(content, conversationId, inputs);
-  return inputs;
-};
-
-const buildMessageCreateInput = (
-  content: JSONContent,
+const buildMessageCreateNodes = (
+  mutation: LocalCreateNodesMutation,
+  userId: string,
+  workspaceId: string,
   parentId: string,
-  queue: CreateNodeInput[],
+  content: JSONContent,
   index?: string | null,
-): void => {
-  const id = content.attrs?.id ?? NeuronId.generate(NeuronId.Type.Message);
-  const input: CreateNodeInput = {
-    id: id,
-    parentId,
-    type: content.type,
-    attrs: {},
-    index,
-  };
-  queue.push(input);
+) => {
+  const id =
+    content.attrs?.id ??
+    NeuronId.generate(NeuronId.getIdTypeFromNode(content.type));
 
-  if (content.attrs) {
-    delete content.attrs.id;
-    if (Object.keys(content.attrs).length > 0) {
-      input.attrs = content.attrs;
+  let attrs = content.attrs ? { ...content.attrs } : null;
+  if (attrs) {
+    delete attrs.id;
+
+    if (Object.keys(attrs).length === 0) {
+      attrs = null;
     }
   }
 
+  let nodeContent: NodeBlock[] | null = null;
   if (LeafNodeTypes.includes(content.type)) {
-    input.content = [];
+    nodeContent = [];
     for (const child of content.content) {
-      input.content.push({
+      nodeContent.push({
         type: child.type,
         text: child.text,
         marks: child.marks?.map((mark) => {
@@ -201,11 +177,37 @@ const buildMessageCreateInput = (
         }),
       });
     }
-  } else {
+  }
+
+  if (nodeContent && nodeContent.length === 0) {
+    nodeContent = null;
+  }
+
+  mutation.data.nodes.push({
+    id: id,
+    parentId,
+    workspaceId: workspaceId,
+    type: content.type,
+    attrs: attrs,
+    index: index,
+    content: nodeContent,
+    createdAt: new Date().toISOString(),
+    createdBy: userId,
+    versionId: NeuronId.generate(NeuronId.Type.Version),
+  });
+
+  if (nodeContent == null && content.content && content.content.length > 0) {
     let lastIndex: string | null = null;
     for (const child of content.content) {
       lastIndex = generateNodeIndex(lastIndex, null);
-      buildMessageCreateInput(child, id, queue, lastIndex);
+      buildMessageCreateNodes(
+        mutation,
+        userId,
+        workspaceId,
+        id,
+        child,
+        lastIndex,
+      );
     }
   }
 };

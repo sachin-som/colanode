@@ -92,13 +92,14 @@ model accountDevices {
   @@map("account_devices")
 }
 
-model updates {
+model mutations {
   id          String    @id @db.VarChar(30)
-  workspaceId String    @db.VarChar(30) @map("workspace_id")
   type        String    @db.VarChar(30)
-  content     Json?
+  workspaceId String    @db.VarChar(30) @map("workspace_id")
+  data        Json?
   createdAt   DateTime  @db.Timestamptz(6) @map("created_at")
+  deviceId    String?    @db.VarChar(30) @map("device_id")
   devices     String[]
 
-  @@map("updates")
+  @@map("mutations")
 }

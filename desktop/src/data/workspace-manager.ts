@@ -17,22 +17,16 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { SubscribedQueryData } from '@/types/databases';
-import {
-  Transaction,
-  TransactionAction,
-  TransactionTable,
-} from '@/types/transactions';
+import { LocalMutation, ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
-import { Update } from '@/types/updates';
-import { Node } from '@/types/nodes';
+import { MutationManager } from '@/data/mutation-manager';
 
 export class WorkspaceManager {
   private readonly account: Account;
   private readonly workspace: Workspace;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly subscribers: Map<string, SubscribedQueryData<unknown>>;
-
-  private lastChangeAt: Date = new Date();
+  private readonly mutationManager: MutationManager;
 
   constructor(account: Account, workspace: Workspace, accountPath: string) {
     this.account = account;
@@ -51,19 +45,14 @@ export class WorkspaceManager {
     this.database = new Kysely<WorkspaceDatabaseSchema>({
       dialect,
     });
-  }
 
-  public async init() {
-    await this.migrate();
-  }
+    this.mutationManager = new MutationManager(
+      account,
+      workspace,
+      this.database,
+    );
 
-  public async execute<T>(query: CompiledQuery<T>): Promise<QueryResult<T>> {
-    const result = await this.database.executeQuery(query);
-
-    if (result.numAffectedRows > 0) {
-      this.lastChangeAt = new Date();
-      const affectedTables = extractTablesFromSql(query.sql);
-
+    this.mutationManager.onMutation(async (affectedTables) => {
       for (const [subscriberId, subscriberData] of this.subscribers) {
         const hasAffectedTables = subscriberData.tables.some((table) =>
           affectedTables.includes(table),
@@ -87,16 +76,33 @@ export class WorkspaceManager {
           });
         }
       }
+    });
+  }
+
+  public async init() {
+    await this.migrate();
+  }
+
+  public async executeQuery<T>(
+    query: CompiledQuery<T>,
+  ): Promise<QueryResult<T>> {
+    const result = await this.database.executeQuery(query);
+
+    //only transactions should have side effects
+    if (result.numAffectedRows > 0) {
+      throw new Error('Query should not have any side effects');
     }
 
     return result;
   }
 
-  public async executeAndSubscribe<T>(
+  public async executeQueryAndSubscribe<T>(
     queryId: string,
     query: CompiledQuery<T>,
   ): Promise<QueryResult<T>> {
     const result = await this.database.executeQuery(query);
+
+    // only transactions should have side effects
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
@@ -112,100 +118,20 @@ export class WorkspaceManager {
     return result;
   }
 
-  public unsubscribe(subscriberId: string) {
-    this.subscribers.delete(subscriberId);
+  public unsubscribeQuery(queryId: string) {
+    this.subscribers.delete(queryId);
   }
 
-  public async getTransactions(): Promise<Transaction[]> {
-    const transactions = await this.database
-      .selectFrom('transactions')
-      .selectAll()
-      .execute();
-
-    if (transactions.length === 0) {
-      return [];
-    }
-
-    return transactions.map((row) => {
-      return {
-        id: row.id,
-        workspaceId: this.workspace.id,
-        action: row.action as TransactionAction,
-        table: row.table as TransactionTable,
-        after: row.after,
-        before: row.before,
-        createdAt: row.created_at,
-      };
-    });
+  public async executeLocalMutation(mutation: LocalMutation) {
+    await this.mutationManager.executeLocalMutation(mutation);
   }
 
-  public async acknowledgeTransaction(transactionId: string) {
-    await this.database
-      .deleteFrom('transactions')
-      .where('id', '=', transactionId)
-      .execute();
+  public async executeServerMutation(mutation: ServerMutation) {
+    await this.mutationManager.executeServerMutation(mutation);
   }
 
-  public async applyUpdate(update: Update) {
-    if (update.type === 'node_sync') {
-      await this.handleNodeSync(update);
-    }
-  }
-
-  private async handleNodeSync(update: Update) {
-    const node = JSON.parse(JSON.parse(update.content)) as Node;
-    const existingNode = await this.database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', node.id)
-      .executeTakeFirst();
-
-    if (!existingNode) {
-      const query = this.database
-        .insertInto('nodes')
-        .values({
-          id: node.id,
-          type: node.type,
-          parent_id: node.parentId,
-          workspace_id: this.workspace.id,
-          index: node.index,
-          content: node.content as any,
-          attrs: node.attrs as any,
-          created_at: node.createdAt,
-          created_by: node.createdBy,
-          updated_at: node.updatedAt,
-          updated_by: node.updatedBy,
-          version_id: node.versionId,
-          server_created_at: node.serverCreatedAt,
-          server_updated_at: node.serverUpdatedAt,
-          server_version_id: node.serverVersionId,
-        })
-        .compile();
-      console.log('query', query);
-
-      await this.execute(query);
-    } else {
-      //TODO: check if the local version has changes before updating
-      const query = this.database
-        .updateTable('nodes')
-        .set({
-          type: node.type,
-          parent_id: node.parentId,
-          index: node.index,
-          content: node.content as any,
-          attrs: node.attrs as any,
-          updated_at: node.updatedAt,
-          updated_by: node.updatedBy,
-          version_id: node.versionId,
-          server_created_at: node.serverCreatedAt,
-          server_updated_at: node.serverUpdatedAt,
-          server_version_id: node.serverVersionId,
-        })
-        .where('id', '=', node.id)
-        .compile();
-
-      await this.execute(query);
-    }
+  public async sendMutations() {
+    await this.mutationManager.sendMutations();
   }
 
   private async migrate() {

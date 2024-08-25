@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { eventBus, Event } from '@/lib/event-bus';
 import { CompiledQuery, QueryResult } from 'kysely';
+import { LocalMutation } from '@/types/mutations';
 
 contextBridge.exposeInMainWorld('neuron', {
   init: () => ipcRenderer.invoke('init'),
@@ -8,11 +9,17 @@ contextBridge.exposeInMainWorld('neuron', {
   executeAppQuery: <R>(query: CompiledQuery<R>): Promise<QueryResult<R>> =>
     ipcRenderer.invoke('execute-app-query', query),
 
-  executeAccountQuery: <R>(
+  executeWorkspaceMutation: (
     accountId: string,
-    query: CompiledQuery<R>,
-  ): Promise<QueryResult<R>> =>
-    ipcRenderer.invoke('execute-account-query', accountId, query),
+    workspaceId: string,
+    mutation: LocalMutation,
+  ): Promise<void> =>
+    ipcRenderer.invoke(
+      'execute-workspace-mutation',
+      accountId,
+      workspaceId,
+      mutation,
+    ),
 
   executeWorkspaceQuery: <R>(
     accountId: string,

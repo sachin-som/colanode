@@ -51,7 +51,7 @@ export const Sidebar = observer(() => {
         .compile();
 
       const queryId = queryKey[0];
-      return await workspace.executeQueryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe(queryId, query);
     },
   });
 

@@ -6,13 +6,13 @@ export type Node = {
   index: string | null;
   attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
-  createdAt: Date;
+  createdAt: string;
   createdBy: string;
-  updatedAt?: Date | null;
+  updatedAt?: string | null;
   updatedBy?: string | null;
   versionId: string;
-  serverCreatedAt: Date;
-  serverUpdatedAt?: Date | null;
+  serverCreatedAt: string;
+  serverUpdatedAt?: string | null;
   serverVersionId: string;
 };
 

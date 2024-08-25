@@ -3,19 +3,17 @@ import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { WorkspaceManager } from '@/data/workspace-manager';
 import { SocketManager } from '@/data/socket-manager';
-import { Update } from '@/types/updates';
+import { ServerMutation } from '@/types/mutations';
 
 export class AccountManager {
   private readonly accountPath: string;
   private readonly socket: SocketManager;
   private readonly workspaces: Map<string, WorkspaceManager>;
   private interval: NodeJS.Timeout;
-  private sentTransactions: Set<string>;
 
   constructor(account: Account, appPath: string, workspaces: Workspace[]) {
     this.socket = new SocketManager(account);
     this.workspaces = new Map<string, WorkspaceManager>();
-    this.sentTransactions = new Set<string>();
 
     this.accountPath = `${appPath}/${account.id}`;
     if (!fs.existsSync(this.accountPath)) {
@@ -28,6 +26,21 @@ export class AccountManager {
         new WorkspaceManager(account, workspace, this.accountPath),
       );
     }
+
+    this.socket.on('mutation', async (mutation) => {
+      const serverMutation = mutation as ServerMutation;
+      const workspace = this.workspaces.get(serverMutation.workspaceId);
+      if (workspace) {
+        await workspace.executeServerMutation(serverMutation);
+        this.socket.send({
+          type: 'mutation_ack',
+          payload: {
+            id: serverMutation.id,
+            workspaceId: serverMutation.workspaceId,
+          },
+        });
+      }
+    });
   }
 
   public async init() {
@@ -36,31 +49,6 @@ export class AccountManager {
     }
 
     this.socket.init();
-    this.socket.on('transaction_ack', async (payload) => {
-      const transactionId = payload.id;
-      const workspaceId = payload.workspaceId;
-
-      if (!this.workspaces.has(workspaceId)) {
-        return;
-      }
-
-      const workspace = this.workspaces.get(workspaceId);
-      await workspace?.acknowledgeTransaction(transactionId);
-      this.sentTransactions.delete(transactionId);
-    });
-
-    this.socket.on('update', async (payload) => {
-      const update = payload as Update;
-      const workspaceId = update.workspaceId;
-
-      if (!this.workspaces.has(workspaceId)) {
-        return;
-      }
-
-      const workspace = this.workspaces.get(workspaceId);
-      await workspace?.applyUpdate(update);
-    });
-
     this.startEventLoop();
   }
 
@@ -93,33 +81,14 @@ export class AccountManager {
       } catch (error) {
         console.error('Error in event loop: ', error);
       }
-    }, 15);
+    }, 1000);
   }
 
   private async executeEventLoop() {
     this.socket.checkConnection();
 
-    if (!this.socket.isConnected()) {
-      return;
-    }
-
     for (const workspace of this.workspaces.values()) {
-      const transactions = await workspace.getTransactions();
-      if (transactions.length === 0) {
-        continue;
-      }
-
-      for (const transaction of transactions) {
-        if (this.sentTransactions.has(transaction.id)) {
-          continue;
-        }
-
-        this.sentTransactions.add(transaction.id);
-        this.socket.send({
-          type: 'transaction',
-          payload: transaction,
-        });
-      }
+      await workspace.sendMutations();
     }
   }
 }

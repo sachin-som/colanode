@@ -26,6 +26,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { NeuronId } from '@/lib/id';
 import { NodeTypes } from '@/lib/constants';
 import { generateNodeIndex } from '@/lib/nodes';
+import { useMutation } from '@tanstack/react-query';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -42,12 +43,69 @@ export const SpaceCreateDialog = ({
   onOpenChange,
 }: SpaceCreateDialogProps) => {
   const workspace = useWorkspace();
-  const [isPending, setIsPending] = React.useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       description: '',
+    },
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const spaceId = NeuronId.generate(NeuronId.Type.Space);
+      const firstIndex = generateNodeIndex(null, null);
+      const secondIndex = generateNodeIndex(firstIndex, null);
+      await workspace.mutate({
+        type: 'create_nodes',
+        data: {
+          nodes: [
+            {
+              id: spaceId,
+              type: NodeTypes.Space,
+              parentId: null,
+              workspaceId: workspace.id,
+              index: generateNodeIndex(null, null),
+              attrs: {
+                name: values.name,
+                description: values.description,
+              },
+              content: null,
+              createdAt: new Date().toISOString(),
+              createdBy: workspace.userId,
+              versionId: NeuronId.generate(NeuronId.Type.Version),
+            },
+            {
+              id: NeuronId.generate(NeuronId.Type.Page),
+              type: NodeTypes.Page,
+              parentId: spaceId,
+              workspaceId: workspace.id,
+              index: firstIndex,
+              attrs: {
+                name: 'Home',
+              },
+              content: null,
+              createdAt: new Date().toISOString(),
+              createdBy: workspace.userId,
+              versionId: NeuronId.generate(NeuronId.Type.Version),
+            },
+            {
+              id: NeuronId.generate(NeuronId.Type.Channel),
+              type: NodeTypes.Channel,
+              parentId: spaceId,
+              workspaceId: workspace.id,
+              index: secondIndex,
+              attrs: {
+                name: 'Discussions',
+              },
+              content: null,
+              createdAt: new Date().toISOString(),
+              createdBy: workspace.userId,
+              versionId: NeuronId.generate(NeuronId.Type.Version),
+            },
+          ],
+        },
+      });
     },
   });
 
@@ -57,59 +115,12 @@ export const SpaceCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsPending(true);
-
-    const spaceId = NeuronId.generate(NeuronId.Type.Space);
-    const query = workspace.schema
-      .insertInto('nodes')
-      .values([
-        {
-          id: spaceId,
-          type: NodeTypes.Space,
-          index: generateNodeIndex(null, null),
-          parent_id: null,
-          workspace_id: workspace.id,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-          attrs: JSON.stringify({
-            name: values.name,
-            description: values.description,
-          }),
-        },
-        {
-          id: NeuronId.generate(NeuronId.Type.Page),
-          type: NodeTypes.Page,
-          index: generateNodeIndex(null, null),
-          parent_id: spaceId,
-          workspace_id: workspace.id,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-          attrs: JSON.stringify({
-            name: 'Home',
-          }),
-        },
-        {
-          id: NeuronId.generate(NeuronId.Type.Channel),
-          type: NodeTypes.Channel,
-          index: generateNodeIndex(null, null),
-          parent_id: spaceId,
-          workspace_id: workspace.id,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-          attrs: JSON.stringify({
-            name: 'Discussions',
-          }),
-        },
-      ])
-      .compile();
-
-    await workspace.executeQuery(query);
-    setIsPending(false);
-    onOpenChange(false);
-    form.reset();
+    mutate(values, {
+      onSuccess: () => {
+        onOpenChange(false);
+        form.reset();
+      },
+    });
   };
 
   return (

@@ -3,6 +3,7 @@ import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { appManager } from '@/data/app-manager';
 import { CompiledQuery } from 'kysely';
+import { LocalMutation } from '@/types/mutations';
 
 let subscriptionId: string | null = null;
 
@@ -74,6 +75,28 @@ ipcMain.handle('execute-app-query', async (_, query: CompiledQuery) => {
 });
 
 ipcMain.handle(
+  'execute-workspace-mutation',
+  async (
+    _,
+    accountId: string,
+    workspaceId: string,
+    mutation: LocalMutation,
+  ) => {
+    const accountManager = await appManager.getAccount(accountId);
+    if (!accountManager) {
+      throw new Error(`Account not found: ${accountId}`);
+    }
+
+    const workspaceManager = accountManager.getWorkspace(workspaceId);
+    if (!workspaceManager) {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+
+    return await workspaceManager.executeLocalMutation(mutation);
+  },
+);
+
+ipcMain.handle(
   'execute-workspace-query',
   async (_, accountId: string, workspaceId: string, query: CompiledQuery) => {
     const accountManager = await appManager.getAccount(accountId);
@@ -86,7 +109,7 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    return await workspaceManager.execute(query);
+    return await workspaceManager.executeQuery(query);
   },
 );
 
@@ -109,7 +132,7 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    return await workspaceManager.executeAndSubscribe(queryId, query);
+    return await workspaceManager.executeQueryAndSubscribe(queryId, query);
   },
 );
 
@@ -126,6 +149,6 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    workspaceManager.unsubscribe(queryId);
+    workspaceManager.unsubscribeQuery(queryId);
   },
 );

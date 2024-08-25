@@ -1,6 +1,5 @@
 import SQLite from 'better-sqlite3';
 import { Parser, AST, Select } from 'node-sql-parser';
-import { NeuronId } from '@/lib/id';
 import { QueryResult } from 'kysely';
 
 const parser = new Parser();
@@ -9,10 +8,6 @@ const parseOptions = { database: 'Sqlite' };
 export const buildSqlite = (filename: string) => {
   const database = new SQLite(filename);
   database.pragma('journal_mode = WAL');
-  database.function('transaction_id', () =>
-    NeuronId.generate(NeuronId.Type.Transaction),
-  );
-
   return database;
 };
 

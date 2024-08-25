@@ -29,6 +29,7 @@ import { sql } from 'kysely';
 import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { NodesTableSchema } from '@/data/schemas/workspace';
+import { NeuronId } from '@/lib/id';
 
 interface BreadcrumbNodeProps {
   node: Node;
@@ -61,13 +62,23 @@ export const BreadcrumbNodeEditor = observer(
     const handleNameChange = React.useMemo(
       () =>
         debounce(async (newName: string) => {
-          const query = workspace.schema
-            .updateTable('nodes')
-            .set('attrs', sql`json_set(attrs, '$.name', ${newName})`)
-            .where('id', '=', node.id)
-            .compile();
-
-          await workspace.executeQuery(query);
+          await workspace.mutate({
+            type: 'update_node',
+            data: {
+              id: node.id,
+              type: node.type,
+              index: node.index,
+              content: node.content,
+              attrs: {
+                ...node.attrs,
+                name: newName,
+              },
+              parentId: node.parentId,
+              updatedAt: new Date().toISOString(),
+              updatedBy: workspace.userId,
+              versionId: NeuronId.generate(NeuronId.Type.Version),
+            },
+          });
         }, 500),
       [node.id],
     );
@@ -111,7 +122,7 @@ export const ContainerHeader = observer(({ node }: ContainerHeaderProps) => {
       `.compile(workspace.schema);
 
       const queryId = queryKey[0];
-      return await workspace.executeQueryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe(queryId, query);
     },
   });
 

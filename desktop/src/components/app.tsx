@@ -18,7 +18,7 @@ import {
 import { AppDatabaseSchema } from '@/data/schemas/app';
 import { useQuery } from '@tanstack/react-query';
 
-const serverUrl = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:3000';
 
 const appDatabase = new Kysely<AppDatabaseSchema>({
   dialect: {
@@ -68,7 +68,7 @@ export const App = observer(() => {
 
   const account = accountsQuery.data.rows[0];
   const axios = Axios.create({
-    baseURL: serverUrl,
+    baseURL: SERVER_URL,
     headers: {
       Authorization: `Bearer ${account.token}`,
     },

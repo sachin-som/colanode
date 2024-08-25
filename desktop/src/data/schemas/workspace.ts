@@ -16,16 +16,14 @@ export interface NodesTableSchema {
   server_version_id: string | null;
 }
 
-export interface TransactionsTableSchema {
-  id: string;
-  action: string;
-  table: string;
-  after?: string | null;
-  before?: string | null;
+export interface MutationsTableSchema {
+  id: number;
+  type: string;
+  data: string;
   created_at: string;
 }
 
 export interface WorkspaceDatabaseSchema {
   nodes: NodesTableSchema;
-  transactions: TransactionsTableSchema;
+  mutations: MutationsTableSchema;
 }

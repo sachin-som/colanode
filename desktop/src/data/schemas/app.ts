@@ -16,7 +16,7 @@ export interface WorkspacesTableSchema {
   version_id: string;
   role: number;
   user_id: string;
-  synced_at: string | null;
+  synced: number;
 }
 
 export interface AppDatabaseSchema {

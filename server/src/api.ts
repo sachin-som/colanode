@@ -10,6 +10,7 @@ import { authMiddleware } from '@/middlewares/auth';
 import { sockets } from '@/lib/sockets';
 import { SocketMessage } from '@/types/sockets';
 import { prisma } from '@/data/prisma';
+import { syncRouter } from '@/routes/sync';
 
 export const initApi = () => {
   const app = express();
@@ -25,6 +26,7 @@ export const initApi = () => {
   app.use('/v1/accounts', accountsRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
   app.use('/v1/mutations', authMiddleware, mutationsRouter);
+  app.use('/v1/', authMiddleware, syncRouter);
 
   const server = http.createServer(app);
 

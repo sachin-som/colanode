@@ -1,12 +1,17 @@
-import { GlobalDatabaseData } from '@/types/global';
 import { EventBus } from '@/lib/event-bus';
 import { CompiledQuery, QueryResult } from 'kysely';
 import { LocalMutationInput } from '@/types/mutations';
 
 interface NeuronApi {
-  init: () => Promise<GlobalDatabaseData>;
+  init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
+  executeAppMutation: (mutation: LocalMutationInput) => Promise<void>;
   executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
+  executeAppQueryAndSubscribe: (
+    queryId: string,
+    query: CompiledQuery<R>,
+  ) => Promise<QueryResult<R>>;
+  unsubscribeAppQuery: (queryId: string) => Promise<void>;
 
   executeWorkspaceMutation: (
     accountId: string,

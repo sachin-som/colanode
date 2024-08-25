@@ -24,7 +24,7 @@ export const Login = observer(() => {
       })
       .compile();
 
-    await appDatabase.executeQuery(insertAccountQuery);
+    await appDatabase.mutate(insertAccountQuery);
 
     if (output.workspaces.length > 0) {
       const insertWorkspacesQuery = appDatabase.database
@@ -37,14 +37,14 @@ export const Login = observer(() => {
             avatar: workspace.avatar,
             role: workspace.role,
             description: workspace.description,
-            synced_at: workspace.syncedAt,
+            synced: 0,
             user_id: workspace.userId,
             version_id: workspace.versionId,
           })),
         )
         .compile();
 
-      await appDatabase.executeQuery(insertWorkspacesQuery);
+      await appDatabase.mutate(insertWorkspacesQuery);
     }
 
     window.location.href = '/';

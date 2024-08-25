@@ -16,7 +16,7 @@ const getAvatarSizeClasses = (size?: string) => {
   }
 
   return 'w-9 h-9';
-}
+};
 
 const colors = [
   'rgb(248 113 113)',
@@ -34,7 +34,7 @@ const colors = [
 const getColorForId = (id: string) => {
   const index = Math.abs(hashCode(id)) % colors.length;
   return colors[index];
-}
+};
 
 const Avatar = ({
   id,

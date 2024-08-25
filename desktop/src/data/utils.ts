@@ -5,7 +5,7 @@ import { QueryResult } from 'kysely';
 const parser = new Parser();
 const parseOptions = { database: 'Sqlite' };
 
-export const buildSqlite = (filename: string) => {
+export const buildSqlite = (filename: string): SQLite.Database => {
   const database = new SQLite(filename);
   database.pragma('journal_mode = WAL');
   return database;

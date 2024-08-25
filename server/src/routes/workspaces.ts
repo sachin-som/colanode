@@ -11,7 +11,6 @@ import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { NeuronId } from '@/lib/id';
 import { prisma } from '@/data/prisma';
 import { Router } from 'express';
-import { Node, NodeBlock } from '@/types/nodes';
 
 export const workspacesRouter = Router();
 
@@ -334,67 +333,3 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   return res.status(200).json(outputs);
 });
-
-workspacesRouter.get(
-  '/:id/nodes',
-  async (req: NeuronRequest, res: NeuronResponse) => {
-    const workspaceId = req.params.id as string;
-    const from = req.query.from as string;
-    const nodes = await getNodesFromDatabase(workspaceId, from);
-    const outputs: Node[] = nodes.map((node) => {
-      return {
-        id: node.id,
-        parentId: node.parentId,
-        workspaceId: node.workspaceId,
-        type: node.type,
-        index: node.index,
-        attrs: node.attrs as Record<string, any>,
-        createdAt: node.createdAt.toISOString(),
-        createdBy: node.createdBy,
-        versionId: node.versionId,
-        content: node.content as NodeBlock[],
-        updatedAt: node.updatedAt?.toISOString(),
-        updatedBy: node.updatedBy,
-        serverCreatedAt: node.serverCreatedAt.toISOString(),
-        serverUpdatedAt: node.serverUpdatedAt?.toISOString(),
-        serverVersionId: node.serverVersionId,
-      };
-    });
-
-    res.status(200).json({
-      nodes: outputs,
-    });
-  },
-);
-
-const getNodesFromDatabase = async (
-  workspaceId: string,
-  from?: string | null,
-) => {
-  if (from) {
-    const date = new Date(from);
-    return prisma.nodes.findMany({
-      where: {
-        workspaceId,
-        OR: [
-          {
-            createdAt: {
-              gte: date,
-            },
-          },
-          {
-            updatedAt: {
-              gte: date,
-            },
-          },
-        ],
-      },
-    });
-  } else {
-    return prisma.nodes.findMany({
-      where: {
-        workspaceId,
-      },
-    });
-  }
-};

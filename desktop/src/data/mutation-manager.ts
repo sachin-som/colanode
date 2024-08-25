@@ -16,15 +16,11 @@ import {
   ServerUpdateNodeMutation,
 } from '@/types/mutations';
 import { Workspace } from '@/types/workspaces';
-import { Account } from '@/types/accounts';
 import { Node } from '@/types/nodes';
-import Axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { NeuronId } from '@/lib/id';
 
-const SERVER_URL = 'http://localhost:3000';
-
 export class MutationManager {
-  private readonly account: Account;
   private readonly workspace: Workspace;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly axios: AxiosInstance;
@@ -34,37 +30,28 @@ export class MutationManager {
   >;
 
   constructor(
-    account: Account,
+    axios: AxiosInstance,
     workspace: Workspace,
     database: Kysely<WorkspaceDatabaseSchema>,
   ) {
-    this.account = account;
     this.workspace = workspace;
+    this.axios = axios;
     this.database = database;
-    this.axios = Axios.create({
-      baseURL: SERVER_URL,
-      headers: {
-        Authorization: `Bearer ${account.token}`,
-      },
-    });
     this.mutationListeners = new Map();
   }
 
-  public onMutation(listener: (affectedTables: string[]) => void) {
+  public onMutation(listener: (affectedTables: string[]) => void): void {
     const id = NeuronId.generate(NeuronId.Type.Subscriber);
     this.mutationListeners.set(id, listener);
-    return () => {
-      this.mutationListeners.delete(id);
-    };
   }
 
-  private notifyMutationListeners(affectedTables: string[]) {
+  private notifyMutationListeners(affectedTables: string[]): void {
     for (const listener of this.mutationListeners.values()) {
       listener(affectedTables);
     }
   }
 
-  public async executeLocalMutation(mutation: LocalMutation) {
+  public async executeLocalMutation(mutation: LocalMutation): Promise<void> {
     switch (mutation.type) {
       case 'create_node':
         return this.executeLocalCreateNodeMutation(mutation);
@@ -81,7 +68,7 @@ export class MutationManager {
 
   private async executeLocalCreateNodeMutation(
     mutation: LocalCreateNodeMutation,
-  ) {
+  ): Promise<void> {
     await this.database.transaction().execute(async (trx) => {
       const node = mutation.data.node;
       await trx
@@ -115,7 +102,7 @@ export class MutationManager {
 
   private async executeLocalCreateNodesMutation(
     mutation: LocalCreateNodesMutation,
-  ) {
+  ): Promise<void> {
     await this.database.transaction().execute(async (trx) => {
       const data = mutation.data;
       await trx
@@ -151,7 +138,7 @@ export class MutationManager {
 
   private async executeLocalUpdateNodeMutation(
     mutation: LocalUpdateNodeMutation,
-  ) {
+  ): Promise<void> {
     await this.database.transaction().execute(async (trx) => {
       const data = mutation.data;
       await trx
@@ -184,7 +171,7 @@ export class MutationManager {
 
   private async executeLocalDeleteNodeMutation(
     mutation: LocalDeleteNodeMutation,
-  ) {
+  ): Promise<void> {
     await this.database.transaction().execute(async (trx) => {
       await trx
         .deleteFrom('nodes')
@@ -206,7 +193,7 @@ export class MutationManager {
 
   private async executeLocalDeleteNodesMutation(
     mutation: LocalDeleteNodesMutation,
-  ) {
+  ): Promise<void> {
     await this.database.transaction().execute(async (trx) => {
       await trx
         .deleteFrom('nodes')
@@ -226,7 +213,7 @@ export class MutationManager {
     this.notifyMutationListeners(['nodes']);
   }
 
-  public async executeServerMutation(mutation: ServerMutation) {
+  public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     switch (mutation.type) {
       case 'create_node':
         return this.executeServerCreateNodeMutation(mutation);
@@ -243,14 +230,14 @@ export class MutationManager {
 
   public async executeServerCreateNodeMutation(
     mutation: ServerCreateNodeMutation,
-  ) {
+  ): Promise<void> {
     const node = mutation.data.node;
     await this.syncNodeFromServer(node);
   }
 
   public async executeServerCreateNodesMutation(
     mutation: ServerCreateNodesMutation,
-  ) {
+  ): Promise<void> {
     for (const node of mutation.data.nodes) {
       await this.syncNodeFromServer(node);
     }
@@ -258,13 +245,13 @@ export class MutationManager {
 
   public async executeServerUpdateNodeMutation(
     mutation: ServerUpdateNodeMutation,
-  ) {
+  ): Promise<void> {
     await this.syncNodeFromServer(mutation.data.node);
   }
 
   public async executeServerDeleteNodeMutation(
     mutation: LocalDeleteNodeMutation,
-  ) {
+  ): Promise<void> {
     await this.database
       .deleteFrom('nodes')
       .where('id', '=', mutation.data.id)
@@ -273,7 +260,7 @@ export class MutationManager {
 
   public async executeServerDeleteNodesMutation(
     mutation: LocalDeleteNodesMutation,
-  ) {
+  ): Promise<void> {
     await this.database
       .deleteFrom('nodes')
       .where('id', 'in', mutation.data.ids)
@@ -282,7 +269,7 @@ export class MutationManager {
     this.notifyMutationListeners(['nodes']);
   }
 
-  public async syncNodeFromServer(node: Node) {
+  public async syncNodeFromServer(node: Node): Promise<void> {
     const existingNode = await this.database
       .selectFrom('nodes')
       .selectAll()
@@ -341,7 +328,7 @@ export class MutationManager {
   public shouldUpdateNodeFromServer(
     localNode: NodesTableSchema,
     serverNode: Node,
-  ) {
+  ): boolean {
     if (localNode.server_version_id === serverNode.serverVersionId) {
       return false;
     }
@@ -362,7 +349,7 @@ export class MutationManager {
     return true;
   }
 
-  public async sendMutations() {
+  public async sendMutations(): Promise<void> {
     do {
       const nextMutation = await this.database
         .selectFrom('mutations')
@@ -378,7 +365,6 @@ export class MutationManager {
       const { data, status } = await this.axios.post<ServerMutation>(
         'v1/mutations',
         {
-          deviceId: this.account.deviceId,
           workspaceId: this.workspace.id,
           type: nextMutation.type,
           data: JSON.parse(nextMutation.data),

@@ -1,3 +1,5 @@
+import { Node } from '@/types/nodes';
+
 export enum WorkspaceRole {
   Owner = 1,
   Admin = 2,
@@ -14,5 +16,9 @@ export type Workspace = {
   accountId: string;
   role: WorkspaceRole;
   userId: string;
-  syncedAt?: Date | null;
+  synced: boolean;
+};
+
+export type WorkspaceSyncData = {
+  nodes: Node[];
 };

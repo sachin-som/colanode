@@ -4,7 +4,12 @@ import { AppDatabaseSchema } from '@/data/schemas/app';
 
 interface AppDatabaseContext {
   database: Kysely<AppDatabaseSchema>;
-  executeQuery: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
+  mutate: (mutation: CompiledQuery) => Promise<void>;
+  query: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
+  queryAndSubscribe: <R>(
+    queryId: string,
+    query: CompiledQuery<R>,
+  ) => Promise<QueryResult<R>>;
 }
 
 export const AppDatabaseContext = React.createContext<AppDatabaseContext>(

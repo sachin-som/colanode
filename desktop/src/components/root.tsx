@@ -9,6 +9,7 @@ import { WorkspaceRedirect } from '@/components/workspaces/workspace-redirect';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/components/workspaces/container';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { eventBus } from '@/lib/event-bus';
 
 const router = createBrowserRouter([
   {
@@ -37,15 +38,46 @@ const router = createBrowserRouter([
   },
 ]);
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
-
 export const Root = () => {
+  const queryClient = React.useMemo(() => {
+    return new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+  }, []);
+
+  React.useEffect(() => {
+    const id = eventBus.subscribe((event) => {
+      if (event.event === 'app_query_updated') {
+        const result = event.payload.result;
+        const queryKey = event.payload.queryId;
+
+        if (result && queryKey) {
+          queryClient.setQueryData([queryKey], result);
+        }
+      }
+    });
+
+    queryClient.getQueryCache().subscribe(async (event) => {
+      if (
+        event.type === 'removed' &&
+        event.query &&
+        event.query.queryKey &&
+        event.query.queryKey.length > 0
+      ) {
+        const queryKey = event.query.queryKey[0];
+        await window.neuron.unsubscribeAppQuery(queryKey);
+      }
+    });
+
+    return () => {
+      eventBus.unsubscribe(id);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

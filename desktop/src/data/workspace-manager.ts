@@ -7,10 +7,9 @@ import {
   QueryResult,
   SqliteDialect,
 } from 'kysely';
-import { Workspace } from '@/types/workspaces';
+import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
 import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 import { workspaceDatabaseMigrations } from '@/data/migrations/workspace';
-import { Account } from '@/types/accounts';
 import {
   buildSqlite,
   extractTablesFromSql,
@@ -20,17 +19,18 @@ import { SubscribedQueryData } from '@/types/databases';
 import { LocalMutation, ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { MutationManager } from '@/data/mutation-manager';
+import { AxiosInstance } from 'axios';
 
 export class WorkspaceManager {
-  private readonly account: Account;
   private readonly workspace: Workspace;
+  private readonly axios: AxiosInstance;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly subscribers: Map<string, SubscribedQueryData<unknown>>;
   private readonly mutationManager: MutationManager;
 
-  constructor(account: Account, workspace: Workspace, accountPath: string) {
-    this.account = account;
+  constructor(workspace: Workspace, axios: AxiosInstance, accountPath: string) {
     this.workspace = workspace;
+    this.axios = axios;
     this.subscribers = new Map();
 
     const workspaceDir = `${accountPath}/${workspace.id}`;
@@ -46,11 +46,7 @@ export class WorkspaceManager {
       dialect,
     });
 
-    this.mutationManager = new MutationManager(
-      account,
-      workspace,
-      this.database,
-    );
+    this.mutationManager = new MutationManager(axios, workspace, this.database);
 
     this.mutationManager.onMutation(async (affectedTables) => {
       for (const [subscriberId, subscriberData] of this.subscribers) {
@@ -79,7 +75,11 @@ export class WorkspaceManager {
     });
   }
 
-  public async init() {
+  public getWorkspace(): Workspace {
+    return this.workspace;
+  }
+
+  public async init(): Promise<void> {
     await this.migrate();
   }
 
@@ -88,7 +88,7 @@ export class WorkspaceManager {
   ): Promise<QueryResult<T>> {
     const result = await this.database.executeQuery(query);
 
-    //only transactions should have side effects
+    //only mutations should have side effects
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
@@ -102,7 +102,7 @@ export class WorkspaceManager {
   ): Promise<QueryResult<T>> {
     const result = await this.database.executeQuery(query);
 
-    // only transactions should have side effects
+    // only mutations should have side effects
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
@@ -118,23 +118,48 @@ export class WorkspaceManager {
     return result;
   }
 
-  public unsubscribeQuery(queryId: string) {
+  public unsubscribeQuery(queryId: string): void {
     this.subscribers.delete(queryId);
   }
 
-  public async executeLocalMutation(mutation: LocalMutation) {
+  public async executeLocalMutation(mutation: LocalMutation): Promise<void> {
     await this.mutationManager.executeLocalMutation(mutation);
   }
 
-  public async executeServerMutation(mutation: ServerMutation) {
+  public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     await this.mutationManager.executeServerMutation(mutation);
   }
 
-  public async sendMutations() {
+  public async sendMutations(): Promise<void> {
     await this.mutationManager.sendMutations();
   }
 
-  private async migrate() {
+  public isSynced(): boolean {
+    return this.workspace.synced;
+  }
+
+  public async sync(): Promise<boolean> {
+    if (this.workspace.synced) {
+      return true;
+    }
+
+    const { data, status } = await this.axios.get<WorkspaceSyncData>(
+      `v1/${this.workspace.id}/sync`,
+    );
+
+    if (status !== 200) {
+      return false;
+    }
+
+    for (const node of data.nodes) {
+      await this.mutationManager.syncNodeFromServer(node);
+    }
+
+    this.workspace.synced = true;
+    return true;
+  }
+
+  private async migrate(): Promise<void> {
     const migrator = new Migrator({
       db: this.database,
       provider: {

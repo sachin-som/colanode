@@ -59,13 +59,13 @@ export const WorkspaceCreate = observer(() => {
             description: data.description,
             avatar: data.avatar,
             role: data.role,
-            synced_at: new Date().toISOString(),
+            synced: 0,
             user_id: data.userId,
             version_id: data.versionId,
           })
           .compile();
 
-        await appDatabase.executeQuery(insertWorkspaceQuery);
+        await appDatabase.mutate(insertWorkspaceQuery);
 
         window.location.href = '/';
       },

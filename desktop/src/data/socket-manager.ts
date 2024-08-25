@@ -23,7 +23,7 @@ export class SocketManager {
     this.lastInitAt = 0;
   }
 
-  public init() {
+  public init(): void {
     if (this.isConnected()) {
       return;
     }
@@ -68,13 +68,13 @@ export class SocketManager {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
-  public close() {
+  public close(): void {
     if (this.socket) {
       this.socket.close();
     }
   }
 
-  public checkConnection() {
+  public checkConnection(): void {
     if (this.isConnected()) {
       return;
     }
@@ -94,13 +94,13 @@ export class SocketManager {
     }
   }
 
-  public send(message: SocketMessage) {
+  public send(message: SocketMessage): void {
     if (this.isConnected()) {
       this.socket?.send(JSON.stringify(message));
     }
   }
 
-  public on(type: string, listener: (payload: any) => void) {
+  public on(type: string, listener: (payload: any) => void): void {
     const listeners = this.listeners.get(type) || [];
     listeners.push(listener);
     this.listeners.set(type, listeners);

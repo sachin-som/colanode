@@ -22,8 +22,8 @@ interface MessageProps {
 export const Message = observer(
   ({ message, previousMessage }: MessageProps) => {
     const author = message.author ?? {
+      id: message.createdBy,
       attrs: {
-        id: message.createdBy,
         name: 'Deleted user',
       },
     };
@@ -63,11 +63,7 @@ export const Message = observer(
       >
         <div className="mr-2 w-10 pt-1">
           {shouldDisplayUserInfo() && (
-            <Avatar
-              id={author.attrs.id}
-              name={author.attrs.name}
-              size="medium"
-            />
+            <Avatar id={author.id} name={author.attrs.name} size="medium" />
           )}
         </div>
 

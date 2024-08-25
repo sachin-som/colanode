@@ -8,6 +8,17 @@ contextBridge.exposeInMainWorld('neuron', {
   logout: (accountId: string) => ipcRenderer.invoke('logout', accountId),
   executeAppQuery: <R>(query: CompiledQuery<R>): Promise<QueryResult<R>> =>
     ipcRenderer.invoke('execute-app-query', query),
+  executeAppQueryAndSubscribe: <R>(
+    queryId: string,
+    query: CompiledQuery<R>,
+  ): Promise<QueryResult<R>> =>
+    ipcRenderer.invoke('execute-app-query-and-subscribe', queryId, query),
+
+  executeAppMutation: (mutation: CompiledQuery): Promise<void> =>
+    ipcRenderer.invoke('execute-app-mutation', mutation),
+
+  unsubscribeAppQuery: (queryId: string): Promise<void> =>
+    ipcRenderer.invoke('unsubscribe-app-query', queryId),
 
   executeWorkspaceMutation: (
     accountId: string,

@@ -2,7 +2,7 @@ import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { appManager } from '@/data/app-manager';
-import { CompiledQuery } from 'kysely';
+import { CompiledQuery, QueryResult } from 'kysely';
 import { LocalMutation } from '@/types/mutations';
 
 let subscriptionId: string | null = null;
@@ -70,8 +70,33 @@ app.on('before-quit', () => {
 ipcMain.handle('init', async () => appManager.init());
 ipcMain.handle('logout', async (_, accountId) => appManager.logout(accountId));
 
-ipcMain.handle('execute-app-query', async (_, query: CompiledQuery) => {
-  return await appManager.execute(query);
+ipcMain.handle(
+  'execute-app-mutation',
+  async (_, mutation: CompiledQuery): Promise<void> => {
+    await appManager.executeMutation(mutation);
+  },
+);
+
+ipcMain.handle(
+  'execute-app-query',
+  async (_, query: CompiledQuery<unknown>): Promise<QueryResult<unknown>> => {
+    return await appManager.executeQuery(query);
+  },
+);
+
+ipcMain.handle(
+  'execute-app-query-and-subscribe',
+  async (
+    _,
+    queryId: string,
+    query: CompiledQuery<unknown>,
+  ): Promise<QueryResult<unknown>> => {
+    return await appManager.executeQueryAndSubscribe(queryId, query);
+  },
+);
+
+ipcMain.handle('unsubscribe-app-query', (_, queryId: string): void => {
+  appManager.unsubscribeQuery(queryId);
 });
 
 ipcMain.handle(
@@ -81,7 +106,7 @@ ipcMain.handle(
     accountId: string,
     workspaceId: string,
     mutation: LocalMutation,
-  ) => {
+  ): Promise<void> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
       throw new Error(`Account not found: ${accountId}`);
@@ -98,7 +123,12 @@ ipcMain.handle(
 
 ipcMain.handle(
   'execute-workspace-query',
-  async (_, accountId: string, workspaceId: string, query: CompiledQuery) => {
+  async (
+    _,
+    accountId: string,
+    workspaceId: string,
+    query: CompiledQuery<unknown>,
+  ): Promise<QueryResult<unknown>> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
       throw new Error(`Account not found: ${accountId}`);
@@ -120,8 +150,8 @@ ipcMain.handle(
     accountId: string,
     workspaceId: string,
     queryId: string,
-    query: CompiledQuery,
-  ) => {
+    query: CompiledQuery<unknown>,
+  ): Promise<QueryResult<unknown>> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
       throw new Error(`Account not found: ${accountId}`);
@@ -138,7 +168,12 @@ ipcMain.handle(
 
 ipcMain.handle(
   'unsubscribe-workspace-query',
-  async (_, accountId: string, workspaceId: string, queryId: string) => {
+  async (
+    _,
+    accountId: string,
+    workspaceId: string,
+    queryId: string,
+  ): Promise<void> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
       throw new Error(`Account not found: ${accountId}`);

@@ -36,7 +36,7 @@ export const App = observer(() => {
     queryKey: ['accounts'],
     queryFn: async () => {
       const query = appDatabase.selectFrom('accounts').selectAll().compile();
-      return await window.neuron.executeAppQuery(query);
+      return await window.neuron.executeAppQueryAndSubscribe('accounts', query);
     },
   });
 
@@ -44,7 +44,10 @@ export const App = observer(() => {
     queryKey: ['workspaces'],
     queryFn: async () => {
       const query = appDatabase.selectFrom('workspaces').selectAll().compile();
-      return await window.neuron.executeAppQuery(query);
+      return await window.neuron.executeAppQueryAndSubscribe(
+        'workspaces',
+        query,
+      );
     },
   });
 
@@ -58,7 +61,10 @@ export const App = observer(() => {
       <AppDatabaseContext.Provider
         value={{
           database: appDatabase,
-          executeQuery: (query) => window.neuron.executeAppQuery(query),
+          query: (query) => window.neuron.executeAppQuery(query),
+          queryAndSubscribe: (queryId, query) =>
+            window.neuron.executeAppQueryAndSubscribe(queryId, query),
+          mutate: (mutation) => window.neuron.executeAppMutation(mutation),
         }}
       >
         <Login />
@@ -78,7 +84,10 @@ export const App = observer(() => {
     <AppDatabaseContext.Provider
       value={{
         database: appDatabase,
-        executeQuery: (query) => window.neuron.executeAppQuery(query),
+        query: (query) => window.neuron.executeAppQuery(query),
+        queryAndSubscribe: (queryId, query) =>
+          window.neuron.executeAppQueryAndSubscribe(queryId, query),
+        mutate: (mutation) => window.neuron.executeAppMutation(mutation),
       }}
     >
       <AccountContext.Provider
@@ -99,7 +108,7 @@ export const App = observer(() => {
               accountId: row.account_id,
               role: row.role,
               userId: row.user_id,
-              syncedAt: row.synced_at,
+              synced: row.synced,
             };
           }),
           logout: () => {

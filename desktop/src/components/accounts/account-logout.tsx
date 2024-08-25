@@ -17,7 +17,7 @@ interface AccountLogoutProps {
 }
 
 export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   return (
     <AlertDialog
       open={true}
@@ -38,15 +38,15 @@ export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={isDeleting}
+            disabled={isLoggingOut}
             onClick={async () => {
-              setIsDeleting(true);
+              setIsLoggingOut(true);
               await window.neuron.logout(id);
               window.location.href = '/';
             }}
           >
-            {isDeleting && <Spinner className="mr-1" />}
-            Delete
+            {isLoggingOut && <Spinner className="mr-1" />}
+            Logout
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

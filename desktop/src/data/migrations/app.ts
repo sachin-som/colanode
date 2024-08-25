@@ -31,7 +31,7 @@ const createWorkspacesTable: Migration = {
       .addColumn('version_id', 'text', (col) => col.notNull())
       .addColumn('role', 'integer', (col) => col.notNull())
       .addColumn('user_id', 'text', (col) => col.notNull())
-      .addColumn('synced_at', 'text')
+      .addColumn('synced', 'integer')
       .execute();
   },
   down: async (db) => {

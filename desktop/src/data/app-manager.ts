@@ -41,6 +41,8 @@ class AppManager {
     this.database = new Kysely<AppDatabaseSchema>({
       dialect,
     });
+
+    this.executeEventLoop = this.executeEventLoop.bind(this);
   }
 
   public async getAccount(
@@ -223,8 +225,12 @@ class AppManager {
   }
 
   private async executeEventLoop(): Promise<void> {
-    for (const accountManager of this.accounts.values()) {
-      await accountManager.executeEventLoop();
+    try {
+      for (const accountManager of this.accounts.values()) {
+        await accountManager.executeEventLoop();
+      }
+    } catch (error) {
+      console.error('Error in event loop:', error);
     }
 
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);

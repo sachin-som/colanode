@@ -17,7 +17,7 @@ import {
 } from '@/types/mutations';
 import { Workspace } from '@/types/workspaces';
 import { Node } from '@/types/nodes';
-import { AxiosInstance } from 'axios';
+import Axios, { AxiosInstance } from 'axios';
 import { NeuronId } from '@/lib/id';
 
 export class MutationManager {
@@ -362,22 +362,33 @@ export class MutationManager {
         break;
       }
 
-      const { data, status } = await this.axios.post<ServerMutation>(
-        'v1/mutations',
-        {
-          workspaceId: this.workspace.id,
-          type: nextMutation.type,
-          data: JSON.parse(nextMutation.data),
-        },
-      );
+      try {
+        const { data, status } = await this.axios.post<ServerMutation>(
+          'v1/mutations',
+          {
+            workspaceId: this.workspace.id,
+            type: nextMutation.type,
+            data: JSON.parse(nextMutation.data),
+          },
+        );
 
-      if (status === 200) {
-        await this.database
-          .deleteFrom('mutations')
-          .where('id', '=', nextMutation.id)
-          .execute();
+        if (status === 200) {
+          await this.database
+            .deleteFrom('mutations')
+            .where('id', '=', nextMutation.id)
+            .execute();
 
-        await this.executeServerMutation(data);
+          await this.executeServerMutation(data);
+        }
+      } catch (error) {
+        if (Axios.isAxiosError(error)) {
+          if (error.response?.status === 404) {
+            await this.database
+              .deleteFrom('mutations')
+              .where('id', '=', nextMutation.id)
+              .execute();
+          }
+        }
       }
     } while (true);
   }

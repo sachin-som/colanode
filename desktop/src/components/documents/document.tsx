@@ -1,20 +1,48 @@
 import React from 'react';
-import { useDocument } from '@/hooks/use-document';
 import { Node } from '@/types/nodes';
 import { DocumentEditor } from './document-editor';
-import { mapToDocumentContent } from '@/editor/utils';
 import { observer } from 'mobx-react-lite';
+import { useQuery } from '@tanstack/react-query';
+import { sql } from 'kysely';
+import { NodesTableSchema } from '@/data/schemas/workspace';
+import { useWorkspace } from '@/contexts/workspace';
+import { mapNode } from '@/lib/nodes';
 
 interface DocumentProps {
   node: Node;
 }
 
 export const Document = observer(({ node }: DocumentProps) => {
-  const { isLoaded, nodes, onUpdate } = useDocument(node);
-  if (!isLoaded) {
-    return <div>Loading...</div>;
+  const workspace = useWorkspace();
+  const { data, isPending } = useQuery({
+    queryKey: [`document:nodes:${node.id}`],
+    queryFn: async ({ queryKey }) => {
+      const query = sql<NodesTableSchema>`
+        WITH RECURSIVE document_hierarchy AS (
+            SELECT *
+            FROM nodes
+            WHERE parent_id = ${node.id}
+            
+            UNION ALL
+            
+            SELECT child.*
+            FROM nodes child
+            INNER JOIN document_hierarchy parent ON child.parent_id = parent.id
+        )
+        SELECT *
+        FROM document_hierarchy;
+      `.compile(workspace.schema);
+
+      const queryId = queryKey[0];
+      return await workspace.queryAndSubscribe(queryId, query);
+    },
+  });
+
+  if (isPending) {
+    return null;
   }
 
-  const content = mapToDocumentContent(node.id, nodes);
-  return <DocumentEditor id={node.id} content={content} onUpdate={onUpdate} />;
+  const rows = data.rows;
+  const nodes = rows.map((row) => mapNode(row));
+  return <DocumentEditor key={node.id} node={node} nodes={nodes} />;
 });

@@ -297,7 +297,12 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         newEditorNodes,
       );
 
-      editor.commands.setContent(newEditorContent);
+      const selection = editor.state.selection;
+      editor
+        .chain()
+        .setContent(newEditorContent)
+        .setTextSelection(selection)
+        .run();
       nodesSnapshot.current = newEditorNodes;
     }, 100),
     [node.id],

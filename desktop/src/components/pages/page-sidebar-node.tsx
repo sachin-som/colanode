@@ -3,14 +3,13 @@ import { Node } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
-import { observer } from 'mobx-react-lite';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface PageSidebarNodeProps {
   node: Node;
 }
 
-export const PageSidebarNode = observer(({ node }: PageSidebarNodeProps) => {
+export const PageSidebarNode = ({ node }: PageSidebarNodeProps) => {
   const workspace = useWorkspace();
   const isActive = false;
   const isUnread = false;
@@ -51,4 +50,4 @@ export const PageSidebarNode = observer(({ node }: PageSidebarNodeProps) => {
       )}
     </div>
   );
-});
+};

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Node } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
-import { observer } from 'mobx-react-lite';
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -36,7 +35,7 @@ interface BreadcrumbNodeProps {
   className?: string;
 }
 
-const BreadcrumbNode = observer(({ node, className }: BreadcrumbNodeProps) => {
+const BreadcrumbNode = ({ node, className }: BreadcrumbNodeProps) => {
   const name = node.attrs.name ?? 'Untitled';
   const avatar = node.attrs.avatar;
 
@@ -48,62 +47,60 @@ const BreadcrumbNode = observer(({ node, className }: BreadcrumbNodeProps) => {
       <span>{name}</span>
     </div>
   );
-});
+};
 
 interface BreadcrumbNodeEditorProps {
   node: Node;
 }
 
-export const BreadcrumbNodeEditor = observer(
-  ({ node }: BreadcrumbNodeEditorProps) => {
-    const workspace = useWorkspace();
-    const [name, setName] = React.useState(node.attrs.name ?? '');
+export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
+  const workspace = useWorkspace();
+  const [name, setName] = React.useState(node.attrs.name ?? '');
 
-    const handleNameChange = React.useMemo(
-      () =>
-        debounce(async (newName: string) => {
-          await workspace.mutate({
-            type: 'update_node',
-            data: {
-              id: node.id,
-              type: node.type,
-              index: node.index,
-              content: node.content,
-              attrs: {
-                ...node.attrs,
-                name: newName,
-              },
-              parentId: node.parentId,
-              updatedAt: new Date().toISOString(),
-              updatedBy: workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
+  const handleNameChange = React.useMemo(
+    () =>
+      debounce(async (newName: string) => {
+        await workspace.mutate({
+          type: 'update_node',
+          data: {
+            id: node.id,
+            type: node.type,
+            index: node.index,
+            content: node.content,
+            attrs: {
+              ...node.attrs,
+              name: newName,
             },
-          });
-        }, 500),
-      [node.id],
-    );
+            parentId: node.parentId,
+            updatedAt: new Date().toISOString(),
+            updatedBy: workspace.userId,
+            versionId: NeuronId.generate(NeuronId.Type.Version),
+          },
+        });
+      }, 500),
+    [node.id],
+  );
 
-    return (
-      <div>
-        <Input
-          placeholder="Name"
-          value={name}
-          onChange={async (e) => {
-            const newName = e.target.value;
-            setName(newName);
-            await handleNameChange(newName);
-          }}
-        />
-      </div>
-    );
-  },
-);
+  return (
+    <div>
+      <Input
+        placeholder="Name"
+        value={name}
+        onChange={async (e) => {
+          const newName = e.target.value;
+          setName(newName);
+          await handleNameChange(newName);
+        }}
+      />
+    </div>
+  );
+};
 
 interface ContainerHeaderProps {
   node: Node;
 }
 
-export const ContainerHeader = observer(({ node }: ContainerHeaderProps) => {
+export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     queryKey: [`breadcrumb:${node.id}`],
@@ -236,4 +233,4 @@ export const ContainerHeader = observer(({ node }: ContainerHeaderProps) => {
       </BreadcrumbList>
     </Breadcrumb>
   );
-});
+};

@@ -2,12 +2,11 @@ import React from 'react';
 import { EmailLogin } from '@/components/accounts/email-login';
 import { LoginOutput } from '@/types/accounts';
 import { EmailRegister } from '@/components/accounts/email-register';
-import { observer } from 'mobx-react-lite';
 import { useAppDatabase } from '@/contexts/app-database';
 
 const SERVER_URL = 'http://localhost:3000';
 
-export const Login = observer(() => {
+export const Login = () => {
   const appDatabase = useAppDatabase();
   const [showRegister, setShowRegister] = React.useState(false);
 
@@ -86,4 +85,4 @@ export const Login = observer(() => {
       </div>
     </div>
   );
-});
+};

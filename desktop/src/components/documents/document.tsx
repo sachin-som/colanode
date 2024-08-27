@@ -1,7 +1,6 @@
 import React from 'react';
 import { Node } from '@/types/nodes';
 import { DocumentEditor } from './document-editor';
-import { observer } from 'mobx-react-lite';
 import { useQuery } from '@tanstack/react-query';
 import { sql } from 'kysely';
 import { NodesTableSchema } from '@/data/schemas/workspace';
@@ -12,7 +11,7 @@ interface DocumentProps {
   node: Node;
 }
 
-export const Document = observer(({ node }: DocumentProps) => {
+export const Document = ({ node }: DocumentProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     queryKey: [`document:nodes:${node.id}`],
@@ -45,4 +44,4 @@ export const Document = observer(({ node }: DocumentProps) => {
   const rows = data.rows;
   const nodes = rows.map((row) => mapNode(row));
   return <DocumentEditor key={node.id} node={node} nodes={nodes} />;
-});
+};

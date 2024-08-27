@@ -33,7 +33,6 @@ import {
   DropcursorExtension,
 } from '@/editor/extensions';
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { observer } from 'mobx-react-lite';
 
 interface MessageEditorProps {
   nodeId: string;
@@ -44,7 +43,7 @@ interface MessageEditorProps {
   onSubmit: (content: JSONContent) => void;
 }
 
-export const MessageEditor = observer((props: MessageEditorProps) => {
+export const MessageEditor = (props: MessageEditorProps) => {
   const editor = useEditor(
     {
       extensions: [
@@ -177,4 +176,4 @@ export const MessageEditor = observer((props: MessageEditorProps) => {
       </div>
     </div>
   );
-});
+};

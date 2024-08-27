@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { parseApiError } from '@/lib/axios';
-import { observer } from 'mobx-react-lite';
 import { useMutation } from '@tanstack/react-query';
 import { Workspace } from '@/types/workspaces';
 import { useAppDatabase } from '@/contexts/app-database';
@@ -29,7 +28,7 @@ const formSchema = z.object({
 
 type formSchemaType = z.infer<typeof formSchema>;
 
-export const WorkspaceCreate = observer(() => {
+export const WorkspaceCreate = () => {
   const appDatabase = useAppDatabase();
   const axios = useAxios();
   const { mutate, isPending } = useMutation({
@@ -135,4 +134,4 @@ export const WorkspaceCreate = observer(() => {
       </div>
     </div>
   );
-});
+};

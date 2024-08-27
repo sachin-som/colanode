@@ -1,5 +1,4 @@
 import React from 'react';
-import { observer } from 'mobx-react-lite';
 import { match } from 'ts-pattern';
 import { useParams } from 'react-router-dom';
 import { NodeTypes } from '@/lib/constants';
@@ -11,7 +10,7 @@ import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
 
-export const Container = observer(() => {
+export const Container = () => {
   const { nodeId } = useParams<{ nodeId: string }>();
   const workspace = useWorkspace();
 
@@ -47,4 +46,4 @@ export const Container = observer(() => {
         .otherwise(null)}
     </div>
   );
-});
+};

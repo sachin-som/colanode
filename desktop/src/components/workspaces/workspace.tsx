@@ -1,7 +1,6 @@
 import React from 'react';
 import { Sidebar } from '@/components/workspaces/sidebar';
 import { WorkspaceContext } from '@/contexts/workspace';
-import { observer } from 'mobx-react-lite';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
   DummyDriver,
@@ -24,7 +23,7 @@ const workspaceDatabase = new Kysely<WorkspaceDatabaseSchema>({
   },
 });
 
-export const Workspace = observer(() => {
+export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const account = useAccount();
   const navigate = useNavigate();
@@ -123,4 +122,4 @@ export const Workspace = observer(() => {
       </WorkspaceContext.Provider>
     </QueryClientProvider>
   );
-});
+};

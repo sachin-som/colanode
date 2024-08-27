@@ -4,7 +4,6 @@ import { AppLoading } from '@/components/app-loading';
 import { AccountContext } from '@/contexts/account';
 import Axios from 'axios';
 import { AxiosContext } from '@/contexts/axios';
-import { observer } from 'mobx-react-lite';
 import { Outlet } from 'react-router-dom';
 import { AccountLogout } from '@/components/accounts/account-logout';
 import { AppDatabaseContext } from '@/contexts/app-database';
@@ -29,7 +28,7 @@ const appDatabase = new Kysely<AppDatabaseSchema>({
   },
 });
 
-export const App = observer(() => {
+export const App = () => {
   const [showLogout, setShowLogout] = React.useState(false);
 
   const accountsQuery = useQuery({
@@ -130,4 +129,4 @@ export const App = observer(() => {
       </AccountContext.Provider>
     </AppDatabaseContext.Provider>
   );
-});
+};

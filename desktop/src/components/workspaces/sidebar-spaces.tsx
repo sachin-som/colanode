@@ -1,10 +1,9 @@
 import React from 'react';
 import { SpaceCreateButton } from '@/components/spaces/space-create-button';
 import { SidebarNode } from '@/components/workspaces/sidebar-node';
-import { observer } from 'mobx-react-lite';
 import { useSidebar } from '@/contexts/sidebar';
 
-export const SidebarSpaces = observer(() => {
+export const SidebarSpaces = () => {
   const sidebar = useSidebar();
   const spaces = sidebar.nodes.filter((node) => node.type === 'space');
 
@@ -21,4 +20,4 @@ export const SidebarSpaces = observer(() => {
       </div>
     </div>
   );
-});
+};

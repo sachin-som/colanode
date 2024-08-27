@@ -7,10 +7,9 @@ import {
 } from '@/components/ui/popover';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
-import { observer } from 'mobx-react-lite';
 import { useAccount } from '@/contexts/account';
 
-export const SidebarHeader = observer(() => {
+export const SidebarHeader = () => {
   const workspace = useWorkspace();
   const account = useAccount();
 
@@ -80,4 +79,4 @@ export const SidebarHeader = observer(() => {
       </PopoverContent>
     </Popover>
   );
-});
+};

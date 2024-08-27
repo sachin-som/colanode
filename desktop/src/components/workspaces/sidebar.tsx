@@ -5,7 +5,6 @@ import { Icon } from '@/components/ui/icon';
 import { SidebarSpaces } from '@/components/workspaces/sidebar-spaces';
 import { Node } from '@/types/nodes';
 import { SidebarContext } from '@/contexts/sidebar';
-import { observer } from 'mobx-react-lite';
 import { Spinner } from '@/components/ui/spinner';
 import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
@@ -30,7 +29,7 @@ const layouts: LayoutItem[] = [
   },
 ];
 
-export const Sidebar = observer(() => {
+export const Sidebar = () => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     queryKey: [`sidebar:${workspace.id}`],
@@ -106,4 +105,4 @@ export const Sidebar = observer(() => {
       </div>
     </SidebarContext.Provider>
   );
-});
+};

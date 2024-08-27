@@ -1,16 +1,15 @@
-import React from "react";
-import {Node} from '@/types/nodes';
-import {cn} from "@/lib/utils";
-import {Avatar} from "@/components/ui/avatar";
-import {Icon} from "@/components/ui/icon";
-import {observer} from "mobx-react-lite";
-import {SidebarNodeChildren} from "@/components/workspaces/sidebar-node-children";
+import React from 'react';
+import { Node } from '@/types/nodes';
+import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
+import { Icon } from '@/components/ui/icon';
+import { SidebarNodeChildren } from '@/components/workspaces/sidebar-node-children';
 
 interface SpaceSidebarNodeProps {
   node: Node;
 }
 
-export const SpaceSidebarNode = observer(({node}: SpaceSidebarNodeProps) => {
+export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
   const [isOpen, setIsOpen] = React.useState(true);
 
   const isActive = false;
@@ -56,4 +55,4 @@ export const SpaceSidebarNode = observer(({node}: SpaceSidebarNodeProps) => {
       )}
     </React.Fragment>
   );
-});
+};

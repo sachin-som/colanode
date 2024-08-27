@@ -1,6 +1,5 @@
 import React from 'react';
 import { Node } from '@/types/nodes';
-import { observer } from 'mobx-react-lite';
 import { match } from 'ts-pattern';
 import { SpaceSidebarNode } from '@/components/spaces/space-sidebar-node';
 import { NodeTypes } from '@/lib/constants';
@@ -11,10 +10,10 @@ interface SidebarNodeProps {
   node: Node;
 }
 
-export const SidebarNode = observer(({ node }: SidebarNodeProps) => {
+export const SidebarNode = ({ node }: SidebarNodeProps): React.ReactNode => {
   return match(node.type)
     .with(NodeTypes.Space, () => <SpaceSidebarNode node={node} />)
     .with(NodeTypes.Channel, () => <ChannelSidebarNode node={node} />)
     .with(NodeTypes.Page, () => <PageSidebarNode node={node} />)
     .otherwise(null);
-});
+};

@@ -49,7 +49,7 @@ import {
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
 import { Node } from '@/types/nodes';
 import {
-  editorNodeArrayEquals,
+  editorNodeMapEquals,
   mapEditorNodesToJSONContent,
   mapJSONContentToEditorNodes,
   mapNodesToEditorNodes,
@@ -72,10 +72,9 @@ interface DocumentEditorProps {
 
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   const workspace = useWorkspace();
-  const databaseNodes = React.useRef<EditorNode[]>(
+  const nodesSnapshot = React.useRef<Map<string, EditorNode>>(
     mapNodesToEditorNodes(nodes),
   );
-  const localNodes = React.useRef<EditorNode[]>(databaseNodes.current);
 
   const editor = useEditor(
     {
@@ -134,7 +133,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
           spellCheck: 'false',
         },
       },
-      content: mapEditorNodesToJSONContent(node.id, localNodes.current),
+      content: mapEditorNodesToJSONContent(node.id, nodesSnapshot.current),
       shouldRerenderOnTransaction: false,
       autofocus: 'start',
       onUpdate: async ({ editor, transaction }) => {
@@ -147,8 +146,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   );
 
   React.useEffect(() => {
-    console.log('nodes changed', nodes);
-    checkForDatabaseChanges(nodes, editor);
+    checkForRemoteChanges(nodes, editor);
   }, [editor, nodes]);
 
   const checkForLocalChanges = React.useCallback(
@@ -159,12 +157,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         editorContent,
       );
 
-      if (editorNodeArrayEquals(newEditorNodes, localNodes.current)) {
-        return;
-      }
-
-      localNodes.current = newEditorNodes;
-      if (editorNodeArrayEquals(newEditorNodes, databaseNodes.current)) {
+      if (editorNodeMapEquals(newEditorNodes, nodesSnapshot.current)) {
         return;
       }
 
@@ -182,11 +175,8 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         },
       };
 
-      for (const newEditorNode of newEditorNodes) {
-        const existingEditorNode = databaseNodes.current.find(
-          (n) => n.id === newEditorNode.id,
-        );
-
+      for (const newEditorNode of newEditorNodes.values()) {
+        const existingEditorNode = nodesSnapshot.current.get(newEditorNode.id);
         if (!existingEditorNode) {
           createNodesMutation.data.nodes.push({
             id: newEditorNode.id,
@@ -218,8 +208,8 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         }
       }
 
-      for (const existingEditorNode of databaseNodes.current) {
-        if (!newEditorNodes.find((n) => n.id === existingEditorNode.id)) {
+      for (const existingEditorNode of nodesSnapshot.current.values()) {
+        if (!newEditorNodes.has(existingEditorNode.id)) {
           deleteNodesMutation.data.ids.push(existingEditorNode.id);
         }
       }
@@ -237,30 +227,79 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
       if (deleteNodesMutation.data.ids.length > 0) {
         await workspace.mutate(deleteNodesMutation);
       }
-    }, 500),
+
+      nodesSnapshot.current = newEditorNodes;
+    }, 100),
     [node.id],
   );
 
-  const checkForDatabaseChanges = React.useCallback(
-    debounce((newDatabaseNodes: Node[], editor: Editor) => {
-      const newEditorNodes = mapNodesToEditorNodes(newDatabaseNodes);
-      if (editorNodeArrayEquals(newEditorNodes, databaseNodes.current)) {
+  const checkForRemoteChanges = React.useCallback(
+    debounce((remoteNodes: Node[], editor: Editor) => {
+      const remoteEditorNodes = mapNodesToEditorNodes(remoteNodes);
+      if (editorNodeMapEquals(remoteEditorNodes, nodesSnapshot.current)) {
         return;
       }
 
-      databaseNodes.current = newEditorNodes;
-      if (editorNodeArrayEquals(newEditorNodes, localNodes.current)) {
+      const currentEditorContent = editor.getJSON();
+      const currentEditorNodes = mapJSONContentToEditorNodes(
+        node.id,
+        currentEditorContent,
+      );
+
+      const editorNodeIds = new Set<string>([
+        ...currentEditorNodes.keys(),
+        ...remoteEditorNodes.keys(),
+      ]);
+
+      const newEditorNodes: Map<string, EditorNode> = new Map();
+      let hasChanges = false;
+      for (const editorNodeId of editorNodeIds) {
+        const currentEditorNode = currentEditorNodes.get(editorNodeId);
+        const snapshotEditorNode = nodesSnapshot.current.get(editorNodeId);
+        const remoteEditorNode = remoteEditorNodes.get(editorNodeId);
+
+        if (!currentEditorNode) {
+          newEditorNodes.set(editorNodeId, remoteEditorNode);
+          hasChanges = true;
+          continue;
+        }
+
+        if (!snapshotEditorNode) {
+          newEditorNodes.set(editorNodeId, currentEditorNode);
+          continue;
+        }
+
+        if (!remoteEditorNode) {
+          newEditorNodes.set(editorNodeId, currentEditorNode);
+          continue;
+        }
+
+        if (!isEqual(currentEditorNode, snapshotEditorNode)) {
+          newEditorNodes.set(editorNodeId, currentEditorNode);
+          continue;
+        }
+
+        if (!isEqual(snapshotEditorNode, remoteEditorNode)) {
+          newEditorNodes.set(editorNodeId, remoteEditorNode);
+          hasChanges = true;
+          continue;
+        }
+
+        newEditorNodes.set(editorNodeId, currentEditorNode);
+      }
+
+      if (!hasChanges) {
         return;
       }
 
-      //here we need to update the editor content
       const newEditorContent = mapEditorNodesToJSONContent(
         node.id,
         newEditorNodes,
       );
+
       editor.commands.setContent(newEditorContent);
-      localNodes.current = newEditorNodes;
-    }, 500),
+      nodesSnapshot.current = newEditorNodes;
+    }, 100),
     [node.id],
   );
 

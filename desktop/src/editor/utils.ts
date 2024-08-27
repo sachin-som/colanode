@@ -6,8 +6,16 @@ import { LeafNodeTypes } from '@/lib/constants';
 import { isEqual } from 'lodash';
 import { generateNodeIndex } from '@/lib/nodes';
 
-export const mapNodesToEditorNodes = (nodes: Node[]): EditorNode[] => {
-  return nodes.map((node) => mapNodeToEditorNode(node));
+export const mapNodesToEditorNodes = (
+  nodes: Node[],
+): Map<string, EditorNode> => {
+  const editorNodes = new Map<string, EditorNode>();
+  for (const node of nodes) {
+    const editorNode = mapNodeToEditorNode(node);
+    editorNodes.set(editorNode.id, editorNode);
+  }
+
+  return editorNodes;
 };
 
 export const mapNodeToEditorNode = (node: Node): EditorNode => {
@@ -23,8 +31,9 @@ export const mapNodeToEditorNode = (node: Node): EditorNode => {
 
 export const mapEditorNodesToJSONContent = (
   rootId: string,
-  editorNodes: EditorNode[],
+  editorNodesMap: Map<string, EditorNode>,
 ): JSONContent => {
+  const editorNodes = Array.from(editorNodesMap.values());
   const contents: JSONContent[] = [];
   const childrenNodes = editorNodes
     .filter((node) => node.parentId === rootId)
@@ -69,7 +78,7 @@ const mapEditorNodeToJSONContent = (
   };
 
   const childrenNodes = nodes
-    .filter((node) => node.parentId === node.id)
+    .filter((n) => n.parentId === node.id)
     .sort((a, b) => {
       if (a.index < b.index) {
         return -1;
@@ -85,9 +94,7 @@ const mapEditorNodeToJSONContent = (
     childrenNodes.forEach((child) => {
       nodeJSONContent.content.push(mapEditorNodeToJSONContent(child, nodes));
     });
-  }
-
-  if (node.content && node.content.length > 0) {
+  } else if (node.content && node.content.length > 0) {
     nodeJSONContent.content = nodeJSONContent.content || [];
     node.content.forEach((child) => {
       const childContent: JSONContent = {
@@ -114,8 +121,8 @@ const mapEditorNodeToJSONContent = (
 export const mapJSONContentToEditorNodes = (
   rootId: string,
   content: JSONContent,
-): EditorNode[] => {
-  const nodes: EditorNode[] = [];
+): Map<string, EditorNode> => {
+  const nodes: Map<string, EditorNode> = new Map();
   if (content.content && content.content.length > 0) {
     for (const child of content.content) {
       mapAndPushJSONContentToEditorNode(rootId, child, nodes);
@@ -128,7 +135,7 @@ export const mapJSONContentToEditorNodes = (
 const mapAndPushJSONContentToEditorNode = (
   parentId: string,
   content: JSONContent,
-  editorNodes: EditorNode[],
+  editorNodes: Map<string, EditorNode>,
 ) => {
   let id = content.attrs?.id;
   if (!id) {
@@ -153,7 +160,11 @@ const mapAndPushJSONContentToEditorNode = (
     index: index,
     attrs: attrs,
   };
-  editorNodes.push(editorNode);
+  editorNodes.set(id, editorNode);
+
+  if (!content.content) {
+    return;
+  }
 
   if (LeafNodeTypes.includes(content.type)) {
     editorNode.content = [];
@@ -185,10 +196,12 @@ const mapAndPushJSONContentToEditorNode = (
   }
 };
 
-const validateEditorNodeIndexes = (editorNodes: EditorNode[]): void => {
+const validateEditorNodeIndexes = (
+  editorNodes: Map<string, EditorNode>,
+): void => {
   //group by parentId
   const groupedNodes: { [key: string]: EditorNode[] } = {};
-  for (const node of editorNodes) {
+  for (const node of editorNodes.values()) {
     if (!groupedNodes[node.parentId]) {
       groupedNodes[node.parentId] = [];
     }
@@ -243,7 +256,7 @@ export const editorNodeArrayEquals = (
   }
 
   for (let i = 0; i < a.length; i++) {
-    if (!deepEquals(a[i], b[i])) {
+    if (!isEqual(a[i], b[i])) {
       return false;
     }
   }
@@ -251,14 +264,20 @@ export const editorNodeArrayEquals = (
   return true;
 };
 
-const deepEquals = (a: any, b: any): boolean => {
-  if (a === b) {
+export const editorNodeMapEquals = (
+  a: Map<string, EditorNode>,
+  b: Map<string, EditorNode>,
+): boolean => {
+  if (a.size !== b.size) {
     return false;
   }
 
-  if ((a === null || a === undefined) && (b === null || b === undefined)) {
-    return false;
+  for (const [key, value] of a) {
+    const otherValue = b.get(key);
+    if (!otherValue || !isEqual(value, otherValue)) {
+      return false;
+    }
   }
 
-  return !isEqual(a, b);
+  return true;
 };

@@ -183,6 +183,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
           const updateNodeMutation = workspace.schema
             .updateTable('nodes')
             .set({
+              index: newEditorNode.index,
               attrs: newEditorNode.attrs
                 ? JSON.stringify(newEditorNode.attrs)
                 : null,
@@ -190,6 +191,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
                 ? JSON.stringify(newEditorNode.content)
                 : null,
             })
+            .where('id', '=', newEditorNode.id)
             .compile();
 
           await workspace.mutate(updateNodeMutation);
@@ -213,7 +215,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
       }
 
       nodesSnapshot.current = newEditorNodes;
-    }, 100),
+    }, 500),
     [node.id],
   );
 
@@ -288,7 +290,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         .setTextSelection(selection)
         .run();
       nodesSnapshot.current = newEditorNodes;
-    }, 100),
+    }, 500),
     [node.id],
   );
 

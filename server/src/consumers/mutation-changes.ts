@@ -2,7 +2,7 @@ import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
 import { ChangeMessage, MutationChangeData } from '@/types/changes';
 import { redis, CHANNEL_NAMES } from '@/data/redis';
 import { PostgresOperation } from '@/lib/constants';
-import { prisma } from '@/data/prisma';
+import { database } from '@/data/database';
 
 export const initMutationChangesConsumer = async () => {
   const consumer = kafka.consumer({ groupId: CONSUMER_IDS.MUTATION_CHANGES });
@@ -64,12 +64,11 @@ const handleMutationUpdate = async (
   }
 
   // if all devices have acknowledged the mutation, delete it
-  if (mutationData.devices == null || mutationData.devices.length == 0) {
-    await prisma.mutations.delete({
-      where: {
-        id: mutationData.id,
-      },
-    });
+  if (mutationData.device_ids == null || mutationData.device_ids.length == 0) {
+    await database
+      .deleteFrom('mutations')
+      .where('id', '=', mutationData.id)
+      .execute();
   }
 };
 

@@ -1,131 +1,39 @@
-import { Node, NodeBlock } from '@/types/nodes';
-
-export type LocalMutation =
-  | LocalCreateNodeMutation
-  | LocalCreateNodesMutation
-  | LocalUpdateNodeMutation
-  | LocalDeleteNodeMutation
-  | LocalDeleteNodesMutation;
-
-export type LocalCreateNodeMutation = {
-  type: 'create_node';
+export type ExecuteLocalMutationsInput = {
   workspaceId: string;
-  deviceId: string;
-  data: {
-    node: LocalCreateNodeData;
-  };
+  mutations: LocalMutation[];
 };
 
-export type LocalCreateNodesMutation = {
-  type: 'create_nodes';
-  workspaceId: string;
-  deviceId: string;
-  data: {
-    nodes: LocalCreateNodeData[];
-  };
+export type LocalMutation = {
+  id: number;
+  table: string;
+  action: 'insert' | 'update' | 'delete';
+  before?: string | null;
+  after?: string | null;
+  createdAt: string;
 };
 
-export type LocalCreateNodeData = {
+export type LocalNodeMutationData = {
   id: string;
   type: string;
-  parentId: string | null;
-  workspaceId: string;
+  parent_id: string | null;
   index: string | null;
-  content: NodeBlock[];
-  attrs: Record<string, any>;
-  createdAt: string;
-  createdBy: string;
-  versionId: string;
+  attrs?: string | null;
+  content?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  created_by: string;
+  updated_by?: string | null;
+  version_id: string;
+  server_created_at: string;
+  server_updated_at: string;
+  server_version_id: string;
 };
 
-export type LocalUpdateNodeMutation = {
-  type: 'update_node';
-  workspaceId: string;
-  deviceId: string;
-  data: {
-    id: string;
-    type: string;
-    parentId: string | null;
-    index: string | null;
-    content: NodeBlock[];
-    attrs: Record<string, any>;
-    updatedAt: string;
-    updatedBy: string;
-    versionId: string;
-  };
-};
-
-export type LocalDeleteNodeMutation = {
-  type: 'delete_node';
-  workspaceId: string;
-  deviceId: string;
-  data: {
-    id: string;
-  };
-};
-
-export type LocalDeleteNodesMutation = {
-  type: 'delete_nodes';
-  workspaceId: string;
-  deviceId: string;
-  data: {
-    ids: string[];
-  };
-};
-
-export type ServerMutation =
-  | ServerCreateNodeMutation
-  | ServerCreateNodesMutation
-  | ServerUpdateNodeMutation
-  | ServerDeleteNodeMutation
-  | ServerDeleteNodesMutation;
-
-export type ServerCreateNodeMutation = {
+export type ServerMutation = {
   id: string;
-  type: 'create_node';
+  table: string;
+  action: 'insert' | 'update' | 'delete';
   workspaceId: string;
-  data: {
-    node: Node;
-  };
-  createdAt: string;
-};
-
-export type ServerCreateNodesMutation = {
-  id: string;
-  type: 'create_nodes';
-  workspaceId: string;
-  data: {
-    nodes: Node[];
-  };
-  createdAt: string;
-};
-
-export type ServerUpdateNodeMutation = {
-  id: string;
-  type: 'update_node';
-  workspaceId: string;
-  data: {
-    node: Node;
-  };
-  createdAt: string;
-};
-
-export type ServerDeleteNodeMutation = {
-  id: string;
-  type: 'delete_node';
-  workspaceId: string;
-  data: {
-    id: string;
-  };
-  createdAt: string;
-};
-
-export type ServerDeleteNodesMutation = {
-  id: string;
-  type: 'delete_nodes';
-  workspaceId: string;
-  data: {
-    ids: string[];
-  };
-  createdAt: string;
+  before: any | null;
+  after: any | null;
 };

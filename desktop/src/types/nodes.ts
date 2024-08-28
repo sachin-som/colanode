@@ -1,6 +1,5 @@
-export type Node = {
+export type LocalNode = {
   id: string;
-  workspaceId: string;
   parentId?: string | null;
   type: string;
   index?: string | null;
@@ -27,6 +26,22 @@ export type NodeBlockMark = {
   attrs: any;
 };
 
-export type NodeWithChildren = Node & {
-  children: NodeWithChildren[];
+export type LocalNodeWithChildren = LocalNode & {
+  children: LocalNodeWithChildren[];
+};
+
+export type ServerNode = {
+  id: string;
+  parentId?: string | null;
+  type: string;
+  index?: string | null;
+  attrs?: Record<string, any> | null;
+  content?: NodeBlock[] | null;
+  createdAt: string;
+  createdBy: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  versionId: string;
+  serverCreatedAt?: string | null;
+  serverUpdatedAt?: string | null;
 };

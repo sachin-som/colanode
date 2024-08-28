@@ -1,9 +1,9 @@
 import React from 'react';
 import { NodeChildrenRenderer } from '@/editor/renderers/node-children';
-import { NodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 
 interface DocumentRendererProps {
-  node: NodeWithChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 

@@ -1,8 +1,8 @@
 import { redis, CHANNEL_NAMES } from '@/data/redis';
 import { sockets } from '@/lib/sockets';
 import { SocketMessage } from '@/types/sockets';
-import { MutationChangeData } from '@/types/changes';
 import { ServerMutation } from '@/types/mutations';
+import { MutationChangeData } from '@/types/changes';
 
 export const initMutationsSubscriber = async () => {
   const subscriber = redis.duplicate();
@@ -12,27 +12,28 @@ export const initMutationsSubscriber = async () => {
 
 const handleMessage = async (message: string) => {
   const mutationData = JSON.parse(message) as MutationChangeData;
-  if (!mutationData.devices || !mutationData.devices.length) {
+  if (!mutationData.device_ids || !mutationData.device_ids.length) {
     return;
   }
 
-  const mutation: ServerMutation = {
+  const serverMutation: ServerMutation = {
     id: mutationData.id,
-    type: mutationData.type as any,
+    action: mutationData.action as 'insert' | 'update' | 'delete',
+    table: mutationData.table,
     workspaceId: mutationData.workspace_id,
-    data: JSON.parse(mutationData.data),
-    createdAt: mutationData.created_at,
+    before: mutationData.before,
+    after: mutationData.after,
   };
 
-  for (const deviceId of mutationData.devices) {
+  for (const deviceId of mutationData.device_ids) {
     const socket = sockets.getSocket(deviceId);
     if (!socket) {
-      return;
+      continue;
     }
 
     const socketMessage: SocketMessage = {
       type: 'mutation',
-      payload: mutation,
+      payload: serverMutation,
     };
     socket.send(JSON.stringify(socketMessage));
   }

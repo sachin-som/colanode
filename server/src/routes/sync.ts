@@ -1,7 +1,7 @@
 import { NeuronRequest, NeuronResponse } from '@/types/api';
-import { prisma } from '@/data/prisma';
+import { database } from '@/data/database';
 import { Router } from 'express';
-import { Node, NodeBlock } from '@/types/nodes';
+import { ServerNode } from '@/types/nodes';
 
 export const syncRouter = Router();
 
@@ -9,29 +9,28 @@ syncRouter.get(
   '/:workspaceId/sync',
   async (req: NeuronRequest, res: NeuronResponse) => {
     const workspaceId = req.params.workspaceId as string;
-    const nodes = await prisma.nodes.findMany({
-      where: {
-        workspaceId,
-      },
-    });
+    const nodes = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('workspace_id', '=', workspaceId)
+      .execute();
 
-    const outputs: Node[] = nodes.map((node) => {
+    const outputs: ServerNode[] = nodes.map((node) => {
       return {
         id: node.id,
-        parentId: node.parentId,
-        workspaceId: node.workspaceId,
+        parentId: node.parent_id,
+        workspaceId: node.workspace_id,
         type: node.type,
         index: node.index,
-        attrs: node.attrs as Record<string, any>,
-        createdAt: node.createdAt.toISOString(),
-        createdBy: node.createdBy,
-        versionId: node.versionId,
-        content: node.content as NodeBlock[],
-        updatedAt: node.updatedAt?.toISOString(),
-        updatedBy: node.updatedBy,
-        serverCreatedAt: node.serverCreatedAt.toISOString(),
-        serverUpdatedAt: node.serverUpdatedAt?.toISOString(),
-        serverVersionId: node.serverVersionId,
+        attrs: node.attrs,
+        createdAt: node.created_at.toISOString(),
+        createdBy: node.created_by,
+        versionId: node.version_id,
+        content: node.content,
+        updatedAt: node.updated_at?.toISOString(),
+        updatedBy: node.updated_by,
+        serverCreatedAt: node.server_created_at.toISOString(),
+        serverUpdatedAt: node.server_updated_at?.toISOString(),
       };
     });
 

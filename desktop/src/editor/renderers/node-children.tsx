@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { NodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 import { NodeBlockRenderer } from '@/editor/renderers/node-block';
 import { NodeRenderer } from '@/editor/renderers/node';
 
 interface NodeChildrenRendererProps {
-  node: NodeWithChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 

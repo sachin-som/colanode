@@ -1,15 +1,15 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { SidebarNode } from '@/components/workspaces/sidebar-node';
 import { useSidebar } from '@/contexts/sidebar';
 
 interface SidebarNodeChildrenProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const SidebarNodeChildren = ({ node }: SidebarNodeChildrenProps) => {
   const sidebar = useSidebar();
-  const children: Node[] = sidebar.nodes
+  const children: LocalNode[] = sidebar.nodes
     .filter((n) => n.parentId === node.id)
     .sort((a, b) => {
       if (a.index < b.index) {

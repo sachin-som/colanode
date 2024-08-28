@@ -1,8 +1,8 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 
 interface MessageReactionsProps {
-  message: Node;
+  message: LocalNode;
   onReactionClick: (reaction: string) => void;
 }
 

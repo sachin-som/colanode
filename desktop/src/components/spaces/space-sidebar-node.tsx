@@ -1,12 +1,12 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { SidebarNodeChildren } from '@/components/workspaces/sidebar-node-children';
 
 interface SpaceSidebarNodeProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {

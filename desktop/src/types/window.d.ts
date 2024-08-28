@@ -5,7 +5,7 @@ import { LocalMutationInput } from '@/types/mutations';
 interface NeuronApi {
   init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
-  executeAppMutation: (mutation: LocalMutationInput) => Promise<void>;
+  executeAppMutation: (mutation: CompiledQuery) => Promise<void>;
   executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   executeAppQueryAndSubscribe: (
     queryId: string,
@@ -16,7 +16,7 @@ interface NeuronApi {
   executeWorkspaceMutation: (
     accountId: string,
     workspaceId: string,
-    input: LocalMutationInput,
+    mutation: CompiledQuery,
   ) => Promise<void>;
 
   executeWorkspaceQuery: (

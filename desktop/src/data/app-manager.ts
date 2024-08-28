@@ -35,7 +35,7 @@ class AppManager {
     this.subscribers = new Map();
 
     const dialect = new SqliteDialect({
-      database: buildSqlite(`${this.appPath}/global.db`),
+      database: buildSqlite(`${this.appPath}/app.db`),
     });
 
     this.database = new Kysely<AppDatabaseSchema>({

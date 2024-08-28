@@ -3,7 +3,7 @@ import { SidebarHeader } from '@/components/workspaces/sidebar-header';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/icon';
 import { SidebarSpaces } from '@/components/workspaces/sidebar-spaces';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { SidebarContext } from '@/contexts/sidebar';
 import { Spinner } from '@/components/ui/spinner';
 import { mapNode } from '@/lib/nodes';
@@ -59,7 +59,7 @@ export const Sidebar = () => {
   }
 
   const currentLayout = 'spaces';
-  const nodes: Node[] = data?.rows.map((row) => mapNode(row)) ?? [];
+  const nodes: LocalNode[] = data?.rows.map((row) => mapNode(row)) ?? [];
 
   return (
     <SidebarContext.Provider

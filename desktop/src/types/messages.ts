@@ -1,5 +1,5 @@
-import { Node, NodeWithChildren } from '@/types/nodes';
+import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
 
-export type MessageNode = NodeWithChildren & {
-  author?: Node | null;
+export type MessageNode = LocalNodeWithChildren & {
+  author?: LocalNode | null;
 };

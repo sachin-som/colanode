@@ -1,4 +1,4 @@
-import { Node, NodeBlock } from '@/types/nodes';
+import { LocalNode, NodeBlock } from '@/types/nodes';
 import { useWorkspace } from '@/contexts/workspace';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
@@ -6,10 +6,9 @@ import { LeafNodeTypes, NodeTypes } from '@/lib/constants';
 import { buildNodeWithChildren, generateNodeIndex, mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { sql } from 'kysely';
-import { NodesTableSchema } from '@/data/schemas/workspace';
+import { CreateNode, SelectNode } from '@/data/schemas/workspace';
 import { hashCode } from '@/lib/utils';
 import { MessageNode } from '@/types/messages';
-import { LocalCreateNodesMutation } from '@/types/mutations';
 
 interface useConversationResult {
   isLoading: boolean;
@@ -28,7 +27,7 @@ export const useConversation = (
   const messagesQuery = useQuery({
     queryKey: [`conversation:messages:${conversationId}`],
     queryFn: async ({ queryKey }) => {
-      const query = sql<NodesTableSchema>`
+      const query = sql<SelectNode>`
         WITH RECURSIVE conversation_hierarchy AS (
             SELECT *
             FROM nodes
@@ -74,22 +73,21 @@ export const useConversation = (
   });
 
   const createMessage = async (content: JSONContent) => {
-    const mutation: LocalCreateNodesMutation = {
-      type: 'create_nodes',
-      data: {
-        nodes: [],
-      },
-    };
+    const nodesToInsert: CreateNode[] = [];
 
     buildMessageCreateNodes(
-      mutation,
+      nodesToInsert,
       workspace.userId,
       workspace.id,
       conversationId,
       content,
     );
 
-    await workspace.mutate(mutation);
+    const query = workspace.schema
+      .insertInto('nodes')
+      .values(nodesToInsert)
+      .compile();
+    await workspace.mutate(query);
   };
 
   const conversationNodes =
@@ -107,9 +105,12 @@ export const useConversation = (
   };
 };
 
-const buildMessages = (nodes: Node[], authors: Node[]): MessageNode[] => {
+const buildMessages = (
+  nodes: LocalNode[],
+  authors: LocalNode[],
+): MessageNode[] => {
   const messages: MessageNode[] = [];
-  const authorMap = new Map<string, Node>();
+  const authorMap = new Map<string, LocalNode>();
 
   for (const author of authors) {
     authorMap.set(author.id, author);
@@ -142,7 +143,7 @@ const buildMessages = (nodes: Node[], authors: Node[]): MessageNode[] => {
 };
 
 const buildMessageCreateNodes = (
-  mutation: LocalCreateNodesMutation,
+  nodes: CreateNode[],
   userId: string,
   workspaceId: string,
   parentId: string,
@@ -183,31 +184,23 @@ const buildMessageCreateNodes = (
     nodeContent = null;
   }
 
-  mutation.data.nodes.push({
+  nodes.push({
     id: id,
-    parentId,
-    workspaceId: workspaceId,
+    parent_id: parentId,
     type: content.type,
-    attrs: attrs,
+    attrs: attrs ? JSON.stringify(attrs) : null,
     index: index,
-    content: nodeContent,
-    createdAt: new Date().toISOString(),
-    createdBy: userId,
-    versionId: NeuronId.generate(NeuronId.Type.Version),
+    content: nodeContent ? JSON.stringify(nodeContent) : null,
+    created_at: new Date().toISOString(),
+    created_by: userId,
+    version_id: NeuronId.generate(NeuronId.Type.Version),
   });
 
   if (nodeContent == null && content.content && content.content.length > 0) {
     let lastIndex: string | null = null;
     for (const child of content.content) {
       lastIndex = generateNodeIndex(lastIndex, null);
-      buildMessageCreateNodes(
-        mutation,
-        userId,
-        workspaceId,
-        id,
-        child,
-        lastIndex,
-      );
+      buildMessageCreateNodes(nodes, userId, workspaceId, id, child, lastIndex);
     }
   }
 };

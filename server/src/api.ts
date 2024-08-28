@@ -9,8 +9,9 @@ import { mutationsRouter } from '@/routes/mutations';
 import { authMiddleware } from '@/middlewares/auth';
 import { sockets } from '@/lib/sockets';
 import { SocketMessage } from '@/types/sockets';
-import { prisma } from '@/data/prisma';
 import { syncRouter } from '@/routes/sync';
+import { database } from '@/data/database';
+import { sql } from 'kysely';
 
 export const initApi = () => {
   const app = express();
@@ -53,11 +54,13 @@ export const initApi = () => {
           return;
         }
 
-        await prisma.$executeRaw`
-          UPDATE mutations
-          SET devices = array_remove(devices, ${deviceId})
-          WHERE id = ${mutationId};
-        `;
+        await database
+          .updateTable('mutations')
+          .set({
+            device_ids: sql`array_remove(device_ids, ${deviceId})`,
+          })
+          .where('id', '=', mutationId)
+          .execute();
       }
     });
 

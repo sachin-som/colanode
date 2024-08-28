@@ -1,4 +1,4 @@
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 
 export enum WorkspaceRole {
   Owner = 1,
@@ -20,5 +20,5 @@ export type Workspace = {
 };
 
 export type WorkspaceSyncData = {
-  nodes: Node[];
+  nodes: LocalNode[];
 };

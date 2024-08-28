@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 
 interface SidebarContext {
-  nodes: Node[];
+  nodes: LocalNode[];
 }
 
 export const SidebarContext = createContext<SidebarContext>(

@@ -1,14 +1,14 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { DocumentEditor } from './document-editor';
 import { useQuery } from '@tanstack/react-query';
 import { sql } from 'kysely';
-import { NodesTableSchema } from '@/data/schemas/workspace';
+import { SelectNode } from '@/data/schemas/workspace';
 import { useWorkspace } from '@/contexts/workspace';
 import { mapNode } from '@/lib/nodes';
 
 interface DocumentProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const Document = ({ node }: DocumentProps) => {
@@ -16,7 +16,7 @@ export const Document = ({ node }: DocumentProps) => {
   const { data, isPending } = useQuery({
     queryKey: [`document:nodes:${node.id}`],
     queryFn: async ({ queryKey }) => {
-      const query = sql<NodesTableSchema>`
+      const query = sql<SelectNode>`
         WITH RECURSIVE document_hierarchy AS (
             SELECT *
             FROM nodes

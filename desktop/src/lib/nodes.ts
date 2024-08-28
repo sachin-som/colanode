@@ -1,12 +1,12 @@
-import { NodesTableSchema } from '@/data/schemas/workspace';
-import { Node, NodeWithChildren } from '@/types/nodes';
+import { SelectNode } from '@/data/schemas/workspace';
+import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 
 export const buildNodeWithChildren = (
-  node: Node,
-  allNodes: Node[],
-): NodeWithChildren => {
-  const children: NodeWithChildren[] = allNodes
+  node: LocalNode,
+  allNodes: LocalNode[],
+): LocalNodeWithChildren => {
+  const children: LocalNodeWithChildren[] = allNodes
     .filter((n) => n.parentId === node.id)
     .map((n) => buildNodeWithChildren(n, allNodes));
 
@@ -26,15 +26,14 @@ export const generateNodeIndex = (
   return generateKeyBetween(lower, upper);
 };
 
-export const mapNode = (row: NodesTableSchema): Node => {
+export const mapNode = (row: SelectNode): LocalNode => {
   return {
     id: row.id,
     type: row.type,
     index: row.index,
     parentId: row.parent_id,
-    workspaceId: row.workspace_id,
-    attrs: row.attrs && JSON.parse(row.attrs),
-    content: row.content && JSON.parse(row.content),
+    attrs: row.attrs ? JSON.parse(row.attrs) : null,
+    content: row.content ? JSON.parse(row.content) : null,
     createdAt: row.created_at,
     createdBy: row.created_by,
     updatedAt: row.updated_at,

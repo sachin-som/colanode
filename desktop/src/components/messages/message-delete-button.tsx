@@ -21,12 +21,12 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { mutate, isPending } = useMutation({
     mutationFn: async (messageId: string) => {
-      await workspace.mutate({
-        type: 'delete_node',
-        data: {
-          id: messageId,
-        },
-      });
+      const mutation = workspace.schema
+        .deleteFrom('nodes')
+        .where('id', '=', messageId)
+        .compile();
+        
+      await workspace.mutate(mutation);
     },
   });
   const workspace = useWorkspace();

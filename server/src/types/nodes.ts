@@ -1,4 +1,4 @@
-export type Node = {
+export type ServerNode = {
   id: string;
   workspaceId: string;
   parentId?: string | null;
@@ -13,7 +13,6 @@ export type Node = {
   versionId: string;
   serverCreatedAt: string;
   serverUpdatedAt?: string | null;
-  serverVersionId: string;
 };
 
 export type NodeBlock = {

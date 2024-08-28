@@ -103,7 +103,6 @@ export class AccountManager {
 
   public async executeEventLoop(): Promise<void> {
     this.socket.checkConnection();
-
     for (const workspace of this.workspaces.values()) {
       if (!workspace.isSynced()) {
         const synced = await workspace.sync();

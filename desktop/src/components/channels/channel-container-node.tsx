@@ -1,9 +1,9 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { Conversation } from '@/components/messages/conversation';
 
 interface ChannelContainerNodeProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const ChannelContainerNode = ({ node }: ChannelContainerNodeProps) => {

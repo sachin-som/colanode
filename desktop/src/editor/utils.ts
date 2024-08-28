@@ -1,4 +1,4 @@
-import { Node, NodeBlock } from '@/types/nodes';
+import { LocalNode, NodeBlock } from '@/types/nodes';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { EditorNode } from '@/types/editor';
@@ -7,7 +7,7 @@ import { isEqual } from 'lodash';
 import { generateNodeIndex } from '@/lib/nodes';
 
 export const mapNodesToEditorNodes = (
-  nodes: Node[],
+  nodes: LocalNode[],
 ): Map<string, EditorNode> => {
   const editorNodes = new Map<string, EditorNode>();
   for (const node of nodes) {
@@ -18,7 +18,7 @@ export const mapNodesToEditorNodes = (
   return editorNodes;
 };
 
-export const mapNodeToEditorNode = (node: Node): EditorNode => {
+export const mapNodeToEditorNode = (node: LocalNode): EditorNode => {
   return {
     id: node.id,
     type: node.type,

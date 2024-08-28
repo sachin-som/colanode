@@ -56,56 +56,54 @@ export const SpaceCreateDialog = ({
       const spaceId = NeuronId.generate(NeuronId.Type.Space);
       const firstIndex = generateNodeIndex(null, null);
       const secondIndex = generateNodeIndex(firstIndex, null);
-      await workspace.mutate({
-        type: 'create_nodes',
-        data: {
-          nodes: [
-            {
-              id: spaceId,
-              type: NodeTypes.Space,
-              parentId: null,
-              workspaceId: workspace.id,
-              index: generateNodeIndex(null, null),
-              attrs: {
-                name: values.name,
-                description: values.description,
-              },
-              content: null,
-              createdAt: new Date().toISOString(),
-              createdBy: workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-            },
-            {
-              id: NeuronId.generate(NeuronId.Type.Page),
-              type: NodeTypes.Page,
-              parentId: spaceId,
-              workspaceId: workspace.id,
-              index: firstIndex,
-              attrs: {
-                name: 'Home',
-              },
-              content: null,
-              createdAt: new Date().toISOString(),
-              createdBy: workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-            },
-            {
-              id: NeuronId.generate(NeuronId.Type.Channel),
-              type: NodeTypes.Channel,
-              parentId: spaceId,
-              workspaceId: workspace.id,
-              index: secondIndex,
-              attrs: {
-                name: 'Discussions',
-              },
-              content: null,
-              createdAt: new Date().toISOString(),
-              createdBy: workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-            },
-          ],
-        },
-      });
+      const query = workspace
+        .schema
+        .insertInto('nodes')
+        .values([
+          {
+            id: spaceId,
+            type: NodeTypes.Space,
+            parent_id: null,
+            index: generateNodeIndex(null, null),
+            attrs: JSON.stringify({
+              name: values.name,
+              description: values.description,
+            }),
+            content: null,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+          {
+            id: NeuronId.generate(NeuronId.Type.Page),
+            type: NodeTypes.Page,
+            parent_id: spaceId,
+            index: firstIndex,
+            attrs: JSON.stringify({
+              name: 'Home',
+            }),
+            content: null,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+          {
+            id: NeuronId.generate(NeuronId.Type.Channel),
+            type: NodeTypes.Channel,
+            parent_id: spaceId,
+            index: secondIndex,
+            attrs: JSON.stringify({
+              name: 'Discussions',
+            }),
+            content: null,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+        ])
+        .compile();
+
+      await workspace.mutate(query);
     },
   });
 

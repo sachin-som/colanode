@@ -1,5 +1,5 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
 import {
   Breadcrumb,
@@ -27,11 +27,11 @@ import { debounce } from 'lodash';
 import { sql } from 'kysely';
 import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
-import { NodesTableSchema } from '@/data/schemas/workspace';
+import { SelectNode } from '@/data/schemas/workspace';
 import { NeuronId } from '@/lib/id';
 
 interface BreadcrumbNodeProps {
-  node: Node;
+  node: LocalNode;
   className?: string;
 }
 
@@ -50,7 +50,7 @@ const BreadcrumbNode = ({ node, className }: BreadcrumbNodeProps) => {
 };
 
 interface BreadcrumbNodeEditorProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
@@ -60,23 +60,21 @@ export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
   const handleNameChange = React.useMemo(
     () =>
       debounce(async (newName: string) => {
-        await workspace.mutate({
-          type: 'update_node',
-          data: {
-            id: node.id,
-            type: node.type,
-            index: node.index,
-            content: node.content,
-            attrs: {
-              ...node.attrs,
-              name: newName,
-            },
-            parentId: node.parentId,
-            updatedAt: new Date().toISOString(),
-            updatedBy: workspace.userId,
-            versionId: NeuronId.generate(NeuronId.Type.Version),
-          },
-        });
+        const newAttrs = {
+          ...node.attrs,
+          name: newName,
+        };
+        const query = workspace.schema
+          .updateTable('nodes')
+          .set({
+            attrs: newAttrs ? JSON.stringify(newAttrs) : null,
+            updated_at: new Date().toISOString(),
+            updated_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          })
+          .compile();
+
+        await workspace.mutate(query);
       }, 500),
     [node.id],
   );
@@ -97,7 +95,7 @@ export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
 };
 
 interface ContainerHeaderProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
@@ -105,7 +103,7 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
   const { data, isPending } = useQuery({
     queryKey: [`breadcrumb:${node.id}`],
     queryFn: async ({ queryKey }) => {
-      const query = sql<NodesTableSchema>`
+      const query = sql<SelectNode>`
         WITH RECURSIVE breadcrumb AS (
           SELECT *
           FROM nodes
@@ -135,7 +133,7 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
   const ellipsisNodes = showEllipsis ? breadcrumbNodes.slice(1, -1) : [];
   const lastNodes = showEllipsis ? breadcrumbNodes.slice(-1) : [];
 
-  const isClickable = (node: Node) => node.type !== NodeTypes.Space;
+  const isClickable = (node: LocalNode) => node.type !== NodeTypes.Space;
 
   return (
     <Breadcrumb className="mx-1 flex h-12 items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80">

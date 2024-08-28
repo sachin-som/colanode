@@ -1,10 +1,10 @@
 import React from 'react';
 import { defaultClasses } from '@/editor/classes';
 import { NodeChildrenRenderer } from '@/editor/renderers/node-children';
-import { NodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 
 interface BlockquoteRendererProps {
-  node: NodeWithChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 

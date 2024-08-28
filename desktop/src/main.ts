@@ -3,7 +3,6 @@ import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { appManager } from '@/data/app-manager';
 import { CompiledQuery, QueryResult } from 'kysely';
-import { LocalMutation } from '@/types/mutations';
 
 let subscriptionId: string | null = null;
 
@@ -105,7 +104,7 @@ ipcMain.handle(
     _,
     accountId: string,
     workspaceId: string,
-    mutation: LocalMutation,
+    mutation: CompiledQuery,
   ): Promise<void> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
@@ -117,7 +116,7 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    return await workspaceManager.executeLocalMutation(mutation);
+    return await workspaceManager.executeMutation(mutation);
   },
 );
 

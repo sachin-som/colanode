@@ -9,7 +9,7 @@ import {
 } from '@/types/workspaces';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { NeuronId } from '@/lib/id';
-import { prisma } from '@/data/prisma';
+import { database } from '@/data/database';
 import { Router } from 'express';
 
 export const workspacesRouter = Router();
@@ -31,11 +31,11 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const account = await prisma.accounts.findUnique({
-    where: {
-      id: req.accountId,
-    },
-  });
+  const account = await database
+    .selectFrom('accounts')
+    .selectAll()
+    .where('id', '=', req.accountId)
+    .executeTakeFirst();
 
   if (!account) {
     return res.status(404).json({
@@ -68,31 +68,53 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
-  await prisma.$transaction([
-    prisma.workspaces.create({
-      data: workspace,
-    }),
-    prisma.nodes.create({
-      data: {
+  await database.transaction().execute(async (trx) => {
+    await trx
+      .insertInto('workspaces')
+      .values({
+        id: workspace.id,
+        name: workspace.name,
+        description: workspace.description,
+        avatar: workspace.avatar,
+        created_at: workspace.createdAt,
+        created_by: workspace.createdBy,
+        status: workspace.status,
+        version_id: workspace.versionId,
+      })
+      .execute();
+
+    await trx
+      .insertInto('nodes')
+      .values({
         id: userId,
-        workspaceId: workspace.id,
+        workspace_id: workspace.id,
         type: 'user',
-        attrs: {
+        attrs: JSON.stringify({
           accountId: account.id,
           name: account.name,
           avatar: account.avatar,
-        },
-        createdAt: new Date(),
-        createdBy: userId,
-        versionId: userVersionId,
-        serverCreatedAt: new Date(),
-        serverVersionId: userVersionId,
-      },
-    }),
-    prisma.workspaceAccounts.create({
-      data: workspaceAccount,
-    }),
-  ]);
+        }),
+        created_at: workspaceAccount.createdAt,
+        created_by: workspaceAccount.createdBy,
+        version_id: userVersionId,
+        server_created_at: new Date(),
+      })
+      .execute();
+
+    await trx
+      .insertInto('workspace_accounts')
+      .values({
+        account_id: workspaceAccount.accountId,
+        workspace_id: workspaceAccount.workspaceId,
+        user_id: workspaceAccount.userId,
+        role: workspaceAccount.role,
+        created_at: workspaceAccount.createdAt,
+        created_by: workspaceAccount.createdBy,
+        status: workspaceAccount.status,
+        version_id: workspaceAccount.versionId,
+      })
+      .execute();
+  });
 
   const output: WorkspaceOutput = {
     id: workspace.id,
@@ -121,11 +143,11 @@ workspacesRouter.put(
       });
     }
 
-    const workspace = await prisma.workspaces.findUnique({
-      where: {
-        id: id,
-      },
-    });
+    const workspace = await database
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
     if (!workspace) {
       return res.status(404).json({
@@ -134,12 +156,12 @@ workspacesRouter.put(
       });
     }
 
-    const workspaceAccount = await prisma.workspaceAccounts.findFirst({
-      where: {
-        workspaceId: id,
-        accountId: req.accountId,
-      },
-    });
+    const workspaceAccount = await database
+      .selectFrom('workspace_accounts')
+      .selectAll()
+      .where('workspace_id', '=', id)
+      .where('account_id', '=', req.accountId)
+      .executeTakeFirst();
 
     if (!workspaceAccount) {
       return res.status(403).json({
@@ -155,26 +177,47 @@ workspacesRouter.put(
       });
     }
 
-    const updatedWorkspace = await prisma.workspaces.update({
-      where: {
-        id: id,
-      },
-      data: {
+    if (!workspaceAccount) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
+
+    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
+
+    const updatedWorkspace = await database
+      .updateTable('workspaces')
+      .set({
         name: input.name,
-        updatedAt: new Date(),
-        updatedBy: req.accountId,
-      },
-    });
+        updated_at: new Date(),
+        updated_by: req.accountId,
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+
+    if (!updatedWorkspace) {
+      return res.status(500).json({
+        code: ApiError.InternalServerError,
+        message: 'Internal server error.',
+      });
+    }
 
     const output: WorkspaceOutput = {
       id: updatedWorkspace.id,
       name: updatedWorkspace.name,
       description: updatedWorkspace.description,
       avatar: updatedWorkspace.avatar,
-      versionId: updatedWorkspace.versionId,
+      versionId: updatedWorkspace.version_id,
       accountId: req.accountId,
       role: workspaceAccount.role,
-      userId: workspaceAccount.userId,
+      userId: workspaceAccount.user_id,
     };
 
     return res.status(200).json(output);
@@ -193,11 +236,11 @@ workspacesRouter.delete(
       });
     }
 
-    const workspace = await prisma.workspaces.findUnique({
-      where: {
-        id: id,
-      },
-    });
+    const workspace = await database
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
     if (!workspace) {
       return res.status(404).json({
@@ -206,12 +249,12 @@ workspacesRouter.delete(
       });
     }
 
-    const workspaceAccount = await prisma.workspaceAccounts.findFirst({
-      where: {
-        workspaceId: id,
-        accountId: req.accountId,
-      },
-    });
+    const workspaceAccount = await database
+      .selectFrom('workspace_accounts')
+      .selectAll()
+      .where('workspace_id', '=', id)
+      .where('account_id', '=', req.accountId)
+      .executeTakeFirst();
 
     if (!workspaceAccount) {
       return res.status(403).json({
@@ -220,11 +263,16 @@ workspacesRouter.delete(
       });
     }
 
-    await prisma.workspaces.delete({
-      where: {
-        id: id,
-      },
-    });
+    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
+
+    await database.deleteFrom('workspaces').where('id', '=', id).execute();
+
+    await database.deleteFrom('workspaces').where('id', '=', id).execute();
 
     return res.status(200).json({
       id: workspace.id,
@@ -242,11 +290,11 @@ workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const workspace = await prisma.workspaces.findUnique({
-    where: {
-      id: id,
-    },
-  });
+  const workspace = await database
+    .selectFrom('workspaces')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirst();
 
   if (!workspace) {
     return res.status(404).json({
@@ -255,12 +303,12 @@ workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const workspaceAccount = await prisma.workspaceAccounts.findFirst({
-    where: {
-      workspaceId: id,
-      accountId: req.accountId,
-    },
-  });
+  const workspaceAccount = await database
+    .selectFrom('workspace_accounts')
+    .selectAll()
+    .where('workspace_id', '=', id)
+    .where('account_id', '=', req.accountId)
+    .executeTakeFirst();
 
   if (!workspaceAccount) {
     return res.status(403).json({
@@ -274,10 +322,10 @@ workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
     name: workspace.name,
     description: workspace.description,
     avatar: workspace.avatar,
-    versionId: workspace.versionId,
+    versionId: workspace.version_id,
     accountId: req.accountId,
     role: workspaceAccount.role,
-    userId: workspaceAccount.userId,
+    userId: workspaceAccount.user_id,
   };
 
   return res.status(200).json(output);
@@ -291,26 +339,24 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const workspaceAccounts = await prisma.workspaceAccounts.findMany({
-    where: {
-      accountId: req.accountId,
-    },
-  });
+  const workspaceAccounts = await database
+    .selectFrom('workspace_accounts')
+    .selectAll()
+    .where('account_id', '=', req.accountId)
+    .execute();
 
-  const workspaceIds = workspaceAccounts.map((wa) => wa.workspaceId);
-  const workspaces = await prisma.workspaces.findMany({
-    where: {
-      id: {
-        in: workspaceIds,
-      },
-    },
-  });
+  const workspaceIds = workspaceAccounts.map((wa) => wa.workspace_id);
+  const workspaces = await database
+    .selectFrom('workspaces')
+    .selectAll()
+    .where('id', 'in', workspaceIds)
+    .execute();
 
   const outputs: WorkspaceOutput[] = [];
 
   for (const workspace of workspaces) {
     const workspaceAccount = workspaceAccounts.find(
-      (wa) => wa.workspaceId === workspace.id,
+      (wa) => wa.workspace_id === workspace.id,
     );
 
     if (!workspaceAccount) {
@@ -322,10 +368,10 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
       name: workspace.name,
       description: workspace.description,
       avatar: workspace.avatar,
-      versionId: workspace.versionId,
+      versionId: workspace.version_id,
       accountId: req.accountId,
       role: workspaceAccount.role,
-      userId: workspaceAccount.userId,
+      userId: workspaceAccount.user_id,
     };
 
     outputs.push(output);

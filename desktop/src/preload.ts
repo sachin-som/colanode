@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { eventBus, Event } from '@/lib/event-bus';
 import { CompiledQuery, QueryResult } from 'kysely';
-import { LocalMutation } from '@/types/mutations';
 
 contextBridge.exposeInMainWorld('neuron', {
   init: () => ipcRenderer.invoke('init'),
@@ -23,7 +22,7 @@ contextBridge.exposeInMainWorld('neuron', {
   executeWorkspaceMutation: (
     accountId: string,
     workspaceId: string,
-    mutation: LocalMutation,
+    mutation: CompiledQuery,
   ): Promise<void> =>
     ipcRenderer.invoke(
       'execute-workspace-mutation',

@@ -47,7 +47,7 @@ import {
 } from '@/editor/extensions';
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import {
   editorNodeMapEquals,
   mapEditorNodesToJSONContent,
@@ -57,17 +57,12 @@ import {
 import { EditorNode } from '@/types/editor';
 import { Editor } from '@tiptap/core';
 import { debounce, isEqual } from 'lodash';
-import {
-  LocalCreateNodesMutation,
-  LocalDeleteNodesMutation,
-  LocalUpdateNodeMutation,
-} from '@/types/mutations';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
 
 interface DocumentEditorProps {
-  node: Node;
-  nodes: Node[];
+  node: LocalNode;
+  nodes: LocalNode[];
 }
 
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
@@ -161,70 +156,59 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         return;
       }
 
-      const createNodesMutation: LocalCreateNodesMutation = {
-        type: 'create_nodes',
-        data: {
-          nodes: [],
-        },
-      };
-      const updateNodeMutations: LocalUpdateNodeMutation[] = [];
-      const deleteNodesMutation: LocalDeleteNodesMutation = {
-        type: 'delete_nodes',
-        data: {
-          ids: [],
-        },
-      };
-
       for (const newEditorNode of newEditorNodes.values()) {
         const existingEditorNode = nodesSnapshot.current.get(newEditorNode.id);
         if (!existingEditorNode) {
-          createNodesMutation.data.nodes.push({
-            id: newEditorNode.id,
-            type: newEditorNode.type,
-            workspaceId: workspace.id,
-            parentId: newEditorNode.parentId,
-            index: newEditorNode.index,
-            attrs: newEditorNode.attrs,
-            content: newEditorNode.content,
-            createdAt: new Date().toISOString(),
-            createdBy: workspace.userId,
-            versionId: NeuronId.generate(NeuronId.Type.Version),
-          });
-        } else if (!isEqual(existingEditorNode, newEditorNode)) {
-          updateNodeMutations.push({
-            type: 'update_node',
-            data: {
+          const query = workspace.schema
+            .insertInto('nodes')
+            .values({
               id: newEditorNode.id,
               type: newEditorNode.type,
-              parentId: newEditorNode.parentId,
+              parent_id: newEditorNode.parentId,
               index: newEditorNode.index,
-              attrs: newEditorNode.attrs,
-              content: newEditorNode.content,
-              updatedAt: new Date().toISOString(),
-              updatedBy: workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-            },
-          });
-        }
-      }
+              attrs: newEditorNode.attrs
+                ? JSON.stringify(newEditorNode.attrs)
+                : null,
+              content: newEditorNode.content
+                ? JSON.stringify(newEditorNode.content)
+                : null,
+              created_at: new Date().toISOString(),
+              created_by: workspace.userId,
+              version_id: NeuronId.generate(NeuronId.Type.Version),
+            })
+            .compile();
 
-      for (const existingEditorNode of nodesSnapshot.current.values()) {
-        if (!newEditorNodes.has(existingEditorNode.id)) {
-          deleteNodesMutation.data.ids.push(existingEditorNode.id);
-        }
-      }
+          await workspace.mutate(query);
+        } else if (!isEqual(existingEditorNode, newEditorNode)) {
+          const updateNodeMutation = workspace.schema
+            .updateTable('nodes')
+            .set({
+              attrs: newEditorNode.attrs
+                ? JSON.stringify(newEditorNode.attrs)
+                : null,
+              content: newEditorNode.content
+                ? JSON.stringify(newEditorNode.content)
+                : null,
+            })
+            .compile();
 
-      if (createNodesMutation.data.nodes.length > 0) {
-        await workspace.mutate(createNodesMutation);
-      }
-
-      if (updateNodeMutations.length > 0) {
-        for (const updateNodeMutation of updateNodeMutations) {
           await workspace.mutate(updateNodeMutation);
         }
       }
 
-      if (deleteNodesMutation.data.ids.length > 0) {
+      const toDeleteIds: string[] = [];
+      for (const existingEditorNode of nodesSnapshot.current.values()) {
+        if (!newEditorNodes.has(existingEditorNode.id)) {
+          toDeleteIds.push(existingEditorNode.id);
+        }
+      }
+
+      if (toDeleteIds.length > 0) {
+        const deleteNodesMutation = workspace.schema
+          .deleteFrom('nodes')
+          .where('id', 'in', toDeleteIds)
+          .compile();
+
         await workspace.mutate(deleteNodesMutation);
       }
 
@@ -234,7 +218,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   );
 
   const checkForRemoteChanges = React.useCallback(
-    debounce((remoteNodes: Node[], editor: Editor) => {
+    debounce((remoteNodes: LocalNode[], editor: Editor) => {
       const remoteEditorNodes = mapNodesToEditorNodes(remoteNodes);
       if (editorNodeMapEquals(remoteEditorNodes, nodesSnapshot.current)) {
         return;

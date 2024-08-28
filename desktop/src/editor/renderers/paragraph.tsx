@@ -1,11 +1,11 @@
 import React from 'react';
 import { defaultClasses } from '@/editor/classes';
 import { NodeChildrenRenderer } from '@/editor/renderers/node-children';
-import { NodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 
 interface ParagraphRendererProps {
-  node: NodeWithChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 

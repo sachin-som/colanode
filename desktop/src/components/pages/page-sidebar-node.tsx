@@ -1,12 +1,12 @@
 import React from 'react';
-import { Node } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface PageSidebarNodeProps {
-  node: Node;
+  node: LocalNode;
 }
 
 export const PageSidebarNode = ({ node }: PageSidebarNodeProps) => {

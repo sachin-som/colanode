@@ -16,17 +16,21 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { SubscribedQueryData } from '@/types/databases';
-import { LocalMutation, ServerMutation } from '@/types/mutations';
+import { ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
-import { MutationManager } from '@/data/mutation-manager';
 import { AxiosInstance } from 'axios';
+import { debounce } from 'lodash';
+import { ServerNode } from '@/types/nodes';
+import { SelectNode } from '@/data/schemas/workspace';
 
 export class WorkspaceManager {
   private readonly workspace: Workspace;
   private readonly axios: AxiosInstance;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly subscribers: Map<string, SubscribedQueryData<unknown>>;
-  private readonly mutationManager: MutationManager;
+  private readonly debouncedNotifyQuerySubscribers: (
+    affectedTables: string[],
+  ) => void;
 
   constructor(workspace: Workspace, axios: AxiosInstance, accountPath: string) {
     this.workspace = workspace;
@@ -46,33 +50,10 @@ export class WorkspaceManager {
       dialect,
     });
 
-    this.mutationManager = new MutationManager(axios, workspace, this.database);
-
-    this.mutationManager.onMutation(async (affectedTables) => {
-      for (const [subscriberId, subscriberData] of this.subscribers) {
-        const hasAffectedTables = subscriberData.tables.some((table) =>
-          affectedTables.includes(table),
-        );
-
-        if (!hasAffectedTables) {
-          continue;
-        }
-
-        const newResult = await this.database.executeQuery(
-          subscriberData.query,
-        );
-
-        if (resultHasChanged(subscriberData.result, newResult)) {
-          eventBus.publish({
-            event: 'workspace_query_updated',
-            payload: {
-              queryId: subscriberId,
-              result: newResult,
-            },
-          });
-        }
-      }
-    });
+    this.debouncedNotifyQuerySubscribers = debounce(
+      this.notifyQuerySubscribers,
+      100,
+    );
   }
 
   public getWorkspace(): Workspace {
@@ -118,20 +99,96 @@ export class WorkspaceManager {
     return result;
   }
 
+  public async executeMutation(mutation: CompiledQuery): Promise<void> {
+    const result = await this.database.executeQuery(mutation);
+
+    if (result.numAffectedRows === 0n) {
+      return;
+    }
+
+    const affectedTables = extractTablesFromSql(mutation.sql);
+    if (affectedTables.length > 0) {
+      this.debouncedNotifyQuerySubscribers(affectedTables);
+    }
+  }
+
   public unsubscribeQuery(queryId: string): void {
     this.subscribers.delete(queryId);
   }
 
-  public async executeLocalMutation(mutation: LocalMutation): Promise<void> {
-    await this.mutationManager.executeLocalMutation(mutation);
-  }
+  private async notifyQuerySubscribers(
+    affectedTables: string[],
+  ): Promise<void> {
+    for (const [subscriberId, subscriberData] of this.subscribers) {
+      const hasAffectedTables = subscriberData.tables.some((table) =>
+        affectedTables.includes(table),
+      );
 
-  public async executeServerMutation(mutation: ServerMutation): Promise<void> {
-    await this.mutationManager.executeServerMutation(mutation);
+      if (!hasAffectedTables) {
+        continue;
+      }
+
+      const newResult = await this.database.executeQuery(subscriberData.query);
+
+      if (resultHasChanged(subscriberData.result, newResult)) {
+        eventBus.publish({
+          event: 'workspace_query_updated',
+          payload: {
+            queryId: subscriberId,
+            result: newResult,
+          },
+        });
+      }
+    }
   }
 
   public async sendMutations(): Promise<void> {
-    await this.mutationManager.sendMutations();
+    const mutations = await this.database
+      .selectFrom('mutations')
+      .selectAll()
+      .orderBy('id asc')
+      .limit(20)
+      .execute();
+
+    if (!mutations || mutations.length === 0) {
+      return;
+    }
+
+    try {
+      const { status } = await this.axios.post<ServerMutation>('v1/mutations', {
+        workspaceId: this.workspace.id,
+        mutations: mutations,
+      });
+
+      if (status === 200) {
+        const mutationIds = mutations.map((mutation) => mutation.id);
+        await this.database
+          .deleteFrom('mutations')
+          .where('id', 'in', mutationIds)
+          .execute();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  public async executeServerMutation(mutation: ServerMutation): Promise<void> {
+    if (mutation.table === 'nodes') {
+      if (mutation.action === 'insert' || mutation.action === 'update') {
+        const node = JSON.parse(mutation.after) as ServerNode;
+        await this.syncNodeFromServer(node);
+      } else if (mutation.action === 'delete') {
+        const node = JSON.parse(mutation.before) as ServerNode;
+        await this.database
+          .deleteFrom('nodes')
+          .where('id', '=', node.id)
+          .execute();
+
+        this.debouncedNotifyQuerySubscribers(['nodes']);
+      }
+    }
+
+    //other cases in the future
   }
 
   public isSynced(): boolean {
@@ -152,10 +209,90 @@ export class WorkspaceManager {
     }
 
     for (const node of data.nodes) {
-      await this.mutationManager.syncNodeFromServer(node);
+      await this.syncNodeFromServer(node);
     }
 
     this.workspace.synced = true;
+    return true;
+  }
+
+  public async syncNodeFromServer(node: ServerNode): Promise<void> {
+    console.log('Syncing node from server:', node);
+    const existingNode = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', node.id)
+      .executeTakeFirst();
+
+    if (!existingNode) {
+      await this.database
+        .insertInto('nodes')
+        .values({
+          id: node.id,
+          type: node.type,
+          parent_id: node.parentId,
+          index: node.index,
+          content: node.content ? JSON.stringify(node.content) : null,
+          attrs: node.attrs ? JSON.stringify(node.attrs) : null,
+          created_at: node.createdAt,
+          created_by: node.createdBy,
+          updated_by: node.updatedBy,
+          updated_at: node.updatedAt,
+          version_id: node.versionId,
+          server_created_at: node.serverCreatedAt,
+          server_updated_at: node.serverUpdatedAt,
+          server_version_id: node.versionId,
+        })
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['nodes']);
+      return;
+    }
+
+    if (this.shouldUpdateNodeFromServer(existingNode, node)) {
+      await this.database
+        .updateTable('nodes')
+        .set({
+          type: node.type,
+          parent_id: node.parentId,
+          index: node.index,
+          content: node.content ? JSON.stringify(node.content) : null,
+          attrs: node.attrs ? JSON.stringify(node.attrs) : null,
+          updated_at: node.updatedAt,
+          updated_by: node.updatedBy,
+          version_id: node.versionId,
+          server_created_at: node.serverCreatedAt,
+          server_updated_at: node.serverUpdatedAt,
+          server_version_id: node.versionId,
+        })
+        .where('id', '=', node.id)
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['nodes']);
+    }
+  }
+
+  public shouldUpdateNodeFromServer(
+    localNode: SelectNode,
+    serverNode: ServerNode,
+  ): boolean {
+    if (localNode.server_version_id === serverNode.versionId) {
+      return false;
+    }
+
+    if (localNode.updated_at) {
+      if (!serverNode.updatedAt) {
+        return false;
+      }
+
+      const localUpdatedAt = new Date(localNode.updated_at);
+      const serverUpdatedAt = new Date(serverNode.updatedAt);
+
+      if (localUpdatedAt > serverUpdatedAt) {
+        return false;
+      }
+    }
+
     return true;
   }
 

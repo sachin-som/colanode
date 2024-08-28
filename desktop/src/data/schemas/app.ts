@@ -1,25 +1,35 @@
-export interface AccountsTableSchema {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string | null;
-  token: string;
-  device_id: string;
+import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
+
+interface AccountTable {
+  id: ColumnType<string, string, never>;
+  name: ColumnType<string, string, string>;
+  email: ColumnType<string, string, never>;
+  avatar: ColumnType<string | null, string | null, string | null>;
+  token: ColumnType<string, string, string>;
+  device_id: ColumnType<string, string, never>;
 }
 
-export interface WorkspacesTableSchema {
-  id: string;
-  account_id: string;
-  name: string;
-  description: string | null;
-  avatar: string | null;
-  version_id: string;
-  role: number;
-  user_id: string;
-  synced: number;
+export type SelectAccount = Selectable<AccountTable>;
+export type CreateAccount = Insertable<AccountTable>;
+export type UpdateAccount = Updateable<AccountTable>;
+
+interface WorkspaceTable {
+  id: ColumnType<string, string, never>;
+  account_id: ColumnType<string, string, never>;
+  name: ColumnType<string, string, string>;
+  description: ColumnType<string | null, string | null, string | null>;
+  avatar: ColumnType<string | null, string | null, string | null>;
+  version_id: ColumnType<string, string, string>;
+  role: ColumnType<number, number, number>;
+  user_id: ColumnType<string, string, never>;
+  synced: ColumnType<number, number, number>;
 }
+
+export type SelectWorkspace = Selectable<WorkspaceTable>;
+export type CreateWorkspace = Insertable<WorkspaceTable>;
+export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
 export interface AppDatabaseSchema {
-  accounts: AccountsTableSchema;
-  workspaces: WorkspacesTableSchema;
+  accounts: AccountTable;
+  workspaces: WorkspaceTable;
 }

@@ -7,11 +7,8 @@ import { accountsRouter } from '@/routes/accounts';
 import { workspacesRouter } from '@/routes/workspaces';
 import { mutationsRouter } from '@/routes/mutations';
 import { authMiddleware } from '@/middlewares/auth';
-import { sockets } from '@/lib/sockets';
-import { SocketMessage } from '@/types/sockets';
+import { synapse } from '@/synapse';
 import { syncRouter } from '@/routes/sync';
-import { database } from '@/data/database';
-import { sql } from 'kysely';
 
 export const initApi = () => {
   const app = express();
@@ -36,37 +33,8 @@ export const initApi = () => {
     path: '/v1/synapse',
   });
 
-  wss.on('connection', (socket, req) => {
-    console.log('New connection', req.url);
-    const deviceId = req.url?.split('device_id=')[1];
-    if (!deviceId) {
-      socket.close();
-      return;
-    }
-
-    sockets.addSocket(deviceId, socket);
-
-    socket.on('message', async (message) => {
-      const socketMessage: SocketMessage = JSON.parse(message.toString());
-      if (socketMessage.type === 'mutation_ack') {
-        const mutationId = socketMessage.payload.id;
-        if (!mutationId) {
-          return;
-        }
-
-        await database
-          .updateTable('mutations')
-          .set({
-            device_ids: sql`array_remove(device_ids, ${deviceId})`,
-          })
-          .where('id', '=', mutationId)
-          .execute();
-      }
-    });
-
-    socket.on('close', () => {
-      sockets.removeSocket(deviceId);
-    });
+  wss.on('connection', async (socket, req) => {
+    await synapse.addConnection(socket, req);
   });
 
   server.listen(port, () => {

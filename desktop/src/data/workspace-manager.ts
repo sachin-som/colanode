@@ -174,14 +174,19 @@ export class WorkspaceManager {
 
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
-      if (mutation.action === 'insert' || mutation.action === 'update') {
-        const node = JSON.parse(mutation.after) as ServerNode;
-        await this.syncNodeFromServer(node);
-      } else if (mutation.action === 'delete') {
-        const node = JSON.parse(mutation.before) as ServerNode;
+      if (
+        mutation.after &&
+        (mutation.action === 'insert' || mutation.action === 'update')
+      ) {
+        await this.syncNodeFromServer(mutation.after);
+      } else if (
+        mutation.before &&
+        mutation.action === 'delete' &&
+        mutation.before.id
+      ) {
         await this.database
           .deleteFrom('nodes')
-          .where('id', '=', node.id)
+          .where('id', '=', mutation.before.id)
           .execute();
 
         this.debouncedNotifyQuerySubscribers(['nodes']);
@@ -217,7 +222,6 @@ export class WorkspaceManager {
   }
 
   public async syncNodeFromServer(node: ServerNode): Promise<void> {
-    console.log('Syncing node from server:', node);
     const existingNode = await this.database
       .selectFrom('nodes')
       .selectAll()

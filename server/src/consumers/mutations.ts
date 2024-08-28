@@ -1,6 +1,5 @@
 import { redis, CHANNEL_NAMES } from '@/data/redis';
-import { sockets } from '@/lib/sockets';
-import { SocketMessage } from '@/types/sockets';
+import { synapse } from '@/synapse';
 import { ServerMutation } from '@/types/mutations';
 import { MutationChangeData } from '@/types/changes';
 
@@ -21,20 +20,14 @@ const handleMessage = async (message: string) => {
     action: mutationData.action as 'insert' | 'update' | 'delete',
     table: mutationData.table,
     workspaceId: mutationData.workspace_id,
-    before: mutationData.before,
-    after: mutationData.after,
+    before: mutationData.before ? JSON.parse(mutationData.before) : null,
+    after: mutationData.after ? JSON.parse(mutationData.after) : null,
   };
 
   for (const deviceId of mutationData.device_ids) {
-    const socket = sockets.getSocket(deviceId);
-    if (!socket) {
-      continue;
-    }
-
-    const socketMessage: SocketMessage = {
+    synapse.send(deviceId, {
       type: 'mutation',
       payload: serverMutation,
-    };
-    socket.send(JSON.stringify(socketMessage));
+    });
   }
 };

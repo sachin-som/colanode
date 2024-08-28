@@ -13,14 +13,13 @@ export const NodeTypes = {
   OrderedList: 'orderedList',
   TaskList: 'taskList',
   TaskItem: 'taskItem',
-  Divider: 'divider',
+  HorizontalRule: 'horizontalRule',
 };
 
 export const LeafNodeTypes: string[] = [
   NodeTypes.Paragraph,
   NodeTypes.Heading,
-  NodeTypes.Blockquote,
-  NodeTypes.Divider,
+  NodeTypes.HorizontalRule,
   NodeTypes.CodeBlock,
 ];
 

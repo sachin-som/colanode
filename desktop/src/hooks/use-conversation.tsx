@@ -32,11 +32,27 @@ export const useConversation = (
     queryKey: [`conversation:messages:${conversationId}`],
     queryFn: async ({ queryKey }) => {
       const query = sql<SelectNode>`
+        SELECT *
+        FROM nodes
+        WHERE parent_id = ${conversationId} AND type = ${NodeTypes.Message}
+        ORDER BY id DESC
+        LIMIT 50
+      `.compile(workspace.schema);
+
+      const queryId = queryKey[0];
+      return await workspace.queryAndSubscribe(queryId, query);
+    },
+  });
+  const messageIds = messagesQuery.data?.rows.map((row) => row.id) ?? [];
+  const messageDescendantsQuery = useQuery({
+    queryKey: [`conversation:descendants:${messageIds.join(',')}`],
+    enabled: messageIds.length > 0,
+    queryFn: async ({ queryKey }) => {
+      const query = sql<SelectNode>`
         WITH RECURSIVE conversation_hierarchy AS (
             SELECT *
             FROM nodes
-            WHERE parent_id = ${conversationId} AND type = ${NodeTypes.Message}
-            
+            WHERE parent_id IN (${sql.join(messageIds)})
             UNION ALL
             
             SELECT child.*
@@ -53,15 +69,11 @@ export const useConversation = (
   });
 
   const authorIds = [
-    ...new Set(
-      messagesQuery.data?.rows
-        .filter((row) => row.type === NodeTypes.Message)
-        .map((row) => row.created_by) ?? [],
-    ),
+    ...new Set(messagesQuery.data?.rows.map((row) => row.created_by) ?? []),
   ].sort();
 
   const authorsQuery = useQuery({
-    queryKey: [`authors:${authorIds.join(',')}`],
+    queryKey: [`nodes:${authorIds.join(',')}`],
     enabled: authorIds.length > 0,
     queryFn: async ({ queryKey }) => {
       const query = workspace.schema
@@ -93,10 +105,12 @@ export const useConversation = (
     await workspace.mutate(query);
   };
 
-  const conversationNodes =
+  const messageNodes =
     messagesQuery.data?.rows.map((row) => mapNode(row)) ?? [];
+  const descendentNodes =
+    messageDescendantsQuery.data?.rows.map((row) => mapNode(row)) ?? [];
   const authorNodes = authorsQuery.data?.rows.map((row) => mapNode(row)) ?? [];
-  const messages = buildMessages(conversationNodes, authorNodes);
+  const messages = buildMessages(messageNodes, descendentNodes, authorNodes);
 
   return {
     isLoading: messagesQuery.isPending,
@@ -109,22 +123,19 @@ export const useConversation = (
 };
 
 const buildMessages = (
-  nodes: LocalNode[],
-  authors: LocalNode[],
+  messageNodes: LocalNode[],
+  descendentNodes: LocalNode[],
+  authorNodes: LocalNode[],
 ): MessageNode[] => {
   const messages: MessageNode[] = [];
   const authorMap = new Map<string, LocalNode>();
 
-  for (const author of authors) {
+  for (const author of authorNodes) {
     authorMap.set(author.id, author);
   }
 
-  for (const node of nodes) {
-    if (node.type !== NodeTypes.Message) {
-      continue;
-    }
-
-    const messageNode = buildNodeWithChildren(node, nodes);
+  for (const node of messageNodes) {
+    const messageNode = buildNodeWithChildren(node, descendentNodes);
     const author = authorMap.get(node.createdBy);
     const message: MessageNode = {
       ...messageNode,

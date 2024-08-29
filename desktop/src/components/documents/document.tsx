@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { SelectNode } from '@/data/schemas/workspace';
 import { useWorkspace } from '@/contexts/workspace';
 import { mapNode } from '@/lib/nodes';
+import { NodeTypes } from '@/lib/constants';
 
 interface DocumentProps {
   node: LocalNode;
@@ -27,6 +28,7 @@ export const Document = ({ node }: DocumentProps) => {
             SELECT child.*
             FROM nodes child
             INNER JOIN document_hierarchy parent ON child.parent_id = parent.id
+            WHERE parent.type NOT IN (${NodeTypes.Page})
         )
         SELECT *
         FROM document_hierarchy;

@@ -30,6 +30,21 @@ import { useQuery } from '@tanstack/react-query';
 import { SelectNode } from '@/data/schemas/workspace';
 import { NeuronId } from '@/lib/id';
 
+const buildBreadcrumbNodes = (node: LocalNode, rows: SelectNode[]) => {
+  const breadcrumbNodes: LocalNode[] = [];
+  let parentId = node.parentId;
+  while (parentId !== null && parentId !== undefined) {
+    const row = rows.find((row) => row.id === parentId);
+    if (row) {
+      breadcrumbNodes.push(mapNode(row));
+      parentId = row.parent_id;
+    } else {
+      parentId = null;
+    }
+  }
+  return breadcrumbNodes.reverse();
+};
+
 interface BreadcrumbNodeProps {
   node: LocalNode;
   className?: string;
@@ -72,6 +87,7 @@ export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
             updated_by: workspace.userId,
             version_id: NeuronId.generate(NeuronId.Type.Version),
           })
+          .where('id', '=', node.id)
           .compile();
 
         await workspace.mutate(query);
@@ -125,7 +141,7 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
     return null;
   }
 
-  const breadcrumbNodes = data?.rows.map((row) => mapNode(row)) ?? [];
+  const breadcrumbNodes: LocalNode[] = buildBreadcrumbNodes(node, data.rows);
   const showEllipsis = breadcrumbNodes.length > 2;
   const firstNodes = showEllipsis
     ? breadcrumbNodes.slice(0, 1)

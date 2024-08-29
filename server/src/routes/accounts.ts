@@ -156,6 +156,7 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
           attrs: JSON.stringify({ googleId: googleUser.id }),
           updated_at: new Date(),
         })
+        .where('id', '=', existingAccount.id)
         .execute();
     }
 

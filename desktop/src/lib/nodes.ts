@@ -54,3 +54,13 @@ export const compareNodeIndex = (a: LocalNode, b: LocalNode): number => {
 
   return 0;
 };
+
+export const compareNodeId = (a: LocalNode, b: LocalNode): number => {
+  if (a.id < b.id) {
+    return -1;
+  } else if (a.id > b.id) {
+    return 1;
+  }
+
+  return 0;
+};

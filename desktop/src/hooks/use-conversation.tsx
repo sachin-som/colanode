@@ -3,11 +3,15 @@ import { useWorkspace } from '@/contexts/workspace';
 import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { LeafNodeTypes, NodeTypes } from '@/lib/constants';
-import { buildNodeWithChildren, generateNodeIndex, mapNode } from '@/lib/nodes';
+import {
+  buildNodeWithChildren,
+  compareNodeId,
+  generateNodeIndex,
+  mapNode,
+} from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { sql } from 'kysely';
 import { CreateNode, SelectNode } from '@/data/schemas/workspace';
-import { hashCode } from '@/lib/utils';
 import { MessageNode } from '@/types/messages';
 
 interface useConversationResult {
@@ -130,15 +134,7 @@ const buildMessages = (
     messages.push(message);
   }
 
-  return messages.sort((a, b) => {
-    if (a.id > b.id) {
-      return 1;
-    } else if (a.id < b.id) {
-      return -1;
-    } else {
-      return 0;
-    }
-  });
+  return messages.sort((a, b) => compareNodeId(a, b));
 };
 
 const buildMessageCreateNodes = (

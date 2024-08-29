@@ -24,7 +24,7 @@ enum IdType {
   BulletList = 'bl',
   TaskList = 'tl',
   TaskItem = 'ti',
-  Divider = 'di',
+  HorizontalRule = 'hr',
 }
 
 export class NeuronId {
@@ -70,8 +70,8 @@ export class NeuronId {
         return IdType.TaskList;
       case NodeTypes.TaskItem:
         return IdType.TaskItem;
-      case NodeTypes.Divider:
-        return IdType.Divider;
+      case NodeTypes.HorizontalRule:
+        return IdType.HorizontalRule;
       default:
         return IdType.Node;
     }

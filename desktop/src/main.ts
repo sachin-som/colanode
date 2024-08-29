@@ -104,7 +104,7 @@ ipcMain.handle(
     _,
     accountId: string,
     workspaceId: string,
-    mutation: CompiledQuery,
+    mutation: CompiledQuery | CompiledQuery[],
   ): Promise<void> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {

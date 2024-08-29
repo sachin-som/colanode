@@ -16,7 +16,7 @@ interface NeuronApi {
   executeWorkspaceMutation: (
     accountId: string,
     workspaceId: string,
-    mutation: CompiledQuery,
+    mutation: CompiledQuery | CompiledQuery[],
   ) => Promise<void>;
 
   executeWorkspaceQuery: (

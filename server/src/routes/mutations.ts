@@ -107,6 +107,7 @@ const handleUpdateNodeMutation = async (
       version_id: nodeData.version_id,
       server_updated_at: new Date(),
     })
+    .where('id', '=', nodeData.id)
     .execute();
 };
 

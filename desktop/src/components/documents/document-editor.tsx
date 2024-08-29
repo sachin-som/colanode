@@ -59,6 +59,7 @@ import { Editor } from '@tiptap/core';
 import { debounce, isEqual } from 'lodash';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
+import { CompiledQuery } from 'kysely';
 
 interface DocumentEditorProps {
   node: LocalNode;
@@ -156,6 +157,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         return;
       }
 
+      const queries: CompiledQuery[] = [];
       for (const newEditorNode of newEditorNodes.values()) {
         const existingEditorNode = nodesSnapshot.current.get(newEditorNode.id);
         if (!existingEditorNode) {
@@ -178,7 +180,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
             })
             .compile();
 
-          await workspace.mutate(query);
+          queries.push(query);
         } else if (!isEqual(existingEditorNode, newEditorNode)) {
           const updateNodeMutation = workspace.schema
             .updateTable('nodes')
@@ -190,11 +192,14 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
               content: newEditorNode.content
                 ? JSON.stringify(newEditorNode.content)
                 : null,
+              updated_at: new Date().toISOString(),
+              updated_by: workspace.userId,
+              version_id: NeuronId.generate(NeuronId.Type.Version),
             })
             .where('id', '=', newEditorNode.id)
             .compile();
 
-          await workspace.mutate(updateNodeMutation);
+          queries.push(updateNodeMutation);
         }
       }
 
@@ -211,7 +216,11 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
           .where('id', 'in', toDeleteIds)
           .compile();
 
-        await workspace.mutate(deleteNodesMutation);
+        queries.push(deleteNodesMutation);
+      }
+
+      if (queries.length > 0) {
+        await workspace.mutate(queries);
       }
 
       nodesSnapshot.current = newEditorNodes;
@@ -284,11 +293,16 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
       );
 
       const selection = editor.state.selection;
-      editor
-        .chain()
-        .setContent(newEditorContent)
-        .setTextSelection(selection)
-        .run();
+      if (selection.$anchor != null && selection.$head != null) {
+        editor
+          .chain()
+          .setContent(newEditorContent)
+          .setTextSelection(selection)
+          .run();
+      } else {
+        editor.chain().setContent(newEditorContent).run();
+      }
+
       nodesSnapshot.current = newEditorNodes;
     }, 500),
     [node.id],

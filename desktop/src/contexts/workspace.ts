@@ -5,7 +5,7 @@ import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 
 interface WorkspaceContext extends Workspace {
   schema: Kysely<WorkspaceDatabaseSchema>;
-  mutate: (mutation: CompiledQuery) => Promise<void>;
+  mutate: (mutation: CompiledQuery | CompiledQuery[]) => Promise<void>;
   query: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   queryAndSubscribe: <R>(
     queryId: string,

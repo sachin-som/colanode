@@ -99,16 +99,42 @@ export class WorkspaceManager {
     return result;
   }
 
-  public async executeMutation(mutation: CompiledQuery): Promise<void> {
-    const result = await this.database.executeQuery(mutation);
+  public async executeMutation(
+    mutation: CompiledQuery | CompiledQuery[],
+  ): Promise<void> {
+    const affectedTables = new Set<string>();
+    let numAffectedRows = 0n;
 
-    if (result.numAffectedRows === 0n) {
+    if (Array.isArray(mutation)) {
+      // Execute multiple queries as a transaction
+      await this.database.transaction().execute(async (trx) => {
+        for (const query of mutation) {
+          const result = await trx.executeQuery(query);
+          if (result.numAffectedRows > 0n) {
+            numAffectedRows += result.numAffectedRows;
+            extractTablesFromSql(query.sql).forEach((table) =>
+              affectedTables.add(table),
+            );
+          }
+        }
+      });
+    } else {
+      // Execute single query
+      const result = await this.database.executeQuery(mutation);
+      numAffectedRows = result.numAffectedRows;
+      if (numAffectedRows > 0n) {
+        extractTablesFromSql(mutation.sql).forEach((table) =>
+          affectedTables.add(table),
+        );
+      }
+    }
+
+    if (numAffectedRows === 0n) {
       return;
     }
 
-    const affectedTables = extractTablesFromSql(mutation.sql);
-    if (affectedTables.length > 0) {
-      this.debouncedNotifyQuerySubscribers(affectedTables);
+    if (affectedTables.size > 0) {
+      this.debouncedNotifyQuerySubscribers(Array.from(affectedTables));
     }
   }
 

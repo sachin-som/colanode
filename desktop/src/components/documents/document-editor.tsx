@@ -185,6 +185,8 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
           const updateNodeMutation = workspace.schema
             .updateTable('nodes')
             .set({
+              type: newEditorNode.type,
+              parent_id: newEditorNode.parentId,
               index: newEditorNode.index,
               attrs: newEditorNode.attrs
                 ? JSON.stringify(newEditorNode.attrs)

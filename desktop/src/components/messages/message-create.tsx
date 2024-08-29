@@ -9,7 +9,7 @@ interface MessageCreateProps {
 
 export const MessageCreate = ({ nodeId, onSubmit }: MessageCreateProps) => {
   return (
-    <div className="mt-1 px-10">
+    <div className="container mt-1 px-10">
       <div className="flex flex-col">
         <MessageEditor
           nodeId={nodeId}

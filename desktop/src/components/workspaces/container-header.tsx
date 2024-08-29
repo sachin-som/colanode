@@ -152,7 +152,7 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
   const isClickable = (node: LocalNode) => node.type !== NodeTypes.Space;
 
   return (
-    <Breadcrumb className="mx-1 flex h-12 items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80">
+    <Breadcrumb className="mx-1 flex h-12 justify-between p-2 text-foreground/80">
       <BreadcrumbList>
         {firstNodes.map((breadcrumbNode) => {
           return (

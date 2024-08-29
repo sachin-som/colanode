@@ -8,7 +8,7 @@ export const SidebarSpaces = () => {
   const spaces = sidebar.nodes.filter((node) => node.type === 'space');
 
   return (
-    <div className="pt-3 first:pt-0">
+    <div className="pt-2 first:pt-0">
       <div className="flex items-center justify-between p-1 pb-2 text-xs text-muted-foreground">
         <span>Spaces</span>
         <SpaceCreateButton />

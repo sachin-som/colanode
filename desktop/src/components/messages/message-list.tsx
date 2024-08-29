@@ -75,7 +75,7 @@ export const MessageList = ({ conversationId, messages }: MessageListProps) => {
         {/*  {isLoadingPrevious && <Loader />}*/}
         {/*</div>*/}
       </InView>
-      <div className="" ref={containerRef}>
+      <div className="container" ref={containerRef}>
         {messages.map((message, index) => {
           const previousMessage = index > 0 ? messages[index - 1] : null;
 

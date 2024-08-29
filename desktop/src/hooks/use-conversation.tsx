@@ -54,11 +54,10 @@ export const useConversation = (
         .filter((row) => row.type === NodeTypes.Message)
         .map((row) => row.created_by) ?? [],
     ),
-  ];
+  ].sort();
 
-  const authorIdsHash = hashCode(authorIds.join(','));
   const authorsQuery = useQuery({
-    queryKey: [`authors:${authorIdsHash}`],
+    queryKey: [`authors:${authorIds.join(',')}`],
     enabled: authorIds.length > 0,
     queryFn: async ({ queryKey }) => {
       const query = workspace.schema

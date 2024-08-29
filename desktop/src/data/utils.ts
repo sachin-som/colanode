@@ -59,7 +59,12 @@ const extractTablesFromAst = (ast: AST): string[] => {
       }
     });
   } else if (ast.type === 'delete') {
-    tables.push(ast.table.table);
+    ast.from.forEach((from) => {
+      const astFrom = from as any;
+      if (astFrom.table) {
+        tables.push(astFrom.table);
+      }
+    });
   }
 
   return tables;

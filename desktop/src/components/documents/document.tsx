@@ -44,6 +44,6 @@ export const Document = ({ node }: DocumentProps) => {
   }
 
   const rows = data.rows;
-  const nodes = rows.map((row) => mapNode(row));
+  const nodes = new Map(rows.map((row) => [row.id, mapNode(row)]));
   return <DocumentEditor key={node.id} node={node} nodes={nodes} />;
 };

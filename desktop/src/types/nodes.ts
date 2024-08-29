@@ -1,18 +1,18 @@
 export type LocalNode = {
   id: string;
-  parentId?: string | null;
+  parentId: string | null;
   type: string;
-  index?: string | null;
-  attrs?: Record<string, any> | null;
-  content?: NodeBlock[] | null;
+  index: string | null;
+  attrs: Record<string, any> | null;
+  content: NodeBlock[] | null;
   createdAt: string;
   createdBy: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
   versionId: string;
-  serverCreatedAt?: string | null;
-  serverUpdatedAt?: string | null;
-  serverVersionId?: string | null;
+  serverCreatedAt: string | null;
+  serverUpdatedAt: string | null;
+  serverVersionId: string | null;
 };
 
 export type NodeBlock = {
@@ -32,16 +32,16 @@ export type LocalNodeWithChildren = LocalNode & {
 
 export type ServerNode = {
   id: string;
-  parentId?: string | null;
+  parentId: string | null;
   type: string;
-  index?: string | null;
-  attrs?: Record<string, any> | null;
-  content?: NodeBlock[] | null;
+  index: string | null;
+  attrs: Record<string, any> | null;
+  content: NodeBlock[] | null;
   createdAt: string;
   createdBy: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
   versionId: string;
-  serverCreatedAt?: string | null;
-  serverUpdatedAt?: string | null;
+  serverCreatedAt: string | null;
+  serverUpdatedAt: string | null;
 };

@@ -41,5 +41,16 @@ export const mapNode = (row: SelectNode): LocalNode => {
     versionId: row.version_id,
     serverCreatedAt: row.server_created_at,
     serverUpdatedAt: row.server_updated_at,
+    serverVersionId: row.server_version_id,
   };
+};
+
+export const compareNodeIndex = (a: LocalNode, b: LocalNode): number => {
+  if (a.index < b.index) {
+    return -1;
+  } else if (a.index > b.index) {
+    return 1;
+  }
+
+  return 0;
 };

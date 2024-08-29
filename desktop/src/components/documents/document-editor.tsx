@@ -48,28 +48,19 @@ import {
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
 import { LocalNode } from '@/types/nodes';
-import {
-  editorNodeMapEquals,
-  mapEditorNodesToJSONContent,
-  mapJSONContentToEditorNodes,
-  mapNodesToEditorNodes,
-} from '@/editor/utils';
-import { EditorNode } from '@/types/editor';
-import { Editor } from '@tiptap/core';
-import { debounce, isEqual } from 'lodash';
 import { useWorkspace } from '@/contexts/workspace';
-import { NeuronId } from '@/lib/id';
-import { CompiledQuery } from 'kysely';
+import { EditorObserver } from '@/editor/observer';
 
 interface DocumentEditorProps {
   node: LocalNode;
-  nodes: LocalNode[];
+  nodes: Map<string, LocalNode>;
 }
 
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   const workspace = useWorkspace();
-  const nodesSnapshot = React.useRef<Map<string, EditorNode>>(
-    mapNodesToEditorNodes(nodes),
+  const observer = React.useMemo<EditorObserver>(
+    () => new EditorObserver(workspace, workspace.schema, node, nodes),
+    [node.id],
   );
 
   const editor = useEditor(
@@ -129,12 +120,12 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
           spellCheck: 'false',
         },
       },
-      content: mapEditorNodesToJSONContent(node.id, nodesSnapshot.current),
+      content: observer.getEditorContent(),
       shouldRerenderOnTransaction: false,
       autofocus: 'start',
       onUpdate: async ({ editor, transaction }) => {
         if (transaction.docChanged) {
-          await checkForLocalChanges(editor);
+          observer.onEditorUpdate(editor);
         }
       },
     },
@@ -142,173 +133,8 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   );
 
   React.useEffect(() => {
-    checkForRemoteChanges(nodes, editor);
-  }, [editor, nodes]);
-
-  const checkForLocalChanges = React.useCallback(
-    debounce(async (editor: Editor) => {
-      const editorContent = editor.getJSON();
-      const newEditorNodes = mapJSONContentToEditorNodes(
-        node.id,
-        editorContent,
-      );
-
-      if (editorNodeMapEquals(newEditorNodes, nodesSnapshot.current)) {
-        return;
-      }
-
-      const queries: CompiledQuery[] = [];
-      for (const newEditorNode of newEditorNodes.values()) {
-        const existingEditorNode = nodesSnapshot.current.get(newEditorNode.id);
-        if (!existingEditorNode) {
-          const query = workspace.schema
-            .insertInto('nodes')
-            .values({
-              id: newEditorNode.id,
-              type: newEditorNode.type,
-              parent_id: newEditorNode.parentId,
-              index: newEditorNode.index,
-              attrs: newEditorNode.attrs
-                ? JSON.stringify(newEditorNode.attrs)
-                : null,
-              content: newEditorNode.content
-                ? JSON.stringify(newEditorNode.content)
-                : null,
-              created_at: new Date().toISOString(),
-              created_by: workspace.userId,
-              version_id: NeuronId.generate(NeuronId.Type.Version),
-            })
-            .compile();
-
-          queries.push(query);
-        } else if (!isEqual(existingEditorNode, newEditorNode)) {
-          const updateNodeMutation = workspace.schema
-            .updateTable('nodes')
-            .set({
-              type: newEditorNode.type,
-              parent_id: newEditorNode.parentId,
-              index: newEditorNode.index,
-              attrs: newEditorNode.attrs
-                ? JSON.stringify(newEditorNode.attrs)
-                : null,
-              content: newEditorNode.content
-                ? JSON.stringify(newEditorNode.content)
-                : null,
-              updated_at: new Date().toISOString(),
-              updated_by: workspace.userId,
-              version_id: NeuronId.generate(NeuronId.Type.Version),
-            })
-            .where('id', '=', newEditorNode.id)
-            .compile();
-
-          queries.push(updateNodeMutation);
-        }
-      }
-
-      const toDeleteIds: string[] = [];
-      for (const existingEditorNode of nodesSnapshot.current.values()) {
-        if (!newEditorNodes.has(existingEditorNode.id)) {
-          toDeleteIds.push(existingEditorNode.id);
-        }
-      }
-
-      if (toDeleteIds.length > 0) {
-        const deleteNodesMutation = workspace.schema
-          .deleteFrom('nodes')
-          .where('id', 'in', toDeleteIds)
-          .compile();
-
-        queries.push(deleteNodesMutation);
-      }
-
-      if (queries.length > 0) {
-        await workspace.mutate(queries);
-      }
-
-      nodesSnapshot.current = newEditorNodes;
-    }, 500),
-    [node.id],
-  );
-
-  const checkForRemoteChanges = React.useCallback(
-    debounce((remoteNodes: LocalNode[], editor: Editor) => {
-      const remoteEditorNodes = mapNodesToEditorNodes(remoteNodes);
-      if (editorNodeMapEquals(remoteEditorNodes, nodesSnapshot.current)) {
-        return;
-      }
-
-      const currentEditorContent = editor.getJSON();
-      const currentEditorNodes = mapJSONContentToEditorNodes(
-        node.id,
-        currentEditorContent,
-      );
-
-      const editorNodeIds = new Set<string>([
-        ...currentEditorNodes.keys(),
-        ...remoteEditorNodes.keys(),
-      ]);
-
-      const newEditorNodes: Map<string, EditorNode> = new Map();
-      let hasChanges = false;
-      for (const editorNodeId of editorNodeIds) {
-        const currentEditorNode = currentEditorNodes.get(editorNodeId);
-        const snapshotEditorNode = nodesSnapshot.current.get(editorNodeId);
-        const remoteEditorNode = remoteEditorNodes.get(editorNodeId);
-
-        if (!currentEditorNode) {
-          newEditorNodes.set(editorNodeId, remoteEditorNode);
-          hasChanges = true;
-          continue;
-        }
-
-        if (!snapshotEditorNode) {
-          newEditorNodes.set(editorNodeId, currentEditorNode);
-          continue;
-        }
-
-        if (!remoteEditorNode) {
-          newEditorNodes.set(editorNodeId, currentEditorNode);
-          continue;
-        }
-
-        if (!isEqual(currentEditorNode, snapshotEditorNode)) {
-          newEditorNodes.set(editorNodeId, currentEditorNode);
-          continue;
-        }
-
-        if (!isEqual(snapshotEditorNode, remoteEditorNode)) {
-          newEditorNodes.set(editorNodeId, remoteEditorNode);
-          hasChanges = true;
-          continue;
-        }
-
-        newEditorNodes.set(editorNodeId, currentEditorNode);
-      }
-
-      if (!hasChanges) {
-        return;
-      }
-
-      const newEditorContent = mapEditorNodesToJSONContent(
-        node.id,
-        newEditorNodes,
-      );
-
-      const selection = editor.state.selection;
-      if (selection.$anchor != null && selection.$head != null) {
-        editor
-          .chain()
-          .setContent(newEditorContent)
-          .setTextSelection(selection)
-          .run();
-      } else {
-        editor.chain().setContent(newEditorContent).run();
-      }
-
-      nodesSnapshot.current = newEditorNodes;
-    }, 500),
-    [node.id],
-  );
+    observer.onNodesChange(nodes, editor);
+  }, [nodes]);
 
   return (
     <div className="min-h-[500px]">

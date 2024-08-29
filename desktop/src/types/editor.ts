@@ -23,7 +23,7 @@ export type EditorNode = {
   id: string;
   parentId: string;
   type: string;
-  index?: string | null;
-  attrs?: Record<string, any> | null;
-  content?: NodeBlock[] | null;
+  index: string | null;
+  attrs: Record<string, any> | null;
+  content: NodeBlock[] | null;
 };

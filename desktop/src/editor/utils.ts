@@ -23,8 +23,18 @@ export const mapNodeToEditorNode = (node: LocalNode): EditorNode => {
     id: node.id,
     type: node.type,
     parentId: node.parentId,
-    attrs: node.attrs,
-    content: node.content,
+    attrs:
+      node.attrs !== null &&
+      node.attrs !== undefined &&
+      Object.keys(node.attrs).length > 0
+        ? node.attrs
+        : null,
+    content:
+      node.content !== null &&
+      node.content !== undefined &&
+      node.content.length > 0
+        ? node.content
+        : null,
     index: node.index,
   };
 };
@@ -159,6 +169,7 @@ const mapAndPushJSONContentToEditorNode = (
     parentId: parentId,
     index: index,
     attrs: attrs,
+    content: null,
   };
   editorNodes.set(id, editorNode);
 

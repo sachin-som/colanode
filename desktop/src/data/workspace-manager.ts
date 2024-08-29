@@ -157,6 +157,7 @@ export class WorkspaceManager {
       const newResult = await this.database.executeQuery(subscriberData.query);
 
       if (resultHasChanged(subscriberData.result, newResult)) {
+        subscriberData.result = newResult;
         eventBus.publish({
           event: 'workspace_query_updated',
           payload: {

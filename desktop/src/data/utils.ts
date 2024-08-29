@@ -1,6 +1,7 @@
 import SQLite from 'better-sqlite3';
 import { Parser, AST, Select } from 'node-sql-parser';
 import { QueryResult } from 'kysely';
+import { isEqual } from 'lodash';
 
 const parser = new Parser();
 const parseOptions = { database: 'Sqlite' };
@@ -76,14 +77,8 @@ export const resultHasChanged = <R>(
     const oldRow = oldResult.rows[i];
     const newRow = newResult.rows[i];
 
-    if (Object.keys(oldRow).length !== Object.keys(newRow).length) {
+    if (!isEqual(oldRow, newRow)) {
       return true;
-    }
-
-    for (const key in oldRow) {
-      if (oldRow[key] !== newRow[key]) {
-        return true;
-      }
     }
   }
 

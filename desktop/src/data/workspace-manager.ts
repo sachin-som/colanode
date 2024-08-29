@@ -200,16 +200,11 @@ export class WorkspaceManager {
 
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
-      if (
-        mutation.after &&
-        (mutation.action === 'insert' || mutation.action === 'update')
-      ) {
+      if (mutation.action === 'insert' && mutation.after) {
         await this.syncNodeFromServer(mutation.after);
-      } else if (
-        mutation.before &&
-        mutation.action === 'delete' &&
-        mutation.before.id
-      ) {
+      } else if (mutation.action === 'update' && mutation.after) {
+        await this.syncNodeFromServer(mutation.after);
+      } else if (mutation.action === 'delete' && mutation.before) {
         await this.database
           .deleteFrom('nodes')
           .where('id', '=', mutation.before.id)

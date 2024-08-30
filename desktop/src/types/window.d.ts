@@ -1,6 +1,7 @@
 import { EventBus } from '@/lib/event-bus';
 import { CompiledQuery, QueryResult } from 'kysely';
 import { LocalMutationInput } from '@/types/mutations';
+import { SubscribedQueryContext } from './databases';
 
 interface NeuronApi {
   init: () => Promise<void>;
@@ -28,14 +29,13 @@ interface NeuronApi {
   executeWorkspaceQueryAndSubscribe: (
     accountId: string,
     workspaceId: string,
-    queryId: string,
-    query: CompiledQuery<R>,
+    context: SubscribedQueryContext<R>,
   ) => Promise<QueryResult<R>>;
 
   unsubscribeWorkspaceQuery: (
     accountId: string,
     workspaceId: string,
-    queryId: string,
+    queryKey: string[],
   ) => Promise<void>;
 }
 

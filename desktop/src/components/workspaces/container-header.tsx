@@ -117,7 +117,7 @@ interface ContainerHeaderProps {
 export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    queryKey: [`breadcrumb:${node.id}`],
+    queryKey: ['breadcrumb', node.id],
     queryFn: async ({ queryKey }) => {
       const query = sql<SelectNode>`
         WITH RECURSIVE breadcrumb AS (
@@ -132,8 +132,10 @@ export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
         SELECT * FROM breadcrumb;
       `.compile(workspace.schema);
 
-      const queryId = queryKey[0];
-      return await workspace.queryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe({
+        key: queryKey,
+        query,
+      });
     },
   });
 

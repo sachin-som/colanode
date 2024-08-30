@@ -15,7 +15,7 @@ export const Container = () => {
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    queryKey: [`node:${nodeId}`],
+    queryKey: ['node', nodeId],
     queryFn: async ({ queryKey }) => {
       const query = workspace.schema
         .selectFrom('nodes')
@@ -23,8 +23,10 @@ export const Container = () => {
         .where('id', '=', nodeId)
         .compile();
 
-      const queryId = queryKey[0];
-      return await workspace.queryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe({
+        key: queryKey,
+        query,
+      });
     },
   });
 

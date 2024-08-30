@@ -35,7 +35,7 @@ import {
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
 
 interface MessageEditorProps {
-  nodeId: string;
+  conversationId: string;
   canSubmit?: boolean;
   canEdit?: boolean;
   loading?: boolean;
@@ -83,7 +83,7 @@ export const MessageEditor = (props: MessageEditorProps) => {
       autofocus: 'end',
       editable: props.canEdit,
     },
-    [props.nodeId],
+    [props.conversationId],
   );
 
   const handleSubmit = React.useCallback(() => {

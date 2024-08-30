@@ -48,10 +48,47 @@ export const Workspace = () => {
     const id = eventBus.subscribe((event) => {
       if (event.event === 'workspace_query_updated') {
         const result = event.payload.result;
-        const queryKey = event.payload.queryId;
+        const queryKey = event.payload.key;
+        const page = event.payload.page;
 
-        if (result && queryKey) {
-          queryClient.setQueryData([queryKey], result);
+        if (!result) {
+          return;
+        }
+
+        if (!queryKey) {
+          return;
+        }
+
+        const existingData = queryClient.getQueryData<any>(queryKey);
+
+        if (!existingData) {
+          window.neuron.unsubscribeWorkspaceQuery(
+            workspace.accountId,
+            workspace.id,
+            queryKey,
+          );
+          return;
+        }
+
+        if (page !== undefined && page != null) {
+          const index = existingData.pageParams.indexOf(page);
+          if (index === -1) {
+            return;
+          }
+
+          const newData = {
+            pageParams: existingData.pageParams,
+            pages: existingData.pages.map((p: any, i: number) => {
+              if (i === index) {
+                return result;
+              }
+
+              return p;
+            }),
+          };
+          queryClient.setQueryData(queryKey, newData);
+        } else {
+          queryClient.setQueryData(queryKey, result);
         }
       }
     });
@@ -63,11 +100,10 @@ export const Workspace = () => {
         event.query.queryKey &&
         event.query.queryKey.length > 0
       ) {
-        const queryKey = event.query.queryKey[0];
         await window.neuron.unsubscribeWorkspaceQuery(
           workspace.accountId,
           workspace.id,
-          queryKey,
+          event.query.queryKey,
         );
       }
     });
@@ -99,12 +135,11 @@ export const Workspace = () => {
               workspace.id,
               query,
             ),
-          queryAndSubscribe: (queryId, query) =>
+          queryAndSubscribe: (context) =>
             window.neuron.executeWorkspaceQueryAndSubscribe(
               workspace.accountId,
               workspace.id,
-              queryId,
-              query,
+              context,
             ),
           navigateToNode(nodeId) {
             navigate(`/${workspaceId}/${nodeId}`);

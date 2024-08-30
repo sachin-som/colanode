@@ -13,7 +13,7 @@ import { SpacebarChats } from '@/components/workspaces/spacebar-chats';
 export const Sidebar = () => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    queryKey: [`sidebar:${workspace.id}`],
+    queryKey: ['sidebar', workspace.id],
     queryFn: async ({ queryKey }) => {
       const query = workspace.schema
         .selectFrom('nodes')
@@ -30,8 +30,10 @@ export const Sidebar = () => {
         )
         .compile();
 
-      const queryId = queryKey[0];
-      return await workspace.queryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe({
+        key: queryKey,
+        query,
+      });
     },
   });
 

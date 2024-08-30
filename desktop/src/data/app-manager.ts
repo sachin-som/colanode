@@ -17,7 +17,7 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { Workspace } from '@/types/workspaces';
-import { SubscribedQueryData } from '@/types/databases';
+import { SubscribedQueryResult } from '@/types/databases';
 import { eventBus } from '@/lib/event-bus';
 
 const EVENT_LOOP_INTERVAL = 1000;
@@ -26,7 +26,7 @@ class AppManager {
   private readonly accounts: Map<string, AccountManager>;
   private readonly appPath: string;
   private readonly database: Kysely<AppDatabaseSchema>;
-  private readonly subscribers: Map<string, SubscribedQueryData<unknown>>;
+  private readonly subscribers: Map<string, SubscribedQueryResult<unknown>>;
   private initPromise: Promise<void> | null = null;
 
   constructor() {
@@ -87,8 +87,11 @@ class AppManager {
     }
 
     const selectedTables = extractTablesFromSql(query.sql);
-    const subscriberData: SubscribedQueryData<T> = {
-      query,
+    const subscriberData: SubscribedQueryResult<T> = {
+      context: {
+        query,
+        key: [queryId],
+      },
       tables: selectedTables,
       result: result,
     };
@@ -151,7 +154,9 @@ class AppManager {
         continue;
       }
 
-      const newResult = await this.database.executeQuery(subscriberData.query);
+      const newResult = await this.database.executeQuery(
+        subscriberData.context.query,
+      );
 
       if (resultHasChanged(subscriberData.result, newResult)) {
         eventBus.publish({

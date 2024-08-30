@@ -15,11 +15,14 @@ import {
   extractTablesFromSql,
   resultHasChanged,
 } from '@/data/utils';
-import { SubscribedQueryData } from '@/types/databases';
+import {
+  SubscribedQueryContext,
+  SubscribedQueryResult,
+} from '@/types/databases';
 import { ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
-import { debounce } from 'lodash';
+import { debounce, isEqual } from 'lodash';
 import { ServerNode } from '@/types/nodes';
 import { SelectNode } from '@/data/schemas/workspace';
 
@@ -27,7 +30,7 @@ export class WorkspaceManager {
   private readonly workspace: Workspace;
   private readonly axios: AxiosInstance;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
-  private readonly subscribers: Map<string, SubscribedQueryData<unknown>>;
+  private readonly subscribers: Map<string, SubscribedQueryResult<unknown>>;
   private readonly debouncedNotifyQuerySubscribers: (
     affectedTables: string[],
   ) => void;
@@ -78,19 +81,19 @@ export class WorkspaceManager {
   }
 
   public async executeQueryAndSubscribe<T>(
-    queryId: string,
-    query: CompiledQuery<T>,
+    context: SubscribedQueryContext<T>,
   ): Promise<QueryResult<T>> {
-    const result = await this.database.executeQuery(query);
+    const result = await this.database.executeQuery(context.query);
 
     // only mutations should have side effects
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
 
-    const selectedTables = extractTablesFromSql(query.sql);
-    const subscriberData: SubscribedQueryData<T> = {
-      query,
+    const queryId = context.key.join('|') + context.page;
+    const selectedTables = extractTablesFromSql(context.query.sql);
+    const subscriberData: SubscribedQueryResult<T> = {
+      context,
       tables: selectedTables,
       result: result,
     };
@@ -138,30 +141,39 @@ export class WorkspaceManager {
     }
   }
 
-  public unsubscribeQuery(queryId: string): void {
-    this.subscribers.delete(queryId);
+  public unsubscribeQuery(queryKey: string[]): void {
+    var queryIds = [...this.subscribers.keys()];
+    for (const queryId of queryIds) {
+      const subscriberData = this.subscribers.get(queryId);
+      if (isEqual(subscriberData.context.key, queryKey)) {
+        this.subscribers.delete(queryId);
+      }
+    }
   }
 
   private async notifyQuerySubscribers(
     affectedTables: string[],
   ): Promise<void> {
-    for (const [subscriberId, subscriberData] of this.subscribers) {
-      const hasAffectedTables = subscriberData.tables.some((table) =>
-        affectedTables.includes(table),
+    for (const subscriber of this.subscribers.values()) {
+      const hasAffectedTables = affectedTables.some((table) =>
+        subscriber.tables.includes(table),
       );
 
       if (!hasAffectedTables) {
         continue;
       }
 
-      const newResult = await this.database.executeQuery(subscriberData.query);
+      const newResult = await this.database.executeQuery(
+        subscriber.context.query,
+      );
 
-      if (resultHasChanged(subscriberData.result, newResult)) {
-        subscriberData.result = newResult;
+      if (resultHasChanged(subscriber.result, newResult)) {
+        subscriber.result = newResult;
         eventBus.publish({
           event: 'workspace_query_updated',
           payload: {
-            queryId: subscriberId,
+            key: subscriber.context.key,
+            page: subscriber.context.page,
             result: newResult,
           },
         });

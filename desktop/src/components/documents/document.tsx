@@ -15,7 +15,7 @@ interface DocumentProps {
 export const Document = ({ node }: DocumentProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    queryKey: [`document:nodes:${node.id}`],
+    queryKey: ['document', 'nodes', node.id],
     queryFn: async ({ queryKey }) => {
       const query = sql<SelectNode>`
         WITH RECURSIVE document_hierarchy AS (
@@ -34,8 +34,10 @@ export const Document = ({ node }: DocumentProps) => {
         FROM document_hierarchy;
       `.compile(workspace.schema);
 
-      const queryId = queryKey[0];
-      return await workspace.queryAndSubscribe(queryId, query);
+      return await workspace.queryAndSubscribe({
+        query,
+        key: queryKey,
+      });
     },
   });
 

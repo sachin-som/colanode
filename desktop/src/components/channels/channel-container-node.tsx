@@ -7,5 +7,5 @@ interface ChannelContainerNodeProps {
 }
 
 export const ChannelContainerNode = ({ node }: ChannelContainerNodeProps) => {
-  return <Conversation nodeId={node.id} />;
+  return <Conversation conversationId={node.id} />;
 };

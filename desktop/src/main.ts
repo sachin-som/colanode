@@ -3,6 +3,7 @@ import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { appManager } from '@/data/app-manager';
 import { CompiledQuery, QueryResult } from 'kysely';
+import { SubscribedQueryContext } from './types/databases';
 
 let subscriptionId: string | null = null;
 
@@ -148,8 +149,7 @@ ipcMain.handle(
     _,
     accountId: string,
     workspaceId: string,
-    queryId: string,
-    query: CompiledQuery<unknown>,
+    context: SubscribedQueryContext<unknown>,
   ): Promise<QueryResult<unknown>> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
@@ -161,7 +161,7 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    return await workspaceManager.executeQueryAndSubscribe(queryId, query);
+    return await workspaceManager.executeQueryAndSubscribe(context);
   },
 );
 
@@ -171,7 +171,7 @@ ipcMain.handle(
     _,
     accountId: string,
     workspaceId: string,
-    queryId: string,
+    queryKey: string[],
   ): Promise<void> => {
     const accountManager = await appManager.getAccount(accountId);
     if (!accountManager) {
@@ -183,6 +183,6 @@ ipcMain.handle(
       throw new Error(`Workspace not found: ${workspaceId}`);
     }
 
-    workspaceManager.unsubscribeQuery(queryId);
+    workspaceManager.unsubscribeQuery(queryKey);
   },
 );

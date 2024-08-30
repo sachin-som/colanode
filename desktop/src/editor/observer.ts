@@ -1,7 +1,8 @@
 import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 import { LeafNodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { compareNodeIndex, generateNodeIndex } from '@/lib/nodes';
+import { generateNodeIndex } from '@/lib/nodes';
+import { compareString } from '@/lib/utils';
 import { LocalNode, NodeBlock } from '@/types/nodes';
 import { Workspace } from '@/types/workspaces';
 import { Editor, JSONContent } from '@tiptap/core';
@@ -57,7 +58,7 @@ export class EditorObserver {
     const contents: JSONContent[] = [];
     const childrenNodes = nodesArray
       .filter((node) => node.parentId === this.rootNode.id)
-      .sort((a, b) => compareNodeIndex(a, b));
+      .sort((a, b) => compareString(a.index, b.index));
 
     for (const child of childrenNodes) {
       const content = this.buildEditorContentFromNode(child, nodesArray);
@@ -90,7 +91,7 @@ export class EditorObserver {
 
     const childrenNodes = nodesArray
       .filter((n) => n.parentId === node.id)
-      .sort((a, b) => compareNodeIndex(a, b));
+      .sort((a, b) => compareString(a.index, b.index));
 
     if (childrenNodes.length > 0) {
       editorContent.content = editorContent.content || [];

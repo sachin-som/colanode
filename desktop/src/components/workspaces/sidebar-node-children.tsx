@@ -2,7 +2,7 @@ import React from 'react';
 import { LocalNode } from '@/types/nodes';
 import { SidebarNode } from '@/components/workspaces/sidebar-node';
 import { useSidebar } from '@/contexts/sidebar';
-import { compareNodeIndex } from '@/lib/nodes';
+import { compareString } from '@/lib/utils';
 
 interface SidebarNodeChildrenProps {
   node: LocalNode;
@@ -12,7 +12,7 @@ export const SidebarNodeChildren = ({ node }: SidebarNodeChildrenProps) => {
   const sidebar = useSidebar();
   const children: LocalNode[] = sidebar.nodes
     .filter((n) => n.parentId === node.id)
-    .sort((a, b) => compareNodeIndex(a, b));
+    .sort((a, b) => compareString(a.index, b.index));
 
   return (
     <React.Fragment>

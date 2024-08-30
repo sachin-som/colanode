@@ -3,12 +3,9 @@ import { JSONContent } from '@tiptap/core';
 import { NeuronId } from '@/lib/id';
 import { LocalNode, NodeBlock } from '@/types/nodes';
 import { LeafNodeTypes, NodeTypes } from '@/lib/constants';
-import {
-  buildNodeWithChildren,
-  compareNodeId,
-  generateNodeIndex,
-} from '@/lib/nodes';
+import { buildNodeWithChildren, generateNodeIndex } from '@/lib/nodes';
 import { MessageNode } from '@/types/messages';
+import { compareString } from './utils';
 
 export const buildMessageCreateNodes = (
   nodes: CreateNode[],
@@ -74,9 +71,9 @@ export const buildMessageCreateNodes = (
 };
 
 export const buildMessages = (allNodes: LocalNode[]): MessageNode[] => {
-  const messageNodes = allNodes
-    .filter((node) => node.type === NodeTypes.Message)
-    .sort((a, b) => compareNodeId(a, b));
+  const messageNodes = allNodes.filter(
+    (node) => node.type === NodeTypes.Message,
+  );
 
   const authorNodes = allNodes.filter((node) => node.type === NodeTypes.User);
   const messages: MessageNode[] = [];
@@ -97,5 +94,5 @@ export const buildMessages = (allNodes: LocalNode[]): MessageNode[] => {
     messages.push(message);
   }
 
-  return messages.sort((a, b) => compareNodeId(a, b));
+  return messages.sort((a, b) => compareString(a.id, b.id));
 };

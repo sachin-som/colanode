@@ -14,6 +14,9 @@ export const NodeTypes = {
   TaskList: 'taskList',
   TaskItem: 'taskItem',
   HorizontalRule: 'horizontalRule',
+  Database: 'database',
+  Record: 'record',
+  Folder: 'folder',
 };
 
 export const LeafNodeTypes: string[] = [

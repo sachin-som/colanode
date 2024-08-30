@@ -44,34 +44,33 @@ export const MessageList = ({
       queryFn: async ({ queryKey, pageParam }) => {
         const offset = pageParam * MESSAGES_PER_PAGE;
         const query = sql<SelectNode>`
-        WITH message_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE parent_id = ${conversationId} AND type = ${NodeTypes.Message}
-          ORDER BY id DESC
-          LIMIT ${sql.lit(MESSAGES_PER_PAGE)}
-          OFFSET ${sql.lit(offset)}
-        ),
-        descendant_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE parent_id IN (SELECT id FROM message_nodes)
+          WITH message_nodes AS (
+            SELECT *
+            FROM nodes
+            WHERE parent_id = ${conversationId} AND type = ${NodeTypes.Message}
+            ORDER BY id DESC
+            LIMIT ${sql.lit(MESSAGES_PER_PAGE)}
+            OFFSET ${sql.lit(offset)}
+          ),
+          descendant_nodes AS (
+            SELECT *
+            FROM nodes
+            WHERE parent_id IN (SELECT id FROM message_nodes)
+            UNION ALL
+            SELECT child.*
+            FROM nodes child
+            INNER JOIN descendant_nodes parent ON child.parent_id = parent.id
+          ),
+          authors AS (
+            SELECT *
+            FROM nodes
+            WHERE id IN (SELECT DISTINCT created_by FROM message_nodes)
+          )
+          SELECT * FROM message_nodes
           UNION ALL
-          SELECT child.*
-          FROM nodes child
-          INNER JOIN descendant_nodes parent ON child.parent_id = parent.id
-        ),
-        authors AS (
-          SELECT *
-          FROM nodes
-          WHERE id IN (SELECT DISTINCT created_by FROM message_nodes)
-        )
-        SELECT * FROM message_nodes
-        UNION ALL
-        SELECT * FROM descendant_nodes
-        UNION ALL
-        SELECT * FROM authors;
-
+          SELECT * FROM descendant_nodes
+          UNION ALL
+          SELECT * FROM authors;
       `.compile(workspace.schema);
 
         return await workspace.queryAndSubscribe({

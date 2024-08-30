@@ -1,6 +1,7 @@
 import { SelectNode } from '@/data/schemas/workspace';
 import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
+import { NodeTypes } from '@/lib/constants';
 
 export const buildNodeWithChildren = (
   node: LocalNode,
@@ -45,22 +46,21 @@ export const mapNode = (row: SelectNode): LocalNode => {
   };
 };
 
-export const compareNodeIndex = (a: LocalNode, b: LocalNode): number => {
-  if (a.index < b.index) {
-    return -1;
-  } else if (a.index > b.index) {
-    return 1;
+export const getDefaultNodeIcon = (type: string) => {
+  switch (type) {
+    case NodeTypes.Channel:
+      return 'discuss-line';
+    case NodeTypes.Page:
+      return 'book-line';
+    case NodeTypes.Database:
+      return 'database-2-line';
+    case NodeTypes.Record:
+      return 'article-line';
+    case NodeTypes.Folder:
+      return 'folder-open-line';
+    case NodeTypes.Space:
+      return 'team-line';
+    default:
+      return 'file-unknown-line';
   }
-
-  return 0;
-};
-
-export const compareNodeId = (a: LocalNode, b: LocalNode): number => {
-  if (a.id < b.id) {
-    return -1;
-  } else if (a.id > b.id) {
-    return 1;
-  }
-
-  return 0;
 };

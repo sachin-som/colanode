@@ -33,20 +33,23 @@ export const App = () => {
 
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       const query = appDatabase.selectFrom('accounts').selectAll().compile();
-      return await window.neuron.executeAppQueryAndSubscribe('accounts', query);
+      return await window.neuron.executeAppQueryAndSubscribe({
+        key: queryKey,
+        query: query,
+      });
     },
   });
 
   const workspacesQuery = useQuery({
     queryKey: ['workspaces'],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       const query = appDatabase.selectFrom('workspaces').selectAll().compile();
-      return await window.neuron.executeAppQueryAndSubscribe(
-        'workspaces',
-        query,
-      );
+      return await window.neuron.executeAppQueryAndSubscribe({
+        key: queryKey,
+        query: query,
+      });
     },
   });
 
@@ -61,8 +64,8 @@ export const App = () => {
         value={{
           database: appDatabase,
           query: (query) => window.neuron.executeAppQuery(query),
-          queryAndSubscribe: (queryId, query) =>
-            window.neuron.executeAppQueryAndSubscribe(queryId, query),
+          queryAndSubscribe: (context) =>
+            window.neuron.executeAppQueryAndSubscribe(context),
           mutate: (mutation) => window.neuron.executeAppMutation(mutation),
         }}
       >
@@ -84,8 +87,8 @@ export const App = () => {
       value={{
         database: appDatabase,
         query: (query) => window.neuron.executeAppQuery(query),
-        queryAndSubscribe: (queryId, query) =>
-          window.neuron.executeAppQueryAndSubscribe(queryId, query),
+        queryAndSubscribe: (context) =>
+          window.neuron.executeAppQueryAndSubscribe(context),
         mutate: (mutation) => window.neuron.executeAppMutation(mutation),
       }}
     >

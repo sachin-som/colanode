@@ -17,8 +17,12 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { Workspace } from '@/types/workspaces';
-import { SubscribedQueryResult } from '@/types/databases';
+import {
+  SubscribedQueryContext,
+  SubscribedQueryResult,
+} from '@/types/databases';
 import { eventBus } from '@/lib/event-bus';
+import { isEqual } from 'lodash';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
@@ -75,23 +79,20 @@ class AppManager {
   }
 
   public async executeQueryAndSubscribe<T>(
-    queryId: string,
-    query: CompiledQuery<T>,
+    context: SubscribedQueryContext<T>,
   ): Promise<QueryResult<T>> {
     await this.waitForInit();
-    const result = await this.database.executeQuery(query);
+    const result = await this.database.executeQuery(context.query);
 
     // only mutations should have side effects
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
 
-    const selectedTables = extractTablesFromSql(query.sql);
+    const queryId = context.key.join('|') + context.page;
+    const selectedTables = extractTablesFromSql(context.query.sql);
     const subscriberData: SubscribedQueryResult<T> = {
-      context: {
-        query,
-        key: [queryId],
-      },
+      context,
       tables: selectedTables,
       result: result,
     };
@@ -145,8 +146,8 @@ class AppManager {
       }
     }
 
-    for (const [subscriberId, subscriberData] of this.subscribers) {
-      const hasAffectedTables = subscriberData.tables.some((table) =>
+    for (const subscriber of this.subscribers.values()) {
+      const hasAffectedTables = subscriber.tables.some((table) =>
         affectedTables.includes(table),
       );
 
@@ -155,14 +156,15 @@ class AppManager {
       }
 
       const newResult = await this.database.executeQuery(
-        subscriberData.context.query,
+        subscriber.context.query,
       );
 
-      if (resultHasChanged(subscriberData.result, newResult)) {
+      if (resultHasChanged(subscriber.result, newResult)) {
         eventBus.publish({
           event: 'app_query_updated',
           payload: {
-            queryId: subscriberId,
+            key: subscriber.context.key,
+            page: subscriber.context.page,
             result: newResult,
           },
         });
@@ -170,8 +172,14 @@ class AppManager {
     }
   }
 
-  public unsubscribeQuery(queryId: string): void {
-    this.subscribers.delete(queryId);
+  public unsubscribeQuery(queryKey: string[]): void {
+    var queryIds = [...this.subscribers.keys()];
+    for (const queryId of queryIds) {
+      const subscriberData = this.subscribers.get(queryId);
+      if (isEqual(subscriberData.context.key, queryKey)) {
+        this.subscribers.delete(queryId);
+      }
+    }
   }
 
   public async logout(accountId: string): Promise<void> {

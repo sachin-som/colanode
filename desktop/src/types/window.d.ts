@@ -9,10 +9,9 @@ interface NeuronApi {
   executeAppMutation: (mutation: CompiledQuery) => Promise<void>;
   executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   executeAppQueryAndSubscribe: (
-    queryId: string,
-    query: CompiledQuery<R>,
+    context: SubscribedQueryContext<R>,
   ) => Promise<QueryResult<R>>;
-  unsubscribeAppQuery: (queryId: string) => Promise<void>;
+  unsubscribeAppQuery: (queryKey: string[]) => Promise<void>;
 
   executeWorkspaceMutation: (
     accountId: string,

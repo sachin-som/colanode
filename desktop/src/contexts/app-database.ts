@@ -1,14 +1,14 @@
 import React from 'react';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
 import { AppDatabaseSchema } from '@/data/schemas/app';
+import { SubscribedQueryContext } from '@/types/databases';
 
 interface AppDatabaseContext {
   database: Kysely<AppDatabaseSchema>;
   mutate: (mutation: CompiledQuery) => Promise<void>;
   query: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   queryAndSubscribe: <R>(
-    queryId: string,
-    query: CompiledQuery<R>,
+    context: SubscribedQueryContext<R>,
   ) => Promise<QueryResult<R>>;
 }
 

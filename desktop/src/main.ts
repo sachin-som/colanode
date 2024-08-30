@@ -88,15 +88,14 @@ ipcMain.handle(
   'execute-app-query-and-subscribe',
   async (
     _,
-    queryId: string,
-    query: CompiledQuery<unknown>,
+    context: SubscribedQueryContext<unknown>,
   ): Promise<QueryResult<unknown>> => {
-    return await appManager.executeQueryAndSubscribe(queryId, query);
+    return await appManager.executeQueryAndSubscribe(context);
   },
 );
 
-ipcMain.handle('unsubscribe-app-query', (_, queryId: string): void => {
-  appManager.unsubscribeQuery(queryId);
+ipcMain.handle('unsubscribe-app-query', (_, queryKey: string[]): void => {
+  appManager.unsubscribeQuery(queryKey);
 });
 
 ipcMain.handle(

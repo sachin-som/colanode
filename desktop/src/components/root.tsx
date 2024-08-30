@@ -53,10 +53,43 @@ export const Root = () => {
     const id = eventBus.subscribe((event) => {
       if (event.event === 'app_query_updated') {
         const result = event.payload.result;
-        const queryKey = event.payload.queryId;
+        const queryKey = event.payload.key;
+        const page = event.payload.page;
 
-        if (result && queryKey) {
-          queryClient.setQueryData([queryKey], result);
+        if (!result) {
+          return;
+        }
+
+        if (!queryKey) {
+          return;
+        }
+
+        const existingData = queryClient.getQueryData<any>(queryKey);
+
+        if (!existingData) {
+          window.neuron.unsubscribeAppQuery(queryKey);
+          return;
+        }
+
+        if (page !== undefined && page != null) {
+          const index = existingData.pageParams.indexOf(page);
+          if (index === -1) {
+            return;
+          }
+
+          const newData = {
+            pageParams: existingData.pageParams,
+            pages: existingData.pages.map((p: any, i: number) => {
+              if (i === index) {
+                return result;
+              }
+
+              return p;
+            }),
+          };
+          queryClient.setQueryData(queryKey, newData);
+        } else {
+          queryClient.setQueryData(queryKey, result);
         }
       }
     });
@@ -68,8 +101,7 @@ export const Root = () => {
         event.query.queryKey &&
         event.query.queryKey.length > 0
       ) {
-        const queryKey = event.query.queryKey[0];
-        await window.neuron.unsubscribeAppQuery(queryKey);
+        await window.neuron.unsubscribeAppQuery(event.query.queryKey);
       }
     });
 

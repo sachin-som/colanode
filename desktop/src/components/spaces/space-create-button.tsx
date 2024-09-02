@@ -1,6 +1,6 @@
-import React from "react";
-import {SpaceCreateDialog} from "@/components/spaces/space-create-dialog";
-import {Icon} from "@/components/ui/icon";
+import React from 'react';
+import { SpaceCreateDialog } from '@/components/spaces/space-create-dialog';
+import { Icon } from '@/components/ui/icon';
 
 export const SpaceCreateButton = () => {
   const [open, setOpen] = React.useState(false);
@@ -13,5 +13,5 @@ export const SpaceCreateButton = () => {
       />
       <SpaceCreateDialog open={open} onOpenChange={setOpen} />
     </React.Fragment>
-  )
-}
+  );
+};

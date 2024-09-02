@@ -16,6 +16,7 @@ import { getDefaultNodeIcon } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
 import { ChannelCreateDialog } from '@/components/channels/channel-create-dialog';
 import { PageCreateDialog } from '@/components/pages/page-create-dialog';
+import { DatabaseCreateDialog } from '@/components/databases/database-create-dialog';
 
 interface SettingsState {
   open: boolean;
@@ -128,6 +129,13 @@ export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
           spaceId={node.id}
           open={openCreatePage}
           onOpenChange={setOpenCreatePage}
+        />
+      )}
+      {openCreateDatabase && (
+        <DatabaseCreateDialog
+          spaceId={node.id}
+          open={openCreateDatabase}
+          onOpenChange={setOpenCreateDatabase}
         />
       )}
     </React.Fragment>

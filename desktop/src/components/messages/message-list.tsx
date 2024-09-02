@@ -36,8 +36,6 @@ export const MessageList = ({
           if (messageCount >= MESSAGES_PER_PAGE) {
             return pages.length;
           }
-
-          return undefined;
         }
         return undefined;
       },

@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
+import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 
 export const Container = () => {
   const { nodeId } = useParams<{ nodeId: string }>();
@@ -45,7 +46,8 @@ export const Container = () => {
       {match(node.type)
         .with(NodeTypes.Channel, () => <ChannelContainerNode node={node} />)
         .with(NodeTypes.Page, () => <PageContainerNode node={node} />)
-        .otherwise(null)}
+        .with(NodeTypes.Database, () => <DatabaseContainerNode node={node} />)
+        .otherwise(() => null)}
     </div>
   );
 };

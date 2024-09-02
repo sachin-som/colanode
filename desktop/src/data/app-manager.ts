@@ -17,10 +17,7 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { Workspace } from '@/types/workspaces';
-import {
-  SubscribedQueryContext,
-  SubscribedQueryResult,
-} from '@/types/databases';
+import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import { eventBus } from '@/lib/event-bus';
 import { isEqual } from 'lodash';
 
@@ -245,7 +242,6 @@ class AppManager {
     } catch (error) {
       console.error('Error in event loop:', error);
     }
-
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 

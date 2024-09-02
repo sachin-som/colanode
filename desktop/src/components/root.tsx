@@ -10,6 +10,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/components/workspaces/container';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { eventBus } from '@/lib/event-bus';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const router = createBrowserRouter([
   {
@@ -112,10 +114,12 @@ export const Root = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
-      <Toaster />
+      <DndProvider backend={HTML5Backend}>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+        <Toaster />
+      </DndProvider>
     </QueryClientProvider>
   );
 };

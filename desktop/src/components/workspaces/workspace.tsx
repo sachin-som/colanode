@@ -144,6 +144,9 @@ export const Workspace = () => {
           navigateToNode(nodeId) {
             navigate(`/${workspaceId}/${nodeId}`);
           },
+          openModal(modal) {
+            // setModal(modal);
+          },
         }}
       >
         <div className="flex h-screen max-h-screen flex-row">

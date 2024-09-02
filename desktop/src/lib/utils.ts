@@ -119,5 +119,9 @@ export const compareString = (a?: string | null, b?: string | null): number => {
     return 1;
   }
 
-  return a.localeCompare(b);
+  if (a > b) {
+    return 1;
+  }
+
+  return -1;
 };

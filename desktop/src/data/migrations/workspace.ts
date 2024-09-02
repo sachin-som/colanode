@@ -50,7 +50,7 @@ const createNodesInsertTrigger: Migration = {
       CREATE TRIGGER after_insert_nodes
       AFTER INSERT ON nodes
       FOR EACH ROW
-      WHEN NEW.server_version_id is null
+      WHEN NEW.server_version_id IS NULL
       BEGIN
           INSERT INTO mutations ('action', 'table', 'after', 'created_at')
           VALUES (
@@ -88,7 +88,7 @@ const createNodesUpdateTrigger: Migration = {
       CREATE TRIGGER after_update_nodes
       AFTER UPDATE ON nodes
       FOR EACH ROW
-      WHEN NEW.version_id != NEW.server_version_id
+      WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
       BEGIN
           INSERT INTO mutations ('action', 'table', 'before', 'after', 'created_at')
           VALUES (

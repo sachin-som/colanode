@@ -1,7 +1,7 @@
 import React from 'react';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
 import { AppDatabaseSchema } from '@/data/schemas/app';
-import { SubscribedQueryContext } from '@/types/databases';
+import { SubscribedQueryContext } from '@/types/queries';
 
 interface AppDatabaseContext {
   database: Kysely<AppDatabaseSchema>;

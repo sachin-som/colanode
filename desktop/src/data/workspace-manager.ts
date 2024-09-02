@@ -15,10 +15,7 @@ import {
   extractTablesFromSql,
   resultHasChanged,
 } from '@/data/utils';
-import {
-  SubscribedQueryContext,
-  SubscribedQueryResult,
-} from '@/types/databases';
+import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import { ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';

@@ -25,6 +25,14 @@ enum IdType {
   TaskList = 'tl',
   TaskItem = 'ti',
   HorizontalRule = 'hr',
+  Database = 'db',
+  DatabaseReplica = 'dr',
+  Record = 'rc',
+  Folder = 'fl',
+  TableView = 'tv',
+  BoardView = 'bv',
+  CalendarView = 'cv',
+  Field = 'fi',
 }
 
 export class NeuronId {
@@ -72,6 +80,22 @@ export class NeuronId {
         return IdType.TaskItem;
       case NodeTypes.HorizontalRule:
         return IdType.HorizontalRule;
+      case NodeTypes.Database:
+        return IdType.Database;
+      case NodeTypes.DatabaseReplica:
+        return IdType.DatabaseReplica;
+      case NodeTypes.Record:
+        return IdType.Record;
+      case NodeTypes.Folder:
+        return IdType.Folder;
+      case NodeTypes.TableView:
+        return IdType.TableView;
+      case NodeTypes.BoardView:
+        return IdType.BoardView;
+      case NodeTypes.CalendarView:
+        return IdType.CalendarView;
+      case NodeTypes.Field:
+        return IdType.Field;
       default:
         return IdType.Node;
     }

@@ -25,7 +25,7 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
         .deleteFrom('nodes')
         .where('id', '=', messageId)
         .compile();
-        
+
       await workspace.mutate(mutation);
     },
   });

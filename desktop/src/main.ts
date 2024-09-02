@@ -3,8 +3,7 @@ import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { appManager } from '@/data/app-manager';
 import { CompiledQuery, QueryResult } from 'kysely';
-import { SubscribedQueryContext } from './types/databases';
-
+import { SubscribedQueryContext } from '@/types/queries';
 let subscriptionId: string | null = null;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

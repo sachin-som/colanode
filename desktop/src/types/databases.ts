@@ -1,13 +1,22 @@
-import { CompiledQuery, QueryResult } from 'kysely';
-
-export type SubscribedQueryContext<T> = {
-  key: string[];
-  page?: number;
-  query: CompiledQuery<T>;
-};
-
-export type SubscribedQueryResult<T> = {
-  context: SubscribedQueryContext<T>;
-  tables: string[];
-  result: QueryResult<T>;
-};
+export type FieldType =
+  | 'name'
+  | 'autonumber'
+  | 'boolean'
+  | 'button'
+  | 'collaborator'
+  | 'created_at'
+  | 'created_by'
+  | 'date'
+  | 'email'
+  | 'file'
+  | 'formula'
+  | 'multi_select'
+  | 'number'
+  | 'phone'
+  | 'relation'
+  | 'rollup'
+  | 'select'
+  | 'text'
+  | 'updated_at'
+  | 'updated_by'
+  | 'url';

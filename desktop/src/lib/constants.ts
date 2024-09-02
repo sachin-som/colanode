@@ -15,8 +15,13 @@ export const NodeTypes = {
   TaskItem: 'taskItem',
   HorizontalRule: 'horizontalRule',
   Database: 'database',
+  DatabaseReplica: 'database_replica',
   Record: 'record',
   Folder: 'folder',
+  TableView: 'table_view',
+  BoardView: 'board_view',
+  CalendarView: 'calendar_view',
+  Field: 'field',
 };
 
 export const LeafNodeTypes: string[] = [
@@ -31,4 +36,10 @@ export const RootNodeTypes: string[] = [
   NodeTypes.Message,
   NodeTypes.Page,
   NodeTypes.Channel,
+];
+
+export const ViewNodeTypes: string[] = [
+  NodeTypes.TableView,
+  NodeTypes.BoardView,
+  NodeTypes.CalendarView,
 ];

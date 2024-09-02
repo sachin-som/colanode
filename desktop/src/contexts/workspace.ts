@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import { Workspace } from '@/types/workspaces';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
 import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
-import { SubscribedQueryContext } from '@/types/databases';
+import { SubscribedQueryContext } from '@/types/queries';
 
 interface WorkspaceContext extends Workspace {
   schema: Kysely<WorkspaceDatabaseSchema>;
@@ -12,6 +12,7 @@ interface WorkspaceContext extends Workspace {
     context: SubscribedQueryContext<R>,
   ) => Promise<QueryResult<R>>;
   navigateToNode: (nodeId: string) => void;
+  openModal: (nodeId: string) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

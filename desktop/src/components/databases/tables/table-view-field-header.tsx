@@ -4,15 +4,15 @@ import { cn } from '@/lib/utils';
 import { getDefaultFieldWidth, getFieldIcon } from '@/lib/databases';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 're-resizable';
+import { Field } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
-import { Field } from '@/types/databases';
+import { FieldRenameInput } from '@/components/databases/fields/field-rename-input';
 
 interface TableViewFieldHeaderProps {
   field: Field;
@@ -116,15 +116,7 @@ export const TableViewFieldHeader = ({
             </div>
           </PopoverTrigger>
           <PopoverContent className="ml-1 flex w-72 flex-col gap-1 p-2 text-sm">
-            <div className="p-1">
-              <Input
-                value={field.name}
-                onChange={(e) => {
-                  // setName(e.target.value);
-                  // updateName(e.target.value);
-                }}
-              />
-            </div>
+            <FieldRenameInput field={field} />
             <Separator />
             {true && (
               <>

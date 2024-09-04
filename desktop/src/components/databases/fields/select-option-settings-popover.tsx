@@ -74,7 +74,7 @@ export const SelectOptionSettingsPopover = ({
                 setName(e.target.value);
               }}
               onBlur={() => {
-                if (name !== option.name) {
+                if (name !== option.name && !isPending) {
                   mutate({
                     name,
                     color: option.color,
@@ -83,7 +83,7 @@ export const SelectOptionSettingsPopover = ({
               }}
               onKeyDown={(e) => {
                 if (isHotkey('enter', e)) {
-                  if (name !== option.name) {
+                  if (name !== option.name && !isPending) {
                     mutate({
                       name,
                       color: option.color,

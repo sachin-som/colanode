@@ -90,6 +90,10 @@ export const getDefaultFieldWidth = (type: FieldType): number => {
   }
 };
 
+export const getDefaultNameWidth = (): number => {
+  return 300;
+};
+
 interface SelectOptionColor {
   label: string;
   value: string;

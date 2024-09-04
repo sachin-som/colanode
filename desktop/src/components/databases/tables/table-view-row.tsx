@@ -1,9 +1,8 @@
 import React from 'react';
 import { TableViewNameCell } from '@/components/databases/tables/table-view-name-cell';
-import { getDefaultFieldWidth } from '@/lib/databases';
-import { useDatabase } from '@/contexts/database';
 import { TableViewFieldCell } from './table-view-field-cell';
 import { RecordNode } from '@/types/databases';
+import { useTableView } from '@/contexts/table-view';
 
 interface TableViewRowProps {
   index: number;
@@ -11,8 +10,8 @@ interface TableViewRowProps {
 }
 
 export const TableViewRow = ({ index, record }: TableViewRowProps) => {
-  const database = useDatabase();
-  const nameCellWidth = '300px';
+  const tableView = useTableView();
+
   return (
     <div className="animate-fade-in flex flex-row items-center gap-0.5 border-b">
       <span
@@ -23,12 +22,12 @@ export const TableViewRow = ({ index, record }: TableViewRowProps) => {
       </span>
       <div
         className="h-8 border-r"
-        style={{ width: nameCellWidth, minWidth: nameCellWidth }}
+        style={{ width: `${tableView.getNameWidth()}px`, minWidth: '300px' }}
       >
         <TableViewNameCell record={record} />
       </div>
-      {database.fields.map((field) => {
-        const width = getDefaultFieldWidth(field.type) + 'px';
+      {tableView.fields.map((field) => {
+        const width = tableView.getFieldWidth(field.id, field.type);
         return (
           <div
             key={`row-${record.id}-${field.id}`}

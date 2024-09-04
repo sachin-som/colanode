@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
-import { getDefaultFieldWidth, getFieldIcon } from '@/lib/databases';
+import { getFieldIcon } from '@/lib/databases';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 're-resizable';
 import { Field } from '@/types/databases';
@@ -13,6 +13,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
 import { FieldRenameInput } from '@/components/databases/fields/field-rename-input';
+import { useTableView } from '@/contexts/table-view';
 
 interface TableViewFieldHeaderProps {
   field: Field;
@@ -23,6 +24,8 @@ export const TableViewFieldHeader = ({
   field,
   index,
 }: TableViewFieldHeaderProps) => {
+  const tableView = useTableView();
+
   const canEditDatabase = true;
   const canEditView = true;
 
@@ -32,7 +35,7 @@ export const TableViewFieldHeader = ({
     type: 'table-field-header',
     item: field,
     canDrag: () => canEditView,
-    end: (item, monitor) => {
+    end: (_item, monitor) => {
       const dropResult = monitor.getDropResult<{ index: number }>();
       if (!dropResult?.index) return;
 
@@ -60,18 +63,19 @@ export const TableViewFieldHeader = ({
   const divRef = React.useRef<HTMLDivElement>(null);
   const dragDropRef = dragRef(dropRef(divRef));
 
-  const defaultWidth = getDefaultFieldWidth(field.type);
-
   return (
     <React.Fragment>
       <Resizable
         defaultSize={{
-          width: defaultWidth,
+          width: `${tableView.getFieldWidth(field.id, field.type)}px`,
           height: '2rem',
         }}
         minWidth={100}
         maxWidth={500}
-        size={{ width: defaultWidth, height: '2rem' }}
+        size={{
+          width: `${tableView.getFieldWidth(field.id, field.type)}px`,
+          height: '2rem',
+        }}
         enable={{
           bottom: false,
           bottomLeft: false,
@@ -91,12 +95,9 @@ export const TableViewFieldHeader = ({
             right: '-3px',
           },
         }}
-        onResizeStop={(e, direction, ref) => {
-          // const newWidth = ref.offsetWidth;
-          // view.updateFieldAttrs({
-          //   ...viewField.attrs,
-          //   width: newWidth,
-          // });
+        onResizeStop={(_e, _direction, ref) => {
+          const newWidth = ref.offsetWidth;
+          tableView.resizeField(field.id, newWidth);
         }}
       >
         <Popover modal={true}>
@@ -160,10 +161,7 @@ export const TableViewFieldHeader = ({
               <div
                 className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100"
                 onClick={() => {
-                  // view.updateFieldAttrs({
-                  //   ...viewField.attrs,
-                  //   visible: false,
-                  // });
+                  tableView.hideField(field.id);
                 }}
               >
                 <Icon name="eye-off-line" />

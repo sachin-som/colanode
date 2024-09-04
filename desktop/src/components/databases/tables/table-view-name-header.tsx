@@ -8,21 +8,22 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { useTableView } from '@/contexts/table-view';
 
 export const TableViewNameHeader = () => {
-  const defaultWidth = '300px';
+  const tableView = useTableView();
 
   const canEditView = true;
 
   return (
     <Resizable
       defaultSize={{
-        width: defaultWidth,
+        width: `${tableView.getNameWidth()}px`,
         height: '2rem',
       }}
       minWidth={100}
       maxWidth={500}
-      size={{ width: defaultWidth, height: '2rem' }}
+      size={{ width: `${tableView.getNameWidth()}px`, height: '2rem' }}
       enable={{
         bottom: false,
         bottomLeft: false,
@@ -43,11 +44,8 @@ export const TableViewNameHeader = () => {
         },
       }}
       onResizeStop={(e, direction, ref) => {
-        // const newWidth = ref.offsetWidth;
-        // view.updateFieldAttrs({
-        //   ...viewField.attrs,
-        //   width: newWidth,
-        // });
+        const newWidth = ref.offsetWidth;
+        tableView.resizeName(newWidth);
       }}
     >
       <Popover modal={true}>

@@ -54,7 +54,7 @@ export const TableViewNumberCell = ({
       } else {
         const query = sql`
           UPDATE nodes
-          SET attrs = json_remove(attrs, '$.${field.id}'),
+          SET attrs = json_remove(attrs, '$.${sql.ref(field.id)}'),
               updated_at = ${new Date().toISOString()},
               updated_by = ${workspace.userId},
               version_id = ${NeuronId.generate(NeuronId.Type.Version)}

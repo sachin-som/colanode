@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { NeuronId } from '@/lib/id';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
+import { sql } from 'kysely';
 
 interface NameEditorProps {
   initialValue: string;
@@ -14,7 +15,7 @@ interface NameEditorProps {
 }
 
 const NameEditor = ({ initialValue, onSave, onCancel }: NameEditorProps) => {
-  const [value, setValue] = React.useState(initialValue);
+  const [value, setValue] = React.useState(initialValue ?? '');
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -58,20 +59,14 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (newName: string) => {
-      const newAttrs = {
-        ...record.attrs,
-        name: newName,
-      };
-      const query = workspace.schema
-        .updateTable('nodes')
-        .set({
-          attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-          updated_at: new Date().toISOString(),
-          updated_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .where('id', '=', record.id)
-        .compile();
+      const query = sql`
+        UPDATE nodes
+        SET attrs = json_set(coalesce(attrs, '{}'), '$.name', ${newName}),
+            updated_at = ${new Date().toISOString()},
+            updated_by = ${workspace.userId},
+            version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+        WHERE id = ${record.id}
+      `.compile(workspace.schema);
 
       await workspace.mutate(query);
     },

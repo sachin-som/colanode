@@ -16,6 +16,7 @@ import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-o
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
 import { useMutation } from '@tanstack/react-query';
+import { sql } from 'kysely';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOption;
@@ -33,20 +34,18 @@ export const SelectOptionSettingsPopover = ({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (input: UpdateSelectOptionInput) => {
-      const newAttrs = {
-        name: input.name,
-        color: input.color,
-      };
-      const query = workspace.schema
-        .updateTable('nodes')
-        .set({
-          attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-          updated_at: new Date().toISOString(),
-          updated_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .where('id', '=', option.id)
-        .compile();
+      const query = sql`
+        UPDATE nodes
+        SET attrs = json_set(
+          coalesce(attrs, '{}'),
+          '$.name', ${input.name},
+          '$.color', ${input.color}
+        ),
+        updated_at = ${new Date().toISOString()},
+        updated_by = ${workspace.userId},
+        version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+        WHERE id = ${option.id}
+      `.compile(workspace.schema);
 
       await workspace.mutate(query);
     },

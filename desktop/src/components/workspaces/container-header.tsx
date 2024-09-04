@@ -75,20 +75,14 @@ export const BreadcrumbNodeEditor = ({ node }: BreadcrumbNodeEditorProps) => {
   const handleNameChange = React.useMemo(
     () =>
       debounce(async (newName: string) => {
-        const newAttrs = {
-          ...node.attrs,
-          name: newName,
-        };
-        const query = workspace.schema
-          .updateTable('nodes')
-          .set({
-            attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-            updated_at: new Date().toISOString(),
-            updated_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          })
-          .where('id', '=', node.id)
-          .compile();
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_set(attrs, '$.name', ${newName}),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${node.id}
+        `.compile(workspace.schema);
 
         await workspace.mutate(query);
       }, 500),

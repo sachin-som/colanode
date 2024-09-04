@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
 import { BooleanField, RecordNode } from '@/types/databases';
+import { sql } from 'kysely';
 
 const getBooleanValue = (record: RecordNode, field: BooleanField): boolean => {
   const attrs = record.attrs;
@@ -15,8 +16,8 @@ const getBooleanValue = (record: RecordNode, field: BooleanField): boolean => {
 
   const fieldValue = attrs[field.id];
 
-  if (typeof fieldValue === 'boolean') {
-    return fieldValue;
+  if (typeof fieldValue === 'number') {
+    return fieldValue === 1;
   }
 
   return false;
@@ -34,22 +35,29 @@ export const TableViewBooleanCell = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation({
     mutationFn: async (newValue: boolean) => {
-      const newAttrs = {
-        ...record.attrs,
-        [field.id]: newValue,
-      };
-      const query = workspace.schema
-        .updateTable('nodes')
-        .set({
-          attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-          updated_at: new Date().toISOString(),
-          updated_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .where('id', '=', record.id)
-        .compile();
+      if (newValue) {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_set(coalesce(attrs, '{}'), '$.${sql.ref(field.id)}', 1),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id}
+        `.compile(workspace.schema);
 
-      await workspace.mutate(query);
+        await workspace.mutate(query);
+      } else {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_remove(attrs, '$.${field.id}'),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id} AND attrs IS NOT NULL
+        `.compile(workspace.schema);
+
+        await workspace.mutate(query);
+      }
     },
   });
 

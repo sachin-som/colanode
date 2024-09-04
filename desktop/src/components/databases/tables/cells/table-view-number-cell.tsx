@@ -7,6 +7,7 @@ import { useWorkspace } from '@/contexts/workspace';
 import { RecordNode } from '@/types/databases';
 import { NeuronId } from '@/lib/id';
 import { NumberField } from '@/types/databases';
+import { sql } from 'kysely';
 
 const getNumberValue = (
   record: RecordNode,
@@ -38,23 +39,30 @@ export const TableViewNumberCell = ({
 }: TableViewNumberCellProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation({
-    mutationFn: async (newValue: number) => {
-      const newAttrs = {
-        ...record.attrs,
-        [field.id]: newValue,
-      };
-      const query = workspace.schema
-        .updateTable('nodes')
-        .set({
-          attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-          updated_at: new Date().toISOString(),
-          updated_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .where('id', '=', record.id)
-        .compile();
+    mutationFn: async (newValue: number | null) => {
+      if (newValue !== null) {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_set(coalesce(attrs, '{}'), '$.${field.id}', ${newValue}),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id}
+        `.compile(workspace.schema);
 
-      await workspace.mutate(query);
+        await workspace.mutate(query);
+      } else {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_remove(attrs, '$.${field.id}'),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id} AND attrs IS NOT NULL
+        `.compile(workspace.schema);
+
+        await workspace.mutate(query);
+      }
     },
   });
 
@@ -69,7 +77,7 @@ export const TableViewNumberCell = ({
   }, [record.versionId]);
 
   const saveIfChanged = (current: number | null, previous: number | null) => {
-    if (current !== null && current !== previous) {
+    if (current !== previous) {
       mutate(current);
     }
   };
@@ -84,6 +92,7 @@ export const TableViewNumberCell = ({
         const number = Number(input);
         if (Number.isNaN(number)) {
           setInput('');
+          saveIfChanged(null, getNumberValue(record, field));
         } else {
           saveIfChanged(number, getNumberValue(record, field));
         }
@@ -93,6 +102,7 @@ export const TableViewNumberCell = ({
           const number = Number(input);
           if (Number.isNaN(number)) {
             setInput('');
+            saveIfChanged(null, getNumberValue(record, field));
           } else {
             saveIfChanged(number, getNumberValue(record, field));
           }

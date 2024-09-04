@@ -10,6 +10,7 @@ import { SelectFieldOptions } from '@/components/databases/fields/select-field-o
 import { useMutation } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
+import { sql } from 'kysely';
 
 const getSelectValue = (
   record: RecordNode,
@@ -42,22 +43,29 @@ export const TableViewSelectCell = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation({
     mutationFn: async (newValue: string | null) => {
-      const newAttrs = {
-        ...record.attrs,
-        [field.id]: newValue,
-      };
-      const query = workspace.schema
-        .updateTable('nodes')
-        .set({
-          attrs: newAttrs ? JSON.stringify(newAttrs) : null,
-          updated_at: new Date().toISOString(),
-          updated_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .where('id', '=', record.id)
-        .compile();
+      if (newValue !== null && newValue.length > 0) {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_set(coalesce(attrs, '{}'), '$.${field.id}', ${newValue}),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id}
+        `.compile(workspace.schema);
 
-      await workspace.mutate(query);
+        await workspace.mutate(query);
+      } else {
+        const query = sql`
+          UPDATE nodes
+          SET attrs = json_remove(attrs, '$.${field.id}'),
+              updated_at = ${new Date().toISOString()},
+              updated_by = ${workspace.userId},
+              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
+          WHERE id = ${record.id} AND attrs IS NOT NULL
+        `.compile(workspace.schema);
+
+        await workspace.mutate(query);
+      }
     },
   });
 

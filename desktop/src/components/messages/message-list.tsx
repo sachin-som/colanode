@@ -59,7 +59,7 @@ export const MessageList = ({
             FROM nodes child
             INNER JOIN descendant_nodes parent ON child.parent_id = parent.id
           ),
-          authors AS (
+          author_nodes AS (
             SELECT *
             FROM nodes
             WHERE id IN (SELECT DISTINCT created_by FROM message_nodes)
@@ -68,7 +68,7 @@ export const MessageList = ({
           UNION ALL
           SELECT * FROM descendant_nodes
           UNION ALL
-          SELECT * FROM authors;
+          SELECT * FROM author_nodes;
       `.compile(workspace.schema);
 
         return await workspace.queryAndSubscribe({

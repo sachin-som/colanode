@@ -1,6 +1,5 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
-import { getDefaultFieldWidth, getFieldIcon } from '@/lib/databases';
 import { Resizable } from 're-resizable';
 import {
   Popover,
@@ -11,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 
 export const TableViewNameHeader = () => {
-  const defaultWidth = getDefaultFieldWidth('name');
+  const defaultWidth = '300px';
 
   const canEditView = true;
 
@@ -54,7 +53,7 @@ export const TableViewNameHeader = () => {
       <Popover modal={true}>
         <PopoverTrigger asChild>
           <div className="flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50">
-            <Icon name={getFieldIcon('name')} />
+            <Icon name="text" />
             <p>Name</p>
           </div>
         </PopoverTrigger>

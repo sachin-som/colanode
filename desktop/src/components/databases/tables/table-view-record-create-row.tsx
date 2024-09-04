@@ -7,7 +7,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { NeuronId } from '@/lib/id';
 import { NodeTypes } from '@/lib/constants';
 
-export const TableViewAddRecordRow = () => {
+export const TableViewRecordCreateRow = () => {
   const workspace = useWorkspace();
   const database = useDatabase();
 

@@ -1,9 +1,9 @@
-import { LocalNode } from '@/types/nodes';
+import { Field } from '@/types/databases';
 import { createContext, useContext } from 'react';
 
 interface DatabaseContext {
   id: string;
-  fields: LocalNode[];
+  fields: Field[];
 }
 
 export const DatabaseContext = createContext<DatabaseContext>(

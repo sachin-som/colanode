@@ -22,6 +22,7 @@ export const NodeTypes = {
   BoardView: 'board_view',
   CalendarView: 'calendar_view',
   Field: 'field',
+  SelectOption: 'select_option',
 };
 
 export const LeafNodeTypes: string[] = [

@@ -9,6 +9,7 @@ import { mapNode } from '@/lib/nodes';
 import { DatabaseContext } from '@/contexts/database';
 import { DatabaseViews } from './database-views';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { mapField } from '@/lib/databases';
 
 interface DatabaseContainerNodeProps {
   node: LocalNode;
@@ -29,10 +30,22 @@ export const DatabaseContainerNode = ({ node }: DatabaseContainerNodeProps) => {
             SELECT *
             FROM nodes
             WHERE parent_id = ${node.id} AND type IN (${sql.join(ViewNodeTypes)})
+          ),
+          select_option_nodes AS (
+            SELECT *
+            FROM nodes
+            WHERE parent_id IN 
+              (
+                SELECT id
+                FROM field_nodes
+              )
+            AND type = ${NodeTypes.SelectOption}
           )
           SELECT * FROM field_nodes
           UNION ALL
-          SELECT * FROM view_nodes;
+          SELECT * FROM view_nodes
+          UNION ALL
+          SELECT * FROM select_option_nodes;
       `.compile(workspace.schema);
 
       return await workspace.queryAndSubscribe({
@@ -49,7 +62,15 @@ export const DatabaseContainerNode = ({ node }: DatabaseContainerNodeProps) => {
   const rows = data?.rows ?? [];
   const fieldNodes = rows
     .filter((row) => row.type === NodeTypes.Field)
-    .map((row) => mapNode(row));
+    .map((row) => {
+      const selectOptionRows =
+        rows.filter(
+          (selectOptionRow) =>
+            selectOptionRow.type === NodeTypes.SelectOption &&
+            selectOptionRow.parent_id === row.id,
+        ) ?? [];
+      return mapField(row, selectOptionRows);
+    });
 
   const viewNodes = rows
     .filter((row) => ViewNodeTypes.includes(row.type))

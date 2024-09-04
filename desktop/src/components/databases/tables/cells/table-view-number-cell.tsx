@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
-import { LocalNode } from '@/types/nodes';
+import { RecordNode } from '@/types/databases';
 import { NeuronId } from '@/lib/id';
+import { NumberField } from '@/types/databases';
 
-const getNumberValue = (record: LocalNode, field: LocalNode): number | null => {
+const getNumberValue = (
+  record: RecordNode,
+  field: NumberField,
+): number | null => {
   const attrs = record.attrs;
 
   if (!attrs) {
@@ -24,8 +28,8 @@ const getNumberValue = (record: LocalNode, field: LocalNode): number | null => {
 };
 
 interface TableViewNumberCellProps {
-  record: LocalNode;
-  field: LocalNode;
+  record: RecordNode;
+  field: NumberField;
 }
 
 export const TableViewNumberCell = ({

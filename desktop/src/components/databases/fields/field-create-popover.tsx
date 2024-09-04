@@ -42,12 +42,9 @@ const formSchema = z.object({
     z.literal('date'),
     z.literal('email'),
     z.literal('file'),
-    z.literal('formula'),
     z.literal('multi_select'),
     z.literal('number'),
     z.literal('phone'),
-    z.literal('relation'),
-    z.literal('rollup'),
     z.literal('select'),
     z.literal('text'),
     z.literal('updated_at'),
@@ -128,7 +125,7 @@ export const FieldCreatePopover = () => {
       <PopoverTrigger asChild>
         <Icon name="add-line" className="mr-2 h-3 w-3 cursor-pointer" />
       </PopoverTrigger>
-      <PopoverContent className="w-128 mr-5" side="bottom">
+      <PopoverContent className="mr-5 w-128" side="bottom">
         <Form {...form}>
           <form
             className="flex flex-col gap-2"

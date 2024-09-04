@@ -25,10 +25,6 @@ interface FieldTypeOption {
 
 const fieldTypes: FieldTypeOption[] = [
   {
-    name: 'Autonumber',
-    type: 'autonumber',
-  },
-  {
     name: 'Boolean',
     type: 'boolean',
   },
@@ -57,10 +53,6 @@ const fieldTypes: FieldTypeOption[] = [
     type: 'file',
   },
   {
-    name: 'Formula',
-    type: 'formula',
-  },
-  {
     name: 'Multi Select',
     type: 'multi_select',
   },
@@ -73,28 +65,12 @@ const fieldTypes: FieldTypeOption[] = [
     type: 'phone',
   },
   {
-    name: 'Relation',
-    type: 'relation',
-  },
-  {
-    name: 'Rollup',
-    type: 'rollup',
-  },
-  {
     name: 'Select',
     type: 'select',
   },
   {
     name: 'Text',
     type: 'text',
-  },
-  {
-    name: 'Last modified Date & Time',
-    type: 'updated_at',
-  },
-  {
-    name: 'Last modified by user',
-    type: 'updated_by',
   },
   {
     name: 'Url',

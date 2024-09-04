@@ -1,5 +1,4 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 import { getDefaultFieldWidth, getFieldIcon } from '@/lib/databases';
@@ -13,9 +12,10 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
+import { Field } from '@/types/databases';
 
 interface TableViewFieldHeaderProps {
-  field: LocalNode;
+  field: Field;
   index: number;
 }
 
@@ -23,13 +23,12 @@ export const TableViewFieldHeader = ({
   field,
   index,
 }: TableViewFieldHeaderProps) => {
-  const name = field.attrs.name ?? 'Untitled';
   const canEditDatabase = true;
   const canEditView = true;
 
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
-  const [, dragRef] = useDrag<LocalNode>({
+  const [, dragRef] = useDrag<Field>({
     type: 'table-field-header',
     item: field,
     canDrag: () => canEditView,
@@ -61,7 +60,7 @@ export const TableViewFieldHeader = ({
   const divRef = React.useRef<HTMLDivElement>(null);
   const dragDropRef = dragRef(dropRef(divRef));
 
-  const defaultWidth = getDefaultFieldWidth(field.attrs.type);
+  const defaultWidth = getDefaultFieldWidth(field.type);
 
   return (
     <React.Fragment>
@@ -72,7 +71,7 @@ export const TableViewFieldHeader = ({
         }}
         minWidth={100}
         maxWidth={500}
-        size={{ width: field.attrs.width ?? defaultWidth, height: '2rem' }}
+        size={{ width: defaultWidth, height: '2rem' }}
         enable={{
           bottom: false,
           bottomLeft: false,
@@ -112,14 +111,14 @@ export const TableViewFieldHeader = ({
               )}
               ref={dragDropRef as any}
             >
-              <Icon name={getFieldIcon(field.attrs.type)} />
-              <p>{name}</p>
+              <Icon name={getFieldIcon(field.type)} />
+              <p>{field.name}</p>
             </div>
           </PopoverTrigger>
           <PopoverContent className="ml-1 flex w-72 flex-col gap-1 p-2 text-sm">
             <div className="p-1">
               <Input
-                value={name}
+                value={field.name}
                 onChange={(e) => {
                   // setName(e.target.value);
                   // updateName(e.target.value);

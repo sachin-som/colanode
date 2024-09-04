@@ -4,9 +4,9 @@ import isHotkey from 'is-hotkey';
 import { useMutation } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
-import { RecordNode, TextField } from '@/types/databases';
+import { RecordNode, EmailField } from '@/types/databases';
 
-const getTextValue = (record: RecordNode, field: TextField): string => {
+const getEmailValue = (record: RecordNode, field: EmailField): string => {
   const attrs = record.attrs;
 
   if (!attrs) {
@@ -22,15 +22,15 @@ const getTextValue = (record: RecordNode, field: TextField): string => {
   return '';
 };
 
-interface TableViewTextCellProps {
+interface TableViewEmailCellProps {
   record: RecordNode;
-  field: TextField;
+  field: EmailField;
 }
 
-export const TableViewTextCell = ({
+export const TableViewEmailCell = ({
   record,
   field,
-}: TableViewTextCellProps) => {
+}: TableViewEmailCellProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation({
     mutationFn: async (newValue: string) => {
@@ -56,11 +56,11 @@ export const TableViewTextCell = ({
   const canEdit = true;
 
   const [text, setText] = React.useState<string>(
-    getTextValue(record, field) ?? '',
+    getEmailValue(record, field) ?? '',
   );
 
   React.useEffect(() => {
-    setText(getTextValue(record, field) ?? '');
+    setText(getEmailValue(record, field) ?? '');
   }, [record.versionId]);
 
   const saveIfChanged = (current: string, previous: string | null) => {
@@ -71,13 +71,13 @@ export const TableViewTextCell = ({
 
   return (
     <input
-      readOnly={!canEdit || isPending}
       value={text}
+      readOnly={!canEdit || isPending}
       onChange={(e) => setText(e.target.value)}
-      onBlur={() => saveIfChanged(text, getTextValue(record, field))}
+      onBlur={() => saveIfChanged(text, getEmailValue(record, field))}
       onKeyDown={(e) => {
         if (isHotkey('enter', e)) {
-          saveIfChanged(text, getTextValue(record, field));
+          saveIfChanged(text, getEmailValue(record, field));
           e.preventDefault();
         }
       }}

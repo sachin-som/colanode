@@ -33,6 +33,7 @@ enum IdType {
   BoardView = 'bv',
   CalendarView = 'cv',
   Field = 'fi',
+  SelectOption = 'so',
 }
 
 export class NeuronId {
@@ -96,6 +97,8 @@ export class NeuronId {
         return IdType.CalendarView;
       case NodeTypes.Field:
         return IdType.Field;
+      case NodeTypes.SelectOption:
+        return IdType.SelectOption;
       default:
         return IdType.Node;
     }

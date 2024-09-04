@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import { LocalNode } from '@/types/nodes';
 import { useMutation } from '@tanstack/react-query';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
+import { BooleanField, RecordNode } from '@/types/databases';
 
-const getBooleanValue = (record: LocalNode, field: LocalNode): boolean => {
+const getBooleanValue = (record: RecordNode, field: BooleanField): boolean => {
   const attrs = record.attrs;
 
   if (!attrs) {
@@ -22,13 +22,15 @@ const getBooleanValue = (record: LocalNode, field: LocalNode): boolean => {
   return false;
 };
 
+interface TableViewBooleanCellProps {
+  record: RecordNode;
+  field: BooleanField;
+}
+
 export const TableViewBooleanCell = ({
   record,
   field,
-}: {
-  record: LocalNode;
-  field: LocalNode;
-}) => {
+}: TableViewBooleanCellProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation({
     mutationFn: async (newValue: boolean) => {

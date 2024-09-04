@@ -1,12 +1,11 @@
 import React from 'react';
 import isHotkey from 'is-hotkey';
-
 import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
-import { LocalNode } from '@/types/nodes';
 import { useMutation } from '@tanstack/react-query';
 import { NeuronId } from '@/lib/id';
 import { Spinner } from '@/components/ui/spinner';
+import { RecordNode } from '@/types/databases';
 
 interface NameEditorProps {
   initialValue: string;
@@ -49,18 +48,18 @@ const NameEditor = ({ initialValue, onSave, onCancel }: NameEditorProps) => {
 };
 
 interface TableViewNameCellProps {
-  node: LocalNode;
+  record: RecordNode;
 }
 
-export const TableViewNameCell = ({ node }: TableViewNameCellProps) => {
+export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const workspace = useWorkspace();
   const [isEditing, setIsEditing] = React.useState(false);
-  const [name, setName] = React.useState(node.attrs?.name);
+  const [name, setName] = React.useState(record.attrs?.name);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (newName: string) => {
       const newAttrs = {
-        ...node.attrs,
+        ...record.attrs,
         name: newName,
       };
       const query = workspace.schema
@@ -71,7 +70,7 @@ export const TableViewNameCell = ({ node }: TableViewNameCellProps) => {
           updated_by: workspace.userId,
           version_id: NeuronId.generate(NeuronId.Type.Version),
         })
-        .where('id', '=', node.id)
+        .where('id', '=', record.id)
         .compile();
 
       await workspace.mutate(query);
@@ -79,8 +78,8 @@ export const TableViewNameCell = ({ node }: TableViewNameCellProps) => {
   });
 
   React.useEffect(() => {
-    setName(node.attrs?.name);
-  }, [node.versionId]);
+    setName(record.attrs?.name);
+  }, [record.versionId]);
 
   const canEdit = true;
   const hasName = name && name.length > 0;
@@ -117,7 +116,7 @@ export const TableViewNameCell = ({ node }: TableViewNameCellProps) => {
           <button
             type="button"
             className="absolute right-2 flex h-6 cursor-pointer flex-row items-center gap-1 rounded-md border bg-white p-1 text-sm text-muted-foreground opacity-0 hover:bg-gray-50 group-hover:opacity-100"
-            onClick={() => workspace.openModal(node.id)}
+            onClick={() => workspace.openModal(record.id)}
           >
             <Icon name="edit-box-line" /> <p>Open</p>
           </button>

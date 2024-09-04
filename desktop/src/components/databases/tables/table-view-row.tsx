@@ -1,19 +1,18 @@
-import { LocalNode } from '@/types/nodes';
 import React from 'react';
 import { TableViewNameCell } from '@/components/databases/tables/table-view-name-cell';
 import { getDefaultFieldWidth } from '@/lib/databases';
 import { useDatabase } from '@/contexts/database';
 import { TableViewFieldCell } from './table-view-field-cell';
-import { FieldType } from '@/types/databases';
+import { RecordNode } from '@/types/databases';
 
 interface TableViewRowProps {
   index: number;
-  node: LocalNode;
+  record: RecordNode;
 }
 
-export const TableViewRow = ({ index, node }: TableViewRowProps) => {
+export const TableViewRow = ({ index, record }: TableViewRowProps) => {
   const database = useDatabase();
-  const nameCellWidth = getDefaultFieldWidth('name') + 'px';
+  const nameCellWidth = '300px';
   return (
     <div className="animate-fade-in flex flex-row items-center gap-0.5 border-b">
       <span
@@ -26,17 +25,17 @@ export const TableViewRow = ({ index, node }: TableViewRowProps) => {
         className="h-8 border-r"
         style={{ width: nameCellWidth, minWidth: nameCellWidth }}
       >
-        <TableViewNameCell node={node} />
+        <TableViewNameCell record={record} />
       </div>
       {database.fields.map((field) => {
-        const width = getDefaultFieldWidth(field.attrs?.type as FieldType);
+        const width = getDefaultFieldWidth(field.type) + 'px';
         return (
           <div
-            key={`row-${node.id}-${field.id}`}
+            key={`row-${record.id}-${field.id}`}
             className="h-8 border-r"
             style={{ width: width }}
           >
-            <TableViewFieldCell record={node} field={field} />
+            <TableViewFieldCell record={record} field={field} />
           </div>
         );
       })}

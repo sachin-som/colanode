@@ -9,11 +9,24 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useTableView } from '@/contexts/table-view';
+import { useDrop } from 'react-dnd';
+import { cn } from '@/lib/utils';
 
 export const TableViewNameHeader = () => {
   const tableView = useTableView();
 
   const canEditView = true;
+
+  const [dropMonitor, dropRef] = useDrop({
+    accept: 'table-field-header',
+    drop: () => ({
+      after: 'name',
+    }),
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
 
   return (
     <Resizable
@@ -50,7 +63,16 @@ export const TableViewNameHeader = () => {
     >
       <Popover modal={true}>
         <PopoverTrigger asChild>
-          <div className="flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50">
+          <div
+            className={cn(
+              'flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50',
+              {
+                'border-r-2 border-blue-300':
+                  dropMonitor.isOver && dropMonitor.canDrop,
+              },
+            )}
+            ref={dropRef}
+          >
             <Icon name="text" />
             <p>Name</p>
           </div>

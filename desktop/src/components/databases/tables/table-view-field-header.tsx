@@ -17,13 +17,9 @@ import { useTableView } from '@/contexts/table-view';
 
 interface TableViewFieldHeaderProps {
   field: Field;
-  index: number;
 }
 
-export const TableViewFieldHeader = ({
-  field,
-  index,
-}: TableViewFieldHeaderProps) => {
+export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
   const tableView = useTableView();
 
   const canEditDatabase = true;
@@ -36,13 +32,10 @@ export const TableViewFieldHeader = ({
     item: field,
     canDrag: () => canEditView,
     end: (_item, monitor) => {
-      const dropResult = monitor.getDropResult<{ index: number }>();
-      if (!dropResult?.index) return;
+      const dropResult = monitor.getDropResult<{ after: string }>();
+      if (!dropResult?.after) return;
 
-      // view.updateFieldAttrs({
-      //   ...item.attrs,
-      //   order: dropResult.index,
-      // });
+      tableView.moveField(field.id, dropResult.after);
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -52,7 +45,7 @@ export const TableViewFieldHeader = ({
   const [dropMonitor, dropRef] = useDrop({
     accept: 'table-field-header',
     drop: () => ({
-      index,
+      after: field.id,
     }),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -106,7 +99,7 @@ export const TableViewFieldHeader = ({
               className={cn(
                 'flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50',
                 {
-                  'border-l-2 border-blue-300':
+                  'border-r-2 border-blue-300':
                     dropMonitor.isOver && dropMonitor.canDrop,
                 },
               )}

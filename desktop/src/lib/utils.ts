@@ -125,3 +125,12 @@ export const compareString = (a?: string | null, b?: string | null): number => {
 
   return -1;
 };
+
+export const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};

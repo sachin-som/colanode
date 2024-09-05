@@ -6,6 +6,10 @@ import { TableViewBooleanCell } from '@/components/databases/tables/cells/table-
 import { TableViewCreatedAtCell } from '@/components/databases/tables/cells/table-view-created-at-cell';
 import { TableViewCreatedByCell } from '@/components/databases/tables/cells/table-view-created-by-cell';
 import { TableViewSelectCell } from '@/components/databases/tables/cells/table-view-select-cell';
+import { TableViewPhoneCell } from '@/components/databases/tables/cells/table-view-phone-cell';
+import { TableViewEmailCell } from '@/components/databases/tables/cells/table-view-email-cell';
+import { TableViewUrlCell } from '@/components/databases/tables/cells/table-view-url-cell';
+import { TableViewMultiSelectCell } from '@/components/databases/tables/cells/table-view-multi-select-cell';
 
 interface TableViewFieldCellProps {
   record: RecordNode;
@@ -29,5 +33,13 @@ export const TableViewFieldCell = ({
       return <TableViewCreatedByCell record={record} field={field} />;
     case 'select':
       return <TableViewSelectCell record={record} field={field} />;
+    case 'phone':
+      return <TableViewPhoneCell record={record} field={field} />;
+    case 'email':
+      return <TableViewEmailCell record={record} field={field} />;
+    case 'url':
+      return <TableViewUrlCell record={record} field={field} />;
+    case 'multi_select':
+      return <TableViewMultiSelectCell record={record} field={field} />;
   }
 };

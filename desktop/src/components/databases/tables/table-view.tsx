@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { sql } from 'kysely';
 import { useWorkspace } from '@/contexts/workspace';
 import { NeuronId } from '@/lib/id';
+import { generateNodeIndex } from '@/lib/nodes';
 
 interface TableViewProps {
   node: LocalNode;
@@ -137,18 +138,22 @@ export const TableView = ({ node }: TableViewProps) => {
     setNameWidth(attrs.nameWidth ?? getDefaultNameWidth());
   }, [node.versionId]);
 
+  const fields = React.useMemo(() => {
+    return database.fields
+      .filter((field) => !hiddenFields[field.id])
+      .sort((a, b) =>
+        compareString(
+          fieldIndexes[a.id] ?? a.index,
+          fieldIndexes[b.id] ?? b.index,
+        ),
+      );
+  }, [database.fields, hiddenFields, fieldIndexes]);
+
   return (
     <TableViewContext.Provider
       value={{
         id: node.id,
-        fields: database.fields
-          .filter((field) => !hiddenFields[field.id])
-          .sort((a, b) =>
-            compareString(
-              fieldIndexes[a.id] ?? a.index,
-              fieldIndexes[b.id] ?? b.index,
-            ),
-          ),
+        fields,
         hideField: (id: string) => {
           if (hiddenFields[id]) {
             return;
@@ -180,46 +185,74 @@ export const TableView = ({ node }: TableViewProps) => {
           updateFieldWidthsMutation.mutate({ fieldId: id, width });
         },
         moveField: (id, after) => {
-          // const field = database.fields.find((f) => f.id === id);
-          // if (!field) {
-          //   return;
-          // }
-          // const sortedFields = [...database.fields].sort((a, b) =>
-          //   compareString(
-          //     fieldIndexes[a.id] ?? a.index,
-          //     fieldIndexes[b.id] ?? b.index,
-          //   ),
-          // );
-          // if (sortedFields.length <= 1) {
-          //   return;
-          // }
-          // let beforeIndex: string | null = null;
-          // let afterIndex: string | null = null;
-          // if (after === 'name') {
-          //   const firstField = sortedFields[0];
-          //   if (firstField.id === id) {
-          //     return;
-          //   }
-          //   afterIndex = firstField.index;
-          // } else {
-          //   const afterFieldArrayIndex = sortedFields.findIndex(
-          //     (f) => f.id === after,
-          //   );
-          //   if (afterFieldArrayIndex === -1) {
-          //     return;
-          //   }
-          //   beforeIndex = sortedFields[afterFieldArrayIndex].index;
-          //   afterIndex =
-          //     afterFieldArrayIndex < sortedFields.length - 1
-          //       ? sortedFields[afterFieldArrayIndex + 1].index
-          //       : null;
-          // }
-          // const newIndex = generateNodeIndex(beforeIndex, afterIndex);
-          // setFieldIndexes({
-          //   ...fieldIndexes,
-          //   [id]: newIndex,
-          // });
-          // updateFieldIndexesMutation.mutate({ fieldId: id, index: newIndex });
+          const field = database.fields.find((f) => f.id === id);
+          if (!field) {
+            return;
+          }
+
+          if (database.fields.length <= 1) {
+            return;
+          }
+
+          const mergedIndexes = database.fields
+            .map((f) => {
+              return {
+                id: f.id,
+                databaseIndex: f.index,
+                viewIndex: fieldIndexes[f.id],
+              };
+            })
+            .sort((a, b) =>
+              compareString(
+                a.viewIndex ?? a.databaseIndex,
+                b.viewIndex ?? b.databaseIndex,
+              ),
+            );
+
+          let previousIndex: string | null = null;
+          let nextIndex: string | null = null;
+          if (after === 'name') {
+            const lowestIndex = mergedIndexes[0];
+            nextIndex = lowestIndex.viewIndex ?? lowestIndex.databaseIndex;
+          } else {
+            const afterFieldArrayIndex = mergedIndexes.findIndex(
+              (f) => f.id === after,
+            );
+            if (afterFieldArrayIndex === -1) {
+              return;
+            }
+
+            previousIndex =
+              mergedIndexes[afterFieldArrayIndex].viewIndex ??
+              mergedIndexes[afterFieldArrayIndex].databaseIndex;
+
+            if (afterFieldArrayIndex < mergedIndexes.length) {
+              nextIndex =
+                mergedIndexes[afterFieldArrayIndex + 1].viewIndex ??
+                mergedIndexes[afterFieldArrayIndex + 1].databaseIndex;
+            }
+          }
+
+          let newIndex = generateNodeIndex(previousIndex, nextIndex);
+
+          const lastDatabaseField = mergedIndexes.sort((a, b) =>
+            compareString(a.databaseIndex, b.databaseIndex),
+          )[mergedIndexes.length - 1];
+
+          const newPotentialFieldIndex = generateNodeIndex(
+            lastDatabaseField.databaseIndex,
+            null,
+          );
+
+          if (newPotentialFieldIndex === newIndex) {
+            newIndex = generateNodeIndex(previousIndex, newPotentialFieldIndex);
+          }
+
+          setFieldIndexes({
+            ...fieldIndexes,
+            [id]: newIndex,
+          });
+          updateFieldIndexesMutation.mutate({ fieldId: id, index: newIndex });
         },
       }}
     >

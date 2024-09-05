@@ -18,11 +18,11 @@ export const buildNodeWithChildren = (
 };
 
 export const generateNodeIndex = (
-  before?: string | null,
-  after?: string | null,
+  previous?: string | null,
+  next?: string | null,
 ) => {
-  const lower = before === undefined ? null : before;
-  const upper = after === undefined ? null : after;
+  const lower = previous === undefined ? null : previous;
+  const upper = next === undefined ? null : next;
 
   return generateKeyBetween(lower, upper);
 };

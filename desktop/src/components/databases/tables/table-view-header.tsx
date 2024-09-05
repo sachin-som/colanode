@@ -11,10 +11,8 @@ export const TableViewHeader = () => {
     <div className="flex flex-row items-center gap-0.5">
       <div style={{ width: '30px', minWidth: '30px' }} />
       <TableViewNameHeader />
-      {tableView.fields.map((field, index) => {
-        return (
-          <TableViewFieldHeader field={field} key={field.id} index={index} />
-        );
+      {tableView.fields.map((field) => {
+        return <TableViewFieldHeader field={field} key={field.id} />;
       })}
       <FieldCreatePopover />
     </div>

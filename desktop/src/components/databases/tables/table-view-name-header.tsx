@@ -66,10 +66,9 @@ export const TableViewNameHeader = () => {
           <div
             className={cn(
               'flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50',
-              {
-                'border-r-2 border-blue-300':
-                  dropMonitor.isOver && dropMonitor.canDrop,
-              },
+              dropMonitor.isOver && dropMonitor.canDrop
+                ? 'border-r-2 border-blue-300'
+                : 'border-r',
             )}
             ref={dropRef}
           >

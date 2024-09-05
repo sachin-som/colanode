@@ -68,20 +68,23 @@ export const FieldCreatePopover = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const siblingsQuery = workspace.schema
+      const lastFieldQuery = workspace.schema
         .selectFrom('nodes')
-        .where('parent_id', '=', database.id)
+        .where((eb) =>
+          eb.and({
+            parent_id: database.id,
+            type: NodeTypes.Field,
+          }),
+        )
         .selectAll()
+        .orderBy('index', 'desc')
+        .limit(1)
         .compile();
 
-      const result = await workspace.query(siblingsQuery);
-      const siblings = result.rows;
-      const maxIndex =
-        siblings.length > 0
-          ? siblings.sort((a, b) => compareString(a.index, b.index))[
-              siblings.length - 1
-            ].index
-          : null;
+      const result = await workspace.query(lastFieldQuery);
+      const lastChild =
+        result.rows && result.rows.length > 0 ? result.rows[0] : null;
+      const maxIndex = lastChild?.index ? lastChild.index : null;
 
       const index = generateNodeIndex(maxIndex, null);
       const query = workspace.schema
@@ -123,7 +126,7 @@ export const FieldCreatePopover = () => {
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Icon name="add-line" className="mr-2 h-3 w-3 cursor-pointer" />
+        <Icon name="add-line" className="ml-2 h-3 w-3 cursor-pointer" />
       </PopoverTrigger>
       <PopoverContent className="mr-5 w-128" side="bottom">
         <Form {...form}>

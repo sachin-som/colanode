@@ -3,6 +3,8 @@ import { SelectNodeWithAttributes } from '@/data/schemas/workspace';
 import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { mapNodeWithAttributes } from '@/lib/nodes';
 import {
+  BoardViewNode,
+  CalendarViewNode,
   DatabaseNode,
   FieldDataType,
   FieldNode,
@@ -157,7 +159,7 @@ const buildDatabaseNode = (
   };
 };
 
-export const buildFieldNode = (
+const buildFieldNode = (
   node: LocalNodeWithAttributes,
   selectOptions: LocalNodeWithAttributes[],
 ): FieldNode | null => {
@@ -272,9 +274,7 @@ export const buildFieldNode = (
   }
 };
 
-export const buildSelectOption = (
-  node: LocalNodeWithAttributes,
-): SelectOptionNode => {
+const buildSelectOption = (node: LocalNodeWithAttributes): SelectOptionNode => {
   const name = node.attributes.find(
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
@@ -290,19 +290,19 @@ export const buildSelectOption = (
   };
 };
 
-export const buildViewNode = (
-  node: LocalNodeWithAttributes,
-): ViewNode | null => {
+const buildViewNode = (node: LocalNodeWithAttributes): ViewNode | null => {
   if (node.type === NodeTypes.TableView) {
     return buildTableViewNode(node);
+  } else if (node.type === NodeTypes.BoardView) {
+    return buildBoardViewNode(node);
+  } else if (node.type === NodeTypes.CalendarView) {
+    return buildCalendarViewNode(node);
   }
 
   return null;
 };
 
-export const buildTableViewNode = (
-  node: LocalNodeWithAttributes,
-): TableViewNode => {
+const buildTableViewNode = (node: LocalNodeWithAttributes): TableViewNode => {
   const name = node.attributes.find(
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
@@ -348,5 +348,31 @@ export const buildTableViewNode = (
     fieldWidths,
     nameWidth: nameWidth,
     versionId: node.versionId,
+  };
+};
+
+const buildBoardViewNode = (node: LocalNodeWithAttributes): BoardViewNode => {
+  const name = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.Name,
+  )?.textValue;
+
+  return {
+    id: node.id,
+    name: name ?? 'Unnamed',
+    type: 'board_view',
+  };
+};
+
+const buildCalendarViewNode = (
+  node: LocalNodeWithAttributes,
+): CalendarViewNode => {
+  const name = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.Name,
+  )?.textValue;
+
+  return {
+    id: node.id,
+    name: name ?? 'Unnamed',
+    type: 'calendar_view',
   };
 };

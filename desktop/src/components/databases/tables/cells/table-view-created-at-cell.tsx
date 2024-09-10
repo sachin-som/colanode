@@ -1,9 +1,9 @@
-import { CreatedAtField, RecordNode } from '@/types/databases';
+import { CreatedAtFieldNode, RecordNode } from '@/types/databases';
 import React from 'react';
 
 interface TableViewCreatedAtCellProps {
   record: RecordNode;
-  field: CreatedAtField;
+  field: CreatedAtFieldNode;
 }
 
 export const TableViewCreatedAtCell = ({

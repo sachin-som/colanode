@@ -1,9 +1,10 @@
-import { Field } from '@/types/databases';
+import { FieldNode } from '@/types/databases';
 import { createContext, useContext } from 'react';
 
 interface DatabaseContext {
   id: string;
-  fields: Field[];
+  name: string;
+  fields: FieldNode[];
 }
 
 export const DatabaseContext = createContext<DatabaseContext>(

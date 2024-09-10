@@ -1,4 +1,4 @@
-import { LocalNode } from '@/types/nodes';
+import { ServerNode, ServerNodeAttribute } from '@/types/nodes';
 
 export enum WorkspaceRole {
   Owner = 1,
@@ -20,5 +20,31 @@ export type Workspace = {
 };
 
 export type WorkspaceSyncData = {
-  nodes: LocalNode[];
+  nodes: ServerNode[];
+  nodeAttributes: ServerNodeAttribute[];
+};
+
+export type SidebarNode = {
+  id: string;
+  type: string;
+  name: string | null;
+  avatar: string | null;
+};
+
+export type SidebarSpaceNode = SidebarNode & {
+  children: SidebarNode[];
+};
+
+export type SidebarChatNode = {
+  id: string;
+  type: string;
+  name: string | null;
+  avatar: string | null;
+};
+
+export type BreadcrumbNode = {
+  id: string;
+  type: string;
+  name: string | null;
+  avatar: string | null;
 };

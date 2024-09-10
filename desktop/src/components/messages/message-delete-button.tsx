@@ -10,8 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@tanstack/react-query';
+import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
 
 interface MessageDeleteButtonProps {
   id: string;
@@ -19,17 +18,7 @@ interface MessageDeleteButtonProps {
 
 export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (messageId: string) => {
-      const mutation = workspace.schema
-        .deleteFrom('nodes')
-        .where('id', '=', messageId)
-        .compile();
-
-      await workspace.mutate(mutation);
-    },
-  });
-  const workspace = useWorkspace();
+  const { mutate, isPending } = useNodeDeleteMutation();
 
   return (
     <React.Fragment>

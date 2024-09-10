@@ -148,7 +148,6 @@ const mapNode = (node: NodeChangeData): ServerNode => {
     parentId: node.parent_id,
     type: node.type,
     index: node.index,
-    attrs: node.attrs ? JSON.parse(node.attrs) : null,
     content: node.content ? JSON.parse(node.content) : null,
     createdAt: node.created_at,
     createdBy: node.created_by,

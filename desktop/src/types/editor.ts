@@ -18,3 +18,21 @@ export type EditorCommand = {
   handler: (props: EditorCommandProps) => void;
   disabled?: boolean;
 };
+
+export type EditorNode = {
+  id: string;
+  type: string;
+  parentId: string;
+  index: string;
+  attributes: EditorNodeAttribute[];
+  content: NodeBlock[] | null;
+};
+
+export type EditorNodeAttribute = {
+  nodeId: string;
+  type: string;
+  key: string;
+  textValue: string | null;
+  numberValue: number | null;
+  foreignNodeId: string | null;
+};

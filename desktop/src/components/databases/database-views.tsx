@@ -1,19 +1,15 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { ViewTab } from '@/components/databases/view-tab';
 import { ViewActions } from '@/components/databases/view-actions';
-import { match } from 'ts-pattern';
-import { NodeTypes } from '@/lib/constants';
-import { TableView } from '@/components/databases/tables/table-view';
-import { BoardView } from '@/components/databases/boards/board-view';
-import { CalendarView } from '@/components/databases/calendars/calendar-view';
+import { ViewNode } from '@/types/databases';
+import { View } from '@/components/databases/view';
 
 interface DatabaseViewsProps {
-  views: LocalNode[];
+  views: ViewNode[];
 }
 
 export const DatabaseViews = ({ views }: DatabaseViewsProps) => {
-  const [selectedView, setSelectedView] = React.useState<LocalNode | null>(
+  const [selectedView, setSelectedView] = React.useState<ViewNode | null>(
     views.length > 0 ? views[0] : null,
   );
 
@@ -32,13 +28,7 @@ export const DatabaseViews = ({ views }: DatabaseViewsProps) => {
         </div>
         <ViewActions />
       </div>
-      {match(selectedView?.type)
-        .with(NodeTypes.TableView, () => <TableView node={selectedView} />)
-        .with(NodeTypes.BoardView, () => <BoardView node={selectedView} />)
-        .with(NodeTypes.CalendarView, () => (
-          <CalendarView node={selectedView} />
-        ))
-        .otherwise(() => null)}
+      {selectedView && <View node={selectedView} />}
     </div>
   );
 };

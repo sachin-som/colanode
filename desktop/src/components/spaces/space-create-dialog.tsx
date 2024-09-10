@@ -1,5 +1,4 @@
 import React from 'react';
-import { useWorkspace } from '@/contexts/workspace';
 import {
   Dialog,
   DialogContent,
@@ -23,10 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { NeuronId } from '@/lib/id';
-import { NodeTypes } from '@/lib/constants';
-import { generateNodeIndex } from '@/lib/nodes';
-import { useMutation } from '@tanstack/react-query';
+import { useSpaceCreateMutation } from '@/mutations/use-space-create-mutation';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -42,68 +38,13 @@ export const SpaceCreateDialog = ({
   open,
   onOpenChange,
 }: SpaceCreateDialogProps) => {
-  const workspace = useWorkspace();
+  const { mutate, isPending } = useSpaceCreateMutation();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       description: '',
-    },
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const spaceId = NeuronId.generate(NeuronId.Type.Space);
-      const firstIndex = generateNodeIndex(null, null);
-      const secondIndex = generateNodeIndex(firstIndex, null);
-      const query = workspace
-        .schema
-        .insertInto('nodes')
-        .values([
-          {
-            id: spaceId,
-            type: NodeTypes.Space,
-            parent_id: null,
-            index: generateNodeIndex(null, null),
-            attrs: JSON.stringify({
-              name: values.name,
-              description: values.description,
-            }),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-          {
-            id: NeuronId.generate(NeuronId.Type.Page),
-            type: NodeTypes.Page,
-            parent_id: spaceId,
-            index: firstIndex,
-            attrs: JSON.stringify({
-              name: 'Home',
-            }),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-          {
-            id: NeuronId.generate(NeuronId.Type.Channel),
-            type: NodeTypes.Channel,
-            parent_id: spaceId,
-            index: secondIndex,
-            attrs: JSON.stringify({
-              name: 'Discussions',
-            }),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-        ])
-        .compile();
-
-      await workspace.mutate(query);
     },
   });
 
@@ -113,12 +54,15 @@ export const SpaceCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(values, {
-      onSuccess: () => {
-        onOpenChange(false);
-        form.reset();
+    mutate(
+      { name: values.name, description: values.description },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          form.reset();
+        },
       },
-    });
+    );
   };
 
   return (

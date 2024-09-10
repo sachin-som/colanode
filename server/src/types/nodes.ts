@@ -4,8 +4,24 @@ export type ServerNode = {
   parentId?: string | null;
   type: string;
   index: string | null;
-  attrs?: Record<string, any> | null;
   content?: NodeBlock[] | null;
+  createdAt: string;
+  createdBy: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  versionId: string;
+  serverCreatedAt: string;
+  serverUpdatedAt?: string | null;
+};
+
+export type ServerNodeAttribute = {
+  nodeId: string;
+  type: string;
+  key: string;
+  workspaceId: string;
+  textValue: string | null;
+  numberValue: number | null;
+  foreignNodeId: string | null;
   createdAt: string;
   createdBy: string;
   updatedAt?: string | null;

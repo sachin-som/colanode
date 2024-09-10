@@ -1,146 +1,53 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { TableViewHeader } from '@/components/databases/tables/table-view-header';
 import { TableViewBody } from '@/components/databases/tables/table-view-body';
 import { TableViewRecordCreateRow } from '@/components/databases/tables/table-view-record-create-row';
 import { TableViewContext } from '@/contexts/table-view';
 import { useDatabase } from '@/contexts/database';
 import { compareString } from '@/lib/utils';
-import { FieldType } from '@/types/databases';
+import { FieldDataType, TableViewNode } from '@/types/databases';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
-import { useMutation } from '@tanstack/react-query';
-import { sql } from 'kysely';
-import { useWorkspace } from '@/contexts/workspace';
-import { NeuronId } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
+import { useUpdateViewFieldIndexMutation } from '@/mutations/use-update-view-field-index-mutation';
+import { useUpdateViewNameWidthMutation } from '@/mutations/use-update-view-name-width-mutation';
+import { useUpdateViewFieldWidthMutation } from '@/mutations/use-update-view-field-width-mutation';
+import { useUpdateViewHiddenFieldMutation } from '@/mutations/use-update-hidden-field-mutation';
 
 interface TableViewProps {
-  node: LocalNode;
-}
-
-interface UpdateHiddenFieldInput {
-  fieldId: string;
-  hide: boolean;
-}
-
-interface UpdateFieldIndexesInput {
-  fieldId: string;
-  index: string;
-}
-
-interface UpdateFieldWidthsInput {
-  fieldId: string;
-  width: number;
+  node: TableViewNode;
 }
 
 export const TableView = ({ node }: TableViewProps) => {
-  const workspace = useWorkspace();
   const database = useDatabase();
 
-  const attrs = node.attrs ?? {};
-  const [hiddenFields, setHiddenFields] = React.useState<
-    Record<string, number>
-  >(attrs.hiddenFields ?? []);
+  const updateHiddenFieldMutation = useUpdateViewHiddenFieldMutation();
+  const updateNameWidthMutation = useUpdateViewNameWidthMutation();
+  const updateFieldWidthMutation = useUpdateViewFieldWidthMutation();
+  const updateFieldIndexMutation = useUpdateViewFieldIndexMutation();
+
+  const [hiddenFields, setHiddenFields] = React.useState<string[]>(
+    node.hiddenFields ?? [],
+  );
   const [fieldIndexes, setFieldIndexes] = React.useState<
     Record<string, string>
-  >(attrs.fieldIndexes ?? {});
+  >(node.fieldIndexes ?? {});
   const [fieldWidths, setFieldWidths] = React.useState<Record<string, number>>(
-    attrs.fieldWidths ?? {},
+    node.fieldWidths ?? {},
   );
   const [nameWidth, setNameWidth] = React.useState<number>(
-    attrs.nameWidth ?? getDefaultNameWidth(),
+    node.nameWidth ?? getDefaultNameWidth(),
   );
 
-  const updateHiddenFieldMutation = useMutation({
-    mutationFn: async (input: UpdateHiddenFieldInput) => {
-      const { fieldId, hide } = input;
-
-      if (hide) {
-        const query = sql`
-          UPDATE nodes
-          SET attrs = json_set(coalesce(attrs, '{}'), '$.hiddenFields.${sql.ref(fieldId)}', 1),
-              updated_at = ${new Date().toISOString()},
-              updated_by = ${workspace.userId},
-              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-          WHERE id = ${node.id}
-        `.compile(workspace.schema);
-
-        await workspace.mutate(query);
-      } else {
-        const query = sql`
-          UPDATE nodes
-          SET attrs = json_remove(attrs, '$.hiddenFields.${sql.ref(fieldId)}'),
-              updated_at = ${new Date().toISOString()},
-              updated_by = ${workspace.userId},
-              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-          WHERE id = ${node.id} AND attrs IS NOT NULL
-        `.compile(workspace.schema);
-
-        await workspace.mutate(query);
-      }
-    },
-  });
-
-  const updateFieldIndexesMutation = useMutation({
-    mutationFn: async (input: UpdateFieldIndexesInput) => {
-      const { fieldId, index } = input;
-
-      const query = sql`
-        UPDATE nodes
-        SET attrs = json_set(coalesce(attrs, '{}'), '$.fieldIndexes.${sql.ref(fieldId)}', ${index}),
-            updated_at = ${new Date().toISOString()},
-            updated_by = ${workspace.userId},
-            version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-        WHERE id = ${node.id}
-      `.compile(workspace.schema);
-
-      await workspace.mutate(query);
-    },
-  });
-
-  const updateFieldWidthsMutation = useMutation({
-    mutationFn: async (input: UpdateFieldWidthsInput) => {
-      const { fieldId, width } = input;
-
-      const query = sql`
-        UPDATE nodes
-        SET attrs = json_set(coalesce(attrs, '{}'), '$.fieldWidths.${sql.ref(fieldId)}', ${width}),
-            updated_at = ${new Date().toISOString()},
-            updated_by = ${workspace.userId},
-            version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-        WHERE id = ${node.id}
-      `.compile(workspace.schema);
-
-      await workspace.mutate(query);
-    },
-  });
-
-  const updateNameWidthMutation = useMutation({
-    mutationFn: async (width: number) => {
-      const query = sql`
-        UPDATE nodes
-        SET attrs = json_set(coalesce(attrs, '{}'), '$.nameWidth', ${width}),
-            updated_at = ${new Date().toISOString()},
-            updated_by = ${workspace.userId},
-            version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-        WHERE id = ${node.id}
-      `.compile(workspace.schema);
-
-      await workspace.mutate(query);
-    },
-  });
-
   React.useEffect(() => {
-    const attrs = node.attrs ?? {};
-    setHiddenFields(attrs.hiddenFields ?? []);
-    setFieldIndexes(attrs.fieldIndexes ?? {});
-    setFieldWidths(attrs.fieldWidths ?? {});
-    setNameWidth(attrs.nameWidth ?? getDefaultNameWidth());
+    setHiddenFields(node.hiddenFields ?? []);
+    setFieldIndexes(node.fieldIndexes ?? {});
+    setFieldWidths(node.fieldWidths ?? {});
+    setNameWidth(node.nameWidth ?? getDefaultNameWidth());
   }, [node.versionId]);
 
   const fields = React.useMemo(() => {
     return database.fields
-      .filter((field) => !hiddenFields[field.id])
+      .filter((field) => !hiddenFields.includes(field.id))
       .sort((a, b) =>
         compareString(
           fieldIndexes[a.id] ?? a.index,
@@ -155,34 +62,45 @@ export const TableView = ({ node }: TableViewProps) => {
         id: node.id,
         fields,
         hideField: (id: string) => {
-          if (hiddenFields[id]) {
+          if (hiddenFields.includes(id)) {
             return;
           }
 
-          setHiddenFields({ ...hiddenFields, [id]: 1 });
-          updateHiddenFieldMutation.mutate({ fieldId: id, hide: true });
+          setHiddenFields([...hiddenFields, id]);
+          updateHiddenFieldMutation.mutate({
+            viewId: node.id,
+            fieldId: id,
+            hide: true,
+          });
         },
         showField: (id: string) => {
-          if (!hiddenFields[id]) {
+          if (!hiddenFields.includes(id)) {
             return;
           }
 
-          const newHiddenFields = { ...hiddenFields };
-          delete newHiddenFields[id];
+          const newHiddenFields = hiddenFields.filter((f) => f !== id);
           setHiddenFields(newHiddenFields);
-          updateHiddenFieldMutation.mutate({ fieldId: id, hide: false });
+          updateHiddenFieldMutation.mutate({
+            viewId: node.id,
+            fieldId: id,
+            hide: false,
+          });
         },
         getNameWidth: () => nameWidth,
         resizeName: (width: number) => {
           setNameWidth(width);
-          updateNameWidthMutation.mutate(width);
+          updateNameWidthMutation.mutate({ viewId: node.id, width });
         },
-        getFieldWidth: (id: string, type: FieldType) => {
+        getFieldWidth: (id: string, type: FieldDataType) => {
           return fieldWidths[id] ?? getDefaultFieldWidth(type);
         },
         resizeField: (id, width) => {
           setFieldWidths({ ...fieldWidths, [id]: width });
-          updateFieldWidthsMutation.mutate({ fieldId: id, width });
+          updateFieldWidthMutation.mutate({
+            viewId: node.id,
+            fieldId: id,
+            width,
+          });
         },
         moveField: (id, after) => {
           const field = database.fields.find((f) => f.id === id);
@@ -252,7 +170,11 @@ export const TableView = ({ node }: TableViewProps) => {
             ...fieldIndexes,
             [id]: newIndex,
           });
-          updateFieldIndexesMutation.mutate({ fieldId: id, index: newIndex });
+          updateFieldIndexMutation.mutate({
+            viewId: node.id,
+            fieldId: id,
+            index: newIndex,
+          });
         },
       }}
     >

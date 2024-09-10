@@ -15,7 +15,9 @@ import { CommanderExtension } from '@/editor/extensions/commander';
 import { DeleteControlExtension } from '@/editor/extensions/delete-control';
 import { DividerNode } from '@/editor/extensions/divider';
 import { DropcursorExtension } from '@/editor/extensions/dropcursor';
-import { HeadingNode } from '@/editor/extensions/heading';
+import { Heading1Node } from '@/editor/extensions/heading1';
+import { Heading2Node } from '@/editor/extensions/heading2';
+import { Heading3Node } from '@/editor/extensions/heading3';
 import { HighlightMark } from '@/editor/extensions/highlight';
 import { LinkMark } from '@/editor/extensions/link';
 import { ListItemNode } from '@/editor/extensions/list-item';
@@ -43,7 +45,9 @@ export {
   DeleteControlExtension,
   DividerNode,
   DocumentNode,
-  HeadingNode,
+  Heading1Node,
+  Heading2Node,
+  Heading3Node,
   HighlightMark,
   ItalicMark,
   LinkMark,

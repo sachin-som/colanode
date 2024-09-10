@@ -52,3 +52,20 @@ export type NodeChangeData = {
   server_created_at: string;
   server_updated_at: string | null;
 };
+
+export type NodeAttributeChangeData = {
+  node_id: string;
+  type: string;
+  key: string;
+  workspace_id: string;
+  text_value: string | null;
+  number_value: number | null;
+  foreign_node_id: string | null;
+  created_at: string;
+  created_by: string;
+  updated_at: string | null;
+  updated_by: string | null;
+  version_id: string;
+  server_created_at: string;
+  server_updated_at: string | null;
+};

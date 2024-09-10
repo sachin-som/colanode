@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { NodeTypes } from '@/lib/constants';
 import { PageContainerNode } from '@/components/pages/page-container-node';
 import { ChannelContainerNode } from '@/components/channels/channel-container-node';
-import { ContainerHeader } from '@/components/workspaces/container-header';
+import { ContainerHeader } from '@/components/workspaces/containers/container-header';
 import { Spinner } from '@/components/ui/spinner';
 import { mapNode } from '@/lib/nodes';
 import { useQuery } from '@tanstack/react-query';

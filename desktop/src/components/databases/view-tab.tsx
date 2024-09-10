@@ -1,16 +1,15 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { LocalNode } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
+import { ViewNode } from '@/types/databases';
 
 interface ViewTabProps {
-  view: LocalNode;
+  view: ViewNode;
   isActive: boolean;
   onClick: () => void;
 }
 
 export const ViewTab = ({ view, isActive, onClick }: ViewTabProps) => {
-  const name = view.attrs?.name ?? 'Unnamed View';
   return (
     <div
       role="presentation"
@@ -21,8 +20,8 @@ export const ViewTab = ({ view, isActive, onClick }: ViewTabProps) => {
       onClick={() => onClick()}
       onKeyDown={() => onClick()}
     >
-      <Avatar id={view.id} name={name} size="small" />
-      {name}
+      <Avatar id={view.id} name={view.name} size="small" />
+      {view.name}
     </div>
   );
 };

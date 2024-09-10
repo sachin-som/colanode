@@ -12,9 +12,10 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "jsx": "react",
+    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "exclude": ["node_modules", "build", "dist"],
+  "exclude": ["node_modules", "build", "dist"]
 }

@@ -16,7 +16,9 @@ enum IdType {
   Message = 'ms',
   Subscriber = 'sb',
   Paragraph = 'pa',
-  Heading = 'he',
+  Heading1 = 'h1',
+  Heading2 = 'h2',
+  Heading3 = 'h3',
   Blockquote = 'bq',
   CodeBlock = 'cb',
   ListItem = 'li',
@@ -63,8 +65,12 @@ export class NeuronId {
         return IdType.Message;
       case NodeTypes.Paragraph:
         return IdType.Paragraph;
-      case NodeTypes.Heading:
-        return IdType.Heading;
+      case NodeTypes.Heading1:
+        return IdType.Heading1;
+      case NodeTypes.Heading2:
+        return IdType.Heading2;
+      case NodeTypes.Heading3:
+        return IdType.Heading3;
       case NodeTypes.Blockquote:
         return IdType.Blockquote;
       case NodeTypes.BulletList:

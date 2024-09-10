@@ -20,7 +20,9 @@ import {
   PageNode,
   TextNode,
   ParagraphNode,
-  HeadingNode,
+  Heading1Node,
+  Heading2Node,
+  Heading3Node,
   BlockquoteNode,
   BulletListNode,
   CodeBlockNode,
@@ -47,13 +49,13 @@ import {
 } from '@/editor/extensions';
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { LocalNode } from '@/types/nodes';
+import { LocalNode, LocalNodeWithAttributes } from '@/types/nodes';
 import { useWorkspace } from '@/contexts/workspace';
 import { EditorObserver } from '@/editor/observer';
 
 interface DocumentEditorProps {
   node: LocalNode;
-  nodes: Map<string, LocalNode>;
+  nodes: Map<string, LocalNodeWithAttributes>;
 }
 
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
@@ -71,7 +73,9 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         PageNode,
         TextNode,
         ParagraphNode,
-        HeadingNode,
+        Heading1Node,
+        Heading2Node,
+        Heading3Node,
         BlockquoteNode,
         BulletListNode,
         CodeBlockNode,

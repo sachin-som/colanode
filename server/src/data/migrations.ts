@@ -74,10 +74,11 @@ const createNodesTable: Migration = {
       .createTable('nodes')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('parent_id', 'varchar(30)')
+      .addColumn('parent_id', 'varchar(30)', (col) =>
+        col.references('nodes.id').onDelete('cascade'),
+      )
       .addColumn('type', 'varchar(30)', (col) => col.notNull())
       .addColumn('index', 'varchar(30)')
-      .addColumn('attrs', 'jsonb')
       .addColumn('content', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
@@ -86,13 +87,33 @@ const createNodesTable: Migration = {
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('server_updated_at', 'timestamptz')
-      .addForeignKeyConstraint(
-        'nodes_parent_id_fkey',
-        ['parent_id'],
-        'nodes',
-        ['id'],
-        (cb) => cb.onDelete('cascade'),
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('nodes').execute();
+  },
+};
+
+const createNodeAttributesTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('node_attributes')
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('type', 'varchar(30)', (col) => col.notNull())
+      .addColumn('key', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('text_value', 'varchar(30)')
+      .addColumn('number_value', 'numeric')
+      .addColumn('foreign_node_id', 'varchar(30)', (col) =>
+        col.references('nodes.id').onDelete('cascade'),
       )
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('updated_at', 'timestamptz')
+      .addColumn('updated_by', 'varchar(30)')
+      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('server_updated_at', 'timestamptz')
       .execute();
   },
   down: async (db) => {
@@ -141,10 +162,11 @@ const createMutationsTable: Migration = {
 };
 
 export const databaseMigrations: Record<string, Migration> = {
-  '202408011709_create_accounts_table': createAccountsTable,
-  '202408011712_create_workspaces_table': createWorkspacesTable,
-  '202408011715_create_workspace_accounts_table': createWorkspaceAccountsTable,
-  '202408011718_create_nodes_table': createNodesTable,
-  '202408011721_create_account_devices_table': createAccountDevicesTable,
-  '202408011724_create_mutations_table': createMutationsTable,
+  '00001_create_accounts_table': createAccountsTable,
+  '00002_create_workspaces_table': createWorkspacesTable,
+  '00003_create_workspace_accounts_table': createWorkspaceAccountsTable,
+  '00004_create_nodes_table': createNodesTable,
+  '00005_create_node_attributes_table': createNodeAttributesTable,
+  '00006_create_account_devices_table': createAccountDevicesTable,
+  '00007_create_mutations_table': createMutationsTable,
 };

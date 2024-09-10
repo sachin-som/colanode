@@ -1,10 +1,6 @@
-import { SelectNode } from '@/data/schemas/workspace';
-import { Field, FieldType, RecordNode, SelectOption } from '@/types/databases';
-import { NodeTypes } from '@/lib/constants';
-import { LocalNode } from '@/types/nodes';
-import { compareString } from '@/lib/utils';
+import { FieldDataType } from '@/types/databases';
 
-export const getFieldIcon = (type?: FieldType): string => {
+export const getFieldIcon = (type?: FieldDataType): string => {
   if (!type) return '';
 
   switch (type) {
@@ -39,7 +35,7 @@ export const getFieldIcon = (type?: FieldType): string => {
   }
 };
 
-export const getDefaultFieldWidth = (type: FieldType): number => {
+export const getDefaultFieldWidth = (type: FieldDataType): number => {
   if (!type) return 0;
 
   switch (type.toLowerCase()) {
@@ -151,165 +147,4 @@ export const getRandomSelectOptionColor = (): string => {
   return selectOptionColors[
     Math.floor(Math.random() * selectOptionColors.length)
   ].value;
-};
-
-export const mapField = (
-  node: SelectNode,
-  selectOptionNodes: SelectNode[],
-): Field => {
-  const attrsJson = node.attrs;
-  const attrs = attrsJson ? JSON.parse(attrsJson) : {};
-  const type: FieldType = attrs.type ?? 'text';
-
-  switch (type) {
-    case 'boolean': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'boolean',
-        index: node.index,
-      };
-    }
-    case 'collaborator': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'collaborator',
-        index: node.index,
-      };
-    }
-    case 'created_at': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'created_at',
-        index: node.index,
-      };
-    }
-    case 'created_by': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'created_by',
-        index: node.index,
-      };
-    }
-    case 'date': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'date',
-        index: node.index,
-      };
-    }
-    case 'email': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'email',
-        index: node.index,
-      };
-    }
-    case 'file': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'file',
-        index: node.index,
-      };
-    }
-    case 'multi_select': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'multi_select',
-        index: node.index,
-        options: selectOptionNodes.map((option) => buildSelectOption(option)),
-      };
-    }
-    case 'number': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'number',
-        index: node.index,
-      };
-    }
-    case 'phone': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'phone',
-        index: node.index,
-      };
-    }
-    case 'select': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'select',
-        index: node.index,
-        options: selectOptionNodes.map((option) => buildSelectOption(option)),
-      };
-    }
-    case 'text': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'text',
-        index: node.index,
-      };
-    }
-    case 'url': {
-      return {
-        id: node.id,
-        name: attrs.name,
-        type: 'url',
-        index: node.index,
-      };
-    }
-  }
-};
-
-export const buildSelectOption = (node: SelectNode): SelectOption => {
-  const attrsJson = node.attrs;
-  const attrs = attrsJson ? JSON.parse(attrsJson) : {};
-  return {
-    id: node.id,
-    name: attrs.name ?? 'Unnamed',
-    color: attrs.color ?? 'gray',
-  };
-};
-
-export const buildRecords = (allNodes: LocalNode[]): RecordNode[] => {
-  const recordNodes = allNodes.filter((node) => node.type === NodeTypes.Record);
-
-  const authorNodes = allNodes.filter((node) => node.type === NodeTypes.User);
-  const records: RecordNode[] = [];
-  const authorMap = new Map<string, LocalNode>();
-
-  for (const author of authorNodes) {
-    authorMap.set(author.id, author);
-  }
-
-  for (const node of recordNodes) {
-    const author = authorMap.get(node.createdBy);
-    const record: RecordNode = {
-      id: node.id,
-      parentId: node.parentId,
-      index: node.index,
-      attrs: node.attrs,
-      createdAt: new Date(node.createdAt),
-      createdBy: {
-        id: author?.id ?? node.createdBy,
-        name: author?.attrs?.name ?? 'Unknown',
-        avatar: author?.attrs?.avatar ?? '',
-      },
-      versionId: node.versionId,
-    };
-
-    records.push(record);
-  }
-
-  return records.sort((a, b) => compareString(a.index, b.index));
 };

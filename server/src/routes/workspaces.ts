@@ -89,16 +89,39 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
         id: userId,
         workspace_id: workspace.id,
         type: 'user',
-        attrs: JSON.stringify({
-          accountId: account.id,
-          name: account.name,
-          avatar: account.avatar,
-        }),
         created_at: workspaceAccount.createdAt,
         created_by: workspaceAccount.createdBy,
         version_id: userVersionId,
         server_created_at: new Date(),
       })
+      .execute();
+
+    await trx
+      .insertInto('node_attributes')
+      .values([
+        {
+          node_id: userId,
+          type: 'name',
+          key: '1',
+          workspace_id: workspace.id,
+          text_value: account.name,
+          created_at: workspaceAccount.createdAt,
+          created_by: workspaceAccount.createdBy,
+          version_id: userVersionId,
+          server_created_at: new Date(),
+        },
+        {
+          node_id: userId,
+          type: 'avatar',
+          key: '1',
+          workspace_id: workspace.id,
+          text_value: account.avatar,
+          created_at: workspaceAccount.createdAt,
+          created_by: workspaceAccount.createdBy,
+          version_id: userVersionId,
+          server_created_at: new Date(),
+        },
+      ])
       .execute();
 
     await trx

@@ -8,11 +8,6 @@ export const Heading2Command: EditorCommand = {
   icon: 'h-2',
   disabled: false,
   handler: ({ editor, range }) => {
-    editor
-      .chain()
-      .focus()
-      .deleteRange(range)
-      .setNode('heading', { level: 2 })
-      .run();
+    editor.chain().focus().deleteRange(range).setNode('heading2').run();
   },
 };

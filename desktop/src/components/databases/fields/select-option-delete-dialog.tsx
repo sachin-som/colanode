@@ -9,8 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@tanstack/react-query';
+import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
 
 interface SelectOptionDeleteDialogProps {
   id: string;
@@ -23,16 +22,7 @@ export const SelectOptionDeleteDialog = ({
   open,
   onOpenChange,
 }: SelectOptionDeleteDialogProps) => {
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (fieldId: string) => {
-      const mutation = workspace.schema
-        .deleteFrom('nodes')
-        .where('id', '=', fieldId)
-        .compile();
-      await workspace.mutate(mutation);
-    },
-  });
-  const workspace = useWorkspace();
+  const { mutate, isPending } = useNodeDeleteMutation();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Field, RecordNode } from '@/types/databases';
+import { FieldNode, RecordNode } from '@/types/databases';
 import { TableViewTextCell } from '@/components/databases/tables/cells/table-view-text-cell';
 import { TableViewNumberCell } from '@/components/databases/tables/cells/table-view-number-cell';
 import { TableViewBooleanCell } from '@/components/databases/tables/cells/table-view-boolean-cell';
@@ -13,14 +13,14 @@ import { TableViewMultiSelectCell } from '@/components/databases/tables/cells/ta
 
 interface TableViewFieldCellProps {
   record: RecordNode;
-  field: Field;
+  field: FieldNode;
 }
 
 export const TableViewFieldCell = ({
   record,
   field,
 }: TableViewFieldCellProps) => {
-  switch (field.type) {
+  switch (field.dataType) {
     case 'text':
       return <TableViewTextCell record={record} field={field} />;
     case 'number':

@@ -1,10 +1,10 @@
 import React from 'react';
 import { defaultClasses } from '@/editor/classes';
 import { NodeChildrenRenderer } from '@/editor/renderers/node-children';
-import { LocalNodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithAttributesAndChildren } from '@/types/nodes';
 
 interface TaskItemRendererProps {
-  node: LocalNodeWithChildren;
+  node: LocalNodeWithAttributesAndChildren;
   keyPrefix: string | null;
 }
 

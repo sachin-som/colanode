@@ -22,11 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { NeuronId } from '@/lib/id';
-import { NodeTypes } from '@/lib/constants';
-import { generateNodeIndex } from '@/lib/nodes';
-import { useMutation } from '@tanstack/react-query';
-import { compareString } from '@/lib/utils';
+import { usePageCreateMutation } from '@/mutations/use-page-create-mutation';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -44,49 +40,12 @@ export const PageCreateDialog = ({
   onOpenChange,
 }: PageCreateDialogProps) => {
   const workspace = useWorkspace();
+  const { mutate, isPending } = usePageCreateMutation();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-    },
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const siblingsQuery = workspace.schema
-        .selectFrom('nodes')
-        .where('parent_id', '=', spaceId)
-        .selectAll()
-        .compile();
-
-      const result = await workspace.query(siblingsQuery);
-      const siblings = result.rows;
-      const maxIndex =
-        siblings.length > 0
-          ? siblings.sort((a, b) => compareString(a.index, b.index))[
-              siblings.length - 1
-            ].index
-          : null;
-
-      const index = generateNodeIndex(maxIndex, null);
-      const query = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id: NeuronId.generate(NeuronId.Type.Page),
-          type: NodeTypes.Page,
-          parent_id: spaceId,
-          index,
-          attrs: JSON.stringify({
-            name: values.name,
-          }),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      await workspace.mutate(query);
     },
   });
 
@@ -96,12 +55,16 @@ export const PageCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(values, {
-      onSuccess: () => {
-        onOpenChange(false);
-        form.reset();
+    mutate(
+      { spaceId, name: values.name },
+      {
+        onSuccess: (id) => {
+          onOpenChange(false);
+          form.reset();
+          workspace.navigateToNode(id);
+        },
       },
-    });
+    );
   };
 
   return (

@@ -6,9 +6,10 @@
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
+    }
   }
 }

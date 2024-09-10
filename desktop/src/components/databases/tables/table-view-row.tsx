@@ -27,7 +27,7 @@ export const TableViewRow = ({ index, record }: TableViewRowProps) => {
         <TableViewNameCell record={record} />
       </div>
       {tableView.fields.map((field) => {
-        const width = tableView.getFieldWidth(field.id, field.type);
+        const width = tableView.getFieldWidth(field.id, field.dataType);
         return (
           <div
             key={`row-${record.id}-${field.id}`}

@@ -1,5 +1,9 @@
-import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithAttributesAndChildren } from '@/types/nodes';
+import { User } from '@/types/users';
 
-export type MessageNode = LocalNodeWithChildren & {
-  author?: LocalNode | null;
+export type MessageNode = {
+  id: string;
+  content: LocalNodeWithAttributesAndChildren[];
+  createdAt: string;
+  author: User;
 };

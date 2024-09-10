@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sidebar } from '@/components/workspaces/sidebar';
+import { Sidebar } from '@/components/workspaces/sidebars/sidebar';
 import { WorkspaceContext } from '@/contexts/workspace';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -153,7 +153,7 @@ export const Workspace = () => {
           <div className="w-96">
             <Sidebar />
           </div>
-          <main className="min-w-128 h-full w-full flex-grow overflow-hidden bg-white">
+          <main className="h-full w-full min-w-128 flex-grow overflow-hidden bg-white">
             <Outlet />
           </main>
         </div>

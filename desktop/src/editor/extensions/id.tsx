@@ -5,7 +5,9 @@ import { NodeTypes } from '@/lib/constants';
 
 const types = [
   NodeTypes.Paragraph,
-  NodeTypes.Heading,
+  NodeTypes.Heading1,
+  NodeTypes.Heading2,
+  NodeTypes.Heading3,
   NodeTypes.Blockquote,
   NodeTypes.BulletList,
   NodeTypes.ListItem,

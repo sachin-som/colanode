@@ -1,0 +1,54 @@
+import { useWorkspace } from '@/contexts/workspace';
+import { NeuronId } from '@/lib/id';
+import { useMutation } from '@tanstack/react-query';
+
+interface UpdateMultiSelectFieldValueMutationProps {
+  recordId: string;
+  fieldId: string;
+  selectOptionId: string;
+  add: boolean;
+}
+
+export const useUpdateMultiSelectFieldValueMutation = () => {
+  const workspace = useWorkspace();
+
+  return useMutation({
+    mutationFn: async ({
+      recordId,
+      fieldId,
+      selectOptionId,
+      add,
+    }: UpdateMultiSelectFieldValueMutationProps) => {
+      if (add) {
+        const query = workspace.schema
+          .insertInto('node_attributes')
+          .values({
+            node_id: recordId,
+            type: fieldId,
+            key: selectOptionId,
+            foreign_node_id: selectOptionId,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          })
+          .onConflict((ob) => ob.doNothing())
+          .compile();
+
+        await workspace.mutate(query);
+      } else {
+        const query = workspace.schema
+          .deleteFrom('node_attributes')
+          .where((eb) =>
+            eb.and([
+              eb('node_id', '=', recordId),
+              eb('type', '=', fieldId),
+              eb('key', '=', selectOptionId),
+            ]),
+          )
+          .compile();
+
+        await workspace.mutate(query);
+      }
+    },
+  });
+};

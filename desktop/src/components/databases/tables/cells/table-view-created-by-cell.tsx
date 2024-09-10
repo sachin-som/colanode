@@ -1,9 +1,9 @@
 import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
-import { CreatedByField, RecordNode } from '@/types/databases';
+import { CreatedByFieldNode, RecordNode } from '@/types/databases';
 
 interface TableViewCreatedByCellProps {
-  field: CreatedByField;
+  field: CreatedByFieldNode;
   record: RecordNode;
 }
 

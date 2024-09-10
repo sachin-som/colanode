@@ -1,6 +1,39 @@
 import { User } from '@/types/users';
+import { LocalNodeAttribute } from './nodes';
 
-export type FieldType =
+export type DatabaseNode = {
+  id: string;
+  name: string;
+  fields: FieldNode[];
+  views: ViewNode[];
+};
+
+export type ViewNode = TableViewNode | BoardViewNode | CalendarViewNode;
+
+export type TableViewNode = {
+  id: string;
+  name: string;
+  type: 'table_view';
+  hiddenFields: string[];
+  fieldIndexes: Record<string, string>;
+  fieldWidths: Record<string, number>;
+  nameWidth: number;
+  versionId: string;
+};
+
+export type BoardViewNode = {
+  id: string;
+  name: string;
+  type: 'board_view';
+};
+
+export type CalendarViewNode = {
+  id: string;
+  name: string;
+  type: 'calendar_view';
+};
+
+export type FieldDataType =
   | 'boolean'
   | 'collaborator'
   | 'created_at'
@@ -15,114 +48,114 @@ export type FieldType =
   | 'text'
   | 'url';
 
-export type Field =
-  | BooleanField
-  | CollaboratorField
-  | CreatedAtField
-  | CreatedByField
-  | DateField
-  | EmailField
-  | FileField
-  | MultiSelectField
-  | NumberField
-  | PhoneField
-  | SelectField
-  | TextField
-  | UrlField;
+export type FieldNode =
+  | BooleanFieldNode
+  | CollaboratorFieldNode
+  | CreatedAtFieldNode
+  | CreatedByFieldNode
+  | DateFieldNode
+  | EmailFieldNode
+  | FileFieldNode
+  | MultiSelectFieldNode
+  | NumberFieldNode
+  | PhoneFieldNode
+  | SelectFieldNode
+  | TextFieldNode
+  | UrlFieldNode;
 
-export type BooleanField = {
+export type BooleanFieldNode = {
   id: string;
-  type: 'boolean';
+  dataType: 'boolean';
   name: string;
   index: string;
 };
 
-export type CollaboratorField = {
+export type CollaboratorFieldNode = {
   id: string;
-  type: 'collaborator';
+  dataType: 'collaborator';
   name: string;
   index: string;
 };
 
-export type CreatedAtField = {
+export type CreatedAtFieldNode = {
   id: string;
-  type: 'created_at';
+  dataType: 'created_at';
   name: string;
   index: string;
 };
 
-export type CreatedByField = {
+export type CreatedByFieldNode = {
   id: string;
-  type: 'created_by';
+  dataType: 'created_by';
   name: string;
   index: string;
 };
 
-export type DateField = {
+export type DateFieldNode = {
   id: string;
-  type: 'date';
+  dataType: 'date';
   name: string;
   index: string;
 };
 
-export type EmailField = {
+export type EmailFieldNode = {
   id: string;
-  type: 'email';
+  dataType: 'email';
   name: string;
   index: string;
 };
 
-export type FileField = {
+export type FileFieldNode = {
   id: string;
-  type: 'file';
+  dataType: 'file';
   name: string;
   index: string;
 };
 
-export type MultiSelectField = {
+export type MultiSelectFieldNode = {
   id: string;
-  type: 'multi_select';
+  dataType: 'multi_select';
   name: string;
   index: string;
-  options: SelectOption[];
+  options: SelectOptionNode[];
 };
 
-export type NumberField = {
+export type NumberFieldNode = {
   id: string;
-  type: 'number';
-  name: string;
-  index: string;
-};
-
-export type PhoneField = {
-  id: string;
-  type: 'phone';
+  dataType: 'number';
   name: string;
   index: string;
 };
 
-export type SelectField = {
+export type PhoneFieldNode = {
   id: string;
-  type: 'select';
-  name: string;
-  index: string;
-  options: SelectOption[];
-};
-
-export type TextField = {
-  id: string;
-  type: 'text';
-  name: string;
-  index: string;
-};
-export type UrlField = {
-  id: string;
-  type: 'url';
+  dataType: 'phone';
   name: string;
   index: string;
 };
 
-export type SelectOption = {
+export type SelectFieldNode = {
+  id: string;
+  dataType: 'select';
+  name: string;
+  index: string;
+  options: SelectOptionNode[];
+};
+
+export type TextFieldNode = {
+  id: string;
+  dataType: 'text';
+  name: string;
+  index: string;
+};
+export type UrlFieldNode = {
+  id: string;
+  dataType: 'url';
+  name: string;
+  index: string;
+};
+
+export type SelectOptionNode = {
   id: string;
   name: string;
   color: string;
@@ -130,10 +163,12 @@ export type SelectOption = {
 
 export type RecordNode = {
   id: string;
+  name: string | null;
   parentId: string;
   index: string;
-  attrs: Record<string, any>;
   createdAt: Date;
   createdBy: User;
   versionId: string;
+
+  attributes: LocalNodeAttribute[];
 };

@@ -1,9 +1,7 @@
 export const defaultClasses = {
-  heading: {
-    1: 'mb-1 mt-4 font-heading text-4xl font-bold',
-    2: 'mb-px mt-3 font-heading text-2xl font-semibold tracking-tight',
-    3: 'mb-px mt-2 font-heading text-xl font-semibold tracking-tight',
-  },
+  heading1: 'mb-1 mt-4 font-heading text-4xl font-bold',
+  heading2: 'mb-px mt-3 font-heading text-2xl font-semibold tracking-tight',
+  heading3: 'mb-px mt-2 font-heading text-xl font-semibold tracking-tight',
   paragraph: 'm-0 px-0 py-1',
   bulletList: 'm-0 ps-6 list-disc [&_ul]:list-[circle] [&_ul_ul]:list-[square]',
   orderedList: 'm-0 ps-6 list-decimal',

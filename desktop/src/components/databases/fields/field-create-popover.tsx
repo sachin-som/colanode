@@ -19,20 +19,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useDatabase } from '@/contexts/database';
-import { FieldTypeSelect } from './field-type-select';
-import { FieldAttrs } from './field-attrs';
-import { useMutation } from '@tanstack/react-query';
-import { useWorkspace } from '@/contexts/workspace';
-import { compareString } from '@/lib/utils';
-import { generateNodeIndex } from '@/lib/nodes';
-import { NeuronId } from '@/lib/id';
-import { NodeTypes } from '@/lib/constants';
+import { FieldDataTypeSelect } from '@/components/databases/fields/field-type-select';
+import { FieldAttrs } from '@/components/databases/fields/field-attrs';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
+import { useFieldCreateMutation } from '@/mutations/use-field-create-mutation';
 
 const formSchema = z.object({
   name: z.string(),
-  type: z.union([
+  dataType: z.union([
     z.literal('autonumber'),
     z.literal('boolean'),
     z.literal('button'),
@@ -55,59 +50,17 @@ const formSchema = z.object({
 
 export const FieldCreatePopover = () => {
   const [open, setOpen] = React.useState(false);
-  const workspace = useWorkspace();
   const database = useDatabase();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      type: 'text',
+      dataType: 'text',
     },
   });
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const lastFieldQuery = workspace.schema
-        .selectFrom('nodes')
-        .where((eb) =>
-          eb.and({
-            parent_id: database.id,
-            type: NodeTypes.Field,
-          }),
-        )
-        .selectAll()
-        .orderBy('index', 'desc')
-        .limit(1)
-        .compile();
-
-      const result = await workspace.query(lastFieldQuery);
-      const lastChild =
-        result.rows && result.rows.length > 0 ? result.rows[0] : null;
-      const maxIndex = lastChild?.index ? lastChild.index : null;
-
-      const index = generateNodeIndex(maxIndex, null);
-      const query = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id: NeuronId.generate(NeuronId.Type.Field),
-          type: NodeTypes.Field,
-          parent_id: database.id,
-          index,
-          attrs: JSON.stringify({
-            name: values.name,
-            type: values.type,
-          }),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      await workspace.mutate(query);
-    },
-  });
+  const { mutate, isPending } = useFieldCreateMutation();
 
   const handleCancelClick = () => {
     setOpen(false);
@@ -115,12 +68,19 @@ export const FieldCreatePopover = () => {
   };
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    mutate(values, {
-      onSuccess: () => {
-        setOpen(false);
-        form.reset();
+    mutate(
+      {
+        databaseId: database.id,
+        name: values.name,
+        dataType: values.dataType,
       },
-    });
+      {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+        },
+      },
+    );
   };
 
   return (
@@ -150,13 +110,13 @@ export const FieldCreatePopover = () => {
               />
               <FormField
                 control={form.control}
-                name="type"
+                name="dataType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Field type</FormLabel>
                     <FormControl>
-                      <FieldTypeSelect
-                        type={field.value}
+                      <FieldDataTypeSelect
+                        dataType={field.value}
                         onChange={field.onChange}
                       />
                     </FormControl>

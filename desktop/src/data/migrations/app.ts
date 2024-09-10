@@ -40,6 +40,6 @@ const createWorkspacesTable: Migration = {
 };
 
 export const appDatabaseMigrations: Record<string, Migration> = {
-  '202408011709_create_accounts_table': createAccountsTable,
-  '202408011712_create_workspaces_table': createWorkspacesTable,
+  '00001_create_accounts_table': createAccountsTable,
+  '00002_create_workspaces_table': createWorkspacesTable,
 };

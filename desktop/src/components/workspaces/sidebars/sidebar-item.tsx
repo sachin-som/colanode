@@ -1,22 +1,20 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
+import { useWorkspace } from '@/contexts/workspace';
+import { SidebarNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
-import { useWorkspace } from '@/contexts/workspace';
 
-interface ChannelSidebarNodeProps {
-  node: LocalNode;
+interface SidebarItemProps {
+  node: SidebarNode;
 }
 
-export const ChannelSidebarNode = ({ node }: ChannelSidebarNodeProps) => {
+export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
   const workspace = useWorkspace();
   const isActive = false;
   const isUnread = false;
   const directCount = 0;
 
-  const avatar = node.attrs.avatar;
-  const name = node.attrs.name ?? 'Unnamed';
   return (
     <div
       key={node.id}
@@ -28,14 +26,14 @@ export const ChannelSidebarNode = ({ node }: ChannelSidebarNodeProps) => {
         workspace.navigateToNode(node.id);
       }}
     >
-      <Avatar id={node.id} avatar={avatar} name={name} size="small" />
+      <Avatar id={node.id} avatar={node.avatar} name={node.name} size="small" />
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
           isUnread && 'font-bold',
         )}
       >
-        {name}
+        {node.name ?? 'Unnamed'}
       </span>
       {directCount > 0 && (
         <span className="mr-1 rounded-md bg-red-500 px-1 py-0.5 text-xs text-white">

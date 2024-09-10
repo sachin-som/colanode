@@ -9,24 +9,15 @@ import {
 } from '@/components/ui/command';
 import { SelectOptionBadge } from '@/components/databases/fields/select-option-badge';
 import { Icon } from '@/components/ui/icon';
-import { MultiSelectField, SelectField } from '@/types/databases';
-import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@tanstack/react-query';
-import { NeuronId } from '@/lib/id';
-import { NodeTypes } from '@/lib/constants';
-import { generateNodeIndex } from '@/lib/nodes';
+import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/components/databases/fields/select-option-settings-popover';
+import { useSelectOptionCreateMutation } from '@/mutations/use-select-option-create-mutation';
 
 interface SelectFieldOptionsProps {
-  field: SelectField | MultiSelectField;
+  field: SelectFieldNode | MultiSelectFieldNode;
   values: string[];
   onSelect: (id: string) => void;
-}
-
-interface CreateSelectOptionInput {
-  name: string;
-  color: string;
 }
 
 export const SelectFieldOptions = ({
@@ -34,51 +25,7 @@ export const SelectFieldOptions = ({
   values,
   onSelect,
 }: SelectFieldOptionsProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (input: CreateSelectOptionInput) => {
-      const lastChildQuery = workspace.schema
-        .selectFrom('nodes')
-        .where((eb) =>
-          eb.and({
-            parent_id: field.id,
-            type: NodeTypes.SelectOption,
-          }),
-        )
-        .selectAll()
-        .orderBy('index', 'desc')
-        .limit(1)
-        .compile();
-
-      const result = await workspace.query(lastChildQuery);
-      const lastChild =
-        result.rows && result.rows.length > 0 ? result.rows[0] : null;
-      const maxIndex = lastChild?.index ? lastChild.index : null;
-
-      const index = generateNodeIndex(maxIndex, null);
-      const id = NeuronId.generate(NeuronId.Type.SelectOption);
-      const query = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id,
-          type: NodeTypes.SelectOption,
-          parent_id: field.id,
-          index,
-          attrs: JSON.stringify({
-            name: input.name,
-            color: input.color,
-          }),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      await workspace.mutate(query);
-      return id;
-    },
-  });
+  const { mutate, isPending } = useSelectOptionCreateMutation();
 
   const [inputValue, setInputValue] = React.useState('');
   const [color, setColor] = React.useState(getRandomSelectOptionColor());
@@ -159,6 +106,7 @@ export const SelectFieldOptions = ({
 
                 mutate(
                   {
+                    fieldId: field.id,
                     name: inputValue.trim(),
                     color,
                   },

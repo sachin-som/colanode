@@ -1,70 +1,27 @@
 import React from 'react';
 import isHotkey from 'is-hotkey';
-import { useEffect, useRef, useState } from 'react';
-
-import { useMutation } from '@tanstack/react-query';
-import { useWorkspace } from '@/contexts/workspace';
 import { RecordNode } from '@/types/databases';
-import { NeuronId } from '@/lib/id';
-import { NumberField } from '@/types/databases';
-import { sql } from 'kysely';
+import { NumberFieldNode } from '@/types/databases';
+import { useUpdateNumberFieldValueMutation } from '@/mutations/use-update-number-field-value-mutation';
 
 const getNumberValue = (
   record: RecordNode,
-  field: NumberField,
+  field: NumberFieldNode,
 ): number | null => {
-  const attrs = record.attrs;
-
-  if (!attrs) {
-    return null;
-  }
-
-  const fieldValue = attrs[field.id];
-
-  if (typeof fieldValue === 'number') {
-    return fieldValue;
-  }
-
-  return null;
+  const attribute = record.attributes.find((attr) => attr.type === field.id);
+  return attribute?.numberValue ?? null;
 };
 
 interface TableViewNumberCellProps {
   record: RecordNode;
-  field: NumberField;
+  field: NumberFieldNode;
 }
 
 export const TableViewNumberCell = ({
   record,
   field,
 }: TableViewNumberCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (newValue: number | null) => {
-      if (newValue !== null) {
-        const query = sql`
-          UPDATE nodes
-          SET attrs = json_set(coalesce(attrs, '{}'), '$.${field.id}', ${newValue}),
-              updated_at = ${new Date().toISOString()},
-              updated_by = ${workspace.userId},
-              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-          WHERE id = ${record.id}
-        `.compile(workspace.schema);
-
-        await workspace.mutate(query);
-      } else {
-        const query = sql`
-          UPDATE nodes
-          SET attrs = json_remove(attrs, '$.${sql.ref(field.id)}'),
-              updated_at = ${new Date().toISOString()},
-              updated_by = ${workspace.userId},
-              version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-          WHERE id = ${record.id} AND attrs IS NOT NULL
-        `.compile(workspace.schema);
-
-        await workspace.mutate(query);
-      }
-    },
-  });
+  const { mutate, isPending } = useUpdateNumberFieldValueMutation();
 
   const canEdit = true;
 
@@ -72,13 +29,17 @@ export const TableViewNumberCell = ({
     getNumberValue(record, field)?.toString() ?? '',
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     setInput(getNumberValue(record, field)?.toString() ?? '');
   }, [record.versionId]);
 
   const saveIfChanged = (current: number | null, previous: number | null) => {
     if (current !== previous) {
-      mutate(current);
+      mutate({
+        recordId: record.id,
+        fieldId: field.id,
+        value: current,
+      });
     }
   };
 

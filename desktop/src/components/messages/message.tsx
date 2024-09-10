@@ -19,13 +19,6 @@ interface MessageProps {
 }
 
 export const Message = ({ message, previousMessage }: MessageProps) => {
-  const author = message.author ?? {
-    id: message.createdBy,
-    attrs: {
-      name: 'Deleted user',
-    },
-  };
-
   const shouldDisplayUserInfo = () => {
     if (!previousMessage) {
       return true;
@@ -38,14 +31,14 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
       return true;
     }
 
-    return !previousMessage || previousMessage.createdBy !== message.createdBy;
+    return !previousMessage || previousMessage.author.id !== message.author.id;
   };
 
   const canEdit = true;
   const canDelete = true;
   const canReplyInThread = true;
 
-  if (!message.children || message.children.length === 0) {
+  if (!message.content || message.content.length === 0) {
     return null;
   }
 
@@ -59,14 +52,18 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
     >
       <div className="mr-2 w-10 pt-1">
         {shouldDisplayUserInfo() && (
-          <Avatar id={author.id} name={author.attrs.name} size="medium" />
+          <Avatar
+            id={message.author.id}
+            name={message.author.name}
+            size="medium"
+          />
         )}
       </div>
 
       <div className="relative w-full">
         {shouldDisplayUserInfo() && (
           <p className="font-medium">
-            {author.attrs.name}
+            {message.author.name}
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="ml-2 text-xs text-muted-foreground">
@@ -122,7 +119,9 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           </ul>
           {/*{data.messageReference && <MessageReference />}*/}
           <div className="text-foreground">
-            <NodeRenderer node={message} keyPrefix={message.id} />
+            {message.content.map((node) => (
+              <NodeRenderer key={node.id} node={node} keyPrefix={node.id} />
+            ))}
           </div>
           {/*<MessageReactions*/}
           {/*  message={message}*/}

@@ -1,9 +1,7 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
-import { SidebarNodeChildren } from '@/components/workspaces/sidebar-node-children';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,17 +15,19 @@ import { NodeTypes } from '@/lib/constants';
 import { ChannelCreateDialog } from '@/components/channels/channel-create-dialog';
 import { PageCreateDialog } from '@/components/pages/page-create-dialog';
 import { DatabaseCreateDialog } from '@/components/databases/database-create-dialog';
+import { SidebarSpaceNode } from '@/types/workspaces';
+import { SidebarItem } from '@/components/workspaces/sidebars/sidebar-item';
 
 interface SettingsState {
   open: boolean;
   tab?: string;
 }
 
-interface SpaceSidebarNodeProps {
-  node: LocalNode;
+interface SidebarSpaceNodeProps {
+  node: SidebarSpaceNode;
 }
 
-export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
+export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
   const [isOpen, setIsOpen] = React.useState(true);
   const [openCreatePage, setOpenCreatePage] = React.useState(false);
   const [openCreateChannel, setOpenCreateChannel] = React.useState(false);
@@ -38,8 +38,7 @@ export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
   });
 
   const isActive = false;
-  const avatar = node.attrs.avatar;
-  const name = node.attrs.name ?? 'Unnamed';
+
   return (
     <React.Fragment>
       <div
@@ -49,12 +48,17 @@ export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
           isActive && 'bg-gray-100',
         )}
       >
-        <Avatar id={node.id} avatar={avatar} name={name} size="small" />
+        <Avatar
+          id={node.id}
+          avatar={node.avatar}
+          name={node.name}
+          size="small"
+        />
         <span
           className="line-clamp-1 w-full flex-grow pl-2 text-left"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {name}
+          {node.name ?? 'Unnamed'}
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -63,7 +67,7 @@ export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="ml-1 w-72">
-            <DropdownMenuLabel>{name}</DropdownMenuLabel>
+            <DropdownMenuLabel>{node.name ?? 'Unnamed'}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
               <div className="flex flex-row items-center gap-2">
@@ -114,7 +118,9 @@ export const SpaceSidebarNode = ({ node }: SpaceSidebarNodeProps) => {
       </div>
       {isOpen && (
         <div className="pl-4">
-          <SidebarNodeChildren node={node} />
+          {node.children.map((child) => (
+            <SidebarItem key={child.id} node={child} />
+          ))}
         </div>
       )}
       {openCreateChannel && (

@@ -11,15 +11,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
-import { SelectOption } from '@/types/databases';
+import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
-import { useWorkspace } from '@/contexts/workspace';
-import { NeuronId } from '@/lib/id';
-import { useMutation } from '@tanstack/react-query';
-import { sql } from 'kysely';
+import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
+import { useUpdateSelectOptionColorMutation } from '@/mutations/use-update-select-option-color-mutation';
 
 interface SelectOptionSettingsPopoverProps {
-  option: SelectOption;
+  option: SelectOptionNode;
 }
 
 interface UpdateSelectOptionInput {
@@ -30,26 +28,8 @@ interface UpdateSelectOptionInput {
 export const SelectOptionSettingsPopover = ({
   option,
 }: SelectOptionSettingsPopoverProps) => {
-  const workspace = useWorkspace();
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (input: UpdateSelectOptionInput) => {
-      const query = sql`
-        UPDATE nodes
-        SET attrs = json_set(
-          coalesce(attrs, '{}'),
-          '$.name', ${input.name},
-          '$.color', ${input.color}
-        ),
-        updated_at = ${new Date().toISOString()},
-        updated_by = ${workspace.userId},
-        version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-        WHERE id = ${option.id}
-      `.compile(workspace.schema);
-
-      await workspace.mutate(query);
-    },
-  });
+  const nameMutation = useNodeUpdateNameMutation();
+  const colorMutation = useUpdateSelectOptionColorMutation();
 
   const [name, setName] = React.useState(option.name);
   const [openSetttingsPopover, setOpenSetttingsPopover] = React.useState(false);
@@ -73,19 +53,19 @@ export const SelectOptionSettingsPopover = ({
                 setName(e.target.value);
               }}
               onBlur={() => {
-                if (name !== option.name && !isPending) {
-                  mutate({
+                if (name !== option.name && !nameMutation.isPending) {
+                  nameMutation.mutate({
+                    id: option.id,
                     name,
-                    color: option.color,
                   });
                 }
               }}
               onKeyDown={(e) => {
                 if (isHotkey('enter', e)) {
-                  if (name !== option.name && !isPending) {
-                    mutate({
+                  if (name !== option.name && !nameMutation.isPending) {
+                    nameMutation.mutate({
+                      id: option.id,
                       name,
-                      color: option.color,
                     });
                   }
                   e.preventDefault();
@@ -101,10 +81,15 @@ export const SelectOptionSettingsPopover = ({
                 key={color.value}
                 className="flex cursor-pointer flex-row items-center gap-2 rounded-md p-1 hover:bg-gray-100"
                 onClick={() => {
-                  mutate({
-                    name,
-                    color: color.value,
-                  });
+                  if (
+                    color.value !== option.color &&
+                    !colorMutation.isPending
+                  ) {
+                    colorMutation.mutate({
+                      id: option.id,
+                      color: color.value,
+                    });
+                  }
                 }}
               >
                 <span className={cn('h-4 w-4 rounded-md', color.class)} />

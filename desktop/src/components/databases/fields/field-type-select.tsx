@@ -15,75 +15,78 @@ import {
 } from '@/components/ui/command';
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon } from '@/lib/databases';
-import { FieldType } from '@/types/databases';
+import { FieldDataType } from '@/types/databases';
 import { cn } from '@/lib/utils';
 
 interface FieldTypeOption {
   name: string;
-  type: FieldType;
+  dataType: FieldDataType;
 }
 
 const fieldTypes: FieldTypeOption[] = [
   {
     name: 'Boolean',
-    type: 'boolean',
+    dataType: 'boolean',
   },
   {
     name: 'Collaborator',
-    type: 'collaborator',
+    dataType: 'collaborator',
   },
   {
     name: 'Created Date & Time',
-    type: 'created_at',
+    dataType: 'created_at',
   },
   {
     name: 'Created by user',
-    type: 'created_by',
+    dataType: 'created_by',
   },
   {
     name: 'Date',
-    type: 'date',
+    dataType: 'date',
   },
   {
     name: 'Email',
-    type: 'email',
+    dataType: 'email',
   },
   {
     name: 'File',
-    type: 'file',
+    dataType: 'file',
   },
   {
     name: 'Multi Select',
-    type: 'multi_select',
+    dataType: 'multi_select',
   },
   {
     name: 'Number',
-    type: 'number',
+    dataType: 'number',
   },
   {
     name: 'Phone',
-    type: 'phone',
+    dataType: 'phone',
   },
   {
     name: 'Select',
-    type: 'select',
+    dataType: 'select',
   },
   {
     name: 'Text',
-    type: 'text',
+    dataType: 'text',
   },
   {
     name: 'Url',
-    type: 'url',
+    dataType: 'url',
   },
 ];
 
-interface FieldTypeSelectProps {
-  type: string | null;
-  onChange: (type: FieldType) => void;
+interface FieldDataTypeSelectProps {
+  dataType: string | null;
+  onChange: (type: FieldDataType) => void;
 }
 
-export const FieldTypeSelect = ({ type, onChange }: FieldTypeSelectProps) => {
+export const FieldDataTypeSelect = ({
+  dataType,
+  onChange,
+}: FieldDataTypeSelectProps) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -96,9 +99,10 @@ export const FieldTypeSelect = ({ type, onChange }: FieldTypeSelectProps) => {
           className="w-full justify-between p-2"
         >
           <span className="flex flex-row items-center gap-1">
-            <Icon name={getFieldIcon(type as FieldType)} />
-            {type
-              ? fieldTypes.find((fieldType) => fieldType.type === type)?.name
+            <Icon name={getFieldIcon(dataType as FieldDataType)} />
+            {dataType
+              ? fieldTypes.find((fieldType) => fieldType.dataType === dataType)
+                  ?.name
               : 'Select field type...'}
           </span>
           <Icon
@@ -115,20 +119,22 @@ export const FieldTypeSelect = ({ type, onChange }: FieldTypeSelectProps) => {
             <CommandGroup className="h-min max-h-96">
               {fieldTypes.map((fieldType) => (
                 <CommandItem
-                  key={fieldType.type}
+                  key={fieldType.dataType}
                   onSelect={() => {
-                    onChange(fieldType.type);
+                    onChange(fieldType.dataType);
                     setOpen(false);
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <Icon name={getFieldIcon(fieldType.type)} />
+                    <Icon name={getFieldIcon(fieldType.dataType)} />
                     <p>{fieldType.name}</p>
                     <Icon
                       name="check-line"
                       className={cn(
                         'ml-auto h-4 w-4',
-                        type === fieldType.type ? 'opacity-100' : 'opacity-0',
+                        dataType === fieldType.dataType
+                          ? 'opacity-100'
+                          : 'opacity-0',
                       )}
                     />
                   </div>

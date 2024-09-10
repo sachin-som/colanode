@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { getFieldIcon } from '@/lib/databases';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 're-resizable';
-import { Field } from '@/types/databases';
+import { FieldNode } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -16,7 +16,7 @@ import { FieldRenameInput } from '@/components/databases/fields/field-rename-inp
 import { useTableView } from '@/contexts/table-view';
 
 interface TableViewFieldHeaderProps {
-  field: Field;
+  field: FieldNode;
 }
 
 export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
@@ -27,7 +27,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
 
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
-  const [, dragRef] = useDrag<Field>({
+  const [, dragRef] = useDrag<FieldNode>({
     type: 'table-field-header',
     item: field,
     canDrag: () => canEditView,
@@ -60,13 +60,13 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
     <React.Fragment>
       <Resizable
         defaultSize={{
-          width: `${tableView.getFieldWidth(field.id, field.type)}px`,
+          width: `${tableView.getFieldWidth(field.id, field.dataType)}px`,
           height: '2rem',
         }}
         minWidth={100}
         maxWidth={500}
         size={{
-          width: `${tableView.getFieldWidth(field.id, field.type)}px`,
+          width: `${tableView.getFieldWidth(field.id, field.dataType)}px`,
           height: '2rem',
         }}
         enable={{
@@ -104,7 +104,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
               )}
               ref={dragDropRef as any}
             >
-              <Icon name={getFieldIcon(field.type)} />
+              <Icon name={getFieldIcon(field.dataType)} />
               <p>{field.name}</p>
             </div>
           </PopoverTrigger>

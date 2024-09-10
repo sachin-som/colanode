@@ -2,11 +2,9 @@ import React from 'react';
 import isHotkey from 'is-hotkey';
 import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@tanstack/react-query';
-import { NeuronId } from '@/lib/id';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
-import { sql } from 'kysely';
+import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
 
 interface NameEditorProps {
   initialValue: string;
@@ -55,25 +53,12 @@ interface TableViewNameCellProps {
 export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const workspace = useWorkspace();
   const [isEditing, setIsEditing] = React.useState(false);
-  const [name, setName] = React.useState(record.attrs?.name);
+  const [name, setName] = React.useState(record.name);
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (newName: string) => {
-      const query = sql`
-        UPDATE nodes
-        SET attrs = json_set(coalesce(attrs, '{}'), '$.name', ${newName}),
-            updated_at = ${new Date().toISOString()},
-            updated_by = ${workspace.userId},
-            version_id = ${NeuronId.generate(NeuronId.Type.Version)}
-        WHERE id = ${record.id}
-      `.compile(workspace.schema);
-
-      await workspace.mutate(query);
-    },
-  });
+  const { mutate, isPending } = useNodeUpdateNameMutation();
 
   React.useEffect(() => {
-    setName(record.attrs?.name);
+    setName(record.name);
   }, [record.versionId]);
 
   const canEdit = true;
@@ -81,18 +66,21 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
 
   const handleSave = (newName: string) => {
     setName(newName);
-    mutate(newName, {
-      onSuccess: () => {
-        setIsEditing(false);
+    mutate(
+      { id: record.id, name: newName },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
       },
-    });
+    );
   };
 
   return (
     <div className="group relative flex h-full w-full items-center">
       {isEditing ? (
         <NameEditor
-          initialValue={name}
+          initialValue={name ?? ''}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />

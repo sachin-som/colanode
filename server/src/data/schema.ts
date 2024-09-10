@@ -82,11 +82,6 @@ interface NodeTable {
   parent_id: ColumnType<string | null, string | null, string | null>;
   type: ColumnType<string, string, string>;
   index: ColumnType<string | null, string | null, string | null>;
-  attrs: JSONColumnType<
-    Record<string, any> | null,
-    string | null,
-    string | null
-  >;
   content: JSONColumnType<NodeBlock[] | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
@@ -100,6 +95,27 @@ interface NodeTable {
 export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
+
+interface NodeAttributeTable {
+  node_id: ColumnType<string, string, never>;
+  type: ColumnType<string, string, never>;
+  key: ColumnType<string, string, string>;
+  workspace_id: ColumnType<string, string, never>;
+  text_value: ColumnType<string | null, string | null, string | null>;
+  number_value: ColumnType<number | null, number | null, number | null>;
+  foreign_node_id: ColumnType<string | null, string | null, string | null>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date>;
+  created_by: ColumnType<string, string, never>;
+  updated_by: ColumnType<string | null, string | null, string>;
+  version_id: ColumnType<string, string, string>;
+  server_created_at: ColumnType<Date, Date, never>;
+  server_updated_at: ColumnType<Date | null, Date | null, Date>;
+}
+
+export type SelectNodeAttribute = Selectable<NodeAttributeTable>;
+export type CreateNodeAttribute = Insertable<NodeAttributeTable>;
+export type UpdateNodeAttribute = Updateable<NodeAttributeTable>;
 
 interface MutationTable {
   id: ColumnType<string, string, never>;
@@ -122,5 +138,6 @@ export interface DatabaseSchema {
   workspace_accounts: WorkspaceAccountTable;
   account_devices: AccountDeviceTable;
   nodes: NodeTable;
+  node_attributes: NodeAttributeTable;
   mutations: MutationTable;
 }

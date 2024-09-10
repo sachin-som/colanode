@@ -1,9 +1,9 @@
 import React from 'react';
 import { NodeChildrenRenderer } from '@/editor/renderers/node-children';
-import { LocalNodeWithChildren } from '@/types/nodes';
+import { LocalNodeWithAttributesAndChildren } from '@/types/nodes';
 
 interface MessageRendererProps {
-  node: LocalNodeWithChildren;
+  node: LocalNodeWithAttributesAndChildren;
   keyPrefix: string | null;
 }
 

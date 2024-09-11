@@ -28,7 +28,7 @@ export const DatabaseViews = ({ views }: DatabaseViewsProps) => {
           ))}
           <ViewCreateButton />
         </div>
-        <ViewActions />
+        {selectedView && <ViewActions viewId={selectedView.id} />}
       </div>
       {selectedView && <View node={selectedView} />}
     </div>

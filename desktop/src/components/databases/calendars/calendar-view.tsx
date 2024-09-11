@@ -1,8 +1,8 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
+import { CalendarViewNode } from '@/types/databases';
 
 interface CalendarViewProps {
-  node: LocalNode;
+  node: CalendarViewNode;
 }
 
 export const CalendarView = ({ node }: CalendarViewProps) => {

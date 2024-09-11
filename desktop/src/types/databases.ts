@@ -19,18 +19,21 @@ export type TableViewNode = {
   fieldWidths: Record<string, number>;
   nameWidth: number;
   versionId: string;
+  filters: ViewFilterNode[];
 };
 
 export type BoardViewNode = {
   id: string;
   name: string;
   type: 'board_view';
+  filters: ViewFilterNode[];
 };
 
 export type CalendarViewNode = {
   id: string;
   name: string;
   type: 'calendar_view';
+  filters: ViewFilterNode[];
 };
 
 export type FieldDataType =
@@ -171,4 +174,11 @@ export type RecordNode = {
   versionId: string;
 
   attributes: LocalNodeAttribute[];
+};
+
+export type ViewFilterNode = {
+  id: string;
+  fieldId: string;
+  operator: string;
+  value: number | string | string[] | null;
 };

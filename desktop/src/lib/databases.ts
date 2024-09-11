@@ -148,3 +148,332 @@ export const getRandomSelectOptionColor = (): string => {
     Math.floor(Math.random() * selectOptionColors.length)
   ].value;
 };
+
+export interface FieldFilterOperator {
+  label: string;
+  value: string;
+}
+
+export const booleanFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is True',
+    value: 'is_true',
+  },
+  {
+    label: 'Is False',
+    value: 'is_false',
+  },
+];
+
+export const collaboratorFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Me',
+    value: 'is_me',
+  },
+  {
+    label: 'Is Not Me',
+    value: 'is_not_me',
+  },
+  {
+    label: 'Is In',
+    value: 'is_in',
+  },
+  {
+    label: 'Is Not In',
+    value: 'is_not_in',
+  },
+];
+
+export const createdAtFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+];
+
+export const createdByFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Me',
+    value: 'is_me',
+  },
+  {
+    label: 'Is Not Me',
+    value: 'is_not_me',
+  },
+  {
+    label: 'Is In',
+    value: 'is_in',
+  },
+  {
+    label: 'Is Not In',
+    value: 'is_not_in',
+  },
+];
+
+export const dateFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+];
+
+export const emailFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+  {
+    label: 'Contains',
+    value: 'contains',
+  },
+  {
+    label: 'Does Not Contain',
+    value: 'does_not_contain',
+  },
+];
+
+export const fileFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is In',
+    value: 'is_in',
+  },
+  {
+    label: 'Is Not In',
+    value: 'is_not_in',
+  },
+];
+
+export const multiSelectFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is In',
+    value: 'is_in',
+  },
+  {
+    label: 'Is Not In',
+    value: 'is_not_in',
+  },
+];
+
+export const numberFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+  {
+    label: 'Is Greater Than',
+    value: 'is_greater_than',
+  },
+  {
+    label: 'Is Less Than',
+    value: 'is_less_than',
+  },
+  {
+    label: 'Is Greater Than Or Equal To',
+    value: 'is_greater_than_or_equal_to',
+  },
+  {
+    label: 'Is Less Than Or Equal To',
+    value: 'is_less_than_or_equal_to',
+  },
+];
+
+export const phoneFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+  {
+    label: 'Contains',
+    value: 'contains',
+  },
+  {
+    label: 'Does Not Contain',
+    value: 'does_not_contain',
+  },
+];
+
+export const selectFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is In',
+    value: 'is_in',
+  },
+  {
+    label: 'Is Not In',
+    value: 'is_not_in',
+  },
+];
+
+export const textFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+  {
+    label: 'Contains',
+    value: 'contains',
+  },
+  {
+    label: 'Does Not Contain',
+    value: 'does_not_contain',
+  },
+];
+
+export const urlFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
+  },
+  {
+    label: 'Is Equal To',
+    value: 'is_equal_to',
+  },
+  {
+    label: 'Is Not Equal To',
+    value: 'is_not_equal_to',
+  },
+  {
+    label: 'Contains',
+    value: 'contains',
+  },
+  {
+    label: 'Does Not Contain',
+    value: 'does_not_contain',
+  },
+];
+
+export const getFieldFilterOperators = (
+  dataType: FieldDataType,
+): FieldFilterOperator[] => {
+  if (!dataType) return [];
+
+  switch (dataType) {
+    case 'boolean':
+      return booleanFieldFilterOperators;
+    case 'collaborator':
+      return collaboratorFieldFilterOperators;
+    case 'created_at':
+      return createdAtFieldFilterOperators;
+    case 'created_by':
+      return createdByFieldFilterOperators;
+    case 'date':
+      return dateFieldFilterOperators;
+    case 'email':
+      return emailFieldFilterOperators;
+    case 'file':
+      return fileFieldFilterOperators;
+    case 'multi_select':
+      return multiSelectFieldFilterOperators;
+    case 'number':
+      return numberFieldFilterOperators;
+    case 'phone':
+      return phoneFieldFilterOperators;
+    case 'select':
+      return selectFieldFilterOperators;
+    case 'text':
+      return textFieldFilterOperators;
+    case 'url':
+      return urlFieldFilterOperators;
+    default:
+      return [];
+  }
+};

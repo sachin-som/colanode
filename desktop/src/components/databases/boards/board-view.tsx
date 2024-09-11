@@ -1,8 +1,8 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
+import { BoardViewNode } from '@/types/databases';
 
 interface BoardViewProps {
-  node: LocalNode;
+  node: BoardViewNode;
 }
 
 export const BoardView = ({ node }: BoardViewProps) => {

@@ -3,9 +3,11 @@ import { createContext, useContext } from 'react';
 
 interface TableViewContext {
   id: string;
+  name: string;
   fields: FieldNode[];
   hideField: (id: string) => void;
   showField: (id: string) => void;
+  isHiddenField: (id: string) => boolean;
   getNameWidth: () => number;
   resizeName: (width: number) => void;
   getFieldWidth: (id: string, type: FieldDataType) => number;

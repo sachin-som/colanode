@@ -1,16 +1,12 @@
 import React from 'react';
-import { ViewSettingsButton } from '@/components/databases/view-settings-button';
 import { ViewSortButton } from '@/components/databases/view-sort-button';
 import { ViewFiltersPopover } from '@/components/databases/filters/view-filters-popover';
+import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 
-interface ViewActionsProps {
-  viewId: string;
-}
-
-export const ViewActions = ({ viewId }: ViewActionsProps) => {
+export const TableViewActions = () => {
   return (
     <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
-      <ViewSettingsButton />
+      <TableViewSettingsPopover />
       <ViewSortButton />
       <ViewFiltersPopover />
     </div>

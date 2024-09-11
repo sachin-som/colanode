@@ -12,6 +12,8 @@ import { useUpdateViewFieldIndexMutation } from '@/mutations/use-update-view-fie
 import { useUpdateViewNameWidthMutation } from '@/mutations/use-update-view-name-width-mutation';
 import { useUpdateViewFieldWidthMutation } from '@/mutations/use-update-view-field-width-mutation';
 import { useUpdateViewHiddenFieldMutation } from '@/mutations/use-update-hidden-field-mutation';
+import { ViewTabs } from '@/components/databases/view-tabs';
+import { TableViewActions } from '@/components/databases/tables/table-view-actions';
 
 interface TableViewProps {
   node: TableViewNode;
@@ -60,6 +62,7 @@ export const TableView = ({ node }: TableViewProps) => {
     <TableViewContext.Provider
       value={{
         id: node.id,
+        name: node.name,
         fields,
         hideField: (id: string) => {
           if (hiddenFields.includes(id)) {
@@ -86,6 +89,7 @@ export const TableView = ({ node }: TableViewProps) => {
             hide: false,
           });
         },
+        isHiddenField: (id: string) => hiddenFields.includes(id),
         getNameWidth: () => nameWidth,
         resizeName: (width: number) => {
           setNameWidth(width);
@@ -178,6 +182,10 @@ export const TableView = ({ node }: TableViewProps) => {
         },
       }}
     >
+      <div className="mt-2 flex flex-row justify-between border-b">
+        <ViewTabs />
+        <TableViewActions />
+      </div>
       <div className="mt-2 w-full min-w-full max-w-full overflow-auto pr-5">
         <TableViewHeader />
         <TableViewBody />

@@ -16,7 +16,7 @@ export const useUpdateViewHiddenFieldMutation = () => {
     mutationFn: async (input: UpdateHiddenFieldInput) => {
       const { viewId, fieldId, hide } = input;
 
-      if (hide) {
+      if (!hide) {
         const query = workspace.schema
           .deleteFrom('node_attributes')
           .where((eb) =>

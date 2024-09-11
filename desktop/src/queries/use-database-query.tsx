@@ -348,6 +348,7 @@ const buildTableViewNode = (node: LocalNodeWithAttributes): TableViewNode => {
     fieldWidths,
     nameWidth: nameWidth,
     versionId: node.versionId,
+    filters: [],
   };
 };
 
@@ -360,6 +361,7 @@ const buildBoardViewNode = (node: LocalNodeWithAttributes): BoardViewNode => {
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'board_view',
+    filters: [],
   };
 };
 
@@ -374,5 +376,6 @@ const buildCalendarViewNode = (
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'calendar_view',
+    filters: [],
   };
 };

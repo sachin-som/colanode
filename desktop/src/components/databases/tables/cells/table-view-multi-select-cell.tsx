@@ -7,7 +7,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useUpdateMultiSelectFieldValueMutation } from '@/mutations/use-update-multi-select-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 
 const getMultiSelectValues = (
   record: RecordNode,
@@ -26,7 +27,13 @@ export const TableViewMultiSelectCell = ({
   record,
   field,
 }: TableViewMultiSelectCellProps) => {
-  const { mutate, isPending } = useUpdateMultiSelectFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
+
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+
   const [open, setOpen] = React.useState(false);
   const [selectedValues, setSelectedValues] = React.useState(
     getMultiSelectValues(record, field),
@@ -63,19 +70,20 @@ export const TableViewMultiSelectCell = ({
 
             if (selectedValues.includes(id)) {
               setSelectedValues(selectedValues.filter((v) => v !== id));
-              mutate({
-                recordId: record.id,
-                fieldId: field.id,
-                selectOptionId: id,
-                add: false,
+              deleteNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: id,
               });
             } else {
               setSelectedValues([...selectedValues, id]);
-              mutate({
-                recordId: record.id,
-                fieldId: field.id,
-                selectOptionId: id,
-                add: true,
+              upsertNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: id,
+                foreignNodeId: id,
+                numberValue: null,
+                textValue: null,
               });
             }
           }}

@@ -1,8 +1,9 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import { RecordNode } from '@/types/databases';
 import { NumberFieldNode } from '@/types/databases';
-import { useUpdateNumberFieldValueMutation } from '@/mutations/use-update-number-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { SmartNumberInput } from '@/components/ui/smart-number-input';
 
 const getNumberValue = (
   record: RecordNode,
@@ -21,55 +22,44 @@ export const TableViewNumberCell = ({
   record,
   field,
 }: TableViewNumberCellProps) => {
-  const { mutate, isPending } = useUpdateNumberFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-
-  const [input, setInput] = React.useState<string>(
-    getNumberValue(record, field)?.toString() ?? '',
-  );
-
-  React.useEffect(() => {
-    setInput(getNumberValue(record, field)?.toString() ?? '');
-  }, [record.versionId]);
-
-  const saveIfChanged = (current: number | null, previous: number | null) => {
-    if (current !== previous) {
-      mutate({
-        recordId: record.id,
-        fieldId: field.id,
-        value: current,
-      });
-    }
-  };
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
 
   return (
-    <input
-      className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"
+    <SmartNumberInput
+      value={getNumberValue(record, field)}
       readOnly={!canEdit || isPending}
-      value={input ?? ''}
-      onChange={(e) => setInput(e.target.value)}
-      onBlur={() => {
-        const number = Number(input);
-        if (Number.isNaN(number)) {
-          setInput('');
-          saveIfChanged(null, getNumberValue(record, field));
+      onChange={(newValue) => {
+        if (isPending) return;
+        if (!canEdit) return;
+
+        if (newValue === getNumberValue(record, field)) {
+          return;
+        }
+
+        if (newValue === null) {
+          deleteNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+          });
         } else {
-          saveIfChanged(number, getNumberValue(record, field));
+          upsertNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+            numberValue: newValue,
+            textValue: null,
+            foreignNodeId: null,
+          });
         }
       }}
-      onKeyDown={(e) => {
-        if (isHotkey('enter', e)) {
-          const number = Number(input);
-          if (Number.isNaN(number)) {
-            setInput('');
-            saveIfChanged(null, getNumberValue(record, field));
-          } else {
-            saveIfChanged(number, getNumberValue(record, field));
-          }
-          e.preventDefault();
-        }
-      }}
+      className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"
     />
   );
 };

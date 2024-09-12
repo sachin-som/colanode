@@ -6,10 +6,11 @@ interface SmartTextInputProps {
   value: string | null;
   onChange: (newValue: string) => void;
   className?: string;
+  readOnly?: boolean;
 }
 
 const SmartTextInput = React.forwardRef<HTMLInputElement, SmartTextInputProps>(
-  ({ value, onChange, className, ...props }, ref) => {
+  ({ value, onChange, className, readOnly, ...props }, ref) => {
     const [localValue, setLocalValue] = React.useState(value ?? '');
     const initialValue = React.useRef(value ?? '');
 
@@ -69,6 +70,7 @@ const SmartTextInput = React.forwardRef<HTMLInputElement, SmartTextInputProps>(
         onChange={handleChange}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
+        readOnly={readOnly}
         {...props}
       />
     );

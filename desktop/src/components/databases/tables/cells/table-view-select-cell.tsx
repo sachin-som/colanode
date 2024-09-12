@@ -7,7 +7,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useUpdateSelectFieldValueMutation } from '@/mutations/use-update-select-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 
 const getSelectValue = (
   record: RecordNode,
@@ -26,7 +27,13 @@ export const TableViewSelectCell = ({
   record,
   field,
 }: TableViewSelectCellProps) => {
-  const { mutate, isPending } = useUpdateSelectFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
+
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
     getSelectValue(record, field) ?? '',
@@ -65,20 +72,20 @@ export const TableViewSelectCell = ({
 
             if (selectedValue === id) {
               setSelectedValue('');
-              mutate({
-                recordId: record.id,
-                fieldId: field.id,
-                selectOptionId: id,
-                add: false,
+              deleteNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: '1',
               });
             } else {
-              setSelectedValue(id);
-              mutate(
+              upsertNodeAttribute(
                 {
-                  recordId: record.id,
-                  fieldId: field.id,
-                  selectOptionId: id,
-                  add: true,
+                  nodeId: record.id,
+                  type: field.id,
+                  key: '1',
+                  foreignNodeId: id,
+                  textValue: null,
+                  numberValue: null,
                 },
                 {
                   onSuccess: () => {
@@ -87,6 +94,7 @@ export const TableViewSelectCell = ({
                 },
               );
             }
+            setSelectedValue(id);
           }}
         />
       </PopoverContent>

@@ -1,5 +1,4 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import { RecordNode, UrlFieldNode } from '@/types/databases';
 import { cn, isValidUrl } from '@/lib/utils';
 import {
@@ -8,7 +7,9 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Icon } from '@/components/ui/icon';
-import { useUpdateUrlFieldValueMutation } from '@/mutations/use-update-url-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
 
 const getUrlValue = (record: RecordNode, field: UrlFieldNode): string => {
   const attribute = record.attributes.find((attr) => attr.type === field.id);
@@ -18,56 +19,51 @@ const getUrlValue = (record: RecordNode, field: UrlFieldNode): string => {
 interface TableViewUrlCellProps {
   record: RecordNode;
   field: UrlFieldNode;
-  className?: string;
 }
 
-export const TableViewUrlCell = ({
-  record,
-  field,
-  className,
-}: TableViewUrlCellProps) => {
-  const { mutate, isPending } = useUpdateUrlFieldValueMutation();
+export const TableViewUrlCell = ({ record, field }: TableViewUrlCellProps) => {
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-
-  const [text, setText] = React.useState<string>(
-    getUrlValue(record, field) ?? '',
-  );
-
-  React.useEffect(() => {
-    setText(getUrlValue(record, field) ?? '');
-  }, [record.versionId]);
-
-  const saveIfChanged = (current: string, previous: string | null) => {
-    if (current.length && current !== previous) {
-      mutate({
-        recordId: record.id,
-        fieldId: field.id,
-        value: current,
-      });
-    }
-  };
-
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const text = getUrlValue(record, field);
   const isUrl = text.length > 0 && isValidUrl(text);
 
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger>
-        <input
+        <SmartTextInput
           value={text}
           readOnly={!canEdit || isPending}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={() => saveIfChanged(text, getUrlValue(record, field))}
-          onKeyDown={(e) => {
-            if (isHotkey('enter', e)) {
-              saveIfChanged(text, getUrlValue(record, field));
-              e.preventDefault();
+          onChange={(newValue) => {
+            if (isPending) return;
+            if (!canEdit) return;
+
+            if (newValue === text) {
+              return;
+            }
+
+            if (newValue === null || newValue === '') {
+              deleteNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: '1',
+              });
+            } else {
+              upsertNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: '1',
+                numberValue: 1,
+                textValue: newValue,
+                foreignNodeId: null,
+              });
             }
           }}
-          className={cn(
-            'flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text',
-            className,
-          )}
+          className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"
         />
       </HoverCardTrigger>
       <HoverCardContent

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useUpdateBooleanFieldValueMutation } from '@/mutations/use-update-boolean-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 
 const getBooleanValue = (
   record: RecordNode,
@@ -24,8 +25,12 @@ export const TableViewBooleanCell = ({
   record,
   field,
 }: TableViewBooleanCellProps) => {
-  const { mutate, isPending } = useUpdateBooleanFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
 
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
   const canEdit = true;
 
   const [input, setInput] = React.useState<boolean>(
@@ -47,11 +52,23 @@ export const TableViewBooleanCell = ({
 
           if (typeof e === 'boolean') {
             setInput(e.valueOf());
-            mutate({
-              recordId: record.id,
-              fieldId: field.id,
-              value: e.valueOf(),
-            });
+            const checked = e.valueOf();
+            if (checked) {
+              upsertNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: '1',
+                numberValue: 1,
+                textValue: null,
+                foreignNodeId: null,
+              });
+            } else {
+              deleteNodeAttribute({
+                nodeId: record.id,
+                type: field.id,
+                key: '1',
+              });
+            }
           }
         }}
       />

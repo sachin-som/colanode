@@ -1,7 +1,8 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import { RecordNode, PhoneFieldNode } from '@/types/databases';
-import { useUpdatePhoneFieldValueMutation } from '@/mutations/use-update-phone-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
 
 const getPhoneValue = (record: RecordNode, field: PhoneFieldNode): string => {
   const attribute = record.attributes.find((attr) => attr.type === field.id);
@@ -17,38 +18,41 @@ export const TableViewPhoneCell = ({
   record,
   field,
 }: TableViewPhoneCellProps) => {
-  const { mutate, isPending } = useUpdatePhoneFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-
-  const [text, setText] = React.useState<string>(
-    getPhoneValue(record, field) ?? '',
-  );
-
-  React.useEffect(() => {
-    setText(getPhoneValue(record, field) ?? '');
-  }, [record.versionId]);
-
-  const saveIfChanged = (current: string, previous: string | null) => {
-    if (current.length && current !== previous) {
-      mutate({
-        recordId: record.id,
-        fieldId: field.id,
-        value: current,
-      });
-    }
-  };
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
 
   return (
-    <input
-      value={text}
+    <SmartTextInput
+      value={getPhoneValue(record, field)}
       readOnly={!canEdit || isPending}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => saveIfChanged(text, getPhoneValue(record, field))}
-      onKeyDown={(e) => {
-        if (isHotkey('enter', e)) {
-          saveIfChanged(text, getPhoneValue(record, field));
-          e.preventDefault();
+      onChange={(newValue) => {
+        if (isPending) return;
+        if (!canEdit) return;
+
+        if (newValue === getPhoneValue(record, field)) {
+          return;
+        }
+
+        if (newValue === null || newValue === '') {
+          deleteNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+          });
+        } else {
+          upsertNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+            numberValue: 1,
+            textValue: newValue,
+            foreignNodeId: null,
+          });
         }
       }}
       className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"

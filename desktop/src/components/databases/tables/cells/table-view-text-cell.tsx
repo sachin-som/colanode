@@ -1,7 +1,8 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import { RecordNode, TextFieldNode } from '@/types/databases';
-import { useUpdateTextFieldValueMutation } from '@/mutations/use-update-text-field-value-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
 
 const getTextValue = (record: RecordNode, field: TextFieldNode): string => {
   const attribute = record.attributes.find((attr) => attr.type === field.id);
@@ -17,38 +18,41 @@ export const TableViewTextCell = ({
   record,
   field,
 }: TableViewTextCellProps) => {
-  const { mutate, isPending } = useUpdateTextFieldValueMutation();
+  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
+    useNodeAttributeUpsertMutation();
+  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
+    useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-
-  const [text, setText] = React.useState<string>(
-    getTextValue(record, field) ?? '',
-  );
-
-  React.useEffect(() => {
-    setText(getTextValue(record, field) ?? '');
-  }, [record.versionId]);
-
-  const saveIfChanged = (current: string, previous: string | null) => {
-    if (current.length && current !== previous) {
-      mutate({
-        recordId: record.id,
-        fieldId: field.id,
-        value: current,
-      });
-    }
-  };
+  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
 
   return (
-    <input
+    <SmartTextInput
+      value={getTextValue(record, field)}
       readOnly={!canEdit || isPending}
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => saveIfChanged(text, getTextValue(record, field))}
-      onKeyDown={(e) => {
-        if (isHotkey('enter', e)) {
-          saveIfChanged(text, getTextValue(record, field));
-          e.preventDefault();
+      onChange={(newValue) => {
+        if (isPending) return;
+        if (!canEdit) return;
+
+        if (newValue === getTextValue(record, field)) {
+          return;
+        }
+
+        if (newValue === null || newValue === '') {
+          deleteNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+          });
+        } else {
+          upsertNodeAttribute({
+            nodeId: record.id,
+            type: field.id,
+            key: '1',
+            numberValue: 1,
+            textValue: newValue,
+            foreignNodeId: null,
+          });
         }
       }}
       className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"

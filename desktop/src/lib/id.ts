@@ -36,6 +36,7 @@ enum IdType {
   CalendarView = 'cv',
   Field = 'fi',
   SelectOption = 'so',
+  ViewFilter = 'vf',
 }
 
 export class NeuronId {
@@ -105,6 +106,8 @@ export class NeuronId {
         return IdType.Field;
       case NodeTypes.SelectOption:
         return IdType.SelectOption;
+      case NodeTypes.ViewFilter:
+        return IdType.ViewFilter;
       default:
         return IdType.Node;
     }

@@ -6,14 +6,16 @@ import { TableViewContext } from '@/contexts/table-view';
 import { useDatabase } from '@/contexts/database';
 import { compareString } from '@/lib/utils';
 import { FieldDataType, TableViewNode } from '@/types/databases';
+import { ViewTabs } from '@/components/databases/view-tabs';
+import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
 import { useUpdateViewFieldIndexMutation } from '@/mutations/use-update-view-field-index-mutation';
 import { useUpdateViewNameWidthMutation } from '@/mutations/use-update-view-name-width-mutation';
 import { useUpdateViewFieldWidthMutation } from '@/mutations/use-update-view-field-width-mutation';
 import { useUpdateViewHiddenFieldMutation } from '@/mutations/use-update-hidden-field-mutation';
-import { ViewTabs } from '@/components/databases/view-tabs';
-import { TableViewActions } from '@/components/databases/tables/table-view-actions';
+import { ViewFilters } from '@/components/databases/filters/view-filters';
+import { ViewActionButton } from '@/components/databases/view-action-button';
 
 interface TableViewProps {
   node: TableViewNode;
@@ -40,6 +42,9 @@ export const TableView = ({ node }: TableViewProps) => {
     node.nameWidth ?? getDefaultNameWidth(),
   );
 
+  const [openFilters, setOpenFilters] = React.useState(true);
+  const [openSort, setOpenSort] = React.useState(false);
+
   React.useEffect(() => {
     setHiddenFields(node.hiddenFields ?? []);
     setFieldIndexes(node.fieldIndexes ?? {});
@@ -64,6 +69,7 @@ export const TableView = ({ node }: TableViewProps) => {
         id: node.id,
         name: node.name,
         fields,
+        filters: node.filters,
         hideField: (id: string) => {
           if (hiddenFields.includes(id)) {
             return;
@@ -184,8 +190,19 @@ export const TableView = ({ node }: TableViewProps) => {
     >
       <div className="mt-2 flex flex-row justify-between border-b">
         <ViewTabs />
-        <TableViewActions />
+        <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
+          <TableViewSettingsPopover />
+          <ViewActionButton
+            icon="sort-desc"
+            onClick={() => setOpenSort((prev) => !prev)}
+          />
+          <ViewActionButton
+            icon="filter-line"
+            onClick={() => setOpenFilters((prev) => !prev)}
+          />
+        </div>
       </div>
+      {openFilters && <ViewFilters viewId={node.id} filters={node.filters} />}
       <div className="mt-2 w-full min-w-full max-w-full overflow-auto pr-5">
         <TableViewHeader />
         <TableViewBody />

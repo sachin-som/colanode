@@ -167,14 +167,6 @@ export const booleanFieldFilterOperators: FieldFilterOperator[] = [
 
 export const collaboratorFieldFilterOperators: FieldFilterOperator[] = [
   {
-    label: 'Is Empty',
-    value: 'is_empty',
-  },
-  {
-    label: 'Is Not Empty',
-    value: 'is_not_empty',
-  },
-  {
     label: 'Is Me',
     value: 'is_me',
   },
@@ -189,6 +181,14 @@ export const collaboratorFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Not In',
     value: 'is_not_in',
+  },
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
   },
 ];
 
@@ -224,14 +224,6 @@ export const createdByFieldFilterOperators: FieldFilterOperator[] = [
 
 export const dateFieldFilterOperators: FieldFilterOperator[] = [
   {
-    label: 'Is Empty',
-    value: 'is_empty',
-  },
-  {
-    label: 'Is Not Empty',
-    value: 'is_not_empty',
-  },
-  {
     label: 'Is Equal To',
     value: 'is_equal_to',
   },
@@ -239,9 +231,6 @@ export const dateFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not Equal To',
     value: 'is_not_equal_to',
   },
-];
-
-export const emailFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Empty',
     value: 'is_empty',
@@ -250,6 +239,9 @@ export const emailFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not Empty',
     value: 'is_not_empty',
   },
+];
+
+export const emailFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Equal To',
     value: 'is_equal_to',
@@ -266,9 +258,6 @@ export const emailFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Does Not Contain',
     value: 'does_not_contain',
   },
-];
-
-export const fileFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Empty',
     value: 'is_empty',
@@ -277,6 +266,9 @@ export const fileFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not Empty',
     value: 'is_not_empty',
   },
+];
+
+export const fileFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is In',
     value: 'is_in',
@@ -284,19 +276,19 @@ export const fileFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Not In',
     value: 'is_not_in',
+  },
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
   },
 ];
 
 export const multiSelectFieldFilterOperators: FieldFilterOperator[] = [
   {
-    label: 'Is Empty',
-    value: 'is_empty',
-  },
-  {
-    label: 'Is Not Empty',
-    value: 'is_not_empty',
-  },
-  {
     label: 'Is In',
     value: 'is_in',
   },
@@ -304,9 +296,6 @@ export const multiSelectFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not In',
     value: 'is_not_in',
   },
-];
-
-export const numberFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Empty',
     value: 'is_empty',
@@ -315,6 +304,9 @@ export const numberFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not Empty',
     value: 'is_not_empty',
   },
+];
+
+export const numberFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Equal To',
     value: 'is_equal_to',
@@ -338,6 +330,14 @@ export const numberFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Less Than Or Equal To',
     value: 'is_less_than_or_equal_to',
+  },
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
   },
 ];
 
@@ -370,14 +370,6 @@ export const phoneFieldFilterOperators: FieldFilterOperator[] = [
 
 export const selectFieldFilterOperators: FieldFilterOperator[] = [
   {
-    label: 'Is Empty',
-    value: 'is_empty',
-  },
-  {
-    label: 'Is Not Empty',
-    value: 'is_not_empty',
-  },
-  {
     label: 'Is In',
     value: 'is_in',
   },
@@ -385,9 +377,6 @@ export const selectFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not In',
     value: 'is_not_in',
   },
-];
-
-export const textFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Empty',
     value: 'is_empty',
@@ -395,6 +384,17 @@ export const textFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Not Empty',
     value: 'is_not_empty',
+  },
+];
+
+export const textFieldFilterOperators: FieldFilterOperator[] = [
+  {
+    label: 'Contains',
+    value: 'contains',
+  },
+  {
+    label: 'Does Not Contain',
+    value: 'does_not_contain',
   },
   {
     label: 'Is Equal To',
@@ -404,26 +404,19 @@ export const textFieldFilterOperators: FieldFilterOperator[] = [
     label: 'Is Not Equal To',
     value: 'is_not_equal_to',
   },
+
   {
-    label: 'Contains',
-    value: 'contains',
+    label: 'Is Empty',
+    value: 'is_empty',
   },
   {
-    label: 'Does Not Contain',
-    value: 'does_not_contain',
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
   },
 ];
 
 export const urlFieldFilterOperators: FieldFilterOperator[] = [
   {
-    label: 'Is Empty',
-    value: 'is_empty',
-  },
-  {
-    label: 'Is Not Empty',
-    value: 'is_not_empty',
-  },
-  {
     label: 'Is Equal To',
     value: 'is_equal_to',
   },
@@ -438,6 +431,14 @@ export const urlFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Does Not Contain',
     value: 'does_not_contain',
+  },
+  {
+    label: 'Is Empty',
+    value: 'is_empty',
+  },
+  {
+    label: 'Is Not Empty',
+    value: 'is_not_empty',
   },
 ];
 

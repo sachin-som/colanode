@@ -10,6 +10,8 @@ import {
   FieldNode,
   SelectOptionNode,
   TableViewNode,
+  ViewFilterNode,
+  ViewFilterValueNode,
   ViewNode,
 } from '@/types/databases';
 import { LocalNodeWithAttributes } from '@/types/nodes';
@@ -52,6 +54,16 @@ export const useDatabaseQuery = (databaseId: string) => {
               )
             AND type = ${NodeTypes.SelectOption}
           ),
+          view_filter_nodes AS (
+            SELECT *
+            FROM nodes
+            WHERE parent_id IN 
+              (
+                SELECT id
+                FROM view_nodes
+              )
+            AND type = ${NodeTypes.ViewFilter}
+          ),
           all_nodes AS (
             SELECT * FROM database_node
             UNION ALL
@@ -60,6 +72,8 @@ export const useDatabaseQuery = (databaseId: string) => {
             SELECT * FROM view_nodes
             UNION ALL
             SELECT * FROM select_option_nodes
+            UNION ALL
+            SELECT * FROM view_filter_nodes
           )
           SELECT 
             n.*,
@@ -145,7 +159,11 @@ const buildDatabaseNode = (
   const viewNodes = nodes.filter((node) => ViewNodeTypes.includes(node.type));
   const views: ViewNode[] = [];
   for (const viewNode of viewNodes) {
-    const view = buildViewNode(viewNode);
+    const viewFilters = nodes.filter(
+      (node) =>
+        node.type === NodeTypes.ViewFilter && node.parentId === viewNode.id,
+    );
+    const view = buildViewNode(viewNode, viewFilters);
     if (view) {
       views.push(view);
     }
@@ -290,19 +308,25 @@ const buildSelectOption = (node: LocalNodeWithAttributes): SelectOptionNode => {
   };
 };
 
-const buildViewNode = (node: LocalNodeWithAttributes): ViewNode | null => {
+const buildViewNode = (
+  node: LocalNodeWithAttributes,
+  filters: LocalNodeWithAttributes[],
+): ViewNode | null => {
   if (node.type === NodeTypes.TableView) {
-    return buildTableViewNode(node);
+    return buildTableViewNode(node, filters);
   } else if (node.type === NodeTypes.BoardView) {
-    return buildBoardViewNode(node);
+    return buildBoardViewNode(node, filters);
   } else if (node.type === NodeTypes.CalendarView) {
-    return buildCalendarViewNode(node);
+    return buildCalendarViewNode(node, filters);
   }
 
   return null;
 };
 
-const buildTableViewNode = (node: LocalNodeWithAttributes): TableViewNode => {
+const buildTableViewNode = (
+  node: LocalNodeWithAttributes,
+  filters: LocalNodeWithAttributes[],
+): TableViewNode => {
   const name = node.attributes.find(
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
@@ -339,6 +363,8 @@ const buildTableViewNode = (node: LocalNodeWithAttributes): TableViewNode => {
     (attribute) => attribute.type === AttributeTypes.NameWidth,
   )?.numberValue;
 
+  const viewFilters = filters.map(buildViewFilterNode);
+
   return {
     id: node.id,
     name: name ?? 'Unnamed',
@@ -348,34 +374,67 @@ const buildTableViewNode = (node: LocalNodeWithAttributes): TableViewNode => {
     fieldWidths,
     nameWidth: nameWidth,
     versionId: node.versionId,
-    filters: [],
+    filters: viewFilters,
   };
 };
 
-const buildBoardViewNode = (node: LocalNodeWithAttributes): BoardViewNode => {
+const buildBoardViewNode = (
+  node: LocalNodeWithAttributes,
+  filters: LocalNodeWithAttributes[],
+): BoardViewNode => {
   const name = node.attributes.find(
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
+
+  const viewFilters = filters.map(buildViewFilterNode);
 
   return {
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'board_view',
-    filters: [],
+    filters: viewFilters,
   };
 };
 
 const buildCalendarViewNode = (
   node: LocalNodeWithAttributes,
+  filters: LocalNodeWithAttributes[],
 ): CalendarViewNode => {
   const name = node.attributes.find(
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
 
+  const viewFilters = filters.map(buildViewFilterNode);
+
   return {
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'calendar_view',
-    filters: [],
+    filters: viewFilters,
+  };
+};
+
+const buildViewFilterNode = (node: LocalNodeWithAttributes): ViewFilterNode => {
+  const fieldId = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.FieldId,
+  )?.foreignNodeId;
+
+  const operator = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.Operator,
+  )?.textValue;
+
+  const values: ViewFilterValueNode[] = node.attributes
+    .filter((attribute) => attribute.type === AttributeTypes.Value)
+    .map((attribute) => ({
+      textValue: attribute.textValue,
+      numberValue: attribute.numberValue,
+      foreignNodeId: attribute.foreignNodeId,
+    }));
+
+  return {
+    id: node.id,
+    fieldId,
+    operator,
+    values,
   };
 };

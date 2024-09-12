@@ -26,6 +26,7 @@ export const NodeTypes = {
   CalendarView: 'calendar_view',
   Field: 'field',
   SelectOption: 'select_option',
+  ViewFilter: 'view_filter',
 };
 
 export const EditorNodeTypes = {
@@ -78,4 +79,7 @@ export const AttributeTypes = {
   FieldWidth: 'field_width',
   FieldIndex: 'field_index',
   NameWidth: 'name_width',
+  FieldId: 'field_id',
+  Operator: 'operator',
+  Value: 'value',
 };

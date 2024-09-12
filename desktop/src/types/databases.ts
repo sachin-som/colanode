@@ -180,5 +180,11 @@ export type ViewFilterNode = {
   id: string;
   fieldId: string;
   operator: string;
-  value: number | string | string[] | null;
+  values: ViewFilterValueNode[];
+};
+
+export type ViewFilterValueNode = {
+  textValue: string | null;
+  numberValue: number | null;
+  foreignNodeId: string | null;
 };

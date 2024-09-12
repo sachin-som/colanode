@@ -1,37 +1,32 @@
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { debounce } from 'lodash';
 import { BreadcrumbNode } from '@/types/workspaces';
-import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { AttributeTypes } from '@/lib/constants';
 
 interface BreadcrumbItemEditorProps {
   node: BreadcrumbNode;
 }
 
 export const BreadcrumbItemEditor = ({ node }: BreadcrumbItemEditorProps) => {
-  const [name, setName] = React.useState(node.name ?? '');
-  const { mutate } = useNodeUpdateNameMutation();
-
-  const handleNameChange = React.useMemo(
-    () =>
-      debounce(async (newName: string) => {
-        mutate({
-          id: node.id,
-          name: newName,
-        });
-      }, 500),
-    [node.id],
-  );
+  const { mutate, isPending } = useNodeAttributeUpsertMutation();
 
   return (
     <div>
-      <Input
-        placeholder="Name"
-        value={name}
-        onChange={async (e) => {
-          const newName = e.target.value;
-          setName(newName);
-          await handleNameChange(newName);
+      <SmartTextInput
+        value={node.name}
+        onChange={(newName) => {
+          if (isPending) return;
+          if (newName === node.name) return;
+
+          mutate({
+            nodeId: node.id,
+            type: AttributeTypes.Name,
+            key: '1',
+            textValue: newName,
+            numberValue: null,
+            foreignNodeId: null,
+          });
         }}
       />
     </div>

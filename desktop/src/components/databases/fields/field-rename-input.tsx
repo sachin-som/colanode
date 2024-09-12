@@ -1,33 +1,32 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
-import { Input } from '@/components/ui/input';
 import { FieldNode } from '@/types/databases';
-import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { AttributeTypes } from '@/lib/constants';
 
 interface FieldRenameInputProps {
   field: FieldNode;
 }
 
 export const FieldRenameInput = ({ field }: FieldRenameInputProps) => {
-  const { mutate, isPending } = useNodeUpdateNameMutation();
-  const [name, setName] = React.useState(field.name);
+  const { mutate, isPending } = useNodeAttributeUpsertMutation();
 
   return (
     <div className="w-full p-1">
-      <Input
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-        }}
-        onBlur={() => {
-          if (name !== field.name && !isPending) {
-            mutate({ id: field.id, name });
-          }
-        }}
-        onKeyDown={(e) => {
-          if (isHotkey('enter', e) && name !== field.name && !isPending) {
-            mutate({ id: field.id, name });
-          }
+      <SmartTextInput
+        value={field.name}
+        onChange={(newName) => {
+          if (isPending) return;
+          if (newName === field.name) return;
+
+          mutate({
+            nodeId: field.id,
+            type: AttributeTypes.Name,
+            key: '1',
+            textValue: newName,
+            numberValue: null,
+            foreignNodeId: null,
+          });
         }}
       />
     </div>

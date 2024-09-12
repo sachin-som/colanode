@@ -1,12 +1,10 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Icon } from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
 import { useTableView } from '@/contexts/table-view';
 import { Separator } from '@/components/ui/separator';
 import { useDatabase } from '@/contexts/database';
@@ -18,15 +16,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
-import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
 import { ViewDeleteDialog } from '@/components/databases/view-delete-dialog';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { AttributeTypes } from '@/lib/constants';
 
 export const TableViewSettingsPopover = () => {
   const tableView = useTableView();
   const database = useDatabase();
-  const nodeUpdateNameMutation = useNodeUpdateNameMutation();
+  const { mutate, isPending } = useNodeAttributeUpsertMutation();
 
-  const [name, setName] = React.useState(tableView.name);
   const [open, setOpen] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
   const [deleteFieldId, setDeleteFieldId] = React.useState<string | null>(null);
@@ -44,27 +43,20 @@ export const TableViewSettingsPopover = () => {
           </div>
         </PopoverTrigger>
         <PopoverContent className="mr-4 flex w-[600px] flex-col gap-1.5 p-2">
-          <Input
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
-            onBlur={() => {
-              if (
-                name !== tableView.name &&
-                !nodeUpdateNameMutation.isPending
-              ) {
-                nodeUpdateNameMutation.mutate({ id: tableView.id, name });
-              }
-            }}
-            onKeyDown={(e) => {
-              if (
-                isHotkey('enter', e) &&
-                name !== tableView.name &&
-                !nodeUpdateNameMutation.isPending
-              ) {
-                nodeUpdateNameMutation.mutate({ id: tableView.id, name });
-              }
+          <SmartTextInput
+            value={tableView.name}
+            onChange={(newName) => {
+              if (isPending) return;
+              if (newName === tableView.name) return;
+
+              mutate({
+                nodeId: tableView.id,
+                type: AttributeTypes.Name,
+                key: '1',
+                textValue: newName,
+                numberValue: null,
+                foreignNodeId: null,
+              });
             }}
           />
           <Separator />

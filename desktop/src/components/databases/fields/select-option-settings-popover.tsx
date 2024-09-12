@@ -1,7 +1,5 @@
 import React from 'react';
-import isHotkey from 'is-hotkey';
 import { Icon } from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Popover,
@@ -13,25 +11,19 @@ import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
 import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
-import { useNodeUpdateNameMutation } from '@/mutations/use-node-update-name-mutation';
-import { useUpdateSelectOptionColorMutation } from '@/mutations/use-update-select-option-color-mutation';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { AttributeTypes } from '@/lib/constants';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOptionNode;
 }
 
-interface UpdateSelectOptionInput {
-  name: string;
-  color: string;
-}
-
 export const SelectOptionSettingsPopover = ({
   option,
 }: SelectOptionSettingsPopoverProps) => {
-  const nameMutation = useNodeUpdateNameMutation();
-  const colorMutation = useUpdateSelectOptionColorMutation();
+  const { mutate, isPending } = useNodeAttributeUpsertMutation();
 
-  const [name, setName] = React.useState(option.name);
   const [openSetttingsPopover, setOpenSetttingsPopover] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
 
@@ -47,29 +39,20 @@ export const SelectOptionSettingsPopover = ({
         </PopoverTrigger>
         <PopoverContent className="ml-1 flex w-72 flex-col gap-1 p-2 text-sm">
           <div className="p-1">
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-              }}
-              onBlur={() => {
-                if (name !== option.name && !nameMutation.isPending) {
-                  nameMutation.mutate({
-                    id: option.id,
-                    name,
-                  });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (isHotkey('enter', e)) {
-                  if (name !== option.name && !nameMutation.isPending) {
-                    nameMutation.mutate({
-                      id: option.id,
-                      name,
-                    });
-                  }
-                  e.preventDefault();
-                }
+            <SmartTextInput
+              value={option.name}
+              onChange={(newName) => {
+                if (isPending) return;
+                if (newName === option.name) return;
+
+                mutate({
+                  nodeId: option.id,
+                  type: AttributeTypes.Name,
+                  key: '1',
+                  textValue: newName,
+                  numberValue: null,
+                  foreignNodeId: null,
+                });
               }}
             />
           </div>
@@ -81,15 +64,15 @@ export const SelectOptionSettingsPopover = ({
                 key={color.value}
                 className="flex cursor-pointer flex-row items-center gap-2 rounded-md p-1 hover:bg-gray-100"
                 onClick={() => {
-                  if (
-                    color.value !== option.color &&
-                    !colorMutation.isPending
-                  ) {
-                    colorMutation.mutate({
-                      id: option.id,
-                      color: color.value,
-                    });
-                  }
+                  if (isPending) return;
+                  mutate({
+                    nodeId: option.id,
+                    type: AttributeTypes.Color,
+                    key: '1',
+                    textValue: color.value,
+                    numberValue: null,
+                    foreignNodeId: null,
+                  });
                 }}
               >
                 <span className={cn('h-4 w-4 rounded-md', color.class)} />

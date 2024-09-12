@@ -51,7 +51,7 @@ export const TableViewEmailCell = ({
           });
         }
       }}
-      className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm focus-visible:cursor-text"
+      className="flex h-full w-full cursor-pointer flex-row items-center gap-1 border-none p-1 text-sm focus-visible:cursor-text"
     />
   );
 };

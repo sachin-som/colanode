@@ -137,7 +137,7 @@ export class WorkspaceManager {
     }
 
     if (affectedTables.size > 0) {
-      this.debouncedNotifyQuerySubscribers(Array.from(affectedTables));
+      this.notifyQuerySubscribers(Array.from(affectedTables));
     }
   }
 

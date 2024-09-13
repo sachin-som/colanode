@@ -10,12 +10,11 @@ import { ViewTabs } from '@/components/databases/view-tabs';
 import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
-import { useUpdateViewFieldIndexMutation } from '@/mutations/use-update-view-field-index-mutation';
-import { useUpdateViewNameWidthMutation } from '@/mutations/use-update-view-name-width-mutation';
-import { useUpdateViewFieldWidthMutation } from '@/mutations/use-update-view-field-width-mutation';
-import { useUpdateViewHiddenFieldMutation } from '@/mutations/use-update-hidden-field-mutation';
 import { ViewFilters } from '@/components/databases/filters/view-filters';
 import { ViewActionButton } from '@/components/databases/view-action-button';
+import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { AttributeTypes } from '@/lib/constants';
 
 interface TableViewProps {
   node: TableViewNode;
@@ -24,10 +23,8 @@ interface TableViewProps {
 export const TableView = ({ node }: TableViewProps) => {
   const database = useDatabase();
 
-  const updateHiddenFieldMutation = useUpdateViewHiddenFieldMutation();
-  const updateNameWidthMutation = useUpdateViewNameWidthMutation();
-  const updateFieldWidthMutation = useUpdateViewFieldWidthMutation();
-  const updateFieldIndexMutation = useUpdateViewFieldIndexMutation();
+  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
+  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
 
   const [hiddenFields, setHiddenFields] = React.useState<string[]>(
     node.hiddenFields ?? [],
@@ -50,7 +47,7 @@ export const TableView = ({ node }: TableViewProps) => {
     setFieldIndexes(node.fieldIndexes ?? {});
     setFieldWidths(node.fieldWidths ?? {});
     setNameWidth(node.nameWidth ?? getDefaultNameWidth());
-  }, [node.versionId]);
+  }, [node.hiddenFields, node.fieldIndexes, node.fieldWidths, node.nameWidth]);
 
   const fields = React.useMemo(() => {
     return database.fields
@@ -76,10 +73,13 @@ export const TableView = ({ node }: TableViewProps) => {
           }
 
           setHiddenFields([...hiddenFields, id]);
-          updateHiddenFieldMutation.mutate({
-            viewId: node.id,
-            fieldId: id,
-            hide: true,
+          upsertAttribute({
+            nodeId: node.id,
+            type: AttributeTypes.HiddenField,
+            key: id,
+            textValue: id,
+            numberValue: null,
+            foreignNodeId: id,
           });
         },
         showField: (id: string) => {
@@ -87,29 +87,38 @@ export const TableView = ({ node }: TableViewProps) => {
             return;
           }
 
-          const newHiddenFields = hiddenFields.filter((f) => f !== id);
-          setHiddenFields(newHiddenFields);
-          updateHiddenFieldMutation.mutate({
-            viewId: node.id,
-            fieldId: id,
-            hide: false,
+          setHiddenFields((prev) => prev.filter((f) => f !== id));
+          deleteAttribute({
+            nodeId: node.id,
+            type: AttributeTypes.HiddenField,
+            key: id,
           });
         },
         isHiddenField: (id: string) => hiddenFields.includes(id),
         getNameWidth: () => nameWidth,
         resizeName: (width: number) => {
           setNameWidth(width);
-          updateNameWidthMutation.mutate({ viewId: node.id, width });
+          upsertAttribute({
+            nodeId: node.id,
+            type: AttributeTypes.NameWidth,
+            key: '1',
+            numberValue: width,
+            foreignNodeId: null,
+            textValue: null,
+          });
         },
         getFieldWidth: (id: string, type: FieldDataType) => {
           return fieldWidths[id] ?? getDefaultFieldWidth(type);
         },
         resizeField: (id, width) => {
           setFieldWidths({ ...fieldWidths, [id]: width });
-          updateFieldWidthMutation.mutate({
-            viewId: node.id,
-            fieldId: id,
-            width,
+          upsertAttribute({
+            nodeId: node.id,
+            type: AttributeTypes.FieldWidth,
+            key: id,
+            numberValue: width,
+            foreignNodeId: id,
+            textValue: null,
           });
         },
         moveField: (id, after) => {
@@ -180,10 +189,13 @@ export const TableView = ({ node }: TableViewProps) => {
             ...fieldIndexes,
             [id]: newIndex,
           });
-          updateFieldIndexMutation.mutate({
-            viewId: node.id,
-            fieldId: id,
-            index: newIndex,
+          upsertAttribute({
+            nodeId: node.id,
+            type: AttributeTypes.FieldIndex,
+            key: id,
+            textValue: newIndex,
+            foreignNodeId: id,
+            numberValue: null,
           });
         },
       }}

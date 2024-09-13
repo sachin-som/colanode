@@ -205,6 +205,10 @@ const buildCalendarViewNode = (
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
 
+  const groupBy = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.GroupBy,
+  )?.foreignNodeId;
+
   const viewFilters = filters.map(buildViewFilterNode);
 
   return {
@@ -212,6 +216,7 @@ const buildCalendarViewNode = (
     name: name ?? 'Unnamed',
     type: 'calendar_view',
     filters: viewFilters,
+    groupBy,
   };
 };
 

@@ -134,3 +134,49 @@ export const isValidUrl = (url: string) => {
     return false;
   }
 };
+
+export const getDisplayedDates = (
+  month: Date,
+): {
+  first: Date;
+  last: Date;
+} => {
+  const firstDayOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const lastDayOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+
+  // Find the first day of the visible grid (Sunday of the week containing the 1st of the month)
+  const firstDayOfWeek = firstDayOfMonth.getDay();
+  const firstDayDisplayed = new Date(
+    firstDayOfMonth.getFullYear(),
+    firstDayOfMonth.getMonth(),
+    firstDayOfMonth.getDate() - firstDayOfWeek,
+  );
+
+  // Find the last day of the visible grid (Saturday of the week containing the last day of the month)
+  const lastDayOfWeek = lastDayOfMonth.getDay();
+  const lastDayDisplayed = new Date(
+    lastDayOfMonth.getFullYear(),
+    lastDayOfMonth.getMonth(),
+    lastDayOfMonth.getDate() + (6 - lastDayOfWeek),
+  );
+
+  return { first: firstDayDisplayed, last: lastDayDisplayed };
+};
+
+export const isSameDay = (
+  date1: Date | string | null,
+  date2: Date | string | null,
+) => {
+  if (date1 == null) {
+    return false;
+  }
+
+  if (date2 == null) {
+    return false;
+  }
+
+  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+
+  return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth();
+};

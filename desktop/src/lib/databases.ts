@@ -1,4 +1,9 @@
-import { FieldDataType } from '@/types/databases';
+import {
+  FieldDataType,
+  FieldNode,
+  RecordNode,
+  ViewFilterNode,
+} from '@/types/databases';
 
 export const getFieldIcon = (type?: FieldDataType): string => {
   if (!type) return '';
@@ -213,6 +218,22 @@ export const createdAtFieldFilterOperators: FieldFilterOperator[] = [
   {
     label: 'Is Not Equal To',
     value: 'is_not_equal_to',
+  },
+  {
+    label: 'Is on or after',
+    value: 'is_on_or_after',
+  },
+  {
+    label: 'Is on or before',
+    value: 'is_on_or_before',
+  },
+  {
+    label: 'Is After',
+    value: 'is_after',
+  },
+  {
+    label: 'Is Before',
+    value: 'is_before',
   },
 ];
 
@@ -490,4 +511,494 @@ export const getFieldFilterOperators = (
     default:
       return [];
   }
+};
+
+export const filterRecords = (
+  records: RecordNode[],
+  filter: ViewFilterNode,
+  field: FieldNode,
+  currentUserId: string,
+): RecordNode[] => {
+  return records.filter((record) =>
+    recordMatchesFilter(record, filter, field, currentUserId),
+  );
+};
+
+const recordMatchesFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+  currentUserId: string,
+) => {
+  switch (field.dataType) {
+    case 'boolean':
+      return recordMatchesBooleanFilter(record, filter, field);
+    case 'collaborator':
+      return recordMatchesCollaboratorFilter(record, filter, field);
+    case 'created_at':
+      return recordMatchesCreatedAtFilter(record, filter);
+    case 'created_by':
+      return recordMatchesCreatedByFilter(record, filter, currentUserId);
+    case 'date':
+      return recordMatchesDateFilter(record, filter, field);
+    case 'email':
+      return recordMatchesEmailFilter(record, filter, field);
+    case 'file':
+      return recordMatchesFileFilter(record, filter, field);
+    case 'multi_select':
+      return recordMatchesMultiSelectFilter(record, filter, field);
+    case 'number':
+      return recordMatchesNumberFilter(record, filter, field);
+    case 'phone':
+      return recordMatchesPhoneFilter(record, filter, field);
+    case 'select':
+      return recordMatchesSelectFilter(record, filter, field);
+    case 'text':
+      return recordMatchesTextFilter(record, filter, field);
+    case 'url':
+      return recordMatchesUrlFilter(record, filter, field);
+    default:
+      return false;
+  }
+};
+
+const recordMatchesBooleanFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.numberValue;
+
+  if (filter.operator === 'is_true') {
+    return fieldValue === 1;
+  }
+  if (filter.operator === 'is_false') {
+    return !fieldValue || fieldValue === 0;
+  }
+
+  return false;
+};
+
+const recordMatchesCollaboratorFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  return false;
+};
+
+const recordMatchesCreatedAtFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+) => {
+  if (filter.values.length === 0) return false;
+
+  const filterValue = filter.values[0].textValue;
+  const filterDate = new Date(filterValue);
+  filterDate.setHours(0, 0, 0, 0); // Set time to midnight
+
+  const recordDate = new Date(record.createdAt);
+  recordDate.setHours(0, 0, 0, 0); // Set time to midnight
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return recordDate.getTime() === filterDate.getTime();
+    case 'is_not_equal_to':
+      return recordDate.getTime() !== filterDate.getTime();
+    case 'is_on_or_after':
+      return recordDate.getTime() >= filterDate.getTime();
+    case 'is_on_or_before':
+      return recordDate.getTime() <= filterDate.getTime();
+    case 'is_after':
+      return recordDate.getTime() > filterDate.getTime();
+    case 'is_before':
+      return recordDate.getTime() < filterDate.getTime();
+  }
+
+  return false;
+};
+
+const recordMatchesCreatedByFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  currentUserId: string,
+) => {
+  const createdBy = record.createdBy?.id;
+  if (!createdBy) {
+    return false;
+  }
+
+  const filterValues = filter.values.map((value) => value.foreignNodeId);
+  if (filterValues.length === 0) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_me':
+      return createdBy === currentUserId;
+    case 'is_not_me':
+      return createdBy !== currentUserId;
+    case 'is_in':
+      return filterValues.includes(createdBy);
+    case 'is_not_in':
+      return !filterValues.includes(createdBy);
+    default:
+      return false;
+  }
+};
+
+const recordMatchesDateFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.textValue;
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  const recordDate = new Date(fieldValue);
+  recordDate.setHours(0, 0, 0, 0); // Set time to midnight
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].textValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  const filterDate = new Date(filterValue);
+  filterDate.setHours(0, 0, 0, 0); // Set time to midnight
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return recordDate.getTime() === filterDate.getTime();
+    case 'is_not_equal_to':
+      return recordDate.getTime() !== filterDate.getTime();
+    case 'is_on_or_after':
+      return recordDate.getTime() >= filterDate.getTime();
+    case 'is_on_or_before':
+      return recordDate.getTime() <= filterDate.getTime();
+    case 'is_after':
+      return recordDate.getTime() > filterDate.getTime();
+    case 'is_before':
+      return recordDate.getTime() < filterDate.getTime();
+  }
+
+  return false;
+};
+
+const recordMatchesEmailFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.textValue;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].textValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return fieldValue === filterValue;
+    case 'is_not_equal_to':
+      return fieldValue !== filterValue;
+    case 'contains':
+      return fieldValue.includes(filterValue);
+    case 'does_not_contain':
+      return !fieldValue.includes(filterValue);
+  }
+
+  return false;
+};
+
+const recordMatchesFileFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  return false;
+};
+
+const recordMatchesMultiSelectFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValues = record.attributes
+    .filter((attribute) => attribute.type === field.id)
+    ?.map((attribute) => attribute.foreignNodeId);
+
+  if (filter.operator === 'is_empty') {
+    return fieldValues?.length === 0;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return fieldValues?.length > 0;
+  }
+
+  if (!fieldValues) {
+    return false;
+  }
+
+  const selectOptionIds = filter.values.map((value) => value.foreignNodeId);
+  if (selectOptionIds.length === 0) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_in':
+      return fieldValues.some((value) => selectOptionIds.includes(value));
+    case 'is_not_in':
+      return !fieldValues.some((value) => selectOptionIds.includes(value));
+  }
+
+  return false;
+};
+
+const recordMatchesNumberFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.numberValue;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].numberValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return fieldValue === filterValue;
+    case 'is_not_equal_to':
+      return fieldValue !== filterValue;
+    case 'is_greater_than':
+      return fieldValue > filterValue;
+    case 'is_less_than':
+      return fieldValue < filterValue;
+    case 'is_greater_than_or_equal_to':
+      return fieldValue >= filterValue;
+    case 'is_less_than_or_equal_to':
+      return fieldValue <= filterValue;
+  }
+
+  return false;
+};
+
+const recordMatchesPhoneFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.textValue;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].textValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return fieldValue === filterValue;
+    case 'is_not_equal_to':
+      return fieldValue !== filterValue;
+    case 'contains':
+      return fieldValue.includes(filterValue);
+    case 'does_not_contain':
+      return !fieldValue.includes(filterValue);
+  }
+
+  return false;
+};
+
+const recordMatchesSelectFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.foreignNodeId;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const selectOptionIds = filter.values.map((value) => value.foreignNodeId);
+  if (selectOptionIds.length === 0) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_in':
+      return selectOptionIds.includes(fieldValue);
+    case 'is_not_in':
+      return !selectOptionIds.includes(fieldValue);
+  }
+
+  return false;
+};
+
+const recordMatchesTextFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.textValue;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].textValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return fieldValue === filterValue;
+    case 'is_not_equal_to':
+      return fieldValue !== filterValue;
+    case 'contains':
+      return fieldValue.includes(filterValue);
+    case 'does_not_contain':
+      return !fieldValue.includes(filterValue);
+  }
+
+  return false;
+};
+
+const recordMatchesUrlFilter = (
+  record: RecordNode,
+  filter: ViewFilterNode,
+  field: FieldNode,
+) => {
+  const fieldValue = record.attributes.find(
+    (attribute) => attribute.type === field.id,
+  )?.textValue;
+
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
+
+  if (!fieldValue) {
+    return false;
+  }
+
+  if (filter.values.length === 0) {
+    return true;
+  }
+
+  const filterValue = filter.values[0].textValue;
+  if (!filterValue) {
+    return true;
+  }
+
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return fieldValue === filterValue;
+    case 'is_not_equal_to':
+      return fieldValue !== filterValue;
+    case 'contains':
+      return fieldValue.includes(filterValue);
+    case 'does_not_contain':
+      return !fieldValue.includes(filterValue);
+  }
+
+  return false;
 };

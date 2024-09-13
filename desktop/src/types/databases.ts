@@ -34,6 +34,7 @@ export type CalendarViewNode = {
   name: string;
   type: 'calendar_view';
   filters: ViewFilterNode[];
+  groupBy: string | null;
 };
 
 export type FieldDataType =

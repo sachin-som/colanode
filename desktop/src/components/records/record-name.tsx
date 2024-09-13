@@ -33,6 +33,7 @@ export const RecordName = ({ record }: RecordNameProps) => {
         });
       }}
       className="font-heading border-b border-none pl-1 text-4xl font-bold shadow-none focus-visible:ring-0"
+      placeholder="Unnamed"
     />
   );
 };

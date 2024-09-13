@@ -7,7 +7,7 @@ import { useWorkspace } from '@/contexts/workspace';
 export const PageNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();
   const id = node.attrs.id;
-  const name = node.attrs.name ?? 'Untitled';
+  const name = node.attrs.name ?? 'Unnamed';
   const avatar = node.attrs.avatar;
 
   if (!id) {

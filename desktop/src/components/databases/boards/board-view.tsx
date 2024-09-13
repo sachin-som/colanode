@@ -19,8 +19,6 @@ export const BoardView = ({ node }: BoardViewProps) => {
     (field) => field.id === node.groupBy,
   );
 
-  console.log(node.groupBy, database.fields);
-
   if (!groupByField || groupByField.dataType !== 'select') {
     return null;
   }

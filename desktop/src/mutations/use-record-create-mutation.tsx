@@ -26,11 +26,12 @@ export const useRecordCreateMutation = () => {
         result.rows && result.rows.length > 0 ? result.rows[0] : null;
       const maxIndex = lastChild?.index ? lastChild.index : null;
 
+      const recordId = NeuronId.generate(NeuronId.Type.Record);
       const index = generateNodeIndex(maxIndex, null);
       const query = workspace.schema
         .insertInto('nodes')
         .values({
-          id: NeuronId.generate(NeuronId.Type.Record),
+          id: recordId,
           type: NodeTypes.Record,
           parent_id: input.databaseId,
           index,
@@ -42,6 +43,7 @@ export const useRecordCreateMutation = () => {
         .compile();
 
       await workspace.mutate(query);
+      return recordId;
     },
   });
 };

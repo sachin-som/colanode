@@ -94,7 +94,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
             {hasName ? (
               record.name
             ) : (
-              <span className="text-muted-foreground">Untitled</span>
+              <span className="text-muted-foreground">Unnamed</span>
             )}
           </div>
           <button

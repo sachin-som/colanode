@@ -7,6 +7,7 @@ import {
   SelectOptionNode,
 } from '@/types/databases';
 import { useDrag } from 'react-dnd';
+import { cn } from '@/lib/utils';
 
 interface BoardViewCardProps {
   record: RecordNode;
@@ -53,16 +54,21 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
 
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const dragRef = drag(buttonRef);
+  const name = record.name;
+  const hasName = name !== null && name !== '';
 
   return (
     <button
       ref={dragRef as any}
       role="presentation"
       key={record.id}
-      className="animate-fade-in flex cursor-pointer flex-col gap-1 rounded-md border p-2 hover:bg-gray-50"
+      className={cn(
+        'animate-fade-in flex cursor-pointer flex-col gap-1 rounded-md border p-2 hover:bg-gray-50',
+        hasName ? '' : 'text-muted-foreground',
+      )}
       onClick={() => workspace.openModal(record.id)}
     >
-      <p>{record.name}</p>
+      {record.name ?? 'Unnamed'}
     </button>
   );
 };

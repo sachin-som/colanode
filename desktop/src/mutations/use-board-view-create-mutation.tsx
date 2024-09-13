@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 interface BoardViewCreateInput {
   databaseId: string;
   name: string;
+  groupBy: string;
 }
 
 export const useBoardViewCreateMutation = () => {
@@ -50,20 +51,34 @@ export const useBoardViewCreateMutation = () => {
         })
         .compile();
 
-      const insertBoardViewNameQuery = workspace.schema
+      const insertBoardViewAttributesQuery = workspace.schema
         .insertInto('node_attributes')
-        .values({
-          node_id: boardViewId,
-          type: AttributeTypes.Name,
-          key: '1',
-          text_value: input.name,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
+        .values([
+          {
+            node_id: boardViewId,
+            type: AttributeTypes.Name,
+            key: '1',
+            text_value: input.name,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+          {
+            node_id: boardViewId,
+            type: AttributeTypes.GroupBy,
+            key: '1',
+            foreign_node_id: input.groupBy,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+        ])
         .compile();
 
-      await workspace.mutate([insertBoardViewQuery, insertBoardViewNameQuery]);
+      await workspace.mutate([
+        insertBoardViewQuery,
+        insertBoardViewAttributesQuery,
+      ]);
       return boardViewId;
     },
   });

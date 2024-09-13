@@ -26,6 +26,7 @@ export type BoardViewNode = {
   name: string;
   type: 'board_view';
   filters: ViewFilterNode[];
+  groupBy: string | null;
 };
 
 export type CalendarViewNode = {

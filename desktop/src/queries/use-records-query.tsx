@@ -197,7 +197,7 @@ const buildFiltersQuery = (
       SELECT na.node_id
       FROM node_attributes na
       ${joinQueries.join(' ')}
-      WHERE ${whereQueries.join(' AND ')}
+      ${whereQueries.length > 0 ? `WHERE ${whereQueries.join(' AND ')}` : ''}
     )
   `;
 };
@@ -578,12 +578,12 @@ const buildSelectFilterQuery = (
   switch (filter.operator) {
     case 'is_in':
       return {
-        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${ids.join(',')})`,
+        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
         whereQuery: null,
       };
     case 'is_not_in':
       return {
-        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id NOT IN (${ids.join(',')})`,
+        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id NOT IN (${joinIds(ids)})`,
         whereQuery: null,
       };
     default:
@@ -615,12 +615,12 @@ const buildMultiSelectFilterQuery = (
   switch (filter.operator) {
     case 'is_in':
       return {
-        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${ids.join(',')})`,
+        joinQuery: `${buildJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
         whereQuery: null,
       };
     case 'is_not_in':
       return {
-        joinQuery: `${buildLeftJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${ids.join(',')})`,
+        joinQuery: `${buildLeftJoinQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
         whereQuery: `na_${filter.id}.node_id IS NULL`,
       };
     default:
@@ -654,4 +654,8 @@ const buildJoinQuery = (filterId: string, fieldId: string): string => {
 
 const buildLeftJoinQuery = (filterId: string, fieldId: string): string => {
   return `LEFT JOIN node_attributes na_${filterId}  ON na_${filterId}.node_id = na.node_id AND na_${filterId}.type = '${fieldId}'`;
+};
+
+const joinIds = (ids: string[]): string => {
+  return ids.map((id) => `'${id}'`).join(',');
 };

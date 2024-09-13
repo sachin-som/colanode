@@ -82,4 +82,5 @@ export const AttributeTypes = {
   FieldId: 'field_id',
   Operator: 'operator',
   Value: 'value',
+  GroupBy: 'group_by',
 };

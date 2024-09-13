@@ -27,10 +27,13 @@ import { useTableViewCreateMutation } from '@/mutations/use-table-view-create-mu
 import { useBoardViewCreateMutation } from '@/mutations/use-board-view-create-mutation';
 import { useCalendarViewCreateMutation } from '@/mutations/use-calendar-view-create-mutation';
 import { useDatabase } from '@/contexts/database';
+import { FieldSelect } from '@/components/databases/fields/field-select';
+import { toast } from '@/components/ui/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
   type: z.enum(['TABLE', 'BOARD', 'CALENDAR']),
+  groupBy: z.string().optional(),
 });
 
 interface ViewTypeOption {
@@ -71,6 +74,11 @@ export const ViewCreateDialog = ({
   const boardViewCreateMutation = useBoardViewCreateMutation();
   const calendarViewCreateMutation = useCalendarViewCreateMutation();
 
+  const isPending =
+    tableViewCreateMutation.isPending ||
+    boardViewCreateMutation.isPending ||
+    calendarViewCreateMutation.isPending;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -78,11 +86,7 @@ export const ViewCreateDialog = ({
       type: 'TABLE',
     },
   });
-
-  const isPending =
-    tableViewCreateMutation.isPending ||
-    boardViewCreateMutation.isPending ||
-    calendarViewCreateMutation.isPending;
+  const type = form.watch('type');
 
   const handleCancel = () => {
     form.reset();
@@ -108,10 +112,21 @@ export const ViewCreateDialog = ({
         },
       );
     } else if (values.type === 'BOARD') {
+      if (!values.groupBy) {
+        toast({
+          title: 'Failed to create board view',
+          description:
+            'You need to specify a group by field to create a board view',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       boardViewCreateMutation.mutate(
         {
           databaseId: database.id,
           name: values.name,
+          groupBy: values.groupBy,
         },
         {
           onSuccess: () => {
@@ -121,10 +136,21 @@ export const ViewCreateDialog = ({
         },
       );
     } else if (values.type === 'CALENDAR') {
+      if (!values.groupBy) {
+        toast({
+          title: 'Failed to create calendar view',
+          description:
+            'You need to specify a group by field to create a calendar view',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       calendarViewCreateMutation.mutate(
         {
           databaseId: database.id,
           name: values.name,
+          groupBy: values.groupBy,
         },
         {
           onSuccess: () => {
@@ -189,6 +215,49 @@ export const ViewCreateDialog = ({
                   </div>
                 )}
               />
+              {type === 'BOARD' && (
+                <FormField
+                  control={form.control}
+                  name="groupBy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Group by</FormLabel>
+                      <FormControl>
+                        <FieldSelect
+                          fields={database.fields.filter(
+                            (field) => field.dataType === 'select',
+                          )}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {type === 'CALENDAR' && (
+                <FormField
+                  control={form.control}
+                  name="groupBy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Group by</FormLabel>
+                      <FormControl>
+                        <FieldSelect
+                          fields={database.fields.filter(
+                            (field) =>
+                              field.dataType === 'date' ||
+                              field.dataType === 'created_at',
+                          )}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleCancel}>

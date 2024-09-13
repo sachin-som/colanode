@@ -94,6 +94,7 @@ interface SelectOptionColor {
   label: string;
   value: string;
   class: string;
+  lightClass: string;
 }
 
 export const selectOptionColors: SelectOptionColor[] = [
@@ -101,46 +102,58 @@ export const selectOptionColors: SelectOptionColor[] = [
     label: 'Gray',
     value: 'gray',
     class: 'bg-gray-200',
+    lightClass: 'bg-gray-50',
   },
   {
     label: 'Orange',
     value: 'orange',
     class: 'bg-orange-200',
+    lightClass: 'bg-orange-50',
   },
   {
     label: 'Yellow',
     value: 'yellow',
     class: 'bg-yellow-200',
+    lightClass: 'bg-yellow-50',
   },
   {
     label: 'Green',
     value: 'green',
     class: 'bg-green-200',
+    lightClass: 'bg-green-50',
   },
   {
     label: 'Blue',
     value: 'blue',
     class: 'bg-blue-200',
+    lightClass: 'bg-blue-50',
   },
   {
     label: 'Purple',
     value: 'purple',
     class: 'bg-purple-200',
+    lightClass: 'bg-purple-50',
   },
   {
     label: 'Pink',
     value: 'pink',
     class: 'bg-pink-200',
+    lightClass: 'bg-pink-50',
   },
   {
     label: 'Red',
     value: 'red',
     class: 'bg-red-200',
+    lightClass: 'bg-red-50',
   },
 ];
 
 export const getSelectOptionColorClass = (color: string): string => {
   return selectOptionColors.find((c) => c.value === color)?.class || '';
+};
+
+export const getSelectOptionLightColorClass = (color: string): string => {
+  return selectOptionColors.find((c) => c.value === color)?.lightClass || '';
 };
 
 export const getRandomSelectOptionColor = (): string => {

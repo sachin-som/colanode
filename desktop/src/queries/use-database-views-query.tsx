@@ -182,6 +182,10 @@ const buildBoardViewNode = (
     (attribute) => attribute.type === AttributeTypes.Name,
   )?.textValue;
 
+  const groupBy = node.attributes.find(
+    (attribute) => attribute.type === AttributeTypes.GroupBy,
+  )?.foreignNodeId;
+
   const viewFilters = filters.map(buildViewFilterNode);
 
   return {
@@ -189,6 +193,7 @@ const buildBoardViewNode = (
     name: name ?? 'Unnamed',
     type: 'board_view',
     filters: viewFilters,
+    groupBy,
   };
 };
 

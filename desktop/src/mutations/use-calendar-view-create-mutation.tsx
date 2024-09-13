@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 interface CalendarViewCreateInput {
   databaseId: string;
   name: string;
+  groupBy: string;
 }
 
 export const useCalendarViewCreateMutation = () => {
@@ -50,22 +51,33 @@ export const useCalendarViewCreateMutation = () => {
         })
         .compile();
 
-      const insertCalendarViewNameQuery = workspace.schema
+      const insertCalendarViewAttributesQuery = workspace.schema
         .insertInto('node_attributes')
-        .values({
-          node_id: calendarViewId,
-          type: AttributeTypes.Name,
-          key: '1',
-          text_value: input.name,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
+        .values([
+          {
+            node_id: calendarViewId,
+            type: AttributeTypes.Name,
+            key: '1',
+            text_value: input.name,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+          {
+            node_id: calendarViewId,
+            type: AttributeTypes.GroupBy,
+            key: '1',
+            foreign_node_id: input.groupBy,
+            created_at: new Date().toISOString(),
+            created_by: workspace.userId,
+            version_id: NeuronId.generate(NeuronId.Type.Version),
+          },
+        ])
         .compile();
 
       await workspace.mutate([
         insertCalendarViewQuery,
-        insertCalendarViewNameQuery,
+        insertCalendarViewAttributesQuery,
       ]);
       return calendarViewId;
     },

@@ -5,7 +5,6 @@ export type DatabaseNode = {
   id: string;
   name: string;
   fields: FieldNode[];
-  views: ViewNode[];
 };
 
 export type ViewNode = TableViewNode | BoardViewNode | CalendarViewNode;

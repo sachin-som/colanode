@@ -54,19 +54,12 @@ interface TableViewNameCellProps {
 export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const workspace = useWorkspace();
   const [isEditing, setIsEditing] = React.useState(false);
-  const [name, setName] = React.useState(record.name);
 
   const { mutate, isPending } = useNodeAttributeUpsertMutation();
-
-  React.useEffect(() => {
-    setName(record.name);
-  }, [record.versionId]);
-
   const canEdit = true;
-  const hasName = name && name.length > 0;
+  const hasName = record.name && record.name.length > 0;
 
   const handleSave = (newName: string) => {
-    setName(newName);
     mutate(
       {
         nodeId: record.id,
@@ -88,7 +81,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
     <div className="group relative flex h-full w-full items-center">
       {isEditing ? (
         <NameEditor
-          initialValue={name ?? ''}
+          initialValue={record.name ?? ''}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />
@@ -99,7 +92,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
             className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm"
           >
             {hasName ? (
-              name
+              record.name
             ) : (
               <span className="text-muted-foreground">Untitled</span>
             )}

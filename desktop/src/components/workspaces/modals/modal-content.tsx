@@ -1,18 +1,19 @@
 import React from 'react';
-import { match } from 'ts-pattern';
-import { useParams } from 'react-router-dom';
-import { NodeTypes } from '@/lib/constants';
-import { PageContainerNode } from '@/components/pages/page-container-node';
-import { ChannelContainerNode } from '@/components/channels/channel-container-node';
-import { ContainerHeader } from '@/components/workspaces/containers/container-header';
 import { Spinner } from '@/components/ui/spinner';
-import { mapNode } from '@/lib/nodes';
-import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 import { useNodeQuery } from '@/queries/use-node-query';
+import { mapNode } from '@/lib/nodes';
+import { match } from 'ts-pattern';
+import { NodeTypes } from '@/lib/constants';
+import { ChannelContainerNode } from '@/components/channels/channel-container-node';
+import { PageContainerNode } from '@/components/pages/page-container-node';
+import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 import { RecordContainerNode } from '@/components/records/record-container-node';
 
-export const Container = () => {
-  const { nodeId } = useParams<{ nodeId: string }>();
+interface ModalContentProps {
+  nodeId: string;
+}
+
+export const ModalContent = ({ nodeId }: ModalContentProps) => {
   const { data, isPending } = useNodeQuery(nodeId);
 
   if (isPending) {
@@ -24,9 +25,9 @@ export const Container = () => {
   }
 
   const node = mapNode(data.rows[0]);
+
   return (
     <div className="flex h-full w-full flex-col">
-      <ContainerHeader node={node} />
       {match(node.type)
         .with(NodeTypes.Channel, () => <ChannelContainerNode node={node} />)
         .with(NodeTypes.Page, () => <PageContainerNode node={node} />)

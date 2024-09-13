@@ -3,16 +3,10 @@ import { SelectNodeWithAttributes } from '@/data/schemas/workspace';
 import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { mapNodeWithAttributes } from '@/lib/nodes';
 import {
-  BoardViewNode,
-  CalendarViewNode,
   DatabaseNode,
   FieldDataType,
   FieldNode,
   SelectOptionNode,
-  TableViewNode,
-  ViewFilterNode,
-  ViewFilterValueNode,
-  ViewNode,
 } from '@/types/databases';
 import { LocalNodeWithAttributes } from '@/types/nodes';
 import { useQuery } from '@tanstack/react-query';
@@ -156,24 +150,10 @@ const buildDatabaseNode = (
     }
   }
 
-  const viewNodes = nodes.filter((node) => ViewNodeTypes.includes(node.type));
-  const views: ViewNode[] = [];
-  for (const viewNode of viewNodes) {
-    const viewFilters = nodes.filter(
-      (node) =>
-        node.type === NodeTypes.ViewFilter && node.parentId === viewNode.id,
-    );
-    const view = buildViewNode(viewNode, viewFilters);
-    if (view) {
-      views.push(view);
-    }
-  }
-
   return {
     id: databaseLocalNode.id,
     name: name,
     fields,
-    views,
   };
 };
 
@@ -305,136 +285,5 @@ const buildSelectOption = (node: LocalNodeWithAttributes): SelectOptionNode => {
     id: node.id,
     name: name ?? 'Unnamed',
     color: color ?? 'gray',
-  };
-};
-
-const buildViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-): ViewNode | null => {
-  if (node.type === NodeTypes.TableView) {
-    return buildTableViewNode(node, filters);
-  } else if (node.type === NodeTypes.BoardView) {
-    return buildBoardViewNode(node, filters);
-  } else if (node.type === NodeTypes.CalendarView) {
-    return buildCalendarViewNode(node, filters);
-  }
-
-  return null;
-};
-
-const buildTableViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-): TableViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const hiddenFields = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.HiddenField)
-    .map((attribute) => attribute.foreignNodeId);
-
-  const fieldIndexes = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.FieldIndex)
-    .reduce(
-      (acc, attribute) => {
-        if (attribute.foreignNodeId && attribute.textValue !== null) {
-          acc[attribute.foreignNodeId] = attribute.textValue;
-        }
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-  const fieldWidths = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.FieldWidth)
-    .reduce(
-      (acc, attribute) => {
-        if (attribute.foreignNodeId && attribute.numberValue !== null) {
-          acc[attribute.foreignNodeId] = attribute.numberValue;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-  const nameWidth = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.NameWidth,
-  )?.numberValue;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-
-  return {
-    id: node.id,
-    name: name ?? 'Unnamed',
-    type: 'table_view',
-    hiddenFields,
-    fieldIndexes,
-    fieldWidths,
-    nameWidth: nameWidth,
-    versionId: node.versionId,
-    filters: viewFilters,
-  };
-};
-
-const buildBoardViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-): BoardViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-
-  return {
-    id: node.id,
-    name: name ?? 'Unnamed',
-    type: 'board_view',
-    filters: viewFilters,
-  };
-};
-
-const buildCalendarViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-): CalendarViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-
-  return {
-    id: node.id,
-    name: name ?? 'Unnamed',
-    type: 'calendar_view',
-    filters: viewFilters,
-  };
-};
-
-const buildViewFilterNode = (node: LocalNodeWithAttributes): ViewFilterNode => {
-  const fieldId = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.FieldId,
-  )?.foreignNodeId;
-
-  const operator = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Operator,
-  )?.textValue;
-
-  const values: ViewFilterValueNode[] = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.Value)
-    .map((attribute) => ({
-      textValue: attribute.textValue,
-      numberValue: attribute.numberValue,
-      foreignNodeId: attribute.foreignNodeId,
-    }));
-
-  return {
-    id: node.id,
-    fieldId,
-    operator,
-    values,
   };
 };

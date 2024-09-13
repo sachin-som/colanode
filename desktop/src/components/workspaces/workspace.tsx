@@ -1,7 +1,12 @@
 import React from 'react';
 import { Sidebar } from '@/components/workspaces/sidebars/sidebar';
 import { WorkspaceContext } from '@/contexts/workspace';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import {
+  Outlet,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   DummyDriver,
   Kysely,
@@ -13,6 +18,7 @@ import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 import { useAccount } from '@/contexts/account';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventBus } from '@/hooks/use-event-bus';
+import { Modal } from '@/components/workspaces/modals/modal';
 
 const workspaceDatabase = new Kysely<WorkspaceDatabaseSchema>({
   dialect: {
@@ -27,6 +33,8 @@ export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const account = useAccount();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const eventBus = useEventBus();
   const workspace = account.workspaces.find((w) => w.id === workspaceId);
 
@@ -117,6 +125,7 @@ export const Workspace = () => {
     return <p>Workspace not found</p>;
   }
 
+  const modal = searchParams.get('modal');
   return (
     <QueryClientProvider client={queryClient}>
       <WorkspaceContext.Provider
@@ -145,7 +154,12 @@ export const Workspace = () => {
             navigate(`/${workspaceId}/${nodeId}`);
           },
           openModal(modal) {
-            // setModal(modal);
+            setSearchParams((prev) => {
+              return {
+                ...prev,
+                modal: modal,
+              };
+            });
           },
         }}
       >
@@ -156,6 +170,18 @@ export const Workspace = () => {
           <main className="h-full w-full min-w-128 flex-grow overflow-hidden bg-white">
             <Outlet />
           </main>
+          {modal && (
+            <Modal
+              nodeId={modal}
+              key={modal}
+              onClose={() => {
+                setSearchParams((prev) => {
+                  prev.delete('modal');
+                  return prev;
+                });
+              }}
+            />
+          )}
         </div>
       </WorkspaceContext.Provider>
     </QueryClientProvider>

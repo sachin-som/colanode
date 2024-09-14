@@ -18,20 +18,22 @@ interface SelectFieldOptionsProps {
   field: SelectFieldNode | MultiSelectFieldNode;
   values: string[];
   onSelect: (id: string) => void;
+  allowAdd: boolean;
 }
 
 export const SelectFieldOptions = ({
   field,
   values,
   onSelect,
+  allowAdd,
 }: SelectFieldOptionsProps) => {
   const { mutate, isPending } = useSelectOptionCreateMutation();
 
   const [inputValue, setInputValue] = React.useState('');
   const [color, setColor] = React.useState(getRandomSelectOptionColor());
-  const allowAdd = !field.options?.some(
-    (option) => option.name === inputValue.trim(),
-  );
+  const showNewOption =
+    allowAdd &&
+    !field.options?.some((option) => option.name === inputValue.trim());
 
   return (
     <Command className="min-h-min">
@@ -91,7 +93,7 @@ export const SelectFieldOptions = ({
           })}
         </CommandGroup>
         <CommandGroup>
-          {allowAdd && inputValue.length > 0 && (
+          {showNewOption && inputValue.length > 0 && (
             <CommandItem
               key={inputValue.trim()}
               value={inputValue.trim()}

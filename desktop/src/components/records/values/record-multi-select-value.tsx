@@ -87,6 +87,7 @@ export const RecordMultiSelectValue = ({
               });
             }
           }}
+          allowAdd={true}
         />
       </PopoverContent>
     </Popover>

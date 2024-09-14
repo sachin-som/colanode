@@ -96,6 +96,7 @@ export const RecordSelectValue = ({
             }
             setSelectedValue(id);
           }}
+          allowAdd={true}
         />
       </PopoverContent>
     </Popover>

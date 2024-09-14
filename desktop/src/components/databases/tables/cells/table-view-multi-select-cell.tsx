@@ -87,6 +87,7 @@ export const TableViewMultiSelectCell = ({
               });
             }
           }}
+          allowAdd={true}
         />
       </PopoverContent>
     </Popover>

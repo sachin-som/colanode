@@ -65,6 +65,7 @@ export const TableViewSelectCell = ({
         <SelectFieldOptions
           field={field}
           values={[selectedValue]}
+          allowAdd={true}
           onSelect={(id) => {
             if (isPending) {
               return;

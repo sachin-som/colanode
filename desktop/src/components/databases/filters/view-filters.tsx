@@ -6,9 +6,11 @@ import { ViewNumberFieldFilter } from '@/components/databases/filters/view-numbe
 import { ViewEmailFieldFilter } from '@/components/databases/filters/view-email-field-filter';
 import { ViewUrlFieldFilter } from '@/components/databases/filters/view-url-field-filter';
 import { ViewPhoneFieldFilter } from '@/components/databases/filters/view-phone-field-filter';
-import { ViewFilterAddPopover } from './view-filter-add-popover';
-import { Icon } from '@/components/ui/icon';
 import { ViewBooleanFieldFilter } from '@/components/databases/filters/view-boolean-field-filter';
+import { ViewSelectFieldFilter } from '@/components/databases/filters/view-select-field-filter';
+import { ViewMultiSelectFieldFilter } from '@/components/databases/filters/view-multi-select-field-filter';
+import { ViewFilterAddPopover } from '@/components/databases/filters/view-filter-add-popover';
+import { Icon } from '@/components/ui/icon';
 
 interface ViewFiltersProps {
   viewId: string;
@@ -58,7 +60,13 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
             case 'file':
               return null;
             case 'multi_select':
-              return null;
+              return (
+                <ViewMultiSelectFieldFilter
+                  key={filter.id}
+                  field={field}
+                  filter={filter}
+                />
+              );
             case 'number':
               return (
                 <ViewNumberFieldFilter
@@ -76,7 +84,13 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
                 />
               );
             case 'select':
-              return null;
+              return (
+                <ViewSelectFieldFilter
+                  key={filter.id}
+                  field={field}
+                  filter={filter}
+                />
+              );
             case 'text':
               return (
                 <ViewTextFieldFilter

@@ -14,46 +14,48 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useDatabase } from '@/contexts/database';
-import { ViewFilterNode } from '@/types/databases';
-import { getFieldFilterOperators, getFieldIcon } from '@/lib/databases';
-import { useViewFilterCreateMutation } from '@/mutations/use-view-filter-create-mutation';
+import { getFieldIcon, isSortableField } from '@/lib/databases';
+import { useViewSortCreateMutation } from '@/mutations/use-view-sort-create-mutation';
+import { SortDirections } from '@/lib/constants';
+import { ViewSortNode } from '@/types/databases';
 
-interface ViewAddFilterButtonProps {
+interface ViewSortAddPopoverProps {
   viewId: string;
-  existingFilters: ViewFilterNode[];
+  existingSorts: ViewSortNode[];
+  children: React.ReactNode;
+  onCreate?: () => void;
 }
 
-export const ViewAddFilterButton = ({
+export const ViewSortAddPopover = ({
   viewId,
-  existingFilters,
-}: ViewAddFilterButtonProps) => {
+  existingSorts,
+  onCreate,
+  children,
+}: ViewSortAddPopoverProps) => {
   const database = useDatabase();
-  const { mutate, isPending } = useViewFilterCreateMutation();
+  const { mutate, isPending } = useViewSortCreateMutation();
 
   const [open, setOpen] = React.useState(false);
-  const fieldsWithoutFilters = database.fields.filter(
-    (field) => !existingFilters.some((filter) => filter.fieldId === field.id),
+  const sortableFields = database.fields.filter(
+    (field) =>
+      isSortableField(field) &&
+      !existingSorts.some((sort) => sort.fieldId === field.id),
   );
 
-  if (fieldsWithoutFilters.length === 0) {
+  if (sortableFields.length === 0) {
     return null;
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="flex cursor-pointer flex-row items-center gap-1 rounded-lg p-1 text-sm text-muted-foreground hover:bg-gray-50">
-          <Icon name="add-line" />
-          Add filter
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-96 p-1">
         <Command className="min-h-min">
           <CommandInput placeholder="Search fields..." className="h-9" />
-          <CommandEmpty>No field found.</CommandEmpty>
+          <CommandEmpty>No sortable field found.</CommandEmpty>
           <CommandList>
             <CommandGroup className="h-min max-h-96">
-              {fieldsWithoutFilters.map((field) => (
+              {sortableFields.map((field) => (
                 <CommandItem
                   key={field.id}
                   onSelect={() => {
@@ -61,13 +63,19 @@ export const ViewAddFilterButton = ({
                       return;
                     }
 
-                    const operators = getFieldFilterOperators(field.dataType);
-                    mutate({
-                      viewId,
-                      fieldId: field.id,
-                      operator: operators[0].value,
-                    });
-                    setOpen(false);
+                    mutate(
+                      {
+                        viewId,
+                        fieldId: field.id,
+                        direction: SortDirections.Ascending,
+                      },
+                      {
+                        onSuccess: () => {
+                          onCreate?.();
+                          setOpen(false);
+                        },
+                      },
+                    );
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">

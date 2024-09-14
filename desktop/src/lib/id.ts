@@ -37,6 +37,7 @@ enum IdType {
   Field = 'fi',
   SelectOption = 'so',
   ViewFilter = 'vf',
+  ViewSort = 'vs',
 }
 
 export class NeuronId {
@@ -108,6 +109,8 @@ export class NeuronId {
         return IdType.SelectOption;
       case NodeTypes.ViewFilter:
         return IdType.ViewFilter;
+      case NodeTypes.ViewSort:
+        return IdType.ViewSort;
       default:
         return IdType.Node;
     }

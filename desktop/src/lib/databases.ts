@@ -1002,3 +1002,16 @@ const recordMatchesUrlFilter = (
 
   return false;
 };
+
+export const isSortableField = (field: FieldNode) => {
+  return (
+    field.dataType === 'text' ||
+    field.dataType === 'number' ||
+    field.dataType === 'date' ||
+    field.dataType === 'created_at' ||
+    field.dataType === 'email' ||
+    field.dataType === 'phone' ||
+    field.dataType === 'select' ||
+    field.dataType === 'url'
+  );
+};

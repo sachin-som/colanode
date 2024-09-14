@@ -33,11 +33,6 @@ export const useDatabaseQuery = (databaseId: string) => {
             FROM nodes
             WHERE parent_id = ${databaseId} AND type = ${NodeTypes.Field}
           ),
-          view_nodes AS (
-            SELECT *
-            FROM nodes
-            WHERE parent_id = ${databaseId} AND type IN (${sql.join(ViewNodeTypes)})
-          ),
           select_option_nodes AS (
             SELECT *
             FROM nodes
@@ -48,26 +43,12 @@ export const useDatabaseQuery = (databaseId: string) => {
               )
             AND type = ${NodeTypes.SelectOption}
           ),
-          view_filter_nodes AS (
-            SELECT *
-            FROM nodes
-            WHERE parent_id IN 
-              (
-                SELECT id
-                FROM view_nodes
-              )
-            AND type = ${NodeTypes.ViewFilter}
-          ),
           all_nodes AS (
             SELECT * FROM database_node
             UNION ALL
             SELECT * FROM field_nodes
             UNION ALL
-            SELECT * FROM view_nodes
-            UNION ALL
             SELECT * FROM select_option_nodes
-            UNION ALL
-            SELECT * FROM view_filter_nodes
           )
           SELECT 
             n.*,

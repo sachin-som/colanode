@@ -37,7 +37,7 @@ export const BoardViewColumnRecords = ({
     },
   ];
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useRecordsQuery(database.id, filters);
+    useRecordsQuery(database.id, filters, view.sorts);
 
   const records = data ?? [];
   return (

@@ -11,7 +11,7 @@ export const TableViewBody = () => {
   const tableView = useTableView();
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useRecordsQuery(database.id, tableView.filters);
+    useRecordsQuery(database.id, tableView.filters, tableView.sorts);
 
   const records = data ?? [];
   return (

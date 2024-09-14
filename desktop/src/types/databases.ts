@@ -19,6 +19,7 @@ export type TableViewNode = {
   nameWidth: number;
   versionId: string;
   filters: ViewFilterNode[];
+  sorts: ViewSortNode[];
 };
 
 export type BoardViewNode = {
@@ -26,6 +27,7 @@ export type BoardViewNode = {
   name: string;
   type: 'board_view';
   filters: ViewFilterNode[];
+  sorts: ViewSortNode[];
   groupBy: string | null;
 };
 
@@ -34,6 +36,7 @@ export type CalendarViewNode = {
   name: string;
   type: 'calendar_view';
   filters: ViewFilterNode[];
+  sorts: ViewSortNode[];
   groupBy: string | null;
 };
 
@@ -188,4 +191,10 @@ export type ViewFilterValueNode = {
   textValue: string | null;
   numberValue: number | null;
   foreignNodeId: string | null;
+};
+
+export type ViewSortNode = {
+  id: string;
+  fieldId: string;
+  direction: 'asc' | 'desc';
 };

@@ -10,11 +10,12 @@ import { ViewTabs } from '@/components/databases/view-tabs';
 import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
-import { ViewFilters } from '@/components/databases/filters/view-filters';
-import { ViewActionButton } from '@/components/databases/view-action-button';
 import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { AttributeTypes } from '@/lib/constants';
+import { ViewSortsAndFilters } from '@/components/databases/view-sorts-and-filters';
+import { ViewFilterButton } from '@/components/databases/filters/view-filter.button';
+import { ViewSortButton } from '@/components/databases/sorts/view-sort-button';
 
 interface TableViewProps {
   node: TableViewNode;
@@ -39,8 +40,7 @@ export const TableView = ({ node }: TableViewProps) => {
     node.nameWidth ?? getDefaultNameWidth(),
   );
 
-  const [openFilters, setOpenFilters] = React.useState(true);
-  const [openSort, setOpenSort] = React.useState(false);
+  const [openSortsAndFilters, setOpenSortsAndFilters] = React.useState(false);
 
   React.useEffect(() => {
     setHiddenFields(node.hiddenFields ?? []);
@@ -67,6 +67,7 @@ export const TableView = ({ node }: TableViewProps) => {
         name: node.name,
         fields,
         filters: node.filters,
+        sorts: node.sorts,
         hideField: (id: string) => {
           if (hiddenFields.includes(id)) {
             return;
@@ -204,17 +205,27 @@ export const TableView = ({ node }: TableViewProps) => {
         <ViewTabs />
         <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
           <TableViewSettingsPopover />
-          <ViewActionButton
-            icon="sort-desc"
-            onClick={() => setOpenSort((prev) => !prev)}
+          <ViewSortButton
+            viewId={node.id}
+            sorts={node.sorts}
+            open={openSortsAndFilters}
+            setOpen={setOpenSortsAndFilters}
           />
-          <ViewActionButton
-            icon="filter-line"
-            onClick={() => setOpenFilters((prev) => !prev)}
+          <ViewFilterButton
+            viewId={node.id}
+            filters={node.filters}
+            open={openSortsAndFilters}
+            setOpen={setOpenSortsAndFilters}
           />
         </div>
       </div>
-      {openFilters && <ViewFilters viewId={node.id} filters={node.filters} />}
+      {openSortsAndFilters && (
+        <ViewSortsAndFilters
+          viewId={node.id}
+          filters={node.filters}
+          sorts={node.sorts}
+        />
+      )}
       <div className="mt-2 w-full min-w-full max-w-full overflow-auto pr-5">
         <TableViewHeader />
         <TableViewBody />

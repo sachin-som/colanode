@@ -51,7 +51,7 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
   ];
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useRecordsQuery(database.id, filters);
+    useRecordsQuery(database.id, filters, view.sorts);
 
   if (isPending) {
     return null;

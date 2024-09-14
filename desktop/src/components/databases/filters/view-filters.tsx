@@ -2,11 +2,12 @@ import React from 'react';
 import { ViewFilterNode } from '@/types/databases';
 import { useDatabase } from '@/contexts/database';
 import { ViewTextFieldFilter } from '@/components/databases/filters/view-text-field-filter';
-import { ViewAddFilterButton } from '@/components/databases/filters/view-filter-add-button';
 import { ViewNumberFieldFilter } from '@/components/databases/filters/view-number-field-filter';
 import { ViewEmailFieldFilter } from '@/components/databases/filters/view-email-field-filter';
 import { ViewUrlFieldFilter } from '@/components/databases/filters/view-url-field-filter';
 import { ViewPhoneFieldFilter } from '@/components/databases/filters/view-phone-field-filter';
+import { ViewFilterAddPopover } from './view-filter-add-popover';
+import { Icon } from '@/components/ui/icon';
 
 interface ViewFiltersProps {
   viewId: string;
@@ -17,7 +18,7 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
   const database = useDatabase();
 
   return (
-    <div className="mt-3 flex flex-row items-center gap-2">
+    <div className="flex flex-row items-center gap-2">
       {filters &&
         filters.map((filter) => {
           const field = database.fields.find(
@@ -91,7 +92,12 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
               return null;
           }
         })}
-      <ViewAddFilterButton viewId={viewId} existingFilters={filters} />
+      <ViewFilterAddPopover viewId={viewId} existingFilters={filters}>
+        <button className="flex cursor-pointer flex-row items-center gap-1 rounded-lg p-1 text-sm text-muted-foreground hover:bg-gray-50">
+          <Icon name="add-line" />
+          Add filter
+        </button>
+      </ViewFilterAddPopover>
     </div>
   );
 };

@@ -27,6 +27,7 @@ export const NodeTypes = {
   Field: 'field',
   SelectOption: 'select_option',
   ViewFilter: 'view_filter',
+  ViewSort: 'view_sort',
 };
 
 export const EditorNodeTypes = {
@@ -83,4 +84,10 @@ export const AttributeTypes = {
   Operator: 'operator',
   Value: 'value',
   GroupBy: 'group_by',
+  Direction: 'direction',
+};
+
+export const SortDirections = {
+  Ascending: 'asc',
+  Descending: 'desc',
 };

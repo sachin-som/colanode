@@ -1,7 +1,7 @@
 import React from 'react';
 import { buttonVariants } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { cn, getDisplayedDates } from '@/lib/utils';
+import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/components/databases/calendars/calendar-view-day';
 import { CalendarViewNode, FieldNode, ViewFilterNode } from '@/types/databases';
@@ -70,36 +70,33 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
         months:
           'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full',
         month: 'space-y-4 w-full',
-        month_caption: 'flex justify-center pt-1 relative items-center',
+        caption: 'flex justify-center pt-1 relative items-center',
         caption_label: 'text-sm font-medium',
         nav: 'space-x-1 flex items-center',
-        button_previous: cn(
+        nav_button: cn(
           buttonVariants({ variant: 'outline' }),
           'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
-          'absolute left-1',
         ),
-        button_next: cn(
-          buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
-          'absolute right-1',
-        ),
-        month_grid: 'w-full border-collapse space-y-1',
-        weekdays: 'flex flex-row mb-2',
-        weekday:
+        nav_button_previous: 'absolute left-1',
+        nav_button_next: 'absolute right-1',
+        table: 'w-full border-collapse space-y-1',
+        head_row: 'flex flex-row mb-2',
+        head_cell:
           'text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]',
-        week: 'flex flex-row w-full border-b first:border-t',
+        row: 'flex flex-row w-full border-b first:border-t',
+        cell: cn(
+          'relative flex-1 h-40 p-2 text-right text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent',
+          '[&:has([aria-selected])]:rounded-md',
+          'border-r first:border-l border-gray-100 overflow-auto',
+        ),
       }}
       components={{
-        Chevron: (props) => {
-          if (props.orientation === 'left') {
-            return (
-              <Icon name="arrow-left-s-line" className="h-4 w-4" {...props} />
-            );
-          }
-          return (
-            <Icon name="arrow-right-s-line" className="h-4 w-4" {...props} />
-          );
-        },
+        IconLeft: ({ ...props }) => (
+          <Icon name="arrow-left-s-line" className="h-4 w-4" {...props} />
+        ),
+        IconRight: ({ ...props }) => (
+          <Icon name="arrow-right-s-line" className="h-4 w-4" {...props} />
+        ),
         Day: (props: DayProps) => {
           const filter: ViewFilterNode = {
             id: 'calendar_filter',
@@ -107,7 +104,7 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
             operator: 'is_equal_to',
             values: [
               {
-                textValue: props.day.date.toISOString(),
+                textValue: props.date.toISOString(),
                 numberValue: null,
                 foreignNodeId: null,
               },
@@ -123,9 +120,8 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
 
           return (
             <CalendarViewDay
-              date={props.day.date}
-              month={props.day.displayMonth}
-              outside={props.day.outside}
+              date={toUTCDate(props.date)}
+              month={props.displayMonth}
               records={dayRecords}
             />
           );

@@ -10,6 +10,7 @@ import { TableViewPhoneCell } from '@/components/databases/tables/cells/table-vi
 import { TableViewEmailCell } from '@/components/databases/tables/cells/table-view-email-cell';
 import { TableViewUrlCell } from '@/components/databases/tables/cells/table-view-url-cell';
 import { TableViewMultiSelectCell } from '@/components/databases/tables/cells/table-view-multi-select-cell';
+import { TableViewDateCell } from '@/components/databases/tables/cells/table-view-date-cell';
 
 interface TableViewFieldCellProps {
   record: RecordNode;
@@ -41,5 +42,13 @@ export const TableViewFieldCell = ({
       return <TableViewUrlCell record={record} field={field} />;
     case 'multi_select':
       return <TableViewMultiSelectCell record={record} field={field} />;
+    case 'collaborator':
+      return null;
+    case 'date':
+      return <TableViewDateCell record={record} field={field} />;
+    case 'file':
+      return null;
+    default:
+      return null;
   }
 };

@@ -9,6 +9,8 @@ import { ViewPhoneFieldFilter } from '@/components/databases/filters/view-phone-
 import { ViewBooleanFieldFilter } from '@/components/databases/filters/view-boolean-field-filter';
 import { ViewSelectFieldFilter } from '@/components/databases/filters/view-select-field-filter';
 import { ViewMultiSelectFieldFilter } from '@/components/databases/filters/view-multi-select-field-filter';
+import { ViewDateFieldFilter } from '@/components/databases/filters/view-date-field-filter';
+import { ViewCreatedAtFieldFilter } from '@/components/databases/filters/view-created-at-field-fitler';
 import { ViewFilterAddPopover } from '@/components/databases/filters/view-filter-add-popover';
 import { Icon } from '@/components/ui/icon';
 
@@ -44,11 +46,23 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
             case 'collaborator':
               return null;
             case 'created_at':
-              return null;
+              return (
+                <ViewCreatedAtFieldFilter
+                  key={filter.id}
+                  field={field}
+                  filter={filter}
+                />
+              );
             case 'created_by':
               return null;
             case 'date':
-              return null;
+              return (
+                <ViewDateFieldFilter
+                  key={filter.id}
+                  field={field}
+                  filter={filter}
+                />
+              );
             case 'email':
               return (
                 <ViewEmailFieldFilter

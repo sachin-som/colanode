@@ -180,3 +180,10 @@ export const isSameDay = (
 
   return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth();
 };
+
+export const toUTCDate = (dateParam: Date | string): Date => {
+  const date = typeof dateParam === 'string' ? new Date(dateParam) : dateParam;
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+};

@@ -7,6 +7,7 @@ import { compareString } from '@/lib/utils';
 import {
   BooleanFieldNode,
   CreatedAtFieldNode,
+  DateFieldNode,
   EmailFieldNode,
   FieldNode,
   MultiSelectFieldNode,
@@ -239,7 +240,7 @@ const buildFilterQuery = (
     case 'created_by':
       return null;
     case 'date':
-      return null;
+      return buildDateFilterQuery(filter, field);
     case 'email':
       return buildEmailFilterQuery(filter, field);
     case 'file':
@@ -635,6 +636,69 @@ const buildMultiSelectFilterQuery = (
       return {
         joinQuery: `${buildFilterLeftJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
         whereQuery: `na_${filter.id}.node_id IS NULL`,
+      };
+    default:
+      return null;
+  }
+};
+
+const buildDateFilterQuery = (
+  filter: ViewFilterNode,
+  field: DateFieldNode,
+): FilterQuery | null => {
+  if (filter.operator === 'is_empty') {
+    return buildIsEmptyFilterQuery(filter.id, field.id);
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+  }
+
+  if (filter.values.length === 0) {
+    return null;
+  }
+
+  const value = filter.values[0].textValue;
+  if (value === null) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+
+  const dateString = date.toISOString().split('T')[0];
+  switch (filter.operator) {
+    case 'is_equal_to':
+      return {
+        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) = '${dateString}'`,
+        whereQuery: null,
+      };
+    case 'is_not_equal_to':
+      return {
+        joinQuery: `${buildFilterLeftJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) != '${dateString}'`,
+        whereQuery: null,
+      };
+    case 'is_on_or_after':
+      return {
+        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) >= '${dateString}'`,
+        whereQuery: null,
+      };
+    case 'is_on_or_before':
+      return {
+        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) <= '${dateString}'`,
+        whereQuery: null,
+      };
+    case 'is_after':
+      return {
+        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) > '${dateString}'`,
+        whereQuery: null,
+      };
+    case 'is_before':
+      return {
+        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) < '${dateString}'`,
+        whereQuery: null,
       };
     default:
       return null;

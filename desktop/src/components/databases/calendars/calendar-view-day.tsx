@@ -7,32 +7,27 @@ import { CalendarViewCard } from '@/components/databases/calendars/calendar-view
 interface CalendarViewDayProps {
   date: Date;
   month: Date;
-  outside: boolean;
   records: RecordNode[];
 }
 
 export const CalendarViewDay = ({
   date,
   month,
-  outside,
   records,
 }: CalendarViewDayProps) => {
   const isToday = isSameDay(date, new Date());
   const canCreateRecord = false;
 
+  const dateMonth = date.getMonth();
+  const displayMonth = month.getMonth();
+  const isOutside = dateMonth !== displayMonth;
+
   return (
-    <td
-      className={cn(
-        'relative h-40 flex-1 p-2 text-right text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent',
-        '[&:has([aria-selected])]:rounded-md',
-        'overflow-auto border-r border-gray-100 first:border-l',
-        'group flex flex-col gap-1',
-      )}
-    >
+    <div className="animate-fade-in group flex h-full w-full flex-col gap-1">
       <div
         className={cn(
           'flex justify-between text-sm',
-          outside ? 'text-muted-foreground' : '',
+          isOutside ? 'text-muted-foreground' : '',
         )}
       >
         <Icon
@@ -54,6 +49,6 @@ export const CalendarViewDay = ({
       {records.map((record) => {
         return <CalendarViewCard key={record.id} record={record} />;
       })}
-    </td>
+    </div>
   );
 };

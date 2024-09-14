@@ -266,6 +266,22 @@ export const dateFieldFilterOperators: FieldFilterOperator[] = [
     value: 'is_not_equal_to',
   },
   {
+    label: 'Is on or after',
+    value: 'is_on_or_after',
+  },
+  {
+    label: 'Is on or before',
+    value: 'is_on_or_before',
+  },
+  {
+    label: 'Is After',
+    value: 'is_after',
+  },
+  {
+    label: 'Is Before',
+    value: 'is_before',
+  },
+  {
     label: 'Is Empty',
     value: 'is_empty',
   },

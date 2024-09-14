@@ -8,6 +8,7 @@ import { ViewUrlFieldFilter } from '@/components/databases/filters/view-url-fiel
 import { ViewPhoneFieldFilter } from '@/components/databases/filters/view-phone-field-filter';
 import { ViewFilterAddPopover } from './view-filter-add-popover';
 import { Icon } from '@/components/ui/icon';
+import { ViewBooleanFieldFilter } from '@/components/databases/filters/view-boolean-field-filter';
 
 interface ViewFiltersProps {
   viewId: string;
@@ -31,7 +32,13 @@ export const ViewFilters = ({ viewId, filters }: ViewFiltersProps) => {
 
           switch (field.dataType) {
             case 'boolean':
-              return null;
+              return (
+                <ViewBooleanFieldFilter
+                  key={filter.id}
+                  field={field}
+                  filter={filter}
+                />
+              );
             case 'collaborator':
               return null;
             case 'created_at':

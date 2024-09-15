@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { EmojiPicker } from '@/components/emojis/emoji-picker';
 
 interface MessageReactionProps {
   onEmojiSelect: (emoji: string) => void;
@@ -25,7 +26,7 @@ export const MessageReactionPicker = ({
         <Icon name="emoji-sticker-line" size={size} className={className} />
       </PopoverTrigger>
       <PopoverContent className="w-max p-0" align="end">
-        <p>coming soon.</p>
+        <EmojiPicker onEmojiClick={console.log} />
       </PopoverContent>
     </Popover>
   );

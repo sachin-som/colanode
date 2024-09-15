@@ -36,7 +36,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
 
   const canEdit = true;
   const canDelete = true;
-  const canReplyInThread = true;
+  const canReplyInThread = false;
 
   if (!message.content || message.content.length === 0) {
     return null;

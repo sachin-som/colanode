@@ -31,6 +31,15 @@ export type ServerNodeAttribute = {
   serverUpdatedAt?: string | null;
 };
 
+export type ServerNodeReaction = {
+  nodeId: string;
+  reactorId: string;
+  reaction: string;
+  workspaceId: string;
+  createdAt: string;
+  serverCreatedAt: string;
+};
+
 export type NodeBlock = {
   type: string;
   text?: string | null;

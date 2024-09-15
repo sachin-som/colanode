@@ -121,6 +121,32 @@ const createNodeAttributesTable: Migration = {
   },
 };
 
+const createNodeReactionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('node_reactions')
+      .addColumn('node_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('reactor_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('reaction', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
+      .addPrimaryKeyConstraint('node_reactions_pkey', [
+        'node_id',
+        'reactor_id',
+        'reaction',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('node_reactions').execute();
+  },
+};
+
 const createAccountDevicesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -169,4 +195,5 @@ export const databaseMigrations: Record<string, Migration> = {
   '00005_create_node_attributes_table': createNodeAttributesTable,
   '00006_create_account_devices_table': createAccountDevicesTable,
   '00007_create_mutations_table': createMutationsTable,
+  '00008_create_node_reactions_table': createNodeReactionsTable,
 };

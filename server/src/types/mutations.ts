@@ -46,6 +46,13 @@ export type LocalNodeAttributeMutationData = {
   server_version_id: string;
 };
 
+export type LocalNodeReactionMutationData = {
+  node_id: string;
+  reactor_id: string;
+  reaction: string;
+  created_at: string;
+};
+
 export type ServerMutation = {
   id: string;
   table: string;

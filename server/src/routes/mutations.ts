@@ -5,6 +5,7 @@ import {
   LocalMutation,
   LocalNodeAttributeMutationData,
   LocalNodeMutationData,
+  LocalNodeReactionMutationData,
 } from '@/types/mutations';
 import { database } from '@/data/database';
 
@@ -51,6 +52,18 @@ mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
               input.workspaceId,
               mutation,
             );
+            break;
+          }
+        }
+      }
+      case 'node_reactions': {
+        switch (mutation.action) {
+          case 'insert': {
+            await handleCreateNodeReactionMutation(input.workspaceId, mutation);
+            break;
+          }
+          case 'delete': {
+            await handleDeleteNodeReactionMutation(mutation);
             break;
           }
         }
@@ -292,6 +305,54 @@ const handleDeleteNodeAttributeMutation = async (
         eb('node_id', '=', nodeAttributeData.node_id),
         eb('type', '=', nodeAttributeData.type),
         eb('key', '=', nodeAttributeData.key),
+      ]),
+    )
+    .execute();
+};
+
+const handleCreateNodeReactionMutation = async (
+  workspaceId: string,
+  mutation: LocalMutation,
+): Promise<void> => {
+  if (!mutation.after) {
+    return;
+  }
+
+  const nodeReactionData = JSON.parse(
+    mutation.after,
+  ) as LocalNodeReactionMutationData;
+  await database
+    .insertInto('node_reactions')
+    .values({
+      node_id: nodeReactionData.node_id,
+      reactor_id: nodeReactionData.reactor_id,
+      reaction: nodeReactionData.reaction,
+      created_at: new Date(nodeReactionData.created_at),
+      workspace_id: workspaceId,
+      server_created_at: new Date(),
+    })
+    .onConflict((ob) => ob.doNothing())
+    .execute();
+};
+
+const handleDeleteNodeReactionMutation = async (
+  mutation: LocalMutation,
+): Promise<void> => {
+  if (!mutation.before) {
+    return;
+  }
+
+  const nodeReactionData = JSON.parse(
+    mutation.before,
+  ) as LocalNodeReactionMutationData;
+
+  await database
+    .deleteFrom('node_reactions')
+    .where((eb) =>
+      eb.and([
+        eb('node_id', '=', nodeReactionData.node_id),
+        eb('reactor_id', '=', nodeReactionData.reactor_id),
+        eb('reaction', '=', nodeReactionData.reaction),
       ]),
     )
     .execute();

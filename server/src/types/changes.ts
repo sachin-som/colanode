@@ -69,3 +69,12 @@ export type NodeAttributeChangeData = {
   server_created_at: string;
   server_updated_at: string | null;
 };
+
+export type NodeReactionChangeData = {
+  node_id: string;
+  reactor_id: string;
+  reaction: string;
+  workspace_id: string;
+  created_at: string;
+  server_created_at: string;
+};

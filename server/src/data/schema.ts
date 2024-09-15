@@ -117,6 +117,19 @@ export type SelectNodeAttribute = Selectable<NodeAttributeTable>;
 export type CreateNodeAttribute = Insertable<NodeAttributeTable>;
 export type UpdateNodeAttribute = Updateable<NodeAttributeTable>;
 
+interface NodeReactionTable {
+  node_id: ColumnType<string, string, never>;
+  reactor_id: ColumnType<string, string, never>;
+  reaction: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  created_at: ColumnType<Date, Date, never>;
+  server_created_at: ColumnType<Date, Date, never>;
+}
+
+export type SelectNodeReaction = Selectable<NodeReactionTable>;
+export type CreateNodeReaction = Insertable<NodeReactionTable>;
+export type UpdateNodeReaction = Updateable<NodeReactionTable>;
+
 interface MutationTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
@@ -139,5 +152,6 @@ export interface DatabaseSchema {
   account_devices: AccountDeviceTable;
   nodes: NodeTable;
   node_attributes: NodeAttributeTable;
+  node_reactions: NodeReactionTable;
   mutations: MutationTable;
 }

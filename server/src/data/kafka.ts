@@ -26,6 +26,9 @@ export const TOPIC_NAMES = {
   NODE_ATTRIBUTE_CHANGES:
     process.env.KAFKA_NODE_ATTRIBUTE_CHANGES_TOPIC_NAME ??
     'neuron_node_attribute_changes',
+  NODE_REACTION_CHANGES:
+    process.env.KAFKA_NODE_REACTION_CHANGES_TOPIC_NAME ??
+    'neuron_node_reaction_changes',
   MUTATION_CHANGES:
     process.env.KAFKA_MUTATION_CHANGES_TOPIC_NAME ?? 'neuron_mutation_changes',
 };
@@ -37,6 +40,9 @@ export const CONSUMER_IDS = {
   NODE_ATTRIBUTE_CHANGES:
     process.env.KAFKA_NODE_ATTRIBUTE_CHANGES_CONSUMER_ID ??
     'neuron_node_attribute_changes_consumer',
+  NODE_REACTION_CHANGES:
+    process.env.KAFKA_NODE_REACTION_CHANGES_CONSUMER_ID ??
+    'neuron_node_reaction_changes_consumer',
   MUTATION_CHANGES:
     process.env.KAFKA_MUTATION_CHANGES_CONSUMER_ID ??
     'neuron_mutation_changes_consumer',

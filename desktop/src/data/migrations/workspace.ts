@@ -76,10 +76,10 @@ const createNodeReactionsTable: Migration = {
     await db.schema
       .createTable('node_reactions')
       .addColumn('node_id', 'text', (col) =>
-        col.references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('reactor_id', 'text', (col) =>
-        col.references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('reaction', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())

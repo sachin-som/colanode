@@ -3,7 +3,6 @@ import type { JSONContent } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import isHotkey from 'is-hotkey';
 import { MessageGifPicker } from '@/components/messages/message-gif-picker';
-import { MessageReactionPicker } from '@/components/messages/message-reaction-picker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -143,13 +142,13 @@ export const MessageEditor = (props: MessageEditorProps) => {
         />
       </div>
       <div className="flex flex-row gap-2">
-        <MessageReactionPicker
+        {/* <MessageReactionPicker
           size={20}
           className="cursor-pointer"
           onEmojiSelect={(emoji) => {
             console.log(emoji);
           }}
-        />
+        /> */}
         <MessageGifPicker />
         <span className="h-5 border-l-2 border-l-gray-300" />
         {props.loading ? (

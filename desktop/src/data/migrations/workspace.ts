@@ -71,6 +71,31 @@ const createNodeAttributesTable: Migration = {
   },
 };
 
+const createNodeReactionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('node_reactions')
+      .addColumn('node_id', 'text', (col) =>
+        col.references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('reactor_id', 'text', (col) =>
+        col.references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('reaction', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('server_created_at', 'text')
+      .addPrimaryKeyConstraint('node_reactions_pkey', [
+        'node_id',
+        'reactor_id',
+        'reaction',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('node_reactions').execute();
+  },
+};
+
 const createMutationsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -340,6 +365,63 @@ const createNodeAttributesDeleteTrigger: Migration = {
   },
 };
 
+const createNodeReactionsInsertTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER after_insert_node_reactions
+      AFTER INSERT ON node_reactions
+      FOR EACH ROW
+      WHEN NEW.server_created_at IS NULL
+      BEGIN
+          INSERT INTO mutations ('action', 'table', 'after', 'created_at')
+          VALUES (
+              'insert',
+              'node_reactions',
+              json_object(
+                  'node_id', NEW.'node_id',
+                  'reactor_id', NEW.'reactor_id',
+                  'reaction', NEW.'reaction',
+                  'created_at', NEW.'created_at',
+                  'server_created_at', NEW.'server_created_at'
+              ),
+              datetime('now')
+          );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP TRIGGER after_insert_node_reactions`.execute(db);
+  },
+};
+
+const createNodeReactionsDeleteTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER after_delete_node_reactions
+      AFTER DELETE ON node_reactions
+      FOR EACH ROW
+      BEGIN
+          INSERT INTO mutations ('action', 'table', 'before', 'created_at')
+          VALUES (
+              'delete',
+              'node_reactions',
+              json_object(
+                  'node_id', OLD.'node_id',
+                  'reactor_id', OLD.'reactor_id',
+                  'reaction', OLD.'reaction',
+                  'created_at', OLD.'created_at',
+                  'server_created_at', OLD.'server_created_at'
+              ),
+              datetime('now')
+          );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP TRIGGER after_delete_node_reactions`.execute(db);
+  },
+};
+
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_nodes_table': createNodesTable,
   '00002_create_nodes_parent_id_and_type_index':
@@ -355,4 +437,9 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
     createNodeAttributesUpdateTrigger,
   '00010_create_node_attributes_delete_trigger':
     createNodeAttributesDeleteTrigger,
+  '00011_create_node_reactions_table': createNodeReactionsTable,
+  '00012_create_node_reactions_insert_trigger':
+    createNodeReactionsInsertTrigger,
+  '00013_create_node_reactions_delete_trigger':
+    createNodeReactionsDeleteTrigger,
 };

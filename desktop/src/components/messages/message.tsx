@@ -7,51 +7,63 @@ import {
 } from '@/components/ui/tooltip';
 import { formatDate, timeAgo } from '@/lib/utils';
 import { InView } from 'react-intersection-observer';
-import { MessageReactionPicker } from '@/components/messages/message-reaction-picker';
+import { MessageReactionCreatePopover } from '@/components/messages/message-reaction-create-popover';
 import { Icon } from '@/components/ui/icon';
 import { MessageDeleteButton } from '@/components/messages/message-delete-button';
 import { NodeRenderer } from '@/editor/renderers/node';
 import { MessageNode } from '@/types/messages';
+import { MessageReactions } from '@/components/messages/message-reactions';
+import { useReactionCreateMutation } from '@/mutations/use-reaction-create-mutation';
+import { useReactionDeleteMutation } from '@/mutations/use-reaction-delete-mutation';
 
 interface MessageProps {
   message: MessageNode;
   previousMessage?: MessageNode;
 }
 
+const shouldDisplayUserInfo = (
+  message: MessageNode,
+  previousMessage?: MessageNode,
+) => {
+  if (!previousMessage) {
+    return true;
+  }
+
+  const previousMessageDate = new Date(previousMessage.createdAt);
+  const currentMessageDate = new Date(message.createdAt);
+
+  if (previousMessageDate.getDate() !== currentMessageDate.getDate()) {
+    return true;
+  }
+
+  return previousMessage.author.id !== message.author.id;
+};
+
 export const Message = ({ message, previousMessage }: MessageProps) => {
-  const shouldDisplayUserInfo = () => {
-    if (!previousMessage) {
-      return true;
-    }
-
-    const previousMessageDate = new Date(previousMessage.createdAt);
-    const currentMessageDate = new Date(message.createdAt);
-
-    if (previousMessageDate.getDate() !== currentMessageDate.getDate()) {
-      return true;
-    }
-
-    return !previousMessage || previousMessage.author.id !== message.author.id;
-  };
-
-  const canEdit = true;
-  const canDelete = true;
-  const canReplyInThread = false;
+  const { mutate: createReaction, isPending: isCreatingReaction } =
+    useReactionCreateMutation();
+  const { mutate: deleteReaction, isPending: isDeletingReaction } =
+    useReactionDeleteMutation();
 
   if (!message.content || message.content.length === 0) {
     return null;
   }
+
+  const canEdit = true;
+  const canDelete = true;
+  const canReplyInThread = false;
+  const displayUserInfo = shouldDisplayUserInfo(message, previousMessage);
 
   return (
     <div
       id={`message-${message.id}`}
       key={`message-${message.id}`}
       className={`group flex flex-row px-1 hover:bg-gray-50 ${
-        shouldDisplayUserInfo() ? 'mt-2 first:mt-0' : ''
+        displayUserInfo ? 'mt-2 first:mt-0' : ''
       }`}
     >
       <div className="mr-2 w-10 pt-1">
-        {shouldDisplayUserInfo() && (
+        {displayUserInfo && (
           <Avatar
             id={message.author.id}
             name={message.author.name}
@@ -61,7 +73,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
       </div>
 
       <div className="relative w-full">
-        {shouldDisplayUserInfo() && (
+        {displayUserInfo && (
           <p className="font-medium">
             {message.author.name}
             <Tooltip>
@@ -87,28 +99,22 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
         >
           <ul className="invisible absolute -top-2 right-1 z-10 flex flex-row bg-gray-100 text-muted-foreground shadow group-hover:visible">
             {canReplyInThread && (
-              <li
-                className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200"
-                onClick={() => {
-                  // workspace.openPanel(data.id);
-                }}
-              >
+              <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
                 <Icon name="question-answer-line" className="cursor-pointer" />
               </li>
             )}
             <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-              <MessageReactionPicker
-                onEmojiSelect={(emoji) => {
-                  console.log(emoji);
+              <MessageReactionCreatePopover
+                onReactionClick={(reaction) => {
+                  if (isCreatingReaction || isDeletingReaction) {
+                    return;
+                  }
+
+                  createReaction({ nodeId: message.id, reaction });
                 }}
               />
             </li>
-            <li
-              className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200"
-              onClick={() => {
-                // onReply?.(data.id, data.createdBy);
-              }}
-            >
+            <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
               <Icon name="reply-line" className="cursor-pointer" />
             </li>
             {canDelete && (
@@ -117,22 +123,27 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
               </li>
             )}
           </ul>
-          {/*{data.messageReference && <MessageReference />}*/}
           <div className="text-foreground">
             {message.content.map((node) => (
               <NodeRenderer key={node.id} node={node} keyPrefix={node.id} />
             ))}
           </div>
-          {/*<MessageReactions*/}
-          {/*  message={message}*/}
-          {/*  onReactionClick={handleEmojiSelect}*/}
-          {/*/>*/}
-          {/*{canReplyInThread && (*/}
-          {/*  <MessageThread*/}
-          {/*    message={data}*/}
-          {/*    onClick={() => workspace.openPanel(data.id)}*/}
-          {/*  />*/}
-          {/*)}*/}
+          {message.reactionCounts.length > 0 && (
+            <MessageReactions
+              message={message}
+              onReactionClick={(reaction) => {
+                if (isCreatingReaction || isDeletingReaction) {
+                  return;
+                }
+
+                if (message.userReactions.includes(reaction)) {
+                  deleteReaction({ nodeId: message.id, reaction });
+                } else {
+                  createReaction({ nodeId: message.id, reaction });
+                }
+              }}
+            />
+          )}
         </InView>
       </div>
     </div>

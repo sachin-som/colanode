@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Icon } from '@/components/ui/icon';
 import {
   Popover,
@@ -9,24 +8,26 @@ import {
 import { EmojiPicker } from '@/components/emojis/emoji-picker';
 
 interface MessageReactionProps {
-  onEmojiSelect: (emoji: string) => void;
-  size?: string | number;
-  className?: string;
+  onReactionClick: (reaction: string) => void;
 }
 
-export const MessageReactionPicker = ({
-  size,
-  className,
+export const MessageReactionCreatePopover = ({
+  onReactionClick,
 }: MessageReactionProps) => {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover onOpenChange={setOpen} open={open} modal={true}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Icon name="emoji-sticker-line" size={size} className={className} />
+        <Icon name="emoji-sticker-line" />
       </PopoverTrigger>
       <PopoverContent className="w-max p-0" align="end">
-        <EmojiPicker onEmojiClick={console.log} />
+        <EmojiPicker
+          onEmojiClick={(emoji) => {
+            onReactionClick(emoji.id);
+            setOpen(false);
+          }}
+        />
       </PopoverContent>
     </Popover>
   );

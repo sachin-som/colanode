@@ -6,4 +6,11 @@ export type MessageNode = {
   content: LocalNodeWithAttributesAndChildren[];
   createdAt: string;
   author: User;
+  reactionCounts: MessageReactionCount[];
+  userReactions: string[];
+};
+
+export type MessageReactionCount = {
+  reaction: string;
+  count: number;
 };

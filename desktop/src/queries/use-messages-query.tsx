@@ -1,10 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNode, SelectNodeWithAttributes } from '@/data/schemas/workspace';
-import { AttributeTypes, NodeTypes } from '@/lib/constants';
-import {
-  buildNodeWithAttributesAndChildren,
-  mapNodeWithAttributes,
-} from '@/lib/nodes';
+import { SelectNode } from '@/data/schemas/workspace';
+import { NodeTypes } from '@/lib/constants';
+import { buildNodeWithChildren, mapNode } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
 import { User } from '@/types/users';
@@ -13,7 +10,7 @@ import { QueryResult, sql } from 'kysely';
 
 const MESSAGES_PER_PAGE = 50;
 
-type MessageRow = SelectNodeWithAttributes & {
+type MessageRow = SelectNode & {
   reaction_counts: string | null;
   user_reactions: string | null;
 };
@@ -77,31 +74,6 @@ export const useMessagesQuery = (conversationId: string) => {
             UNION ALL
             SELECT * FROM author_nodes
         ),
-        node_attributes_aggregated AS (
-            SELECT
-                na.node_id,
-                json_group_array(
-                    json_object(
-                        'node_id', na.'node_id',
-                        'type', na.'type',
-                        'key', na.'key',
-                        'text_value', na.'text_value',
-                        'number_value', na.'number_value',
-                        'foreign_node_id', na.'foreign_node_id',
-                        'created_at', na.'created_at',
-                        'updated_at', na.'updated_at',
-                        'created_by', na.'created_by',
-                        'updated_by', na.'updated_by',
-                        'version_id', na.'version_id',
-                        'server_created_at', na.'server_created_at',
-                        'server_updated_at', na.'server_updated_at',
-                        'server_version_id', na.'server_version_id'
-                    )
-                ) AS attributes
-            FROM node_attributes na
-            WHERE na.node_id IN (SELECT id FROM all_nodes)
-            GROUP BY na.node_id
-        ),
         message_reaction_counts AS (
             SELECT
                 mrc.node_id,
@@ -129,11 +101,9 @@ export const useMessagesQuery = (conversationId: string) => {
         )
         SELECT
             n.*,
-            COALESCE(na.attributes, json('[]')) AS attributes,
             COALESCE(mrc.reaction_counts, json('[]')) AS reaction_counts,
             COALESCE(ur.user_reactions, json('[]')) AS user_reactions
         FROM all_nodes n
-        LEFT JOIN node_attributes_aggregated na ON n.id = na.node_id
         LEFT JOIN message_reaction_counts mrc ON n.id = mrc.node_id
         LEFT JOIN user_reactions ur ON n.id = ur.node_id;
       `.compile(workspace.schema);
@@ -159,19 +129,14 @@ const buildMessages = (rows: MessageRow[]): MessageNode[] => {
     .filter(
       (row) => row.type !== NodeTypes.User && row.type !== NodeTypes.Message,
     )
-    .map(mapNodeWithAttributes);
+    .map(mapNode);
 
   const messages: MessageNode[] = [];
   const authorMap = new Map<string, User>();
   for (const authorRow of authorRows) {
-    const authorNode = mapNodeWithAttributes(authorRow);
-    const name = authorNode.attributes.find(
-      (attr) => attr.type === AttributeTypes.Name,
-    )?.textValue;
-
-    const avatar = authorNode.attributes.find(
-      (attr) => attr.type === AttributeTypes.Avatar,
-    )?.textValue;
+    const authorNode = mapNode(authorRow);
+    const name = authorNode.attributes.name;
+    const avatar = authorNode.attributes.avatar;
 
     authorMap.set(authorRow.id, {
       id: authorRow.id,
@@ -181,11 +146,11 @@ const buildMessages = (rows: MessageRow[]): MessageNode[] => {
   }
 
   for (const messageRow of messageRows) {
-    const messageNode = mapNodeWithAttributes(messageRow);
+    const messageNode = mapNode(messageRow);
     const author = authorMap.get(messageNode.createdBy);
     const children = contentNodes
       .filter((n) => n.parentId === messageNode.id)
-      .map((n) => buildNodeWithAttributesAndChildren(n, contentNodes));
+      .map((n) => buildNodeWithChildren(n, contentNodes));
 
     const reactionCounts: MessageReactionCount[] = JSON.parse(
       messageRow.reaction_counts,

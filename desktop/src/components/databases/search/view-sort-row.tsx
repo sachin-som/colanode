@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon } from '@/lib/databases';
-import { FieldNode, ViewSortNode } from '@/types/databases';
+import { FieldNode, ViewSort } from '@/types/databases';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,18 +9,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
-import { AttributeTypes, SortDirections } from '@/lib/constants';
+import { SortDirections } from '@/lib/constants';
+import { useViewSearch } from '@/contexts/view-search';
 
 interface ViewSortProps {
-  sort: ViewSortNode;
+  sort: ViewSort;
   field: FieldNode;
 }
 
-export const ViewSort = ({ sort, field }: ViewSortProps) => {
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteSort } = useNodeDeleteMutation();
+export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
+  const viewSearch = useViewSearch();
 
   return (
     <div className="flex flex-row items-center gap-3 text-sm">
@@ -45,13 +43,9 @@ export const ViewSort = ({ sort, field }: ViewSortProps) => {
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={() => {
-              upsertAttribute({
-                nodeId: sort.id,
-                type: AttributeTypes.Direction,
-                key: '1',
-                textValue: SortDirections.Ascending,
-                numberValue: null,
-                foreignNodeId: null,
+              viewSearch.updateSort(sort.id, {
+                ...sort,
+                direction: 'asc',
               });
             }}
           >
@@ -59,13 +53,9 @@ export const ViewSort = ({ sort, field }: ViewSortProps) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              upsertAttribute({
-                nodeId: sort.id,
-                type: AttributeTypes.Direction,
-                key: '1',
-                textValue: SortDirections.Descending,
-                numberValue: null,
-                foreignNodeId: null,
+              viewSearch.updateSort(sort.id, {
+                ...sort,
+                direction: 'desc',
               });
             }}
           >
@@ -77,7 +67,7 @@ export const ViewSort = ({ sort, field }: ViewSortProps) => {
         variant="ghost"
         size="icon"
         onClick={() => {
-          deleteSort(sort.id);
+          viewSearch.removeSort(sort.id);
         }}
       >
         <Icon name="delete-bin-line" className="h-4 w-4" />

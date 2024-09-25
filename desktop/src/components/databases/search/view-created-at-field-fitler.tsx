@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreatedAtFieldNode, ViewFilterNode } from '@/types/databases';
+import { CreatedAtFieldNode, ViewFieldFilter } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -14,37 +14,39 @@ import {
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon, dateFieldFilterOperators } from '@/lib/databases';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useViewSearch } from '@/contexts/view-search';
 
 interface ViewCreatedAtFieldFilterProps {
   field: CreatedAtFieldNode;
-  filter: ViewFilterNode;
+  filter: ViewFieldFilter;
 }
 
 export const ViewCreatedAtFieldFilter = ({
   field,
   filter,
 }: ViewCreatedAtFieldFilterProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
-  const { mutate: deleteFilter } = useNodeDeleteMutation();
+  const viewSearch = useViewSearch();
 
   const operator =
     dateFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
     ) ?? dateFieldFilterOperators[0];
 
-  const dateTextValue =
-    filter.values.length > 0 ? filter.values[0].textValue : null;
+  const dateTextValue = (filter.value as string) ?? null;
   const dateValue = dateTextValue ? new Date(dateTextValue) : null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isFieldFilterOpened(filter.id)}
+      onOpenChange={() => {
+        if (viewSearch.isFieldFilterOpened(filter.id)) {
+          viewSearch.closeFieldFilter(filter.id);
+        } else {
+          viewSearch.openFieldFilter(filter.id);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -75,25 +77,17 @@ export const ViewCreatedAtFieldFilter = ({
                 <DropdownMenuItem
                   key={operator.value}
                   onSelect={() => {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Operator,
-                      key: '1',
-                      textValue: operator.value,
-                      numberValue: null,
-                      foreignNodeId: null,
-                    });
-
-                    if (
+                    const value =
                       operator.value === 'is_empty' ||
                       operator.value === 'is_not_empty'
-                    ) {
-                      deleteAttribute({
-                        nodeId: filter.id,
-                        type: AttributeTypes.Value,
-                        key: '1',
-                      });
-                    }
+                        ? null
+                        : dateValue?.toISOString();
+
+                    viewSearch.updateFilter(filter.id, {
+                      ...filter,
+                      operator: operator.value,
+                      value: value,
+                    });
                   }}
                 >
                   {operator.label}
@@ -105,7 +99,7 @@ export const ViewCreatedAtFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              deleteFilter(filter.id);
+              viewSearch.removeFilter(filter.id);
             }}
           >
             <Icon name="delete-bin-line" className="h-4 w-4" />
@@ -115,19 +109,14 @@ export const ViewCreatedAtFieldFilter = ({
           value={dateValue}
           onChange={(newValue) => {
             if (newValue === null || newValue === undefined) {
-              deleteAttribute({
-                nodeId: filter.id,
-                type: AttributeTypes.Value,
-                key: '1',
+              viewSearch.updateFilter(filter.id, {
+                ...filter,
+                value: null,
               });
             } else {
-              upsertAttribute({
-                nodeId: filter.id,
-                type: AttributeTypes.Value,
-                key: '1',
-                textValue: newValue.toISOString(),
-                numberValue: null,
-                foreignNodeId: null,
+              viewSearch.updateFilter(filter.id, {
+                ...filter,
+                value: newValue.toISOString(),
               });
             }
           }}

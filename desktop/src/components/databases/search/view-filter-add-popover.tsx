@@ -14,35 +14,28 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useDatabase } from '@/contexts/database';
-import { getFieldIcon, isSortableField } from '@/lib/databases';
-import { useViewSortCreateMutation } from '@/mutations/use-view-sort-create-mutation';
-import { SortDirections } from '@/lib/constants';
-import { ViewSortNode } from '@/types/databases';
+import { getFieldIcon } from '@/lib/databases';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewSortAddPopoverProps {
-  viewId: string;
-  existingSorts: ViewSortNode[];
+interface ViewFilterAddPopoverProps {
   children: React.ReactNode;
-  onCreate?: () => void;
 }
 
-export const ViewSortAddPopover = ({
-  viewId,
-  existingSorts,
-  onCreate,
+export const ViewFilterAddPopover = ({
   children,
-}: ViewSortAddPopoverProps) => {
+}: ViewFilterAddPopoverProps) => {
   const database = useDatabase();
-  const { mutate, isPending } = useViewSortCreateMutation();
+  const viewSearch = useViewSearch();
 
   const [open, setOpen] = React.useState(false);
-  const sortableFields = database.fields.filter(
+  const fieldsWithoutFilters = database.fields.filter(
     (field) =>
-      isSortableField(field) &&
-      !existingSorts.some((sort) => sort.fieldId === field.id),
+      !viewSearch.filters.some(
+        (filter) => filter.type === 'field' && filter.fieldId === field.id,
+      ),
   );
 
-  if (sortableFields.length === 0) {
+  if (fieldsWithoutFilters.length === 0) {
     return null;
   }
 
@@ -52,30 +45,15 @@ export const ViewSortAddPopover = ({
       <PopoverContent className="w-96 p-1">
         <Command className="min-h-min">
           <CommandInput placeholder="Search fields..." className="h-9" />
-          <CommandEmpty>No sortable field found.</CommandEmpty>
+          <CommandEmpty>No field found.</CommandEmpty>
           <CommandList>
             <CommandGroup className="h-min max-h-96">
-              {sortableFields.map((field) => (
+              {fieldsWithoutFilters.map((field) => (
                 <CommandItem
                   key={field.id}
                   onSelect={() => {
-                    if (isPending) {
-                      return;
-                    }
-
-                    mutate(
-                      {
-                        viewId,
-                        fieldId: field.id,
-                        direction: SortDirections.Ascending,
-                      },
-                      {
-                        onSuccess: () => {
-                          onCreate?.();
-                          setOpen(false);
-                        },
-                      },
-                    );
+                    viewSearch.initFieldFilter(field.id);
+                    setOpen(false);
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">

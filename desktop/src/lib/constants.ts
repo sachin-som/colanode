@@ -26,8 +26,6 @@ export const NodeTypes = {
   CalendarView: 'calendar_view',
   Field: 'field',
   SelectOption: 'select_option',
-  ViewFilter: 'view_filter',
-  ViewSort: 'view_sort',
 };
 
 export const EditorNodeTypes = {
@@ -67,25 +65,6 @@ export const ViewNodeTypes: string[] = [
   NodeTypes.BoardView,
   NodeTypes.CalendarView,
 ];
-
-export const AttributeTypes = {
-  Name: 'name',
-  Description: 'description',
-  Avatar: 'avatar',
-  Color: 'color',
-  DataType: 'data_type',
-  Language: 'language',
-  Checked: 'checked',
-  HiddenField: 'hidden_field',
-  FieldWidth: 'field_width',
-  FieldIndex: 'field_index',
-  NameWidth: 'name_width',
-  FieldId: 'field_id',
-  Operator: 'operator',
-  Value: 'value',
-  GroupBy: 'group_by',
-  Direction: 'direction',
-};
 
 export const SortDirections = {
   Ascending: 'asc',

@@ -1,22 +1,20 @@
 import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 import { NeuronId } from '@/lib/id';
-import {
-  LocalNode,
-  LocalNodeAttribute,
-  LocalNodeWithAttributes,
-} from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { Workspace } from '@/types/workspaces';
 import { Editor, JSONContent } from '@tiptap/core';
 import { CompiledQuery, Kysely } from 'kysely';
 import { debounce, isEqual } from 'lodash';
 import { mapContentsToEditorNodes, mapNodesToContents } from '@/editor/mappers';
-import { EditorNode, EditorNodeAttribute } from '@/types/editor';
+import { EditorNode } from '@/types/editor';
+import * as Y from 'yjs';
+import { fromUint8Array, toUint8Array } from 'js-base64';
 
 export class EditorObserver {
   private readonly workspace: Workspace;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly rootNode: LocalNode;
-  private readonly nodesMap: Map<string, LocalNodeWithAttributes>;
+  private readonly nodesMap: Map<string, LocalNode>;
   private editorContent: JSONContent;
 
   private readonly onEditorUpdateDebounced: () => void;
@@ -29,7 +27,7 @@ export class EditorObserver {
     workspace: Workspace,
     database: Kysely<WorkspaceDatabaseSchema>,
     rootNode: LocalNode,
-    nodesMap: Map<string, LocalNodeWithAttributes>,
+    nodesMap: Map<string, LocalNode>,
   ) {
     this.workspace = workspace;
     this.database = database;
@@ -98,12 +96,30 @@ export class EditorObserver {
       const editorNode = editorNodesMap.get(nodeId);
 
       if (!existingNode) {
-        const newNode: LocalNodeWithAttributes = {
+        const doc = new Y.Doc({
+          guid: editorNode.id,
+        });
+
+        const attributesMap = doc.getMap('attributes');
+
+        doc.transact(() => {
+          for (const [key, value] of Object.entries(editorNode.attributes)) {
+            if (value !== undefined) {
+              attributesMap.set(key, value);
+            }
+          }
+        });
+
+        const attributes = attributesMap.toJSON();
+        const state = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+        const newNode: LocalNode = {
           id: editorNode.id,
-          type: editorNode.type,
-          parentId: editorNode.parentId,
-          index: editorNode.index,
-          content: editorNode.content,
+          type: editorNode.attributes.type,
+          parentId: editorNode.attributes.parentId,
+          index: editorNode.attributes.index,
+          attributes: editorNode.attributes,
+          state: state,
           createdAt: new Date().toISOString(),
           createdBy: this.workspace.userId,
           versionId: NeuronId.generate(NeuronId.Type.Version),
@@ -112,19 +128,14 @@ export class EditorObserver {
           serverCreatedAt: null,
           serverUpdatedAt: null,
           serverVersionId: null,
-          attributes: [],
         };
 
         const insertNodeQuery = this.database
           .insertInto('nodes')
           .values({
             id: editorNode.id,
-            type: editorNode.type,
-            parent_id: editorNode.parentId,
-            index: editorNode.index,
-            content: editorNode.content
-              ? JSON.stringify(editorNode.content)
-              : null,
+            attributes: JSON.stringify(attributes),
+            state: state,
             created_at: new Date().toISOString(),
             created_by: this.workspace.userId,
             version_id: NeuronId.generate(NeuronId.Type.Version),
@@ -133,46 +144,6 @@ export class EditorObserver {
 
         insertQueries.push(insertNodeQuery);
         this.nodesMap.set(newNode.id, newNode);
-
-        if (editorNode.attributes && editorNode.attributes.length > 0) {
-          for (const attribute of editorNode.attributes) {
-            const nodeAttribute: LocalNodeAttribute = {
-              nodeId: newNode.id,
-              type: attribute.type,
-              key: attribute.key,
-              textValue: attribute.textValue,
-              numberValue: attribute.numberValue,
-              foreignNodeId: attribute.foreignNodeId,
-              createdAt: new Date().toISOString(),
-              createdBy: this.workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-              updatedAt: null,
-              updatedBy: null,
-              serverCreatedAt: null,
-              serverUpdatedAt: null,
-              serverVersionId: null,
-            };
-
-            newNode.attributes.push(nodeAttribute);
-
-            const insertNodeAttributeQuery = this.database
-              .insertInto('node_attributes')
-              .values({
-                node_id: newNode.id,
-                type: nodeAttribute.type,
-                key: nodeAttribute.key,
-                text_value: nodeAttribute.textValue,
-                number_value: nodeAttribute.numberValue,
-                foreign_node_id: nodeAttribute.foreignNodeId,
-                created_at: new Date().toISOString(),
-                created_by: this.workspace.userId,
-                version_id: NeuronId.generate(NeuronId.Type.Version),
-              })
-              .compile();
-
-            insertQueries.push(insertNodeAttributeQuery);
-          }
-        }
       } else if (!editorNode) {
         const query = this.database
           .deleteFrom('nodes')
@@ -182,11 +153,73 @@ export class EditorObserver {
         deleteQueries.push(query);
         this.nodesMap.delete(existingNode.id);
       } else {
-        if (!this.nodeContentEquals(existingNode, editorNode)) {
-          existingNode.type = editorNode.type;
-          existingNode.parentId = editorNode.parentId;
-          existingNode.index = editorNode.index;
-          existingNode.content = editorNode.content;
+        if (!isEqual(existingNode.attributes, editorNode.attributes)) {
+          const doc = new Y.Doc({
+            guid: existingNode.id,
+          });
+
+          Y.applyUpdate(doc, toUint8Array(existingNode.state));
+          const attributesMap = doc.getMap('attributes');
+
+          let hasChanges = false;
+          doc.transact(() => {
+            if (existingNode.attributes.type !== editorNode.attributes.type) {
+              attributesMap.set('type', editorNode.attributes.type);
+              hasChanges = true;
+            }
+
+            if (
+              existingNode.attributes.parentId !==
+              editorNode.attributes.parentId
+            ) {
+              attributesMap.set('parentId', editorNode.attributes.parentId);
+              hasChanges = true;
+            }
+
+            if (existingNode.attributes.index !== editorNode.attributes.index) {
+              attributesMap.set('index', editorNode.attributes.index);
+              hasChanges = true;
+            }
+
+            if (
+              !isEqual(
+                existingNode.attributes.content,
+                editorNode.attributes.content,
+              )
+            ) {
+              attributesMap.set('content', editorNode.attributes.content);
+              hasChanges = true;
+            }
+
+            for (const [key, value] of Object.entries(editorNode.attributes)) {
+              const existingValue = attributesMap.get(key);
+              if (!isEqual(existingValue, value)) {
+                attributesMap.set(key, value);
+                hasChanges = true;
+              }
+            }
+
+            const existingAttributes = existingNode.attributes;
+            const editorAttributes = editorNode.attributes;
+            for (const key of Object.keys(existingAttributes)) {
+              if (!(key in editorAttributes)) {
+                attributesMap.delete(key);
+                hasChanges = true;
+              }
+            }
+          });
+
+          if (!hasChanges) {
+            continue;
+          }
+
+          const attributes = attributesMap.toJSON();
+          const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+          existingNode.type = editorNode.attributes.type;
+          existingNode.parentId = editorNode.attributes.parentId;
+          existingNode.index = editorNode.attributes.index;
+          existingNode.attributes = editorNode.attributes;
           existingNode.updatedAt = new Date().toISOString();
           existingNode.updatedBy = this.workspace.userId;
           existingNode.versionId = NeuronId.generate(NeuronId.Type.Version);
@@ -194,12 +227,8 @@ export class EditorObserver {
           const query = this.database
             .updateTable('nodes')
             .set({
-              type: existingNode.type,
-              parent_id: existingNode.parentId,
-              index: existingNode.index,
-              content: existingNode.content
-                ? JSON.stringify(existingNode.content)
-                : null,
+              attributes: JSON.stringify(attributes),
+              state: encodedState,
               updated_at: existingNode.updatedAt,
               updated_by: existingNode.updatedBy,
               version_id: existingNode.versionId,
@@ -208,98 +237,6 @@ export class EditorObserver {
             .compile();
 
           updateQueries.push(query);
-        }
-
-        for (const attribute of editorNode.attributes) {
-          const existingAttribute = existingNode.attributes.find(
-            (attr) =>
-              attr.nodeId === existingNode.id &&
-              attr.type === attribute.type &&
-              attr.key === attribute.key,
-          );
-
-          if (!existingAttribute) {
-            const newAttribute: LocalNodeAttribute = {
-              nodeId: existingNode.id,
-              type: attribute.type,
-              key: attribute.key,
-              textValue: attribute.textValue,
-              numberValue: attribute.numberValue,
-              foreignNodeId: attribute.foreignNodeId,
-              createdAt: new Date().toISOString(),
-              createdBy: this.workspace.userId,
-              versionId: NeuronId.generate(NeuronId.Type.Version),
-              updatedAt: null,
-              updatedBy: null,
-              serverCreatedAt: null,
-              serverUpdatedAt: null,
-              serverVersionId: null,
-            };
-
-            existingNode.attributes.push(newAttribute);
-
-            const insertNodeAttributeQuery = this.database
-              .insertInto('node_attributes')
-              .values({
-                node_id: existingNode.id,
-                type: newAttribute.type,
-                key: newAttribute.key,
-                text_value: newAttribute.textValue,
-                number_value: newAttribute.numberValue,
-                foreign_node_id: newAttribute.foreignNodeId,
-                created_at: newAttribute.createdAt,
-                created_by: newAttribute.createdBy,
-                version_id: newAttribute.versionId,
-              })
-              .compile();
-
-            insertQueries.push(insertNodeAttributeQuery);
-          } else if (!this.nodeAttributesEqual(existingAttribute, attribute)) {
-            const updateNodeAttributeQuery = this.database
-              .updateTable('node_attributes')
-              .set({
-                text_value: attribute.textValue,
-                number_value: attribute.numberValue,
-                foreign_node_id: attribute.foreignNodeId,
-                updated_at: new Date().toISOString(),
-                updated_by: this.workspace.userId,
-                version_id: NeuronId.generate(NeuronId.Type.Version),
-              })
-              .where((eb) =>
-                eb.and([
-                  eb('node_id', '=', existingAttribute.nodeId),
-                  eb('type', '=', existingAttribute.type),
-                  eb('key', '=', existingAttribute.key),
-                ]),
-              )
-              .compile();
-
-            updateQueries.push(updateNodeAttributeQuery);
-          }
-        }
-
-        for (const attribute of existingNode.attributes) {
-          const editorAttribute = editorNode.attributes.find(
-            (attr) =>
-              attr.nodeId === existingNode.id &&
-              attr.type === attribute.type &&
-              attr.key === attribute.key,
-          );
-
-          if (!editorAttribute) {
-            const deleteNodeAttributeQuery = this.database
-              .deleteFrom('node_attributes')
-              .where((eb) =>
-                eb.and([
-                  eb('node_id', '=', existingNode.id),
-                  eb('type', '=', attribute.type),
-                  eb('key', '=', attribute.key),
-                ]),
-              )
-              .compile();
-
-            deleteQueries.push(deleteNodeAttributeQuery);
-          }
         }
       }
     }
@@ -319,7 +256,7 @@ export class EditorObserver {
   }
 
   private checkNodesChanges(
-    newNodesMap: Map<string, LocalNodeWithAttributes>,
+    newNodesMap: Map<string, LocalNode>,
     editor: Editor,
   ) {
     const allNodeIds = new Set([
@@ -339,7 +276,7 @@ export class EditorObserver {
         this.nodesMap.delete(oldNode.id);
         hasChanges = true;
       } else if (
-        !this.nodeContentEquals(oldNode, newNode) &&
+        !isEqual(oldNode, newNode) &&
         oldNode.updatedAt !== null &&
         newNode.updatedAt !== null
       ) {
@@ -365,55 +302,5 @@ export class EditorObserver {
         editor.chain().setContent(this.editorContent).run();
       }
     }
-  }
-
-  private nodeContentEquals(
-    existingNode: EditorNode,
-    editorNode: EditorNode,
-  ): boolean {
-    if (existingNode.index !== editorNode.index) {
-      return false;
-    }
-
-    if (existingNode.parentId !== editorNode.parentId) {
-      return false;
-    }
-
-    if (existingNode.type !== editorNode.type) {
-      return false;
-    }
-
-    if (!isEqual(existingNode.content, editorNode.content)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private nodeAttributesEqual(
-    existingAttribute: EditorNodeAttribute,
-    editorAttribute: EditorNodeAttribute,
-  ): boolean {
-    if (existingAttribute.key !== editorAttribute.key) {
-      return false;
-    }
-
-    if (existingAttribute.type !== editorAttribute.type) {
-      return false;
-    }
-
-    if (existingAttribute.textValue !== editorAttribute.textValue) {
-      return false;
-    }
-
-    if (existingAttribute.numberValue !== editorAttribute.numberValue) {
-      return false;
-    }
-
-    if (existingAttribute.foreignNodeId !== editorAttribute.foreignNodeId) {
-      return false;
-    }
-
-    return true;
   }
 }

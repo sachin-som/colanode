@@ -1,31 +1,28 @@
 import React from 'react';
 import { BreadcrumbNode } from '@/types/workspaces';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { AttributeTypes } from '@/lib/constants';
 
 interface BreadcrumbItemEditorProps {
   node: BreadcrumbNode;
 }
 
 export const BreadcrumbItemEditor = ({ node }: BreadcrumbItemEditorProps) => {
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
 
   return (
     <div>
       <SmartTextInput
         value={node.name}
         onChange={(newName) => {
-          if (isPending) return;
+          if (isSettingNodeAttribute) return;
           if (newName === node.name) return;
 
-          mutate({
+          setNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.Name,
-            key: '1',
-            textValue: newName,
-            numberValue: null,
-            foreignNodeId: null,
+            key: 'name',
+            value: newName,
           });
         }}
       />

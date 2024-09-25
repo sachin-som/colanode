@@ -1,7 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { AttributeTypes, NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { generateNodeIndex } from '@/lib/nodes';
+import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
 
@@ -32,36 +32,21 @@ export const usePageCreateMutation = () => {
 
       const id = NeuronId.generate(NeuronId.Type.Page);
       const index = generateNodeIndex(maxIndex, null);
-      const insertPageQuery = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id,
-          type: NodeTypes.Page,
-          parent_id: input.spaceId,
-          index,
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      const insertPageAttributesQuery = workspace.schema
-        .insertInto('node_attributes')
-        .values([
-          {
-            node_id: id,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: input.name,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+      const query = buildNodeInsertMutation(
+        workspace.schema,
+        workspace.userId,
+        {
+          id: id,
+          attributes: {
+            type: NodeTypes.Page,
+            parentId: input.spaceId,
+            index: index,
+            name: input.name,
           },
-        ])
-        .compile();
+        },
+      );
 
-      await workspace.mutate([insertPageQuery, insertPageAttributesQuery]);
+      await workspace.mutate(query);
       return id;
     },
   });

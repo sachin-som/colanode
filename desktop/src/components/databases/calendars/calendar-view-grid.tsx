@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/components/databases/calendars/calendar-view-day';
-import { CalendarViewNode, FieldNode, ViewFilterNode } from '@/types/databases';
+import { CalendarViewNode, FieldNode, ViewFilter } from '@/types/databases';
 import { useRecordsQuery } from '@/queries/use-records-query';
 import { useDatabase } from '@/contexts/database';
 import { filterRecords } from '@/lib/databases';
@@ -22,31 +22,21 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
   const [month, setMonth] = React.useState(new Date());
   const { first, last } = getDisplayedDates(month);
 
-  const filters = [
+  const filters: ViewFilter[] = [
     ...view.filters,
     {
       id: 'start_date',
+      type: 'field',
       fieldId: field.id,
       operator: 'is_on_or_after',
-      values: [
-        {
-          textValue: first.toISOString(),
-          numberValue: null,
-          foreignNodeId: null,
-        },
-      ],
+      value: first.toISOString(),
     },
     {
       id: 'end_date',
+      type: 'field',
       fieldId: field.id,
       operator: 'is_on_or_before',
-      values: [
-        {
-          textValue: last.toISOString(),
-          numberValue: null,
-          foreignNodeId: null,
-        },
-      ],
+      value: last.toISOString(),
     },
   ];
 
@@ -98,17 +88,12 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
           <Icon name="arrow-right-s-line" className="h-4 w-4" {...props} />
         ),
         Day: (props: DayProps) => {
-          const filter: ViewFilterNode = {
+          const filter: ViewFilter = {
             id: 'calendar_filter',
+            type: 'field',
             fieldId: field.id,
             operator: 'is_equal_to',
-            values: [
-              {
-                textValue: props.date.toISOString(),
-                numberValue: null,
-                foreignNodeId: null,
-              },
-            ],
+            value: props.date.toISOString(),
           };
 
           const dayRecords = filterRecords(

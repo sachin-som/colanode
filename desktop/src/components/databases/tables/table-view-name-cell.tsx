@@ -4,8 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 
 interface NameEditorProps {
   initialValue: string;
@@ -55,7 +54,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const workspace = useWorkspace();
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
   const canEdit = true;
   const hasName = record.name && record.name.length > 0;
 
@@ -63,11 +62,8 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
     mutate(
       {
         nodeId: record.id,
-        type: AttributeTypes.Name,
-        key: '1',
-        textValue: newName,
-        numberValue: null,
-        foreignNodeId: null,
+        key: 'name',
+        value: newName,
       },
       {
         onSuccess: () => {

@@ -1,13 +1,8 @@
 import React from 'react';
 import { RecordNode, PhoneFieldNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-
-const getPhoneValue = (record: RecordNode, field: PhoneFieldNode): string => {
-  const attribute = record.attributes.find((attr) => attr.type === field.id);
-  return attribute?.textValue ?? '';
-};
 
 interface TableViewPhoneCellProps {
   record: RecordNode;
@@ -18,40 +13,36 @@ export const TableViewPhoneCell = ({
   record,
   field,
 }: TableViewPhoneCellProps) => {
-  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
-    useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
   const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
     useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   return (
     <SmartTextInput
-      value={getPhoneValue(record, field)}
+      value={record.attributes[field.id]}
       readOnly={!canEdit || isPending}
       onChange={(newValue) => {
         if (isPending) return;
         if (!canEdit) return;
 
-        if (newValue === getPhoneValue(record, field)) {
+        if (newValue === record.attributes[field.id]) {
           return;
         }
 
         if (newValue === null || newValue === '') {
           deleteNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
+            key: field.id,
           });
         } else {
-          upsertNodeAttribute({
+          setNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
-            numberValue: 1,
-            textValue: newValue,
-            foreignNodeId: null,
+            key: field.id,
+            value: newValue,
           });
         }
       }}

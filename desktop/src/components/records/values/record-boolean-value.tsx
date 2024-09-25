@@ -1,20 +1,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-
-const getBooleanValue = (
-  record: RecordNode,
-  field: BooleanFieldNode,
-): boolean => {
-  const attribute = record.attributes.find((attr) => attr.type === field.id);
-  if (!attribute) {
-    return false;
-  }
-
-  return attribute.numberValue === 1;
-};
 
 interface RecordBooleanValueProps {
   record: RecordNode;
@@ -25,20 +13,20 @@ export const RecordBooleanValue = ({
   record,
   field,
 }: RecordBooleanValueProps) => {
-  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
-    useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
   const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
     useNodeAttributeDeleteMutation();
 
-  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
   const canEdit = true;
 
   const [input, setInput] = React.useState<boolean>(
-    getBooleanValue(record, field),
+    (record.attributes[field.id] as boolean) ?? false,
   );
 
   React.useEffect(() => {
-    setInput(getBooleanValue(record, field));
+    setInput((record.attributes[field.id] as boolean) ?? false);
   }, [record.versionId]);
 
   return (
@@ -54,19 +42,15 @@ export const RecordBooleanValue = ({
             setInput(e.valueOf());
             const checked = e.valueOf();
             if (checked) {
-              upsertNodeAttribute({
+              setNodeAttribute({
                 nodeId: record.id,
-                type: field.id,
-                key: '1',
-                numberValue: 1,
-                textValue: null,
-                foreignNodeId: null,
+                key: field.id,
+                value: checked,
               });
             } else {
               deleteNodeAttribute({
                 nodeId: record.id,
-                type: field.id,
-                key: '1',
+                key: field.id,
               });
             }
           }

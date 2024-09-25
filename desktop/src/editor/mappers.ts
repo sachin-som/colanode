@@ -1,15 +1,15 @@
-import { AttributeTypes, EditorNodeTypes, NodeTypes } from '@/lib/constants';
+import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { EditorNode } from '@/types/editor';
-import { LocalNodeWithAttributes, NodeBlock } from '@/types/nodes';
+import { LocalNode, NodeBlock } from '@/types/nodes';
 import { JSONContent } from '@tiptap/core';
 
 export const mapContentsToEditorNodes = (
   contents: JSONContent[],
   parentId: string,
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): EditorNode[] => {
   const editorNodes: EditorNode[] = [];
   mapAndPushContentsToNodes(contents, parentId, editorNodes, nodesMap);
@@ -21,7 +21,7 @@ const mapAndPushContentsToNodes = (
   contents: JSONContent[] | null | undefined,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   if (!contents) {
     return;
@@ -34,7 +34,7 @@ const mapAndPushContentsToNodes = (
 
 export const mapNodesToContents = (
   parentId: string,
-  nodes: LocalNodeWithAttributes[],
+  nodes: LocalNode[],
 ): JSONContent[] => {
   const contents: JSONContent[] = [];
   const children = nodes
@@ -51,29 +51,30 @@ const validateNodesIndexes = (editorNodes: EditorNode[]) => {
   //group by parentId
   const groupedNodes: { [key: string]: EditorNode[] } = {};
   for (const node of editorNodes) {
-    if (!groupedNodes[node.parentId]) {
-      groupedNodes[node.parentId] = [];
+    if (!groupedNodes[node.attributes.parentId]) {
+      groupedNodes[node.attributes.parentId] = [];
     }
 
-    groupedNodes[node.parentId].push(node);
+    groupedNodes[node.attributes.parentId].push(node);
   }
 
   for (const parentId in groupedNodes) {
     const nodes = groupedNodes[parentId];
 
     for (let i = 0; i < nodes.length; i++) {
-      const currentIndex = nodes[i].index;
-      const beforeIndex = i === 0 ? null : nodes[i - 1].index;
+      const currentIndex = nodes[i].attributes.index;
+      const beforeIndex = i === 0 ? null : nodes[i - 1].attributes.index;
 
       // find the lowest index after the current node
       // we do this because sometimes nodes can be ordered in such a way that
       // the current node's index is higher than one of its siblings
       // after the next sibling
       // for example:  1, {current}, 4, 3
-      let afterIndex = i === nodes.length - 1 ? null : nodes[i + 1].index;
+      let afterIndex =
+        i === nodes.length - 1 ? null : nodes[i + 1].attributes.index;
       for (let j = i + 1; j < nodes.length; j++) {
-        if (nodes[j].index < afterIndex) {
-          afterIndex = nodes[j].index;
+        if (nodes[j].attributes.index < afterIndex) {
+          afterIndex = nodes[j].attributes.index;
           break;
         }
       }
@@ -91,7 +92,7 @@ const validateNodesIndexes = (editorNodes: EditorNode[]) => {
         currentIndex <= beforeIndex ||
         currentIndex > afterIndex
       ) {
-        nodes[i].index = generateNodeIndex(beforeIndex, afterIndex);
+        nodes[i].attributes.index = generateNodeIndex(beforeIndex, afterIndex);
       }
     }
   }
@@ -101,7 +102,7 @@ const mapAndPushContentToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   switch (content.type) {
     case EditorNodeTypes.Paragraph:
@@ -146,10 +147,7 @@ const mapAndPushContentToNode = (
   }
 };
 
-const mapNodeToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
-): JSONContent => {
+const mapNodeToContent = (node: LocalNode, nodes: LocalNode[]): JSONContent => {
   switch (node.type) {
     case NodeTypes.Paragraph:
       return mapParagraphToContent(node);
@@ -184,27 +182,28 @@ const mapParagraphToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.Paragraph,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: mapContentsToNodeBlocks(content.content),
+    attributes: {
+      type: NodeTypes.Paragraph,
+      parentId: parentId,
+      index: index,
+      content: mapContentsToNodeBlocks(content.content),
+    },
   });
 };
 
-const mapParagraphToContent = (node: LocalNodeWithAttributes): JSONContent => {
+const mapParagraphToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.Paragraph,
     attrs: {
       id: node.id,
     },
-    content: mapNodeBlocksToContents(node.content),
+    content: mapNodeBlocksToContents(node.attributes.content),
   };
 };
 
@@ -212,27 +211,28 @@ const mapHeading1ToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.Heading1,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: mapContentsToNodeBlocks(content.content),
+    attributes: {
+      type: NodeTypes.Heading1,
+      parentId: parentId,
+      index: index,
+      content: mapContentsToNodeBlocks(content.content),
+    },
   });
 };
 
-const mapHeading1ToContent = (node: LocalNodeWithAttributes): JSONContent => {
+const mapHeading1ToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.Heading1,
     attrs: {
       id: node.id,
     },
-    content: mapNodeBlocksToContents(node.content),
+    content: mapNodeBlocksToContents(node.attributes.content),
   };
 };
 
@@ -240,27 +240,28 @@ const mapHeading2ToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.Heading2,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: mapContentsToNodeBlocks(content.content),
+    attributes: {
+      type: NodeTypes.Heading2,
+      parentId: parentId,
+      index: index,
+      content: mapContentsToNodeBlocks(content.content),
+    },
   });
 };
 
-const mapHeading2ToContent = (node: LocalNodeWithAttributes): JSONContent => {
+const mapHeading2ToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.Heading2,
     attrs: {
       id: node.id,
     },
-    content: mapNodeBlocksToContents(node.content),
+    content: mapNodeBlocksToContents(node.attributes.content),
   };
 };
 
@@ -268,27 +269,28 @@ const mapHeading3ToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.Heading3,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: mapContentsToNodeBlocks(content.content),
+    attributes: {
+      type: NodeTypes.Heading3,
+      parentId: parentId,
+      index: index,
+      content: mapContentsToNodeBlocks(content.content),
+    },
   });
 };
 
-const mapHeading3ToContent = (node: LocalNodeWithAttributes): JSONContent => {
+const mapHeading3ToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.Heading3,
     attrs: {
       id: node.id,
     },
-    content: mapNodeBlocksToContents(node.content),
+    content: mapNodeBlocksToContents(node.attributes.content),
   };
 };
 
@@ -296,26 +298,26 @@ const mapBulletListToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
 
   editorNodes.push({
     id: id,
-    type: NodeTypes.BulletList,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.BulletList,
+      parentId: parentId,
+      index: index,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapBulletListToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
   return {
     type: EditorNodeTypes.BulletList,
@@ -330,25 +332,25 @@ const mapOrderedListToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.OrderedList,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.OrderedList,
+      parentId: parentId,
+      index: index,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapOrderedListToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
   return {
     type: EditorNodeTypes.OrderedList,
@@ -363,25 +365,25 @@ const mapListItemToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.ListItem,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.ListItem,
+      parentId: parentId,
+      index: index,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapListItemToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
   return {
     type: EditorNodeTypes.ListItem,
@@ -396,25 +398,25 @@ const mapBlockquoteToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.Blockquote,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.Blockquote,
+      parentId: parentId,
+      index: index,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapBlockquoteToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
   return {
     type: EditorNodeTypes.Blockquote,
@@ -429,7 +431,7 @@ const mapCodeBlockToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
@@ -437,35 +439,25 @@ const mapCodeBlockToNode = (
   const language = content.attrs?.language;
   editorNodes.push({
     id: id,
-    type: NodeTypes.CodeBlock,
-    parentId: parentId,
-    index: index,
-    attributes: [
-      {
-        nodeId: id,
-        type: AttributeTypes.Language,
-        key: AttributeTypes.Language,
-        numberValue: null,
-        textValue: language,
-        foreignNodeId: null,
-      },
-    ],
-    content: mapContentsToNodeBlocks(content.content),
+    attributes: {
+      type: NodeTypes.CodeBlock,
+      parentId: parentId,
+      index: index,
+      language: language,
+      content: mapContentsToNodeBlocks(content.content),
+    },
   });
 };
 
-const mapCodeBlockToContent = (node: LocalNodeWithAttributes): JSONContent => {
-  const language = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Language,
-  )?.textValue;
-
+const mapCodeBlockToContent = (node: LocalNode): JSONContent => {
+  const language = node.attributes.language;
   return {
     type: EditorNodeTypes.CodeBlock,
     attrs: {
       id: node.id,
       language: language,
     },
-    content: mapNodeBlocksToContents(node.content),
+    content: mapNodeBlocksToContents(node.attributes.content),
   };
 };
 
@@ -473,23 +465,21 @@ const mapHorizontalRuleToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.HorizontalRule,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.HorizontalRule,
+      parentId: parentId,
+      index: index,
+    },
   });
 };
 
-const mapHorizontalRuleToContent = (
-  node: LocalNodeWithAttributes,
-): JSONContent => {
+const mapHorizontalRuleToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.HorizontalRule,
     attrs: {
@@ -503,25 +493,25 @@ const mapTaskListToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.TaskList,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.TaskList,
+      parentId: parentId,
+      index: index,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapTaskListToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
   return {
     type: EditorNodeTypes.TaskList,
@@ -536,40 +526,28 @@ const mapTaskItemToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
   editorNodes.push({
     id: id,
-    type: NodeTypes.TaskItem,
-    parentId: parentId,
-    index: index,
-    attributes: [
-      {
-        nodeId: id,
-        type: AttributeTypes.Checked,
-        key: '1',
-        numberValue: content.attrs?.checked ? 1 : 0,
-        textValue: null,
-        foreignNodeId: null,
-      },
-    ],
-    content: null,
+    attributes: {
+      type: NodeTypes.TaskItem,
+      parentId: parentId,
+      index: index,
+      checked: content.attrs?.checked ?? false,
+    },
   });
 
   mapAndPushContentsToNodes(content.content, id, editorNodes, nodesMap);
 };
 
 const mapTaskItemToContent = (
-  node: LocalNodeWithAttributes,
-  nodes: LocalNodeWithAttributes[],
+  node: LocalNode,
+  nodes: LocalNode[],
 ): JSONContent => {
-  const checkedAttribute = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Checked,
-  );
-
-  const checked = checkedAttribute?.numberValue === 1;
+  const checked = node.attributes.checked === true;
   return {
     type: EditorNodeTypes.TaskItem,
     attrs: {
@@ -584,36 +562,28 @@ const mapPageToNode = (
   content: JSONContent,
   parentId: string,
   editorNodes: EditorNode[],
-  nodesMap: Map<string, LocalNodeWithAttributes>,
+  nodesMap: Map<string, LocalNode>,
 ): void => {
   const id = getIdFromContent(content);
   const index = nodesMap.get(id)?.index;
 
   editorNodes.push({
     id: id,
-    type: NodeTypes.Page,
-    parentId: parentId,
-    index: index,
-    attributes: [],
-    content: null,
+    attributes: {
+      type: NodeTypes.Page,
+      parentId: parentId,
+      index: index,
+    },
   });
 };
 
-const mapPageToContent = (node: LocalNodeWithAttributes): JSONContent => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const avatar = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Avatar,
-  )?.textValue;
-
+const mapPageToContent = (node: LocalNode): JSONContent => {
   return {
     type: EditorNodeTypes.Page,
     attrs: {
       id: node.id,
-      name: name,
-      avatar: avatar,
+      name: node.attributes.name,
+      avatar: node.attributes.avatar,
     },
     content: null,
   };

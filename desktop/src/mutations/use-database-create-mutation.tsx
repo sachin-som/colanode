@@ -1,7 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { AttributeTypes, NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { generateNodeIndex } from '@/lib/nodes';
+import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
 
@@ -12,6 +12,7 @@ interface DatabaseCreateMutationInput {
 
 export const useDatabaseCreateMutation = () => {
   const workspace = useWorkspace();
+
   return useMutation({
     mutationFn: async (input: DatabaseCreateMutationInput) => {
       const siblingsQuery = workspace.schema
@@ -32,85 +33,43 @@ export const useDatabaseCreateMutation = () => {
       const databaseId = NeuronId.generate(NeuronId.Type.Database);
       const tableViewId = NeuronId.generate(NeuronId.Type.TableView);
       const fieldId = NeuronId.generate(NeuronId.Type.Field);
-      const insertNodesQuery = workspace.schema
-        .insertInto('nodes')
-        .values([
+
+      const query = buildNodeInsertMutation(
+        workspace.schema,
+        workspace.userId,
+        [
           {
             id: databaseId,
-            type: NodeTypes.Database,
-            parent_id: input.spaceId,
-            index: generateNodeIndex(maxIndex, null),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            attributes: {
+              type: NodeTypes.Database,
+              parentId: input.spaceId,
+              index: generateNodeIndex(maxIndex, null),
+              name: input.name,
+            },
           },
           {
             id: tableViewId,
-            type: NodeTypes.TableView,
-            parent_id: databaseId,
-            index: generateNodeIndex(null, null),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            attributes: {
+              type: NodeTypes.TableView,
+              parentId: databaseId,
+              index: generateNodeIndex(null, null),
+              name: 'Default',
+            },
           },
           {
             id: fieldId,
-            type: NodeTypes.Field,
-            parent_id: databaseId,
-            index: generateNodeIndex(null, null),
-            content: null,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            attributes: {
+              type: NodeTypes.Field,
+              parentId: databaseId,
+              index: generateNodeIndex(null, null),
+              name: 'Comment',
+              dataType: 'text',
+            },
           },
-        ])
-        .compile();
+        ],
+      );
 
-      const insertAttributesQuery = workspace.schema
-        .insertInto('node_attributes')
-        .values([
-          {
-            node_id: databaseId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: input.name,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-          {
-            node_id: tableViewId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: 'Default',
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-          {
-            node_id: fieldId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: 'Comment',
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-          {
-            node_id: fieldId,
-            type: AttributeTypes.DataType,
-            key: '1',
-            text_value: 'text',
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-        ])
-        .compile();
-
-      await workspace.mutate([insertNodesQuery, insertAttributesQuery]);
+      await workspace.mutate(query);
       return databaseId;
     },
   });

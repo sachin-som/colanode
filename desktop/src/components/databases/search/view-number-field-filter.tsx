@@ -1,5 +1,5 @@
 import React from 'react';
-import { UrlFieldNode, ViewFilterNode } from '@/types/databases';
+import { NumberFieldNode, ViewFieldFilter } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -13,39 +13,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { urlFieldFilterOperators } from '@/lib/databases';
-import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
+import { getFieldIcon, numberFieldFilterOperators } from '@/lib/databases';
+import { SmartNumberInput } from '@/components/ui/smart-number-input';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewUrlFieldFilterProps {
-  field: UrlFieldNode;
-  filter: ViewFilterNode;
+interface ViewNumberFieldFilterProps {
+  field: NumberFieldNode;
+  filter: ViewFieldFilter;
 }
 
-export const ViewUrlFieldFilter = ({
+export const ViewNumberFieldFilter = ({
   field,
   filter,
-}: ViewUrlFieldFilterProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
-  const { mutate: deleteFilter } = useNodeDeleteMutation();
+}: ViewNumberFieldFilterProps) => {
+  const viewSearch = useViewSearch();
 
   const operator =
-    urlFieldFilterOperators.find(
+    numberFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
-    ) ?? urlFieldFilterOperators[0];
+    ) ?? numberFieldFilterOperators[0];
 
-  const urlValue = filter.values.length > 0 ? filter.values[0].textValue : null;
+  const numberValue = filter.value as number | null;
 
   const hideInput =
     operator.value === 'is_empty' || operator.value === 'is_not_empty';
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isFieldFilterOpened(filter.id)}
+      onOpenChange={() => {
+        if (viewSearch.isFieldFilterOpened(filter.id)) {
+          viewSearch.closeFieldFilter(filter.id);
+        } else {
+          viewSearch.openFieldFilter(filter.id);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -58,7 +61,7 @@ export const ViewUrlFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <Icon name="link" className="h-4 w-4" />
+            <Icon name={getFieldIcon(field.dataType)} className="h-4 w-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -72,29 +75,21 @@ export const ViewUrlFieldFilter = ({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {urlFieldFilterOperators.map((operator) => (
+              {numberFieldFilterOperators.map((operator) => (
                 <DropdownMenuItem
                   key={operator.value}
                   onSelect={() => {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Operator,
-                      key: '1',
-                      textValue: operator.value,
-                      numberValue: null,
-                      foreignNodeId: null,
-                    });
-
-                    if (
+                    const value =
                       operator.value === 'is_empty' ||
                       operator.value === 'is_not_empty'
-                    ) {
-                      deleteAttribute({
-                        nodeId: filter.id,
-                        type: AttributeTypes.Value,
-                        key: '1',
-                      });
-                    }
+                        ? null
+                        : numberValue;
+
+                    viewSearch.updateFilter(filter.id, {
+                      ...filter,
+                      operator: operator.value,
+                      value: value,
+                    });
                   }}
                 >
                   {operator.label}
@@ -106,23 +101,19 @@ export const ViewUrlFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              deleteFilter(filter.id);
+              viewSearch.removeFilter(filter.id);
             }}
           >
             <Icon name="delete-bin-line" className="h-4 w-4" />
           </Button>
         </div>
         {!hideInput && (
-          <SmartTextInput
-            value={urlValue}
+          <SmartNumberInput
+            value={numberValue ?? null}
             onChange={(value) => {
-              upsertAttribute({
-                nodeId: filter.id,
-                type: AttributeTypes.Value,
-                key: '1',
-                textValue: value,
-                numberValue: null,
-                foreignNodeId: null,
+              viewSearch.updateFilter(filter.id, {
+                ...filter,
+                value: value,
               });
             }}
           />

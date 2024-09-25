@@ -107,10 +107,6 @@ export class NeuronId {
         return IdType.Field;
       case NodeTypes.SelectOption:
         return IdType.SelectOption;
-      case NodeTypes.ViewFilter:
-        return IdType.ViewFilter;
-      case NodeTypes.ViewSort:
-        return IdType.ViewSort;
       default:
         return IdType.Node;
     }

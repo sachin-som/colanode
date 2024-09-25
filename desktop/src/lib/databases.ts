@@ -2,8 +2,10 @@ import {
   FieldDataType,
   FieldNode,
   RecordNode,
-  ViewFilterNode,
+  ViewFieldFilter,
+  ViewFilter,
 } from '@/types/databases';
+import { isStringArray } from '@/lib/utils';
 
 export const getFieldIcon = (type?: FieldDataType): string => {
   if (!type) return '';
@@ -531,7 +533,7 @@ export const getFieldFilterOperators = (
 
 export const filterRecords = (
   records: RecordNode[],
-  filter: ViewFilterNode,
+  filter: ViewFilter,
   field: FieldNode,
   currentUserId: string,
 ): RecordNode[] => {
@@ -542,10 +544,14 @@ export const filterRecords = (
 
 const recordMatchesFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFilter,
   field: FieldNode,
   currentUserId: string,
 ) => {
+  if (filter.type === 'group') {
+    return false;
+  }
+
   switch (field.dataType) {
     case 'boolean':
       return recordMatchesBooleanFilter(record, filter, field);
@@ -580,18 +586,16 @@ const recordMatchesFilter = (
 
 const recordMatchesBooleanFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.numberValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_true') {
-    return fieldValue === 1;
+    return fieldValue === true;
   }
   if (filter.operator === 'is_false') {
-    return !fieldValue || fieldValue === 0;
+    return !fieldValue || fieldValue === false;
   }
 
   return false;
@@ -599,7 +603,7 @@ const recordMatchesBooleanFilter = (
 
 const recordMatchesCollaboratorFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFilter,
   field: FieldNode,
 ) => {
   return false;
@@ -607,12 +611,15 @@ const recordMatchesCollaboratorFilter = (
 
 const recordMatchesCreatedAtFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
 ) => {
-  if (filter.values.length === 0) return false;
+  if (!filter.value) return false;
 
-  const filterValue = filter.values[0].textValue;
-  const filterDate = new Date(filterValue);
+  if (typeof filter.value !== 'string') {
+    return true;
+  }
+
+  const filterDate = new Date(filter.value);
   filterDate.setHours(0, 0, 0, 0); // Set time to midnight
 
   const recordDate = new Date(record.createdAt);
@@ -638,7 +645,7 @@ const recordMatchesCreatedAtFilter = (
 
 const recordMatchesCreatedByFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   currentUserId: string,
 ) => {
   const createdBy = record.createdBy?.id;
@@ -646,33 +653,42 @@ const recordMatchesCreatedByFilter = (
     return false;
   }
 
-  const filterValues = filter.values.map((value) => value.foreignNodeId);
-  if (filterValues.length === 0) {
+  if (filter.operator === 'is_me') {
+    return createdBy === currentUserId;
+  }
+
+  if (filter.operator === 'is_not_me') {
+    return createdBy !== currentUserId;
+  }
+
+  if (!isStringArray(filter.value)) {
     return true;
   }
 
-  switch (filter.operator) {
-    case 'is_me':
-      return createdBy === currentUserId;
-    case 'is_not_me':
-      return createdBy !== currentUserId;
-    case 'is_in':
-      return filterValues.includes(createdBy);
-    case 'is_not_in':
-      return !filterValues.includes(createdBy);
-    default:
-      return false;
+  if (filter.operator === 'is_in') {
+    return filter.value.includes(createdBy);
   }
+
+  if (filter.operator === 'is_not_in') {
+    return !filter.value.includes(createdBy);
+  }
+
+  return false;
 };
 
 const recordMatchesDateFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.textValue;
+  const fieldValue = record.attributes[field.id];
+  if (filter.operator === 'is_empty') {
+    return !fieldValue;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return !!fieldValue;
+  }
 
   if (!fieldValue) {
     return false;
@@ -681,16 +697,11 @@ const recordMatchesDateFilter = (
   const recordDate = new Date(fieldValue);
   recordDate.setHours(0, 0, 0, 0); // Set time to midnight
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'string') {
     return true;
   }
 
-  const filterValue = filter.values[0].textValue;
-  if (!filterValue) {
-    return true;
-  }
-
-  const filterDate = new Date(filterValue);
+  const filterDate = new Date(filter.value);
   filterDate.setHours(0, 0, 0, 0); // Set time to midnight
 
   switch (filter.operator) {
@@ -713,12 +724,10 @@ const recordMatchesDateFilter = (
 
 const recordMatchesEmailFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.textValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -732,11 +741,11 @@ const recordMatchesEmailFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'string') {
     return true;
   }
 
-  const filterValue = filter.values[0].textValue;
+  const filterValue = filter.value;
   if (!filterValue) {
     return true;
   }
@@ -757,7 +766,7 @@ const recordMatchesEmailFilter = (
 
 const recordMatchesFileFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
   return false;
@@ -765,12 +774,10 @@ const recordMatchesFileFilter = (
 
 const recordMatchesMultiSelectFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValues = record.attributes
-    .filter((attribute) => attribute.type === field.id)
-    ?.map((attribute) => attribute.foreignNodeId);
+  const fieldValues = record.attributes[field.id] as string[];
 
   if (filter.operator === 'is_empty') {
     return fieldValues?.length === 0;
@@ -784,16 +791,15 @@ const recordMatchesMultiSelectFilter = (
     return false;
   }
 
-  const selectOptionIds = filter.values.map((value) => value.foreignNodeId);
-  if (selectOptionIds.length === 0) {
+  if (!isStringArray(filter.value)) {
     return true;
   }
 
   switch (filter.operator) {
     case 'is_in':
-      return fieldValues.some((value) => selectOptionIds.includes(value));
+      return filter.value.some((value) => fieldValues.includes(value));
     case 'is_not_in':
-      return !fieldValues.some((value) => selectOptionIds.includes(value));
+      return !filter.value.some((value) => fieldValues.includes(value));
   }
 
   return false;
@@ -801,12 +807,10 @@ const recordMatchesMultiSelectFilter = (
 
 const recordMatchesNumberFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.numberValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -820,11 +824,11 @@ const recordMatchesNumberFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'number') {
     return true;
   }
 
-  const filterValue = filter.values[0].numberValue;
+  const filterValue = filter.value;
   if (!filterValue) {
     return true;
   }
@@ -849,12 +853,10 @@ const recordMatchesNumberFilter = (
 
 const recordMatchesPhoneFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.textValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -868,11 +870,11 @@ const recordMatchesPhoneFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'string') {
     return true;
   }
 
-  const filterValue = filter.values[0].textValue;
+  const filterValue = filter.value;
   if (!filterValue) {
     return true;
   }
@@ -893,12 +895,10 @@ const recordMatchesPhoneFilter = (
 
 const recordMatchesSelectFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.foreignNodeId;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -912,20 +912,15 @@ const recordMatchesSelectFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
-    return true;
-  }
-
-  const selectOptionIds = filter.values.map((value) => value.foreignNodeId);
-  if (selectOptionIds.length === 0) {
+  if (!isStringArray(filter.value)) {
     return true;
   }
 
   switch (filter.operator) {
     case 'is_in':
-      return selectOptionIds.includes(fieldValue);
+      return filter.value.includes(fieldValue);
     case 'is_not_in':
-      return !selectOptionIds.includes(fieldValue);
+      return !filter.value.includes(fieldValue);
   }
 
   return false;
@@ -933,12 +928,10 @@ const recordMatchesSelectFilter = (
 
 const recordMatchesTextFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.textValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -952,11 +945,11 @@ const recordMatchesTextFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'string') {
     return true;
   }
 
-  const filterValue = filter.values[0].textValue;
+  const filterValue = filter.value;
   if (!filterValue) {
     return true;
   }
@@ -977,12 +970,10 @@ const recordMatchesTextFilter = (
 
 const recordMatchesUrlFilter = (
   record: RecordNode,
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: FieldNode,
 ) => {
-  const fieldValue = record.attributes.find(
-    (attribute) => attribute.type === field.id,
-  )?.textValue;
+  const fieldValue = record.attributes[field.id];
 
   if (filter.operator === 'is_empty') {
     return !fieldValue;
@@ -996,11 +987,11 @@ const recordMatchesUrlFilter = (
     return false;
   }
 
-  if (filter.values.length === 0) {
+  if (typeof filter.value !== 'string') {
     return true;
   }
 
-  const filterValue = filter.values[0].textValue;
+  const filterValue = filter.value;
   if (!filterValue) {
     return true;
   }

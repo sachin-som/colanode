@@ -1,7 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { AttributeTypes, NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { generateNodeIndex } from '@/lib/nodes';
+import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { useMutation } from '@tanstack/react-query';
 
 interface FieldCreateMutationInput {
@@ -33,46 +33,24 @@ export const useFieldCreateMutation = () => {
         result.rows && result.rows.length > 0 ? result.rows[0] : null;
       const maxIndex = lastChild?.index ? lastChild.index : null;
 
-      const fieldId = NeuronId.generate(NeuronId.Type.Field);
-      const insertFieldQuery = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id: fieldId,
-          type: NodeTypes.Field,
-          parent_id: values.databaseId,
-          index: generateNodeIndex(maxIndex, null),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      const insertFieldAttributesQuery = workspace.schema
-        .insertInto('node_attributes')
-        .values([
-          {
-            node_id: fieldId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: values.name,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+      const id = NeuronId.generate(NeuronId.Type.Field);
+      const query = buildNodeInsertMutation(
+        workspace.schema,
+        workspace.userId,
+        {
+          id: id,
+          attributes: {
+            type: NodeTypes.Field,
+            parentId: values.databaseId,
+            index: generateNodeIndex(maxIndex, null),
+            name: values.name,
+            dataType: values.dataType,
           },
-          {
-            node_id: fieldId,
-            type: AttributeTypes.DataType,
-            key: '1',
-            text_value: values.dataType,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-        ])
-        .compile();
+        },
+      );
 
-      await workspace.mutate([insertFieldQuery, insertFieldAttributesQuery]);
+      await workspace.mutate(query);
+      return id;
     },
   });
 };

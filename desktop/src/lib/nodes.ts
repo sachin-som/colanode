@@ -1,17 +1,19 @@
 import {
+  CreateNode,
   SelectNode,
-  SelectNodeAttribute,
-  SelectNodeWithAttributes,
+  WorkspaceDatabaseSchema,
 } from '@/data/schemas/workspace';
 import {
   LocalNode,
-  LocalNodeAttribute,
-  LocalNodeWithAttributes,
-  LocalNodeWithAttributesAndChildren,
   LocalNodeWithChildren,
+  NodeInsertInput,
 } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
+import { CompiledQuery, Kysely } from 'kysely';
+import * as Y from 'yjs';
+import { NeuronId } from '@/lib/id';
+import { fromUint8Array } from 'js-base64';
 
 export const buildNodeWithChildren = (
   node: LocalNode,
@@ -20,20 +22,6 @@ export const buildNodeWithChildren = (
   const children: LocalNodeWithChildren[] = allNodes
     .filter((n) => n.parentId === node.id)
     .map((n) => buildNodeWithChildren(n, allNodes));
-
-  return {
-    ...node,
-    children: children,
-  };
-};
-
-export const buildNodeWithAttributesAndChildren = (
-  node: LocalNodeWithAttributes,
-  allNodes: LocalNodeWithAttributes[],
-): LocalNodeWithAttributesAndChildren => {
-  const children: LocalNodeWithAttributesAndChildren[] = allNodes
-    .filter((n) => n.parentId === node.id)
-    .map((n) => buildNodeWithAttributesAndChildren(n, allNodes));
 
   return {
     ...node,
@@ -51,13 +39,57 @@ export const generateNodeIndex = (
   return generateKeyBetween(lower, upper);
 };
 
+export const buildNodeInsertMutation = (
+  schema: Kysely<WorkspaceDatabaseSchema>,
+  userId: string,
+  input: NodeInsertInput | NodeInsertInput[],
+): CompiledQuery => {
+  const nodes = Array.isArray(input)
+    ? input.map((node) => buildCreateNode(node, userId))
+    : buildCreateNode(input, userId);
+
+  return schema.insertInto('nodes').values(nodes).compile();
+};
+
+const buildCreateNode = (
+  input: NodeInsertInput,
+  userId: string,
+): CreateNode => {
+  const doc = new Y.Doc({
+    guid: input.id,
+  });
+
+  const attributesMap = doc.getMap('attributes');
+
+  doc.transact(() => {
+    for (const [key, value] of Object.entries(input.attributes)) {
+      if (value !== undefined) {
+        attributesMap.set(key, value);
+      }
+    }
+  });
+
+  const attributes = JSON.stringify(attributesMap.toJSON());
+  const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+  return {
+    id: input.id,
+    attributes: attributes,
+    state: encodedState,
+    created_at: new Date().toISOString(),
+    created_by: userId,
+    version_id: NeuronId.generate(NeuronId.Type.Version),
+  };
+};
+
 export const mapNode = (row: SelectNode): LocalNode => {
   return {
     id: row.id,
     type: row.type,
     index: row.index,
     parentId: row.parent_id,
-    content: row.content ? JSON.parse(row.content) : null,
+    attributes: JSON.parse(row.attributes),
+    state: row.state,
     createdAt: row.created_at,
     createdBy: row.created_by,
     updatedAt: row.updated_at,
@@ -66,40 +98,6 @@ export const mapNode = (row: SelectNode): LocalNode => {
     serverCreatedAt: row.server_created_at,
     serverUpdatedAt: row.server_updated_at,
     serverVersionId: row.server_version_id,
-  };
-};
-
-export const mapNodeAttribute = (
-  row: SelectNodeAttribute,
-): LocalNodeAttribute => {
-  return {
-    nodeId: row.node_id,
-    type: row.type,
-    key: row.key,
-    textValue: row.text_value,
-    numberValue: row.number_value,
-    foreignNodeId: row.foreign_node_id,
-    createdAt: row.created_at,
-    createdBy: row.created_by,
-    updatedAt: row.updated_at,
-    updatedBy: row.updated_by,
-    versionId: row.version_id,
-    serverCreatedAt: row.server_created_at,
-    serverUpdatedAt: row.server_updated_at,
-    serverVersionId: row.server_version_id,
-  };
-};
-
-export const mapNodeWithAttributes = (
-  row: SelectNodeWithAttributes,
-): LocalNodeWithAttributes => {
-  const attributes: SelectNodeAttribute[] = row.attributes
-    ? JSON.parse(row.attributes)
-    : [];
-
-  return {
-    ...mapNode(row),
-    attributes: attributes.map(mapNodeAttribute),
   };
 };
 

@@ -1,50 +1,50 @@
 import React from 'react';
-import { ViewSortNode } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { ViewSort } from '@/components/databases/sorts/view-sort';
+import { ViewSortRow } from '@/components/databases/search/view-sort-row';
 import { useDatabase } from '@/contexts/database';
-import { ViewSortAddPopover } from './view-sort-add-popover';
+import { ViewSortAddPopover } from '@/components/databases/search/view-sort-add-popover';
 import { Icon } from '@/components/ui/icon';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewSortsProps {
-  viewId: string;
-  sorts: ViewSortNode[];
-}
-
-export const ViewSorts = ({ viewId, sorts }: ViewSortsProps) => {
+export const ViewSorts = () => {
   const database = useDatabase();
-  const [open, setOpen] = React.useState(false);
+  const viewSearch = useViewSearch();
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isSortsOpened}
+      onOpenChange={(open) => {
+        if (open) {
+          viewSearch.openSorts();
+        } else {
+          viewSearch.closeSorts();
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
           className="border-dashed text-xs text-muted-foreground"
         >
-          Sorts ({sorts.length})
+          Sorts ({viewSearch.sorts.length})
         </Button>
       </PopoverTrigger>
       <PopoverContent className="flex flex-col gap-2 p-2">
-        {sorts.map((sort) => {
+        {viewSearch.sorts.map((sort) => {
           const field = database.fields.find(
             (field) => field.id === sort.fieldId,
           );
 
           if (!field) return null;
-          return <ViewSort key={sort.id} sort={sort} field={field} />;
+          return <ViewSortRow key={sort.id} sort={sort} field={field} />;
         })}
-        <ViewSortAddPopover
-          viewId={viewId}
-          existingSorts={sorts}
-          onCreate={() => setOpen(true)}
-        >
+        <ViewSortAddPopover>
           <button className="flex cursor-pointer flex-row items-center gap-1 rounded-lg p-1 text-sm text-muted-foreground hover:bg-gray-50">
             <Icon name="add-line" />
             Add sort

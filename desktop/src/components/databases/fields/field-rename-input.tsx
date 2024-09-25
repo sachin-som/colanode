@@ -1,15 +1,14 @@
 import React from 'react';
 import { FieldNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { AttributeTypes } from '@/lib/constants';
 
 interface FieldRenameInputProps {
   field: FieldNode;
 }
 
 export const FieldRenameInput = ({ field }: FieldRenameInputProps) => {
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
 
   return (
     <div className="w-full p-1">
@@ -21,11 +20,8 @@ export const FieldRenameInput = ({ field }: FieldRenameInputProps) => {
 
           mutate({
             nodeId: field.id,
-            type: AttributeTypes.Name,
-            key: '1',
-            textValue: newName,
-            numberValue: null,
-            foreignNodeId: null,
+            key: 'name',
+            value: newName,
           });
         }}
       />

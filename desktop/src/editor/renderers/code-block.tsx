@@ -2,12 +2,11 @@ import React from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { defaultClasses } from '@/editor/classes';
-import { LocalNodeWithAttributesAndChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 import { highlightCode, languages } from '@/lib/lowlight';
-import { AttributeTypes } from '@/lib/constants';
 
 interface CodeBlockRendererProps {
-  node: LocalNodeWithAttributesAndChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 
@@ -15,13 +14,11 @@ export const CodeBlockRenderer = ({
   node,
   keyPrefix,
 }: CodeBlockRendererProps) => {
-  const language = node.attributes.find(
-    (attr) => attr.type === AttributeTypes.Language,
-  )?.textValue;
+  const language = node.attributes.language;
 
   const [copied, setCopied] = React.useState(false);
 
-  const code = node.content?.[0].text ?? '';
+  const code = node.attributes.content?.[0].text ?? '';
   if (!code) {
     return null;
   }

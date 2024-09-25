@@ -8,10 +8,7 @@ import {
   SqliteDialect,
 } from 'kysely';
 import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
-import {
-  SelectNodeAttribute,
-  WorkspaceDatabaseSchema,
-} from '@/data/schemas/workspace';
+import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
 import { workspaceDatabaseMigrations } from '@/data/migrations/workspace';
 import {
   buildSqlite,
@@ -23,7 +20,7 @@ import { ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
-import { ServerNode, ServerNodeAttribute } from '@/types/nodes';
+import { ServerNode } from '@/types/nodes';
 import { SelectNode } from '@/data/schemas/workspace';
 
 export class WorkspaceManager {
@@ -214,8 +211,6 @@ export class WorkspaceManager {
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
       await this.executeNodeServerMutation(mutation);
-    } else if (mutation.table === 'node_attributes') {
-      await this.executeNodeAttributeServerMutation(mutation);
     }
 
     //other cases in the future
@@ -235,29 +230,6 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
-    }
-  }
-
-  private async executeNodeAttributeServerMutation(
-    mutation: ServerMutation,
-  ): Promise<void> {
-    if (mutation.action === 'insert' && mutation.after) {
-      await this.syncNodeAttributeFromServer(mutation.after);
-    } else if (mutation.action === 'update' && mutation.after) {
-      await this.syncNodeAttributeFromServer(mutation.after);
-    } else if (mutation.action === 'delete' && mutation.before) {
-      await this.database
-        .deleteFrom('node_attributes')
-        .where((eb) =>
-          eb.and([
-            eb('node_id', '=', mutation.before.nodeId),
-            eb('type', '=', mutation.before.type),
-            eb('key', '=', mutation.before.key),
-          ]),
-        )
-        .execute();
-
-      this.debouncedNotifyQuerySubscribers(['node_attributes']);
     }
   }
 
@@ -282,10 +254,6 @@ export class WorkspaceManager {
       await this.syncNodeFromServer(node);
     }
 
-    for (const nodeAttribute of data.nodeAttributes) {
-      await this.syncNodeAttributeFromServer(nodeAttribute);
-    }
-
     this.workspace.synced = true;
     return true;
   }
@@ -302,10 +270,8 @@ export class WorkspaceManager {
         .insertInto('nodes')
         .values({
           id: node.id,
-          type: node.type,
-          parent_id: node.parentId,
-          index: node.index,
-          content: node.content ? JSON.stringify(node.content) : null,
+          attributes: node.attributes ? JSON.stringify(node.attributes) : null,
+          state: node.state,
           created_at: node.createdAt,
           created_by: node.createdBy,
           updated_by: node.updatedBy,
@@ -325,10 +291,8 @@ export class WorkspaceManager {
       await this.database
         .updateTable('nodes')
         .set({
-          type: node.type,
-          parent_id: node.parentId,
-          index: node.index,
-          content: node.content ? JSON.stringify(node.content) : null,
+          attributes: node.attributes ? JSON.stringify(node.attributes) : null,
+          state: node.state,
           updated_at: node.updatedAt,
           updated_by: node.updatedBy,
           version_id: node.versionId,
@@ -340,78 +304,6 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
-    }
-  }
-
-  private async syncNodeAttributeFromServer(
-    nodeAttribute: ServerNodeAttribute,
-  ): Promise<void> {
-    const existingNodeAttribute = await this.database
-      .selectFrom('node_attributes')
-      .selectAll()
-      .where((eb) =>
-        eb.and([
-          eb('node_id', '=', nodeAttribute.nodeId),
-          eb('type', '=', nodeAttribute.type),
-          eb('key', '=', nodeAttribute.key),
-        ]),
-      )
-      .executeTakeFirst();
-
-    if (!existingNodeAttribute) {
-      await this.database
-        .insertInto('node_attributes')
-        .values({
-          node_id: nodeAttribute.nodeId,
-          type: nodeAttribute.type,
-          key: nodeAttribute.key,
-          text_value: nodeAttribute.textValue,
-          number_value: nodeAttribute.numberValue,
-          foreign_node_id: nodeAttribute.foreignNodeId,
-          created_at: nodeAttribute.createdAt,
-          created_by: nodeAttribute.createdBy,
-          updated_by: nodeAttribute.updatedBy,
-          updated_at: nodeAttribute.updatedAt,
-          version_id: nodeAttribute.versionId,
-          server_created_at: nodeAttribute.serverCreatedAt,
-          server_updated_at: nodeAttribute.serverUpdatedAt,
-          server_version_id: nodeAttribute.versionId,
-        })
-        .execute();
-
-      this.debouncedNotifyQuerySubscribers(['node_attributes']);
-      return;
-    }
-
-    if (
-      this.shouldUpdateNodeAttributeFromServer(
-        existingNodeAttribute,
-        nodeAttribute,
-      )
-    ) {
-      await this.database
-        .updateTable('node_attributes')
-        .set({
-          text_value: nodeAttribute.textValue,
-          number_value: nodeAttribute.numberValue,
-          foreign_node_id: nodeAttribute.foreignNodeId,
-          updated_at: nodeAttribute.updatedAt,
-          updated_by: nodeAttribute.updatedBy,
-          version_id: nodeAttribute.versionId,
-          server_created_at: nodeAttribute.serverCreatedAt,
-          server_updated_at: nodeAttribute.serverUpdatedAt,
-          server_version_id: nodeAttribute.versionId,
-        })
-        .where((eb) =>
-          eb.and([
-            eb('node_id', '=', nodeAttribute.nodeId),
-            eb('type', '=', nodeAttribute.type),
-            eb('key', '=', nodeAttribute.key),
-          ]),
-        )
-        .execute();
-
-      this.debouncedNotifyQuerySubscribers(['node_attributes']);
     }
   }
 
@@ -430,32 +322,6 @@ export class WorkspaceManager {
 
       const localUpdatedAt = new Date(localNode.updated_at);
       const serverUpdatedAt = new Date(serverNode.updatedAt);
-
-      if (localUpdatedAt > serverUpdatedAt) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private shouldUpdateNodeAttributeFromServer(
-    localNodeAttribute: SelectNodeAttribute,
-    serverNodeAttribute: ServerNodeAttribute,
-  ): boolean {
-    if (
-      localNodeAttribute.server_version_id === serverNodeAttribute.versionId
-    ) {
-      return false;
-    }
-
-    if (localNodeAttribute.updated_at) {
-      if (!serverNodeAttribute.updatedAt) {
-        return false;
-      }
-
-      const localUpdatedAt = new Date(localNodeAttribute.updated_at);
-      const serverUpdatedAt = new Date(serverNodeAttribute.updatedAt);
 
       if (localUpdatedAt > serverUpdatedAt) {
         return false;

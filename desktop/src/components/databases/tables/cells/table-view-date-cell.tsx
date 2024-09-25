@@ -1,16 +1,8 @@
 import React from 'react';
 import { RecordNode, EmailFieldNode, DateFieldNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { DatePicker } from '@/components/ui/date-picker';
-
-const getDateValue = (
-  record: RecordNode,
-  field: DateFieldNode,
-): Date | null => {
-  const attribute = record.attributes.find((attr) => attr.type === field.id);
-  return attribute?.textValue ? new Date(attribute.textValue) : null;
-};
 
 interface TableViewDateCellProps {
   record: RecordNode;
@@ -21,17 +13,17 @@ export const TableViewDateCell = ({
   record,
   field,
 }: TableViewDateCellProps) => {
-  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
-    useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
   const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
     useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   return (
     <DatePicker
-      value={getDateValue(record, field)}
+      value={record.attributes[field.id]}
       onChange={(newValue) => {
         if (isPending) return;
         if (!canEdit) return;
@@ -39,17 +31,13 @@ export const TableViewDateCell = ({
         if (newValue === null || newValue === undefined) {
           deleteNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
+            key: field.id,
           });
         } else {
-          upsertNodeAttribute({
+          setNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
-            textValue: newValue.toISOString(),
-            numberValue: null,
-            foreignNodeId: null,
+            key: field.id,
+            value: newValue.toISOString(),
           });
         }
       }}

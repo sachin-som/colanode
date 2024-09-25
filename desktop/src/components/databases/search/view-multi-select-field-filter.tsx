@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectFieldNode, ViewFilterNode } from '@/types/databases';
+import { MultiSelectFieldNode, ViewFieldFilter } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -14,33 +14,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon, selectFieldFilterOperators } from '@/lib/databases';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
 import { SelectOptionBadge } from '@/components/databases/fields/select-option-badge';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewSelectFieldFilterProps {
-  field: SelectFieldNode;
-  filter: ViewFilterNode;
+interface ViewMultiSelectFieldFilterProps {
+  field: MultiSelectFieldNode;
+  filter: ViewFieldFilter;
 }
 
-export const ViewSelectFieldFilter = ({
+export const ViewMultiSelectFieldFilter = ({
   field,
   filter,
-}: ViewSelectFieldFilterProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
-  const { mutate: deleteFilter } = useNodeDeleteMutation();
+}: ViewMultiSelectFieldFilterProps) => {
+  const viewSearch = useViewSearch();
 
   const operator =
     selectFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
     ) ?? selectFieldFilterOperators[0];
 
-  const selectOptionIds = filter.values.map((value) => value.foreignNodeId);
+  const selectOptionIds = (filter.value as string[]) ?? [];
   const selectedOptions = field.options.filter((option) =>
     selectOptionIds.includes(option.id),
   );
@@ -49,7 +43,16 @@ export const ViewSelectFieldFilter = ({
     operator.value === 'is_empty' || operator.value === 'is_not_empty';
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isFieldFilterOpened(filter.id)}
+      onOpenChange={() => {
+        if (viewSearch.isFieldFilterOpened(filter.id)) {
+          viewSearch.closeFieldFilter(filter.id);
+        } else {
+          viewSearch.openFieldFilter(filter.id);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -80,25 +83,17 @@ export const ViewSelectFieldFilter = ({
                 <DropdownMenuItem
                   key={operator.value}
                   onSelect={() => {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Operator,
-                      key: '1',
-                      textValue: operator.value,
-                      numberValue: null,
-                      foreignNodeId: null,
-                    });
-
-                    if (
+                    const value =
                       operator.value === 'is_empty' ||
                       operator.value === 'is_not_empty'
-                    ) {
-                      deleteAttribute({
-                        nodeId: filter.id,
-                        type: AttributeTypes.Value,
-                        key: '1',
-                      });
-                    }
+                        ? []
+                        : selectOptionIds;
+
+                    viewSearch.updateFilter(filter.id, {
+                      ...filter,
+                      operator: operator.value,
+                      value: value,
+                    });
                   }}
                 >
                   {operator.label}
@@ -110,7 +105,7 @@ export const ViewSelectFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              deleteFilter(filter.id);
+              viewSearch.removeFilter(filter.id);
             }}
           >
             <Icon name="delete-bin-line" className="h-4 w-4" />
@@ -134,22 +129,14 @@ export const ViewSelectFieldFilter = ({
                 field={field}
                 values={selectOptionIds}
                 onSelect={(id) => {
-                  if (selectOptionIds.includes(id)) {
-                    deleteAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Value,
-                      key: id,
-                    });
-                  } else {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Value,
-                      key: id,
-                      foreignNodeId: id,
-                      textValue: null,
-                      numberValue: null,
-                    });
-                  }
+                  const values = selectOptionIds.includes(id)
+                    ? selectOptionIds.filter((value) => value !== id)
+                    : [...selectOptionIds, id];
+
+                  viewSearch.updateFilter(filter.id, {
+                    ...filter,
+                    value: values,
+                  });
                 }}
                 allowAdd={false}
               />

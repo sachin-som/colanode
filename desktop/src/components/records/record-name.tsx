@@ -1,15 +1,14 @@
 import React from 'react';
 import { RecordNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { AttributeTypes } from '@/lib/constants';
 
 interface RecordNameProps {
   record: RecordNode;
 }
 
 export const RecordName = ({ record }: RecordNameProps) => {
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
 
   return (
     <SmartTextInput
@@ -25,11 +24,8 @@ export const RecordName = ({ record }: RecordNameProps) => {
 
         mutate({
           nodeId: record.id,
-          type: AttributeTypes.Name,
-          key: '1',
-          textValue: value,
-          numberValue: null,
-          foreignNodeId: null,
+          key: 'name',
+          value: value,
         });
       }}
       className="font-heading border-b border-none pl-1 text-4xl font-bold shadow-none focus-visible:ring-0"

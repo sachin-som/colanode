@@ -1,89 +1,26 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNodeWithAttributes } from '@/data/schemas/workspace';
-import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
-import { mapNodeWithAttributes } from '@/lib/nodes';
+import { SelectNode } from '@/data/schemas/workspace';
+import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
+import { mapNode } from '@/lib/nodes';
 import {
   BoardViewNode,
   CalendarViewNode,
   TableViewNode,
-  ViewFilterNode,
-  ViewFilterValueNode,
   ViewNode,
-  ViewSortNode,
 } from '@/types/databases';
-import { LocalNodeWithAttributes } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { QueryResult, sql } from 'kysely';
 
 export const useDatabaseViewsQuery = (databaseId: string) => {
   const workspace = useWorkspace();
-  return useQuery<
-    QueryResult<SelectNodeWithAttributes>,
-    Error,
-    ViewNode[],
-    string[]
-  >({
+  return useQuery<QueryResult<SelectNode>, Error, ViewNode[], string[]>({
     queryKey: ['database-views', databaseId],
     queryFn: async ({ queryKey }) => {
-      const query = sql<SelectNodeWithAttributes>`
-          WITH view_nodes AS (
-            SELECT *
-            FROM nodes
-            WHERE parent_id = ${databaseId} AND type IN (${sql.join(ViewNodeTypes)})
-          ),
-          view_filter_nodes AS (
-            SELECT *
-            FROM nodes
-            WHERE parent_id IN 
-              (
-                SELECT id
-                FROM view_nodes
-              )
-            AND type = ${NodeTypes.ViewFilter}
-          ),
-          view_sort_nodes AS (
-            SELECT *
-            FROM nodes
-            WHERE parent_id IN 
-              (
-                SELECT id
-                FROM view_nodes
-              )
-            AND type = ${NodeTypes.ViewSort}
-          ),
-          all_nodes AS (
-            SELECT * FROM view_nodes
-            UNION ALL
-            SELECT * FROM view_filter_nodes
-            UNION ALL
-            SELECT * FROM view_sort_nodes
-          )
-          SELECT 
-            n.*,
-            CASE 
-              WHEN COUNT(na.node_id) = 0 THEN json('[]')
-              ELSE json_group_array(
-                json_object(
-                  'node_id', na.'node_id',
-                  'type', na.'type',
-                  'key', na.'key',
-                  'text_value', na.'text_value',
-                  'number_value', na.'number_value',
-                  'foreign_node_id', na.'foreign_node_id',
-                  'created_at', na.'created_at',
-                  'updated_at', na.'updated_at',
-                  'created_by', na.'created_by',
-                  'updated_by', na.'updated_by',
-                  'version_id', na.'version_id',
-                  'server_created_at', na.'server_created_at',
-                  'server_updated_at', na.'server_updated_at',
-                  'server_version_id', na.'server_version_id'
-                )
-              )
-            END as attributes
-          FROM all_nodes n
-          LEFT JOIN node_attributes na ON n.id = na.node_id
-          GROUP BY n.id;
+      const query = sql<SelectNode>`
+        SELECT *
+        FROM nodes
+        WHERE parent_id = ${databaseId} AND type IN (${sql.join(ViewNodeTypes)})
       `.compile(workspace.schema);
 
       return await workspace.queryAndSubscribe({
@@ -91,28 +28,18 @@ export const useDatabaseViewsQuery = (databaseId: string) => {
         query,
       });
     },
-    select: (data: QueryResult<SelectNodeWithAttributes>): ViewNode[] => {
+    select: (data: QueryResult<SelectNode>): ViewNode[] => {
       const rows = data?.rows ?? [];
       return buildViewNodes(rows);
     },
   });
 };
 
-const buildViewNodes = (rows: SelectNodeWithAttributes[]): ViewNode[] => {
-  const nodes = rows.map((row) => mapNodeWithAttributes(row));
-
-  const viewNodes = nodes.filter((node) => ViewNodeTypes.includes(node.type));
+const buildViewNodes = (rows: SelectNode[]): ViewNode[] => {
+  const nodes = rows.map((row) => mapNode(row));
   const views: ViewNode[] = [];
-  for (const viewNode of viewNodes) {
-    const viewFilters = nodes.filter(
-      (node) =>
-        node.type === NodeTypes.ViewFilter && node.parentId === viewNode.id,
-    );
-    const viewSorts = nodes.filter(
-      (node) =>
-        node.type === NodeTypes.ViewSort && node.parentId === viewNode.id,
-    );
-    const view = buildViewNode(viewNode, viewFilters, viewSorts);
+  for (const node of nodes) {
+    const view = buildViewNode(node);
     if (view) {
       views.push(view);
     }
@@ -121,65 +48,27 @@ const buildViewNodes = (rows: SelectNodeWithAttributes[]): ViewNode[] => {
   return views;
 };
 
-const buildViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-  sorts: LocalNodeWithAttributes[],
-): ViewNode | null => {
+const buildViewNode = (node: LocalNode): ViewNode | null => {
   if (node.type === NodeTypes.TableView) {
-    return buildTableViewNode(node, filters, sorts);
+    return buildTableViewNode(node);
   } else if (node.type === NodeTypes.BoardView) {
-    return buildBoardViewNode(node, filters, sorts);
+    return buildBoardViewNode(node);
   } else if (node.type === NodeTypes.CalendarView) {
-    return buildCalendarViewNode(node, filters, sorts);
+    return buildCalendarViewNode(node);
   }
 
   return null;
 };
 
-const buildTableViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-  sorts: LocalNodeWithAttributes[],
-): TableViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
+const buildTableViewNode = (node: LocalNode): TableViewNode => {
+  const name = node.attributes.name;
+  const hiddenFields = node.attributes.hiddenFields;
+  const fieldIndexes = node.attributes.fieldIndexes;
+  const fieldWidths = node.attributes.fieldWidths;
+  const nameWidth = node.attributes.nameWidth;
 
-  const hiddenFields = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.HiddenField)
-    .map((attribute) => attribute.foreignNodeId);
-
-  const fieldIndexes = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.FieldIndex)
-    .reduce(
-      (acc, attribute) => {
-        if (attribute.foreignNodeId && attribute.textValue !== null) {
-          acc[attribute.foreignNodeId] = attribute.textValue;
-        }
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-  const fieldWidths = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.FieldWidth)
-    .reduce(
-      (acc, attribute) => {
-        if (attribute.foreignNodeId && attribute.numberValue !== null) {
-          acc[attribute.foreignNodeId] = attribute.numberValue;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-  const nameWidth = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.NameWidth,
-  )?.numberValue;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-  const viewSorts = sorts.map(buildViewSortNode);
+  const viewFilters = node.attributes.filters;
+  const viewSorts = node.attributes.sorts;
 
   return {
     id: node.id,
@@ -190,100 +79,40 @@ const buildTableViewNode = (
     fieldWidths,
     nameWidth: nameWidth,
     versionId: node.versionId,
-    filters: viewFilters,
-    sorts: viewSorts,
+    filters: viewFilters ?? [],
+    sorts: viewSorts ?? [],
   };
 };
 
-const buildBoardViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-  sorts: LocalNodeWithAttributes[],
-): BoardViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const groupBy = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.GroupBy,
-  )?.foreignNodeId;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-  const viewSorts = sorts.map(buildViewSortNode);
+const buildBoardViewNode = (node: LocalNode): BoardViewNode => {
+  const name = node.attributes.name;
+  const groupBy = node.attributes.groupBy;
+  const viewFilters = node.attributes.filters;
+  const viewSorts = node.attributes.sorts;
 
   return {
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'board_view',
-    filters: viewFilters,
-    sorts: viewSorts,
+    filters: viewFilters ?? [],
+    sorts: viewSorts ?? [],
     groupBy,
   };
 };
 
-const buildCalendarViewNode = (
-  node: LocalNodeWithAttributes,
-  filters: LocalNodeWithAttributes[],
-  sorts: LocalNodeWithAttributes[],
-): CalendarViewNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
+const buildCalendarViewNode = (node: LocalNode): CalendarViewNode => {
+  const name = node.attributes.name;
+  const groupBy = node.attributes.groupBy;
 
-  const groupBy = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.GroupBy,
-  )?.foreignNodeId;
-
-  const viewFilters = filters.map(buildViewFilterNode);
-  const viewSorts = sorts.map(buildViewSortNode);
+  const viewFilters = node.attributes.filters;
+  const viewSorts = node.attributes.sorts;
 
   return {
     id: node.id,
     name: name ?? 'Unnamed',
     type: 'calendar_view',
-    filters: viewFilters,
-    sorts: viewSorts,
+    filters: viewFilters ?? [],
+    sorts: viewSorts ?? [],
     groupBy,
-  };
-};
-
-const buildViewFilterNode = (node: LocalNodeWithAttributes): ViewFilterNode => {
-  const fieldId = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.FieldId,
-  )?.foreignNodeId;
-
-  const operator = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Operator,
-  )?.textValue;
-
-  const values: ViewFilterValueNode[] = node.attributes
-    .filter((attribute) => attribute.type === AttributeTypes.Value)
-    .map((attribute) => ({
-      textValue: attribute.textValue,
-      numberValue: attribute.numberValue,
-      foreignNodeId: attribute.foreignNodeId,
-    }));
-
-  return {
-    id: node.id,
-    fieldId,
-    operator,
-    values,
-  };
-};
-
-const buildViewSortNode = (node: LocalNodeWithAttributes): ViewSortNode => {
-  const fieldId = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.FieldId,
-  )?.foreignNodeId;
-
-  const direction = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Direction,
-  )?.textValue;
-
-  return {
-    id: node.id,
-    fieldId,
-    direction: direction as any,
   };
 };

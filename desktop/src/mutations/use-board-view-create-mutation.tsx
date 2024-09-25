@@ -1,7 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
+import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { generateNodeIndex } from '@/lib/nodes';
+import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
 
@@ -36,50 +36,22 @@ export const useBoardViewCreateMutation = () => {
             ].index
           : null;
 
-      const boardViewId = NeuronId.generate(NeuronId.Type.BoardView);
-      const insertBoardViewQuery = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id: boardViewId,
-          type: NodeTypes.BoardView,
-          parent_id: input.databaseId,
-          index: generateNodeIndex(maxIndex, null),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      const insertBoardViewAttributesQuery = workspace.schema
-        .insertInto('node_attributes')
-        .values([
-          {
-            node_id: boardViewId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: input.name,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+      const id = NeuronId.generate(NeuronId.Type.BoardView);
+      const query = buildNodeInsertMutation(
+        workspace.schema,
+        workspace.userId,
+        {
+          id: id,
+          attributes: {
+            type: NodeTypes.BoardView,
+            parentId: input.databaseId,
+            index: generateNodeIndex(maxIndex, null),
           },
-          {
-            node_id: boardViewId,
-            type: AttributeTypes.GroupBy,
-            key: '1',
-            foreign_node_id: input.groupBy,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-        ])
-        .compile();
+        },
+      );
 
-      await workspace.mutate([
-        insertBoardViewQuery,
-        insertBoardViewAttributesQuery,
-      ]);
-      return boardViewId;
+      await workspace.mutate(query);
+      return id;
     },
   });
 };

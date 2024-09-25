@@ -16,15 +16,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { ViewDeleteDialog } from '@/components/databases/view-delete-dialog';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { AttributeTypes } from '@/lib/constants';
 
 export const TableViewSettingsPopover = () => {
   const tableView = useTableView();
   const database = useDatabase();
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
 
   const [open, setOpen] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -51,11 +50,8 @@ export const TableViewSettingsPopover = () => {
 
               mutate({
                 nodeId: tableView.id,
-                type: AttributeTypes.Name,
-                key: '1',
-                textValue: newName,
-                numberValue: null,
-                foreignNodeId: null,
+                key: 'name',
+                value: newName,
               });
             }}
           />

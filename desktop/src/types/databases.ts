@@ -1,5 +1,4 @@
 import { User } from '@/types/users';
-import { LocalNodeAttribute } from './nodes';
 
 export type DatabaseNode = {
   id: string;
@@ -18,16 +17,16 @@ export type TableViewNode = {
   fieldWidths: Record<string, number>;
   nameWidth: number;
   versionId: string;
-  filters: ViewFilterNode[];
-  sorts: ViewSortNode[];
+  filters: ViewFilter[];
+  sorts: ViewSort[];
 };
 
 export type BoardViewNode = {
   id: string;
   name: string;
   type: 'board_view';
-  filters: ViewFilterNode[];
-  sorts: ViewSortNode[];
+  filters: ViewFilter[];
+  sorts: ViewSort[];
   groupBy: string | null;
 };
 
@@ -35,8 +34,8 @@ export type CalendarViewNode = {
   id: string;
   name: string;
   type: 'calendar_view';
-  filters: ViewFilterNode[];
-  sorts: ViewSortNode[];
+  filters: ViewFilter[];
+  sorts: ViewSort[];
   groupBy: string | null;
 };
 
@@ -177,23 +176,27 @@ export type RecordNode = {
   createdBy: User;
   versionId: string;
 
-  attributes: LocalNodeAttribute[];
+  attributes: any;
 };
 
-export type ViewFilterNode = {
+export type ViewFieldFilter = {
   id: string;
+  type: 'field';
   fieldId: string;
   operator: string;
-  values: ViewFilterValueNode[];
+  value: string | number | boolean | string[] | number[] | null;
 };
 
-export type ViewFilterValueNode = {
-  textValue: string | null;
-  numberValue: number | null;
-  foreignNodeId: string | null;
+export type ViewGroupFilter = {
+  id: string;
+  type: 'group';
+  operator: 'and' | 'or';
+  filters: ViewFieldFilter[];
 };
 
-export type ViewSortNode = {
+export type ViewFilter = ViewFieldFilter | ViewGroupFilter;
+
+export type ViewSort = {
   id: string;
   fieldId: string;
   direction: 'asc' | 'desc';

@@ -1,9 +1,9 @@
 import { useDatabase } from '@/contexts/database';
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNode, SelectNodeWithAttributes } from '@/data/schemas/workspace';
-import { AttributeTypes, NodeTypes } from '@/lib/constants';
-import { mapNodeWithAttributes } from '@/lib/nodes';
-import { compareString } from '@/lib/utils';
+import { SelectNode } from '@/data/schemas/workspace';
+import { NodeTypes } from '@/lib/constants';
+import { mapNode } from '@/lib/nodes';
+import { isStringArray } from '@/lib/utils';
 import {
   BooleanFieldNode,
   CreatedAtFieldNode,
@@ -17,8 +17,9 @@ import {
   SelectFieldNode,
   TextFieldNode,
   UrlFieldNode,
-  ViewFilterNode,
-  ViewSortNode,
+  ViewFieldFilter,
+  ViewFilter,
+  ViewSort,
 } from '@/types/databases';
 import { User } from '@/types/users';
 import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
@@ -29,8 +30,8 @@ const RECORDS_PER_PAGE = 50;
 
 export const useRecordsQuery = (
   databaseId: string,
-  filters: ViewFilterNode[],
-  sorts: ViewSortNode[],
+  filters: ViewFilter[],
+  sorts: ViewSort[],
 ) => {
   const workspace = useWorkspace();
   const database = useDatabase();
@@ -42,7 +43,7 @@ export const useRecordsQuery = (
   }
 
   return useInfiniteQuery<
-    QueryResult<SelectNodeWithAttributes>,
+    QueryResult<SelectNode>,
     Error,
     RecordNode[],
     string[],
@@ -66,14 +67,12 @@ export const useRecordsQuery = (
       const offset = pageParam * RECORDS_PER_PAGE;
 
       const filterQuery = buildFiltersQuery(filters, database.fields);
-      const joinsQuery = buildSortJoinsQuery(sorts, database.fields);
       const orderByQuery = `ORDER BY ${sorts.length > 0 ? buildSortOrdersQuery(sorts, database.fields) : 'n."index" ASC'}`;
 
-      const query = sql<SelectNodeWithAttributes>`
+      const query = sql<SelectNode>`
         WITH record_nodes AS (
           SELECT n.*, ROW_NUMBER() OVER (${sql.raw(orderByQuery)}) AS order_number
           FROM nodes n
-          ${sql.raw(joinsQuery)}
           WHERE n.parent_id = ${databaseId} AND n.type = ${NodeTypes.Record} ${sql.raw(filterQuery)}
           ${sql.raw(orderByQuery)}
           LIMIT ${sql.lit(RECORDS_PER_PAGE)}
@@ -89,30 +88,9 @@ export const useRecordsQuery = (
           UNION ALL
           SELECT * FROM author_nodes
         )
-        SELECT 
-            n.*,
-            json_group_array(
-              json_object(
-                'node_id', na.'node_id',
-                'type', na.'type',
-                'key', na.'key',
-                'text_value', na.'text_value',
-                'number_value', na.'number_value',
-                'foreign_node_id', na.'foreign_node_id',
-                'created_at', na.'created_at',
-                'updated_at', na.'updated_at',
-                'created_by', na.'created_by',
-                'updated_by', na.updated_by,
-                'version_id', na.'version_id',
-                'server_created_at', na.'server_created_at',
-                'server_updated_at', na.'server_updated_at',
-                'server_version_id', na.'server_version_id'
-              )
-            ) as attributes
-          FROM all_nodes n
-          LEFT JOIN node_attributes na ON n.id = na.node_id
-          GROUP BY n.id
-          ORDER BY n.order_number ASC
+        SELECT n.*
+        FROM all_nodes n
+        ORDER BY n.order_number ASC
       `.compile(workspace.schema);
 
       return await workspace.queryAndSubscribe({
@@ -121,9 +99,7 @@ export const useRecordsQuery = (
         query,
       });
     },
-    select: (
-      data: InfiniteData<QueryResult<SelectNodeWithAttributes>>,
-    ): RecordNode[] => {
+    select: (data: InfiniteData<QueryResult<SelectNode>>): RecordNode[] => {
       const pages = data?.pages ?? [];
       const rows = pages.map((page) => page.rows).flat();
       return buildRecords(rows);
@@ -131,8 +107,8 @@ export const useRecordsQuery = (
   });
 };
 
-const buildRecords = (rows: SelectNodeWithAttributes[]): RecordNode[] => {
-  const nodes = rows.map(mapNodeWithAttributes);
+const buildRecords = (rows: SelectNode[]): RecordNode[] => {
+  const nodes = rows.map(mapNode);
   const recordNodes = nodes.filter((node) => node.type === NodeTypes.Record);
 
   const authorNodes = nodes.filter((node) => node.type === NodeTypes.User);
@@ -140,13 +116,8 @@ const buildRecords = (rows: SelectNodeWithAttributes[]): RecordNode[] => {
   const authorMap = new Map<string, User>();
 
   for (const author of authorNodes) {
-    const name = author.attributes.find(
-      (attr) => attr.type === AttributeTypes.Name,
-    )?.textValue;
-
-    const avatar = author.attributes.find(
-      (attr) => attr.type === AttributeTypes.Avatar,
-    )?.textValue;
+    const name = author.attributes.name;
+    const avatar = author.attributes.avatar;
 
     authorMap.set(author.id, {
       id: author.id,
@@ -156,10 +127,7 @@ const buildRecords = (rows: SelectNodeWithAttributes[]): RecordNode[] => {
   }
 
   for (const node of recordNodes) {
-    const name = node.attributes.find(
-      (attr) => attr.type === AttributeTypes.Name,
-    )?.textValue;
-
+    const name = node.attributes.name;
     const author = authorMap.get(node.createdBy);
     const record: RecordNode = {
       id: node.id,
@@ -183,7 +151,7 @@ const buildRecords = (rows: SelectNodeWithAttributes[]): RecordNode[] => {
 };
 
 const buildFiltersQuery = (
-  filters: ViewFilterNode[],
+  filters: ViewFilter[],
   fields: FieldNode[],
 ): string => {
   if (filters.length === 0) {
@@ -198,33 +166,17 @@ const buildFiltersQuery = (
     return '';
   }
 
-  const joinQueries = filterQueries
-    .map((query) => query.joinQuery)
-    .filter((query) => query !== null && query.length > 0);
-
-  const whereQueries = filterQueries
-    .map((query) => query.whereQuery)
-    .filter((query) => query !== null && query.length > 0);
-
-  return `AND n.id IN
-    ( 
-      SELECT na.node_id
-      FROM node_attributes na
-      ${joinQueries.join(' ')}
-      ${whereQueries.length > 0 ? `WHERE ${whereQueries.join(' AND ')}` : ''}
-    )
-  `;
+  return `AND (${filterQueries.join(' AND ')})`;
 };
 
-interface FilterQuery {
-  joinQuery: string;
-  whereQuery: string | null;
-}
-
 const buildFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFilter,
   fields: FieldNode[],
-): FilterQuery | null => {
+): string | null => {
+  if (filter.type === 'group') {
+    return null;
+  }
+
   const field = fields.find((field) => field.id === filter.fieldId);
   if (!field) {
     return null;
@@ -263,607 +215,493 @@ const buildFilterQuery = (
 };
 
 const buildBooleanFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: BooleanFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_true') {
-    return {
-      joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value = 1`,
-      whereQuery: null,
-    };
+    return `json_extract(n.attributes, '$.${field.id}') = true`;
   }
 
   if (filter.operator === 'is_false') {
-    return {
-      joinQuery: buildFilterLeftJoinNodeAttributesQuery(filter.id, field.id),
-      whereQuery: `na_${filter.id}.node_id IS NULL OR na_${filter.id}.number_value = 0`,
-    };
+    return `(json_extract(n.attributes, '$.${field.id}') = false OR json_extract(n.attributes, '$.${field.id}') IS NULL)`;
   }
 
   return null;
 };
 
 const buildNumberFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: NumberFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].numberValue;
-  if (value === null) {
+  if (typeof filter.value !== 'number') {
     return null;
   }
+
+  const value = filter.value as number;
+  let operator: string | null;
 
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value = ${value}`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value != ${value}`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'is_greater_than':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value > ${value}`,
-        whereQuery: null,
-      };
+      operator = '>';
+      break;
     case 'is_less_than':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value < ${value}`,
-        whereQuery: null,
-      };
+      operator = '<';
+      break;
     case 'is_greater_than_or_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value >= ${value}`,
-        whereQuery: null,
-      };
+      operator = '>=';
+      break;
     case 'is_less_than_or_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.number_value <= ${value}`,
-        whereQuery: null,
-      };
+      operator = '<=';
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `json_extract(n.attributes, '$.${field.id}') ${operator} ${value}`;
 };
 
 const buildTextFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: TextFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
+
+  const value = filter.value as string;
+  let operator: string | null;
+  let formattedValue = value;
 
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value = '${value}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value != '${value}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'contains':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'does_not_contain':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value NOT LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'NOT LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'starts_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `${value}%`;
+      break;
     case 'ends_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}`;
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
 };
 
 const buildEmailFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFilter,
   field: EmailFieldNode,
-): FilterQuery | null => {
+): string | null => {
+  if (filter.type === 'group') {
+    return null;
+  }
+
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
+
+  const value = filter.value as string;
+  let operator: string | null;
+  let formattedValue = value;
 
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value = '${value}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value != '${value}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'contains':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'does_not_contain':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value NOT LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'NOT LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'starts_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `${value}%`;
+      break;
     case 'ends_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}`;
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
 };
 
 const buildPhoneFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: PhoneFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
+
+  const value = filter.value as string;
+  let operator: string | null;
+  let formattedValue = value;
 
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value = '${value}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value != '${value}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'contains':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'does_not_contain':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value NOT LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'NOT LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'starts_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `${value}%`;
+      break;
     case 'ends_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}`;
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
 };
 
 const buildUrlFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: UrlFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
+
+  const value = filter.value as string;
+  let operator: string | null;
+  let formattedValue = value;
 
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value = '${value}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value != '${value}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'contains':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'does_not_contain':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value NOT LIKE '%${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'NOT LIKE';
+      formattedValue = `%${value}%`;
+      break;
     case 'starts_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '${value}%'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `${value}%`;
+      break;
     case 'ends_with':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.text_value LIKE '%${value}'`,
-        whereQuery: null,
-      };
+      operator = 'LIKE';
+      formattedValue = `%${value}`;
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
 };
 
 const buildSelectFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: SelectFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (!isStringArray(filter.value)) {
     return null;
   }
 
-  const ids = filter.values.map((value) => value.foreignNodeId);
-  if (ids.length === 0) {
-    return null;
-  }
-
+  const values = joinIds(filter.value);
   switch (filter.operator) {
     case 'is_in':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
-        whereQuery: null,
-      };
+      return `json_extract(n.attributes, '$.${field.id}') IN (${values})`;
     case 'is_not_in':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id NOT IN (${joinIds(ids)})`,
-        whereQuery: null,
-      };
+      return `json_extract(n.attributes, '$.${field.id}') NOT IN (${values})`;
     default:
       return null;
   }
 };
 
 const buildMultiSelectFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: MultiSelectFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (!isStringArray(filter.value)) {
     return null;
   }
 
-  const ids = filter.values.map((value) => value.foreignNodeId);
-  if (ids.length === 0) {
-    return null;
-  }
-
+  const values = joinIds(filter.value);
   switch (filter.operator) {
     case 'is_in':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
-        whereQuery: null,
-      };
+      return `json_extract(n.attributes, '$.${field.id}') IN (${values})`;
     case 'is_not_in':
-      return {
-        joinQuery: `${buildFilterLeftJoinNodeAttributesQuery(filter.id, field.id)} AND na_${filter.id}.foreign_node_id IN (${joinIds(ids)})`,
-        whereQuery: `na_${filter.id}.node_id IS NULL`,
-      };
+      return `json_extract(n.attributes, '$.${field.id}') NOT IN (${values})`;
     default:
       return null;
   }
 };
 
 const buildDateFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: DateFieldNode,
-): FilterQuery | null => {
+): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(filter.id, field.id);
+    return buildIsEmptyFilterQuery(field.id);
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(filter.id, field.id);
+    return buildIsNotEmptyFilterQuery(field.id);
   }
 
-  if (filter.values.length === 0) {
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
 
-  const date = new Date(value);
+  const date = new Date(filter.value);
   if (isNaN(date.getTime())) {
     return null;
   }
 
   const dateString = date.toISOString().split('T')[0];
+  let operator: string | null;
+
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) = '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterLeftJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) != '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'is_on_or_after':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) >= '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '>=';
+      break;
     case 'is_on_or_before':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) <= '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '<=';
+      break;
     case 'is_after':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) > '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '>';
+      break;
     case 'is_before':
-      return {
-        joinQuery: `${buildFilterJoinNodeAttributesQuery(filter.id, field.id)} AND DATE(na_${filter.id}.text_value) < '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '<';
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `DATE(json_extract(n.attributes, '$.${field.id}')) ${operator} '${dateString}'`;
 };
 
 const buildCreatedAtFilterQuery = (
-  filter: ViewFilterNode,
+  filter: ViewFieldFilter,
   field: CreatedAtFieldNode,
-): FilterQuery | null => {
-  if (filter.values.length === 0) {
+): string | null => {
+  if (filter.operator === 'is_empty') {
+    return `n.created_at IS NULL`;
+  }
+
+  if (filter.operator === 'is_not_empty') {
+    return `n.created_at IS NOT NULL`;
+  }
+
+  if (filter.value === null) {
     return null;
   }
 
-  const value = filter.values[0].textValue;
-  if (value === null) {
+  if (typeof filter.value !== 'string') {
     return null;
   }
 
-  const date = new Date(value);
+  const date = new Date(filter.value);
   if (isNaN(date.getTime())) {
     return null;
   }
 
   const dateString = date.toISOString().split('T')[0];
+  let operator: string | null;
+
   switch (filter.operator) {
     case 'is_equal_to':
-      return {
-        joinQuery: `${buildFilterJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) = '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '=';
+      break;
     case 'is_not_equal_to':
-      return {
-        joinQuery: `${buildFilterLeftJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) != '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '!=';
+      break;
     case 'is_on_or_after':
-      return {
-        joinQuery: `${buildFilterJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) >= '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '>=';
+      break;
     case 'is_on_or_before':
-      return {
-        joinQuery: `${buildFilterJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) <= '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '<=';
+      break;
     case 'is_after':
-      return {
-        joinQuery: `${buildFilterJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) > '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '>';
+      break;
     case 'is_before':
-      return {
-        joinQuery: `${buildFilterJoinNodesQuery(filter.id)} AND DATE(n_${filter.id}.created_at) < '${dateString}'`,
-        whereQuery: null,
-      };
+      operator = '<';
+      break;
     default:
       return null;
   }
+
+  if (operator === null) {
+    return null;
+  }
+
+  return `DATE(n.created_at) ${operator} '${dateString}'`;
 };
 
-const buildIsEmptyFilterQuery = (
-  filterId: string,
-  fieldId: string,
-): FilterQuery => {
-  return {
-    joinQuery: buildFilterLeftJoinNodeAttributesQuery(filterId, fieldId),
-    whereQuery: `na_${filterId}.node_id IS NULL`,
-  };
+const buildIsEmptyFilterQuery = (fieldId: string): string => {
+  return `json_extract(n.attributes, '$.${fieldId}') IS NULL`;
 };
 
-const buildIsNotEmptyFilterQuery = (
-  filterId: string,
-  fieldId: string,
-): FilterQuery => {
-  return {
-    joinQuery: buildFilterJoinNodeAttributesQuery(filterId, fieldId),
-    whereQuery: null,
-  };
-};
-
-const buildFilterJoinNodesQuery = (filterId: string): string => {
-  return `JOIN nodes n_${filterId} ON n_${filterId}.id = na.node_id`;
-};
-
-const buildFilterLeftJoinNodesQuery = (filterId: string): string => {
-  return `LEFT JOIN nodes n_${filterId} ON n_${filterId}.id = na.node_id`;
-};
-
-const buildFilterJoinNodeAttributesQuery = (
-  filterId: string,
-  fieldId: string,
-): string => {
-  return `JOIN node_attributes na_${filterId} ON na_${filterId}.node_id = na.node_id AND na_${filterId}.type = '${fieldId}'`;
-};
-
-const buildFilterLeftJoinNodeAttributesQuery = (
-  filterId: string,
-  fieldId: string,
-): string => {
-  return `LEFT JOIN node_attributes na_${filterId} ON na_${filterId}.node_id = na.node_id AND na_${filterId}.type = '${fieldId}'`;
+const buildIsNotEmptyFilterQuery = (fieldId: string): string => {
+  return `json_extract(n.attributes, '$.${fieldId}') IS NOT NULL`;
 };
 
 const joinIds = (ids: string[]): string => {
   return ids.map((id) => `'${id}'`).join(',');
 };
 
-const buildSortJoinsQuery = (
-  sorts: ViewSortNode[],
-  fields: FieldNode[],
-): string => {
-  if (sorts.length === 0) {
-    return '';
-  }
-
-  const joinQueries = sorts
-    .map((sort) => buildSortJoinQuery(sort, fields))
-    .filter((query) => query !== null && query.length > 0);
-
-  return joinQueries.join(' ');
-};
-
-const buildSortJoinQuery = (
-  sort: ViewSortNode,
-  fields: FieldNode[],
-): string | null => {
-  const field = fields.find((field) => field.id === sort.fieldId);
-  if (!field) {
-    return null;
-  }
-
-  switch (field.dataType) {
-    case 'boolean':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'collaborator':
-      return null;
-    case 'created_at':
-      return buildSortLeftJoinNodesQuery(sort.id);
-    case 'created_by':
-      return null;
-    case 'date':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'email':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'file':
-      return null;
-    case 'multi_select':
-      return null;
-    case 'number':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'phone':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'select':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'text':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    case 'url':
-      return buildSortLeftJoinNodeAttributesQuery(sort.id, field.id);
-    default:
-      return null;
-  }
-};
-
 const buildSortOrdersQuery = (
-  sorts: ViewSortNode[],
+  sorts: ViewSort[],
   fields: FieldNode[],
 ): string => {
   return sorts
@@ -873,7 +711,7 @@ const buildSortOrdersQuery = (
 };
 
 const buildSortOrderQuery = (
-  sort: ViewSortNode,
+  sort: ViewSort,
   fields: FieldNode[],
 ): string | null => {
   const field = fields.find((field) => field.id === sort.fieldId);
@@ -881,45 +719,13 @@ const buildSortOrderQuery = (
     return null;
   }
 
-  switch (field.dataType) {
-    case 'boolean':
-      return `na_${sort.id}.number_value ${sort.direction}`;
-    case 'collaborator':
-      return null;
-    case 'created_at':
-      return `n_${sort.id}.created_at ${sort.direction}`;
-    case 'created_by':
-      return null;
-    case 'date':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    case 'email':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    case 'file':
-      return null;
-    case 'multi_select':
-      return null;
-    case 'number':
-      return `na_${sort.id}.number_value ${sort.direction}`;
-    case 'phone':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    case 'select':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    case 'text':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    case 'url':
-      return `na_${sort.id}.text_value ${sort.direction}`;
-    default:
-      return null;
+  if (field.dataType === 'created_at') {
+    return `n.created_at ${sort.direction}`;
   }
-};
 
-const buildSortLeftJoinNodesQuery = (sortId: string): string => {
-  return `LEFT JOIN nodes n_${sortId} ON n_${sortId}.id = n.id`;
-};
+  if (field.dataType === 'created_by') {
+    return `n.created_by_id ${sort.direction}`;
+  }
 
-const buildSortLeftJoinNodeAttributesQuery = (
-  sortId: string,
-  fieldId: string,
-): string => {
-  return `LEFT JOIN node_attributes na_${sortId} ON na_${sortId}.node_id = n.id AND na_${sortId}.type = '${fieldId}'`;
+  return `json_extract(n.attributes, '$.${field.id}') ${sort.direction}`;
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BooleanFieldNode, ViewFilterNode } from '@/types/databases';
+import { UrlFieldNode, ViewFieldFilter } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -13,31 +13,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { getFieldIcon, booleanFieldFilterOperators } from '@/lib/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
+import { urlFieldFilterOperators } from '@/lib/databases';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewBooleanFieldFilterProps {
-  field: BooleanFieldNode;
-  filter: ViewFilterNode;
+interface ViewUrlFieldFilterProps {
+  field: UrlFieldNode;
+  filter: ViewFieldFilter;
 }
 
-export const ViewBooleanFieldFilter = ({
+export const ViewUrlFieldFilter = ({
   field,
   filter,
-}: ViewBooleanFieldFilterProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteFilter } = useNodeDeleteMutation();
+}: ViewUrlFieldFilterProps) => {
+  const viewSearch = useViewSearch();
 
   const operator =
-    booleanFieldFilterOperators.find(
+    urlFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
-    ) ?? booleanFieldFilterOperators[0];
+    ) ?? urlFieldFilterOperators[0];
+
+  const urlValue = filter.value as string | null;
+
+  const hideInput =
+    operator.value === 'is_empty' || operator.value === 'is_not_empty';
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isFieldFilterOpened(filter.id)}
+      onOpenChange={(open) => {
+        if (open) {
+          viewSearch.openFieldFilter(filter.id);
+        } else {
+          viewSearch.closeFieldFilter(filter.id);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -50,7 +61,7 @@ export const ViewBooleanFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <Icon name={getFieldIcon(field.dataType)} className="h-4 w-4" />
+            <Icon name="link" className="h-4 w-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -64,17 +75,20 @@ export const ViewBooleanFieldFilter = ({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {booleanFieldFilterOperators.map((operator) => (
+              {urlFieldFilterOperators.map((operator) => (
                 <DropdownMenuItem
                   key={operator.value}
                   onSelect={() => {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Operator,
-                      key: '1',
-                      textValue: operator.value,
-                      numberValue: null,
-                      foreignNodeId: null,
+                    const value =
+                      operator.value === 'is_empty' ||
+                      operator.value === 'is_not_empty'
+                        ? null
+                        : urlValue;
+
+                    viewSearch.updateFilter(filter.id, {
+                      ...filter,
+                      operator: operator.value,
+                      value: value,
                     });
                   }}
                 >
@@ -87,12 +101,23 @@ export const ViewBooleanFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              deleteFilter(filter.id);
+              viewSearch.removeFilter(filter.id);
             }}
           >
             <Icon name="delete-bin-line" className="h-4 w-4" />
           </Button>
         </div>
+        {!hideInput && (
+          <SmartTextInput
+            value={urlValue}
+            onChange={(value) => {
+              viewSearch.updateFilter(filter.id, {
+                ...filter,
+                value: value,
+              });
+            }}
+          />
+        )}
       </PopoverContent>
     </Popover>
   );

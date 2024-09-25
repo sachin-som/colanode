@@ -7,16 +7,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-
-const getMultiSelectValues = (
-  record: RecordNode,
-  field: MultiSelectFieldNode,
-): string[] => {
-  const attributes = record.attributes.filter((attr) => attr.type === field.id);
-  return attributes.map((attr) => attr.foreignNodeId);
-};
 
 interface RecordMultiSelectValueProps {
   record: RecordNode;
@@ -27,20 +19,20 @@ export const RecordMultiSelectValue = ({
   record,
   field,
 }: RecordMultiSelectValueProps) => {
-  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
-    useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
   const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
     useNodeAttributeDeleteMutation();
 
-  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   const [open, setOpen] = React.useState(false);
   const [selectedValues, setSelectedValues] = React.useState(
-    getMultiSelectValues(record, field),
+    (record.attributes[field.id] as string[]) ?? [],
   );
 
   React.useEffect(() => {
-    setSelectedValues(getMultiSelectValues(record, field));
+    setSelectedValues((record.attributes[field.id] as string[]) ?? []);
   }, [record.versionId]);
 
   const selectedOptions = field.options?.filter((option) =>
@@ -69,21 +61,19 @@ export const RecordMultiSelectValue = ({
             if (isPending) return;
 
             if (selectedValues.includes(id)) {
-              setSelectedValues(selectedValues.filter((v) => v !== id));
+              const values = selectedValues.filter((v) => v !== id);
+              setSelectedValues(values);
               deleteNodeAttribute({
                 nodeId: record.id,
-                type: field.id,
-                key: id,
+                key: field.id,
               });
             } else {
-              setSelectedValues([...selectedValues, id]);
-              upsertNodeAttribute({
+              const values = [...selectedValues, id];
+              setSelectedValues(values);
+              setNodeAttribute({
                 nodeId: record.id,
-                type: field.id,
-                key: id,
-                foreignNodeId: id,
-                numberValue: null,
-                textValue: null,
+                key: field.id,
+                value: values,
               });
             }
           }}

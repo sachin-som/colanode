@@ -1,5 +1,5 @@
 import React from 'react';
-import { NumberFieldNode, ViewFilterNode } from '@/types/databases';
+import { EmailFieldNode, ViewFieldFilter } from '@/types/databases';
 import {
   Popover,
   PopoverContent,
@@ -13,40 +13,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { getFieldIcon, numberFieldFilterOperators } from '@/lib/databases';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { SmartNumberInput } from '@/components/ui/smart-number-input';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
+import { getFieldIcon, emailFieldFilterOperators } from '@/lib/databases';
+import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useViewSearch } from '@/contexts/view-search';
 
-interface ViewNumberFieldFilterProps {
-  field: NumberFieldNode;
-  filter: ViewFilterNode;
+interface ViewEmailFieldFilterProps {
+  field: EmailFieldNode;
+  filter: ViewFieldFilter;
 }
 
-export const ViewNumberFieldFilter = ({
+export const ViewEmailFieldFilter = ({
   field,
   filter,
-}: ViewNumberFieldFilterProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
-  const { mutate: deleteFilter } = useNodeDeleteMutation();
+}: ViewEmailFieldFilterProps) => {
+  const viewSearch = useViewSearch();
 
   const operator =
-    numberFieldFilterOperators.find(
+    emailFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
-    ) ?? numberFieldFilterOperators[0];
+    ) ?? emailFieldFilterOperators[0];
 
-  const numberValue =
-    filter.values.length > 0 ? filter.values[0].numberValue : null;
+  const textValue = filter.value as string | null;
 
   const hideInput =
     operator.value === 'is_empty' || operator.value === 'is_not_empty';
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={viewSearch.isFieldFilterOpened(filter.id)}
+      onOpenChange={() => {
+        if (viewSearch.isFieldFilterOpened(filter.id)) {
+          viewSearch.closeFieldFilter(filter.id);
+        } else {
+          viewSearch.openFieldFilter(filter.id);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -73,29 +75,21 @@ export const ViewNumberFieldFilter = ({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {numberFieldFilterOperators.map((operator) => (
+              {emailFieldFilterOperators.map((operator) => (
                 <DropdownMenuItem
                   key={operator.value}
                   onSelect={() => {
-                    upsertAttribute({
-                      nodeId: filter.id,
-                      type: AttributeTypes.Operator,
-                      key: '1',
-                      textValue: operator.value,
-                      numberValue: null,
-                      foreignNodeId: null,
-                    });
-
-                    if (
+                    const value =
                       operator.value === 'is_empty' ||
                       operator.value === 'is_not_empty'
-                    ) {
-                      deleteAttribute({
-                        nodeId: filter.id,
-                        type: AttributeTypes.Value,
-                        key: '1',
-                      });
-                    }
+                        ? null
+                        : textValue;
+
+                    viewSearch.updateFilter(filter.id, {
+                      ...filter,
+                      operator: operator.value,
+                      value: value,
+                    });
                   }}
                 >
                   {operator.label}
@@ -107,23 +101,19 @@ export const ViewNumberFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              deleteFilter(filter.id);
+              viewSearch.removeFilter(filter.id);
             }}
           >
             <Icon name="delete-bin-line" className="h-4 w-4" />
           </Button>
         </div>
         {!hideInput && (
-          <SmartNumberInput
-            value={numberValue ?? null}
+          <SmartTextInput
+            value={textValue}
             onChange={(value) => {
-              upsertAttribute({
-                nodeId: filter.id,
-                type: AttributeTypes.Value,
-                key: '1',
-                textValue: null,
-                numberValue: value,
-                foreignNodeId: null,
+              viewSearch.updateFilter(filter.id, {
+                ...filter,
+                value: value,
               });
             }}
           />

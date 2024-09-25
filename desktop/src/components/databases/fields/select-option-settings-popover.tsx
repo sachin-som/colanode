@@ -11,9 +11,8 @@ import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
 import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { AttributeTypes } from '@/lib/constants';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOptionNode;
@@ -22,7 +21,7 @@ interface SelectOptionSettingsPopoverProps {
 export const SelectOptionSettingsPopover = ({
   option,
 }: SelectOptionSettingsPopoverProps) => {
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
 
   const [openSetttingsPopover, setOpenSetttingsPopover] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
@@ -47,11 +46,8 @@ export const SelectOptionSettingsPopover = ({
 
                 mutate({
                   nodeId: option.id,
-                  type: AttributeTypes.Name,
-                  key: '1',
-                  textValue: newName,
-                  numberValue: null,
-                  foreignNodeId: null,
+                  key: 'name',
+                  value: newName,
                 });
               }}
             />
@@ -67,11 +63,8 @@ export const SelectOptionSettingsPopover = ({
                   if (isPending) return;
                   mutate({
                     nodeId: option.id,
-                    type: AttributeTypes.Color,
-                    key: '1',
-                    textValue: color.value,
-                    numberValue: null,
-                    foreignNodeId: null,
+                    key: 'color',
+                    value: color.value,
                   });
                 }}
               >

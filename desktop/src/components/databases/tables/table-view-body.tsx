@@ -4,14 +4,14 @@ import { TableViewRow } from '@/components/databases/tables/table-view-row';
 import { TableViewEmptyPlaceholder } from '@/components/databases/tables/table-view-empty-placeholder';
 import { TableViewLoadMoreRow } from './table-view-load-more-row';
 import { useRecordsQuery } from '@/queries/use-records-query';
-import { useTableView } from '@/contexts/table-view';
+import { useViewSearch } from '@/contexts/view-search';
 
 export const TableViewBody = () => {
   const database = useDatabase();
-  const tableView = useTableView();
+  const viewSearch = useViewSearch();
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useRecordsQuery(database.id, tableView.filters, tableView.sorts);
+    useRecordsQuery(database.id, viewSearch.filters, viewSearch.sorts);
 
   const records = data ?? [];
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWorkspace } from '@/contexts/workspace';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import {
   RecordNode,
   SelectFieldNode,
@@ -20,7 +20,7 @@ interface DragResult {
 
 export const BoardViewCard = ({ record }: BoardViewCardProps) => {
   const workspace = useWorkspace();
-  const { mutate, isPending } = useNodeAttributeUpsertMutation();
+  const { mutate, isPending } = useNodeAttributeSetMutation();
 
   const [, drag] = useDrag({
     type: 'board-record',
@@ -32,9 +32,9 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
         const optionId = dropResult.option.id;
         const fieldId = dropResult.field.id;
 
-        const currentOptionId = record.attributes?.find(
-          (v) => v.type === fieldId && v.foreignNodeId === optionId,
-        )?.foreignNodeId;
+        const currentOptionId = record.attributes[fieldId] as
+          | string
+          | undefined;
 
         if (currentOptionId === optionId) {
           return;
@@ -42,11 +42,8 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
 
         mutate({
           nodeId: record.id,
-          type: fieldId,
-          key: '1',
-          foreignNodeId: optionId,
-          textValue: null,
-          numberValue: null,
+          key: fieldId,
+          value: optionId,
         });
       }
     },

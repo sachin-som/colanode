@@ -10,12 +10,12 @@ import { ViewTabs } from '@/components/databases/view-tabs';
 import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
-import { AttributeTypes } from '@/lib/constants';
-import { ViewSortsAndFilters } from '@/components/databases/view-sorts-and-filters';
-import { ViewFilterButton } from '@/components/databases/filters/view-filter.button';
-import { ViewSortButton } from '@/components/databases/sorts/view-sort-button';
+import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
+import { ViewFilterButton } from '@/components/databases/search/view-filter-button';
+import { ViewSortButton } from '@/components/databases/search/view-sort-button';
+import { ViewSearchProvider } from '@/components/databases/search/view-search-provider';
 
 interface TableViewProps {
   node: TableViewNode;
@@ -24,8 +24,8 @@ interface TableViewProps {
 export const TableView = ({ node }: TableViewProps) => {
   const database = useDatabase();
 
-  const { mutate: upsertAttribute } = useNodeAttributeUpsertMutation();
-  const { mutate: deleteAttribute } = useNodeAttributeDeleteMutation();
+  const { mutate: setNodeAttribute } = useNodeAttributeSetMutation();
+  const { mutate: deleteNodeAttribute } = useNodeAttributeDeleteMutation();
 
   const [hiddenFields, setHiddenFields] = React.useState<string[]>(
     node.hiddenFields ?? [],
@@ -39,8 +39,6 @@ export const TableView = ({ node }: TableViewProps) => {
   const [nameWidth, setNameWidth] = React.useState<number>(
     node.nameWidth ?? getDefaultNameWidth(),
   );
-
-  const [openSortsAndFilters, setOpenSortsAndFilters] = React.useState(false);
 
   React.useEffect(() => {
     setHiddenFields(node.hiddenFields ?? []);
@@ -66,21 +64,17 @@ export const TableView = ({ node }: TableViewProps) => {
         id: node.id,
         name: node.name,
         fields,
-        filters: node.filters,
-        sorts: node.sorts,
         hideField: (id: string) => {
           if (hiddenFields.includes(id)) {
             return;
           }
 
-          setHiddenFields([...hiddenFields, id]);
-          upsertAttribute({
+          const newHiddenFields = [...hiddenFields, id];
+          setHiddenFields(newHiddenFields);
+          setNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.HiddenField,
-            key: id,
-            textValue: id,
-            numberValue: null,
-            foreignNodeId: id,
+            key: 'hiddenFields',
+            value: newHiddenFields,
           });
         },
         showField: (id: string) => {
@@ -88,24 +82,21 @@ export const TableView = ({ node }: TableViewProps) => {
             return;
           }
 
-          setHiddenFields((prev) => prev.filter((f) => f !== id));
-          deleteAttribute({
+          const newHiddenFields = hiddenFields.filter((f) => f !== id);
+          setHiddenFields(newHiddenFields);
+          deleteNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.HiddenField,
-            key: id,
+            key: 'hiddenFields',
           });
         },
         isHiddenField: (id: string) => hiddenFields.includes(id),
         getNameWidth: () => nameWidth,
         resizeName: (width: number) => {
           setNameWidth(width);
-          upsertAttribute({
+          setNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.NameWidth,
-            key: '1',
-            numberValue: width,
-            foreignNodeId: null,
-            textValue: null,
+            key: 'nameWidth',
+            value: width,
           });
         },
         getFieldWidth: (id: string, type: FieldDataType) => {
@@ -113,13 +104,10 @@ export const TableView = ({ node }: TableViewProps) => {
         },
         resizeField: (id, width) => {
           setFieldWidths({ ...fieldWidths, [id]: width });
-          upsertAttribute({
+          setNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.FieldWidth,
-            key: id,
-            numberValue: width,
-            foreignNodeId: id,
-            textValue: null,
+            key: 'fieldWidths',
+            value: { ...fieldWidths, [id]: width },
           });
         },
         moveField: (id, after) => {
@@ -190,47 +178,34 @@ export const TableView = ({ node }: TableViewProps) => {
             ...fieldIndexes,
             [id]: newIndex,
           });
-          upsertAttribute({
+          setNodeAttribute({
             nodeId: node.id,
-            type: AttributeTypes.FieldIndex,
-            key: id,
-            textValue: newIndex,
-            foreignNodeId: id,
-            numberValue: null,
+            key: 'fieldIndexes',
+            value: { ...fieldIndexes, [id]: newIndex },
           });
         },
       }}
     >
-      <div className="mt-2 flex flex-row justify-between border-b">
-        <ViewTabs />
-        <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
-          <TableViewSettingsPopover />
-          <ViewSortButton
-            viewId={node.id}
-            sorts={node.sorts}
-            open={openSortsAndFilters}
-            setOpen={setOpenSortsAndFilters}
-          />
-          <ViewFilterButton
-            viewId={node.id}
-            filters={node.filters}
-            open={openSortsAndFilters}
-            setOpen={setOpenSortsAndFilters}
-          />
+      <ViewSearchProvider
+        id={node.id}
+        filters={node.filters}
+        sorts={node.sorts}
+      >
+        <div className="mt-2 flex flex-row justify-between border-b">
+          <ViewTabs />
+          <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
+            <TableViewSettingsPopover />
+            <ViewSortButton />
+            <ViewFilterButton />
+          </div>
         </div>
-      </div>
-      {openSortsAndFilters && (
-        <ViewSortsAndFilters
-          viewId={node.id}
-          filters={node.filters}
-          sorts={node.sorts}
-        />
-      )}
-      <div className="mt-2 w-full min-w-full max-w-full overflow-auto pr-5">
-        <TableViewHeader />
-        <TableViewBody />
-        <TableViewRecordCreateRow />
-      </div>
+        <ViewSearchBar />
+        <div className="mt-2 w-full min-w-full max-w-full overflow-auto pr-5">
+          <TableViewHeader />
+          <TableViewBody />
+          <TableViewRecordCreateRow />
+        </div>
+      </ViewSearchProvider>
     </TableViewContext.Provider>
   );
 };

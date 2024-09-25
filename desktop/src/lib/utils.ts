@@ -187,3 +187,23 @@ export const toUTCDate = (dateParam: Date | string): Date => {
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   );
 };
+
+export const isStringArray = (
+  value: unknown | null | undefined,
+): value is string[] => {
+  if (value == null) {
+    return false;
+  }
+
+  if (value === undefined) {
+    return false;
+  }
+
+  if (value === null) {
+    return false;
+  }
+
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+};

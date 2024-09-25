@@ -1,17 +1,9 @@
 import React from 'react';
 import { RecordNode } from '@/types/databases';
 import { NumberFieldNode } from '@/types/databases';
-import { useNodeAttributeUpsertMutation } from '@/mutations/use-node-attribute-upsert-mutation';
+import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { SmartNumberInput } from '@/components/ui/smart-number-input';
-
-const getNumberValue = (
-  record: RecordNode,
-  field: NumberFieldNode,
-): number | null => {
-  const attribute = record.attributes.find((attr) => attr.type === field.id);
-  return attribute?.numberValue ?? null;
-};
 
 interface RecordNumberValueProps {
   record: RecordNode;
@@ -22,40 +14,36 @@ export const RecordNumberValue = ({
   record,
   field,
 }: RecordNumberValueProps) => {
-  const { mutate: upsertNodeAttribute, isPending: isUpsertingNodeAttribute } =
-    useNodeAttributeUpsertMutation();
+  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
+    useNodeAttributeSetMutation();
   const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
     useNodeAttributeDeleteMutation();
 
   const canEdit = true;
-  const isPending = isUpsertingNodeAttribute || isDeletingNodeAttribute;
+  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   return (
     <SmartNumberInput
-      value={getNumberValue(record, field)}
+      value={record.attributes[field.id]}
       readOnly={!canEdit || isPending}
       onChange={(newValue) => {
         if (isPending) return;
         if (!canEdit) return;
 
-        if (newValue === getNumberValue(record, field)) {
+        if (newValue === record.attributes[field.id]) {
           return;
         }
 
         if (newValue === null) {
           deleteNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
+            key: field.id,
           });
         } else {
-          upsertNodeAttribute({
+          setNodeAttribute({
             nodeId: record.id,
-            type: field.id,
-            key: '1',
-            numberValue: newValue,
-            textValue: null,
-            foreignNodeId: null,
+            key: field.id,
+            value: newValue,
           });
         }
       }}

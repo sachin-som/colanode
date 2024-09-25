@@ -49,13 +49,13 @@ import {
 } from '@/editor/extensions';
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
-import { LocalNode, LocalNodeWithAttributes } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { useWorkspace } from '@/contexts/workspace';
 import { EditorObserver } from '@/editor/observer';
 
 interface DocumentEditorProps {
   node: LocalNode;
-  nodes: Map<string, LocalNodeWithAttributes>;
+  nodes: Map<string, LocalNode>;
 }
 
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {

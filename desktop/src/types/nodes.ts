@@ -3,7 +3,8 @@ export type LocalNode = {
   parentId: string | null;
   type: string;
   index: string | null;
-  content: NodeBlock[] | null;
+  attributes: LocalNodeAttributes;
+  state: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;
@@ -14,25 +15,12 @@ export type LocalNode = {
   serverVersionId: string | null;
 };
 
-export type LocalNodeAttribute = {
-  nodeId: string;
+export type LocalNodeAttributes = {
   type: string;
-  key: string;
-  textValue: string | null;
-  numberValue: number | null;
-  foreignNodeId: string | null;
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string | null;
-  updatedBy: string | null;
-  versionId: string;
-  serverCreatedAt: string | null;
-  serverUpdatedAt: string | null;
-  serverVersionId: string | null;
-};
-
-export type LocalNodeWithAttributes = LocalNode & {
-  attributes: LocalNodeAttribute[];
+  parentId?: string | null;
+  index?: string | null;
+  content?: NodeBlock[] | null;
+  [key: string]: any;
 };
 
 export type NodeBlock = {
@@ -50,16 +38,13 @@ export type LocalNodeWithChildren = LocalNode & {
   children: LocalNodeWithChildren[];
 };
 
-export type LocalNodeWithAttributesAndChildren = LocalNodeWithAttributes & {
-  children: LocalNodeWithAttributesAndChildren[];
-};
-
 export type ServerNode = {
   id: string;
   parentId: string | null;
   type: string;
   index: string | null;
-  content: NodeBlock[] | null;
+  attributes: ServerNodeAttributes;
+  state: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;
@@ -69,19 +54,15 @@ export type ServerNode = {
   serverUpdatedAt: string | null;
 };
 
-export type ServerNodeAttribute = {
-  id: string;
-  nodeId: string;
+export type ServerNodeAttributes = {
   type: string;
-  key: string;
-  textValue: string | null;
-  numberValue: number | null;
-  foreignNodeId: string | null;
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string | null;
-  updatedBy: string | null;
-  versionId: string;
-  serverCreatedAt: string | null;
-  serverUpdatedAt: string | null;
+  parentId?: string | null;
+  index?: string | null;
+  content?: NodeBlock[] | null;
+  [key: string]: any;
+};
+
+export type NodeInsertInput = {
+  id: string;
+  attributes: LocalNodeAttributes;
 };

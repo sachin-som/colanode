@@ -5,6 +5,7 @@ import {
   BoardViewNode,
   SelectFieldNode,
   SelectOptionNode,
+  ViewFilter,
 } from '@/types/databases';
 import { BoardViewCard } from '@/components/databases/boards/board-view-card';
 
@@ -21,19 +22,14 @@ export const BoardViewColumnRecords = ({
 }: BoardViewColumnRecordsProps) => {
   const database = useDatabase();
 
-  const filters = [
+  const filters: ViewFilter[] = [
     ...view.filters,
     {
       id: '1',
+      type: 'field',
       fieldId: field.id,
       operator: 'is_in',
-      values: [
-        {
-          textValue: null,
-          numberValue: null,
-          foreignNodeId: option.id,
-        },
-      ],
+      value: [option.id],
     },
   ];
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =

@@ -4,16 +4,17 @@ import { useMutation } from '@tanstack/react-query';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import * as Y from 'yjs';
 
-interface NodeAttributeDeleteInput {
+interface NodeAttributeSetInput {
   nodeId: string;
   key: string;
+  value: any;
 }
 
-export const useNodeAttributeDeleteMutation = () => {
+export const useNodeAttributeSetMutation = () => {
   const workspace = useWorkspace();
 
   return useMutation({
-    mutationFn: async (input: NodeAttributeDeleteInput) => {
+    mutationFn: async (input: NodeAttributeSetInput) => {
       const selectQuery = workspace.schema
         .selectFrom('nodes')
         .where('id', '=', input.nodeId)
@@ -33,7 +34,7 @@ export const useNodeAttributeDeleteMutation = () => {
       Y.applyUpdate(doc, toUint8Array(node.state));
 
       const attributesMap = doc.getMap('attributes');
-      attributesMap.delete(input.key);
+      attributesMap.set(input.key, input.value);
 
       const attributes = JSON.stringify(attributesMap.toJSON());
       const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));

@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { LocalNodeWithAttributesAndChildren } from '@/types/nodes';
+import { LocalNodeWithChildren } from '@/types/nodes';
 import { NodeBlockRenderer } from '@/editor/renderers/node-block';
 import { NodeRenderer } from '@/editor/renderers/node';
 
 interface NodeChildrenRendererProps {
-  node: LocalNodeWithAttributesAndChildren;
+  node: LocalNodeWithChildren;
   keyPrefix: string | null;
 }
 
@@ -25,7 +25,7 @@ export const NodeChildrenRenderer = ({
 
   return (
     <React.Fragment>
-      {node.content.map((nodeBlock, index) => (
+      {node.attributes.content?.map((nodeBlock, index) => (
         <NodeBlockRenderer node={nodeBlock} keyPrefix={keyPrefix} key={index} />
       ))}
     </React.Fragment>

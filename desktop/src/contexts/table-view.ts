@@ -1,17 +1,10 @@
-import {
-  FieldNode,
-  FieldDataType,
-  ViewFilterNode,
-  ViewSortNode,
-} from '@/types/databases';
+import { FieldNode, FieldDataType } from '@/types/databases';
 import { createContext, useContext } from 'react';
 
 interface TableViewContext {
   id: string;
   name: string;
   fields: FieldNode[];
-  filters: ViewFilterNode[];
-  sorts: ViewSortNode[];
   hideField: (id: string) => void;
   showField: (id: string) => void;
   isHiddenField: (id: string) => boolean;

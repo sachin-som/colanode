@@ -1,7 +1,7 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
+import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
-import { generateNodeIndex } from '@/lib/nodes';
+import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
 
@@ -36,50 +36,24 @@ export const useCalendarViewCreateMutation = () => {
             ].index
           : null;
 
-      const calendarViewId = NeuronId.generate(NeuronId.Type.CalendarView);
-      const insertCalendarViewQuery = workspace.schema
-        .insertInto('nodes')
-        .values({
-          id: calendarViewId,
-          type: NodeTypes.CalendarView,
-          parent_id: input.databaseId,
-          index: generateNodeIndex(maxIndex, null),
-          content: null,
-          created_at: new Date().toISOString(),
-          created_by: workspace.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
-        })
-        .compile();
-
-      const insertCalendarViewAttributesQuery = workspace.schema
-        .insertInto('node_attributes')
-        .values([
-          {
-            node_id: calendarViewId,
-            type: AttributeTypes.Name,
-            key: '1',
-            text_value: input.name,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+      const id = NeuronId.generate(NeuronId.Type.CalendarView);
+      const query = buildNodeInsertMutation(
+        workspace.schema,
+        workspace.userId,
+        {
+          id: id,
+          attributes: {
+            type: NodeTypes.CalendarView,
+            parentId: input.databaseId,
+            index: generateNodeIndex(maxIndex, null),
+            name: input.name,
+            groupBy: input.groupBy,
           },
-          {
-            node_id: calendarViewId,
-            type: AttributeTypes.GroupBy,
-            key: '1',
-            foreign_node_id: input.groupBy,
-            created_at: new Date().toISOString(),
-            created_by: workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
-          },
-        ])
-        .compile();
+        },
+      );
 
-      await workspace.mutate([
-        insertCalendarViewQuery,
-        insertCalendarViewAttributesQuery,
-      ]);
-      return calendarViewId;
+      await workspace.mutate(query);
+      return id;
     },
   });
 };

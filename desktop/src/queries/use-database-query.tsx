@@ -1,28 +1,28 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNodeWithAttributes } from '@/data/schemas/workspace';
-import { AttributeTypes, NodeTypes, ViewNodeTypes } from '@/lib/constants';
-import { mapNodeWithAttributes } from '@/lib/nodes';
+import { SelectNode } from '@/data/schemas/workspace';
+import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
+import { mapNode } from '@/lib/nodes';
 import {
   DatabaseNode,
   FieldDataType,
   FieldNode,
   SelectOptionNode,
 } from '@/types/databases';
-import { LocalNodeWithAttributes } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { useQuery } from '@tanstack/react-query';
 import { QueryResult, sql } from 'kysely';
 
 export const useDatabaseQuery = (databaseId: string) => {
   const workspace = useWorkspace();
   return useQuery<
-    QueryResult<SelectNodeWithAttributes>,
+    QueryResult<SelectNode>,
     Error,
     DatabaseNode | null,
     string[]
   >({
     queryKey: ['database', databaseId],
     queryFn: async ({ queryKey }) => {
-      const query = sql<SelectNodeWithAttributes>`
+      const query = sql<SelectNode>`
           WITH database_node AS (
             SELECT *
             FROM nodes
@@ -42,40 +42,12 @@ export const useDatabaseQuery = (databaseId: string) => {
                 FROM field_nodes
               )
             AND type = ${NodeTypes.SelectOption}
-          ),
-          all_nodes AS (
-            SELECT * FROM database_node
-            UNION ALL
-            SELECT * FROM field_nodes
-            UNION ALL
-            SELECT * FROM select_option_nodes
           )
-          SELECT 
-            n.*,
-            CASE 
-              WHEN COUNT(na.node_id) = 0 THEN json('[]')
-              ELSE json_group_array(
-                json_object(
-                  'node_id', na.'node_id',
-                  'type', na.'type',
-                  'key', na.'key',
-                  'text_value', na.'text_value',
-                  'number_value', na.'number_value',
-                  'foreign_node_id', na.'foreign_node_id',
-                  'created_at', na.'created_at',
-                  'updated_at', na.'updated_at',
-                  'created_by', na.'created_by',
-                  'updated_by', na.'updated_by',
-                  'version_id', na.'version_id',
-                  'server_created_at', na.'server_created_at',
-                  'server_updated_at', na.'server_updated_at',
-                  'server_version_id', na.'server_version_id'
-                )
-              )
-            END as attributes
-          FROM all_nodes n
-          LEFT JOIN node_attributes na ON n.id = na.node_id
-          GROUP BY n.id;
+          SELECT * FROM database_node
+          UNION ALL
+          SELECT * FROM field_nodes
+          UNION ALL
+          SELECT * FROM select_option_nodes
       `.compile(workspace.schema);
 
       return await workspace.queryAndSubscribe({
@@ -83,19 +55,15 @@ export const useDatabaseQuery = (databaseId: string) => {
         query,
       });
     },
-    select: (
-      data: QueryResult<SelectNodeWithAttributes>,
-    ): DatabaseNode | null => {
+    select: (data: QueryResult<SelectNode>): DatabaseNode | null => {
       const rows = data?.rows ?? [];
       return buildDatabaseNode(rows);
     },
   });
 };
 
-const buildDatabaseNode = (
-  rows: SelectNodeWithAttributes[],
-): DatabaseNode | null => {
-  const nodes = rows.map((row) => mapNodeWithAttributes(row));
+const buildDatabaseNode = (rows: SelectNode[]): DatabaseNode | null => {
+  const nodes = rows.map((row) => mapNode(row));
 
   const databaseLocalNode = nodes.find(
     (node) => node.type === NodeTypes.Database,
@@ -104,10 +72,7 @@ const buildDatabaseNode = (
     return null;
   }
 
-  const name = databaseLocalNode.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
+  const name = databaseLocalNode.attributes.name;
   const fieldsNodes = nodes.filter((node) => node.type === NodeTypes.Field);
   const groupedSelectOptions = nodes
     .filter((node) => node.type === NodeTypes.SelectOption)
@@ -119,7 +84,7 @@ const buildDatabaseNode = (
         acc[node.parentId].push(node);
         return acc;
       },
-      {} as Record<string, LocalNodeWithAttributes[]>,
+      {} as Record<string, LocalNode[]>,
     );
 
   const fields: FieldNode[] = [];
@@ -139,16 +104,11 @@ const buildDatabaseNode = (
 };
 
 const buildFieldNode = (
-  node: LocalNodeWithAttributes,
-  selectOptions: LocalNodeWithAttributes[],
+  node: LocalNode,
+  selectOptions: LocalNode[],
 ): FieldNode | null => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const dataType = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.DataType,
-  )?.textValue as FieldDataType;
+  const name = node.attributes.name;
+  const dataType = node.attributes.dataType as FieldDataType;
 
   if (!dataType) {
     return null;
@@ -253,14 +213,9 @@ const buildFieldNode = (
   }
 };
 
-const buildSelectOption = (node: LocalNodeWithAttributes): SelectOptionNode => {
-  const name = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Name,
-  )?.textValue;
-
-  const color = node.attributes.find(
-    (attribute) => attribute.type === AttributeTypes.Color,
-  )?.textValue;
+const buildSelectOption = (node: LocalNode): SelectOptionNode => {
+  const name = node.attributes.name;
+  const color = node.attributes.color;
 
   return {
     id: node.id,

@@ -16,6 +16,7 @@ import {
 } from 'kysely';
 import { AppDatabaseSchema } from '@/electron/schemas/app';
 import { useQuery } from '@tanstack/react-query';
+import { DelayedComponent } from '@/components/ui/delayed-component';
 
 const SERVER_URL = 'http://localhost:3000';
 
@@ -70,7 +71,11 @@ export const App = () => {
 
   const isLoading = accountsQuery.isPending || workspacesQuery.isPending;
   if (isLoading) {
-    return <AppLoading />;
+    return (
+      <DelayedComponent>
+        <AppLoading />
+      </DelayedComponent>
+    );
   }
 
   if (accountsQuery.data.rows.length == 0) {

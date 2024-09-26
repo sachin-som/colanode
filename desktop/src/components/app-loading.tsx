@@ -1,5 +1,5 @@
-import React from "react";
-import {Spinner} from "@/components/ui/spinner";
+import React from 'react';
+import { Spinner } from '@/components/ui/spinner';
 
 export const AppLoading = () => {
   return (
@@ -14,4 +14,4 @@ export const AppLoading = () => {
       </div>
     </div>
   );
-}
+};

@@ -4,6 +4,7 @@ import {
   ExecuteLocalMutationsInput,
   LocalMutation,
   LocalNodeMutationData,
+  LocalNodePermissionMutationData,
   LocalNodeReactionMutationData,
 } from '@/types/mutations';
 import { database } from '@/data/database';
@@ -30,6 +31,32 @@ mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
             }
             case 'delete': {
               await handleDeleteNodeMutation(input.workspaceId, mutation);
+              break;
+            }
+          }
+          break;
+        }
+        case 'node_permissions': {
+          switch (mutation.action) {
+            case 'insert': {
+              await handleCreateNodePermissionMutation(
+                input.workspaceId,
+                mutation,
+              );
+              break;
+            }
+            case 'update': {
+              await handleUpdateNodePermissionMutation(
+                input.workspaceId,
+                mutation,
+              );
+              break;
+            }
+            case 'delete': {
+              await handleDeleteNodePermissionMutation(
+                input.workspaceId,
+                mutation,
+              );
               break;
             }
           }
@@ -166,7 +193,7 @@ const handleDeleteNodeMutation = async (
   await database.deleteFrom('nodes').where('id', '=', nodeData.id).execute();
 };
 
-const handleCreateNodeReactionMutation = async (
+const handleCreateNodePermissionMutation = async (
   workspaceId: string,
   mutation: LocalMutation,
 ): Promise<void> => {
@@ -186,6 +213,137 @@ const handleCreateNodeReactionMutation = async (
       created_at: new Date(nodeReactionData.created_at),
       workspace_id: workspaceId,
       server_created_at: new Date(),
+    })
+    .onConflict((ob) => ob.doNothing())
+    .execute();
+};
+
+const handleUpdateNodePermissionMutation = async (
+  workspaceId: string,
+  mutation: LocalMutation,
+): Promise<void> => {
+  if (!mutation.after) {
+    return;
+  }
+
+  const nodePermissionData = JSON.parse(
+    mutation.after,
+  ) as LocalNodePermissionMutationData;
+
+  const existingNodePermissions = await database
+    .selectFrom('node_permissions')
+    .selectAll()
+    .where((eb) =>
+      eb.and([
+        eb('node_id', '=', nodePermissionData.node_id),
+        eb('collaborator_id', '=', nodePermissionData.collaborator_id),
+      ]),
+    )
+    .executeTakeFirst();
+
+  if (
+    !existingNodePermissions ||
+    existingNodePermissions.workspace_id != workspaceId ||
+    existingNodePermissions.updated_at === null ||
+    existingNodePermissions.updated_by === null
+  ) {
+    return;
+  }
+
+  if (existingNodePermissions.permission === nodePermissionData.permission) {
+    return;
+  }
+
+  const updatedAt = new Date(existingNodePermissions.updated_at);
+  if (existingNodePermissions.server_updated_at !== null) {
+    const serverUpdatedAt = new Date(existingNodePermissions.server_updated_at);
+    if (serverUpdatedAt > updatedAt) {
+      return;
+    }
+  }
+
+  await database
+    .updateTable('node_permissions')
+    .set({
+      permission: nodePermissionData.permission,
+      updated_at: updatedAt,
+      updated_by:
+        nodePermissionData.updated_by ?? existingNodePermissions.created_by,
+      version_id: nodePermissionData.version_id,
+      server_updated_at: new Date(),
+    })
+    .where((eb) =>
+      eb.and([
+        eb('node_id', '=', nodePermissionData.node_id),
+        eb('collaborator_id', '=', nodePermissionData.collaborator_id),
+      ]),
+    )
+    .execute();
+};
+
+const handleDeleteNodePermissionMutation = async (
+  workspaceId: string,
+  mutation: LocalMutation,
+): Promise<void> => {
+  if (!mutation.before) {
+    return;
+  }
+
+  const nodePermissionData = JSON.parse(
+    mutation.before,
+  ) as LocalNodePermissionMutationData;
+
+  const existingNodePermissions = await database
+    .selectFrom('node_permissions')
+    .selectAll()
+    .where((eb) =>
+      eb.and([
+        eb('node_id', '=', nodePermissionData.node_id),
+        eb('collaborator_id', '=', nodePermissionData.collaborator_id),
+      ]),
+    )
+    .executeTakeFirst();
+
+  if (
+    !existingNodePermissions ||
+    existingNodePermissions.workspace_id != workspaceId
+  ) {
+    return;
+  }
+
+  await database
+    .deleteFrom('node_permissions')
+    .where((eb) =>
+      eb.and([
+        eb('node_id', '=', nodePermissionData.node_id),
+        eb('collaborator_id', '=', nodePermissionData.collaborator_id),
+      ]),
+    )
+    .execute();
+};
+
+const handleCreateNodeReactionMutation = async (
+  workspaceId: string,
+  mutation: LocalMutation,
+): Promise<void> => {
+  if (!mutation.after) {
+    return;
+  }
+
+  const nodePermissionData = JSON.parse(
+    mutation.after,
+  ) as LocalNodePermissionMutationData;
+  await database
+    .insertInto('node_permissions')
+    .values({
+      node_id: nodePermissionData.node_id,
+      collaborator_id: nodePermissionData.collaborator_id,
+      permission: nodePermissionData.permission,
+      workspace_id: workspaceId,
+      created_at: new Date(nodePermissionData.created_at),
+      created_by: nodePermissionData.created_by,
+      server_created_at: new Date(),
+      version_id: nodePermissionData.version_id,
     })
     .onConflict((ob) => ob.doNothing())
     .execute();

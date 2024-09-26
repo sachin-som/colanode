@@ -23,6 +23,20 @@ export type ServerNodeAttributes = {
   [key: string]: any;
 };
 
+export type ServerNodePermission = {
+  nodeId: string;
+  collaboratorId: string;
+  permission: string;
+  workspaceId: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  versionId: string;
+  serverCreatedAt: string;
+  serverUpdatedAt?: string | null;
+};
+
 export type ServerNodeReaction = {
   nodeId: string;
   reactorId: string;

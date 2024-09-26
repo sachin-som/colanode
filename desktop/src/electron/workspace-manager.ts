@@ -8,7 +8,10 @@ import {
   SqliteDialect,
 } from 'kysely';
 import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
-import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
+import {
+  SelectNodePermission,
+  WorkspaceDatabaseSchema,
+} from '@/electron/schemas/workspace';
 import { workspaceDatabaseMigrations } from '@/electron/migrations/workspace';
 import {
   buildSqlite,
@@ -23,7 +26,11 @@ import {
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
-import { ServerNode, ServerNodeReaction } from '@/types/nodes';
+import {
+  ServerNode,
+  ServerNodePermission,
+  ServerNodeReaction,
+} from '@/types/nodes';
 import { SelectNode } from '@/electron/schemas/workspace';
 
 export class WorkspaceManager {
@@ -229,6 +236,8 @@ export class WorkspaceManager {
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
       await this.executeNodeServerMutation(mutation);
+    } else if (mutation.table === 'node_permissions') {
+      await this.executeNodePermissionServerMutation(mutation);
     } else if (mutation.table === 'node_reactions') {
       await this.executeNodeReactionServerMutation(mutation);
     }
@@ -250,6 +259,28 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
+    }
+  }
+
+  private async executeNodePermissionServerMutation(
+    mutation: ServerMutation,
+  ): Promise<void> {
+    if (mutation.action === 'insert' && mutation.after) {
+      await this.syncNodePermissionFromServer(mutation.after);
+    } else if (mutation.action === 'update' && mutation.after) {
+      await this.syncNodePermissionFromServer(mutation.after);
+    } else if (mutation.action === 'delete' && mutation.before) {
+      await this.database
+        .deleteFrom('node_permissions')
+        .where((eb) =>
+          eb.and([
+            eb('node_id', '=', mutation.before.node_id),
+            eb('collaborator_id', '=', mutation.before.collaborator_id),
+          ]),
+        )
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['node_permissions']);
     }
   }
 
@@ -395,6 +426,71 @@ export class WorkspaceManager {
     }
   }
 
+  public async syncNodePermissionFromServer(
+    nodePermission: ServerNodePermission,
+  ): Promise<void> {
+    const existingNodePermission = await this.database
+      .selectFrom('node_permissions')
+      .selectAll()
+      .where((eb) =>
+        eb.and([
+          eb('node_id', '=', nodePermission.nodeId),
+          eb('collaborator_id', '=', nodePermission.collaboratorId),
+        ]),
+      )
+      .executeTakeFirst();
+
+    if (!existingNodePermission) {
+      await this.database
+        .insertInto('node_permissions')
+        .values({
+          node_id: nodePermission.nodeId,
+          collaborator_id: nodePermission.collaboratorId,
+          permission: nodePermission.permission,
+          created_at: nodePermission.createdAt,
+          created_by: nodePermission.createdBy,
+          updated_by: nodePermission.updatedBy,
+          updated_at: nodePermission.updatedAt,
+          version_id: nodePermission.versionId,
+          server_created_at: nodePermission.serverCreatedAt,
+          server_updated_at: nodePermission.serverUpdatedAt,
+          server_version_id: nodePermission.versionId,
+        })
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['node_permissions']);
+      return;
+    }
+
+    if (
+      this.shouldUpdateNodePermissionFromServer(
+        existingNodePermission,
+        nodePermission,
+      )
+    ) {
+      await this.database
+        .updateTable('node_permissions')
+        .set({
+          permission: nodePermission.permission,
+          updated_at: nodePermission.updatedAt,
+          updated_by: nodePermission.updatedBy,
+          version_id: nodePermission.versionId,
+          server_created_at: nodePermission.serverCreatedAt,
+          server_updated_at: nodePermission.serverUpdatedAt,
+          server_version_id: nodePermission.versionId,
+        })
+        .where((eb) =>
+          eb.and([
+            eb('node_id', '=', nodePermission.nodeId),
+            eb('collaborator_id', '=', nodePermission.collaboratorId),
+          ]),
+        )
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['nodes']);
+    }
+  }
+
   private async syncNodeReactionFromServer(
     nodeReaction: ServerNodeReaction,
   ): Promise<void> {
@@ -423,6 +519,30 @@ export class WorkspaceManager {
   ): boolean {
     if (localNode.server_version_id === serverNode.versionId) {
       return false;
+    }
+
+    return true;
+  }
+
+  public shouldUpdateNodePermissionFromServer(
+    localNodePermission: SelectNodePermission,
+    serverNodePermission: ServerNodePermission,
+  ): boolean {
+    if (
+      localNodePermission.server_version_id === serverNodePermission.versionId
+    ) {
+      return false;
+    }
+
+    if (localNodePermission.updated_at) {
+      if (!serverNodePermission.updatedAt) {
+        return false;
+      }
+      const localUpdatedAt = new Date(localNodePermission.updated_at);
+      const serverUpdatedAt = new Date(serverNodePermission.updatedAt);
+      if (localUpdatedAt > serverUpdatedAt) {
+        return false;
+      }
     }
 
     return true;

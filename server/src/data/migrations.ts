@@ -80,6 +80,7 @@ const createNodesTable: Migration = {
       .addColumn('parent_id', 'varchar(30)', (col) =>
         col
           .generatedAlwaysAs(sql`(attributes->>'parentId')::VARCHAR(30)`)
+          .stored()
           .references('nodes.id')
           .onDelete('cascade'),
       )
@@ -101,6 +102,36 @@ const createNodesTable: Migration = {
   },
   down: async (db) => {
     await db.schema.dropTable('nodes').execute();
+  },
+};
+
+const createNodePermissionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('node_permissions')
+      .addColumn('node_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('collaborator_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('permission', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('updated_at', 'timestamptz')
+      .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('updated_by', 'varchar(30)')
+      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('server_created_at', 'timestamptz')
+      .addColumn('server_updated_at', 'timestamptz')
+      .addPrimaryKeyConstraint('node_permissions_pkey', [
+        'node_id',
+        'collaborator_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('node_permissions').execute();
   },
 };
 
@@ -175,7 +206,8 @@ export const databaseMigrations: Record<string, Migration> = {
   '00002_create_workspaces_table': createWorkspacesTable,
   '00003_create_workspace_accounts_table': createWorkspaceAccountsTable,
   '00004_create_nodes_table': createNodesTable,
-  '00005_create_account_devices_table': createAccountDevicesTable,
-  '00006_create_mutations_table': createMutationsTable,
-  '00007_create_node_reactions_table': createNodeReactionsTable,
+  '00005_create_node_permissions_table': createNodePermissionsTable,
+  '00006_create_node_reactions_table': createNodeReactionsTable,
+  '00007_create_account_devices_table': createAccountDevicesTable,
+  '00008_create_mutations_table': createMutationsTable,
 };

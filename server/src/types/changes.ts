@@ -53,6 +53,20 @@ export type NodeChangeData = {
   server_updated_at: string | null;
 };
 
+export type NodePermissionChangeData = {
+  node_id: string;
+  collaborator_id: string;
+  permission: string;
+  workspace_id: string;
+  created_at: string;
+  created_by: string;
+  updated_at: string | null;
+  updated_by: string | null;
+  version_id: string;
+  server_created_at: string;
+  server_updated_at: string | null;
+};
+
 export type NodeReactionChangeData = {
   node_id: string;
   reactor_id: string;

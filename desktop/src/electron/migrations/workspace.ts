@@ -51,6 +51,49 @@ const createNodesParentIdAndTypeIndex: Migration = {
   },
 };
 
+const createNodeNamesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TABLE node_names;
+    `.execute(db);
+  },
+};
+
+const createNodePermissionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('node_permissions')
+      .addColumn('node_id', 'text', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('collaborator_id', 'text', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('permission', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('created_by', 'text', (col) => col.notNull())
+      .addColumn('updated_by', 'text')
+      .addColumn('version_id', 'text', (col) => col.notNull())
+      .addColumn('server_created_at', 'text')
+      .addColumn('server_updated_at', 'text')
+      .addColumn('server_version_id', 'text')
+      .addPrimaryKeyConstraint('node_reactions_pkey', [
+        'node_id',
+        'collaborator_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('node_permissions').execute();
+  },
+};
+
 const createNodeReactionsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -73,19 +116,6 @@ const createNodeReactionsTable: Migration = {
   },
   down: async (db) => {
     await db.schema.dropTable('node_reactions').execute();
-  },
-};
-
-const createNodeNamesTable: Migration = {
-  up: async (db) => {
-    await sql`
-      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TABLE node_names;
-    `.execute(db);
   },
 };
 
@@ -299,6 +329,123 @@ const createNodeDeleteNameTrigger: Migration = {
   },
 };
 
+const createNodePermissionInsertMutationTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_permission_insert_mutation
+      AFTER INSERT ON node_permissions
+      FOR EACH ROW
+      WHEN NEW.server_version_id IS NULL
+      BEGIN
+          INSERT INTO mutations ('action', 'table', 'after', 'created_at')
+          VALUES (
+              'insert',
+              'node_permissions',
+              json_object(
+                  'node_id', NEW.'node_id',
+                  'collaborator_id', NEW.'collaborator_id',
+                  'permission', NEW.'permission',
+                  'created_at', NEW.'created_at',
+                  'updated_at', NEW.'updated_at',
+                  'created_by', NEW.'created_by',
+                  'updated_by', NEW.'updated_by',
+                  'version_id', NEW.'version_id',
+                  'server_created_at', NEW.'server_created_at',
+                  'server_updated_at', NEW.'server_updated_at',
+                  'server_version_id', NEW.'server_version_id'
+              ),
+              datetime('now')
+          );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP TRIGGER node_insert_mutation`.execute(db);
+  },
+};
+
+const createNodePermissionUpdateMutationTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_permission_update_mutation
+      AFTER UPDATE ON node_permission
+      FOR EACH ROW
+      WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
+      BEGIN
+          INSERT INTO mutations ('action', 'table', 'before', 'after', 'created_at')
+          VALUES (
+              'update',
+              'node_permissions',
+              json_object(
+                  'node_id', OLD.'node_id',
+                  'collaborator_id', OLD.'collaborator_id',
+                  'permission', OLD.'permission',
+                  'created_at', OLD.'created_at',
+                  'updated_at', OLD.'updated_at',
+                  'created_by', OLD.'created_by',
+                  'updated_by', OLD.'updated_by',
+                  'version_id', OLD.'version_id',
+                  'server_created_at', OLD.'server_created_at',
+                  'server_updated_at', OLD.'server_updated_at',
+                  'server_version_id', OLD.'server_version_id'
+              ),
+              json_object(
+                  'node_id', NEW.'node_id',
+                  'collaborator_id', NEW.'collaborator_id',
+                  'permission', NEW.'permission',
+                  'created_at', NEW.'created_at',
+                  'updated_at', NEW.'updated_at',
+                  'created_by', NEW.'created_by',
+                  'updated_by', NEW.'updated_by',
+                  'version_id', NEW.'version_id',
+                  'server_created_at', NEW.'server_created_at',
+                  'server_updated_at', NEW.'server_updated_at',
+                  'server_version_id', NEW.'server_version_id'
+              ),
+              datetime('now')
+          );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP TRIGGER node_update_mutation`.execute(db);
+  },
+};
+
+const createNodePermissionDeleteMutationTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_permission_delete_mutation
+      AFTER DELETE ON node_permissions
+      FOR EACH ROW
+      BEGIN
+          INSERT INTO mutations ('action', 'table', 'before', 'created_at')
+          VALUES (
+              'delete',
+              'node_permissions',
+              json_object(
+                  'node_id', OLD.'node_id',
+                  'collaborator_id', OLD.'collaborator_id',
+                  'permission', OLD.'permission',
+                  'created_at', OLD.'created_at',
+                  'updated_at', OLD.'updated_at',
+                  'created_by', OLD.'created_by',
+                  'updated_by', OLD.'updated_by',
+                  'version_id', OLD.'version_id',
+                  'server_created_at', OLD.'server_created_at',
+                  'server_updated_at', OLD.'server_updated_at',
+                  'server_version_id', OLD.'server_version_id'
+              ),
+              datetime('now')
+          );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP TRIGGER node_delete_mutation`.execute(db);
+  },
+};
+
 const createNodeReactionInsertMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
@@ -360,17 +507,24 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_nodes_table': createNodesTable,
   '00002_create_nodes_parent_id_and_type_index':
     createNodesParentIdAndTypeIndex,
-  '00003_create_mutations_table': createMutationsTable,
+  '00003_create_node_reactions_table': createNodeReactionsTable,
   '00004_create_node_names_table': createNodeNamesTable,
-  '00005_create_node_insert_mutation_trigger': createNodeInsertMutationTrigger,
-  '00006_create_node_update_mutation_trigger': createNodeUpdateMutationTrigger,
-  '00007_create_node_delete_mutation_trigger': createNodeDeleteMutationTrigger,
-  '00008_create_node_insert_name_trigger': createNodeInsertNameTrigger,
-  '00009_create_node_update_name_trigger': createNodeUpdateNameTrigger,
-  '00010_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
-  '00011_create_node_reactions_table': createNodeReactionsTable,
-  '00012_create_node_reaction_insert_mutation_trigger':
+  '00005_create_node_permissions_table': createNodePermissionsTable,
+  '00006_create_mutations_table': createMutationsTable,
+  '00007_create_node_insert_mutation_trigger': createNodeInsertMutationTrigger,
+  '00008_create_node_update_mutation_trigger': createNodeUpdateMutationTrigger,
+  '00009_create_node_delete_mutation_trigger': createNodeDeleteMutationTrigger,
+  '00010_create_node_insert_name_trigger': createNodeInsertNameTrigger,
+  '00011_create_node_update_name_trigger': createNodeUpdateNameTrigger,
+  '00012_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
+  '00013_create_node_permission_insert_mutation_trigger':
+    createNodePermissionInsertMutationTrigger,
+  '00014_create_node_permission_update_mutation_trigger':
+    createNodePermissionUpdateMutationTrigger,
+  '00015_create_node_permission_delete_mutation_trigger':
+    createNodePermissionDeleteMutationTrigger,
+  '00016_create_node_reaction_insert_mutation_trigger':
     createNodeReactionInsertMutationTrigger,
-  '00013_create_node_reaction_delete_mutation_trigger':
+  '00017_create_node_reaction_delete_mutation_trigger':
     createNodeReactionDeleteMutationTrigger,
 };

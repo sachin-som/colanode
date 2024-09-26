@@ -21,6 +21,24 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
+interface NodePermissionTable {
+  node_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  permission: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  created_by: ColumnType<string, string, never>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+  version_id: ColumnType<string, string, string>;
+  server_created_at: ColumnType<string | null, string | null, string | null>;
+  server_updated_at: ColumnType<string | null, string | null, string | null>;
+  server_version_id: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectNodePermission = Selectable<NodePermissionTable>;
+export type CreateNodePermission = Insertable<NodePermissionTable>;
+export type UpdateNodePermission = Updateable<NodePermissionTable>;
+
 interface NodeReactionTable {
   node_id: ColumnType<string, string, never>;
   reactor_id: ColumnType<string, string, never>;
@@ -50,5 +68,6 @@ export type UpdateMutation = Updateable<MutationTable>;
 export interface WorkspaceDatabaseSchema {
   nodes: NodeTable;
   mutations: MutationTable;
+  node_permissions: NodePermissionTable;
   node_reactions: NodeReactionTable;
 }

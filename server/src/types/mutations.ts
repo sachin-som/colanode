@@ -26,6 +26,20 @@ export type LocalNodeMutationData = {
   server_version_id: string;
 };
 
+export type LocalNodePermissionMutationData = {
+  node_id: string;
+  collaborator_id: string;
+  permission: string;
+  created_at: string;
+  updated_at?: string | null;
+  created_by: string;
+  updated_by?: string | null;
+  version_id: string;
+  server_created_at: string;
+  server_updated_at: string;
+  server_version_id: string;
+};
+
 export type LocalNodeReactionMutationData = {
   node_id: string;
   reactor_id: string;

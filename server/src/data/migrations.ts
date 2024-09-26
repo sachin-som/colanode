@@ -70,24 +70,34 @@ const createWorkspaceAccountsTable: Migration = {
 
 const createNodesTable: Migration = {
   up: async (db) => {
-    await sql`
-        CREATE TABLE nodes (
-        id VARCHAR(30) PRIMARY KEY NOT NULL,
-        workspace_id VARCHAR(30) NOT NULL,
-        type VARCHAR(30) GENERATED ALWAYS AS ((attributes->>'type')::VARCHAR(30)) STORED,
-        parent_id VARCHAR(30) GENERATED ALWAYS AS ((attributes->>'parentId')::VARCHAR(30)) STORED,
-        "index" VARCHAR(30) GENERATED ALWAYS AS ((attributes->>'index')::VARCHAR(30)) STORED,
-        attributes JSONB NOT NULL,
-        state TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ,
-        created_by VARCHAR(30) NOT NULL,
-        updated_by VARCHAR(30),
-        version_id VARCHAR(30) NOT NULL,
-        server_created_at TIMESTAMPTZ,
-        server_updated_at TIMESTAMPTZ,
-        FOREIGN KEY (parent_id) REFERENCES nodes(id) ON DELETE CASCADE
-      )`.execute(db);
+    await db.schema
+      .createTable('nodes')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('type', 'varchar(30)', (col) =>
+        col.generatedAlwaysAs(sql`(attributes->>'type')::VARCHAR(30)`).stored(),
+      )
+      .addColumn('parent_id', 'varchar(30)', (col) =>
+        col
+          .generatedAlwaysAs(sql`(attributes->>'parentId')::VARCHAR(30)`)
+          .references('nodes.id')
+          .onDelete('cascade'),
+      )
+      .addColumn('index', 'varchar(30)', (col) =>
+        col
+          .generatedAlwaysAs(sql`(attributes->>'index')::VARCHAR(30)`)
+          .stored(),
+      )
+      .addColumn('attributes', 'jsonb', (col) => col.notNull())
+      .addColumn('state', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('updated_at', 'timestamptz')
+      .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('updated_by', 'varchar(30)')
+      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('server_created_at', 'timestamptz')
+      .addColumn('server_updated_at', 'timestamptz')
+      .execute();
   },
   down: async (db) => {
     await db.schema.dropTable('nodes').execute();

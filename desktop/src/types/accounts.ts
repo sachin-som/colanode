@@ -13,4 +13,5 @@ export type Account = {
   token: string;
   deviceId: string;
   status: string;
+  server: string;
 };

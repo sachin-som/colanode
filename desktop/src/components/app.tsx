@@ -116,6 +116,7 @@ export const App = () => {
           email: account.email,
           deviceId: account.device_id,
           status: account.status,
+          server: account.server,
           workspaces: workspacesQuery.data?.rows.map((row) => {
             return {
               id: row.id,

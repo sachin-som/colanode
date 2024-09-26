@@ -14,9 +14,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
-import {parseApiError} from "@/lib/axios";
-import {Icon} from "@/components/ui/icon";
-import axios from "axios";
+import { parseApiError } from '@/lib/axios';
+import { Icon } from '@/components/ui/icon';
+import axios from 'axios';
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -29,7 +29,10 @@ interface EmailRegisterProps {
   onRegister: (output: LoginOutput) => void;
 }
 
-export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => {
+export const EmailRegister = ({
+  serverUrl,
+  onRegister,
+}: EmailRegisterProps) => {
   const [isPending, setIsPending] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,7 +49,7 @@ export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => 
     try {
       const { data } = await axios.post<LoginOutput>(
         `${serverUrl}/v1/accounts/register/email`,
-        values
+        values,
       );
 
       onRegister(data);
@@ -60,7 +63,7 @@ export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => 
     } finally {
       setIsPending(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
@@ -117,4 +120,4 @@ export const EmailRegister = ({ serverUrl, onRegister }: EmailRegisterProps) => 
       </form>
     </Form>
   );
-}
+};

@@ -8,6 +8,7 @@ import {
   SqliteDialect,
 } from 'kysely';
 import { AccountManager } from '@/data/account-manager';
+import { ServerManager } from '@/data/server-manager';
 import { AppDatabaseSchema } from '@/data/schemas/app';
 import { appDatabaseMigrations } from '@/data/migrations/app';
 import { Account } from '@/types/accounts';
@@ -20,10 +21,12 @@ import { Workspace } from '@/types/workspaces';
 import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import { eventBus } from '@/lib/event-bus';
 import { isEqual } from 'lodash';
+import { Server } from '@/types/servers';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
 class AppManager {
+  private readonly servers: Map<string, ServerManager>;
   private readonly accounts: Map<string, AccountManager>;
   private readonly appPath: string;
   private readonly database: Kysely<AppDatabaseSchema>;
@@ -209,6 +212,12 @@ class AppManager {
   private async executeInit(): Promise<void> {
     await this.migrate();
 
+    const servers = await this.getServers();
+    for (const server of servers) {
+      const serverManager = new ServerManager(server);
+      this.servers.set(server.domain, serverManager);
+    }
+
     const accounts = await this.getAccounts();
     const workspaces = await this.getWorkspaces();
     for (const account of accounts) {
@@ -265,6 +274,25 @@ class AppManager {
     await migrator.migrateToLatest();
   }
 
+  private async getServers(): Promise<Server[]> {
+    const servers = await this.database
+      .selectFrom('servers')
+      .selectAll()
+      .execute();
+
+    return servers.map((server) => ({
+      domain: server.domain,
+      name: server.name,
+      avatar: server.avatar,
+      attributes: JSON.parse(server.attributes),
+      version: server.version,
+      createdAt: new Date(server.created_at),
+      lastSyncedAt: server.last_synced_at
+        ? new Date(server.last_synced_at)
+        : null,
+    }));
+  }
+
   private async getAccounts(): Promise<Account[]> {
     const accounts = await this.database
       .selectFrom('accounts')
@@ -278,6 +306,7 @@ class AppManager {
       avatar: account.avatar,
       token: account.token,
       deviceId: account.device_id,
+      server: account.server,
       status: account.status,
     }));
   }

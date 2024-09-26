@@ -1,7 +1,22 @@
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
+interface ServerTable {
+  domain: ColumnType<string, string, never>;
+  name: ColumnType<string, string, string>;
+  avatar: ColumnType<string, string, string>;
+  attributes: ColumnType<string, string, string>;
+  version: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, string>;
+  last_synced_at: ColumnType<string | null, string | null, string>;
+}
+
+export type SelectServer = Selectable<ServerTable>;
+export type CreateServer = Insertable<ServerTable>;
+export type UpdateServer = Updateable<ServerTable>;
+
 interface AccountTable {
   id: ColumnType<string, string, never>;
+  server: ColumnType<string, string, never>;
   name: ColumnType<string, string, string>;
   email: ColumnType<string, string, never>;
   avatar: ColumnType<string | null, string | null, string | null>;
@@ -31,6 +46,7 @@ export type CreateWorkspace = Insertable<WorkspaceTable>;
 export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
 export interface AppDatabaseSchema {
+  servers: ServerTable;
   accounts: AccountTable;
   workspaces: WorkspaceTable;
 }

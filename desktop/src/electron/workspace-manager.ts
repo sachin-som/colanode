@@ -411,19 +411,6 @@ export class WorkspaceManager {
       return false;
     }
 
-    if (localNode.updated_at) {
-      if (!serverNode.updatedAt) {
-        return false;
-      }
-
-      const localUpdatedAt = new Date(localNode.updated_at);
-      const serverUpdatedAt = new Date(serverNode.updatedAt);
-
-      if (localUpdatedAt > serverUpdatedAt) {
-        return false;
-      }
-    }
-
     return true;
   }
 

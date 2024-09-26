@@ -76,6 +76,19 @@ const createNodeReactionsTable: Migration = {
   },
 };
 
+const createNodeNamesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TABLE node_names;
+    `.execute(db);
+  },
+};
+
 const createMutationsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -94,10 +107,10 @@ const createMutationsTable: Migration = {
   },
 };
 
-const createNodesInsertTrigger: Migration = {
+const createNodeInsertMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER after_insert_nodes
+      CREATE TRIGGER node_insert_mutation
       AFTER INSERT ON nodes
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL
@@ -128,14 +141,14 @@ const createNodesInsertTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER after_insert_nodes`.execute(db);
+    await sql`DROP TRIGGER node_insert_mutation`.execute(db);
   },
 };
 
-const createNodesUpdateTrigger: Migration = {
+const createNodeUpdateMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER after_update_nodes
+      CREATE TRIGGER node_update_mutation
       AFTER UPDATE ON nodes
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
@@ -182,14 +195,14 @@ const createNodesUpdateTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER after_update_nodes`.execute(db);
+    await sql`DROP TRIGGER node_update_mutation`.execute(db);
   },
 };
 
-const createDeleteNodesTrigger: Migration = {
+const createNodeDeleteMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER after_delete_nodes
+      CREATE TRIGGER node_delete_mutation
       AFTER DELETE ON nodes
       FOR EACH ROW
       BEGIN
@@ -219,14 +232,77 @@ const createDeleteNodesTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER after_delete_nodes`.execute(db);
+    await sql`DROP TRIGGER node_delete_mutation`.execute(db);
   },
 };
 
-const createNodeReactionsInsertTrigger: Migration = {
+const createNodeInsertNameTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER after_insert_node_reactions
+      CREATE TRIGGER node_insert_name
+      AFTER INSERT ON nodes
+      WHEN json_type(NEW.attributes, '$.name') = 'text'
+      BEGIN
+        INSERT INTO node_names (id, name)
+        VALUES (
+          NEW.id,
+          json_extract(NEW.attributes, '$.name')
+        );
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER node_insert_name;
+    `.execute(db);
+  },
+};
+
+const createNodeUpdateNameTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_update_name
+      AFTER UPDATE ON nodes
+      WHEN json_extract(OLD.attributes, '$.name') IS NOT json_extract(NEW.attributes, '$.name')
+      BEGIN
+        DELETE FROM node_names WHERE id = OLD.id;
+
+        INSERT INTO node_names (id, name)
+        SELECT
+          NEW.id,
+          json_extract(NEW.attributes, '$.name')
+        WHERE json_type(NEW.attributes, '$.name') = 'text';
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER node_update_name;
+    `.execute(db);
+  },
+};
+
+const createNodeDeleteNameTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_delete_name
+      AFTER DELETE ON nodes
+      BEGIN
+        DELETE FROM node_names WHERE id = OLD.id;
+      END;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER node_delete_name;
+    `.execute(db);
+  },
+};
+
+const createNodeReactionInsertMutationTrigger: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE TRIGGER node_reaction_insert_mutation
       AFTER INSERT ON node_reactions
       FOR EACH ROW
       WHEN NEW.server_created_at IS NULL
@@ -252,10 +328,10 @@ const createNodeReactionsInsertTrigger: Migration = {
   },
 };
 
-const createNodeReactionsDeleteTrigger: Migration = {
+const createNodeReactionDeleteMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER after_delete_node_reactions
+      CREATE TRIGGER node_reaction_delete_mutation
       AFTER DELETE ON node_reactions
       FOR EACH ROW
       BEGIN
@@ -276,7 +352,7 @@ const createNodeReactionsDeleteTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER after_delete_node_reactions`.execute(db);
+    await sql`DROP TRIGGER node_reaction_delete_mutation`.execute(db);
   },
 };
 
@@ -285,12 +361,16 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00002_create_nodes_parent_id_and_type_index':
     createNodesParentIdAndTypeIndex,
   '00003_create_mutations_table': createMutationsTable,
-  '00004_create_node_insert_trigger': createNodesInsertTrigger,
-  '00005_create_node_update_trigger': createNodesUpdateTrigger,
-  '00006_create_node_delete_trigger': createDeleteNodesTrigger,
-  '00007_create_node_reactions_table': createNodeReactionsTable,
-  '00008_create_node_reactions_insert_trigger':
-    createNodeReactionsInsertTrigger,
-  '00009_create_node_reactions_delete_trigger':
-    createNodeReactionsDeleteTrigger,
+  '00004_create_node_names_table': createNodeNamesTable,
+  '00005_create_node_insert_mutation_trigger': createNodeInsertMutationTrigger,
+  '00006_create_node_update_mutation_trigger': createNodeUpdateMutationTrigger,
+  '00007_create_node_delete_mutation_trigger': createNodeDeleteMutationTrigger,
+  '00008_create_node_insert_name_trigger': createNodeInsertNameTrigger,
+  '00009_create_node_update_name_trigger': createNodeUpdateNameTrigger,
+  '00010_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
+  '00011_create_node_reactions_table': createNodeReactionsTable,
+  '00012_create_node_reaction_insert_mutation_trigger':
+    createNodeReactionInsertMutationTrigger,
+  '00013_create_node_reaction_delete_mutation_trigger':
+    createNodeReactionDeleteMutationTrigger,
 };

@@ -315,7 +315,7 @@ export class WorkspaceManager {
         .insertInto('nodes')
         .values({
           id: node.id,
-          attributes: node.attributes ? JSON.stringify(node.attributes) : null,
+          attributes: JSON.stringify(node.attributes),
           state: node.state,
           created_at: node.createdAt,
           created_by: node.createdBy,

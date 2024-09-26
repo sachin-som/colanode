@@ -21,7 +21,7 @@ export const LoginForm = ({ servers }: LoginFormProps) => {
   const appDatabase = useAppDatabase();
   const [showRegister, setShowRegister] = React.useState(false);
   const [server, setServer] = React.useState(servers[0]);
-  const serverUrl = `https://${server.domain}`;
+  const serverUrl = `http://${server.domain}`;
 
   const handleLogin = async (output: LoginOutput) => {
     const insertAccountQuery = appDatabase.database
@@ -33,6 +33,7 @@ export const LoginForm = ({ servers }: LoginFormProps) => {
         device_id: output.account.deviceId,
         email: output.account.email,
         token: output.account.token,
+        server: server.domain,
       })
       .compile();
 

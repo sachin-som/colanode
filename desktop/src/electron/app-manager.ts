@@ -34,6 +34,7 @@ class AppManager {
   private initPromise: Promise<void> | null = null;
 
   constructor() {
+    this.servers = new Map<string, ServerManager>();
     this.accounts = new Map<string, AccountManager>();
     this.appPath = app.getPath('userData');
     this.subscribers = new Map();

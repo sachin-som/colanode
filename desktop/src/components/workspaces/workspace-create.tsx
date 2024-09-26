@@ -16,10 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { parseApiError } from '@/lib/axios';
-import { useMutation } from '@tanstack/react-query';
-import { Workspace } from '@/types/workspaces';
-import { useAppDatabase } from '@/contexts/app-database';
-import { useAxios } from '@/contexts/axios';
+import { useWorkspaceCreateMutation } from '@/mutations/use-workspace-create-mutation';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -29,15 +26,7 @@ const formSchema = z.object({
 type formSchemaType = z.infer<typeof formSchema>;
 
 export const WorkspaceCreate = () => {
-  const appDatabase = useAppDatabase();
-  const axios = useAxios();
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (input: formSchemaType) => {
-      const { data } = await axios.post<Workspace>('v1/workspaces', input);
-      return data;
-    },
-  });
-
+  const { mutate, isPending } = useWorkspaceCreateMutation();
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,36 +36,25 @@ export const WorkspaceCreate = () => {
   });
 
   const handleSubmit = async (values: formSchemaType) => {
-    mutate(values, {
-      onSuccess: async (data) => {
-        const insertWorkspaceQuery = appDatabase.database
-          .insertInto('workspaces')
-          .values({
-            id: data.id,
-            account_id: data.accountId,
-            name: data.name,
-            description: data.description,
-            avatar: data.avatar,
-            role: data.role,
-            synced: 0,
-            user_id: data.userId,
-            version_id: data.versionId,
-          })
-          .compile();
-
-        await appDatabase.mutate(insertWorkspaceQuery);
-
-        window.location.href = '/';
+    mutate(
+      {
+        name: values.name,
+        description: values.description,
       },
-      onError: (error) => {
-        const apiError = parseApiError(error);
-        toast({
-          title: 'Failed to create workspace',
-          description: apiError.message,
-          variant: 'destructive',
-        });
+      {
+        onSuccess: () => {
+          window.location.href = '/';
+        },
+        onError: (error) => {
+          const apiError = parseApiError(error);
+          toast({
+            title: 'Failed to create workspace',
+            description: apiError.message,
+            variant: 'destructive',
+          });
+        },
       },
-    });
+    );
   };
 
   return (

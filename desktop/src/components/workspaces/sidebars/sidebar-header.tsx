@@ -8,13 +8,17 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { useAccount } from '@/contexts/account';
+import { useNavigate } from 'react-router-dom';
 
 export const SidebarHeader = () => {
   const workspace = useWorkspace();
   const account = useAccount();
+  const navigate = useNavigate();
+
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <div className="mb-1 flex h-12 cursor-pointer items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80 hover:bg-gray-200">
           <div className="flex flex-grow items-center gap-2">
@@ -49,6 +53,10 @@ export const SidebarHeader = () => {
               <li
                 key={w.id}
                 className="flex flex-row items-center gap-2 rounded-md p-2 pl-1 hover:cursor-pointer hover:bg-gray-100"
+                onClick={() => {
+                  navigate(`/${w.id}`);
+                  setOpen(false);
+                }}
               >
                 <Avatar id={w.id} name={w.name} className="h-7 w-7" />
                 <p>{w.name}</p>
@@ -58,7 +66,12 @@ export const SidebarHeader = () => {
         </ul>
         <hr />
         <div className="flex flex-col">
-          <button className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100">
+          <button
+            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
+            onClick={() => {
+              navigate('/create');
+            }}
+          >
             <Icon name="add-line" />
             <span>Create workspace</span>
           </button>

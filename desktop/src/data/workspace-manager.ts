@@ -20,7 +20,7 @@ import { ServerMutation } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
-import { ServerNode } from '@/types/nodes';
+import { ServerNode, ServerNodeReaction } from '@/types/nodes';
 import { SelectNode } from '@/data/schemas/workspace';
 
 export class WorkspaceManager {
@@ -254,6 +254,10 @@ export class WorkspaceManager {
       await this.syncNodeFromServer(node);
     }
 
+    for (const nodeReaction of data.nodeReactions) {
+      await this.syncNodeReactionFromServer(nodeReaction);
+    }
+
     this.workspace.synced = true;
     return true;
   }
@@ -305,6 +309,26 @@ export class WorkspaceManager {
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
     }
+  }
+
+  private async syncNodeReactionFromServer(
+    nodeReaction: ServerNodeReaction,
+  ): Promise<void> {
+    await this.database
+      .insertInto('node_reactions')
+      .values({
+        node_id: nodeReaction.nodeId,
+        reactor_id: nodeReaction.reactorId,
+        reaction: nodeReaction.reaction,
+        created_at: nodeReaction.createdAt,
+        server_created_at: nodeReaction.serverCreatedAt,
+      })
+      .onConflict((ob) =>
+        ob.doUpdateSet({
+          server_created_at: nodeReaction.serverCreatedAt,
+        }),
+      )
+      .execute();
   }
 
   public shouldUpdateNodeFromServer(

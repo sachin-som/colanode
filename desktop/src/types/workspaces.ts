@@ -1,4 +1,4 @@
-import { ServerNode } from '@/types/nodes';
+import { ServerNode, ServerNodeReaction } from '@/types/nodes';
 
 export enum WorkspaceRole {
   Owner = 1,
@@ -21,6 +21,7 @@ export type Workspace = {
 
 export type WorkspaceSyncData = {
   nodes: ServerNode[];
+  nodeReactions: ServerNodeReaction[];
 };
 
 export type SidebarNode = {

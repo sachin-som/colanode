@@ -62,6 +62,15 @@ export type ServerNodeAttributes = {
   [key: string]: any;
 };
 
+export type ServerNodeReaction = {
+  nodeId: string;
+  reactorId: string;
+  reaction: string;
+  workspaceId: string;
+  createdAt: string;
+  serverCreatedAt: string;
+};
+
 export type NodeInsertInput = {
   id: string;
   attributes: LocalNodeAttributes;

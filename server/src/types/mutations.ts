@@ -14,28 +14,8 @@ export type LocalMutation = {
 
 export type LocalNodeMutationData = {
   id: string;
-  type: string;
-  parent_id: string | null;
-  index: string | null;
-  attrs?: string | null;
-  content?: string | null;
-  created_at: string;
-  updated_at?: string | null;
-  created_by: string;
-  updated_by?: string | null;
-  version_id: string;
-  server_created_at: string;
-  server_updated_at: string;
-  server_version_id: string;
-};
-
-export type LocalNodeAttributeMutationData = {
-  node_id: string;
-  type: string;
-  key: string;
-  text_value: string | null;
-  number_value: number | null;
-  foreign_node_id: string | null;
+  attributes: string;
+  state: string;
   created_at: string;
   updated_at?: string | null;
   created_by: string;

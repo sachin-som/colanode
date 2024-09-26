@@ -235,14 +235,14 @@ class AppManager {
   }
 
   private async executeEventLoop(): Promise<void> {
-    // try {
-    //   for (const accountManager of this.accounts.values()) {
-    //     await accountManager.executeEventLoop();
-    //   }
-    // } catch (error) {
-    //   console.error('Error in event loop:', error);
-    // }
-    // setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
+    try {
+      for (const accountManager of this.accounts.values()) {
+        await accountManager.executeEventLoop();
+      }
+    } catch (error) {
+      console.error('Error in event loop:', error);
+    }
+    setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 
   private async migrate(): Promise<void> {

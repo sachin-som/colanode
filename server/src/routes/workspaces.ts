@@ -11,6 +11,8 @@ import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { NeuronId } from '@/lib/id';
 import { database } from '@/data/database';
 import { Router } from 'express';
+import * as Y from 'yjs';
+import { fromUint8Array } from 'js-base64';
 
 export const workspacesRouter = Router();
 
@@ -57,6 +59,20 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   const userId = NeuronId.generate(NeuronId.Type.User);
   const userVersionId = NeuronId.generate(NeuronId.Type.Version);
+  const userDoc = new Y.Doc({
+    guid: userId,
+  });
+
+  const userAttributesMap = userDoc.getMap('attributes');
+  userDoc.transact(() => {
+    userAttributesMap.set('type', 'user');
+    userAttributesMap.set('name', account.name);
+    userAttributesMap.set('avatar', account.avatar);
+  });
+
+  const userAttributes = JSON.stringify(userAttributesMap.toJSON());
+  const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
+
   const workspaceAccount: WorkspaceAccount = {
     accountId: req.accountId,
     workspaceId: workspace.id,
@@ -88,40 +104,13 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
       .values({
         id: userId,
         workspace_id: workspace.id,
-        type: 'user',
+        attributes: userAttributes,
+        state: userState,
         created_at: workspaceAccount.createdAt,
         created_by: workspaceAccount.createdBy,
         version_id: userVersionId,
         server_created_at: new Date(),
       })
-      .execute();
-
-    await trx
-      .insertInto('node_attributes')
-      .values([
-        {
-          node_id: userId,
-          type: 'name',
-          key: '1',
-          workspace_id: workspace.id,
-          text_value: account.name,
-          created_at: workspaceAccount.createdAt,
-          created_by: workspaceAccount.createdBy,
-          version_id: userVersionId,
-          server_created_at: new Date(),
-        },
-        {
-          node_id: userId,
-          type: 'avatar',
-          key: '1',
-          workspace_id: workspace.id,
-          text_value: account.avatar,
-          created_at: workspaceAccount.createdAt,
-          created_by: workspaceAccount.createdBy,
-          version_id: userVersionId,
-          server_created_at: new Date(),
-        },
-      ])
       .execute();
 
     await trx

@@ -3,11 +3,12 @@ import { Router } from 'express';
 import {
   ExecuteLocalMutationsInput,
   LocalMutation,
-  LocalNodeAttributeMutationData,
   LocalNodeMutationData,
   LocalNodeReactionMutationData,
 } from '@/types/mutations';
 import { database } from '@/data/database';
+import * as Y from 'yjs';
+import { fromUint8Array, toUint8Array } from 'js-base64';
 
 export const mutationsRouter = Router();
 
@@ -30,31 +31,7 @@ mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
             break;
           }
         }
-      }
-      case 'node_attributes': {
-        switch (mutation.action) {
-          case 'insert': {
-            await handleCreateNodeAttributeMutation(
-              input.workspaceId,
-              mutation,
-            );
-            break;
-          }
-          case 'update': {
-            await handleUpdateNodeAttributeMutation(
-              input.workspaceId,
-              mutation,
-            );
-            break;
-          }
-          case 'delete': {
-            await handleDeleteNodeAttributeMutation(
-              input.workspaceId,
-              mutation,
-            );
-            break;
-          }
-        }
+        break;
       }
       case 'node_reactions': {
         switch (mutation.action) {
@@ -67,6 +44,7 @@ mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
             break;
           }
         }
+        break;
       }
     }
   }
@@ -96,11 +74,9 @@ const handleCreateNodeMutation = async (
     .insertInto('nodes')
     .values({
       id: nodeData.id,
-      parent_id: nodeData.parent_id,
+      attributes: nodeData.attributes,
       workspace_id: workspaceId,
-      type: nodeData.type,
-      index: nodeData.index,
-      content: nodeData.content,
+      state: nodeData.state,
       created_at: new Date(nodeData.created_at),
       created_by: nodeData.created_by,
       version_id: nodeData.version_id,
@@ -120,10 +96,11 @@ const handleUpdateNodeMutation = async (
   const nodeData = JSON.parse(mutation.after) as LocalNodeMutationData;
   const existingNode = await database
     .selectFrom('nodes')
+    .select(['id', 'workspace_id', 'state'])
     .where('id', '=', nodeData.id)
     .executeTakeFirst();
 
-  if (!existingNode) {
+  if (!existingNode || existingNode.workspace_id != workspaceId) {
     return;
   }
 
@@ -132,13 +109,22 @@ const handleUpdateNodeMutation = async (
     : new Date();
   const updatedBy = nodeData.updated_by ?? nodeData.created_by;
 
+  const doc = new Y.Doc({
+    guid: nodeData.id,
+  });
+
+  Y.applyUpdate(doc, toUint8Array(existingNode.state));
+  Y.applyUpdate(doc, toUint8Array(nodeData.state));
+
+  const attributesMap = doc.getMap('attributes');
+  const attributes = JSON.stringify(attributesMap.toJSON());
+  const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
   await database
     .updateTable('nodes')
     .set({
-      parent_id: nodeData.parent_id,
-      type: nodeData.type,
-      index: nodeData.index,
-      content: nodeData.content,
+      attributes: attributes,
+      state: encodedState,
       updated_at: updatedAt,
       updated_by: updatedBy,
       version_id: nodeData.version_id,
@@ -168,146 +154,6 @@ const handleDeleteNodeMutation = async (
   }
 
   await database.deleteFrom('nodes').where('id', '=', nodeData.id).execute();
-};
-
-const handleCreateNodeAttributeMutation = async (
-  workspaceId: string,
-  mutation: LocalMutation,
-): Promise<void> => {
-  if (!mutation.after) {
-    return;
-  }
-
-  const nodeAttributeData = JSON.parse(
-    mutation.after,
-  ) as LocalNodeAttributeMutationData;
-  const existingNodeAttribute = await database
-    .selectFrom('node_attributes')
-    .where((eb) =>
-      eb.and([
-        eb('node_id', '=', nodeAttributeData.node_id),
-        eb('type', '=', nodeAttributeData.type),
-        eb('key', '=', nodeAttributeData.key),
-      ]),
-    )
-    .executeTakeFirst();
-
-  if (existingNodeAttribute) {
-    return;
-  }
-
-  await database
-    .insertInto('node_attributes')
-    .values({
-      node_id: nodeAttributeData.node_id,
-      type: nodeAttributeData.type,
-      key: nodeAttributeData.key,
-      workspace_id: workspaceId,
-      text_value: nodeAttributeData.text_value,
-      number_value: nodeAttributeData.number_value,
-      foreign_node_id: nodeAttributeData.foreign_node_id,
-      created_at: new Date(nodeAttributeData.created_at),
-      created_by: nodeAttributeData.created_by,
-      version_id: nodeAttributeData.version_id,
-      server_created_at: new Date(),
-    })
-    .execute();
-};
-
-const handleUpdateNodeAttributeMutation = async (
-  workspaceId: string,
-  mutation: LocalMutation,
-): Promise<void> => {
-  if (!mutation.after) {
-    return;
-  }
-
-  const nodeAttributeData = JSON.parse(
-    mutation.after,
-  ) as LocalNodeAttributeMutationData;
-  const existingNodeAttribute = await database
-    .selectFrom('node_attributes')
-    .where((eb) =>
-      eb.and([
-        eb('node_id', '=', nodeAttributeData.node_id),
-        eb('type', '=', nodeAttributeData.type),
-        eb('key', '=', nodeAttributeData.key),
-      ]),
-    )
-    .executeTakeFirst();
-
-  if (!existingNodeAttribute) {
-    return;
-  }
-
-  const updatedAt = nodeAttributeData.updated_at
-    ? new Date(nodeAttributeData.updated_at)
-    : new Date();
-
-  const updatedBy =
-    nodeAttributeData.updated_by ?? nodeAttributeData.created_by;
-
-  await database
-    .updateTable('node_attributes')
-    .set({
-      text_value: nodeAttributeData.text_value,
-      number_value: nodeAttributeData.number_value,
-      foreign_node_id: nodeAttributeData.foreign_node_id,
-      updated_at: updatedAt,
-      updated_by: updatedBy,
-      version_id: nodeAttributeData.version_id,
-      server_updated_at: new Date(),
-    })
-    .where((eb) =>
-      eb.and([
-        eb('node_id', '=', nodeAttributeData.node_id),
-        eb('type', '=', nodeAttributeData.type),
-        eb('key', '=', nodeAttributeData.key),
-      ]),
-    )
-    .execute();
-};
-
-const handleDeleteNodeAttributeMutation = async (
-  workspaceId: string,
-  mutation: LocalMutation,
-): Promise<void> => {
-  if (!mutation.before) {
-    return;
-  }
-
-  const nodeAttributeData = JSON.parse(
-    mutation.before,
-  ) as LocalNodeAttributeMutationData;
-  const existingNodeAttribute = await database
-    .selectFrom('node_attributes')
-    .selectAll()
-    .where((eb) =>
-      eb.and([
-        eb('node_id', '=', nodeAttributeData.node_id),
-        eb('type', '=', nodeAttributeData.type),
-        eb('key', '=', nodeAttributeData.key),
-      ]),
-    )
-    .executeTakeFirst();
-
-  if (
-    !existingNodeAttribute ||
-    existingNodeAttribute.workspace_id !== workspaceId
-  ) {
-    return;
-  }
-
-  await database
-    .deleteFrom('node_attributes')
-    .where((eb) =>
-      eb.and([
-        eb('node_id', '=', nodeAttributeData.node_id),
-        eb('type', '=', nodeAttributeData.type),
-        eb('key', '=', nodeAttributeData.key),
-      ]),
-    )
-    .execute();
 };
 
 const handleCreateNodeReactionMutation = async (

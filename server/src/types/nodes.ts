@@ -4,7 +4,8 @@ export type ServerNode = {
   parentId?: string | null;
   type: string;
   index: string | null;
-  content?: NodeBlock[] | null;
+  attributes: ServerNodeAttributes | null;
+  state: string;
   createdAt: string;
   createdBy: string;
   updatedAt?: string | null;
@@ -14,21 +15,12 @@ export type ServerNode = {
   serverUpdatedAt?: string | null;
 };
 
-export type ServerNodeAttribute = {
-  nodeId: string;
+export type ServerNodeAttributes = {
   type: string;
-  key: string;
-  workspaceId: string;
-  textValue: string | null;
-  numberValue: number | null;
-  foreignNodeId: string | null;
-  createdAt: string;
-  createdBy: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  versionId: string;
-  serverCreatedAt: string;
-  serverUpdatedAt?: string | null;
+  parentId?: string | null;
+  index?: string | null;
+  content?: NodeBlock[] | null;
+  [key: string]: any;
 };
 
 export type ServerNodeReaction = {

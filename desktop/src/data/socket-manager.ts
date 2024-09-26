@@ -24,7 +24,6 @@ export class SocketManager {
   }
 
   public init(): void {
-    return;
     if (this.isConnected()) {
       return;
     }

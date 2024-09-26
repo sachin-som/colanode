@@ -12,4 +12,5 @@ export type Account = {
   avatar?: string | null;
   token: string;
   deviceId: string;
+  status: string;
 };

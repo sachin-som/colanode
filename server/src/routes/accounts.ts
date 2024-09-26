@@ -8,12 +8,13 @@ import {
   LoginOutput,
 } from '@/types/accounts';
 import axios from 'axios';
-import { ApiError } from '@/types/api';
+import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { NeuronId } from '@/lib/id';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput } from '@/types/workspaces';
 import { createJwtToken } from '@/lib/jwt';
+import { authMiddleware } from '@/middlewares/auth';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -195,6 +196,52 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
   );
   return res.status(200).json(output);
 });
+
+accountsRouter.delete(
+  '/logout/:deviceId',
+  authMiddleware,
+  async (req: NeuronRequest, res: NeuronResponse) => {
+    console.log('logout endpoint called', req.params.deviceId);
+    if (!req.accountId) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    const deviceId = req.params.deviceId as string;
+    if (!deviceId) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    const accountDevice = await database
+      .selectFrom('account_devices')
+      .selectAll()
+      .where('id', '=', deviceId)
+      .executeTakeFirst();
+
+    if (!accountDevice) {
+      return res.status(200).end();
+    }
+
+    if (accountDevice.account_id != req.accountId) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden',
+      });
+    }
+
+    await database
+      .deleteFrom('account_devices')
+      .where('id', '=', deviceId)
+      .execute();
+
+    return res.status(200).end();
+  },
+);
 
 const buildLoginOutput = async (
   id: string,

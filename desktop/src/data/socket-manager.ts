@@ -75,6 +75,14 @@ export class SocketManager {
   }
 
   public checkConnection(): void {
+    if (this.account.status === 'logout') {
+      if (this.isConnected()) {
+        this.close();
+      }
+
+      return;
+    }
+
     if (this.isConnected()) {
       return;
     }

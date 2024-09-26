@@ -291,15 +291,44 @@ export class WorkspaceManager {
       return false;
     }
 
-    for (const node of data.nodes) {
-      await this.syncNodeFromServer(node);
-    }
+    await this.database
+      .insertInto('nodes')
+      .values(
+        data.nodes.map((node) => {
+          return {
+            id: node.id,
+            attributes: JSON.stringify(node.attributes),
+            state: node.state,
+            created_at: node.createdAt,
+            created_by: node.createdBy,
+            updated_by: node.updatedBy,
+            updated_at: node.updatedAt,
+            version_id: node.versionId,
+            server_created_at: node.serverCreatedAt,
+            server_updated_at: node.serverUpdatedAt,
+            server_version_id: node.versionId,
+          };
+        }),
+      )
+      .execute();
 
-    for (const nodeReaction of data.nodeReactions) {
-      await this.syncNodeReactionFromServer(nodeReaction);
-    }
+    await this.database
+      .insertInto('node_reactions')
+      .values(
+        data.nodeReactions.map((nodeReaction) => {
+          return {
+            node_id: nodeReaction.nodeId,
+            reactor_id: nodeReaction.reactorId,
+            reaction: nodeReaction.reaction,
+            created_at: nodeReaction.createdAt,
+            server_created_at: nodeReaction.serverCreatedAt,
+          };
+        }),
+      )
+      .execute();
 
     this.workspace.synced = true;
+    this.debouncedNotifyQuerySubscribers(['nodes', 'node_reactions']);
     return true;
   }
 

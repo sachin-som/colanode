@@ -10,8 +10,7 @@ const createAccountsTable: Migration = {
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
       .addColumn('token', 'text', (col) => col.notNull())
-      .addColumn('last_update_id', 'text')
-      .addColumn('last_update_at', 'text')
+      .addColumn('status', 'text', (col) => col.defaultTo('active').notNull())
       .execute();
   },
   down: async (db) => {
@@ -24,7 +23,9 @@ const createWorkspacesTable: Migration = {
     await db.schema
       .createTable('workspaces')
       .addColumn('id', 'text', (col) => col.notNull())
-      .addColumn('account_id', 'text', (col) => col.notNull())
+      .addColumn('account_id', 'text', (col) =>
+        col.notNull().references('accounts.id').onDelete('cascade'),
+      )
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('description', 'text')
       .addColumn('avatar', 'text')

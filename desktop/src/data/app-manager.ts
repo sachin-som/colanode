@@ -186,21 +186,16 @@ class AppManager {
       throw new Error(`Account not found: ${accountId}`);
     }
 
-    await accountManager.logout();
-    this.accounts.delete(accountId);
-
-    const deleteAccountQuery = this.database
-      .deleteFrom('accounts')
+    accountManager.account.status = 'logout';
+    const markAccountLoggedOutQuery = this.database
+      .updateTable('accounts')
+      .set({
+        status: 'logout',
+      })
       .where('id', '=', accountId)
       .compile();
 
-    const deleteWorkspacesQuery = this.database
-      .deleteFrom('workspaces')
-      .where('account_id', '=', accountId)
-      .compile();
-
-    await this.executeMutation(deleteAccountQuery);
-    await this.executeMutation(deleteWorkspacesQuery);
+    await this.executeMutation(markAccountLoggedOutQuery);
   }
 
   private async waitForInit(): Promise<void> {
@@ -237,7 +232,19 @@ class AppManager {
   private async executeEventLoop(): Promise<void> {
     try {
       for (const accountManager of this.accounts.values()) {
-        await accountManager.executeEventLoop();
+        if (accountManager.account.status === 'logout') {
+          const loggedOut = await accountManager.logout();
+          if (loggedOut) {
+            await this.database
+              .deleteFrom('accounts')
+              .where('id', '=', accountManager.account.id)
+              .execute();
+
+            this.accounts.delete(accountManager.account.id);
+          }
+        } else {
+          await accountManager.executeEventLoop();
+        }
       }
     } catch (error) {
       console.error('Error in event loop:', error);
@@ -271,6 +278,7 @@ class AppManager {
       avatar: account.avatar,
       token: account.token,
       deviceId: account.device_id,
+      status: account.status,
     }));
   }
 

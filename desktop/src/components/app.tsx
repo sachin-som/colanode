@@ -34,7 +34,11 @@ export const App = () => {
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
     queryFn: async ({ queryKey }) => {
-      const query = appDatabase.selectFrom('accounts').selectAll().compile();
+      const query = appDatabase
+        .selectFrom('accounts')
+        .where('status', '=', 'active')
+        .selectAll()
+        .compile();
       return await window.neuron.executeAppQueryAndSubscribe({
         key: queryKey,
         query: query,
@@ -45,7 +49,18 @@ export const App = () => {
   const workspacesQuery = useQuery({
     queryKey: ['workspaces'],
     queryFn: async ({ queryKey }) => {
-      const query = appDatabase.selectFrom('workspaces').selectAll().compile();
+      const query = appDatabase
+        .selectFrom('workspaces')
+        .where(
+          'account_id',
+          'in',
+          appDatabase
+            .selectFrom('accounts')
+            .where('status', '=', 'active')
+            .select('id'),
+        )
+        .selectAll()
+        .compile();
       return await window.neuron.executeAppQueryAndSubscribe({
         key: queryKey,
         query: query,
@@ -100,6 +115,7 @@ export const App = () => {
           token: account.token,
           email: account.email,
           deviceId: account.device_id,
+          status: account.status,
           workspaces: workspacesQuery.data?.rows.map((row) => {
             return {
               id: row.id,

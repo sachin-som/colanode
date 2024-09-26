@@ -11,7 +11,7 @@ import { AppDatabaseSchema } from '@/data/schemas/app';
 const SERVER_URL = 'http://localhost:3000';
 
 export class AccountManager {
-  private readonly account: Account;
+  public readonly account: Account;
   private readonly accountPath: string;
   private readonly socket: SocketManager;
   private readonly axios: AxiosInstance;
@@ -87,7 +87,15 @@ export class AccountManager {
     this.workspaces.set(workspace.id, workspaceManager);
   }
 
-  public async logout(): Promise<void> {
+  public async logout(): Promise<boolean> {
+    const { status } = await this.axios.delete(
+      `v1/accounts/logout/${this.account.deviceId}`,
+    );
+
+    if (status !== 200) {
+      return false;
+    }
+
     if (fs.existsSync(this.accountPath)) {
       fs.rm(this.accountPath, { recursive: true, force: true }, (err) => {
         if (err) {
@@ -99,6 +107,8 @@ export class AccountManager {
     if (this.socket) {
       this.socket.close();
     }
+
+    return true;
   }
 
   public async executeEventLoop(): Promise<void> {

@@ -6,3 +6,8 @@ export type ServerMutation = {
   before: any | null;
   after: any | null;
 };
+
+export type ServerExecuteMutationsResponse = {
+  success: boolean;
+  executedMutations: number[];
+};

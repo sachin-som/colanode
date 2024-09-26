@@ -14,42 +14,52 @@ export const mutationsRouter = Router();
 
 mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const input = req.body as ExecuteLocalMutationsInput;
+  const executedMutations: number[] = [];
   for (const mutation of input.mutations) {
-    switch (mutation.table) {
-      case 'nodes': {
-        switch (mutation.action) {
-          case 'insert': {
-            await handleCreateNodeMutation(input.workspaceId, mutation);
-            break;
+    try {
+      switch (mutation.table) {
+        case 'nodes': {
+          switch (mutation.action) {
+            case 'insert': {
+              await handleCreateNodeMutation(input.workspaceId, mutation);
+              break;
+            }
+            case 'update': {
+              await handleUpdateNodeMutation(input.workspaceId, mutation);
+              break;
+            }
+            case 'delete': {
+              await handleDeleteNodeMutation(input.workspaceId, mutation);
+              break;
+            }
           }
-          case 'update': {
-            await handleUpdateNodeMutation(input.workspaceId, mutation);
-            break;
-          }
-          case 'delete': {
-            await handleDeleteNodeMutation(input.workspaceId, mutation);
-            break;
-          }
+          break;
         }
-        break;
-      }
-      case 'node_reactions': {
-        switch (mutation.action) {
-          case 'insert': {
-            await handleCreateNodeReactionMutation(input.workspaceId, mutation);
-            break;
+        case 'node_reactions': {
+          switch (mutation.action) {
+            case 'insert': {
+              await handleCreateNodeReactionMutation(
+                input.workspaceId,
+                mutation,
+              );
+              break;
+            }
+            case 'delete': {
+              await handleDeleteNodeReactionMutation(mutation);
+              break;
+            }
           }
-          case 'delete': {
-            await handleDeleteNodeReactionMutation(mutation);
-            break;
-          }
+          break;
         }
-        break;
       }
+
+      executedMutations.push(mutation.id);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  res.status(200).json({ success: true });
+  res.status(200).json({ success: true, executedMutations });
 });
 
 const handleCreateNodeMutation = async (

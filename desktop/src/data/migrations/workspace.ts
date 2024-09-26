@@ -2,27 +2,41 @@ import { Migration, sql } from 'kysely';
 
 const createNodesTable: Migration = {
   up: async (db) => {
-    await sql`
-      CREATE TABLE nodes (
-        id TEXT PRIMARY KEY NOT NULL,
-        type TEXT GENERATED ALWAYS AS (json_extract(attributes, '$.type')) STORED NOT NULL,
-        parent_id TEXT GENERATED ALWAYS AS (json_extract(attributes, '$.parentId')) STORED REFERENCES nodes(id) ON DELETE CASCADE,
-        "index" TEXT GENERATED ALWAYS AS (json_extract(attributes, '$.index')) STORED,
-        attributes TEXT NOT NULL,
-        state TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
-        created_by TEXT NOT NULL,
-        updated_by TEXT,
-        version_id TEXT NOT NULL,
-        server_created_at TEXT,
-        server_updated_at TEXT,
-        server_version_id TEXT
+    await db.schema
+      .createTable('nodes')
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('type', 'text', (col) =>
+        col
+          .notNull()
+          .generatedAlwaysAs(sql`json_extract(attributes, '$.type')`)
+          .stored(),
       )
-    `.execute(db);
+      .addColumn('parent_id', 'text', (col) =>
+        col
+          .generatedAlwaysAs(sql`json_extract(attributes, '$.parentId')`)
+          .stored()
+          .references('nodes.id')
+          .onDelete('cascade'),
+      )
+      .addColumn('index', 'text', (col) =>
+        col
+          .generatedAlwaysAs(sql`json_extract(attributes, '$.index')`)
+          .stored(),
+      )
+      .addColumn('attributes', 'text', (col) => col.notNull())
+      .addColumn('state', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('created_by', 'text', (col) => col.notNull())
+      .addColumn('updated_by', 'text')
+      .addColumn('version_id', 'text', (col) => col.notNull())
+      .addColumn('server_created_at', 'text')
+      .addColumn('server_updated_at', 'text')
+      .addColumn('server_version_id', 'text')
+      .execute();
   },
   down: async (db) => {
-    await sql`DROP TABLE IF EXISTS nodes`.execute(db);
+    await db.schema.dropTable('nodes').execute();
   },
 };
 
@@ -72,6 +86,7 @@ const createMutationsTable: Migration = {
       .addColumn('before', 'text')
       .addColumn('after', 'text')
       .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('retry_count', 'integer', (col) => col.defaultTo(0))
       .execute();
   },
   down: async (db) => {

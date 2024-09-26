@@ -40,6 +40,7 @@ interface MutationTable {
   before: ColumnType<string | null, string | null, never>;
   after: ColumnType<string | null, string | null, never>;
   created_at: ColumnType<string, string, never>;
+  retry_count: ColumnType<number, number, number>;
 }
 
 export type SelectMutation = Selectable<MutationTable>;

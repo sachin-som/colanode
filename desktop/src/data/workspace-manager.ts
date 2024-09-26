@@ -16,7 +16,10 @@ import {
   resultHasChanged,
 } from '@/data/utils';
 import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
-import { ServerMutation } from '@/types/mutations';
+import {
+  ServerExecuteMutationsResponse,
+  ServerMutation,
+} from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
@@ -191,16 +194,31 @@ export class WorkspaceManager {
     }
 
     try {
-      const { status } = await this.axios.post<ServerMutation>('v1/mutations', {
-        workspaceId: this.workspace.id,
-        mutations: mutations,
-      });
+      const { status, data } =
+        await this.axios.post<ServerExecuteMutationsResponse>('v1/mutations', {
+          workspaceId: this.workspace.id,
+          mutations: mutations,
+        });
 
-      if (status === 200) {
-        const mutationIds = mutations.map((mutation) => mutation.id);
+      if (status !== 200) {
+        return;
+      }
+
+      const executedMutations = data.executedMutations;
+      await this.database
+        .deleteFrom('mutations')
+        .where('id', 'in', executedMutations)
+        .execute();
+
+      const failedMutationIds = mutations
+        .filter((mutation) => !executedMutations.includes(mutation.id))
+        .map((mutation) => mutation.id);
+
+      if (failedMutationIds.length > 0) {
         await this.database
-          .deleteFrom('mutations')
-          .where('id', 'in', mutationIds)
+          .updateTable('mutations')
+          .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
+          .where('id', 'in', failedMutationIds)
           .execute();
       }
     } catch (error) {
@@ -211,6 +229,8 @@ export class WorkspaceManager {
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
       await this.executeNodeServerMutation(mutation);
+    } else if (mutation.table === 'node_reactions') {
+      await this.executeNodeReactionServerMutation(mutation);
     }
 
     //other cases in the future
@@ -230,6 +250,27 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
+    }
+  }
+
+  private async executeNodeReactionServerMutation(
+    mutation: ServerMutation,
+  ): Promise<void> {
+    if (mutation.action === 'insert' && mutation.after) {
+      await this.syncNodeReactionFromServer(mutation.after);
+    } else if (mutation.action === 'delete' && mutation.before) {
+      await this.database
+        .deleteFrom('node_reactions')
+        .where((eb) =>
+          eb.and([
+            eb('node_id', '=', mutation.before.node_id),
+            eb('reactor_id', '=', mutation.before.reactor_id),
+            eb('reaction', '=', mutation.before.reaction),
+          ]),
+        )
+        .execute();
+
+      this.debouncedNotifyQuerySubscribers(['node_reactions']);
     }
   }
 
@@ -329,6 +370,8 @@ export class WorkspaceManager {
         }),
       )
       .execute();
+
+    this.debouncedNotifyQuerySubscribers(['node_reactions']);
   }
 
   public shouldUpdateNodeFromServer(

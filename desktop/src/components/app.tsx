@@ -14,7 +14,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely';
-import { AppDatabaseSchema } from '@/data/schemas/app';
+import { AppDatabaseSchema } from '@/electron/schemas/app';
 import { useQuery } from '@tanstack/react-query';
 
 const SERVER_URL = 'http://localhost:3000';

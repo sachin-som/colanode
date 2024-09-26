@@ -14,7 +14,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely';
-import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
+import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
 import { useAccount } from '@/contexts/account';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventBus } from '@/hooks/use-event-bus';

@@ -8,13 +8,13 @@ import {
   SqliteDialect,
 } from 'kysely';
 import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
-import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
-import { workspaceDatabaseMigrations } from '@/data/migrations/workspace';
+import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
+import { workspaceDatabaseMigrations } from '@/electron/migrations/workspace';
 import {
   buildSqlite,
   extractTablesFromSql,
   resultHasChanged,
-} from '@/data/utils';
+} from '@/electron/utils';
 import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import {
   ServerExecuteMutationsResponse,
@@ -24,7 +24,7 @@ import { eventBus } from '@/lib/event-bus';
 import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
 import { ServerNode, ServerNodeReaction } from '@/types/nodes';
-import { SelectNode } from '@/data/schemas/workspace';
+import { SelectNode } from '@/electron/schemas/workspace';
 
 export class WorkspaceManager {
   private readonly workspace: Workspace;

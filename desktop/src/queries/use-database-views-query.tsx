@@ -1,5 +1,5 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNode } from '@/data/schemas/workspace';
+import { SelectNode } from '@/electron/schemas/workspace';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { mapNode } from '@/lib/nodes';
 import {

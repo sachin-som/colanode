@@ -7,16 +7,16 @@ import {
   QueryResult,
   SqliteDialect,
 } from 'kysely';
-import { AccountManager } from '@/data/account-manager';
-import { ServerManager } from '@/data/server-manager';
-import { AppDatabaseSchema } from '@/data/schemas/app';
-import { appDatabaseMigrations } from '@/data/migrations/app';
+import { AccountManager } from '@/electron/account-manager';
+import { ServerManager } from '@/electron/server-manager';
+import { AppDatabaseSchema } from '@/electron/schemas/app';
+import { appDatabaseMigrations } from '@/electron/migrations/app';
 import { Account } from '@/types/accounts';
 import {
   buildSqlite,
   extractTablesFromSql,
   resultHasChanged,
-} from '@/data/utils';
+} from '@/electron/utils';
 import { Workspace } from '@/types/workspaces';
 import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import { eventBus } from '@/lib/event-bus';

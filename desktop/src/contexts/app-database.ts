@@ -1,6 +1,6 @@
 import React from 'react';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
-import { AppDatabaseSchema } from '@/data/schemas/app';
+import { AppDatabaseSchema } from '@/electron/schemas/app';
 import { SubscribedQueryContext } from '@/types/queries';
 
 interface AppDatabaseContext {

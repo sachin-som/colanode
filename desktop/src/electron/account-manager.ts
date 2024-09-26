@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
-import { WorkspaceManager } from '@/data/workspace-manager';
-import { SocketManager } from '@/data/socket-manager';
+import { WorkspaceManager } from '@/electron/workspace-manager';
+import { SocketManager } from '@/electron/socket-manager';
 import { ServerMutation } from '@/types/mutations';
 import Axios, { AxiosInstance } from 'axios';
 import { Kysely } from 'kysely';
-import { AppDatabaseSchema } from '@/data/schemas/app';
+import { AppDatabaseSchema } from '@/electron/schemas/app';
 
 const SERVER_URL = 'http://localhost:3000';
 

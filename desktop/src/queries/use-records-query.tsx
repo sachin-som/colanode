@@ -1,6 +1,6 @@
 import { useDatabase } from '@/contexts/database';
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNode } from '@/data/schemas/workspace';
+import { SelectNode } from '@/electron/schemas/workspace';
 import { NodeTypes } from '@/lib/constants';
 import { mapNode } from '@/lib/nodes';
 import { isStringArray } from '@/lib/utils';

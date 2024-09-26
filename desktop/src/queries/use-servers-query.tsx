@@ -1,5 +1,5 @@
 import { useAppDatabase } from '@/contexts/app-database';
-import { SelectServer } from '@/data/schemas/app';
+import { SelectServer } from '@/electron/schemas/app';
 import { Server } from '@/types/servers';
 import { useQuery } from '@tanstack/react-query';
 import { QueryResult } from 'kysely';

@@ -1,7 +1,7 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
-import { appManager } from '@/data/app-manager';
+import { appManager } from '@/electron/app-manager';
 import { CompiledQuery, QueryResult } from 'kysely';
 import { SubscribedQueryContext } from '@/types/queries';
 let subscriptionId: string | null = null;

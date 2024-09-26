@@ -1,5 +1,5 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { SelectNode } from '@/data/schemas/workspace';
+import { SelectNode } from '@/electron/schemas/workspace';
 import { mapNode } from '@/lib/nodes';
 import { BreadcrumbNode } from '@/types/workspaces';
 import { useQuery } from '@tanstack/react-query';

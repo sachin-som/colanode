@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { Workspace } from '@/types/workspaces';
 import { CompiledQuery, Kysely, QueryResult } from 'kysely';
-import { WorkspaceDatabaseSchema } from '@/data/schemas/workspace';
+import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
 import { SubscribedQueryContext } from '@/types/queries';
 
 interface WorkspaceContext extends Workspace {

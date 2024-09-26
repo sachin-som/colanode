@@ -102,18 +102,44 @@ class AppManager {
     return result;
   }
 
-  public async executeMutation(mutation: CompiledQuery): Promise<void> {
-    const result = await this.database.executeQuery(mutation);
-    if (result.numAffectedRows === 0n) {
+  public async executeMutation(
+    mutation: CompiledQuery | CompiledQuery[],
+  ): Promise<void> {
+    const affectedTables = new Set<string>();
+    let numAffectedRows = 0n;
+
+    if (Array.isArray(mutation)) {
+      // Execute multiple queries as a transaction
+      await this.database.transaction().execute(async (trx) => {
+        for (const query of mutation) {
+          const result = await trx.executeQuery(query);
+          if (result.numAffectedRows > 0n) {
+            numAffectedRows += result.numAffectedRows;
+            extractTablesFromSql(query.sql).forEach((table) =>
+              affectedTables.add(table),
+            );
+          }
+        }
+      });
+    } else {
+      // Execute single query
+      const result = await this.database.executeQuery(mutation);
+      numAffectedRows = result.numAffectedRows;
+      if (numAffectedRows > 0n) {
+        extractTablesFromSql(mutation.sql).forEach((table) =>
+          affectedTables.add(table),
+        );
+      }
+    }
+    if (numAffectedRows === 0n) {
       return;
     }
 
-    const affectedTables = extractTablesFromSql(mutation.sql);
-    if (affectedTables.length === 0) {
+    if (affectedTables.size === 0) {
       return;
     }
 
-    if (affectedTables.includes('accounts')) {
+    if (affectedTables.has('accounts')) {
       const accounts = await this.getAccounts();
       for (const account of accounts) {
         if (this.accounts.has(account.id)) {
@@ -132,7 +158,7 @@ class AppManager {
       }
     }
 
-    if (affectedTables.includes('workspaces')) {
+    if (affectedTables.has('workspaces')) {
       const workspaces = await this.getWorkspaces();
       for (const workspace of workspaces) {
         const accountManager = this.accounts.get(workspace.accountId);
@@ -149,7 +175,7 @@ class AppManager {
 
     for (const subscriber of this.subscribers.values()) {
       const hasAffectedTables = subscriber.tables.some((table) =>
-        affectedTables.includes(table),
+        affectedTables.has(table),
       );
 
       if (!hasAffectedTables) {

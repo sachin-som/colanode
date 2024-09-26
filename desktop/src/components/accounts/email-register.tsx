@@ -12,11 +12,11 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
 import { parseApiError } from '@/lib/axios';
 import { Icon } from '@/components/ui/icon';
-import axios from 'axios';
+import { useEmailRegisterMutation } from '@/mutations/use-email-register-mutation';
+import { Server } from '@/types/servers';
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -25,16 +25,11 @@ const formSchema = z.object({
 });
 
 interface EmailRegisterProps {
-  serverUrl: string;
-  onRegister: (output: LoginOutput) => void;
+  server: Server;
 }
 
-export const EmailRegister = ({
-  serverUrl,
-  onRegister,
-}: EmailRegisterProps) => {
-  const [isPending, setIsPending] = React.useState(false);
-
+export const EmailRegister = ({ server }: EmailRegisterProps) => {
+  const { mutate, isPending } = useEmailRegisterMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,24 +40,27 @@ export const EmailRegister = ({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsPending(true);
-    try {
-      const { data } = await axios.post<LoginOutput>(
-        `${serverUrl}/v1/accounts/register/email`,
-        values,
-      );
-
-      onRegister(data);
-    } catch (error) {
-      const apiError = parseApiError(error);
-      toast({
-        title: 'Failed to register',
-        description: apiError.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPending(false);
-    }
+    mutate(
+      {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        server: server,
+      },
+      {
+        onSuccess: () => {
+          window.location.href = '/';
+        },
+        onError: (error) => {
+          const apiError = parseApiError(error);
+          toast({
+            title: 'Failed to login',
+            description: apiError.message,
+            variant: 'destructive',
+          });
+        },
+      },
+    );
   };
 
   return (

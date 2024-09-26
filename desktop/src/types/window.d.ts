@@ -6,7 +6,9 @@ import { SubscribedQueryContext } from '@/types/queries';
 interface NeuronApi {
   init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
-  executeAppMutation: (mutation: CompiledQuery) => Promise<void>;
+  executeAppMutation: (
+    mutation: CompiledQuery | CompiledQuery[],
+  ) => Promise<void>;
   executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   executeAppQueryAndSubscribe: (
     context: SubscribedQueryContext<R>,

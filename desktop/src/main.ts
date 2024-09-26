@@ -71,7 +71,7 @@ ipcMain.handle('logout', async (_, accountId) => appManager.logout(accountId));
 
 ipcMain.handle(
   'execute-app-mutation',
-  async (_, mutation: CompiledQuery): Promise<void> => {
+  async (_, mutation: CompiledQuery | CompiledQuery[]): Promise<void> => {
     await appManager.executeMutation(mutation);
   },
 );

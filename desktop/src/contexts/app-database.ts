@@ -5,7 +5,7 @@ import { SubscribedQueryContext } from '@/types/queries';
 
 interface AppDatabaseContext {
   database: Kysely<AppDatabaseSchema>;
-  mutate: (mutation: CompiledQuery) => Promise<void>;
+  mutate: (mutation: CompiledQuery | CompiledQuery[]) => Promise<void>;
   query: <R>(query: CompiledQuery<R>) => Promise<QueryResult<R>>;
   queryAndSubscribe: <R>(
     context: SubscribedQueryContext<R>,

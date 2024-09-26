@@ -12,11 +12,11 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginOutput } from '@/types/accounts';
 import { toast } from '@/components/ui/use-toast';
 import { parseApiError } from '@/lib/axios';
 import { Icon } from '@/components/ui/icon';
-import axios from 'axios';
+import { Server } from '@/types/servers';
+import { useEmailLoginMutation } from '@/mutations/use-email-login-mutation';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
@@ -24,12 +24,11 @@ const formSchema = z.object({
 });
 
 interface EmailLoginProps {
-  serverUrl: string;
-  onLogin: (output: LoginOutput) => void;
+  server: Server;
 }
 
-export const EmailLogin = ({ serverUrl, onLogin }: EmailLoginProps) => {
-  const [isPending, setIsPending] = React.useState(false);
+export const EmailLogin = ({ server }: EmailLoginProps) => {
+  const { mutate, isPending } = useEmailLoginMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,24 +38,26 @@ export const EmailLogin = ({ serverUrl, onLogin }: EmailLoginProps) => {
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsPending(true);
-    try {
-      const { data } = await axios.post<LoginOutput>(
-        `${serverUrl}/v1/accounts/login/email`,
-        values,
-      );
-
-      onLogin(data);
-    } catch (error) {
-      const apiError = parseApiError(error);
-      toast({
-        title: 'Failed to login',
-        description: apiError.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPending(false);
-    }
+    mutate(
+      {
+        email: values.email,
+        password: values.password,
+        server: server,
+      },
+      {
+        onSuccess: () => {
+          window.location.href = '/';
+        },
+        onError: (error) => {
+          const apiError = parseApiError(error);
+          toast({
+            title: 'Failed to login',
+            description: apiError.message,
+            variant: 'destructive',
+          });
+        },
+      },
+    );
   };
 
   return (

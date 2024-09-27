@@ -13,6 +13,7 @@ interface WorkspaceContext extends Workspace {
   ) => Promise<QueryResult<R>>;
   navigateToNode: (nodeId: string) => void;
   openModal: (nodeId: string) => void;
+  openSettings: () => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

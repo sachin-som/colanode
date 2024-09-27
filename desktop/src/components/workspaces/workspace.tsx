@@ -19,6 +19,7 @@ import { useAccount } from '@/contexts/account';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventBus } from '@/hooks/use-event-bus';
 import { Modal } from '@/components/workspaces/modals/modal';
+import { WorkspaceSettingsDialog } from '@/components/workspaces/workspace-settings-dialog';
 
 const workspaceDatabase = new Kysely<WorkspaceDatabaseSchema>({
   dialect: {
@@ -31,9 +32,11 @@ const workspaceDatabase = new Kysely<WorkspaceDatabaseSchema>({
 
 export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
+
   const account = useAccount();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [openSettings, setOpenSettings] = React.useState(false);
 
   const eventBus = useEventBus();
   const workspace = account.workspaces.find((w) => w.id === workspaceId);
@@ -161,6 +164,9 @@ export const Workspace = () => {
               };
             });
           },
+          openSettings() {
+            setOpenSettings(true);
+          },
         }}
       >
         <div className="flex h-screen max-h-screen flex-row">
@@ -183,6 +189,12 @@ export const Workspace = () => {
             />
           )}
         </div>
+        {openSettings && (
+          <WorkspaceSettingsDialog
+            open={openSettings}
+            onOpenChange={setOpenSettings}
+          />
+        )}
       </WorkspaceContext.Provider>
     </QueryClientProvider>
   );

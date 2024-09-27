@@ -43,7 +43,7 @@ export const Breadcrumb = ({ node }: BreadcrumbProps) => {
   const isClickable = (type: string) => type !== NodeTypes.Space;
 
   return (
-    <BreadcrumbWrapper className="mx-1 flex h-12 justify-between p-2 text-foreground/80">
+    <BreadcrumbWrapper>
       <BreadcrumbList>
         {visibleNodes.map((breadcrumbNode, index) => (
           <React.Fragment key={breadcrumbNode.id}>

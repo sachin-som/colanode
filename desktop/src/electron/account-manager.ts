@@ -68,8 +68,6 @@ export class AccountManager {
     for (const workspace of this.workspaces.values()) {
       await workspace.init();
     }
-
-    this.socket.init();
   }
 
   public getWorkspace(workspaceId: string): WorkspaceManager | undefined {

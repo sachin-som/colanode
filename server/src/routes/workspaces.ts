@@ -207,6 +207,8 @@ workspacesRouter.put(
       .updateTable('workspaces')
       .set({
         name: input.name,
+        description: input.description,
+        avatar: input.avatar,
         updated_at: new Date(),
         updated_by: req.accountId,
       })

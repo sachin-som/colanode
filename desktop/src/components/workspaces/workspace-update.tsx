@@ -16,9 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { parseApiError } from '@/lib/axios';
-import { useWorkspaceCreateMutation } from '@/mutations/use-workspace-create-mutation';
-import { useAccount } from '@/contexts/account';
-import { useNavigate } from 'react-router-dom';
+import { useWorkspaceUpdateMutation } from '@/mutations/use-workspace-update-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -27,33 +26,37 @@ const formSchema = z.object({
 
 type formSchemaType = z.infer<typeof formSchema>;
 
-export const WorkspaceCreate = () => {
-  const account = useAccount();
-  const navigate = useNavigate();
+export const WorkspaceUpdate = () => {
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useWorkspaceUpdateMutation();
 
-  const { mutate, isPending } = useWorkspaceCreateMutation();
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      name: workspace.name,
+      description: workspace.description,
     },
   });
 
   const handleSubmit = async (values: formSchemaType) => {
     mutate(
       {
+        id: workspace.id,
         name: values.name,
         description: values.description,
       },
       {
         onSuccess: () => {
-          window.location.href = '/';
+          toast({
+            title: 'Workspace updated',
+            description: 'Workspace was updated successfully',
+            variant: 'default',
+          });
         },
         onError: (error) => {
           const apiError = parseApiError(error);
           toast({
-            title: 'Failed to create workspace',
+            title: 'Failed to update workspace',
             description: apiError.message,
             variant: 'destructive',
           });
@@ -65,11 +68,6 @@ export const WorkspaceCreate = () => {
   return (
     <div className="container flex flex-row justify-center">
       <div className="w-full max-w-[700px]">
-        <div className="flex flex-row justify-center py-8">
-          <h1 className="text-center text-4xl font-bold leading-tight tracking-tighter lg:leading-[1.1]">
-            Setup your workspace
-          </h1>
-        </div>
         <Form {...form}>
           <form
             className="flex flex-col"
@@ -107,22 +105,9 @@ export const WorkspaceCreate = () => {
               />
             </div>
             <div className="flex flex-row justify-end gap-2">
-              {account.workspaces?.length > 0 && (
-                <Button
-                  type="button"
-                  disabled={isPending}
-                  variant="outline"
-                  onClick={() => {
-                    navigate('/');
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
               <Button type="submit" disabled={isPending}>
                 {isPending && <Spinner className="mr-1" />}
-                Create
+                Save
               </Button>
             </div>
           </form>

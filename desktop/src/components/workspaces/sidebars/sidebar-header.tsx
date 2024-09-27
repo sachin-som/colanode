@@ -75,7 +75,12 @@ export const SidebarHeader = () => {
             <Icon name="add-line" />
             <span>Create workspace</span>
           </button>
-          <button className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100">
+          <button
+            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
+            onClick={() => {
+              workspace.openSettings();
+            }}
+          >
             <Icon name="settings-4-line" />
             <span>Settings</span>
           </button>

@@ -10,6 +10,7 @@ export enum ApiError {
   ResourceNotFound = 'ResourceNotFound',
   Unauthorized = 'Unauthorized',
   Forbidden = 'Forbidden',
+  BadRequest = 'BadRequest',
 }
 
 export type NeuronRequest = Request & {

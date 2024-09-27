@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { useWorkspace } from '@/contexts/workspace';
-import { WorkspaceUpdate } from './workspace-update';
+import { WorkspaceUpdate } from '@/components/workspaces/workspace-update';
+import { WorkspaceUsers } from '@/components/workspaces/workspace-users';
 
 interface WorkspaceSettingsDialogProps {
   open: boolean;
@@ -47,10 +48,10 @@ export const WorkspaceSettingsDialog = ({
             <TabsTrigger
               key={`tab-trigger-collaborators`}
               className="w-full justify-start p-2 hover:bg-gray-50"
-              value="collaborators"
+              value="users"
             >
               <Icon name="group-line" className="mr-2" />
-              Collaborators
+              Users
             </TabsTrigger>
             <TabsTrigger
               key={`tab-trigger-delete`}
@@ -72,9 +73,9 @@ export const WorkspaceSettingsDialog = ({
             <TabsContent
               key="tab-content-collaborators"
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="collaborators"
+              value="users"
             >
-              <p>Coming soon.</p>
+              <WorkspaceUsers />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"

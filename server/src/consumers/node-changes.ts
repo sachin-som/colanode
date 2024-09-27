@@ -150,12 +150,14 @@ const mapNode = (node: NodeChangeData): ServerNode => {
     index: node.index,
     attributes: JSON.parse(node.attributes),
     state: node.state,
-    createdAt: node.created_at,
+    createdAt: new Date(node.created_at),
     createdBy: node.created_by,
-    updatedAt: node.updated_at,
+    updatedAt: node.updated_at ? new Date(node.updated_at) : null,
     updatedBy: node.updated_by,
     versionId: node.version_id,
-    serverCreatedAt: node.server_created_at,
-    serverUpdatedAt: node.server_updated_at,
+    serverCreatedAt: new Date(node.server_created_at),
+    serverUpdatedAt: node.server_updated_at
+      ? new Date(node.server_updated_at)
+      : null,
   };
 };

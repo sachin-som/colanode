@@ -66,53 +66,49 @@ export const WorkspaceUpdate = () => {
   };
 
   return (
-    <div className="container flex flex-row justify-center">
-      <div className="w-full max-w-[700px]">
-        <Form {...form}>
-          <form
-            className="flex flex-col"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            <div className="flex-grow space-y-4 py-2 pb-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Write a short description about the workspace"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="flex flex-row justify-end gap-2">
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner className="mr-1" />}
-                Save
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </div>
+    <Form {...form}>
+      <form
+        className="flex flex-col"
+        onSubmit={form.handleSubmit(handleSubmit)}
+      >
+        <div className="flex-grow space-y-4 py-2 pb-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Name *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Write a short description about the workspace"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-row justify-end gap-2">
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Spinner className="mr-1" />}
+            Save
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };

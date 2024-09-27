@@ -6,13 +6,13 @@ export type ServerNode = {
   index: string | null;
   attributes: ServerNodeAttributes | null;
   state: string;
-  createdAt: string;
+  createdAt: Date;
   createdBy: string;
-  updatedAt?: string | null;
+  updatedAt?: Date | null;
   updatedBy?: string | null;
   versionId: string;
-  serverCreatedAt: string;
-  serverUpdatedAt?: string | null;
+  serverCreatedAt: Date;
+  serverUpdatedAt?: Date | null;
 };
 
 export type ServerNodeAttributes = {
@@ -28,13 +28,13 @@ export type ServerNodePermission = {
   collaboratorId: string;
   permission: string;
   workspaceId: string;
-  createdAt: string;
+  createdAt: Date;
   createdBy: string;
-  updatedAt?: string | null;
+  updatedAt?: Date | null;
   updatedBy?: string | null;
   versionId: string;
-  serverCreatedAt: string;
-  serverUpdatedAt?: string | null;
+  serverCreatedAt: Date;
+  serverUpdatedAt?: Date | null;
 };
 
 export type ServerNodeReaction = {
@@ -42,8 +42,8 @@ export type ServerNodeReaction = {
   reactorId: string;
   reaction: string;
   workspaceId: string;
-  createdAt: string;
-  serverCreatedAt: string;
+  createdAt: Date;
+  serverCreatedAt: Date;
 };
 
 export type NodeBlock = {

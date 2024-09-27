@@ -126,7 +126,7 @@ const mapNodeReaction = (
     reactorId: reaction.reactor_id,
     reaction: reaction.reaction,
     workspaceId: reaction.workspace_id,
-    createdAt: reaction.created_at,
-    serverCreatedAt: reaction.server_created_at,
+    createdAt: new Date(reaction.created_at),
+    serverCreatedAt: new Date(reaction.server_created_at),
   };
 };

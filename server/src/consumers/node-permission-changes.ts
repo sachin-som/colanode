@@ -161,12 +161,14 @@ const mapNodePermission = (
     collaboratorId: reaction.collaborator_id,
     permission: reaction.permission,
     workspaceId: reaction.workspace_id,
-    createdAt: reaction.created_at,
+    createdAt: new Date(reaction.created_at),
     createdBy: reaction.created_by,
-    updatedAt: reaction.updated_at,
+    updatedAt: reaction.updated_at ? new Date(reaction.updated_at) : null,
     updatedBy: reaction.updated_by,
     versionId: reaction.version_id,
-    serverCreatedAt: reaction.server_created_at,
-    serverUpdatedAt: reaction.server_updated_at,
+    serverCreatedAt: new Date(reaction.server_created_at),
+    serverUpdatedAt: reaction.server_updated_at
+      ? new Date(reaction.server_updated_at)
+      : null,
   };
 };

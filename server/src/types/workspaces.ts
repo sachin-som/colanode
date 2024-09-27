@@ -57,3 +57,11 @@ export type WorkspaceOutput = {
   role: WorkspaceRole;
   userId: string;
 };
+
+export type WorkspaceAccountsInviteInput = {
+  emails: string[];
+};
+
+export type WorkspaceAccountRoleUpdateInput = {
+  role: WorkspaceRole;
+};

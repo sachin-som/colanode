@@ -3,6 +3,7 @@ import { database } from '@/data/database';
 import { Router } from 'express';
 import { ServerNode, ServerNodeReaction } from '@/types/nodes';
 import { compareString } from '@/lib/utils';
+import { mapNode } from '@/lib/nodes';
 
 export const syncRouter = Router();
 
@@ -23,24 +24,7 @@ syncRouter.get(
       .execute();
 
     const nodes: ServerNode[] = nodeRows
-      .map((node) => {
-        return {
-          id: node.id,
-          parentId: node.parent_id,
-          workspaceId: node.workspace_id,
-          type: node.type,
-          index: node.index,
-          attributes: node.attributes,
-          state: node.state,
-          createdAt: node.created_at.toISOString(),
-          createdBy: node.created_by,
-          versionId: node.version_id,
-          updatedAt: node.updated_at?.toISOString(),
-          updatedBy: node.updated_by,
-          serverCreatedAt: node.server_created_at.toISOString(),
-          serverUpdatedAt: node.server_updated_at?.toISOString(),
-        };
-      })
+      .map((node) => mapNode(node))
       .sort((a, b) => compareString(a.id, b.id));
 
     const nodeReactions: ServerNodeReaction[] = nodeReactionRows.map(
@@ -50,8 +34,8 @@ syncRouter.get(
           reactorId: nodeReaction.reactor_id,
           reaction: nodeReaction.reaction,
           workspaceId: nodeReaction.workspace_id,
-          createdAt: nodeReaction.created_at.toISOString(),
-          serverCreatedAt: nodeReaction.server_created_at.toISOString(),
+          createdAt: nodeReaction.created_at,
+          serverCreatedAt: nodeReaction.server_created_at,
         };
       },
     );

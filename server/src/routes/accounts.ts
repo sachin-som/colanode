@@ -23,9 +23,11 @@ export const accountsRouter = Router();
 
 accountsRouter.post('/register/email', async (req: Request, res: Response) => {
   const input: EmailRegisterInput = req.body;
+  const email = input.email.toLowerCase();
+
   let existingAccount = await database
     .selectFrom('accounts')
-    .where('email', '=', input.email)
+    .where('email', '=', email)
     .executeTakeFirst();
 
   if (existingAccount) {
@@ -42,7 +44,7 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
     .values({
       id: NeuronId.generate(NeuronId.Type.Account),
       name: input.name,
-      email: input.email,
+      email: email,
       password: password,
       status: AccountStatus.Active,
       created_at: new Date(),
@@ -68,9 +70,11 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
 
 accountsRouter.post('/login/email', async (req: Request, res: Response) => {
   const input: EmailLoginInput = req.body;
+  const email = input.email.toLowerCase();
+
   let account = await database
     .selectFrom('accounts')
-    .where('email', '=', input.email)
+    .where('email', '=', email)
     .selectAll()
     .executeTakeFirst();
 

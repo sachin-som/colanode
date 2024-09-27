@@ -24,6 +24,14 @@ export type WorkspaceSyncData = {
   nodeReactions: ServerNodeReaction[];
 };
 
+export type WorkspaceAccountsInviteOutput = {
+  users: ServerNode[];
+};
+
+export type WorkspaceAccountRoleUpdateOutput = {
+  user: ServerNode;
+};
+
 export type SidebarNode = {
   id: string;
   type: string;

@@ -12,7 +12,7 @@ export const useNodeCollaboratorDeleteMutation = () => {
   return useMutation({
     mutationFn: async (input: NodeCollaboratorDeleteInput) => {
       const mutation = workspace.schema
-        .deleteFrom('node_permissions')
+        .deleteFrom('node_collaborators')
         .where((eb) =>
           eb.and([
             eb('node_id', '=', input.nodeId),

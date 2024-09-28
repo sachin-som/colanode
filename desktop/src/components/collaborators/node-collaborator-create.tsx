@@ -3,7 +3,7 @@ import { NodeCollaboratorSearch } from '@/components/collaborators/node-collabor
 import { NodeCollaboratorNode } from '@/types/nodes';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { NodeCollaboratorPermissionDropdown } from './node-collaborator-permission-dropdown';
+import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
 import { useNodeCollaboratorCreateMutation } from '@/mutations/use-node-collaborator-create-mutation';
 import { toast } from '../ui/use-toast';
 
@@ -21,7 +21,7 @@ export const NodeCollaboratorCreate = ({
   const [collaborators, setCollaborators] = React.useState<
     NodeCollaboratorNode[]
   >([]);
-  const [permission, setPermission] = React.useState('collaborator');
+  const [role, setRole] = React.useState('collaborator');
 
   return (
     <div className="flex flex-col gap-2">
@@ -31,10 +31,7 @@ export const NodeCollaboratorCreate = ({
         excluded={existingCollaborators}
       />
       <div className="flex justify-end space-x-2">
-        <NodeCollaboratorPermissionDropdown
-          value={permission}
-          onChange={setPermission}
-        />
+        <NodeCollaboratorRoleDropdown value={role} onChange={setRole} />
         <Button
           variant="default"
           className="shrink-0"
@@ -51,7 +48,7 @@ export const NodeCollaboratorCreate = ({
                 collaboratorIds: collaborators.map(
                   (collaborator) => collaborator.id,
                 ),
-                permission: permission,
+                role: role,
               },
               {
                 onSuccess() {

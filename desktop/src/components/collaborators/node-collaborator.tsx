@@ -1,8 +1,8 @@
 import React from 'react';
 import { NodeCollaboratorNode } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
-import { NodeCollaboratorPermissionDropdown } from './node-collaborator-permission-dropdown';
 import { Icon } from '@/components/ui/icon';
+import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
 import { useNodeCollaboratorDeleteMutation } from '@/mutations/use-node-collaborator-delete-mutation';
 import { useNodeCollaboratorUpdateMutation } from '@/mutations/use-node-collaborator-update-mutation';
 
@@ -35,13 +35,13 @@ export const NodeCollaborator = ({
         </div>
       </div>
       <div className="flex flex-row items-center gap-1">
-        <NodeCollaboratorPermissionDropdown
-          value={collaborator.permission}
-          onChange={(newPermission) => {
+        <NodeCollaboratorRoleDropdown
+          value={collaborator.role}
+          onChange={(newRole) => {
             updateCollaborator({
               nodeId: nodeId,
               collaboratorId: collaborator.id,
-              permission: newPermission,
+              role: newRole,
             });
           }}
         />

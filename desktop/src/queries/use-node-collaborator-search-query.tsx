@@ -51,7 +51,7 @@ export const useNodeCollaboratorSearchQuery = (
           name: attributes.name,
           email: attributes.email,
           avatar: attributes.avatar,
-          permission: 'collaborator',
+          role: 'collaborator',
         };
       });
     },

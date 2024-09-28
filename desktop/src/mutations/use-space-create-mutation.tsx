@@ -1,5 +1,5 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { NodePermission, NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { useMutation } from '@tanstack/react-query';
@@ -54,19 +54,19 @@ export const useSpaceCreateMutation = () => {
         ],
       );
 
-      const insertPermissionQuery = workspace.schema
-        .insertInto('node_permissions')
+      const insertCollaboratorQuery = workspace.schema
+        .insertInto('node_collaborators')
         .values({
           node_id: spaceId,
           collaborator_id: workspace.userId,
-          permission: NodePermission.Owner,
+          role: NodeRole.Owner,
           created_at: new Date().toISOString(),
           created_by: workspace.userId,
           version_id: NeuronId.generate(NeuronId.Type.Version),
         })
         .compile();
 
-      await workspace.mutate([insertNodesQuery, insertPermissionQuery]);
+      await workspace.mutate([insertNodesQuery, insertCollaboratorQuery]);
       return spaceId;
     },
   });

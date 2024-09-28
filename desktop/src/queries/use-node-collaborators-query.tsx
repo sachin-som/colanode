@@ -15,7 +15,7 @@ type NodeCollaboratorRow = {
   node_parent_id: string | null;
   collaborator_id: string;
   collaborator_attributes: string;
-  permission: string;
+  role: string;
 };
 
 export const useNodeCollaboratorsQuery = (nodeId: string) => {
@@ -39,17 +39,17 @@ export const useNodeCollaboratorsQuery = (nodeId: string) => {
           INNER JOIN ancestors a ON n.id = a.parent_id
         )
         SELECT
-          np.node_id,
+          nc.node_id,
           a.level AS node_level,
           nn.attributes AS node_attributes,
           nn.parent_id AS node_parent_id,
-          np.collaborator_id,
+          nc.collaborator_id,
           cn.attributes AS collaborator_attributes,
-          np.permission
-        FROM node_permissions np
-        JOIN ancestors a ON np.node_id = a.id
-        JOIN nodes nn ON np.node_id = nn.id
-        JOIN nodes cn ON np.collaborator_id = cn.id
+          nc.role
+        FROM node_collaborators nc
+        JOIN ancestors a ON nc.node_id = a.id
+        JOIN nodes nn ON nc.node_id = nn.id
+        JOIN nodes cn ON nc.collaborator_id = cn.id
         WHERE cn.type = ${NodeTypes.User};
       `.compile(workspace.schema);
 
@@ -83,7 +83,7 @@ const buildNodeCollaborators = (
         name: collaboratorAttributes.name,
         email: collaboratorAttributes.email,
         avatar: collaboratorAttributes.avatar || null,
-        permission: row.permission,
+        role: row.role,
       };
 
       direct.push(collaborator);
@@ -120,7 +120,7 @@ const buildNodeCollaborators = (
       name: collaboratorAttributes.name,
       avatar: collaboratorAttributes.avatar,
       email: collaboratorAttributes.email,
-      permission: row.permission,
+      role: row.role,
     });
   }
 

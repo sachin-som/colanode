@@ -9,7 +9,7 @@ import {
 } from 'kysely';
 import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
 import {
-  SelectNodePermission,
+  SelectNodeCollaborator,
   WorkspaceDatabaseSchema,
 } from '@/electron/schemas/workspace';
 import { workspaceDatabaseMigrations } from '@/electron/migrations/workspace';
@@ -28,7 +28,7 @@ import { AxiosInstance } from 'axios';
 import { debounce, isEqual } from 'lodash';
 import {
   ServerNode,
-  ServerNodePermission,
+  ServerNodeCollaborator,
   ServerNodeReaction,
 } from '@/types/nodes';
 import { SelectNode } from '@/electron/schemas/workspace';
@@ -236,8 +236,8 @@ export class WorkspaceManager {
   public async executeServerMutation(mutation: ServerMutation): Promise<void> {
     if (mutation.table === 'nodes') {
       await this.executeNodeServerMutation(mutation);
-    } else if (mutation.table === 'node_permissions') {
-      await this.executeNodePermissionServerMutation(mutation);
+    } else if (mutation.table === 'node_collaborators') {
+      await this.executeNodeCollaboratorServerMutation(mutation);
     } else if (mutation.table === 'node_reactions') {
       await this.executeNodeReactionServerMutation(mutation);
     }
@@ -262,16 +262,16 @@ export class WorkspaceManager {
     }
   }
 
-  private async executeNodePermissionServerMutation(
+  private async executeNodeCollaboratorServerMutation(
     mutation: ServerMutation,
   ): Promise<void> {
     if (mutation.action === 'insert' && mutation.after) {
-      await this.syncNodePermissionFromServer(mutation.after);
+      await this.syncNodeCollaboratorFromServer(mutation.after);
     } else if (mutation.action === 'update' && mutation.after) {
-      await this.syncNodePermissionFromServer(mutation.after);
+      await this.syncNodeCollaboratorFromServer(mutation.after);
     } else if (mutation.action === 'delete' && mutation.before) {
       await this.database
-        .deleteFrom('node_permissions')
+        .deleteFrom('node_collaborators')
         .where((eb) =>
           eb.and([
             eb('node_id', '=', mutation.before.node_id),
@@ -280,7 +280,7 @@ export class WorkspaceManager {
         )
         .execute();
 
-      this.debouncedNotifyQuerySubscribers(['node_permissions']);
+      this.debouncedNotifyQuerySubscribers(['node_collaborators']);
     }
   }
 
@@ -426,68 +426,68 @@ export class WorkspaceManager {
     }
   }
 
-  public async syncNodePermissionFromServer(
-    nodePermission: ServerNodePermission,
+  public async syncNodeCollaboratorFromServer(
+    nodeCollaborator: ServerNodeCollaborator,
   ): Promise<void> {
-    const existingNodePermission = await this.database
-      .selectFrom('node_permissions')
+    const existingNodeCollaborator = await this.database
+      .selectFrom('node_collaborators')
       .selectAll()
       .where((eb) =>
         eb.and([
-          eb('node_id', '=', nodePermission.nodeId),
-          eb('collaborator_id', '=', nodePermission.collaboratorId),
+          eb('node_id', '=', nodeCollaborator.nodeId),
+          eb('collaborator_id', '=', nodeCollaborator.collaboratorId),
         ]),
       )
       .executeTakeFirst();
 
-    if (!existingNodePermission) {
+    if (!existingNodeCollaborator) {
       await this.database
-        .insertInto('node_permissions')
+        .insertInto('node_collaborators')
         .values({
-          node_id: nodePermission.nodeId,
-          collaborator_id: nodePermission.collaboratorId,
-          permission: nodePermission.permission,
-          created_at: nodePermission.createdAt,
-          created_by: nodePermission.createdBy,
-          updated_by: nodePermission.updatedBy,
-          updated_at: nodePermission.updatedAt,
-          version_id: nodePermission.versionId,
-          server_created_at: nodePermission.serverCreatedAt,
-          server_updated_at: nodePermission.serverUpdatedAt,
-          server_version_id: nodePermission.versionId,
+          node_id: nodeCollaborator.nodeId,
+          collaborator_id: nodeCollaborator.collaboratorId,
+          role: nodeCollaborator.role,
+          created_at: nodeCollaborator.createdAt,
+          created_by: nodeCollaborator.createdBy,
+          updated_by: nodeCollaborator.updatedBy,
+          updated_at: nodeCollaborator.updatedAt,
+          version_id: nodeCollaborator.versionId,
+          server_created_at: nodeCollaborator.serverCreatedAt,
+          server_updated_at: nodeCollaborator.serverUpdatedAt,
+          server_version_id: nodeCollaborator.versionId,
         })
         .execute();
 
-      this.debouncedNotifyQuerySubscribers(['node_permissions']);
+      this.debouncedNotifyQuerySubscribers(['node_collaborators']);
       return;
     }
 
     if (
-      this.shouldUpdateNodePermissionFromServer(
-        existingNodePermission,
-        nodePermission,
+      this.shouldUpdateNodeCollaboratorFromServer(
+        existingNodeCollaborator,
+        nodeCollaborator,
       )
     ) {
       await this.database
-        .updateTable('node_permissions')
+        .updateTable('node_collaborators')
         .set({
-          permission: nodePermission.permission,
-          updated_at: nodePermission.updatedAt,
-          updated_by: nodePermission.updatedBy,
-          version_id: nodePermission.versionId,
-          server_created_at: nodePermission.serverCreatedAt,
-          server_updated_at: nodePermission.serverUpdatedAt,
-          server_version_id: nodePermission.versionId,
+          role: nodeCollaborator.role,
+          updated_at: nodeCollaborator.updatedAt,
+          updated_by: nodeCollaborator.updatedBy,
+          version_id: nodeCollaborator.versionId,
+          server_created_at: nodeCollaborator.serverCreatedAt,
+          server_updated_at: nodeCollaborator.serverUpdatedAt,
+          server_version_id: nodeCollaborator.versionId,
         })
         .where((eb) =>
           eb.and([
-            eb('node_id', '=', nodePermission.nodeId),
-            eb('collaborator_id', '=', nodePermission.collaboratorId),
+            eb('node_id', '=', nodeCollaborator.nodeId),
+            eb('collaborator_id', '=', nodeCollaborator.collaboratorId),
           ]),
         )
         .execute();
 
-      this.debouncedNotifyQuerySubscribers(['nodes']);
+      this.debouncedNotifyQuerySubscribers(['node_collaborators']);
     }
   }
 
@@ -524,22 +524,23 @@ export class WorkspaceManager {
     return true;
   }
 
-  public shouldUpdateNodePermissionFromServer(
-    localNodePermission: SelectNodePermission,
-    serverNodePermission: ServerNodePermission,
+  public shouldUpdateNodeCollaboratorFromServer(
+    localNodeCollaborator: SelectNodeCollaborator,
+    serverNodeCollaborator: ServerNodeCollaborator,
   ): boolean {
     if (
-      localNodePermission.server_version_id === serverNodePermission.versionId
+      localNodeCollaborator.server_version_id ===
+      serverNodeCollaborator.versionId
     ) {
       return false;
     }
 
-    if (localNodePermission.updated_at) {
-      if (!serverNodePermission.updatedAt) {
+    if (localNodeCollaborator.updated_at) {
+      if (!serverNodeCollaborator.updatedAt) {
         return false;
       }
-      const localUpdatedAt = new Date(localNodePermission.updated_at);
-      const serverUpdatedAt = new Date(serverNodePermission.updatedAt);
+      const localUpdatedAt = new Date(localNodeCollaborator.updated_at);
+      const serverUpdatedAt = new Date(serverNodeCollaborator.updatedAt);
       if (localUpdatedAt > serverUpdatedAt) {
         return false;
       }

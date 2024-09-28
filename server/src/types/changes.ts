@@ -53,10 +53,10 @@ export type NodeChangeData = {
   server_updated_at: string | null;
 };
 
-export type NodePermissionChangeData = {
+export type NodeCollaboratorChangeData = {
   node_id: string;
   collaborator_id: string;
-  permission: string;
+  role: string;
   workspace_id: string;
   created_at: string;
   created_by: string;

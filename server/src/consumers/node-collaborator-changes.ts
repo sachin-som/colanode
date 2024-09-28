@@ -1,17 +1,17 @@
 import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
-import { ChangeMessage, NodePermissionChangeData } from '@/types/changes';
+import { ChangeMessage, NodeCollaboratorChangeData } from '@/types/changes';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { NeuronId } from '@/lib/id';
-import { ServerNodePermission } from '@/types/nodes';
+import { ServerNodeCollaborator } from '@/types/nodes';
 
-export const initNodePermissionChangesConsumer = async () => {
+export const initNodeCollaboratorChangesConsumer = async () => {
   const consumer = kafka.consumer({
-    groupId: CONSUMER_IDS.NODE_PERMISSION_CHANGES,
+    groupId: CONSUMER_IDS.NODE_COLLABORATOR_CHANGES,
   });
 
   await consumer.connect();
-  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_PERMISSION_CHANGES });
+  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_COLLABORATOR_CHANGES });
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -21,34 +21,34 @@ export const initNodePermissionChangesConsumer = async () => {
 
       const change = JSON.parse(
         message.value.toString(),
-      ) as ChangeMessage<NodePermissionChangeData>;
+      ) as ChangeMessage<NodeCollaboratorChangeData>;
 
-      await handleNodePermissionChange(change);
+      await handleNodeCollaboratorChange(change);
     },
   });
 };
 
-const handleNodePermissionChange = async (
-  change: ChangeMessage<NodePermissionChangeData>,
+const handleNodeCollaboratorChange = async (
+  change: ChangeMessage<NodeCollaboratorChangeData>,
 ) => {
   switch (change.op) {
     case PostgresOperation.CREATE: {
-      await handleNodePermissionCreate(change);
+      await handleNodeCollaboratorCreate(change);
       break;
     }
     case PostgresOperation.UPDATE: {
-      await handleNodePermissionUpdate(change);
+      await handleNodeCollaboratorUpdate(change);
       break;
     }
     case PostgresOperation.DELETE: {
-      await handleNodePermissionDelete(change);
+      await handleNodeCollaboratorDelete(change);
       break;
     }
   }
 };
 
-const handleNodePermissionCreate = async (
-  change: ChangeMessage<NodePermissionChangeData>,
+const handleNodeCollaboratorCreate = async (
+  change: ChangeMessage<NodeCollaboratorChangeData>,
 ) => {
   const reaction = change.after;
   if (!reaction) {
@@ -60,24 +60,24 @@ const handleNodePermissionCreate = async (
     return;
   }
 
-  const serverNodePermission: ServerNodePermission =
-    mapNodePermission(reaction);
+  const serverNodeCollaborator: ServerNodeCollaborator =
+    mapNodeCollaborator(reaction);
   await database
     .insertInto('mutations')
     .values({
       id: NeuronId.generate(NeuronId.Type.Mutation),
-      table: 'node_permissions',
+      table: 'node_collaborators',
       action: 'insert',
       workspace_id: reaction.workspace_id,
       created_at: new Date(),
-      after: JSON.stringify(serverNodePermission),
+      after: JSON.stringify(serverNodeCollaborator),
       device_ids: deviceIds,
     })
     .execute();
 };
 
-const handleNodePermissionUpdate = async (
-  change: ChangeMessage<NodePermissionChangeData>,
+const handleNodeCollaboratorUpdate = async (
+  change: ChangeMessage<NodeCollaboratorChangeData>,
 ) => {
   const reaction = change.after;
   if (!reaction) {
@@ -89,24 +89,24 @@ const handleNodePermissionUpdate = async (
     return;
   }
 
-  const serverNodePermission: ServerNodePermission =
-    mapNodePermission(reaction);
+  const serverNodeCollaborator: ServerNodeCollaborator =
+    mapNodeCollaborator(reaction);
   await database
     .insertInto('mutations')
     .values({
       id: NeuronId.generate(NeuronId.Type.Mutation),
-      table: 'node_permissions',
+      table: 'node_collaborators',
       action: 'update',
       workspace_id: reaction.workspace_id,
       created_at: new Date(),
-      after: JSON.stringify(serverNodePermission),
+      after: JSON.stringify(serverNodeCollaborator),
       device_ids: deviceIds,
     })
     .execute();
 };
 
-const handleNodePermissionDelete = async (
-  change: ChangeMessage<NodePermissionChangeData>,
+const handleNodeCollaboratorDelete = async (
+  change: ChangeMessage<NodeCollaboratorChangeData>,
 ) => {
   const reaction = change.before;
   if (!reaction) {
@@ -118,17 +118,17 @@ const handleNodePermissionDelete = async (
     return;
   }
 
-  const serverNodePermission: ServerNodePermission =
-    mapNodePermission(reaction);
+  const serverNodeCollaborator: ServerNodeCollaborator =
+    mapNodeCollaborator(reaction);
   await database
     .insertInto('mutations')
     .values({
       id: NeuronId.generate(NeuronId.Type.Mutation),
-      table: 'node_permissions',
+      table: 'node_collaborators',
       action: 'delete',
       workspace_id: reaction.workspace_id,
       created_at: new Date(),
-      before: JSON.stringify(serverNodePermission),
+      before: JSON.stringify(serverNodeCollaborator),
       after: null,
       device_ids: deviceIds,
     })
@@ -153,13 +153,13 @@ const getDeviceIds = async (workspaceId: string) => {
   return deviceIds;
 };
 
-const mapNodePermission = (
-  reaction: NodePermissionChangeData,
-): ServerNodePermission => {
+const mapNodeCollaborator = (
+  reaction: NodeCollaboratorChangeData,
+): ServerNodeCollaborator => {
   return {
     nodeId: reaction.node_id,
     collaboratorId: reaction.collaborator_id,
-    permission: reaction.permission,
+    role: reaction.role,
     workspaceId: reaction.workspace_id,
     createdAt: new Date(reaction.created_at),
     createdBy: reaction.created_by,

@@ -7,14 +7,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
 
-interface NodeCollaboratorPermission {
+interface NodeCollaboratorRole {
   name: string;
   value: string;
   description: string;
   enabled: boolean;
 }
 
-const permissions: NodeCollaboratorPermission[] = [
+const roles: NodeCollaboratorRole[] = [
   {
     name: 'Owner',
     value: 'owner',
@@ -35,22 +35,22 @@ const permissions: NodeCollaboratorPermission[] = [
   },
 ];
 
-interface NodeCollaboratorPermissionDropdownProps {
+interface NodeCollaboratorRoleDropdownProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export const NodeCollaboratorPermissionDropdown = ({
+export const NodeCollaboratorRoleDropdown = ({
   value,
   onChange,
-}: NodeCollaboratorPermissionDropdownProps) => {
-  const currentPermission = permissions.find((role) => role.value === value);
+}: NodeCollaboratorRoleDropdownProps) => {
+  const currentRole = roles.find((role) => role.value === value);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <p className="flex cursor-pointer flex-row items-center p-1 text-sm text-muted-foreground hover:bg-gray-50">
-          {currentPermission?.name}
+          {currentRole?.name}
           <Icon
             name="arrow-down-s-line"
             className="ml-2 h-4 w-4 text-muted-foreground"
@@ -58,23 +58,23 @@ export const NodeCollaboratorPermissionDropdown = ({
         </p>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {permissions.map((permission) => (
+        {roles.map((role) => (
           <DropdownMenuItem
-            key={permission.value}
+            key={role.value}
             onSelect={() => {
-              onChange(permission.value);
+              onChange(role.value);
             }}
           >
             <div className="flex w-full flex-row items-center justify-between">
               <div className="flex w-full flex-col">
                 <p className="mb-1 text-sm font-medium leading-none">
-                  {permission.name}
+                  {role.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {permission.description}
+                  {role.description}
                 </p>
               </div>
-              {value === permission.value && (
+              {value === role.value && (
                 <Icon name="check-line" className="mr-2 h-4 w-4" />
               )}
             </div>

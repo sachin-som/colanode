@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 interface NodeCollaboratorUpdateInput {
   nodeId: string;
   collaboratorId: string;
-  permission: string;
+  role: string;
 }
 
 export const useNodeCollaboratorUpdateMutation = () => {
@@ -14,9 +14,9 @@ export const useNodeCollaboratorUpdateMutation = () => {
   return useMutation({
     mutationFn: async (input: NodeCollaboratorUpdateInput) => {
       const mutation = workspace.schema
-        .updateTable('node_permissions')
+        .updateTable('node_collaborators')
         .set({
-          permission: input.permission,
+          role: input.role,
           updated_at: new Date().toISOString(),
           updated_by: workspace.userId,
           version_id: NeuronId.generate(NeuronId.Type.Version),

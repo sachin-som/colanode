@@ -26,10 +26,10 @@ export type LocalNodeMutationData = {
   server_version_id: string;
 };
 
-export type LocalNodePermissionMutationData = {
+export type LocalNodeCollaboratorMutationData = {
   node_id: string;
   collaborator_id: string;
-  permission: string;
+  role: string;
   created_at: string;
   updated_at?: string | null;
   created_by: string;

@@ -64,17 +64,17 @@ const createNodeNamesTable: Migration = {
   },
 };
 
-const createNodePermissionsTable: Migration = {
+const createNodeCollaboratorsTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_permissions')
+      .createTable('node_collaborators')
       .addColumn('node_id', 'text', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('collaborator_id', 'text', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
-      .addColumn('permission', 'text', (col) => col.notNull())
+      .addColumn('role', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('created_by', 'text', (col) => col.notNull())
@@ -90,7 +90,7 @@ const createNodePermissionsTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('node_permissions').execute();
+    await db.schema.dropTable('node_collaborators').execute();
   },
 };
 
@@ -329,22 +329,22 @@ const createNodeDeleteNameTrigger: Migration = {
   },
 };
 
-const createNodePermissionInsertMutationTrigger: Migration = {
+const createNodeCollaboratorInsertMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_permission_insert_mutation
-      AFTER INSERT ON node_permissions
+      CREATE TRIGGER node_collaborator_insert_mutation
+      AFTER INSERT ON node_collaborators
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL
       BEGIN
           INSERT INTO mutations ('action', 'table', 'after', 'created_at')
           VALUES (
               'insert',
-              'node_permissions',
+              'node_collaborators',
               json_object(
                   'node_id', NEW.'node_id',
                   'collaborator_id', NEW.'collaborator_id',
-                  'permission', NEW.'permission',
+                  'role', NEW.'role',
                   'created_at', NEW.'created_at',
                   'updated_at', NEW.'updated_at',
                   'created_by', NEW.'created_by',
@@ -360,26 +360,26 @@ const createNodePermissionInsertMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_insert_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_insert_mutation`.execute(db);
   },
 };
 
-const createNodePermissionUpdateMutationTrigger: Migration = {
+const createNodeCollaboratorUpdateMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_permission_update_mutation
-      AFTER UPDATE ON node_permission
+      CREATE TRIGGER node_collaborator_update_mutation
+      AFTER UPDATE ON node_collaborators
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
       BEGIN
           INSERT INTO mutations ('action', 'table', 'before', 'after', 'created_at')
           VALUES (
               'update',
-              'node_permissions',
+              'node_collaborators',
               json_object(
                   'node_id', OLD.'node_id',
                   'collaborator_id', OLD.'collaborator_id',
-                  'permission', OLD.'permission',
+                  'role', OLD.'role',
                   'created_at', OLD.'created_at',
                   'updated_at', OLD.'updated_at',
                   'created_by', OLD.'created_by',
@@ -392,7 +392,7 @@ const createNodePermissionUpdateMutationTrigger: Migration = {
               json_object(
                   'node_id', NEW.'node_id',
                   'collaborator_id', NEW.'collaborator_id',
-                  'permission', NEW.'permission',
+                  'role', NEW.'role',
                   'created_at', NEW.'created_at',
                   'updated_at', NEW.'updated_at',
                   'created_by', NEW.'created_by',
@@ -408,25 +408,25 @@ const createNodePermissionUpdateMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_update_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_update_mutation`.execute(db);
   },
 };
 
-const createNodePermissionDeleteMutationTrigger: Migration = {
+const createNodeCollaboratorDeleteMutationTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_permission_delete_mutation
-      AFTER DELETE ON node_permissions
+      CREATE TRIGGER node_collaborator_delete_mutation
+      AFTER DELETE ON node_collaborators
       FOR EACH ROW
       BEGIN
           INSERT INTO mutations ('action', 'table', 'before', 'created_at')
           VALUES (
               'delete',
-              'node_permissions',
+              'node_collaborators',
               json_object(
                   'node_id', OLD.'node_id',
                   'collaborator_id', OLD.'collaborator_id',
-                  'permission', OLD.'permission',
+                  'role', OLD.'role',
                   'created_at', OLD.'created_at',
                   'updated_at', OLD.'updated_at',
                   'created_by', OLD.'created_by',
@@ -442,7 +442,7 @@ const createNodePermissionDeleteMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_delete_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_delete_mutation`.execute(db);
   },
 };
 
@@ -509,7 +509,7 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
     createNodesParentIdAndTypeIndex,
   '00003_create_node_reactions_table': createNodeReactionsTable,
   '00004_create_node_names_table': createNodeNamesTable,
-  '00005_create_node_permissions_table': createNodePermissionsTable,
+  '00005_create_node_collaborators_table': createNodeCollaboratorsTable,
   '00006_create_mutations_table': createMutationsTable,
   '00007_create_node_insert_mutation_trigger': createNodeInsertMutationTrigger,
   '00008_create_node_update_mutation_trigger': createNodeUpdateMutationTrigger,
@@ -517,12 +517,12 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00010_create_node_insert_name_trigger': createNodeInsertNameTrigger,
   '00011_create_node_update_name_trigger': createNodeUpdateNameTrigger,
   '00012_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
-  '00013_create_node_permission_insert_mutation_trigger':
-    createNodePermissionInsertMutationTrigger,
-  '00014_create_node_permission_update_mutation_trigger':
-    createNodePermissionUpdateMutationTrigger,
-  '00015_create_node_permission_delete_mutation_trigger':
-    createNodePermissionDeleteMutationTrigger,
+  '00013_create_node_collaborator_insert_mutation_trigger':
+    createNodeCollaboratorInsertMutationTrigger,
+  '00014_create_node_collaborator_update_mutation_trigger':
+    createNodeCollaboratorUpdateMutationTrigger,
+  '00015_create_node_collaborator_delete_mutation_trigger':
+    createNodeCollaboratorDeleteMutationTrigger,
   '00016_create_node_reaction_insert_mutation_trigger':
     createNodeReactionInsertMutationTrigger,
   '00017_create_node_reaction_delete_mutation_trigger':

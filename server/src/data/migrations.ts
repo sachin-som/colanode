@@ -49,7 +49,7 @@ const createWorkspaceAccountsTable: Migration = {
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('role', 'integer', (col) => col.notNull())
+      .addColumn('role', 'varchar(30)', (col) => col.notNull())
       .addColumn('attrs', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
@@ -105,17 +105,17 @@ const createNodesTable: Migration = {
   },
 };
 
-const createNodePermissionsTable: Migration = {
+const createNodeCollaboratorsTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_permissions')
+      .createTable('node_collaborators')
       .addColumn('node_id', 'varchar(30)', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('collaborator_id', 'varchar(30)', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
-      .addColumn('permission', 'varchar(30)', (col) => col.notNull())
+      .addColumn('role', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
@@ -124,14 +124,14 @@ const createNodePermissionsTable: Migration = {
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz')
       .addColumn('server_updated_at', 'timestamptz')
-      .addPrimaryKeyConstraint('node_permissions_pkey', [
+      .addPrimaryKeyConstraint('node_collaborators_pkey', [
         'node_id',
         'collaborator_id',
       ])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('node_permissions').execute();
+    await db.schema.dropTable('node_collaborators').execute();
   },
 };
 
@@ -206,7 +206,7 @@ export const databaseMigrations: Record<string, Migration> = {
   '00002_create_workspaces_table': createWorkspacesTable,
   '00003_create_workspace_accounts_table': createWorkspaceAccountsTable,
   '00004_create_nodes_table': createNodesTable,
-  '00005_create_node_permissions_table': createNodePermissionsTable,
+  '00005_create_node_collaborators_table': createNodeCollaboratorsTable,
   '00006_create_node_reactions_table': createNodeReactionsTable,
   '00007_create_account_devices_table': createAccountDevicesTable,
   '00008_create_mutations_table': createMutationsTable,

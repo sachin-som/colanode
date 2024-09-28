@@ -23,10 +23,10 @@ export type ServerNodeAttributes = {
   [key: string]: any;
 };
 
-export type ServerNodePermission = {
+export type ServerNodeCollaborator = {
   nodeId: string;
   collaboratorId: string;
-  permission: string;
+  role: string;
   workspaceId: string;
   createdAt: Date;
   createdBy: string;

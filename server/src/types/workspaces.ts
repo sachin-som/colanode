@@ -4,10 +4,10 @@ export enum WorkspaceStatus {
 }
 
 export enum WorkspaceRole {
-  Owner = 1,
-  Admin = 2,
-  Collaborator = 3,
-  Viewer = 4,
+  Owner = 'owner',
+  Admin = 'admin',
+  Collaborator = 'collaborator',
+  Viewer = 'viewer',
 }
 
 export enum WorkspaceAccountStatus {
@@ -54,7 +54,7 @@ export type WorkspaceOutput = {
   avatar?: string | null;
   versionId: string;
   accountId: string;
-  role: WorkspaceRole;
+  role: string;
   userId: string;
 };
 

@@ -1,12 +1,12 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { CreateNodePermission } from '@/electron/schemas/workspace';
+import { CreateNodeCollaborator } from '@/electron/schemas/workspace';
 import { NeuronId } from '@/lib/id';
 import { useMutation } from '@tanstack/react-query';
 
 interface ReactionCreateInput {
   nodeId: string;
   collaboratorIds: string[];
-  permission: string;
+  role: string;
 }
 
 export const useNodeCollaboratorCreateMutation = () => {
@@ -18,12 +18,12 @@ export const useNodeCollaboratorCreateMutation = () => {
         return;
       }
 
-      const nodePermissionToCreate: CreateNodePermission[] =
+      const nodeCollaboratorsToCreate: CreateNodeCollaborator[] =
         input.collaboratorIds.map((collaboratorId) => {
           return {
             node_id: input.nodeId,
             collaborator_id: collaboratorId,
-            permission: input.permission,
+            role: input.role,
             created_at: new Date().toISOString(),
             created_by: workspace.userId,
             version_id: NeuronId.generate(NeuronId.Type.Version),
@@ -31,8 +31,8 @@ export const useNodeCollaboratorCreateMutation = () => {
         });
 
       const query = workspace.schema
-        .insertInto('node_permissions')
-        .values(nodePermissionToCreate)
+        .insertInto('node_collaborators')
+        .values(nodeCollaboratorsToCreate)
         .onConflict((b) => b.doNothing())
         .compile();
 

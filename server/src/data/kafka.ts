@@ -23,9 +23,9 @@ export const producer = kafka.producer();
 export const TOPIC_NAMES = {
   NODE_CHANGES:
     process.env.KAFKA_NODE_CHANGES_TOPIC_NAME ?? 'neuron_node_changes',
-  NODE_PERMISSION_CHANGES:
-    process.env.KAFKA_NODE_PERMISSION_CHANGES_TOPIC_NAME ??
-    'neuron_node_permission_changes',
+  NODE_COLLABORATOR_CHANGES:
+    process.env.KAFKA_NODE_COLLABORATOR_CHANGES_TOPIC_NAME ??
+    'neuron_node_collaborator_changes',
   NODE_REACTION_CHANGES:
     process.env.KAFKA_NODE_REACTION_CHANGES_TOPIC_NAME ??
     'neuron_node_reaction_changes',
@@ -37,9 +37,9 @@ export const CONSUMER_IDS = {
   NODE_CHANGES:
     process.env.KAFKA_NODE_CHANGES_CONSUMER_ID ??
     'neuron_node_changes_consumer',
-  NODE_PERMISSION_CHANGES:
-    process.env.KAFKA_NODE_PERMISSION_CHANGES_CONSUMER_ID ??
-    'neuron_node_permission_changes_consumer',
+  NODE_COLLABORATOR_CHANGES:
+    process.env.KAFKA_NODE_COLLABORATOR_CHANGES_CONSUMER_ID ??
+    'neuron_node_collaborator_changes_consumer',
   NODE_REACTION_CHANGES:
     process.env.KAFKA_NODE_REACTION_CHANGES_CONSUMER_ID ??
     'neuron_node_reaction_changes_consumer',

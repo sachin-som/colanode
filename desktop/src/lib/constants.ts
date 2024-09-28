@@ -71,7 +71,7 @@ export const SortDirections = {
   Descending: 'desc',
 };
 
-export const NodePermission = {
+export const NodeRole = {
   Owner: 'owner',
   Admin: 'admin',
   Collaborator: 'collaborator',

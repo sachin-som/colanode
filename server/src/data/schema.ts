@@ -45,7 +45,7 @@ interface WorkspaceAccountTable {
   workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
   user_id: ColumnType<string, string, never>;
-  role: ColumnType<number, number, number>;
+  role: ColumnType<string, string, string>;
   attrs: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
@@ -101,10 +101,10 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
-interface NodePermissionTable {
+interface NodeCollaboratorTable {
   node_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
-  permission: ColumnType<string, string, string>;
+  role: ColumnType<string, string, string>;
   workspace_id: ColumnType<string, string, never>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
@@ -115,9 +115,9 @@ interface NodePermissionTable {
   server_updated_at: ColumnType<Date | null, Date | null, Date>;
 }
 
-export type SelectNodePermission = Selectable<NodePermissionTable>;
-export type CreateNodePermission = Insertable<NodePermissionTable>;
-export type UpdateNodePermission = Updateable<NodePermissionTable>;
+export type SelectNodeCollaborator = Selectable<NodeCollaboratorTable>;
+export type CreateNodeCollaborator = Insertable<NodeCollaboratorTable>;
+export type UpdateNodeCollaborator = Updateable<NodeCollaboratorTable>;
 
 interface NodeReactionTable {
   node_id: ColumnType<string, string, never>;
@@ -153,7 +153,7 @@ export interface DatabaseSchema {
   workspace_accounts: WorkspaceAccountTable;
   account_devices: AccountDeviceTable;
   nodes: NodeTable;
-  node_permissions: NodePermissionTable;
+  node_collaborators: NodeCollaboratorTable;
   node_reactions: NodeReactionTable;
   mutations: MutationTable;
 }

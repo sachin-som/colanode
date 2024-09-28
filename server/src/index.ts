@@ -3,7 +3,7 @@ import { initRedis } from '@/data/redis';
 import { initNodeChangesConsumer } from '@/consumers/node-changes';
 import { initMutationChangesConsumer } from '@/consumers/mutation-changes';
 import { initMutationsSubscriber } from '@/consumers/mutations';
-import { initNodePermissionChangesConsumer } from '@/consumers/node-permission-changes';
+import { initNodeCollaboratorChangesConsumer } from '@/consumers/node-collaborator-changes';
 import { initNodeReactionChangesConsumer } from '@/consumers/node-reaction-changes';
 import { migrate } from '@/data/database';
 
@@ -14,8 +14,8 @@ migrate().then(() => {
     console.log('Node changes consumer started');
   });
 
-  initNodePermissionChangesConsumer().then(() => {
-    console.log('Node permission change consumer started');
+  initNodeCollaboratorChangesConsumer().then(() => {
+    console.log('Node collaborator change consumer started');
   });
 
   initNodeReactionChangesConsumer().then(() => {

@@ -9,9 +9,9 @@ import { WorkspaceRedirect } from '@/components/workspaces/workspace-redirect';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/components/workspaces/containers/container';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { eventBus } from '@/lib/event-bus';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useEventBus } from '@/hooks/use-event-bus';
 
 const router = createBrowserRouter([
   {
@@ -41,6 +41,7 @@ const router = createBrowserRouter([
 ]);
 
 export const Root = () => {
+  const eventBus = useEventBus();
   const queryClient = React.useMemo(() => {
     return new QueryClient({
       defaultOptions: {

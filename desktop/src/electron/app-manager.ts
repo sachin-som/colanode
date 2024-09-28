@@ -131,6 +131,7 @@ class AppManager {
         );
       }
     }
+
     if (numAffectedRows === 0n) {
       return;
     }
@@ -187,6 +188,7 @@ class AppManager {
       );
 
       if (resultHasChanged(subscriber.result, newResult)) {
+        subscriber.result = newResult;
         eventBus.publish({
           event: 'app_query_updated',
           payload: {

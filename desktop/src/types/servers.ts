@@ -11,3 +11,10 @@ export type Server = {
 export type ServerAttributes = {
   name: string;
 };
+
+export type ServerConfig = {
+  name: string;
+  avatar: string;
+  version: string;
+  attributes: ServerAttributes;
+};

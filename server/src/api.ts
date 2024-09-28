@@ -7,8 +7,9 @@ import { accountsRouter } from '@/routes/accounts';
 import { workspacesRouter } from '@/routes/workspaces';
 import { mutationsRouter } from '@/routes/mutations';
 import { authMiddleware } from '@/middlewares/auth';
-import { synapse } from '@/synapse';
 import { syncRouter } from '@/routes/sync';
+import { configRouter } from '@/routes/config';
+import { synapse } from '@/synapse';
 
 export const initApi = () => {
   const app = express();
@@ -22,6 +23,7 @@ export const initApi = () => {
   });
 
   app.use('/v1/accounts', accountsRouter);
+  app.use('/v1/config', configRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
   app.use('/v1/mutations', authMiddleware, mutationsRouter);
   app.use('/v1/', authMiddleware, syncRouter);

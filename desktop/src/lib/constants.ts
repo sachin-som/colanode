@@ -70,3 +70,10 @@ export const SortDirections = {
   Ascending: 'asc',
   Descending: 'desc',
 };
+
+export const NodePermission = {
+  Owner: 'owner',
+  Admin: 'admin',
+  Collaborator: 'collaborator',
+  Viewer: 'viewer',
+};

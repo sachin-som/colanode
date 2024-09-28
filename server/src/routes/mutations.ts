@@ -201,18 +201,20 @@ const handleCreateNodePermissionMutation = async (
     return;
   }
 
-  const nodeReactionData = JSON.parse(
+  const nodePermissionData = JSON.parse(
     mutation.after,
-  ) as LocalNodeReactionMutationData;
+  ) as LocalNodePermissionMutationData;
   await database
-    .insertInto('node_reactions')
+    .insertInto('node_permissions')
     .values({
-      node_id: nodeReactionData.node_id,
-      reactor_id: nodeReactionData.reactor_id,
-      reaction: nodeReactionData.reaction,
-      created_at: new Date(nodeReactionData.created_at),
+      node_id: nodePermissionData.node_id,
+      collaborator_id: nodePermissionData.collaborator_id,
+      permission: nodePermissionData.permission,
       workspace_id: workspaceId,
+      created_at: new Date(nodePermissionData.created_at),
+      created_by: nodePermissionData.created_by,
       server_created_at: new Date(),
+      version_id: nodePermissionData.version_id,
     })
     .onConflict((ob) => ob.doNothing())
     .execute();
@@ -330,20 +332,18 @@ const handleCreateNodeReactionMutation = async (
     return;
   }
 
-  const nodePermissionData = JSON.parse(
+  const nodeReactionData = JSON.parse(
     mutation.after,
-  ) as LocalNodePermissionMutationData;
+  ) as LocalNodeReactionMutationData;
   await database
-    .insertInto('node_permissions')
+    .insertInto('node_reactions')
     .values({
-      node_id: nodePermissionData.node_id,
-      collaborator_id: nodePermissionData.collaborator_id,
-      permission: nodePermissionData.permission,
+      node_id: nodeReactionData.node_id,
+      reactor_id: nodeReactionData.reactor_id,
+      reaction: nodeReactionData.reaction,
+      created_at: new Date(nodeReactionData.created_at),
       workspace_id: workspaceId,
-      created_at: new Date(nodePermissionData.created_at),
-      created_by: nodePermissionData.created_by,
       server_created_at: new Date(),
-      version_id: nodePermissionData.version_id,
     })
     .onConflict((ob) => ob.doNothing())
     .execute();

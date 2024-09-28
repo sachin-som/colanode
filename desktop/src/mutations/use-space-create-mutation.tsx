@@ -1,5 +1,5 @@
 import { useWorkspace } from '@/contexts/workspace';
-import { NodeTypes } from '@/lib/constants';
+import { NodePermission, NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildNodeInsertMutation, generateNodeIndex } from '@/lib/nodes';
 import { useMutation } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ export const useSpaceCreateMutation = () => {
       const pageIndex = generateNodeIndex(null, null);
       const channelIndex = generateNodeIndex(pageIndex, null);
 
-      const query = buildNodeInsertMutation(
+      const insertNodesQuery = buildNodeInsertMutation(
         workspace.schema,
         workspace.userId,
         [
@@ -54,7 +54,19 @@ export const useSpaceCreateMutation = () => {
         ],
       );
 
-      await workspace.mutate(query);
+      const insertPermissionQuery = workspace.schema
+        .insertInto('node_permissions')
+        .values({
+          node_id: spaceId,
+          collaborator_id: workspace.userId,
+          permission: NodePermission.Owner,
+          created_at: new Date().toISOString(),
+          created_by: workspace.userId,
+          version_id: NeuronId.generate(NeuronId.Type.Version),
+        })
+        .compile();
+
+      await workspace.mutate([insertNodesQuery, insertPermissionQuery]);
       return spaceId;
     },
   });

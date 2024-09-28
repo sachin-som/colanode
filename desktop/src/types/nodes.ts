@@ -89,3 +89,23 @@ export type NodeInsertInput = {
   id: string;
   attributes: LocalNodeAttributes;
 };
+
+export type NodeCollaboratorsWrapper = {
+  direct: NodeCollaboratorNode[];
+  inherit: InheritNodeCollaboratorsGroup[];
+};
+
+export type InheritNodeCollaboratorsGroup = {
+  id: string;
+  name: string;
+  avatar: string | null;
+  collaborators: NodeCollaboratorNode[];
+};
+
+export type NodeCollaboratorNode = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  permission: string;
+};

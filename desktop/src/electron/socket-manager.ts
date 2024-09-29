@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
 import { Account } from '@/types/accounts';
-
-const SOCKET_URL = 'ws://localhost:3000';
+import { Server } from '@/types/servers';
+import { buildSynapseUrl } from '@/lib/servers';
 
 export type SocketMessage = {
   type: string;
@@ -9,13 +9,15 @@ export type SocketMessage = {
 };
 
 export class SocketManager {
+  private readonly server: Server;
   private readonly account: Account;
   private socket: WebSocket | null;
   private closingCount: number;
   private listeners: Map<string, ((payload: any) => void)[]>;
   private lastInitAt: number;
 
-  constructor(account: Account) {
+  constructor(server: Server, account: Account) {
+    this.server = server;
     this.account = account;
     this.socket = null;
     this.closingCount = 0;
@@ -37,7 +39,7 @@ export class SocketManager {
     this.lastInitAt = Date.now();
     this.closingCount = 0;
     this.socket = new WebSocket(
-      `${SOCKET_URL}/v1/synapse?device_id=${this.account.deviceId}`,
+      buildSynapseUrl(this.server, this.account.deviceId),
     );
 
     this.socket.onmessage = (event) => {

@@ -9,7 +9,7 @@ export type Server = {
 };
 
 export type ServerAttributes = {
-  name: string;
+  insecure?: string;
 };
 
 export type ServerConfig = {

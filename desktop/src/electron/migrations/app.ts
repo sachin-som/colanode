@@ -18,7 +18,7 @@ const createServersTable: Migration = {
   },
 };
 
-const addNeuronServers: Migration = {
+const insertNeuronServers: Migration = {
   up: async (db) => {
     await db
       .insertInto('servers')
@@ -27,7 +27,7 @@ const addNeuronServers: Migration = {
           domain: 'localhost:3000',
           name: 'Localhost',
           avatar: '',
-          attributes: '{}',
+          attributes: '{ "insecure": true }',
           version: '0.1.0',
           created_at: new Date().toISOString(),
         },
@@ -101,7 +101,7 @@ const createWorkspacesTable: Migration = {
 
 export const appDatabaseMigrations: Record<string, Migration> = {
   '00001_create_servers_table': createServersTable,
-  '00002_add_neuron_servers': addNeuronServers,
+  '00002_insert_neuron_servers': insertNeuronServers,
   '00003_create_accounts_table': createAccountsTable,
   '00004_create_workspaces_table': createWorkspacesTable,
 };

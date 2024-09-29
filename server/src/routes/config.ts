@@ -8,7 +8,7 @@ configRouter.get('/', async (req: Request, res: Response) => {
     avatar: '',
     version: '0.1.0',
     attributes: {
-      type: '',
+      insecure: true,
     },
   });
 });

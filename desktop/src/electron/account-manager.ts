@@ -1,14 +1,14 @@
 import * as fs from 'node:fs';
+import Axios, { AxiosInstance } from 'axios';
 import { Account } from '@/types/accounts';
 import { Workspace } from '@/types/workspaces';
 import { WorkspaceManager } from '@/electron/workspace-manager';
 import { SocketManager } from '@/electron/socket-manager';
 import { ServerMutation } from '@/types/mutations';
-import Axios, { AxiosInstance } from 'axios';
 import { Kysely } from 'kysely';
 import { AppDatabaseSchema } from '@/electron/schemas/app';
-
-const SERVER_URL = 'http://localhost:3000';
+import { Server } from '@/types/servers';
+import { buildApiBaseUrl } from '@/lib/servers';
 
 export class AccountManager {
   public readonly account: Account;
@@ -19,6 +19,7 @@ export class AccountManager {
   private readonly database: Kysely<AppDatabaseSchema>;
 
   constructor(
+    server: Server,
     account: Account,
     appPath: string,
     workspaces: Workspace[],
@@ -26,9 +27,9 @@ export class AccountManager {
   ) {
     this.account = account;
     this.database = database;
-    this.socket = new SocketManager(account);
+    this.socket = new SocketManager(server, account);
     this.axios = Axios.create({
-      baseURL: SERVER_URL,
+      baseURL: buildApiBaseUrl(server),
       headers: {
         Authorization: `Bearer ${account.token}`,
         DeviceId: account.deviceId,

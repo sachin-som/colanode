@@ -1,76 +1,29 @@
 import React from 'react';
+import Axios from 'axios';
 import { Login } from '@/components/accounts/login';
 import { AppLoading } from '@/components/app-loading';
 import { AccountContext } from '@/contexts/account';
-import Axios from 'axios';
 import { AxiosContext } from '@/contexts/axios';
 import { Outlet } from 'react-router-dom';
 import { AccountLogout } from '@/components/accounts/account-logout';
-import { AppDatabaseContext } from '@/contexts/app-database';
-import {
-  Kysely,
-  SqliteAdapter,
-  DummyDriver,
-  SqliteIntrospector,
-  SqliteQueryCompiler,
-} from 'kysely';
-import { AppDatabaseSchema } from '@/electron/schemas/app';
-import { useQuery } from '@tanstack/react-query';
 import { DelayedComponent } from '@/components/ui/delayed-component';
-
-const SERVER_URL = 'http://localhost:3000';
-
-const appDatabase = new Kysely<AppDatabaseSchema>({
-  dialect: {
-    createAdapter: () => new SqliteAdapter(),
-    createDriver: () => new DummyDriver(),
-    createIntrospector: (db) => new SqliteIntrospector(db),
-    createQueryCompiler: () => new SqliteQueryCompiler(),
-  },
-});
+import { useAccountsQuery } from '@/queries/use-accounts-query';
+import { useWorkspacesQuery } from '@/queries/use-workspaces-query';
+import { useServersQuery } from '@/queries/use-servers-query';
+import { buildApiBaseUrl } from '@/lib/servers';
 
 export const App = () => {
   const [showLogout, setShowLogout] = React.useState(false);
 
-  const accountsQuery = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async ({ queryKey }) => {
-      const query = appDatabase
-        .selectFrom('accounts')
-        .where('status', '=', 'active')
-        .selectAll()
-        .compile();
-      return await window.neuron.executeAppQueryAndSubscribe({
-        key: queryKey,
-        query: query,
-      });
-    },
-  });
+  const { data: servers, isPending: isPendingServers } = useServersQuery();
+  const { data: accounts, isPending: isPendingAccounts } = useAccountsQuery();
+  const { data: workspaces, isPending: isPendingWorkspaces } =
+    useWorkspacesQuery();
 
-  const workspacesQuery = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: async ({ queryKey }) => {
-      const query = appDatabase
-        .selectFrom('workspaces')
-        .where(
-          'account_id',
-          'in',
-          appDatabase
-            .selectFrom('accounts')
-            .where('status', '=', 'active')
-            .select('id'),
-        )
-        .selectAll()
-        .compile();
-      return await window.neuron.executeAppQueryAndSubscribe({
-        key: queryKey,
-        query: query,
-      });
-    },
-  });
+  const isPending =
+    isPendingServers || isPendingAccounts || isPendingWorkspaces;
 
-  const isLoading = accountsQuery.isPending || workspacesQuery.isPending;
-  if (isLoading) {
+  if (isPending) {
     return (
       <DelayedComponent>
         <AppLoading />
@@ -78,80 +31,49 @@ export const App = () => {
     );
   }
 
-  if (accountsQuery.data.rows.length == 0) {
-    return (
-      <AppDatabaseContext.Provider
-        value={{
-          database: appDatabase,
-          query: (query) => window.neuron.executeAppQuery(query),
-          queryAndSubscribe: (context) =>
-            window.neuron.executeAppQueryAndSubscribe(context),
-          mutate: (mutation) => window.neuron.executeAppMutation(mutation),
-        }}
-      >
-        <Login />
-      </AppDatabaseContext.Provider>
-    );
+  if (accounts.length == 0) {
+    return <Login />;
   }
 
-  const account = accountsQuery.data.rows[0];
+  const account = accounts[0];
+  const server = servers.find((server) => server.domain === account.server);
+
+  if (!server) {
+    return <p>Server not found.</p>;
+  }
+
+  const accountWorkspaces = workspaces.filter(
+    (workspace) => workspace.accountId === account.id,
+  );
+
   const axios = Axios.create({
-    baseURL: SERVER_URL,
+    baseURL: buildApiBaseUrl(server),
     headers: {
       Authorization: `Bearer ${account.token}`,
     },
   });
 
   return (
-    <AppDatabaseContext.Provider
+    <AccountContext.Provider
       value={{
-        database: appDatabase,
-        query: (query) => window.neuron.executeAppQuery(query),
-        queryAndSubscribe: (context) =>
-          window.neuron.executeAppQueryAndSubscribe(context),
-        mutate: (mutation) => window.neuron.executeAppMutation(mutation),
+        ...account,
+        workspaces: accountWorkspaces,
+        logout: () => {
+          setShowLogout(true);
+        },
       }}
     >
-      <AccountContext.Provider
-        value={{
-          id: account.id,
-          name: account.name,
-          avatar: account.avatar,
-          token: account.token,
-          email: account.email,
-          deviceId: account.device_id,
-          status: account.status,
-          server: account.server,
-          workspaces: workspacesQuery.data?.rows.map((row) => {
-            return {
-              id: row.id,
-              name: row.name,
-              description: row.description,
-              avatar: row.avatar,
-              versionId: row.version_id,
-              accountId: row.account_id,
-              role: row.role,
-              userId: row.user_id,
-              synced: row.synced,
-            };
-          }),
-          logout: () => {
-            setShowLogout(true);
-          },
-        }}
-      >
-        <AxiosContext.Provider value={axios}>
-          <Outlet />
-        </AxiosContext.Provider>
-        {showLogout && (
-          <AccountLogout
-            id={account.id}
-            onCancel={() => {
-              setShowLogout(false);
-            }}
-          />
-        )}
-      </AccountContext.Provider>
-    </AppDatabaseContext.Provider>
+      <AxiosContext.Provider value={axios}>
+        <Outlet />
+      </AxiosContext.Provider>
+      {showLogout && (
+        <AccountLogout
+          id={account.id}
+          onCancel={() => {
+            setShowLogout(false);
+          }}
+        />
+      )}
+    </AccountContext.Provider>
   );
 };

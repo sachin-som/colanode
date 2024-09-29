@@ -8,7 +8,6 @@ import {
   SqliteDialect,
 } from 'kysely';
 import { AccountManager } from '@/electron/account-manager';
-import { ServerManager } from '@/electron/server-manager';
 import { AppDatabaseSchema } from '@/electron/schemas/app';
 import { appDatabaseMigrations } from '@/electron/migrations/app';
 import { Account } from '@/types/accounts';
@@ -26,7 +25,7 @@ import { Server } from '@/types/servers';
 const EVENT_LOOP_INTERVAL = 1000;
 
 class AppManager {
-  private readonly servers: Map<string, ServerManager>;
+  private readonly servers: Map<string, Server>;
   private readonly accounts: Map<string, AccountManager>;
   private readonly appPath: string;
   private readonly database: Kysely<AppDatabaseSchema>;
@@ -34,7 +33,7 @@ class AppManager {
   private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.servers = new Map<string, ServerManager>();
+    this.servers = new Map<string, Server>();
     this.accounts = new Map<string, AccountManager>();
     this.appPath = app.getPath('userData');
     this.subscribers = new Map();
@@ -140,6 +139,13 @@ class AppManager {
       return;
     }
 
+    if (affectedTables.has('servers')) {
+      const servers = await this.getServers();
+      for (const server of servers) {
+        this.servers.set(server.domain, server);
+      }
+    }
+
     if (affectedTables.has('accounts')) {
       const accounts = await this.getAccounts();
       for (const account of accounts) {
@@ -147,7 +153,13 @@ class AppManager {
           continue;
         }
 
+        const server = this.servers.get(account.server);
+        if (!server) {
+          continue;
+        }
+
         const accountManager = new AccountManager(
+          server,
           account,
           this.appPath,
           [],
@@ -243,8 +255,7 @@ class AppManager {
 
     const servers = await this.getServers();
     for (const server of servers) {
-      const serverManager = new ServerManager(server);
-      this.servers.set(server.domain, serverManager);
+      this.servers.set(server.domain, server);
     }
 
     const accounts = await this.getAccounts();
@@ -253,7 +264,14 @@ class AppManager {
       const accountWorkspaces = workspaces.filter(
         (workspace) => workspace.accountId === account.id,
       );
+
+      const server = this.servers.get(account.server);
+      if (!server) {
+        continue;
+      }
+
       const accountManager = new AccountManager(
+        server,
         account,
         this.appPath,
         accountWorkspaces,

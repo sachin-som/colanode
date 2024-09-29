@@ -303,7 +303,7 @@ class AppManager {
         }
       }
     } catch (error) {
-      console.error('Error in event loop:', error);
+      // console.error('Error in event loop:', error);
     }
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }

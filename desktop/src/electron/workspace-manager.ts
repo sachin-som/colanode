@@ -24,7 +24,7 @@ import {
   ServerMutation,
 } from '@/types/mutations';
 import { eventBus } from '@/lib/event-bus';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, isAxiosError } from 'axios';
 import { debounce, isEqual } from 'lodash';
 import {
   ServerNode,
@@ -32,12 +32,14 @@ import {
   ServerNodeReaction,
 } from '@/types/nodes';
 import { SelectNode } from '@/electron/schemas/workspace';
+import { BackoffCalculator } from '@/lib/backoff-calculator';
 
 export class WorkspaceManager {
   private readonly workspace: Workspace;
   private readonly axios: AxiosInstance;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
   private readonly subscribers: Map<string, SubscribedQueryResult<unknown>>;
+  private readonly backoffCalculator: BackoffCalculator;
   private readonly debouncedNotifyQuerySubscribers: (
     affectedTables: string[],
   ) => void;
@@ -46,6 +48,7 @@ export class WorkspaceManager {
     this.workspace = workspace;
     this.axios = axios;
     this.subscribers = new Map();
+    this.backoffCalculator = new BackoffCalculator();
 
     const workspaceDir = `${accountPath}/${workspace.id}`;
     if (!fs.existsSync(workspaceDir)) {
@@ -189,18 +192,22 @@ export class WorkspaceManager {
   }
 
   public async sendMutations(): Promise<void> {
-    const mutations = await this.database
-      .selectFrom('mutations')
-      .selectAll()
-      .orderBy('id asc')
-      .limit(20)
-      .execute();
-
-    if (!mutations || mutations.length === 0) {
+    if (!this.backoffCalculator.canRetry()) {
       return;
     }
 
     try {
+      const mutations = await this.database
+        .selectFrom('mutations')
+        .selectAll()
+        .orderBy('id asc')
+        .limit(20)
+        .execute();
+
+      if (!mutations || mutations.length === 0) {
+        return;
+      }
+
       const { status, data } =
         await this.axios.post<ServerExecuteMutationsResponse>('v1/mutations', {
           workspaceId: this.workspace.id,
@@ -228,8 +235,12 @@ export class WorkspaceManager {
           .where('id', 'in', failedMutationIds)
           .execute();
       }
+
+      this.backoffCalculator.reset();
     } catch (error) {
-      console.error(error);
+      if (isAxiosError(error)) {
+        this.backoffCalculator.increaseError();
+      }
     }
   }
 
@@ -310,71 +321,84 @@ export class WorkspaceManager {
   }
 
   public async sync(): Promise<boolean> {
-    if (this.workspace.synced) {
-      return true;
-    }
-
-    const { data, status } = await this.axios.get<WorkspaceSyncData>(
-      `v1/${this.workspace.id}/sync`,
-    );
-
-    if (status !== 200) {
+    if (!this.backoffCalculator.canRetry()) {
       return false;
     }
 
-    if (data.nodes.length === 0 && data.nodeReactions.length === 0) {
+    try {
+      if (this.workspace.synced) {
+        return true;
+      }
+
+      const { data, status } = await this.axios.get<WorkspaceSyncData>(
+        `v1/${this.workspace.id}/sync`,
+      );
+
+      if (status !== 200) {
+        return false;
+      }
+
+      if (data.nodes.length === 0 && data.nodeReactions.length === 0) {
+        return true;
+      }
+
+      await this.database.transaction().execute(async (trx) => {
+        if (data.nodes.length > 0) {
+          await trx.deleteFrom('nodes').execute();
+
+          await trx
+            .insertInto('nodes')
+            .values(
+              data.nodes.map((node) => {
+                return {
+                  id: node.id,
+                  attributes: JSON.stringify(node.attributes),
+                  state: node.state,
+                  created_at: node.createdAt,
+                  created_by: node.createdBy,
+                  updated_by: node.updatedBy,
+                  updated_at: node.updatedAt,
+                  version_id: node.versionId,
+                  server_created_at: node.serverCreatedAt,
+                  server_updated_at: node.serverUpdatedAt,
+                  server_version_id: node.versionId,
+                };
+              }),
+            )
+            .execute();
+        }
+
+        if (data.nodeReactions.length > 0) {
+          await trx.deleteFrom('node_reactions').execute();
+
+          await trx
+            .insertInto('node_reactions')
+            .values(
+              data.nodeReactions.map((nodeReaction) => {
+                return {
+                  node_id: nodeReaction.nodeId,
+                  reactor_id: nodeReaction.reactorId,
+                  reaction: nodeReaction.reaction,
+                  created_at: nodeReaction.createdAt,
+                  server_created_at: nodeReaction.serverCreatedAt,
+                };
+              }),
+            )
+            .execute();
+        }
+      });
+
+      this.workspace.synced = true;
+      this.backoffCalculator.reset();
+      this.debouncedNotifyQuerySubscribers(['nodes', 'node_reactions']);
       return true;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        this.backoffCalculator.increaseError();
+      }
     }
 
-    await this.database.transaction().execute(async (trx) => {
-      if (data.nodes.length > 0) {
-        await trx.deleteFrom('nodes').execute();
-
-        await trx
-          .insertInto('nodes')
-          .values(
-            data.nodes.map((node) => {
-              return {
-                id: node.id,
-                attributes: JSON.stringify(node.attributes),
-                state: node.state,
-                created_at: node.createdAt,
-                created_by: node.createdBy,
-                updated_by: node.updatedBy,
-                updated_at: node.updatedAt,
-                version_id: node.versionId,
-                server_created_at: node.serverCreatedAt,
-                server_updated_at: node.serverUpdatedAt,
-                server_version_id: node.versionId,
-              };
-            }),
-          )
-          .execute();
-      }
-
-      if (data.nodeReactions.length > 0) {
-        await trx.deleteFrom('node_reactions').execute();
-
-        await trx
-          .insertInto('node_reactions')
-          .values(
-            data.nodeReactions.map((nodeReaction) => {
-              return {
-                node_id: nodeReaction.nodeId,
-                reactor_id: nodeReaction.reactorId,
-                reaction: nodeReaction.reaction,
-                created_at: nodeReaction.createdAt,
-                server_created_at: nodeReaction.serverCreatedAt,
-              };
-            }),
-          )
-          .execute();
-      }
-    });
-
-    this.workspace.synced = true;
-    this.debouncedNotifyQuerySubscribers(['nodes', 'node_reactions']);
-    return true;
+    return false;
   }
 
   public async syncNodeFromServer(node: ServerNode): Promise<void> {

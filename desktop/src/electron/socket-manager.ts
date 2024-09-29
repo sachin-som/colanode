@@ -2,6 +2,7 @@ import { WebSocket } from 'ws';
 import { Account } from '@/types/accounts';
 import { Server } from '@/types/servers';
 import { buildSynapseUrl } from '@/lib/servers';
+import { BackoffCalculator } from '@/lib/backoff-calculator';
 
 export type SocketMessage = {
   type: string;
@@ -12,17 +13,17 @@ export class SocketManager {
   private readonly server: Server;
   private readonly account: Account;
   private socket: WebSocket | null;
-  private closingCount: number;
+  private backoffCalculator: BackoffCalculator;
   private listeners: Map<string, ((payload: any) => void)[]>;
-  private lastInitAt: number;
+  private closingCount: number;
 
   constructor(server: Server, account: Account) {
     this.server = server;
     this.account = account;
     this.socket = null;
-    this.closingCount = 0;
+    this.backoffCalculator = new BackoffCalculator();
     this.listeners = new Map();
-    this.lastInitAt = 0;
+    this.closingCount = 0;
   }
 
   public init(): void {
@@ -30,14 +31,10 @@ export class SocketManager {
       return;
     }
 
-    // Prevent multiple init calls in a short period
-    // init only once in 5 seconds
-    if (Date.now() - this.lastInitAt < 5000) {
+    if (!this.backoffCalculator.canRetry()) {
       return;
     }
 
-    this.lastInitAt = Date.now();
-    this.closingCount = 0;
     this.socket = new WebSocket(
       buildSynapseUrl(this.server, this.account.deviceId),
     );
@@ -61,8 +58,12 @@ export class SocketManager {
       }
     };
 
-    this.socket.onerror = (event) => {
-      console.error('Socket error:', event);
+    this.socket.onopen = () => {
+      this.backoffCalculator.reset();
+    };
+
+    this.socket.onerror = () => {
+      this.backoffCalculator.increaseError();
     };
   }
 

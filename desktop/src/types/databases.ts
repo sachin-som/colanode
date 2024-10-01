@@ -1,4 +1,4 @@
-import { User } from '@/types/users';
+import { UserNode } from '@/types/users';
 
 export type DatabaseNode = {
   id: string;
@@ -173,7 +173,7 @@ export type RecordNode = {
   parentId: string;
   index: string;
   createdAt: Date;
-  createdBy: User;
+  createdBy: UserNode;
   versionId: string;
 
   attributes: any;

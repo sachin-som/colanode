@@ -21,7 +21,7 @@ import {
   ViewFilter,
   ViewSort,
 } from '@/types/databases';
-import { User } from '@/types/users';
+import { UserNode } from '@/types/users';
 import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 import { sha256 } from 'js-sha256';
 import { QueryResult, sql } from 'kysely';
@@ -113,15 +113,17 @@ const buildRecords = (rows: SelectNode[]): RecordNode[] => {
 
   const authorNodes = nodes.filter((node) => node.type === NodeTypes.User);
   const records: RecordNode[] = [];
-  const authorMap = new Map<string, User>();
+  const authorMap = new Map<string, UserNode>();
 
   for (const author of authorNodes) {
     const name = author.attributes.name;
     const avatar = author.attributes.avatar;
+    const email = author.attributes.email;
 
     authorMap.set(author.id, {
       id: author.id,
       name: name ?? 'Unknown User',
+      email,
       avatar,
     });
   }
@@ -139,6 +141,7 @@ const buildRecords = (rows: SelectNode[]): RecordNode[] => {
       createdBy: author ?? {
         id: node.createdBy,
         name: 'Unknown User',
+        email: 'unknown@neuron.com',
         avatar: null,
       },
       versionId: node.versionId,

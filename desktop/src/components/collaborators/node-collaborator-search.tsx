@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/command';
 import { Icon } from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+import { Avatar } from '@/components/ui/avatar';
 import { useNodeCollaboratorSearchQuery } from '@/queries/use-node-collaborator-search-query';
-import { Avatar } from '../ui/avatar';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];

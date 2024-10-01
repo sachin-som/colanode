@@ -2,17 +2,9 @@ import React from 'react';
 import { SidebarHeader } from '@/components/workspaces/sidebars/sidebar-header';
 import { SidebarSpaces } from '@/components/workspaces/sidebars/sidebar-spaces';
 import { SidebarChats } from '@/components/workspaces/sidebars/sidebar-chats';
-import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
-import { useSidebarQuery } from '@/queries/use-sidebar-query';
 
 export const Sidebar = () => {
-  const { data, isPending } = useSidebarQuery();
-
-  if (isPending) {
-    return <Spinner />;
-  }
-
   return (
     <div className="h-full max-h-screen w-full border-r border-gray-200">
       <SidebarHeader />
@@ -25,8 +17,8 @@ export const Sidebar = () => {
           <Icon name="inbox-line" className="mr-2 h-4 w-4" />
           <span>Inbox</span>
         </div>
-        <SidebarChats chats={data?.chats ?? []} />
-        <SidebarSpaces spaces={data?.spaces ?? []} />
+        <SidebarChats />
+        <SidebarSpaces />
       </div>
     </div>
   );

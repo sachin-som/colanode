@@ -4,7 +4,7 @@ import { NodeTypes } from '@/lib/constants';
 import { buildNodeWithChildren, mapNode } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
-import { User } from '@/types/users';
+import { UserNode } from '@/types/users';
 import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 import { QueryResult, sql } from 'kysely';
 
@@ -132,15 +132,17 @@ const buildMessages = (rows: MessageRow[]): MessageNode[] => {
     .map(mapNode);
 
   const messages: MessageNode[] = [];
-  const authorMap = new Map<string, User>();
+  const authorMap = new Map<string, UserNode>();
   for (const authorRow of authorRows) {
     const authorNode = mapNode(authorRow);
     const name = authorNode.attributes.name;
+    const email = authorNode.attributes.email;
     const avatar = authorNode.attributes.avatar;
 
     authorMap.set(authorRow.id, {
       id: authorRow.id,
       name: name ?? 'Unknown User',
+      email,
       avatar,
     });
   }
@@ -163,6 +165,7 @@ const buildMessages = (rows: MessageRow[]): MessageNode[] => {
       author: author ?? {
         id: messageNode.createdBy,
         name: 'Unknown User',
+        email: 'unknown@neuron.com',
         avatar: null,
       },
       content: children,

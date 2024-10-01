@@ -1,5 +1,6 @@
-export type User = {
+export type UserNode = {
   id: string;
   name: string;
-  avatar: string;
+  email: string;
+  avatar: string | null;
 };

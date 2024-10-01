@@ -1,11 +1,11 @@
 import { LocalNodeWithChildren } from '@/types/nodes';
-import { User } from '@/types/users';
+import { UserNode } from '@/types/users';
 
 export type MessageNode = {
   id: string;
   content: LocalNodeWithChildren[];
   createdAt: string;
-  author: User;
+  author: UserNode;
   reactionCounts: MessageReactionCount[];
   userReactions: string[];
 };

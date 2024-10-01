@@ -12,6 +12,7 @@ enum IdType {
   Space = 'sp',
   Page = 'pg',
   Channel = 'ch',
+  Chat = 'ct',
   Node = 'nd',
   Message = 'ms',
   Subscriber = 'sb',

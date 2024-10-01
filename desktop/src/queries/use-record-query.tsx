@@ -57,11 +57,13 @@ const buildRecord = (
         id: authorNode.id,
         name: authorNode.attributes.name,
         avatar: authorNode.attributes.avatar,
+        email: authorNode.attributes.email,
       }
     : {
         id: recordNode.createdBy,
         name: 'Unknown User',
         avatar: null,
+        email: 'unknown@neuron.com',
       };
 
   return {

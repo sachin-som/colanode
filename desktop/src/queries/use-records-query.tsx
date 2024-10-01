@@ -550,11 +550,11 @@ const buildMultiSelectFilterQuery = (
   field: MultiSelectFieldNode,
 ): string | null => {
   if (filter.operator === 'is_empty') {
-    return buildIsEmptyFilterQuery(field.id);
+    return `json_extract(n.attributes, '$.${field.id}') IS NULL OR json_array_length(json_extract(n.attributes, '$.${field.id}')) = 0`;
   }
 
   if (filter.operator === 'is_not_empty') {
-    return buildIsNotEmptyFilterQuery(field.id);
+    return `json_extract(n.attributes, '$.${field.id}') IS NOT NULL AND json_array_length(json_extract(n.attributes, '$.${field.id}')) > 0`;
   }
 
   if (!isStringArray(filter.value)) {
@@ -564,9 +564,9 @@ const buildMultiSelectFilterQuery = (
   const values = joinIds(filter.value);
   switch (filter.operator) {
     case 'is_in':
-      return `json_extract(n.attributes, '$.${field.id}') IN (${values})`;
+      return `EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.${field.id}')) WHERE json_each.value IN (${values}))`;
     case 'is_not_in':
-      return `json_extract(n.attributes, '$.${field.id}') NOT IN (${values})`;
+      return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.${field.id}')) WHERE json_each.value IN (${values}))`;
     default:
       return null;
   }

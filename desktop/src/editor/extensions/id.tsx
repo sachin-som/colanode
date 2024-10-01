@@ -1,21 +1,21 @@
 import { Extension } from '@tiptap/react';
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { NeuronId } from '@/lib/id';
-import { NodeTypes } from '@/lib/constants';
+import { EditorNodeTypes } from '@/lib/constants';
 
 const types = [
-  NodeTypes.Paragraph,
-  NodeTypes.Heading1,
-  NodeTypes.Heading2,
-  NodeTypes.Heading3,
-  NodeTypes.Blockquote,
-  NodeTypes.BulletList,
-  NodeTypes.ListItem,
-  NodeTypes.OrderedList,
-  NodeTypes.TaskList,
-  NodeTypes.TaskItem,
-  NodeTypes.CodeBlock,
-  NodeTypes.HorizontalRule,
+  EditorNodeTypes.Paragraph,
+  EditorNodeTypes.Heading1,
+  EditorNodeTypes.Heading2,
+  EditorNodeTypes.Heading3,
+  EditorNodeTypes.Blockquote,
+  EditorNodeTypes.BulletList,
+  EditorNodeTypes.ListItem,
+  EditorNodeTypes.OrderedList,
+  EditorNodeTypes.TaskList,
+  EditorNodeTypes.TaskItem,
+  EditorNodeTypes.CodeBlock,
+  EditorNodeTypes.HorizontalRule,
 ];
 
 export const IdExtension = Extension.create({

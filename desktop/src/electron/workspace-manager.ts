@@ -280,17 +280,11 @@ export class WorkspaceManager {
     mutation: ServerMutation,
   ): Promise<boolean> {
     if (mutation.action === 'insert' && mutation.after) {
-      return this.syncNodeFromServer(mutation.after);
+      return this.createNodeFromServer(mutation.after);
     } else if (mutation.action === 'update' && mutation.after) {
-      return this.syncNodeFromServer(mutation.after);
+      return this.updateNodeFromServer(mutation.after);
     } else if (mutation.action === 'delete' && mutation.before) {
-      await this.database
-        .deleteFrom('nodes')
-        .where('id', '=', mutation.before.id)
-        .execute();
-
-      this.debouncedNotifyQuerySubscribers(['nodes']);
-      return true;
+      return this.deleteNodeFromServer(mutation.before);
     }
   }
 
@@ -424,74 +418,81 @@ export class WorkspaceManager {
     return false;
   }
 
-  public async syncNodeFromServer(node: ServerNode): Promise<boolean> {
-    try {
-      const existingNode = await this.database
-        .selectFrom('nodes')
-        .selectAll()
-        .where('id', '=', node.id)
-        .executeTakeFirst();
-
-      if (!existingNode) {
-        await this.database
-          .insertInto('nodes')
-          .values({
-            id: node.id,
-            attributes: JSON.stringify(node.attributes),
-            state: node.state,
-            created_at: node.createdAt,
-            created_by: node.createdBy,
-            updated_by: node.updatedBy,
-            updated_at: node.updatedAt,
-            version_id: node.versionId,
+  private async createNodeFromServer(node: ServerNode): Promise<boolean> {
+    await this.database
+      .insertInto('nodes')
+      .values({
+        id: node.id,
+        attributes: JSON.stringify(node.attributes),
+        state: node.state,
+        created_at: node.createdAt,
+        created_by: node.createdBy,
+        updated_by: node.updatedBy,
+        updated_at: node.updatedAt,
+        version_id: node.versionId,
+        server_created_at: node.serverCreatedAt,
+        server_updated_at: node.serverUpdatedAt,
+        server_version_id: node.versionId,
+      })
+      .onConflict((cb) =>
+        cb
+          .doUpdateSet({
             server_created_at: node.serverCreatedAt,
             server_updated_at: node.serverUpdatedAt,
             server_version_id: node.versionId,
           })
-          .onConflict((cb) => cb.doNothing())
-          .execute();
+          .where('version_id', '=', node.versionId),
+      )
+      .execute();
 
-        this.debouncedNotifyQuerySubscribers(['nodes']);
-        return true;
-      }
+    this.debouncedNotifyQuerySubscribers(['nodes']);
+    return true;
+  }
 
-      if (this.shouldUpdateNodeFromServer(existingNode, node)) {
-        const doc = new Y.Doc({
-          guid: node.id,
-        });
+  private async updateNodeFromServer(node: ServerNode): Promise<boolean> {
+    const existingNode = await this.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', node.id)
+      .executeTakeFirst();
 
-        Y.applyUpdate(doc, toUint8Array(existingNode.state));
-        Y.applyUpdate(doc, toUint8Array(node.state));
-
-        const attributesMap = doc.getMap('attributes');
-        const attributes = JSON.stringify(attributesMap.toJSON());
-        const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
-
-        await this.database
-          .updateTable('nodes')
-          .set({
-            attributes: attributes,
-            state: encodedState,
-            updated_at: node.updatedAt,
-            updated_by: node.updatedBy,
-            version_id: node.versionId,
-            server_created_at: node.serverCreatedAt,
-            server_updated_at: node.serverUpdatedAt,
-            server_version_id: node.versionId,
-          })
-          .where('id', '=', node.id)
-          .execute();
-
-        this.debouncedNotifyQuerySubscribers(['nodes']);
-        return true;
-      }
-    } catch (error) {
-      if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-        return true;
-      }
+    if (!this.shouldUpdateNodeFromServer(existingNode, node)) {
+      return true;
     }
+    const doc = new Y.Doc({
+      guid: node.id,
+    });
 
-    return false;
+    Y.applyUpdate(doc, toUint8Array(existingNode.state));
+    Y.applyUpdate(doc, toUint8Array(node.state));
+
+    const attributesMap = doc.getMap('attributes');
+    const attributes = JSON.stringify(attributesMap.toJSON());
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    await this.database
+      .updateTable('nodes')
+      .set({
+        attributes: attributes,
+        state: encodedState,
+        updated_at: node.updatedAt,
+        updated_by: node.updatedBy,
+        version_id: node.versionId,
+        server_created_at: node.serverCreatedAt,
+        server_updated_at: node.serverUpdatedAt,
+        server_version_id: node.versionId,
+      })
+      .where('id', '=', node.id)
+      .execute();
+
+    this.debouncedNotifyQuerySubscribers(['nodes']);
+    return true;
+  }
+
+  private async deleteNodeFromServer(node: ServerNode): Promise<boolean> {
+    await this.database.deleteFrom('nodes').where('id', '=', node.id).execute();
+    this.debouncedNotifyQuerySubscribers(['nodes']);
+    return true;
   }
 
   public async syncNodeCollaboratorFromServer(

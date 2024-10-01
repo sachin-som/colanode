@@ -42,6 +42,7 @@ const handleCreateNodeCollaboratorMutation = async (
     workspaceAccount,
     nodeCollaboratorData,
   );
+
   if (!canCreate) {
     return {
       status: 'error',

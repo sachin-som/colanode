@@ -33,6 +33,8 @@ import {
 } from '@/types/nodes';
 import { SelectNode } from '@/electron/schemas/workspace';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
+import * as Y from 'yjs';
+import { fromUint8Array, toUint8Array } from 'js-base64';
 
 export class WorkspaceManager {
   private readonly workspace: Workspace;
@@ -247,25 +249,27 @@ export class WorkspaceManager {
     }
   }
 
-  public async executeServerMutation(mutation: ServerMutation): Promise<void> {
+  public async executeServerMutation(
+    mutation: ServerMutation,
+  ): Promise<boolean> {
     if (mutation.table === 'nodes') {
-      await this.executeNodeServerMutation(mutation);
+      return this.executeNodeServerMutation(mutation);
     } else if (mutation.table === 'node_collaborators') {
-      await this.executeNodeCollaboratorServerMutation(mutation);
+      return this.executeNodeCollaboratorServerMutation(mutation);
     } else if (mutation.table === 'node_reactions') {
-      await this.executeNodeReactionServerMutation(mutation);
+      return this.executeNodeReactionServerMutation(mutation);
     }
 
-    //other cases in the future
+    return false;
   }
 
   private async executeNodeServerMutation(
     mutation: ServerMutation,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (mutation.action === 'insert' && mutation.after) {
-      await this.syncNodeFromServer(mutation.after);
+      return this.syncNodeFromServer(mutation.after);
     } else if (mutation.action === 'update' && mutation.after) {
-      await this.syncNodeFromServer(mutation.after);
+      return this.syncNodeFromServer(mutation.after);
     } else if (mutation.action === 'delete' && mutation.before) {
       await this.database
         .deleteFrom('nodes')
@@ -273,16 +277,17 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['nodes']);
+      return true;
     }
   }
 
   private async executeNodeCollaboratorServerMutation(
     mutation: ServerMutation,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (mutation.action === 'insert' && mutation.after) {
-      await this.syncNodeCollaboratorFromServer(mutation.after);
+      return this.syncNodeCollaboratorFromServer(mutation.after);
     } else if (mutation.action === 'update' && mutation.after) {
-      await this.syncNodeCollaboratorFromServer(mutation.after);
+      return this.syncNodeCollaboratorFromServer(mutation.after);
     } else if (mutation.action === 'delete' && mutation.before) {
       await this.database
         .deleteFrom('node_collaborators')
@@ -295,14 +300,15 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['node_collaborators']);
+      return true;
     }
   }
 
   private async executeNodeReactionServerMutation(
     mutation: ServerMutation,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (mutation.action === 'insert' && mutation.after) {
-      await this.syncNodeReactionFromServer(mutation.after);
+      return this.syncNodeReactionFromServer(mutation.after);
     } else if (mutation.action === 'delete' && mutation.before) {
       await this.database
         .deleteFrom('node_reactions')
@@ -316,6 +322,7 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['node_reactions']);
+      return true;
     }
   }
 
@@ -404,58 +411,79 @@ export class WorkspaceManager {
     return false;
   }
 
-  public async syncNodeFromServer(node: ServerNode): Promise<void> {
-    const existingNode = await this.database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', node.id)
-      .executeTakeFirst();
-
-    if (!existingNode) {
-      await this.database
-        .insertInto('nodes')
-        .values({
-          id: node.id,
-          attributes: JSON.stringify(node.attributes),
-          state: node.state,
-          created_at: node.createdAt,
-          created_by: node.createdBy,
-          updated_by: node.updatedBy,
-          updated_at: node.updatedAt,
-          version_id: node.versionId,
-          server_created_at: node.serverCreatedAt,
-          server_updated_at: node.serverUpdatedAt,
-          server_version_id: node.versionId,
-        })
-        .execute();
-
-      this.debouncedNotifyQuerySubscribers(['nodes']);
-      return;
-    }
-
-    if (this.shouldUpdateNodeFromServer(existingNode, node)) {
-      await this.database
-        .updateTable('nodes')
-        .set({
-          attributes: node.attributes ? JSON.stringify(node.attributes) : null,
-          state: node.state,
-          updated_at: node.updatedAt,
-          updated_by: node.updatedBy,
-          version_id: node.versionId,
-          server_created_at: node.serverCreatedAt,
-          server_updated_at: node.serverUpdatedAt,
-          server_version_id: node.versionId,
-        })
+  public async syncNodeFromServer(node: ServerNode): Promise<boolean> {
+    try {
+      const existingNode = await this.database
+        .selectFrom('nodes')
+        .selectAll()
         .where('id', '=', node.id)
-        .execute();
+        .executeTakeFirst();
 
-      this.debouncedNotifyQuerySubscribers(['nodes']);
+      if (!existingNode) {
+        await this.database
+          .insertInto('nodes')
+          .values({
+            id: node.id,
+            attributes: JSON.stringify(node.attributes),
+            state: node.state,
+            created_at: node.createdAt,
+            created_by: node.createdBy,
+            updated_by: node.updatedBy,
+            updated_at: node.updatedAt,
+            version_id: node.versionId,
+            server_created_at: node.serverCreatedAt,
+            server_updated_at: node.serverUpdatedAt,
+            server_version_id: node.versionId,
+          })
+          .onConflict((cb) => cb.doNothing())
+          .execute();
+
+        this.debouncedNotifyQuerySubscribers(['nodes']);
+        return true;
+      }
+
+      if (this.shouldUpdateNodeFromServer(existingNode, node)) {
+        const doc = new Y.Doc({
+          guid: node.id,
+        });
+
+        Y.applyUpdate(doc, toUint8Array(existingNode.state));
+        Y.applyUpdate(doc, toUint8Array(node.state));
+
+        const attributesMap = doc.getMap('attributes');
+        const attributes = JSON.stringify(attributesMap.toJSON());
+        const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+        await this.database
+          .updateTable('nodes')
+          .set({
+            attributes: attributes,
+            state: encodedState,
+            updated_at: node.updatedAt,
+            updated_by: node.updatedBy,
+            version_id: node.versionId,
+            server_created_at: node.serverCreatedAt,
+            server_updated_at: node.serverUpdatedAt,
+            server_version_id: node.versionId,
+          })
+          .where('id', '=', node.id)
+          .execute();
+
+        this.debouncedNotifyQuerySubscribers(['nodes']);
+        return true;
+      }
+    } catch (error) {
+      if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+        return true;
+      }
     }
+
+    return false;
   }
 
   public async syncNodeCollaboratorFromServer(
     nodeCollaborator: ServerNodeCollaborator,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const existingNodeCollaborator = await this.database
       .selectFrom('node_collaborators')
       .selectAll()
@@ -486,7 +514,7 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['node_collaborators']);
-      return;
+      return true;
     }
 
     if (
@@ -515,12 +543,13 @@ export class WorkspaceManager {
         .execute();
 
       this.debouncedNotifyQuerySubscribers(['node_collaborators']);
+      return true;
     }
   }
 
   private async syncNodeReactionFromServer(
     nodeReaction: ServerNodeReaction,
-  ): Promise<void> {
+  ): Promise<boolean> {
     await this.database
       .insertInto('node_reactions')
       .values({
@@ -538,6 +567,7 @@ export class WorkspaceManager {
       .execute();
 
     this.debouncedNotifyQuerySubscribers(['node_reactions']);
+    return true;
   }
 
   public shouldUpdateNodeFromServer(

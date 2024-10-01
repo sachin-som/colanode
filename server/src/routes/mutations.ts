@@ -66,6 +66,7 @@ mutationsRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     }
   }
 
+  console.log('executed mutations', results);
   res.status(200).json({ results });
 });
 

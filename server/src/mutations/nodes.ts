@@ -169,10 +169,13 @@ const handleDeleteNodeMutation = async (
     .select(['id', 'workspace_id'])
     .executeTakeFirst();
 
-  if (
-    !existingNode ||
-    existingNode.workspace_id !== workspaceAccount.workspace_id
-  ) {
+  if (!existingNode) {
+    return {
+      status: 'success',
+    };
+  }
+
+  if (existingNode.workspace_id !== workspaceAccount.workspace_id) {
     return {
       status: 'error',
     };

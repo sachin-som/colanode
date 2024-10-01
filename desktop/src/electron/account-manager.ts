@@ -50,17 +50,25 @@ export class AccountManager {
     }
 
     this.socket.on('mutation', async (mutation) => {
-      const serverMutation = mutation as ServerMutation;
-      const workspace = this.workspaces.get(serverMutation.workspaceId);
-      if (workspace) {
-        await workspace.executeServerMutation(serverMutation);
-        this.socket.send({
-          type: 'mutation_ack',
-          payload: {
-            id: serverMutation.id,
-            workspaceId: serverMutation.workspaceId,
-          },
-        });
+      try {
+        const serverMutation = mutation as ServerMutation;
+        const workspace = this.workspaces.get(serverMutation.workspaceId);
+        if (!workspace) {
+          return;
+        }
+
+        const executed = await workspace.executeServerMutation(serverMutation);
+        if (executed) {
+          this.socket.send({
+            type: 'mutation_ack',
+            payload: {
+              id: serverMutation.id,
+              workspaceId: serverMutation.workspaceId,
+            },
+          });
+        }
+      } catch (error) {
+        console.log(error);
       }
     });
   }

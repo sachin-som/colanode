@@ -220,13 +220,26 @@ export class WorkspaceManager {
         return;
       }
 
-      const executedMutations = data.results
+      const executedMutationIds = data.results
         .filter((result) => result.status === 'success')
         .map((result) => result.id);
 
+      const mutliFailureMutationIds = mutations
+        .filter(
+          (mutation) =>
+            mutation.retry_count >= 5 &&
+            !executedMutationIds.includes(mutation.id),
+        )
+        .map((mutation) => mutation.id);
+
+      const toDeleteMutationIds = [
+        ...executedMutationIds,
+        ...mutliFailureMutationIds,
+      ];
+
       await this.database
         .deleteFrom('mutations')
-        .where('id', 'in', executedMutations)
+        .where('id', 'in', toDeleteMutationIds)
         .execute();
 
       const failedMutationIds = data.results

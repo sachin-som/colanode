@@ -16,7 +16,7 @@ import {
   extractTablesFromSql,
   resultHasChanged,
 } from '@/electron/utils';
-import { Workspace } from '@/types/workspaces';
+import { Workspace, WorkspaceRole } from '@/types/workspaces';
 import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import { eventBus } from '@/lib/event-bus';
 import { isEqual } from 'lodash';
@@ -372,7 +372,7 @@ class AppManager {
         description: workspace.description,
         avatar: workspace.avatar,
         versionId: workspace.version_id,
-        role: workspace.role,
+        role: workspace.role as WorkspaceRole,
         userId: workspace.user_id,
         synced: workspace.synced === 1,
       }),

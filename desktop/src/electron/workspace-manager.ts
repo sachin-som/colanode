@@ -218,15 +218,18 @@ export class WorkspaceManager {
         return;
       }
 
-      const executedMutations = data.executedMutations;
+      const executedMutations = data.results
+        .filter((result) => result.status === 'success')
+        .map((result) => result.id);
+
       await this.database
         .deleteFrom('mutations')
         .where('id', 'in', executedMutations)
         .execute();
 
-      const failedMutationIds = mutations
-        .filter((mutation) => !executedMutations.includes(mutation.id))
-        .map((mutation) => mutation.id);
+      const failedMutationIds = data.results
+        .filter((result) => result.status === 'error')
+        .map((result) => result.id);
 
       if (failedMutationIds.length > 0) {
         await this.database

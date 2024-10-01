@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 
 interface UpdateWorkspaceAccountRoleInput {
   accountId: string;
-  role: number;
+  role: string;
 }
 
 export const useWorkspaceAccountRoleUpdateMutation = () => {

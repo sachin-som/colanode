@@ -6,6 +6,8 @@ import { Avatar } from '@/components/ui/avatar';
 import { useWorkspace } from '@/contexts/workspace';
 import { WorkspaceUpdate } from '@/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/components/workspaces/workspace-users';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { DialogTitle } from '@radix-ui/react-dialog';
 
 interface WorkspaceSettingsDialogProps {
   open: boolean;
@@ -20,7 +22,13 @@ export const WorkspaceSettingsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="md:min-h-3/4 md:max-h-3/4 p-3 md:h-3/4 md:w-3/4 md:max-w-full">
+      <DialogContent
+        className="md:min-h-3/4 md:max-h-3/4 p-3 md:h-3/4 md:w-3/4 md:max-w-full"
+        aria-describedby={undefined}
+      >
+        <VisuallyHidden>
+          <DialogTitle>Workspace Settings</DialogTitle>
+        </VisuallyHidden>
         <Tabs
           defaultValue="info"
           className="grid h-full max-h-full grid-cols-[240px_minmax(0,1fr)] overflow-hidden"

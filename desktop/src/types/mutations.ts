@@ -8,6 +8,12 @@ export type ServerMutation = {
 };
 
 export type ServerExecuteMutationsResponse = {
-  success: boolean;
-  executedMutations: number[];
+  results: ServerExecuteMutationResult[];
 };
+
+export type ServerExecuteMutationResult = {
+  id: number;
+  status: ServerExecuteMutationStatus;
+};
+
+export type ServerExecuteMutationStatus = 'success' | 'error';

@@ -3,6 +3,17 @@ export type ExecuteLocalMutationsInput = {
   mutations: LocalMutation[];
 };
 
+export type ExecuteLocalMutationResult = {
+  status: ExecuteLocalMutationStatus;
+};
+
+export type ExecuteLocalMutationStatus = 'success' | 'error';
+
+export type ServerExecuteMutationResult = {
+  id: number;
+  status: ExecuteLocalMutationStatus;
+};
+
 export type LocalMutation = {
   id: number;
   table: string;

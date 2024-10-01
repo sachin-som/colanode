@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/components/workspaces/workspace-user-role-dropdown';
+import { WorkspaceRole } from '@/types/workspaces';
 
 export const WorkspaceUsers = () => {
   const { data, isPending, hasNextPage, fetchNextPage, isFetchingNextPage } =
@@ -30,7 +31,7 @@ export const WorkspaceUsers = () => {
           const name: string = user.attributes.name ?? 'Unknown';
           const email: string = user.attributes.email ?? ' ';
           const avatar: string | null | undefined = user.attributes.avatar;
-          const role: number = user.attributes.role;
+          const role: WorkspaceRole = user.attributes.role;
           const accountId: string = user.attributes.accountId;
 
           if (!accountId || !role) {

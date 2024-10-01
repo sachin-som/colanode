@@ -42,7 +42,7 @@ const roles: WorkspaceRoleItem[] = [
 
 interface WorkspaceUserRoleDropdownProps {
   accountId: string;
-  value: number;
+  value: WorkspaceRole;
 }
 
 export const WorkspaceUserRoleDropdown = ({

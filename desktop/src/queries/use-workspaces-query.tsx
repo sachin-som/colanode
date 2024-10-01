@@ -1,6 +1,6 @@
 import { useAppDatabase } from '@/contexts/app-database';
 import { SelectWorkspace } from '@/electron/schemas/app';
-import { Workspace } from '@/types/workspaces';
+import { Workspace, WorkspaceRole } from '@/types/workspaces';
 import { useQuery } from '@tanstack/react-query';
 import { QueryResult } from 'kysely';
 
@@ -43,7 +43,7 @@ const mapWorkspaces = (row: SelectWorkspace): Workspace => {
     avatar: row.avatar,
     versionId: row.version_id,
     accountId: row.account_id,
-    role: row.role,
+    role: row.role as WorkspaceRole,
     userId: row.user_id,
     synced: row.synced === 1,
   };

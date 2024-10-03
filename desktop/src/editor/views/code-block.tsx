@@ -1,7 +1,7 @@
 import React from 'react';
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
-import '@/styles/highlight.css';
+import '@/renderer/styles/highlight.css';
 
 import {
   Command,
@@ -21,7 +21,10 @@ import { defaultClasses } from '@/editor/classes';
 import { languages } from '@/lib/lowlight';
 import { cn } from '@/lib/utils';
 
-export const CodeBlockNodeView = ({ node, updateAttributes }: NodeViewProps) => {
+export const CodeBlockNodeView = ({
+  node,
+  updateAttributes,
+}: NodeViewProps) => {
   const language = node.attrs?.language ?? 'plaintext';
   const languageItem = languages.find((item) => item.code === language);
   const code = node.textContent ?? '';

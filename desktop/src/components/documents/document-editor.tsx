@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/styles/editor.css';
+import '@/renderer/styles/editor.css';
 import { useEditor, EditorContent } from '@tiptap/react';
 import {
   ParagraphCommand,

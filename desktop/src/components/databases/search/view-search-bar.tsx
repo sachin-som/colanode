@@ -2,7 +2,7 @@ import React from 'react';
 import { ViewSorts } from '@/components/databases/search/view-sorts';
 import { ViewFilters } from '@/components/databases/search/view-filters';
 import { Separator } from '@/components/ui/separator';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 export const ViewSearchBar = () => {
   const viewSearch = useViewSearch();

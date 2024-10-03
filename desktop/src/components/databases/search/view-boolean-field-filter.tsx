@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon, booleanFieldFilterOperators } from '@/lib/databases';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewBooleanFieldFilterProps {
   field: BooleanFieldNode;

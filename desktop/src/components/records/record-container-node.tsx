@@ -6,7 +6,7 @@ import { RecordAttributes } from '@/components/records/record-attributes';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Document } from '@/components/documents/document';
 import { Separator } from '@/components/ui/separator';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordContainerNodeProps {
   node: LocalNode;

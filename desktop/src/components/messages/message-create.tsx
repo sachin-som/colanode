@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageEditor } from '@/components/messages/message-editor';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface MessageCreateProps {
   conversationId: string;

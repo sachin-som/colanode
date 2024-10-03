@@ -13,7 +13,7 @@ import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOptionNode;

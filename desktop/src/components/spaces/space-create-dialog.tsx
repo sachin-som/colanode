@@ -23,7 +23,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),

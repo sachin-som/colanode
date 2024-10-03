@@ -1,11 +1,11 @@
 import React from 'react';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { TableViewRow } from '@/components/databases/tables/table-view-row';
 import { TableViewEmptyPlaceholder } from '@/components/databases/tables/table-view-empty-placeholder';
 import { TableViewLoadMoreRow } from '@/components/databases/tables/table-view-load-more-row';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
-import { useViewSearch } from '@/contexts/view-search';
-import { useWorkspace } from '@/contexts/workspace';
+import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const RECORDS_PER_PAGE = 50;
 

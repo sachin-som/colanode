@@ -1,8 +1,8 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const TableViewRecordCreateRow = () => {
   const workspace = useWorkspace();

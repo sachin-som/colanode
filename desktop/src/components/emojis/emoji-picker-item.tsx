@@ -1,7 +1,7 @@
 import React from 'react';
 import { Emoji } from '@/lib/emojis';
 import { EmojiElement } from '@/components/emojis/emoji-element';
-import { useEmojiPicker } from '@/contexts/emoji-picker';
+import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';
 
 interface EmojiPickerItemProps {
   emoji: Emoji;

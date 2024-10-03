@@ -1,7 +1,7 @@
 import React from 'react';
 import { ViewFilterAddPopover } from '@/components/databases/search/view-filter-add-popover';
 import { Icon } from '@/components/ui/icon';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 export const ViewFilterButton = () => {
   const viewSearch = useViewSearch();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import {
   Popover,
   PopoverContent,
@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
-import { useAccount } from '@/contexts/account';
+import { useAccount } from '@/renderer/contexts/account';
 import { useNavigate } from 'react-router-dom';
 
 export const SidebarHeader = () => {

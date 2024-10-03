@@ -9,7 +9,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface TableViewUrlCellProps {
   record: RecordNode;

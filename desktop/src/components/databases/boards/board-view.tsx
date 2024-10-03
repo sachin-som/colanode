@@ -1,7 +1,7 @@
 import React from 'react';
 import { BoardViewNode } from '@/types/databases';
 import { ViewTabs } from '@/components/databases/view-tabs';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { BoardViewColumn } from '@/components/databases/boards/board-view-column';
 import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
 import { ViewSortButton } from '@/components/databases/search/view-sort-button';

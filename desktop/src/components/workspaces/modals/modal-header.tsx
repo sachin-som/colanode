@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface ModalHeaderProps {
   nodeId: string;

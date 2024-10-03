@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import {
   BoardViewNode,
@@ -8,7 +8,7 @@ import {
   ViewFilter,
 } from '@/types/databases';
 import { BoardViewCard } from '@/components/databases/boards/board-view-card';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const RECORDS_PER_PAGE = 50;
 

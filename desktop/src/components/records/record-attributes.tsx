@@ -1,7 +1,7 @@
 import React from 'react';
 import { RecordNode } from '@/types/databases';
 import { RecordName } from '@/components/records/record-name';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { RecordField } from '@/components/records/record-field';
 import { RecordFieldValue } from '@/components/records/record-field-value';
 

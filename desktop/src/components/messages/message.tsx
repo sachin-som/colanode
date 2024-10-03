@@ -14,7 +14,7 @@ import { NodeRenderer } from '@/editor/renderers/node';
 import { MessageNode } from '@/types/messages';
 import { MessageReactions } from '@/components/messages/message-reactions';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface MessageProps {
   message: MessageNode;

@@ -2,7 +2,7 @@ import React from 'react';
 import { FieldNode } from '@/types/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface FieldRenameInputProps {
   field: FieldNode;

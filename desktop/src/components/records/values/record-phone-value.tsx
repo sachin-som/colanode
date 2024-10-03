@@ -2,7 +2,7 @@ import React from 'react';
 import { RecordNode, PhoneFieldNode } from '@/types/databases';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordPhoneValueProps {
   record: RecordNode;

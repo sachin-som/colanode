@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { getFieldIcon, numberFieldFilterOperators } from '@/lib/databases';
 import { SmartNumberInput } from '@/components/ui/smart-number-input';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewNumberFieldFilterProps {
   field: NumberFieldNode;

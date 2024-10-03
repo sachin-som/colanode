@@ -1,7 +1,7 @@
 import React from 'react';
 import isHotkey from 'is-hotkey';
 import { Icon } from '@/components/ui/icon';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';

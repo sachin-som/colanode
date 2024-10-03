@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { ViewSortAddPopover } from '@/components/databases/search/view-sort-add-popover';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 export const ViewSortButton = () => {
   const viewSearch = useViewSearch();

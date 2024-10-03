@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { useTableView } from '@/contexts/table-view';
+import { useTableView } from '@/renderer/contexts/table-view';
 import { useDrop } from 'react-dnd';
 import { cn } from '@/lib/utils';
 

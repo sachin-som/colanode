@@ -2,7 +2,7 @@ import React from 'react';
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Avatar } from '@/components/ui/avatar';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const PageNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();

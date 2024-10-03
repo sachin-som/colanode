@@ -6,7 +6,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/components/ui/use-toast';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface NodeCollaboratorCreate {
   id: string;

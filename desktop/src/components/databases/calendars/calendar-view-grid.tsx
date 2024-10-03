@@ -6,9 +6,9 @@ import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/components/databases/calendars/calendar-view-day';
 import { CalendarViewNode, FieldNode, ViewFilter } from '@/types/databases';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { filterRecords } from '@/lib/databases';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const RECORDS_PER_PAGE = 50;
 

@@ -7,7 +7,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Avatar } from '@/components/ui/avatar';

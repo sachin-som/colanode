@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface TableViewMultiSelectCellProps {
   record: RecordNode;

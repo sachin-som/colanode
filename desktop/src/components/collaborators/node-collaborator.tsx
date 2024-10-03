@@ -4,7 +4,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface NodeCollaboratorProps {
   nodeId: string;

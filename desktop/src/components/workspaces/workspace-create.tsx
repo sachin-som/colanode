@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useAccount } from '@/contexts/account';
+import { useAccount } from '@/renderer/contexts/account';
 import { useNavigate } from 'react-router-dom';
 
 const formSchema = z.object({

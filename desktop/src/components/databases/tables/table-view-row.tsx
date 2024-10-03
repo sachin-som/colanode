@@ -2,7 +2,7 @@ import React from 'react';
 import { TableViewNameCell } from '@/components/databases/tables/table-view-name-cell';
 import { TableViewFieldCell } from '@/components/databases/tables/table-view-field-cell';
 import { RecordNode } from '@/types/databases';
-import { useTableView } from '@/contexts/table-view';
+import { useTableView } from '@/renderer/contexts/table-view';
 
 interface TableViewRowProps {
   index: number;

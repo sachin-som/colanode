@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTableView } from '@/contexts/table-view';
+import { useTableView } from '@/renderer/contexts/table-view';
 import { TableViewNameHeader } from '@/components/databases/tables/table-view-name-header';
 import { TableViewFieldHeader } from '@/components/databases/tables/table-view-field-header';
 import { FieldCreatePopover } from '@/components/databases/fields/field-create-popover';

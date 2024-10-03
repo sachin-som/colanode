@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { phoneFieldFilterOperators } from '@/lib/databases';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewPhoneFieldFilterProps {
   field: PhoneFieldNode;

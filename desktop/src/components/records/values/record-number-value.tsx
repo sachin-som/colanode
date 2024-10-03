@@ -3,7 +3,7 @@ import { RecordNode } from '@/types/databases';
 import { NumberFieldNode } from '@/types/databases';
 import { SmartNumberInput } from '@/components/ui/smart-number-input';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordNumberValueProps {
   record: RecordNode;

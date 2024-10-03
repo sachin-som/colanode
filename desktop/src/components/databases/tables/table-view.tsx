@@ -2,8 +2,8 @@ import React from 'react';
 import { TableViewHeader } from '@/components/databases/tables/table-view-header';
 import { TableViewBody } from '@/components/databases/tables/table-view-body';
 import { TableViewRecordCreateRow } from '@/components/databases/tables/table-view-record-create-row';
-import { TableViewContext } from '@/contexts/table-view';
-import { useDatabase } from '@/contexts/database';
+import { TableViewContext } from '@/renderer/contexts/table-view';
+import { useDatabase } from '@/renderer/contexts/database';
 import { compareString } from '@/lib/utils';
 import { FieldDataType, TableViewNode } from '@/types/databases';
 import { ViewTabs } from '@/components/databases/view-tabs';
@@ -15,7 +15,7 @@ import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
 import { ViewFilterButton } from '@/components/databases/search/view-filter-button';
 import { ViewSortButton } from '@/components/databases/search/view-sort-button';
 import { ViewSearchProvider } from '@/components/databases/search/view-search-provider';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface TableViewProps {
   node: TableViewNode;

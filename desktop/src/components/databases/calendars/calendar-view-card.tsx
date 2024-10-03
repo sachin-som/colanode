@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { RecordNode } from '@/types/databases';
 import { cn } from '@/lib/utils';
 

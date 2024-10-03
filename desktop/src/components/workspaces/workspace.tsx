@@ -1,13 +1,13 @@
 import React from 'react';
 import { Sidebar } from '@/components/workspaces/sidebars/sidebar';
-import { WorkspaceContext } from '@/contexts/workspace';
+import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import {
   Outlet,
   useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { useAccount } from '@/contexts/account';
+import { useAccount } from '@/renderer/contexts/account';
 import { Modal } from '@/components/workspaces/modals/modal';
 import { WorkspaceSettingsDialog } from '@/components/workspaces/workspace-settings-dialog';
 

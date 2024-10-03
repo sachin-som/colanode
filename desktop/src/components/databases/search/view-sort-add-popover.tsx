@@ -13,9 +13,9 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { getFieldIcon, isSortableField } from '@/lib/databases';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewSortAddPopoverProps {
   children: React.ReactNode;

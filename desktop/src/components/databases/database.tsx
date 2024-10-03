@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseContext } from '@/contexts/database';
+import { DatabaseContext } from '@/renderer/contexts/database';
 import { DatabaseNode } from '@/types/databases';
 
 interface DatabaseProps {

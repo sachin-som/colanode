@@ -2,7 +2,7 @@ import React from 'react';
 import { SpaceCreateButton } from '@/components/spaces/space-create-button';
 import { SidebarSpaceItem } from '@/components/workspaces/sidebars/sidebar-space-item';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const SidebarSpaces = () => {
   const workspace = useWorkspace();

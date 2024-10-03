@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceUpdate } from '@/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/components/workspaces/workspace-users';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';

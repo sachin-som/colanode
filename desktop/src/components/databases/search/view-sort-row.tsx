@@ -10,7 +10,7 @@ import {
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { SortDirections } from '@/lib/constants';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewSortProps {
   sort: ViewSort;

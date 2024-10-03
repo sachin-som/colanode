@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from '@/contexts/account';
+import { useAccount } from '@/renderer/contexts/account';
 
 export const WorkspaceRedirect = (): React.ReactNode => {
   const account = useAccount();

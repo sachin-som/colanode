@@ -1,7 +1,7 @@
 import React from 'react';
 import { ViewTab } from '@/components/databases/view-tab';
 import { ViewCreateButton } from '@/components/databases/view-create-button';
-import { useDatabaseViews } from '@/contexts/database-views';
+import { useDatabaseViews } from '@/renderer/contexts/database-views';
 
 export const ViewTabs = () => {
   const databaseViews = useDatabaseViews();

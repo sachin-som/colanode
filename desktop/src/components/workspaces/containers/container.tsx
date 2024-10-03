@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { RecordContainerNode } from '@/components/records/record-container-node';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const Container = () => {
   const workspace = useWorkspace();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { CalendarViewNode } from '@/types/databases';
 import { ViewTabs } from '@/components/databases/view-tabs';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { CalendarViewGrid } from '@/components/databases/calendars/calendar-view-grid';
 import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
 import { ViewSortButton } from '@/components/databases/search/view-sort-button';

@@ -10,7 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/components/ui/use-toast';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface WorkspaceRoleItem {
   name: string;

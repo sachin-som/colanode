@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@/types/workspaces';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const USERS_PER_PAGE = 50;
 

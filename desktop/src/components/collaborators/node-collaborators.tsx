@@ -3,7 +3,7 @@ import { Separator } from '@/components/ui/separator';
 import { NodeCollaborator } from '@/components/collaborators/node-collaborator';
 import { NodeCollaboratorCreate } from '@/components/collaborators/node-collaborator-create';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface NodeCollaboratorsProps {
   id: string;

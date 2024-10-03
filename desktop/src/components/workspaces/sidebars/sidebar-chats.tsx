@@ -2,7 +2,7 @@ import React from 'react';
 import { ChatCreatePopover } from '@/components/chats/chat-create-popover';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { SidebarChatItem } from '@/components/workspaces/sidebars/sidebar-chat-item';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const SidebarChats = () => {
   const workspace = useWorkspace();

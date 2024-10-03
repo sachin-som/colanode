@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { ViewTextFieldFilter } from '@/components/databases/search/view-text-field-filter';
 import { ViewNumberFieldFilter } from '@/components/databases/search/view-number-field-filter';
 import { ViewEmailFieldFilter } from '@/components/databases/search/view-email-field-filter';
@@ -12,7 +12,7 @@ import { ViewDateFieldFilter } from '@/components/databases/search/view-date-fie
 import { ViewCreatedAtFieldFilter } from '@/components/databases/search/view-created-at-field-fitler';
 import { ViewFilterAddPopover } from '@/components/databases/search/view-filter-add-popover';
 import { Icon } from '@/components/ui/icon';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 export const ViewFilters = () => {
   const database = useDatabase();

@@ -7,7 +7,7 @@ import { ChannelContainerNode } from '@/components/channels/channel-container-no
 import { PageContainerNode } from '@/components/pages/page-container-node';
 import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 import { RecordContainerNode } from '@/components/records/record-container-node';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface ModalContentProps {
   nodeId: string;

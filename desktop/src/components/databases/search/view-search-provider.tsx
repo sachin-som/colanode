@@ -1,11 +1,11 @@
 import React from 'react';
-import { ViewSearchContext } from '@/contexts/view-search';
+import { ViewSearchContext } from '@/renderer/contexts/view-search';
 import { ViewFieldFilter, ViewFilter, ViewSort } from '@/types/databases';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { NeuronId } from '@/lib/id';
 import { getFieldFilterOperators } from '@/lib/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface ViewSearchProviderProps {
   id: string;

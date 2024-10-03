@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SidebarNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';

@@ -6,10 +6,10 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ViewSortRow } from '@/components/databases/search/view-sort-row';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { ViewSortAddPopover } from '@/components/databases/search/view-sort-add-popover';
 import { Icon } from '@/components/ui/icon';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 export const ViewSorts = () => {
   const database = useDatabase();

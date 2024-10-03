@@ -12,7 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/components/databases/fields/select-option-settings-popover';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface SelectFieldOptionsProps {

@@ -50,7 +50,7 @@ import {
 
 import { EditorBubbleMenu } from '@/editor/menu/bubble-menu';
 import { LocalNode } from '@/types/nodes';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { EditorObserver } from '@/editor/observer';
 
 interface DocumentEditorProps {

@@ -16,7 +16,7 @@ import { Icon } from '@/components/ui/icon';
 import { getFieldIcon, selectFieldFilterOperators } from '@/lib/databases';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
 import { SelectOptionBadge } from '@/components/databases/fields/select-option-badge';
-import { useViewSearch } from '@/contexts/view-search';
+import { useViewSearch } from '@/renderer/contexts/view-search';
 
 interface ViewSelectFieldFilterProps {
   field: SelectFieldNode;

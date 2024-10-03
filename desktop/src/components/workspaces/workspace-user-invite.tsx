@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const WorkspaceUserInvite = () => {
   const workspace = useWorkspace();

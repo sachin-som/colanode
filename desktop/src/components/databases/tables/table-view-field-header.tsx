@@ -13,7 +13,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
 import { FieldRenameInput } from '@/components/databases/fields/field-rename-input';
-import { useTableView } from '@/contexts/table-view';
+import { useTableView } from '@/renderer/contexts/table-view';
 
 interface TableViewFieldHeaderProps {
   field: FieldNode;

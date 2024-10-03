@@ -3,7 +3,7 @@ import { LocalNode } from '@/types/nodes';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { Database } from '@/components/databases/database';
 import { DatabaseViews } from '@/components/databases/database-views';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface DatabaseContainerNodeProps {
   node: LocalNode;

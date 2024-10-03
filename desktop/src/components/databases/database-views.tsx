@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseViewsContext } from '@/contexts/database-views';
+import { DatabaseViewsContext } from '@/renderer/contexts/database-views';
 import { ViewNode } from '@/types/databases';
 import { View } from '@/components/databases/view';
 import { ScrollArea } from '@/components/ui/scroll-area';

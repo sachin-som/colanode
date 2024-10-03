@@ -5,9 +5,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Icon } from '@/components/ui/icon';
-import { useTableView } from '@/contexts/table-view';
+import { useTableView } from '@/renderer/contexts/table-view';
 import { Separator } from '@/components/ui/separator';
-import { useDatabase } from '@/contexts/database';
+import { useDatabase } from '@/renderer/contexts/database';
 import { cn } from '@/lib/utils';
 import { getFieldIcon } from '@/lib/databases';
 import {
@@ -19,7 +19,7 @@ import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-di
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { ViewDeleteDialog } from '@/components/databases/view-delete-dialog';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useWorkspace } from '@/contexts/workspace';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const TableViewSettingsPopover = () => {
   const workspace = useWorkspace();

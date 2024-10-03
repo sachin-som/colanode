@@ -5,6 +5,7 @@ import { MutationInput, MutationMap } from '@/types/mutations';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { mediator } from '@/main/mediator';
 import { databaseContext } from '@/main/data/database-context';
+import { socketManager } from '@/main/sockets/socket-manager';
 
 let subscriptionId: string | null = null;
 
@@ -15,6 +16,7 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = async () => {
   await databaseContext.init();
+  socketManager.init();
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -75,7 +77,7 @@ ipcMain.handle(
     _: unknown,
     input: T,
   ): Promise<MutationMap[T['type']]['output']> => {
-    return mediator.handleMutation(input);
+    return mediator.executeMutation(input);
   },
 );
 
@@ -83,10 +85,20 @@ ipcMain.handle(
   'execute-query',
   async <T extends QueryInput>(
     _: unknown,
+    input: T,
+  ): Promise<QueryMap[T['type']]['output']> => {
+    return mediator.executeQuery(input);
+  },
+);
+
+ipcMain.handle(
+  'execute-query-and-subscribe',
+  async <T extends QueryInput>(
+    _: unknown,
     id: string,
     input: T,
   ): Promise<QueryMap[T['type']]['output']> => {
-    return mediator.handleQuery(id, input);
+    return mediator.executeQueryAndSubscribe(id, input);
   },
 );
 

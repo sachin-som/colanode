@@ -19,7 +19,10 @@ export const useQuery = <T extends QueryInput>(input: T) => {
     const queryId = NeuronId.generate(NeuronId.Type.Query);
     const fetchData = async () => {
       try {
-        const result = await window.neuron.executeQuery(queryId, input);
+        const result = await window.neuron.executeQueryAndSubscribe(
+          queryId,
+          input,
+        );
         setData(result);
       } catch (error) {
         console.error('Error executing query:', error);

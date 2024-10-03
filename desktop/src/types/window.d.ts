@@ -14,6 +14,10 @@ interface NeuronApi {
   ) => Promise<MutationMap[T['type']]['output']>;
 
   executeQuery: <T extends QueryInput>(
+    input: T,
+  ) => Promise<QueryMap[T['type']]['output']>;
+
+  executeQueryAndSubscribe: <T extends QueryInput>(
     id: string,
     input: T,
   ) => Promise<QueryMap[T['type']]['output']>;

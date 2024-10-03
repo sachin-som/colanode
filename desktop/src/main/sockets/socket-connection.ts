@@ -9,7 +9,7 @@ export type SocketMessage = {
   payload: any;
 };
 
-export class SocketManager {
+export class SocketConnection {
   private readonly server: Server;
   private readonly account: Account;
   private socket: WebSocket | null;

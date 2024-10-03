@@ -65,7 +65,10 @@ export const useInfiniteQuery = <T extends QueryInput>({
       const queryId = NeuronId.generate(NeuronId.Type.Query);
 
       try {
-        const result = await window.neuron.executeQuery(queryId, input);
+        const result = await window.neuron.executeQueryAndSubscribe(
+          queryId,
+          input,
+        );
 
         // Update pages state
         setPages((prevPages) => {

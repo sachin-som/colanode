@@ -14,10 +14,16 @@ contextBridge.exposeInMainWorld('neuron', {
   },
 
   executeQuery: <T extends QueryInput>(
+    input: T,
+  ): Promise<QueryMap[T['type']]['output']> => {
+    return ipcRenderer.invoke('execute-query', input);
+  },
+
+  executeQueryAndSubscribe: <T extends QueryInput>(
     id: string,
     input: T,
   ): Promise<QueryMap[T['type']]['output']> => {
-    return ipcRenderer.invoke('execute-query', id, input);
+    return ipcRenderer.invoke('execute-query-and-subscribe', id, input);
   },
 
   unsubscribeQuery: (id: string): Promise<void> => {

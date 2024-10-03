@@ -18,7 +18,7 @@ class Mediator {
   private readonly subscribedQueries: Map<string, SubscribedQuery<QueryInput>> =
     new Map();
 
-  public async handleMutation<T extends MutationInput>(
+  public async executeMutation<T extends MutationInput>(
     input: T,
   ): Promise<MutationMap[T['type']]['output']> {
     const handler = mutationHandlerMap[input.type] as MutationHandler<T>;
@@ -31,7 +31,15 @@ class Mediator {
     return result.output;
   }
 
-  public async handleQuery<T extends QueryInput>(
+  public async executeQuery<T extends QueryInput>(
+    input: T,
+  ): Promise<QueryMap[T['type']]['output']> {
+    const handler = queryHandlerMap[input.type] as QueryHandler<T>;
+    const result = await handler.handleQuery(input);
+    return result.output;
+  }
+
+  public async executeQueryAndSubscribe<T extends QueryInput>(
     id: string,
     input: T,
   ): Promise<QueryMap[T['type']]['output']> {

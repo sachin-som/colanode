@@ -1,6 +1,6 @@
 import React from 'react';
 import { RecordNode, DateFieldNode } from '@/types/databases';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useWorkspace } from '@/contexts/workspace';
 

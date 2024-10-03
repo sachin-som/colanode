@@ -8,8 +8,8 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useWorkspace } from '@/contexts/workspace';
-import { useQuery } from '@/hooks/use-query';
-import { useMutation } from '@/hooks/use-mutation';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Avatar } from '@/components/ui/avatar';
 
 export const ChatCreateCommand = () => {

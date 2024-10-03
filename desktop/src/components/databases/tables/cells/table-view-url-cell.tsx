@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/hover-card';
 import { Icon } from '@/components/ui/icon';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface TableViewUrlCellProps {

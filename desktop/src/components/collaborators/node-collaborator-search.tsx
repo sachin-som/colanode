@@ -17,7 +17,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface NodeCollaboratorSearchProps {

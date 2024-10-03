@@ -13,7 +13,7 @@ import { MessageDeleteButton } from '@/components/messages/message-delete-button
 import { NodeRenderer } from '@/editor/renderers/node';
 import { MessageNode } from '@/types/messages';
 import { MessageReactions } from '@/components/messages/message-reactions';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageProps {

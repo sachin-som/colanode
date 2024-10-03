@@ -1,7 +1,7 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordBooleanValueProps {

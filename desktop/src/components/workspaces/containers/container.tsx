@@ -7,7 +7,7 @@ import { ChannelContainerNode } from '@/components/channels/channel-container-no
 import { ContainerHeader } from '@/components/workspaces/containers/container-header';
 import { Spinner } from '@/components/ui/spinner';
 import { DatabaseContainerNode } from '@/components/databases/database-container-node';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { RecordContainerNode } from '@/components/records/record-container-node';
 import { useWorkspace } from '@/contexts/workspace';
 

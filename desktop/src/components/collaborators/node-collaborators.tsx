@@ -2,7 +2,7 @@ import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { NodeCollaborator } from '@/components/collaborators/node-collaborator';
 import { NodeCollaboratorCreate } from '@/components/collaborators/node-collaborator-create';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface NodeCollaboratorsProps {

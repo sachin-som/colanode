@@ -1,7 +1,7 @@
 import React from 'react';
 import { SpaceCreateButton } from '@/components/spaces/space-create-button';
 import { SidebarSpaceItem } from '@/components/workspaces/sidebars/sidebar-space-item';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/contexts/workspace';
 
 export const SidebarSpaces = () => {

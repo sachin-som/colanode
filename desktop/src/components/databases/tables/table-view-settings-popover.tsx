@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { ViewDeleteDialog } from '@/components/databases/view-delete-dialog';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
 import { useWorkspace } from '@/contexts/workspace';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { LoginForm } from '@/components/accounts/login-form';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 export const Login = () => {
   const { data, isPending } = useQuery({

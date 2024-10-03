@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface NameEditorProps {
   initialValue: string;

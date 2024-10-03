@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { LocalNode } from '@/types/nodes';
 import { Database } from '@/components/databases/database';
 import { RecordAttributes } from '@/components/records/record-attributes';

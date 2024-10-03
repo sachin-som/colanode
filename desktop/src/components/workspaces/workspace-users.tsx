@@ -1,5 +1,5 @@
 import React from 'react';
-import { useInfiniteQuery } from '@/hooks/use-infinite-query';
+import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { Separator } from '@/components/ui/separator';
 import { WorkspaceUserInvite } from '@/components/workspaces/workspace-user-invite';
 import { Avatar } from '@/components/ui/avatar';

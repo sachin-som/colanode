@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/components/ui/use-toast';
 import { Icon } from '@/components/ui/icon';
 import { Server } from '@/types/servers';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),

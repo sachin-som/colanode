@@ -1,7 +1,7 @@
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/components/messages/message';
-import { useInfiniteQuery } from '@/hooks/use-infinite-query';
+import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useWorkspace } from '@/contexts/workspace';
 import { compareString } from '@/lib/utils';
 

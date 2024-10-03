@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import {
   RecordNode,
   SelectFieldNode,

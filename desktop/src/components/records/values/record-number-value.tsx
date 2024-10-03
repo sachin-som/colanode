@@ -2,7 +2,7 @@ import React from 'react';
 import { RecordNode } from '@/types/databases';
 import { NumberFieldNode } from '@/types/databases';
 import { SmartNumberInput } from '@/components/ui/smart-number-input';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordNumberValueProps {

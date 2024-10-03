@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageEditor } from '@/components/messages/message-editor';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageCreateProps {

@@ -4,7 +4,7 @@ import { NodeCollaboratorNode } from '@/types/nodes';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/components/ui/use-toast';
 import { useWorkspace } from '@/contexts/workspace';
 

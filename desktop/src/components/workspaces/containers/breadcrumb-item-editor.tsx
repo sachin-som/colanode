@@ -1,7 +1,7 @@
 import React from 'react';
 import { BreadcrumbNode } from '@/types/workspaces';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface BreadcrumbItemEditorProps {

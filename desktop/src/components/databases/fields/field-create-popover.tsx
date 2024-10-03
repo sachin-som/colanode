@@ -23,7 +23,7 @@ import { FieldDataTypeSelect } from '@/components/databases/fields/field-type-se
 import { FieldAttrs } from '@/components/databases/fields/field-attrs';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({

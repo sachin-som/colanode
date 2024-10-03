@@ -7,7 +7,7 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordSelectValueProps {

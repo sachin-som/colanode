@@ -7,7 +7,7 @@ import { AxiosContext } from '@/contexts/axios';
 import { Outlet } from 'react-router-dom';
 import { AccountLogout } from '@/components/accounts/account-logout';
 import { DelayedComponent } from '@/components/ui/delayed-component';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { buildApiBaseUrl } from '@/lib/servers';
 
 export const App = () => {

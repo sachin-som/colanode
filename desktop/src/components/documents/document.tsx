@@ -1,7 +1,7 @@
 import React from 'react';
 import { LocalNode } from '@/types/nodes';
 import { DocumentEditor } from '@/components/documents/document-editor';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface DocumentProps {

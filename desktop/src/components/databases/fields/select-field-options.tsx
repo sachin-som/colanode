@@ -13,7 +13,7 @@ import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/components/databases/fields/select-option-settings-popover';
 import { useWorkspace } from '@/contexts/workspace';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface SelectFieldOptionsProps {
   field: SelectFieldNode | MultiSelectFieldNode;

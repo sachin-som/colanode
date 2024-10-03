@@ -1,7 +1,7 @@
 import React from 'react';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { sha256 } from 'js-sha256';
-import { useEventBus } from '@/hooks/use-event-bus';
+import { useEventBus } from '@/renderer/hooks/use-event-bus';
 import { NeuronId } from '@/lib/id';
 
 export const useInfiniteQuery = <T extends QueryInput>({

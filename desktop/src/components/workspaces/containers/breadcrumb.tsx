@@ -22,7 +22,7 @@ import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/contexts/workspace';
 import { BreadcrumbItem } from '@/components/workspaces/containers/breadcrumb-item';
 import { BreadcrumbItemEditor } from '@/components/workspaces/containers/breadcrumb-item-editor';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface BreadcrumbProps {
   node: LocalNode;

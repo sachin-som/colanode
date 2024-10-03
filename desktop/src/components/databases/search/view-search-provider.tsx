@@ -4,7 +4,7 @@ import { ViewFieldFilter, ViewFilter, ViewSort } from '@/types/databases';
 import { useDatabase } from '@/contexts/database';
 import { NeuronId } from '@/lib/id';
 import { getFieldFilterOperators } from '@/lib/databases';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 interface ViewSearchProviderProps {

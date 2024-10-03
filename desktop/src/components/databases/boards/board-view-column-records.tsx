@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDatabase } from '@/contexts/database';
-import { useInfiniteQuery } from '@/hooks/use-infinite-query';
+import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import {
   BoardViewNode,
   SelectFieldNode,

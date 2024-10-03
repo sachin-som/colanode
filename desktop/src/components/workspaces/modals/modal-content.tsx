@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { match } from 'ts-pattern';
 import { NodeTypes } from '@/lib/constants';
 import { ChannelContainerNode } from '@/components/channels/channel-container-node';

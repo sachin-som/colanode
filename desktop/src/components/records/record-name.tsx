@@ -1,6 +1,6 @@
 import React from 'react';
 import { RecordNode } from '@/types/databases';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
 import { useWorkspace } from '@/contexts/workspace';
 

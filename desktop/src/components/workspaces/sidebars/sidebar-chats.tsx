@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChatCreatePopover } from '@/components/chats/chat-create-popover';
-import { useQuery } from '@/hooks/use-query';
+import { useQuery } from '@/renderer/hooks/use-query';
 import { SidebarChatItem } from '@/components/workspaces/sidebars/sidebar-chat-item';
 import { useWorkspace } from '@/contexts/workspace';
 

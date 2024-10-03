@@ -10,7 +10,7 @@ import { ViewTabs } from '@/components/databases/view-tabs';
 import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
 import { ViewFilterButton } from '@/components/databases/search/view-filter-button';
 import { ViewSortButton } from '@/components/databases/search/view-sort-button';

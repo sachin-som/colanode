@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { useDatabase } from '@/contexts/database';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 export const TableViewRecordCreateRow = () => {

@@ -11,7 +11,7 @@ import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
 import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
-import { useMutation } from '@/hooks/use-mutation';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
 import { useWorkspace } from '@/contexts/workspace';
 

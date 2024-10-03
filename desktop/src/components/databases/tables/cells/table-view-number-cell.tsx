@@ -1,9 +1,9 @@
 import React from 'react';
 import { RecordNode } from '@/types/databases';
 import { NumberFieldNode } from '@/types/databases';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { SmartNumberInput } from '@/components/ui/smart-number-input';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface TableViewNumberCellProps {
   record: RecordNode;
@@ -14,13 +14,10 @@ export const TableViewNumberCell = ({
   record,
   field,
 }: TableViewNumberCellProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
-    useNodeAttributeDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const canEdit = true;
-  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   return (
     <SmartNumberInput
@@ -35,15 +32,23 @@ export const TableViewNumberCell = ({
         }
 
         if (newValue === null) {
-          deleteNodeAttribute({
-            nodeId: record.id,
-            key: field.id,
+          mutate({
+            input: {
+              type: 'node_attribute_delete',
+              nodeId: record.id,
+              attribute: field.id,
+              userId: workspace.userId,
+            },
           });
         } else {
-          setNodeAttribute({
-            nodeId: record.id,
-            key: field.id,
-            value: newValue,
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: record.id,
+              attribute: field.id,
+              value: newValue,
+              userId: workspace.userId,
+            },
           });
         }
       }}

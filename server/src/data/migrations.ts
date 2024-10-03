@@ -142,7 +142,7 @@ const createNodeReactionsTable: Migration = {
       .addColumn('node_id', 'varchar(30)', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
-      .addColumn('reactor_id', 'varchar(30)', (col) =>
+      .addColumn('actor_id', 'varchar(30)', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('reaction', 'varchar(30)', (col) => col.notNull())
@@ -151,7 +151,7 @@ const createNodeReactionsTable: Migration = {
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addPrimaryKeyConstraint('node_reactions_pkey', [
         'node_id',
-        'reactor_id',
+        'actor_id',
         'reaction',
       ])
       .execute();

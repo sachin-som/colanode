@@ -53,7 +53,7 @@ export type LocalNodeCollaboratorMutationData = {
 
 export type LocalNodeReactionMutationData = {
   node_id: string;
-  reactor_id: string;
+  actor_id: string;
   reaction: string;
   created_at: string;
 };

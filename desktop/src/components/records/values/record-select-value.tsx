@@ -7,8 +7,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordSelectValueProps {
   record: RecordNode;
@@ -19,12 +19,8 @@ export const RecordSelectValue = ({
   record,
   field,
 }: RecordSelectValueProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
-    useNodeAttributeDeleteMutation();
-
-  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
@@ -64,23 +60,27 @@ export const RecordSelectValue = ({
 
             if (selectedValue === id) {
               setSelectedValue('');
-              deleteNodeAttribute({
-                nodeId: record.id,
-                key: field.id,
+              mutate({
+                input: {
+                  type: 'node_attribute_delete',
+                  nodeId: record.id,
+                  attribute: field.id,
+                  userId: workspace.userId,
+                },
               });
             } else {
-              setNodeAttribute(
-                {
+              mutate({
+                input: {
+                  type: 'node_attribute_set',
                   nodeId: record.id,
-                  key: field.id,
+                  attribute: field.id,
                   value: id,
+                  userId: workspace.userId,
                 },
-                {
-                  onSuccess: () => {
-                    setOpen(false);
-                  },
+                onSuccess() {
+                  setOpen(false);
                 },
-              );
+              });
             }
             setSelectedValue(id);
           }}

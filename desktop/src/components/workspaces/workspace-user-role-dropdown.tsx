@@ -8,9 +8,9 @@ import {
 import { WorkspaceRole } from '@/types/workspaces';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
-import { useWorkspaceAccountRoleUpdateMutation } from '@/mutations/use-workspace-account-role-update-mutation';
-import { parseApiError } from '@/lib/axios';
+import { useMutation } from '@/hooks/use-mutation';
 import { toast } from '@/components/ui/use-toast';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface WorkspaceRoleItem {
   name: string;
@@ -49,7 +49,8 @@ export const WorkspaceUserRoleDropdown = ({
   accountId,
   value,
 }: WorkspaceUserRoleDropdownProps) => {
-  const { mutate, isPending } = useWorkspaceAccountRoleUpdateMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
   const currentRole = roles.find((role) => role.value === value);
 
   return (
@@ -76,22 +77,22 @@ export const WorkspaceUserRoleDropdown = ({
                 return;
               }
 
-              mutate(
-                {
-                  accountId,
+              mutate({
+                input: {
+                  type: 'workspace_account_role_update',
+                  accountId: accountId,
                   role: role.value,
+                  userId: workspace.userId,
                 },
-                {
-                  onError: (error) => {
-                    const apiError = parseApiError(error);
-                    toast({
-                      title: 'Failed to update role',
-                      description: apiError.message,
-                      variant: 'destructive',
-                    });
-                  },
+                onError() {
+                  toast({
+                    title: 'Failed to update role',
+                    description:
+                      'Something went wrong updating user role. Please try again!',
+                    variant: 'destructive',
+                  });
                 },
-              );
+              });
             }}
           >
             <div className="flex w-full flex-row items-center justify-between">

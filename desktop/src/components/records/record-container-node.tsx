@@ -1,22 +1,31 @@
 import React from 'react';
-import { useDatabaseQuery } from '@/queries/use-database-query';
-import { useRecordQuery } from '@/queries/use-record-query';
+import { useQuery } from '@/hooks/use-query';
 import { LocalNode } from '@/types/nodes';
 import { Database } from '@/components/databases/database';
 import { RecordAttributes } from '@/components/records/record-attributes';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Document } from '@/components/documents/document';
 import { Separator } from '@/components/ui/separator';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordContainerNodeProps {
   node: LocalNode;
 }
 
 export const RecordContainerNode = ({ node }: RecordContainerNodeProps) => {
-  const { data: record, isPending: isRecordPending } = useRecordQuery(node.id);
-  const { data: database, isPending: isDatabasePending } = useDatabaseQuery(
-    node.parentId,
-  );
+  const workspace = useWorkspace();
+
+  const { data: record, isPending: isRecordPending } = useQuery({
+    type: 'record_get',
+    recordId: node.id,
+    userId: workspace.userId,
+  });
+
+  const { data: database, isPending: isDatabasePending } = useQuery({
+    type: 'database_get',
+    databaseId: node.parentId,
+    userId: workspace.userId,
+  });
 
   if (isRecordPending || isDatabasePending) {
     return null;

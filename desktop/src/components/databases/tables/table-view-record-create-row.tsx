@@ -1,13 +1,13 @@
 import React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { useDatabase } from '@/contexts/database';
-import { useRecordCreateMutation } from '@/mutations/use-record-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 export const TableViewRecordCreateRow = () => {
   const workspace = useWorkspace();
   const database = useDatabase();
-  const { mutate, isPending } = useRecordCreateMutation();
+  const { mutate, isPending } = useMutation();
 
   return (
     <button
@@ -15,16 +15,16 @@ export const TableViewRecordCreateRow = () => {
       disabled={isPending}
       className="animate-fade-in flex h-8 w-full cursor-pointer flex-row items-center gap-1 border-b pl-2 text-muted-foreground hover:bg-gray-50"
       onClick={() => {
-        mutate(
-          {
+        mutate({
+          input: {
+            type: 'record_create',
             databaseId: database.id,
+            userId: workspace.userId,
           },
-          {
-            onSuccess: (recordId) => {
-              workspace.openModal(recordId);
-            },
+          onSuccess: (output) => {
+            workspace.openModal(output.id);
           },
-        );
+        });
       }}
     >
       <Icon name="add-line" />

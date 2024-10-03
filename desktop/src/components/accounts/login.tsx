@@ -1,9 +1,11 @@
 import React from 'react';
-import { LoginForm } from './login-form';
-import { useServersQuery } from '@/queries/use-servers-query';
+import { LoginForm } from '@/components/accounts/login-form';
+import { useQuery } from '@/hooks/use-query';
 
 export const Login = () => {
-  const { data, isPending } = useServersQuery();
+  const { data, isPending } = useQuery({
+    type: 'server_list',
+  });
 
   return (
     <div className="grid h-screen min-h-screen w-full grid-cols-5">

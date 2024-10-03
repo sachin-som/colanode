@@ -81,7 +81,8 @@ const createWorkspacesTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('workspaces')
-      .addColumn('id', 'text', (col) => col.notNull())
+      .addColumn('user_id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('workspace_id', 'text', (col) => col.notNull())
       .addColumn('account_id', 'text', (col) =>
         col.notNull().references('accounts.id').onDelete('cascade'),
       )
@@ -90,7 +91,6 @@ const createWorkspacesTable: Migration = {
       .addColumn('avatar', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
       .addColumn('role', 'text', (col) => col.notNull())
-      .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('synced', 'integer')
       .execute();
   },

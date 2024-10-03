@@ -123,7 +123,7 @@ const mapNodeReaction = (
 ): ServerNodeReaction => {
   return {
     nodeId: reaction.node_id,
-    reactorId: reaction.reactor_id,
+    reactorId: reaction.actor_id,
     reaction: reaction.reaction,
     workspaceId: reaction.workspace_id,
     createdAt: new Date(reaction.created_at),

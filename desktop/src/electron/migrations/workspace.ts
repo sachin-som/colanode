@@ -101,7 +101,7 @@ const createNodeReactionsTable: Migration = {
       .addColumn('node_id', 'text', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
-      .addColumn('reactor_id', 'text', (col) =>
+      .addColumn('actor_id', 'text', (col) =>
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('reaction', 'text', (col) => col.notNull())
@@ -109,7 +109,7 @@ const createNodeReactionsTable: Migration = {
       .addColumn('server_created_at', 'text')
       .addPrimaryKeyConstraint('node_reactions_pkey', [
         'node_id',
-        'reactor_id',
+        'actor_id',
         'reaction',
       ])
       .execute();
@@ -460,7 +460,7 @@ const createNodeReactionInsertMutationTrigger: Migration = {
               'node_reactions',
               json_object(
                   'node_id', NEW.'node_id',
-                  'reactor_id', NEW.'reactor_id',
+                  'actor_id', NEW.'actor_id',
                   'reaction', NEW.'reaction',
                   'created_at', NEW.'created_at',
                   'server_created_at', NEW.'server_created_at'
@@ -488,7 +488,7 @@ const createNodeReactionDeleteMutationTrigger: Migration = {
               'node_reactions',
               json_object(
                   'node_id', OLD.'node_id',
-                  'reactor_id', OLD.'reactor_id',
+                  'actor_id', OLD.'actor_id',
                   'reaction', OLD.'reaction',
                   'created_at', OLD.'created_at',
                   'server_created_at', OLD.'server_created_at'

@@ -7,18 +7,21 @@ import { AxiosContext } from '@/contexts/axios';
 import { Outlet } from 'react-router-dom';
 import { AccountLogout } from '@/components/accounts/account-logout';
 import { DelayedComponent } from '@/components/ui/delayed-component';
-import { useAccountsQuery } from '@/queries/use-accounts-query';
-import { useWorkspacesQuery } from '@/queries/use-workspaces-query';
-import { useServersQuery } from '@/queries/use-servers-query';
+import { useQuery } from '@/hooks/use-query';
 import { buildApiBaseUrl } from '@/lib/servers';
 
 export const App = () => {
   const [showLogout, setShowLogout] = React.useState(false);
 
-  const { data: servers, isPending: isPendingServers } = useServersQuery();
-  const { data: accounts, isPending: isPendingAccounts } = useAccountsQuery();
-  const { data: workspaces, isPending: isPendingWorkspaces } =
-    useWorkspacesQuery();
+  const { data: servers, isPending: isPendingServers } = useQuery({
+    type: 'server_list',
+  });
+  const { data: accounts, isPending: isPendingAccounts } = useQuery({
+    type: 'account_list',
+  });
+  const { data: workspaces, isPending: isPendingWorkspaces } = useQuery({
+    type: 'workspace_list',
+  });
 
   const isPending =
     isPendingServers || isPendingAccounts || isPendingWorkspaces;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordBooleanValueProps {
   record: RecordNode;
@@ -13,12 +13,9 @@ export const RecordBooleanValue = ({
   record,
   field,
 }: RecordBooleanValueProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
-    useNodeAttributeDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
-  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
   const canEdit = true;
 
   const [input, setInput] = React.useState<boolean>(
@@ -42,15 +39,23 @@ export const RecordBooleanValue = ({
             setInput(e.valueOf());
             const checked = e.valueOf();
             if (checked) {
-              setNodeAttribute({
-                nodeId: record.id,
-                key: field.id,
-                value: checked,
+              mutate({
+                input: {
+                  type: 'node_attribute_set',
+                  nodeId: record.id,
+                  attribute: field.id,
+                  value: checked,
+                  userId: workspace.userId,
+                },
               });
             } else {
-              deleteNodeAttribute({
-                nodeId: record.id,
-                key: field.id,
+              mutate({
+                input: {
+                  type: 'node_attribute_delete',
+                  nodeId: record.id,
+                  attribute: field.id,
+                  userId: workspace.userId,
+                },
               });
             }
           }

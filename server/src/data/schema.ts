@@ -121,7 +121,7 @@ export type UpdateNodeCollaborator = Updateable<NodeCollaboratorTable>;
 
 interface NodeReactionTable {
   node_id: ColumnType<string, string, never>;
-  reactor_id: ColumnType<string, string, never>;
+  actor_id: ColumnType<string, string, never>;
   reaction: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   created_at: ColumnType<Date, Date, never>;

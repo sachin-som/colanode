@@ -15,8 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { parseApiError } from '@/lib/axios';
-import { useWorkspaceUpdateMutation } from '@/mutations/use-workspace-update-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({
@@ -28,7 +27,7 @@ type formSchemaType = z.infer<typeof formSchema>;
 
 export const WorkspaceUpdate = () => {
   const workspace = useWorkspace();
-  const { mutate, isPending } = useWorkspaceUpdateMutation();
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
@@ -39,30 +38,30 @@ export const WorkspaceUpdate = () => {
   });
 
   const handleSubmit = async (values: formSchemaType) => {
-    mutate(
-      {
+    mutate({
+      input: {
+        type: 'workspace_update',
         id: workspace.id,
+        accountId: workspace.accountId,
         name: values.name,
         description: values.description,
       },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Workspace updated',
-            description: 'Workspace was updated successfully',
-            variant: 'default',
-          });
-        },
-        onError: (error) => {
-          const apiError = parseApiError(error);
-          toast({
-            title: 'Failed to update workspace',
-            description: apiError.message,
-            variant: 'destructive',
-          });
-        },
+      onSuccess() {
+        toast({
+          title: 'Workspace updated',
+          description: 'Workspace was updated successfully',
+          variant: 'default',
+        });
       },
-    );
+      onError() {
+        toast({
+          title: 'Failed to update workspace',
+          description:
+            'Something went wrong updating workspace. Please try again!',
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (

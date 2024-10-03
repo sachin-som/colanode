@@ -11,8 +11,9 @@ import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
 import { SelectOptionNode } from '@/types/databases';
 import { SelectOptionDeleteDialog } from '@/components/databases/fields/select-option-delete-dialog';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOptionNode;
@@ -21,7 +22,8 @@ interface SelectOptionSettingsPopoverProps {
 export const SelectOptionSettingsPopover = ({
   option,
 }: SelectOptionSettingsPopoverProps) => {
-  const { mutate, isPending } = useNodeAttributeSetMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const [openSetttingsPopover, setOpenSetttingsPopover] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
@@ -45,9 +47,13 @@ export const SelectOptionSettingsPopover = ({
                 if (newName === option.name) return;
 
                 mutate({
-                  nodeId: option.id,
-                  key: 'name',
-                  value: newName,
+                  input: {
+                    type: 'node_attribute_set',
+                    nodeId: option.id,
+                    attribute: 'name',
+                    value: newName,
+                    userId: workspace.userId,
+                  },
                 });
               }}
             />
@@ -61,10 +67,15 @@ export const SelectOptionSettingsPopover = ({
                 className="flex cursor-pointer flex-row items-center gap-2 rounded-md p-1 hover:bg-gray-100"
                 onClick={() => {
                   if (isPending) return;
+
                   mutate({
-                    nodeId: option.id,
-                    key: 'color',
-                    value: color.value,
+                    input: {
+                      type: 'node_attribute_set',
+                      nodeId: option.id,
+                      attribute: 'color',
+                      value: color.value,
+                      userId: workspace.userId,
+                    },
                   });
                 }}
               >

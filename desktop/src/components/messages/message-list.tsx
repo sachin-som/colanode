@@ -1,25 +1,60 @@
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/components/messages/message';
-import { useMessagesQuery } from '@/queries/use-messages-query';
+import { useInfiniteQuery } from '@/hooks/use-infinite-query';
+import { useWorkspace } from '@/contexts/workspace';
+import { compareString } from '@/lib/utils';
 
 interface MessageListProps {
   conversationId: string;
   onLastMessageIdChange: (id: string) => void;
 }
 
+const MESSAGES_PER_PAGE = 50;
+
 export const MessageList = ({
   conversationId,
   onLastMessageIdChange,
 }: MessageListProps) => {
+  const workspace = useWorkspace();
   const lastMessageId = React.useRef<string | null>(null);
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useMessagesQuery(conversationId);
+    useInfiniteQuery({
+      initialPageInput: {
+        type: 'message_list',
+        conversationId: conversationId,
+        userId: workspace.userId,
+        page: 0,
+        count: MESSAGES_PER_PAGE,
+      },
+      getNextPageInput(page, pages) {
+        if (page > pages.length) {
+          return undefined;
+        }
+
+        const lastPage = pages[page - 1];
+        if (lastPage.length < MESSAGES_PER_PAGE) {
+          return undefined;
+        }
+
+        return {
+          type: 'message_list',
+          conversationId: conversationId,
+          userId: workspace.userId,
+          page: page,
+          count: MESSAGES_PER_PAGE,
+        };
+      },
+    });
+
+  const messages = (data?.flatMap((page) => page) ?? []).sort((a, b) =>
+    compareString(a.id, b.id),
+  );
 
   React.useEffect(() => {
-    if (data?.length > 0) {
-      const lastMessage = data[data.length - 1];
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
       if (lastMessage.id !== lastMessageId.current) {
         lastMessageId.current = lastMessage.id;
         onLastMessageIdChange(lastMessageId.current);
@@ -41,8 +76,8 @@ export const MessageList = ({
           }
         }}
       ></InView>
-      {data.map((message, index) => {
-        const previousMessage = index > 0 ? data[index - 1] : null;
+      {messages.map((message, index) => {
+        const previousMessage = index > 0 ? messages[index - 1] : null;
 
         const currentMessageDate = new Date(message.createdAt);
         const previousMessageDate = previousMessage

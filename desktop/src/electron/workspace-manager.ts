@@ -18,7 +18,6 @@ import {
   extractTablesFromSql,
   resultHasChanged,
 } from '@/electron/utils';
-import { SubscribedQueryContext, SubscribedQueryResult } from '@/types/queries';
 import {
   ServerExecuteMutationsResponse,
   ServerMutation,
@@ -40,7 +39,6 @@ export class WorkspaceManager {
   private readonly workspace: Workspace;
   private readonly axios: AxiosInstance;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
-  private readonly subscribers: Map<string, SubscribedQueryResult<unknown>>;
   private readonly backoffCalculator: BackoffCalculator;
   private readonly debouncedNotifyQuerySubscribers: (
     affectedTables: string[],
@@ -49,7 +47,6 @@ export class WorkspaceManager {
   constructor(workspace: Workspace, axios: AxiosInstance, accountPath: string) {
     this.workspace = workspace;
     this.axios = axios;
-    this.subscribers = new Map();
     this.backoffCalculator = new BackoffCalculator();
 
     const workspaceDir = `${accountPath}/${workspace.id}`;
@@ -88,28 +85,6 @@ export class WorkspaceManager {
     if (result.numAffectedRows > 0) {
       throw new Error('Query should not have any side effects');
     }
-
-    return result;
-  }
-
-  public async executeQueryAndSubscribe<T>(
-    context: SubscribedQueryContext<T>,
-  ): Promise<QueryResult<T>> {
-    const result = await this.database.executeQuery(context.query);
-
-    // only mutations should have side effects
-    if (result.numAffectedRows > 0) {
-      throw new Error('Query should not have any side effects');
-    }
-
-    const queryId = context.key.join('|') + context.page;
-    const selectedTables = extractTablesFromSql(context.query.sql);
-    const subscriberData: SubscribedQueryResult<T> = {
-      context,
-      tables: selectedTables,
-      result: result,
-    };
-    this.subscribers.set(queryId, subscriberData);
 
     return result;
   }
@@ -153,44 +128,31 @@ export class WorkspaceManager {
     }
   }
 
-  public unsubscribeQuery(queryKey: string[]): void {
-    var queryIds = [...this.subscribers.keys()];
-    for (const queryId of queryIds) {
-      const subscriberData = this.subscribers.get(queryId);
-      if (isEqual(subscriberData.context.key, queryKey)) {
-        this.subscribers.delete(queryId);
-      }
-    }
-  }
-
   private async notifyQuerySubscribers(
     affectedTables: string[],
   ): Promise<void> {
-    for (const subscriber of this.subscribers.values()) {
-      const hasAffectedTables = affectedTables.some((table) =>
-        subscriber.tables.includes(table),
-      );
-
-      if (!hasAffectedTables) {
-        continue;
-      }
-
-      const newResult = await this.database.executeQuery(
-        subscriber.context.query,
-      );
-
-      if (resultHasChanged(subscriber.result, newResult)) {
-        subscriber.result = newResult;
-        eventBus.publish({
-          event: 'workspace_query_updated',
-          payload: {
-            key: subscriber.context.key,
-            page: subscriber.context.page,
-            result: newResult,
-          },
-        });
-      }
-    }
+    // for (const subscriber of this.subscribers.values()) {
+    //   const hasAffectedTables = affectedTables.some((table) =>
+    //     subscriber.tables.includes(table),
+    //   );
+    //   if (!hasAffectedTables) {
+    //     continue;
+    //   }
+    //   const newResult = await this.database.executeQuery(
+    //     subscriber.context.query,
+    //   );
+    //   if (resultHasChanged(subscriber.result, newResult)) {
+    //     subscriber.result = newResult;
+    //     eventBus.publish({
+    //       event: 'workspace_query_updated',
+    //       payload: {
+    //         key: subscriber.context.key,
+    //         page: subscriber.context.page,
+    //         result: newResult,
+    //       },
+    //     });
+    //   }
+    // }
   }
 
   public async sendMutations(): Promise<void> {
@@ -322,7 +284,7 @@ export class WorkspaceManager {
         .where((eb) =>
           eb.and([
             eb('node_id', '=', mutation.before.node_id),
-            eb('reactor_id', '=', mutation.before.reactor_id),
+            eb('actor_id', '=', mutation.before.actor_id),
             eb('reaction', '=', mutation.before.reaction),
           ]),
         )
@@ -394,7 +356,7 @@ export class WorkspaceManager {
               data.nodeReactions.map((nodeReaction) => {
                 return {
                   node_id: nodeReaction.nodeId,
-                  reactor_id: nodeReaction.reactorId,
+                  actor_id: nodeReaction.actorId,
                   reaction: nodeReaction.reaction,
                   created_at: nodeReaction.createdAt,
                   server_created_at: nodeReaction.serverCreatedAt,
@@ -568,7 +530,7 @@ export class WorkspaceManager {
       .insertInto('node_reactions')
       .values({
         node_id: nodeReaction.nodeId,
-        reactor_id: nodeReaction.reactorId,
+        actor_id: nodeReaction.actorId,
         reaction: nodeReaction.reaction,
         created_at: nodeReaction.createdAt,
         server_created_at: nodeReaction.serverCreatedAt,

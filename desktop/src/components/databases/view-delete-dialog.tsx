@@ -9,7 +9,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface ViewDeleteDialogProps {
   id: string;
@@ -22,7 +23,8 @@ export const ViewDeleteDialog = ({
   open,
   onOpenChange,
 }: ViewDeleteDialogProps) => {
-  const { mutate, isPending } = useNodeDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -41,9 +43,14 @@ export const ViewDeleteDialog = ({
           <Button
             variant="destructive"
             disabled={isPending}
-            onClick={async () => {
-              mutate(id, {
-                onSuccess: () => {
+            onClick={() => {
+              mutate({
+                input: {
+                  type: 'node_delete',
+                  nodeId: id,
+                  userId: workspace.userId,
+                },
+                onSuccess() {
                   onOpenChange(false);
                 },
               });

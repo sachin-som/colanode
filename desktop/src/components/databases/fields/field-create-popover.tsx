@@ -23,7 +23,8 @@ import { FieldDataTypeSelect } from '@/components/databases/fields/field-type-se
 import { FieldAttrs } from '@/components/databases/fields/field-attrs';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
-import { useFieldCreateMutation } from '@/mutations/use-field-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({
   name: z.string(),
@@ -50,7 +51,10 @@ const formSchema = z.object({
 
 export const FieldCreatePopover = () => {
   const [open, setOpen] = React.useState(false);
+  const workspace = useWorkspace();
   const database = useDatabase();
+
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,27 +64,25 @@ export const FieldCreatePopover = () => {
     },
   });
 
-  const { mutate, isPending } = useFieldCreateMutation();
-
   const handleCancelClick = () => {
     setOpen(false);
     form.reset();
   };
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    mutate(
-      {
+    mutate({
+      input: {
+        type: 'field_create',
         databaseId: database.id,
         name: values.name,
         dataType: values.dataType,
+        userId: workspace.userId,
       },
-      {
-        onSuccess: () => {
-          setOpen(false);
-          form.reset();
-        },
+      onSuccess: () => {
+        setOpen(false);
+        form.reset();
       },
-    );
+    });
   };
 
   return (

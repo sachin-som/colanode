@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import { SocketMessage } from '@/types/sockets';
-import { database } from './data/database';
+import { database } from '@/data/database';
 import { sql } from 'kysely';
 import { SelectMutation } from '@/data/schema';
 import { ServerMutation } from '@/types/mutations';

@@ -12,8 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
-import { parseApiError } from '@/lib/axios';
-import { useServerCreateMutation } from '@/mutations/use-server-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 
 interface ServerCreateDialogProps {
   open: boolean;
@@ -24,7 +23,7 @@ export const ServerCreateDialog = ({
   open,
   onOpenChange,
 }: ServerCreateDialogProps) => {
-  const { mutate, isPending } = useServerCreateMutation();
+  const { mutate, isPending } = useMutation();
   const [domain, setDomain] = React.useState('');
 
   return (
@@ -50,24 +49,23 @@ export const ServerCreateDialog = ({
             type="button"
             disabled={isPending}
             onClick={() => {
-              mutate(
-                {
-                  domain: domain,
+              mutate({
+                input: {
+                  type: 'server_create',
+                  domain,
                 },
-                {
-                  onSuccess() {
-                    onOpenChange(false);
-                  },
-                  onError: (error) => {
-                    const apiError = parseApiError(error);
-                    toast({
-                      title: 'Failed to login',
-                      description: apiError.message,
-                      variant: 'destructive',
-                    });
-                  },
+                onSuccess() {
+                  onOpenChange(false);
                 },
-              );
+                onError() {
+                  toast({
+                    title: 'Failed to login',
+                    description:
+                      'Something went wrong adding the server. Please make sure the domain is correct.',
+                    variant: 'destructive',
+                  });
+                },
+              });
             }}
           >
             {isPending && <Spinner className="mr-1" />}

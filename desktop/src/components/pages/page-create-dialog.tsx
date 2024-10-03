@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { usePageCreateMutation } from '@/mutations/use-page-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -40,7 +40,7 @@ export const PageCreateDialog = ({
   onOpenChange,
 }: PageCreateDialogProps) => {
   const workspace = useWorkspace();
-  const { mutate, isPending } = usePageCreateMutation();
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,16 +55,19 @@ export const PageCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(
-      { spaceId, name: values.name },
-      {
-        onSuccess: (id) => {
-          onOpenChange(false);
-          form.reset();
-          workspace.navigateToNode(id);
-        },
+    mutate({
+      input: {
+        type: 'page_create',
+        spaceId: spaceId,
+        name: values.name,
+        userId: workspace.userId,
       },
-    );
+      onSuccess(output) {
+        onOpenChange(false);
+        form.reset();
+        workspace.navigateToNode(output.id);
+      },
+    });
   };
 
   return (

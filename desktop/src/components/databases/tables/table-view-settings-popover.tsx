@@ -16,14 +16,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { FieldDeleteDialog } from '@/components/databases/fields/field-delete-dialog';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { ViewDeleteDialog } from '@/components/databases/view-delete-dialog';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useWorkspace } from '@/contexts/workspace';
 
 export const TableViewSettingsPopover = () => {
+  const workspace = useWorkspace();
   const tableView = useTableView();
   const database = useDatabase();
-  const { mutate, isPending } = useNodeAttributeSetMutation();
+  const { mutate, isPending } = useMutation();
 
   const [open, setOpen] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -49,9 +51,13 @@ export const TableViewSettingsPopover = () => {
               if (newName === tableView.name) return;
 
               mutate({
-                nodeId: tableView.id,
-                key: 'name',
-                value: newName,
+                input: {
+                  type: 'node_attribute_set',
+                  nodeId: tableView.id,
+                  attribute: 'name',
+                  value: newName,
+                  userId: workspace.userId,
+                },
               });
             }}
           />

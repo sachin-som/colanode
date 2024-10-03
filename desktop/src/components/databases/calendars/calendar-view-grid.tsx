@@ -5,10 +5,12 @@ import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/components/databases/calendars/calendar-view-day';
 import { CalendarViewNode, FieldNode, ViewFilter } from '@/types/databases';
-import { useRecordsQuery } from '@/queries/use-records-query';
+import { useInfiniteQuery } from '@/hooks/use-infinite-query';
 import { useDatabase } from '@/contexts/database';
 import { filterRecords } from '@/lib/databases';
 import { useWorkspace } from '@/contexts/workspace';
+
+const RECORDS_PER_PAGE = 50;
 
 interface CalendarViewGridProps {
   view: CalendarViewNode;
@@ -41,13 +43,43 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
   ];
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useRecordsQuery(database.id, filters, view.sorts);
+    useInfiniteQuery({
+      initialPageInput: {
+        type: 'record_list',
+        databaseId: database.id,
+        filters: filters,
+        sorts: view.sorts,
+        page: 0,
+        count: RECORDS_PER_PAGE,
+        userId: workspace.userId,
+      },
+      getNextPageInput(page, pages) {
+        if (page > pages.length) {
+          return undefined;
+        }
+
+        const lastPage = pages[page - 1];
+        if (lastPage.length < RECORDS_PER_PAGE) {
+          return undefined;
+        }
+
+        return {
+          type: 'record_list',
+          databaseId: database.id,
+          filters: filters,
+          sorts: view.sorts,
+          page: page,
+          count: RECORDS_PER_PAGE,
+          userId: workspace.userId,
+        };
+      },
+    });
 
   if (isPending) {
     return null;
   }
 
-  const records = data ?? [];
+  const records = data?.flatMap((page) => page) ?? [];
   return (
     <DayPicker
       showOutsideDays

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWorkspaceUsersQuery } from '@/queries/use-workspace-users-query';
+import { useInfiniteQuery } from '@/hooks/use-infinite-query';
 import { Separator } from '@/components/ui/separator';
 import { WorkspaceUserInvite } from '@/components/workspaces/workspace-user-invite';
 import { Avatar } from '@/components/ui/avatar';
@@ -7,15 +7,45 @@ import { Spinner } from '@/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@/types/workspaces';
+import { useWorkspace } from '@/contexts/workspace';
+
+const USERS_PER_PAGE = 50;
 
 export const WorkspaceUsers = () => {
+  const workspace = useWorkspace();
+
   const { data, isPending, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useWorkspaceUsersQuery();
+    useInfiniteQuery({
+      initialPageInput: {
+        type: 'workspace_user_list',
+        page: 0,
+        count: USERS_PER_PAGE,
+        userId: workspace.userId,
+      },
+      getNextPageInput(page, pages) {
+        if (page > pages.length) {
+          return undefined;
+        }
+
+        const lastPage = pages[page - 1];
+        if (lastPage.length < USERS_PER_PAGE) {
+          return undefined;
+        }
+
+        return {
+          type: 'workspace_user_list',
+          page: page,
+          count: USERS_PER_PAGE,
+          userId: workspace.userId,
+        };
+      },
+    });
 
   if (isPending) {
     return null;
   }
 
+  const users = data?.flatMap((page) => page) ?? [];
   return (
     <div className="flex flex-col space-y-4">
       <WorkspaceUserInvite />
@@ -27,7 +57,7 @@ export const WorkspaceUsers = () => {
         </p>
       </div>
       <div className="flex flex-col gap-2">
-        {data.map((user) => {
+        {users.map((user) => {
           const name: string = user.attributes.name ?? 'Unknown';
           const email: string = user.attributes.email ?? ' ';
           const avatar: string | null | undefined = user.attributes.avatar;

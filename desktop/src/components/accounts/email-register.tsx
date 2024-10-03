@@ -13,9 +13,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/components/ui/use-toast';
-import { parseApiError } from '@/lib/axios';
 import { Icon } from '@/components/ui/icon';
-import { useEmailRegisterMutation } from '@/mutations/use-email-register-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { Server } from '@/types/servers';
 
 const formSchema = z.object({
@@ -29,7 +28,7 @@ interface EmailRegisterProps {
 }
 
 export const EmailRegister = ({ server }: EmailRegisterProps) => {
-  const { mutate, isPending } = useEmailRegisterMutation();
+  const { mutate, isPending } = useMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,27 +39,26 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(
-      {
+    mutate({
+      input: {
+        type: 'email_register',
         name: values.name,
         email: values.email,
         password: values.password,
-        server: server,
+        server: server.domain,
       },
-      {
-        onSuccess: () => {
-          window.location.href = '/';
-        },
-        onError: (error) => {
-          const apiError = parseApiError(error);
-          toast({
-            title: 'Failed to login',
-            description: apiError.message,
-            variant: 'destructive',
-          });
-        },
+      onSuccess() {
+        window.location.href = '/';
       },
-    );
+      onError() {
+        toast({
+          title: 'Failed to register',
+          description:
+            'Something went wrong trying to register. Please try again.',
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (

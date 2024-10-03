@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { useWorkspace } from '@/contexts/workspace';
 import { Spinner } from '@/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 
 interface NameEditorProps {
   initialValue: string;
@@ -54,23 +54,23 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const workspace = useWorkspace();
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const { mutate, isPending } = useNodeAttributeSetMutation();
+  const { mutate, isPending } = useMutation();
   const canEdit = true;
   const hasName = record.name && record.name.length > 0;
 
   const handleSave = (newName: string) => {
-    mutate(
-      {
+    mutate({
+      input: {
+        type: 'node_attribute_set',
         nodeId: record.id,
-        key: 'name',
+        attribute: 'name',
         value: newName,
+        userId: workspace.userId,
       },
-      {
-        onSuccess: () => {
-          setIsEditing(false);
-        },
+      onSuccess() {
+        setIsEditing(false);
       },
-    );
+    });
   };
 
   return (

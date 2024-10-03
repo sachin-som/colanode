@@ -8,7 +8,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { Server } from '@/types/servers';
-import { ServerCreateDialog } from './server-create-dialog';
+import { ServerCreateDialog } from '@/components/servers/server-create-dialog';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 
 interface ServerDropdownProps {

@@ -4,7 +4,8 @@ import { ViewFieldFilter, ViewFilter, ViewSort } from '@/types/databases';
 import { useDatabase } from '@/contexts/database';
 import { NeuronId } from '@/lib/id';
 import { getFieldFilterOperators } from '@/lib/databases';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface ViewSearchProviderProps {
   id: string;
@@ -19,9 +20,9 @@ export const ViewSearchProvider = ({
   sorts,
   children,
 }: ViewSearchProviderProps) => {
+  const workspace = useWorkspace();
   const database = useDatabase();
-  const { mutate: setNodeAttribute, isPending: isSetingNodeAttribute } =
-    useNodeAttributeSetMutation();
+  const { mutate, isPending } = useMutation();
 
   const [isSearchBarOpened, setIsSearchBarOpened] = React.useState(false);
   const [isSortsOpened, setIsSortsOpened] = React.useState(false);
@@ -35,7 +36,7 @@ export const ViewSearchProvider = ({
         id,
         filters: filters,
         sorts: sorts,
-        isSaving: isSetingNodeAttribute,
+        isSaving: isPending,
         isSearchBarOpened: isSearchBarOpened,
         isSortsOpened: isSortsOpened,
         isFieldFilterOpened: (fieldId: string) =>
@@ -67,19 +68,19 @@ export const ViewSearchProvider = ({
           };
 
           const newFilters = [...filters, filter];
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'filters',
+              attribute: 'filters',
               value: newFilters,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setOpenedFieldFilters((prev) => [...prev, filter.id]);
-                setIsSearchBarOpened(true);
-              },
+            onSuccess() {
+              setOpenedFieldFilters((prev) => [...prev, filter.id]);
+              setIsSearchBarOpened(true);
             },
-          );
+          });
         },
         updateFilter: (filterId: string, newFilter: ViewFieldFilter) => {
           const newFilters = filters.map((filter) =>
@@ -88,37 +89,33 @@ export const ViewSearchProvider = ({
               : filter,
           );
 
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'filters',
+              attribute: 'filters',
               value: newFilters,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setIsSearchBarOpened(true);
-              },
+            onSuccess() {
+              setIsSearchBarOpened(true);
             },
-          );
+          });
         },
         removeFilter: (filterId: string) => {
           const newFilters = filters.filter((filter) => filter.id !== filterId);
-
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'filters',
+              attribute: 'filters',
               value: newFilters,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setOpenedFieldFilters((prev) =>
-                  prev.filter((id) => id !== filterId),
-                );
-                setIsSearchBarOpened(true);
-              },
+            onSuccess() {
+              setIsSearchBarOpened(true);
             },
-          );
+          });
         },
         initFieldSort: (fieldId: string) => {
           const field = database.fields.find((field) => field.id === fieldId);
@@ -145,54 +142,54 @@ export const ViewSearchProvider = ({
           };
 
           const newSorts = [...sorts, sort];
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'sorts',
+              attribute: 'sorts',
               value: newSorts,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setIsSearchBarOpened(true);
-                setIsSortsOpened(true);
-              },
+            onSuccess() {
+              setIsSearchBarOpened(true);
+              setIsSortsOpened(true);
             },
-          );
+          });
         },
         updateSort: (sortId: string, newSort: ViewSort) => {
           const newSorts = sorts.map((sort) =>
             sort.id === sortId ? newSort : sort,
           );
 
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'sorts',
+              attribute: 'sorts',
               value: newSorts,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setIsSortsOpened(true);
-                setIsSearchBarOpened(true);
-              },
+            onSuccess() {
+              setIsSearchBarOpened(true);
+              setIsSortsOpened(true);
             },
-          );
+          });
         },
         removeSort: (sortId: string) => {
           const newSorts = sorts.filter((sort) => sort.id !== sortId);
 
-          setNodeAttribute(
-            {
+          mutate({
+            input: {
+              type: 'node_attribute_set',
               nodeId: id,
-              key: 'sorts',
+              attribute: 'sorts',
               value: newSorts,
+              userId: workspace.userId,
             },
-            {
-              onSuccess: () => {
-                setIsSearchBarOpened(true);
-              },
+            onSuccess() {
+              setIsSearchBarOpened(true);
             },
-          );
+          });
         },
         openSearchBar: () => setIsSearchBarOpened(true),
         closeSearchBar: () => setIsSearchBarOpened(false),

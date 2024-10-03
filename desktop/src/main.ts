@@ -1,9 +1,11 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
-import { appManager } from '@/electron/app-manager';
-import { CompiledQuery, QueryResult } from 'kysely';
-import { SubscribedQueryContext } from '@/types/queries';
+import { MutationInput, MutationMap } from '@/types/mutations';
+import { QueryInput, QueryMap } from '@/types/queries';
+import { mediator } from '@/electron/mediator';
+import { databaseContext } from './electron/database-context';
+
 let subscriptionId: string | null = null;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -11,7 +13,9 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const createWindow = () => {
+const createWindow = async () => {
+  await databaseContext.init();
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     fullscreen: true,
@@ -65,122 +69,27 @@ app.on('before-quit', () => {
   }
 });
 
-// inter process handlers
-ipcMain.handle('init', async () => appManager.init());
-ipcMain.handle('logout', async (_, accountId) => appManager.logout(accountId));
-
 ipcMain.handle(
-  'execute-app-mutation',
-  async (_, mutation: CompiledQuery | CompiledQuery[]): Promise<void> => {
-    await appManager.executeMutation(mutation);
+  'execute-mutation',
+  async <T extends MutationInput>(
+    _: unknown,
+    input: T,
+  ): Promise<MutationMap[T['type']]['output']> => {
+    return mediator.handleMutation(input);
   },
 );
 
 ipcMain.handle(
-  'execute-app-query',
-  async (_, query: CompiledQuery<unknown>): Promise<QueryResult<unknown>> => {
-    return await appManager.executeQuery(query);
+  'execute-query',
+  async <T extends QueryInput>(
+    _: unknown,
+    id: string,
+    input: T,
+  ): Promise<QueryMap[T['type']]['output']> => {
+    return mediator.handleQuery(id, input);
   },
 );
 
-ipcMain.handle(
-  'execute-app-query-and-subscribe',
-  async (
-    _,
-    context: SubscribedQueryContext<unknown>,
-  ): Promise<QueryResult<unknown>> => {
-    return await appManager.executeQueryAndSubscribe(context);
-  },
-);
-
-ipcMain.handle('unsubscribe-app-query', (_, queryKey: string[]): void => {
-  appManager.unsubscribeQuery(queryKey);
+ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
+  mediator.unsubscribeQuery(id);
 });
-
-ipcMain.handle(
-  'execute-workspace-mutation',
-  async (
-    _,
-    accountId: string,
-    workspaceId: string,
-    mutation: CompiledQuery | CompiledQuery[],
-  ): Promise<void> => {
-    const accountManager = await appManager.getAccount(accountId);
-    if (!accountManager) {
-      throw new Error(`Account not found: ${accountId}`);
-    }
-
-    const workspaceManager = accountManager.getWorkspace(workspaceId);
-    if (!workspaceManager) {
-      throw new Error(`Workspace not found: ${workspaceId}`);
-    }
-
-    return await workspaceManager.executeMutation(mutation);
-  },
-);
-
-ipcMain.handle(
-  'execute-workspace-query',
-  async (
-    _,
-    accountId: string,
-    workspaceId: string,
-    query: CompiledQuery<unknown>,
-  ): Promise<QueryResult<unknown>> => {
-    const accountManager = await appManager.getAccount(accountId);
-    if (!accountManager) {
-      throw new Error(`Account not found: ${accountId}`);
-    }
-
-    const workspaceManager = accountManager.getWorkspace(workspaceId);
-    if (!workspaceManager) {
-      throw new Error(`Workspace not found: ${workspaceId}`);
-    }
-
-    return await workspaceManager.executeQuery(query);
-  },
-);
-
-ipcMain.handle(
-  'execute-workspace-query-and-subscribe',
-  async (
-    _,
-    accountId: string,
-    workspaceId: string,
-    context: SubscribedQueryContext<unknown>,
-  ): Promise<QueryResult<unknown>> => {
-    const accountManager = await appManager.getAccount(accountId);
-    if (!accountManager) {
-      throw new Error(`Account not found: ${accountId}`);
-    }
-
-    const workspaceManager = accountManager.getWorkspace(workspaceId);
-    if (!workspaceManager) {
-      throw new Error(`Workspace not found: ${workspaceId}`);
-    }
-
-    return await workspaceManager.executeQueryAndSubscribe(context);
-  },
-);
-
-ipcMain.handle(
-  'unsubscribe-workspace-query',
-  async (
-    _,
-    accountId: string,
-    workspaceId: string,
-    queryKey: string[],
-  ): Promise<void> => {
-    const accountManager = await appManager.getAccount(accountId);
-    if (!accountManager) {
-      throw new Error(`Account not found: ${accountId}`);
-    }
-
-    const workspaceManager = accountManager.getWorkspace(workspaceId);
-    if (!workspaceManager) {
-      throw new Error(`Workspace not found: ${workspaceId}`);
-    }
-
-    workspaceManager.unsubscribeQuery(queryKey);
-  },
-);

@@ -22,7 +22,7 @@ import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/contexts/workspace';
 import { BreadcrumbItem } from '@/components/workspaces/containers/breadcrumb-item';
 import { BreadcrumbItemEditor } from '@/components/workspaces/containers/breadcrumb-item-editor';
-import { useBreadcrumbQuery } from '@/queries/use-breadcrumb-query';
+import { useQuery } from '@/hooks/use-query';
 
 interface BreadcrumbProps {
   node: LocalNode;
@@ -30,7 +30,11 @@ interface BreadcrumbProps {
 
 export const Breadcrumb = ({ node }: BreadcrumbProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useBreadcrumbQuery(node.id);
+  const { data, isPending } = useQuery({
+    type: 'breadcrumb_list',
+    nodeId: node.id,
+    userId: workspace.userId,
+  });
 
   if (isPending) {
     return null;

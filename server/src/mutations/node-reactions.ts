@@ -39,7 +39,7 @@ const handleCreateNodeReactionMutation = async (
     mutation.after,
   ) as LocalNodeReactionMutationData;
 
-  if (nodeReactionData.reactor_id !== workspaceAccount.user_id) {
+  if (nodeReactionData.actor_id !== workspaceAccount.user_id) {
     return {
       status: 'error',
     };
@@ -60,7 +60,7 @@ const handleCreateNodeReactionMutation = async (
     .insertInto('node_reactions')
     .values({
       node_id: nodeReactionData.node_id,
-      reactor_id: nodeReactionData.reactor_id,
+      actor_id: nodeReactionData.actor_id,
       reaction: nodeReactionData.reaction,
       created_at: new Date(nodeReactionData.created_at),
       workspace_id: workspaceAccount.workspace_id,
@@ -88,7 +88,7 @@ const handleDeleteNodeReactionMutation = async (
     mutation.before,
   ) as LocalNodeReactionMutationData;
 
-  if (nodeReactionData.reactor_id !== workspaceAccount.user_id) {
+  if (nodeReactionData.actor_id !== workspaceAccount.user_id) {
     return {
       status: 'error',
     };
@@ -99,7 +99,7 @@ const handleDeleteNodeReactionMutation = async (
     .where((eb) =>
       eb.and([
         eb('node_id', '=', nodeReactionData.node_id),
-        eb('reactor_id', '=', nodeReactionData.reactor_id),
+        eb('actor_id', '=', nodeReactionData.actor_id),
         eb('reaction', '=', nodeReactionData.reaction),
       ]),
     )

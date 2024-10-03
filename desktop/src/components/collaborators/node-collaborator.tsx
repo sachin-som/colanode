@@ -3,8 +3,8 @@ import { NodeCollaboratorNode } from '@/types/nodes';
 import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { NodeCollaboratorRoleDropdown } from '@/components/collaborators/node-collaborator-role-dropdown';
-import { useNodeCollaboratorDeleteMutation } from '@/mutations/use-node-collaborator-delete-mutation';
-import { useNodeCollaboratorUpdateMutation } from '@/mutations/use-node-collaborator-update-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface NodeCollaboratorProps {
   nodeId: string;
@@ -17,8 +17,9 @@ export const NodeCollaborator = ({
   collaborator,
   removable,
 }: NodeCollaboratorProps) => {
-  const { mutate: updateCollaborator } = useNodeCollaboratorUpdateMutation();
-  const { mutate: deleteCollaborator } = useNodeCollaboratorDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate } = useMutation();
+
   return (
     <div className="flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
@@ -38,10 +39,14 @@ export const NodeCollaborator = ({
         <NodeCollaboratorRoleDropdown
           value={collaborator.role}
           onChange={(newRole) => {
-            updateCollaborator({
-              nodeId: nodeId,
-              collaboratorId: collaborator.id,
-              role: newRole,
+            mutate({
+              input: {
+                type: 'node_collaborator_update',
+                nodeId: nodeId,
+                collaboratorId: collaborator.id,
+                role: newRole,
+                userId: workspace.userId,
+              },
             });
           }}
         />
@@ -50,9 +55,13 @@ export const NodeCollaborator = ({
             name="delete-bin-line"
             className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
             onClick={() => {
-              deleteCollaborator({
-                nodeId: nodeId,
-                collaboratorId: collaborator.id,
+              mutate({
+                input: {
+                  type: 'node_collaborator_delete',
+                  nodeId: nodeId,
+                  collaboratorId: collaborator.id,
+                  userId: workspace.userId,
+                },
               });
             }}
           />

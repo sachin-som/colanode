@@ -1,10 +1,16 @@
 import React from 'react';
 import { SpaceCreateButton } from '@/components/spaces/space-create-button';
 import { SidebarSpaceItem } from '@/components/workspaces/sidebars/sidebar-space-item';
-import { useSidebarSpacesQuery } from '@/queries/use-sidebar-spaces-query';
+import { useQuery } from '@/hooks/use-query';
+import { useWorkspace } from '@/contexts/workspace';
 
 export const SidebarSpaces = () => {
-  const { data } = useSidebarSpacesQuery();
+  const workspace = useWorkspace();
+  const { data } = useQuery({
+    type: 'sidebar_space_list',
+    userId: workspace.userId,
+  });
+
   return (
     <div className="pt-2 first:pt-0">
       <div className="flex items-center justify-between p-1 pb-2 text-xs text-muted-foreground">

@@ -17,7 +17,8 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
-import { useNodeCollaboratorSearchQuery } from '@/queries/use-node-collaborator-search-query';
+import { useQuery } from '@/hooks/use-query';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];
@@ -30,9 +31,17 @@ export const NodeCollaboratorSearch = ({
   value,
   onChange,
 }: NodeCollaboratorSearchProps) => {
+  const workspace = useWorkspace();
+
   const [query, setQuery] = React.useState('');
   const [open, setOpen] = React.useState(false);
-  const { data } = useNodeCollaboratorSearchQuery(query, excluded);
+
+  const { data } = useQuery({
+    type: 'node_collaborator_search',
+    searchQuery: query,
+    excluded: excluded,
+    userId: workspace.userId,
+  });
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>

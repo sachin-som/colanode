@@ -61,7 +61,7 @@ interface DocumentEditorProps {
 export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
   const workspace = useWorkspace();
   const observer = React.useMemo<EditorObserver>(
-    () => new EditorObserver(workspace, workspace.schema, node, nodes),
+    () => new EditorObserver(workspace, workspace as any, node, nodes),
     [node.id],
   );
 

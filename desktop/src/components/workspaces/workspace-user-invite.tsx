@@ -2,15 +2,17 @@ import React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { isValidEmail } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useWorkspaceAccountsInviteMutation } from '@/mutations/use-workspace-accounts-invite-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { Spinner } from '@/components/ui/spinner';
-import { parseApiError } from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
+import { useWorkspace } from '@/contexts/workspace';
 
 export const WorkspaceUserInvite = () => {
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
+
   const [input, setInput] = React.useState('');
   const [emails, setEmails] = React.useState<string[]>([]);
-  const { mutate, isPending } = useWorkspaceAccountsInviteMutation();
 
   return (
     <div className="flex flex-col space-y-2">
@@ -73,21 +75,21 @@ export const WorkspaceUserInvite = () => {
               return;
             }
 
-            mutate(
-              {
+            mutate({
+              input: {
+                type: 'workspace_accounts_invite',
                 emails: emails,
+                userId: workspace.userId,
               },
-              {
-                onError: (error) => {
-                  const apiError = parseApiError(error);
-                  toast({
-                    title: 'Failed to login',
-                    description: apiError.message,
-                    variant: 'destructive',
-                  });
-                },
+              onError() {
+                toast({
+                  title: 'Failed to invite users',
+                  description:
+                    'Something went wrong inviting userts to workspace. Please try again!',
+                  variant: 'destructive',
+                });
               },
-            );
+            });
           }}
         >
           {isPending && <Spinner className="mr-1" />}

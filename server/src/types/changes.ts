@@ -69,7 +69,7 @@ export type NodeCollaboratorChangeData = {
 
 export type NodeReactionChangeData = {
   node_id: string;
-  reactor_id: string;
+  actor_id: string;
   reaction: string;
   workspace_id: string;
   created_at: string;

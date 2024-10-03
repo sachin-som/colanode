@@ -51,7 +51,7 @@ export const buildNodeInsertMutation = (
   return schema.insertInto('nodes').values(nodes).compile();
 };
 
-const buildCreateNode = (
+export const buildCreateNode = (
   input: NodeInsertInput,
   userId: string,
 ): CreateNode => {

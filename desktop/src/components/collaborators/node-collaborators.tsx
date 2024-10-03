@@ -2,14 +2,20 @@ import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { NodeCollaborator } from '@/components/collaborators/node-collaborator';
 import { NodeCollaboratorCreate } from '@/components/collaborators/node-collaborator-create';
-import { useNodeCollaboratorsQuery } from '@/queries/use-node-collaborators-query';
+import { useQuery } from '@/hooks/use-query';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface NodeCollaboratorsProps {
   id: string;
 }
 
 export const NodeCollaborators = ({ id }: NodeCollaboratorsProps) => {
-  const { data, isPending } = useNodeCollaboratorsQuery(id);
+  const workspace = useWorkspace();
+  const { data, isPending } = useQuery({
+    type: 'node_collaborator_list',
+    nodeId: id,
+    userId: workspace.userId,
+  });
 
   if (isPending) {
     return null;

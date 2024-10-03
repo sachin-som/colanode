@@ -15,8 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { parseApiError } from '@/lib/axios';
-import { useWorkspaceCreateMutation } from '@/mutations/use-workspace-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { useAccount } from '@/contexts/account';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,7 +30,7 @@ export const WorkspaceCreate = () => {
   const account = useAccount();
   const navigate = useNavigate();
 
-  const { mutate, isPending } = useWorkspaceCreateMutation();
+  const { mutate, isPending } = useMutation();
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,25 +40,25 @@ export const WorkspaceCreate = () => {
   });
 
   const handleSubmit = async (values: formSchemaType) => {
-    mutate(
-      {
+    mutate({
+      input: {
+        type: 'workspace_create',
         name: values.name,
         description: values.description,
+        accountId: account.id,
       },
-      {
-        onSuccess: () => {
-          window.location.href = '/';
-        },
-        onError: (error) => {
-          const apiError = parseApiError(error);
-          toast({
-            title: 'Failed to create workspace',
-            description: apiError.message,
-            variant: 'destructive',
-          });
-        },
+      onSuccess() {
+        window.location.href = '/';
       },
-    );
+      onError() {
+        toast({
+          title: 'Failed to create workspace',
+          description:
+            'Somewthing went wrong creating the workspace. Please try again!',
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (

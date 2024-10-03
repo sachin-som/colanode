@@ -22,7 +22,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useSpaceCreateMutation } from '@/mutations/use-space-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -38,7 +39,8 @@ export const SpaceCreateDialog = ({
   open,
   onOpenChange,
 }: SpaceCreateDialogProps) => {
-  const { mutate, isPending } = useSpaceCreateMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,15 +56,18 @@ export const SpaceCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(
-      { name: values.name, description: values.description },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          form.reset();
-        },
+    mutate({
+      input: {
+        type: 'space_create',
+        name: values.name,
+        description: values.description,
+        userId: workspace.userId,
       },
-    );
+      onSuccess() {
+        onOpenChange(false);
+        form.reset();
+      },
+    });
   };
 
   return (

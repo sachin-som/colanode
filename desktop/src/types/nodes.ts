@@ -78,7 +78,7 @@ export type ServerNodeCollaborator = {
 
 export type ServerNodeReaction = {
   nodeId: string;
-  reactorId: string;
+  actorId: string;
   reaction: string;
   workspaceId: string;
   createdAt: string;

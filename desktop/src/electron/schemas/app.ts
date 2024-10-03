@@ -30,14 +30,14 @@ export type CreateAccount = Insertable<AccountTable>;
 export type UpdateAccount = Updateable<AccountTable>;
 
 interface WorkspaceTable {
-  id: ColumnType<string, string, never>;
+  user_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
   name: ColumnType<string, string, string>;
   description: ColumnType<string | null, string | null, string | null>;
   avatar: ColumnType<string | null, string | null, string | null>;
   version_id: ColumnType<string, string, string>;
   role: ColumnType<string, string, string>;
-  user_id: ColumnType<string, string, never>;
   synced: ColumnType<number, number, number>;
 }
 

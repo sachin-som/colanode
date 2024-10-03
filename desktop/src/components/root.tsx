@@ -12,15 +12,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useEventBus } from '@/hooks/use-event-bus';
-import {
-  DummyDriver,
-  Kysely,
-  SqliteAdapter,
-  SqliteIntrospector,
-  SqliteQueryCompiler,
-} from 'kysely';
-import { AppDatabaseSchema } from '@/electron/schemas/app';
-import { AppDatabaseContext } from '@/contexts/app-database';
 
 const router = createBrowserRouter([
   {
@@ -48,15 +39,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
-const appDatabase = new Kysely<AppDatabaseSchema>({
-  dialect: {
-    createAdapter: () => new SqliteAdapter(),
-    createDriver: () => new DummyDriver(),
-    createIntrospector: (db) => new SqliteIntrospector(db),
-    createQueryCompiler: () => new SqliteQueryCompiler(),
-  },
-});
 
 export const Root = () => {
   const eventBus = useEventBus();
@@ -133,22 +115,12 @@ export const Root = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppDatabaseContext.Provider
-        value={{
-          database: appDatabase,
-          query: (query) => window.neuron.executeAppQuery(query),
-          queryAndSubscribe: (context) =>
-            window.neuron.executeAppQueryAndSubscribe(context),
-          mutate: (mutation) => window.neuron.executeAppMutation(mutation),
-        }}
-      >
-        <DndProvider backend={HTML5Backend}>
-          <TooltipProvider>
-            <RouterProvider router={router} />
-          </TooltipProvider>
-          <Toaster />
-        </DndProvider>
-      </AppDatabaseContext.Provider>
+      <DndProvider backend={HTML5Backend}>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+        <Toaster />
+      </DndProvider>
     </QueryClientProvider>
   );
 };

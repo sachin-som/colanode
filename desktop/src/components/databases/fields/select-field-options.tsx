@@ -12,7 +12,8 @@ import { Icon } from '@/components/ui/icon';
 import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/components/databases/fields/select-option-settings-popover';
-import { useSelectOptionCreateMutation } from '@/mutations/use-select-option-create-mutation';
+import { useWorkspace } from '@/contexts/workspace';
+import { useMutation } from '@/hooks/use-mutation';
 
 interface SelectFieldOptionsProps {
   field: SelectFieldNode | MultiSelectFieldNode;
@@ -27,7 +28,8 @@ export const SelectFieldOptions = ({
   onSelect,
   allowAdd,
 }: SelectFieldOptionsProps) => {
-  const { mutate, isPending } = useSelectOptionCreateMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const [inputValue, setInputValue] = React.useState('');
   const [color, setColor] = React.useState(getRandomSelectOptionColor());
@@ -106,20 +108,20 @@ export const SelectFieldOptions = ({
                   return;
                 }
 
-                mutate(
-                  {
+                mutate({
+                  input: {
+                    type: 'select_option_create',
                     fieldId: field.id,
                     name: inputValue.trim(),
                     color,
+                    userId: workspace.userId,
                   },
-                  {
-                    onSuccess: (id) => {
-                      setInputValue('');
-                      setColor(getRandomSelectOptionColor());
-                      onSelect(id);
-                    },
+                  onSuccess(output) {
+                    setInputValue('');
+                    setColor(getRandomSelectOptionColor());
+                    onSelect(output.id);
                   },
-                );
+                });
               }}
               className="flex flex-row items-center gap-2"
             >

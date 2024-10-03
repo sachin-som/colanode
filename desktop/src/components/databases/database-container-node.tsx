@@ -1,21 +1,28 @@
 import React from 'react';
 import { LocalNode } from '@/types/nodes';
-import { useDatabaseQuery } from '@/queries/use-database-query';
+import { useQuery } from '@/hooks/use-query';
 import { Database } from '@/components/databases/database';
 import { DatabaseViews } from '@/components/databases/database-views';
-import { useDatabaseViewsQuery } from '@/queries/use-database-views-query';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface DatabaseContainerNodeProps {
   node: LocalNode;
 }
 
 export const DatabaseContainerNode = ({ node }: DatabaseContainerNodeProps) => {
-  const { data: database, isPending: isDatabasePending } = useDatabaseQuery(
-    node.id,
-  );
-  const { data: views, isPending: isViewsPending } = useDatabaseViewsQuery(
-    node.id,
-  );
+  const workspace = useWorkspace();
+
+  const { data: database, isPending: isDatabasePending } = useQuery({
+    type: 'database_get',
+    databaseId: node.id,
+    userId: workspace.userId,
+  });
+
+  const { data: views, isPending: isViewsPending } = useQuery({
+    type: 'database_view_list',
+    databaseId: node.id,
+    userId: workspace.userId,
+  });
 
   if (isDatabasePending || isViewsPending) {
     return null;

@@ -10,15 +10,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { useNodeDeleteMutation } from '@/mutations/use-node-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageDeleteButtonProps {
   id: string;
 }
 
 export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
-  const { mutate, isPending } = useNodeDeleteMutation();
 
   return (
     <React.Fragment>
@@ -39,9 +41,14 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
             <Button
               variant="destructive"
               disabled={isPending}
-              onClick={async () => {
-                mutate(id, {
-                  onSuccess: () => {
+              onClick={() => {
+                mutate({
+                  input: {
+                    type: 'node_delete',
+                    nodeId: id,
+                    userId: workspace.userId,
+                  },
+                  onSuccess() {
                     setShowDeleteModal(false);
                   },
                 });

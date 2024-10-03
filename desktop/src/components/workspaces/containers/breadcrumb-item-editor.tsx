@@ -1,28 +1,33 @@
 import React from 'react';
 import { BreadcrumbNode } from '@/types/workspaces';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface BreadcrumbItemEditorProps {
   node: BreadcrumbNode;
 }
 
 export const BreadcrumbItemEditor = ({ node }: BreadcrumbItemEditorProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   return (
     <div>
       <SmartTextInput
         value={node.name}
         onChange={(newName) => {
-          if (isSettingNodeAttribute) return;
+          if (isPending) return;
           if (newName === node.name) return;
 
-          setNodeAttribute({
-            nodeId: node.id,
-            key: 'name',
-            value: newName,
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'name',
+              value: newName,
+              userId: workspace.userId,
+            },
           });
         }}
       />

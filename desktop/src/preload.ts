@@ -1,74 +1,28 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { eventBus, Event } from '@/lib/event-bus';
-import { CompiledQuery, QueryResult } from 'kysely';
+import { MutationInput, MutationMap } from '@/types/mutations';
+import { QueryInput, QueryMap } from '@/types/queries';
 
 contextBridge.exposeInMainWorld('neuron', {
   init: () => ipcRenderer.invoke('init'),
   logout: (accountId: string) => ipcRenderer.invoke('logout', accountId),
-  executeAppQuery: <R>(query: CompiledQuery<R>): Promise<QueryResult<R>> =>
-    ipcRenderer.invoke('execute-app-query', query),
-  executeAppQueryAndSubscribe: <R>(
-    queryId: string,
-    query: CompiledQuery<R>,
-  ): Promise<QueryResult<R>> =>
-    ipcRenderer.invoke('execute-app-query-and-subscribe', queryId, query),
 
-  executeAppMutation: (
-    mutation: CompiledQuery | CompiledQuery[],
-  ): Promise<void> => ipcRenderer.invoke('execute-app-mutation', mutation),
+  executeMutation: <T extends MutationInput>(
+    input: T,
+  ): Promise<MutationMap[T['type']]['output']> => {
+    return ipcRenderer.invoke('execute-mutation', input);
+  },
 
-  unsubscribeAppQuery: (queryId: string): Promise<void> =>
-    ipcRenderer.invoke('unsubscribe-app-query', queryId),
+  executeQuery: <T extends QueryInput>(
+    id: string,
+    input: T,
+  ): Promise<QueryMap[T['type']]['output']> => {
+    return ipcRenderer.invoke('execute-query', id, input);
+  },
 
-  executeWorkspaceMutation: (
-    accountId: string,
-    workspaceId: string,
-    mutation: CompiledQuery | CompiledQuery[],
-  ): Promise<void> =>
-    ipcRenderer.invoke(
-      'execute-workspace-mutation',
-      accountId,
-      workspaceId,
-      mutation,
-    ),
-
-  executeWorkspaceQuery: <R>(
-    accountId: string,
-    workspaceId: string,
-    query: CompiledQuery<R>,
-  ): Promise<QueryResult<R>> =>
-    ipcRenderer.invoke(
-      'execute-workspace-query',
-      accountId,
-      workspaceId,
-      query,
-    ),
-
-  executeWorkspaceQueryAndSubscribe: <R>(
-    accountId: string,
-    workspaceId: string,
-    queryId: string,
-    query: CompiledQuery<R>,
-  ): Promise<QueryResult<R>> =>
-    ipcRenderer.invoke(
-      'execute-workspace-query-and-subscribe',
-      accountId,
-      workspaceId,
-      queryId,
-      query,
-    ),
-
-  unsubscribeWorkspaceQuery: (
-    accountId: string,
-    workspaceId: string,
-    queryId: string,
-  ) =>
-    ipcRenderer.invoke(
-      'unsubscribe-workspace-query',
-      accountId,
-      workspaceId,
-      queryId,
-    ),
+  unsubscribeQuery: (id: string): Promise<void> => {
+    return ipcRenderer.invoke('unsubscribe-query', id);
+  },
 });
 
 contextBridge.exposeInMainWorld('eventBus', {

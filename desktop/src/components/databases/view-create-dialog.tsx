@@ -23,12 +23,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/icon';
-import { useTableViewCreateMutation } from '@/mutations/use-table-view-create-mutation';
-import { useBoardViewCreateMutation } from '@/mutations/use-board-view-create-mutation';
-import { useCalendarViewCreateMutation } from '@/mutations/use-calendar-view-create-mutation';
 import { useDatabase } from '@/contexts/database';
 import { FieldSelect } from '@/components/databases/fields/field-select';
 import { toast } from '@/components/ui/use-toast';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -69,15 +68,9 @@ export const ViewCreateDialog = ({
   open,
   onOpenChange,
 }: ViewCreateDialogProps) => {
+  const workspace = useWorkspace();
   const database = useDatabase();
-  const tableViewCreateMutation = useTableViewCreateMutation();
-  const boardViewCreateMutation = useBoardViewCreateMutation();
-  const calendarViewCreateMutation = useCalendarViewCreateMutation();
-
-  const isPending =
-    tableViewCreateMutation.isPending ||
-    boardViewCreateMutation.isPending ||
-    calendarViewCreateMutation.isPending;
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,18 +92,18 @@ export const ViewCreateDialog = ({
     }
 
     if (values.type === 'TABLE') {
-      tableViewCreateMutation.mutate(
-        {
+      mutate({
+        input: {
+          type: 'table_view_create',
           databaseId: database.id,
           name: values.name,
+          userId: workspace.userId,
         },
-        {
-          onSuccess: () => {
-            form.reset();
-            onOpenChange(false);
-          },
+        onSuccess() {
+          form.reset();
+          onOpenChange(false);
         },
-      );
+      });
     } else if (values.type === 'BOARD') {
       if (!values.groupBy) {
         toast({
@@ -122,19 +115,19 @@ export const ViewCreateDialog = ({
         return;
       }
 
-      boardViewCreateMutation.mutate(
-        {
+      mutate({
+        input: {
+          type: 'board_view_create',
           databaseId: database.id,
           name: values.name,
           groupBy: values.groupBy,
+          userId: workspace.userId,
         },
-        {
-          onSuccess: () => {
-            form.reset();
-            onOpenChange(false);
-          },
+        onSuccess() {
+          form.reset();
+          onOpenChange(false);
         },
-      );
+      });
     } else if (values.type === 'CALENDAR') {
       if (!values.groupBy) {
         toast({
@@ -146,19 +139,19 @@ export const ViewCreateDialog = ({
         return;
       }
 
-      calendarViewCreateMutation.mutate(
-        {
+      mutate({
+        input: {
+          type: 'calendar_view_create',
           databaseId: database.id,
           name: values.name,
           groupBy: values.groupBy,
+          userId: workspace.userId,
         },
-        {
-          onSuccess: () => {
-            form.reset();
-            onOpenChange(false);
-          },
+        onSuccess() {
+          form.reset();
+          onOpenChange(false);
         },
-      );
+      });
     }
   };
 

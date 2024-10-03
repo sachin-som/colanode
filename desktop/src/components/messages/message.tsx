@@ -13,8 +13,8 @@ import { MessageDeleteButton } from '@/components/messages/message-delete-button
 import { NodeRenderer } from '@/editor/renderers/node';
 import { MessageNode } from '@/types/messages';
 import { MessageReactions } from '@/components/messages/message-reactions';
-import { useReactionCreateMutation } from '@/mutations/use-reaction-create-mutation';
-import { useReactionDeleteMutation } from '@/mutations/use-reaction-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface MessageProps {
   message: MessageNode;
@@ -40,10 +40,8 @@ const shouldDisplayUserInfo = (
 };
 
 export const Message = ({ message, previousMessage }: MessageProps) => {
-  const { mutate: createReaction, isPending: isCreatingReaction } =
-    useReactionCreateMutation();
-  const { mutate: deleteReaction, isPending: isDeletingReaction } =
-    useReactionDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   if (!message.content || message.content.length === 0) {
     return null;
@@ -106,11 +104,18 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
             <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
               <MessageReactionCreatePopover
                 onReactionClick={(reaction) => {
-                  if (isCreatingReaction || isDeletingReaction) {
+                  if (isPending) {
                     return;
                   }
 
-                  createReaction({ nodeId: message.id, reaction });
+                  mutate({
+                    input: {
+                      type: 'node_reaction_create',
+                      nodeId: message.id,
+                      userId: workspace.userId,
+                      reaction,
+                    },
+                  });
                 }}
               />
             </li>
@@ -132,14 +137,28 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
             <MessageReactions
               message={message}
               onReactionClick={(reaction) => {
-                if (isCreatingReaction || isDeletingReaction) {
+                if (isPending) {
                   return;
                 }
 
                 if (message.userReactions.includes(reaction)) {
-                  deleteReaction({ nodeId: message.id, reaction });
+                  mutate({
+                    input: {
+                      type: 'node_reaction_delete',
+                      nodeId: message.id,
+                      userId: workspace.userId,
+                      reaction,
+                    },
+                  });
                 } else {
-                  createReaction({ nodeId: message.id, reaction });
+                  mutate({
+                    input: {
+                      type: 'node_reaction_create',
+                      nodeId: message.id,
+                      userId: workspace.userId,
+                      reaction,
+                    },
+                  });
                 }
               }}
             />

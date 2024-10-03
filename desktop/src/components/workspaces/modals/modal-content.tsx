@@ -1,38 +1,41 @@
 import React from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { useNodeQuery } from '@/queries/use-node-query';
-import { mapNode } from '@/lib/nodes';
+import { useQuery } from '@/hooks/use-query';
 import { match } from 'ts-pattern';
 import { NodeTypes } from '@/lib/constants';
 import { ChannelContainerNode } from '@/components/channels/channel-container-node';
 import { PageContainerNode } from '@/components/pages/page-container-node';
 import { DatabaseContainerNode } from '@/components/databases/database-container-node';
 import { RecordContainerNode } from '@/components/records/record-container-node';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface ModalContentProps {
   nodeId: string;
 }
 
 export const ModalContent = ({ nodeId }: ModalContentProps) => {
-  const { data, isPending } = useNodeQuery(nodeId);
+  const workspace = useWorkspace();
+  const { data, isPending } = useQuery({
+    type: 'node_get',
+    nodeId: nodeId,
+    userId: workspace.userId,
+  });
 
   if (isPending) {
     return <Spinner />;
   }
 
-  if (!data || data.rows.length === 0) {
+  if (!data) {
     return null;
   }
 
-  const node = mapNode(data.rows[0]);
-
   return (
     <div className="flex h-full w-full flex-col">
-      {match(node.type)
-        .with(NodeTypes.Channel, () => <ChannelContainerNode node={node} />)
-        .with(NodeTypes.Page, () => <PageContainerNode node={node} />)
-        .with(NodeTypes.Database, () => <DatabaseContainerNode node={node} />)
-        .with(NodeTypes.Record, () => <RecordContainerNode node={node} />)
+      {match(data.type)
+        .with(NodeTypes.Channel, () => <ChannelContainerNode node={data} />)
+        .with(NodeTypes.Page, () => <PageContainerNode node={data} />)
+        .with(NodeTypes.Database, () => <DatabaseContainerNode node={data} />)
+        .with(NodeTypes.Record, () => <RecordContainerNode node={data} />)
         .otherwise(() => null)}
     </div>
   );

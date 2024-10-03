@@ -39,6 +39,7 @@ enum IdType {
   SelectOption = 'so',
   ViewFilter = 'vf',
   ViewSort = 'vs',
+  Query = 'qu',
 }
 
 export class NeuronId {

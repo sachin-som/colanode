@@ -10,22 +10,21 @@ import { ViewTabs } from '@/components/databases/view-tabs';
 import { TableViewSettingsPopover } from '@/components/databases/tables/table-view-settings-popover';
 import { getDefaultFieldWidth, getDefaultNameWidth } from '@/lib/databases';
 import { generateNodeIndex } from '@/lib/nodes';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 import { ViewSearchBar } from '@/components/databases/search/view-search-bar';
 import { ViewFilterButton } from '@/components/databases/search/view-filter-button';
 import { ViewSortButton } from '@/components/databases/search/view-sort-button';
 import { ViewSearchProvider } from '@/components/databases/search/view-search-provider';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface TableViewProps {
   node: TableViewNode;
 }
 
 export const TableView = ({ node }: TableViewProps) => {
+  const workspace = useWorkspace();
   const database = useDatabase();
-
-  const { mutate: setNodeAttribute } = useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute } = useNodeAttributeDeleteMutation();
+  const { mutate } = useMutation();
 
   const [hiddenFields, setHiddenFields] = React.useState<string[]>(
     node.hiddenFields ?? [],
@@ -71,10 +70,14 @@ export const TableView = ({ node }: TableViewProps) => {
 
           const newHiddenFields = [...hiddenFields, id];
           setHiddenFields(newHiddenFields);
-          setNodeAttribute({
-            nodeId: node.id,
-            key: 'hiddenFields',
-            value: newHiddenFields,
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'hiddenFields',
+              value: newHiddenFields,
+              userId: workspace.userId,
+            },
           });
         },
         showField: (id: string) => {
@@ -84,19 +87,28 @@ export const TableView = ({ node }: TableViewProps) => {
 
           const newHiddenFields = hiddenFields.filter((f) => f !== id);
           setHiddenFields(newHiddenFields);
-          deleteNodeAttribute({
-            nodeId: node.id,
-            key: 'hiddenFields',
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'hiddenFields',
+              value: newHiddenFields,
+              userId: workspace.userId,
+            },
           });
         },
         isHiddenField: (id: string) => hiddenFields.includes(id),
         getNameWidth: () => nameWidth,
         resizeName: (width: number) => {
           setNameWidth(width);
-          setNodeAttribute({
-            nodeId: node.id,
-            key: 'nameWidth',
-            value: width,
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'nameWidth',
+              value: width,
+              userId: workspace.userId,
+            },
           });
         },
         getFieldWidth: (id: string, type: FieldDataType) => {
@@ -104,10 +116,14 @@ export const TableView = ({ node }: TableViewProps) => {
         },
         resizeField: (id, width) => {
           setFieldWidths({ ...fieldWidths, [id]: width });
-          setNodeAttribute({
-            nodeId: node.id,
-            key: 'fieldWidths',
-            value: { ...fieldWidths, [id]: width },
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'fieldWidths',
+              value: { ...fieldWidths, [id]: width },
+              userId: workspace.userId,
+            },
           });
         },
         moveField: (id, after) => {
@@ -178,10 +194,14 @@ export const TableView = ({ node }: TableViewProps) => {
             ...fieldIndexes,
             [id]: newIndex,
           });
-          setNodeAttribute({
-            nodeId: node.id,
-            key: 'fieldIndexes',
-            value: { ...fieldIndexes, [id]: newIndex },
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: node.id,
+              attribute: 'fieldIndexes',
+              value: { ...fieldIndexes, [id]: newIndex },
+              userId: workspace.userId,
+            },
           });
         },
       }}

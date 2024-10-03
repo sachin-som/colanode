@@ -1,10 +1,15 @@
 import React from 'react';
 import { ChatCreatePopover } from '@/components/chats/chat-create-popover';
-import { useSidebarChatsQuery } from '@/queries/use-sidebar-chats-query';
-import { SidebarChatItem } from './sidebar-chat-item';
+import { useQuery } from '@/hooks/use-query';
+import { SidebarChatItem } from '@/components/workspaces/sidebars/sidebar-chat-item';
+import { useWorkspace } from '@/contexts/workspace';
 
 export const SidebarChats = () => {
-  const { data } = useSidebarChatsQuery();
+  const workspace = useWorkspace();
+  const { data } = useQuery({
+    type: 'sidebar_chat_list',
+    userId: workspace.userId,
+  });
 
   return (
     <div className="pt-2 first:pt-0">

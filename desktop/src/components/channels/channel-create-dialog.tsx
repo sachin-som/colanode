@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useChannelCreateMutation } from '@/mutations/use-channel-create-mutation';
+import { useMutation } from '@/hooks/use-mutation';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -40,7 +40,7 @@ export const ChannelCreateDialog = ({
   onOpenChange,
 }: ChannelCreateDialogProps) => {
   const workspace = useWorkspace();
-  const { mutate, isPending } = useChannelCreateMutation();
+  const { mutate, isPending } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,19 +59,19 @@ export const ChannelCreateDialog = ({
       return;
     }
 
-    mutate(
-      {
-        spaceId,
+    mutate({
+      input: {
+        type: 'channel_create',
+        spaceId: spaceId,
         name: values.name,
+        userId: workspace.userId,
       },
-      {
-        onSuccess: (id) => {
-          onOpenChange(false);
-          form.reset();
-          workspace.navigateToNode(id);
-        },
+      onSuccess(output) {
+        onOpenChange(false);
+        form.reset();
+        workspace.navigateToNode(output.id);
       },
-    );
+    });
   };
 
   return (

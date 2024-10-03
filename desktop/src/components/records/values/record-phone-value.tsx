@@ -1,8 +1,8 @@
 import React from 'react';
 import { RecordNode, PhoneFieldNode } from '@/types/databases';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
 import { SmartTextInput } from '@/components/ui/smart-text-input';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface RecordPhoneValueProps {
   record: RecordNode;
@@ -10,13 +10,10 @@ interface RecordPhoneValueProps {
 }
 
 export const RecordPhoneValue = ({ record, field }: RecordPhoneValueProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
-    useNodeAttributeDeleteMutation();
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const canEdit = true;
-  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
 
   return (
     <SmartTextInput
@@ -31,15 +28,23 @@ export const RecordPhoneValue = ({ record, field }: RecordPhoneValueProps) => {
         }
 
         if (newValue === null || newValue === '') {
-          deleteNodeAttribute({
-            nodeId: record.id,
-            key: field.id,
+          mutate({
+            input: {
+              type: 'node_attribute_delete',
+              nodeId: record.id,
+              attribute: field.id,
+              userId: workspace.userId,
+            },
           });
         } else {
-          setNodeAttribute({
-            nodeId: record.id,
-            key: field.id,
-            value: newValue,
+          mutate({
+            input: {
+              type: 'node_attribute_set',
+              nodeId: record.id,
+              attribute: field.id,
+              value: newValue,
+              userId: workspace.userId,
+            },
           });
         }
       }}

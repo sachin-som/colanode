@@ -7,8 +7,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { SelectFieldOptions } from '@/components/databases/fields/select-field-options';
-import { useNodeAttributeSetMutation } from '@/mutations/use-node-attribute-set-mutation';
-import { useNodeAttributeDeleteMutation } from '@/mutations/use-node-attribute-delete-mutation';
+import { useMutation } from '@/hooks/use-mutation';
+import { useWorkspace } from '@/contexts/workspace';
 
 interface TableViewMultiSelectCellProps {
   record: RecordNode;
@@ -19,12 +19,8 @@ export const TableViewMultiSelectCell = ({
   record,
   field,
 }: TableViewMultiSelectCellProps) => {
-  const { mutate: setNodeAttribute, isPending: isSettingNodeAttribute } =
-    useNodeAttributeSetMutation();
-  const { mutate: deleteNodeAttribute, isPending: isDeletingNodeAttribute } =
-    useNodeAttributeDeleteMutation();
-
-  const isPending = isSettingNodeAttribute || isDeletingNodeAttribute;
+  const workspace = useWorkspace();
+  const { mutate, isPending } = useMutation();
 
   const [open, setOpen] = React.useState(false);
   const [selectedValues, setSelectedValues] = React.useState(
@@ -62,17 +58,25 @@ export const TableViewMultiSelectCell = ({
 
             if (selectedValues.includes(id)) {
               setSelectedValues(selectedValues.filter((v) => v !== id));
-              deleteNodeAttribute({
-                nodeId: record.id,
-                key: field.id,
+              mutate({
+                input: {
+                  type: 'node_attribute_delete',
+                  nodeId: record.id,
+                  attribute: field.id,
+                  userId: workspace.userId,
+                },
               });
             } else {
               const values = [...selectedValues, id];
               setSelectedValues(values);
-              setNodeAttribute({
-                nodeId: record.id,
-                key: field.id,
-                value: values,
+              mutate({
+                input: {
+                  type: 'node_attribute_set',
+                  nodeId: record.id,
+                  attribute: field.id,
+                  value: values,
+                  userId: workspace.userId,
+                },
               });
             }
           }}

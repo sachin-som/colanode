@@ -1,4 +1,4 @@
-import { AppDatabaseSchema } from '@/electron/schemas/app';
+import { AppDatabaseSchema } from '@/main/schemas/app';
 import { LoginOutput } from '@/types/accounts';
 import { Server } from '@/types/servers';
 import { CompiledQuery, Kysely } from 'kysely';

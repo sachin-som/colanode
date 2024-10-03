@@ -2,7 +2,7 @@ import {
   CreateNode,
   SelectNode,
   WorkspaceDatabaseSchema,
-} from '@/electron/schemas/workspace';
+} from '@/main/schemas/workspace';
 import {
   LocalNode,
   LocalNodeWithChildren,

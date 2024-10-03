@@ -1,4 +1,4 @@
-import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
+import { WorkspaceDatabaseSchema } from '@/main/schemas/workspace';
 import { NeuronId } from '@/lib/id';
 import { LocalNode } from '@/types/nodes';
 import { Workspace } from '@/types/workspaces';

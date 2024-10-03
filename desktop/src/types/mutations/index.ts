@@ -1,5 +1,5 @@
-import { AppDatabaseSchema } from '@/electron/schemas/app';
-import { WorkspaceDatabaseSchema } from '@/electron/schemas/workspace';
+import { AppDatabaseSchema } from '@/main/schemas/app';
+import { WorkspaceDatabaseSchema } from '@/main/schemas/workspace';
 
 export interface MutationMap {}
 

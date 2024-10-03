@@ -3,8 +3,8 @@ import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/types/mutations';
 import { QueryInput, QueryMap } from '@/types/queries';
-import { mediator } from '@/electron/mediator';
-import { databaseContext } from './electron/database-context';
+import { mediator } from '@/main/mediator';
+import { databaseContext } from '@/main/database-context';
 
 let subscriptionId: string | null = null;
 

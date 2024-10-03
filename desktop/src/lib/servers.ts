@@ -1,4 +1,4 @@
-import { SelectServer } from '@/electron/schemas/app';
+import { SelectServer } from '@/main/schemas/app';
 import { Server } from '@/types/servers';
 
 export const buildApiBaseUrl = (server: Server): string => {

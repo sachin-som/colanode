@@ -1,4 +1,4 @@
-import { SelectServer } from '@/main/schemas/app';
+import { SelectServer } from '@/main/data/app/schema';
 import { Server } from '@/types/servers';
 
 export const buildApiBaseUrl = (server: Server): string => {

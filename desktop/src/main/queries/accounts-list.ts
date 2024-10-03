@@ -1,8 +1,8 @@
 import { AccountListQueryInput } from '@/types/queries/account-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { Account } from '@/types/accounts';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
-import { SelectAccount } from '../schemas/app';
+import { SelectAccount } from '@/main/data/app/schema';
 import { isEqual } from 'lodash';
 import { MutationChange } from '@/types/mutations';
 

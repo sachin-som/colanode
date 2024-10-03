@@ -1,7 +1,7 @@
 import { DatabaseViewListQueryInput } from '@/types/queries/database-view-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { LocalNode } from '@/types/nodes';

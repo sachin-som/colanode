@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { buildApiBaseUrl, mapServer } from '@/lib/servers';
 import { WorkspaceCreateMutationInput } from '@/types/mutations/workspace-create';
 import {

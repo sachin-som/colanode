@@ -1,8 +1,8 @@
 import { WorkspaceListQueryInput } from '@/types/queries/workspace-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { Workspace, WorkspaceRole } from '@/types/workspaces';
-import { SelectWorkspace } from '../schemas/app';
+import { SelectWorkspace } from '@/main/data/app/schema';
 import { MutationChange } from '@/types/mutations';
 import { isEqual } from 'lodash';
 

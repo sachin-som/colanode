@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { NeuronId } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeAttributeSetMutationInput } from '@/types/mutations/node-attribute-set';

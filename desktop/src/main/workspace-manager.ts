@@ -11,13 +11,13 @@ import { Workspace, WorkspaceSyncData } from '@/types/workspaces';
 import {
   SelectNodeCollaborator,
   WorkspaceDatabaseSchema,
-} from '@/main/schemas/workspace';
-import { workspaceDatabaseMigrations } from '@/main/migrations/workspace';
+} from '@/main/data/workspace/schema';
+import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
 import {
   buildSqlite,
   extractTablesFromSql,
   resultHasChanged,
-} from '@/main/utils';
+} from '@/main/data/utils';
 import {
   ServerExecuteMutationsResponse,
   ServerMutation,
@@ -30,7 +30,7 @@ import {
   ServerNodeCollaborator,
   ServerNodeReaction,
 } from '@/types/nodes';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
 import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';

@@ -8,38 +8,6 @@ import { QueryMap, QueryInput } from '@/types/queries';
 interface NeuronApi {
   init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
-  executeAppMutation: (
-    mutation: CompiledQuery | CompiledQuery[],
-  ) => Promise<void>;
-  executeAppQuery: (query: CompiledQuery<R>) => Promise<QueryResult<R>>;
-  executeAppQueryAndSubscribe: (
-    context: SubscribedQueryContext<R>,
-  ) => Promise<QueryResult<R>>;
-  unsubscribeAppQuery: (queryKey: string[]) => Promise<void>;
-
-  executeWorkspaceMutation: (
-    accountId: string,
-    workspaceId: string,
-    mutation: CompiledQuery | CompiledQuery[],
-  ) => Promise<void>;
-
-  executeWorkspaceQuery: (
-    accountId: string,
-    workspaceId: string,
-    query: CompiledQuery<R>,
-  ) => Promise<QueryResult<R>>;
-
-  executeWorkspaceQueryAndSubscribe: (
-    accountId: string,
-    workspaceId: string,
-    context: SubscribedQueryContext<R>,
-  ) => Promise<QueryResult<R>>;
-
-  unsubscribeWorkspaceQuery: (
-    accountId: string,
-    workspaceId: string,
-    queryKey: string[],
-  ) => Promise<void>;
 
   executeMutation: <T extends MutationInput>(
     input: T,

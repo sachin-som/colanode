@@ -1,8 +1,8 @@
 import { SidebarSpaceListQueryInput } from '@/types/queries/sidebar-space-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { SidebarNode, SidebarSpaceNode } from '@/types/workspaces';
 import { mapNode } from '@/lib/nodes';

@@ -1,8 +1,8 @@
 import { MessageListQueryInput } from '@/types/queries/message-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { MutationChange } from '@/types/mutations';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { sql } from 'kysely';
 import { NodeTypes } from '@/lib/constants';
 import { MessageNode, MessageReactionCount } from '@/types/messages';

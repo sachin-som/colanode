@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeCollaboratorDeleteMutationInput } from '@/types/mutations/node-collaborator-delete';
 

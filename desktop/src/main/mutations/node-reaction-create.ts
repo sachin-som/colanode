@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeReactionCreateMutationInput } from '@/types/mutations/node-reaction-create';
 

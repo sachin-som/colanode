@@ -4,7 +4,7 @@ import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/types/mutations';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { mediator } from '@/main/mediator';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 
 let subscriptionId: string | null = null;
 

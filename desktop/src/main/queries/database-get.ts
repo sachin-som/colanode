@@ -1,8 +1,8 @@
 import { DatabaseGetQueryInput } from '@/types/queries/database-get';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
 import {

@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';

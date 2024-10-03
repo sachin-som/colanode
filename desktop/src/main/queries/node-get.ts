@@ -1,8 +1,8 @@
 import { NodeGetQueryInput } from '@/types/queries/node-get';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { mapNode } from '@/lib/nodes';
-import { SelectNode } from '../schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { MutationChange } from '@/types/mutations';
 import { isEqual } from 'lodash';
 

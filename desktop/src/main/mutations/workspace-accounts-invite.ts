@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { buildApiBaseUrl, mapServer } from '@/lib/servers';
 import { WorkspaceAccountsInviteMutationInput } from '@/types/mutations/workspace-accounts-invite';
 import {
@@ -8,7 +8,7 @@ import {
   MutationResult,
 } from '@/types/mutations';
 import { WorkspaceAccountsInviteOutput } from '@/types/workspaces';
-import { CreateNode } from '@/main/schemas/workspace';
+import { CreateNode } from '@/main/data/workspace/schema';
 
 export class WorkspaceAccountsInviteMutationHandler
   implements MutationHandler<WorkspaceAccountsInviteMutationInput>

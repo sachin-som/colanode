@@ -1,11 +1,11 @@
 import { app } from 'electron';
 import * as fs from 'node:fs';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
-import { AppDatabaseSchema, SelectWorkspace } from '@/main/schemas/app';
-import { WorkspaceDatabaseSchema } from '@/main/schemas/workspace';
-import { buildSqlite } from '@/main/utils';
-import { appDatabaseMigrations } from '@/main/migrations/app';
-import { workspaceDatabaseMigrations } from '@/main/migrations/workspace';
+import { AppDatabaseSchema, SelectWorkspace } from '@/main/data/app/schema';
+import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
+import { buildSqlite } from '@/main/data/utils';
+import { appDatabaseMigrations } from '@/main/data/app/migrations';
+import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
 
 class DatabaseContext {
   private readonly appPath: string;

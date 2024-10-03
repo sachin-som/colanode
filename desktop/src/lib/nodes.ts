@@ -1,8 +1,4 @@
-import {
-  CreateNode,
-  SelectNode,
-  WorkspaceDatabaseSchema,
-} from '@/main/schemas/workspace';
+import { CreateNode, SelectNode } from '@/main/data/workspace/schema';
 import {
   LocalNode,
   LocalNodeWithChildren,
@@ -37,18 +33,6 @@ export const generateNodeIndex = (
   const upper = next === undefined ? null : next;
 
   return generateKeyBetween(lower, upper);
-};
-
-export const buildNodeInsertMutation = (
-  schema: Kysely<WorkspaceDatabaseSchema>,
-  userId: string,
-  input: NodeInsertInput | NodeInsertInput[],
-): CompiledQuery => {
-  const nodes = Array.isArray(input)
-    ? input.map((node) => buildCreateNode(node, userId))
-    : buildCreateNode(input, userId);
-
-  return schema.insertInto('nodes').values(nodes).compile();
 };
 
 export const buildCreateNode = (

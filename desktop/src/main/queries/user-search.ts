@@ -1,8 +1,8 @@
 import { UserSearchQueryInput } from '@/types/queries/user-search';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
-import { SelectNode } from '@/main/schemas/workspace';
+import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { UserNode } from '@/types/users';
 import { MutationChange } from '@/types/mutations';

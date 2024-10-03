@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { LoginOutput } from '@/types/accounts';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { buildApiBaseUrl, mapServer } from '@/lib/servers';
 import { EmailLoginMutationInput } from '@/types/mutations/email-login';
 import {

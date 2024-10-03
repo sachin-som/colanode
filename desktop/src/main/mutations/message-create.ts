@@ -1,12 +1,12 @@
 import { mapContentsToEditorNodes } from '@/renderer/editor/mappers';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildCreateNode } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { MessageCreateMutationInput } from '@/types/mutations/message-create';
 import { LocalNode } from '@/types/nodes';
-import { CreateNode } from '@/main/schemas/workspace';
+import { CreateNode } from '@/main/data/workspace/schema';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>

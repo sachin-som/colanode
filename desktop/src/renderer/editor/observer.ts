@@ -1,4 +1,4 @@
-import { WorkspaceDatabaseSchema } from '@/main/schemas/workspace';
+import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { NeuronId } from '@/lib/id';
 import { LocalNode } from '@/types/nodes';
 import { Workspace } from '@/types/workspaces';
@@ -250,11 +250,11 @@ export class EditorObserver {
       deleteQueries.length > 0
     ) {
       const queries = [...insertQueries, ...updateQueries, ...deleteQueries];
-      await window.neuron.executeWorkspaceMutation(
-        this.workspace.accountId,
-        this.workspace.id,
-        queries,
-      );
+      // await window.neuron.executeWorkspaceMutation(
+      //   this.workspace.accountId,
+      //   this.workspace.id,
+      //   queries,
+      // );
     }
   }
 

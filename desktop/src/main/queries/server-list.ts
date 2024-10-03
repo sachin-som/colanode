@@ -1,8 +1,8 @@
 import { ServerListQueryInput } from '@/types/queries/server-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { mapServer } from '@/lib/servers';
-import { SelectServer } from '../schemas/app';
+import { SelectServer } from '@/main/data/app/schema';
 import { MutationChange } from '@/types/mutations';
 import { isEqual } from 'lodash';
 

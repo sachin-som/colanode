@@ -1,5 +1,5 @@
 import { NodeCollaboratorListQueryInput } from '@/types/queries/node-collaborator-list';
-import { databaseContext } from '@/main/database-context';
+import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
 import { NodeTypes } from '@/lib/constants';

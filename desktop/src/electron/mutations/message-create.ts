@@ -1,4 +1,4 @@
-import { mapContentsToEditorNodes } from '@/editor/mappers';
+import { mapContentsToEditorNodes } from '@/renderer/editor/mappers';
 import { databaseContext } from '@/electron/database-context';
 import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';

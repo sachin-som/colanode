@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceAccountRoleUpdateMutationInput } from '@/types/mutations/workspace-account-role-update';
 import {
   MutationChange,
@@ -57,15 +56,15 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       };
     }
 
+    const axios = buildAxiosInstance(
+      server.domain,
+      server.attributes,
+      account.token,
+    );
     const { data } = await axios.post<WorkspaceAccountRoleUpdateOutput>(
-      `${buildApiBaseUrl(server)}/v1/workspaces/${workspace.workspace_id}/accounts/${input.accountId}`,
+      `/v1/workspaces/${workspace.workspace_id}/users/${input.accountId}`,
       {
         role: input.role,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${account.token}`,
-        },
       },
     );
 

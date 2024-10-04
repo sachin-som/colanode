@@ -1,8 +1,7 @@
-import axios from 'axios';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { SelectWorkspace } from '@/main/data/app/schema';
 import { databaseContext } from '@/main/data/database-context';
-import { WorkspaceSyncData } from '@/types/sync';
+import { ServerSyncResponse, WorkspaceSyncData } from '@/types/sync';
 
 const EVENT_LOOP_INTERVAL = 100;
 
@@ -23,7 +22,12 @@ class Synchronizer {
   }
 
   private async executeEventLoop() {
+    // try {
     await this.checkForWorkspaceSyncs();
+    await this.checkForWorkspaceChanges();
+    // } catch (error) {
+    //   console.log('error', error);
+    // }
 
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
@@ -44,34 +48,103 @@ class Synchronizer {
     }
   }
 
+  private async checkForWorkspaceChanges() {
+    const workspaces = await databaseContext.appDatabase
+      .selectFrom('workspaces')
+      .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
+      .innerJoin('servers', 'accounts.server', 'servers.domain')
+      .select([
+        'workspaces.workspace_id',
+        'workspaces.user_id',
+        'accounts.token',
+        'servers.domain',
+        'servers.attributes',
+      ])
+      .where('workspaces.synced', '=', 1)
+      .execute();
+
+    for (const workspace of workspaces) {
+      const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+        workspace.user_id,
+      );
+
+      const changes = await workspaceDatabase
+        .selectFrom('changes')
+        .selectAll()
+        .orderBy('id asc')
+        .limit(20)
+        .execute();
+
+      if (changes.length === 0) {
+        return;
+      }
+
+      const axios = buildAxiosInstance(
+        workspace.domain,
+        workspace.attributes,
+        workspace.token,
+      );
+
+      const { data } = await axios.post<ServerSyncResponse>(
+        `/v1/sync/${workspace.workspace_id}`,
+        {
+          changes: changes,
+        },
+      );
+
+      const syncedChangeIds: number[] = [];
+      const unsyncedChangeIds: number[] = [];
+      for (const result of data.results) {
+        if (result.status === 'success') {
+          syncedChangeIds.push(result.id);
+        } else {
+          unsyncedChangeIds.push(result.id);
+        }
+      }
+
+      if (syncedChangeIds.length > 0) {
+        await workspaceDatabase
+          .deleteFrom('changes')
+          .where('id', 'in', syncedChangeIds)
+          .execute();
+      }
+
+      if (unsyncedChangeIds.length > 0) {
+        await workspaceDatabase
+          .updateTable('changes')
+          .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
+          .where('id', 'in', unsyncedChangeIds)
+          .execute();
+
+        //we just delete changes that have failed to sync for more than 5 times.
+        //in the future we might need to revert the change locally.
+        await workspaceDatabase
+          .deleteFrom('changes')
+          .where('retry_count', '>=', 5)
+          .execute();
+      }
+    }
+  }
+
   private async syncWorkspace(workspace: SelectWorkspace): Promise<void> {
-    const account = await databaseContext.appDatabase
+    const credentials = await databaseContext.appDatabase
       .selectFrom('accounts')
-      .selectAll()
+      .innerJoin('servers', 'accounts.server', 'servers.domain')
+      .select(['domain', 'attributes', 'token'])
       .where('id', '=', workspace.account_id)
       .executeTakeFirst();
 
-    if (!account) {
+    if (!credentials) {
       return;
     }
 
-    const server = await databaseContext.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .where('domain', '=', account.server)
-      .executeTakeFirst();
-
-    if (!server) {
-      return;
-    }
-
+    const axios = buildAxiosInstance(
+      credentials.domain,
+      credentials.attributes,
+      credentials.token,
+    );
     const { data } = await axios.get<WorkspaceSyncData>(
-      `${buildApiBaseUrl(server)}/v1/sync/${workspace.workspace_id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${account.token}`,
-        },
-      },
+      `/v1/sync/${workspace.workspace_id}`,
     );
 
     const workspaceDatabase = await databaseContext.getWorkspaceDatabase(

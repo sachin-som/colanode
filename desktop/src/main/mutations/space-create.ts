@@ -22,46 +22,60 @@ export class SpaceCreateMutationHandler
     const pageIndex = generateNodeIndex(null, null);
     const channelIndex = generateNodeIndex(pageIndex, null);
 
-    await workspaceDatabase
-      .insertInto('nodes')
-      .values([
-        buildCreateNode(
-          {
-            id: spaceId,
-            attributes: {
-              type: NodeTypes.Space,
-              name: input.name,
-              description: input.description,
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('nodes')
+        .values([
+          buildCreateNode(
+            {
+              id: spaceId,
+              attributes: {
+                type: NodeTypes.Space,
+                name: input.name,
+                description: input.description,
+              },
             },
-          },
-          input.userId,
-        ),
-        buildCreateNode(
-          {
-            id: pageId,
-            attributes: {
-              type: NodeTypes.Page,
-              parentId: spaceId,
-              index: pageIndex,
-              name: 'Home',
+            input.userId,
+          ),
+          buildCreateNode(
+            {
+              id: pageId,
+              attributes: {
+                type: NodeTypes.Page,
+                parentId: spaceId,
+                index: pageIndex,
+                name: 'Home',
+              },
             },
-          },
-          input.userId,
-        ),
-        buildCreateNode(
-          {
-            id: channelId,
-            attributes: {
-              type: NodeTypes.Channel,
-              parentId: spaceId,
-              index: channelIndex,
-              name: 'Discussions',
+            input.userId,
+          ),
+          buildCreateNode(
+            {
+              id: channelId,
+              attributes: {
+                type: NodeTypes.Channel,
+                parentId: spaceId,
+                index: channelIndex,
+                name: 'Discussions',
+              },
             },
-          },
-          input.userId,
-        ),
-      ])
-      .execute();
+            input.userId,
+          ),
+        ])
+        .execute();
+
+      await trx
+        .insertInto('node_collaborators')
+        .values({
+          node_id: spaceId,
+          collaborator_id: input.userId,
+          role: 'owner',
+          created_at: new Date().toISOString(),
+          created_by: input.userId,
+          version_id: NeuronId.generate(NeuronId.Type.Version),
+        })
+        .execute();
+    });
 
     return {
       output: {

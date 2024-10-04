@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceAccountsInviteMutationInput } from '@/types/mutations/workspace-accounts-invite';
 import {
   MutationChange,
@@ -58,15 +57,15 @@ export class WorkspaceAccountsInviteMutationHandler
       };
     }
 
+    const axios = buildAxiosInstance(
+      server.domain,
+      server.attributes,
+      account.token,
+    );
     const { data } = await axios.post<WorkspaceAccountsInviteOutput>(
-      `${buildApiBaseUrl(server)}/v1/workspaces/${workspace.workspace_id}/accounts`,
+      `/v1/workspaces/${workspace.workspace_id}/users`,
       {
         emails: input.emails,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${account.token}`,
-        },
       },
     );
 

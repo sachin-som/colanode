@@ -51,7 +51,7 @@ export type SelectNodeReaction = Selectable<NodeReactionTable>;
 export type CreateNodeReaction = Insertable<NodeReactionTable>;
 export type UpdateNodeReaction = Updateable<NodeReactionTable>;
 
-interface MutationTable {
+interface ChangeTable {
   id: ColumnType<number, never, never>;
   table: ColumnType<string, string, never>;
   action: ColumnType<string, string, never>;
@@ -61,13 +61,13 @@ interface MutationTable {
   retry_count: ColumnType<number, number, number>;
 }
 
-export type SelectMutation = Selectable<MutationTable>;
-export type CreateMutation = Insertable<MutationTable>;
-export type UpdateMutation = Updateable<MutationTable>;
+export type SelectChange = Selectable<ChangeTable>;
+export type CreateChange = Insertable<ChangeTable>;
+export type UpdateChange = Updateable<ChangeTable>;
 
 export interface WorkspaceDatabaseSchema {
   nodes: NodeTable;
-  mutations: MutationTable;
+  changes: ChangeTable;
   node_collaborators: NodeCollaboratorTable;
   node_reactions: NodeReactionTable;
 }

@@ -88,6 +88,7 @@ syncRouter.get(
 syncRouter.post(
   '/:workspaceId',
   async (req: NeuronRequest, res: NeuronResponse) => {
+    const workspaceId = req.params.workspaceId as string;
     const input = req.body as SyncLocalChangesInput;
     if (!req.accountId) {
       return res.status(401).json({
@@ -99,7 +100,7 @@ syncRouter.post(
     const workspace = await database
       .selectFrom('workspaces')
       .selectAll()
-      .where('id', '=', input.workspaceId)
+      .where('id', '=', workspaceId)
       .executeTakeFirst();
 
     if (!workspace) {

@@ -1,7 +1,6 @@
-import axios from 'axios';
 import { LoginOutput } from '@/types/accounts';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { EmailLoginMutationInput } from '@/types/mutations/email-login';
 import {
   MutationChange,
@@ -29,13 +28,12 @@ export class EmailLoginMutationHandler
       };
     }
 
-    const { data } = await axios.post<LoginOutput>(
-      `${buildApiBaseUrl(server)}/v1/accounts/login/email`,
-      {
-        email: input.email,
-        password: input.password,
-      },
-    );
+    const axios = buildAxiosInstance(server.domain, server.attributes);
+    const { data } = await axios.post<LoginOutput>('/v1/accounts/login/email', {
+      email: input.email,
+      password: input.password,
+    });
+
     const changedTables: MutationChange[] = [];
     await databaseContext.appDatabase.transaction().execute(async (trx) => {
       await trx

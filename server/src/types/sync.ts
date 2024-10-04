@@ -1,5 +1,4 @@
 export type SyncLocalChangesInput = {
-  workspaceId: string;
   changes: LocalChange[];
 };
 

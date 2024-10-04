@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceCreateMutationInput } from '@/types/mutations/workspace-create';
 import {
   MutationChange,
@@ -35,18 +34,15 @@ export class WorkspaceCreateMutationHandler
       throw new Error('Account not found');
     }
 
-    const { data } = await axios.post<Workspace>(
-      `${buildApiBaseUrl(server)}/v1/workspaces`,
-      {
-        name: input.name,
-        description: input.description,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${account.token}`,
-        },
-      },
+    const axios = buildAxiosInstance(
+      server.domain,
+      server.attributes,
+      account.token,
     );
+    const { data } = await axios.post<Workspace>(`/v1/workspaces`, {
+      name: input.name,
+      description: input.description,
+    });
 
     await databaseContext.appDatabase
       .insertInto('workspaces')

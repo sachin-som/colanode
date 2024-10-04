@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceUpdateMutationInput } from '@/types/mutations/workspace-update';
 import {
   MutationChange,
@@ -35,13 +34,15 @@ export class WorkspaceUpdateMutationHandler
       throw new Error('Account not found');
     }
 
-    const { data } = await axios.post<Workspace>(
-      `${buildApiBaseUrl(server)}/v1/workspaces/${input.id}`,
-      {
-        name: input.name,
-        description: input.description,
-      },
+    const axios = buildAxiosInstance(
+      server.domain,
+      server.attributes,
+      account.token,
     );
+    const { data } = await axios.post<Workspace>(`/v1/workspaces/${input.id}`, {
+      name: input.name,
+      description: input.description,
+    });
 
     await databaseContext.appDatabase
       .updateTable('workspaces')

@@ -14,6 +14,15 @@ export class NodeCollaboratorSearchQueryHandler
   public async handleQuery(
     input: NodeCollaboratorSearchQueryInput,
   ): Promise<QueryResult<NodeCollaboratorSearchQueryInput>> {
+    if (input.searchQuery.length === 0) {
+      return {
+        output: [],
+        state: {
+          rows: [],
+        },
+      };
+    }
+
     const rows = await this.fetchNodes(input);
     return {
       output: this.buildCollaboratorNodes(rows),

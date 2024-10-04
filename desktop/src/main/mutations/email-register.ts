@@ -1,7 +1,6 @@
-import axios from 'axios';
 import { LoginOutput } from '@/types/accounts';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl } from '@/lib/servers';
+import { buildAxiosInstance } from '@/lib/servers';
 import { EmailRegisterMutationInput } from '@/types/mutations/email-register';
 import {
   MutationChange,
@@ -29,8 +28,9 @@ export class EmailRegisterMutationHandler
       };
     }
 
+    const axios = buildAxiosInstance(server.domain, server.attributes);
     const { data } = await axios.post<LoginOutput>(
-      `${buildApiBaseUrl(server)}/v1/accounts/register/email`,
+      '/v1/accounts/register/email',
       {
         name: input.name,
         email: input.email,

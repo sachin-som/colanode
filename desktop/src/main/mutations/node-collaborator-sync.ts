@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeCollaboratorSyncMutationInput } from '@/types/mutations/node-collaborator-sync';
 import { ServerNodeCollaborator, ServerNodeReaction } from '@/types/nodes';
@@ -9,7 +9,7 @@ export class NodeCollaboratorSyncMutationHandler
   public async handleMutation(
     input: NodeCollaboratorSyncMutationInput,
   ): Promise<MutationResult<NodeCollaboratorSyncMutationInput>> {
-    const workspace = await databaseContext.appDatabase
+    const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where((eb) =>
@@ -56,7 +56,7 @@ export class NodeCollaboratorSyncMutationHandler
     nodeCollaborator: ServerNodeCollaborator,
   ): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .insertInto('node_collaborators')
@@ -90,7 +90,7 @@ export class NodeCollaboratorSyncMutationHandler
     nodeCollaborator: ServerNodeCollaborator,
   ): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     const existingNodeCollaborator = await workspaceDatabase
       .selectFrom('node_collaborators')
@@ -145,7 +145,7 @@ export class NodeCollaboratorSyncMutationHandler
     nodeCollaborator: ServerNodeCollaborator,
   ): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .deleteFrom('node_collaborators')

@@ -1,5 +1,5 @@
 import { SidebarSpaceListQueryInput } from '@/types/queries/sidebar-space-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
@@ -64,7 +64,7 @@ export class SidebarSpaceListQueryHandler
   private async fetchNodes(
     input: SidebarSpaceListQueryInput,
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceAccountsInviteMutationInput } from '@/types/mutations/workspace-accounts-invite';
 import {
@@ -15,7 +15,7 @@ export class WorkspaceAccountsInviteMutationHandler
   async handleMutation(
     input: WorkspaceAccountsInviteMutationInput,
   ): Promise<MutationResult<WorkspaceAccountsInviteMutationInput>> {
-    const workspace = await databaseContext.appDatabase
+    const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', input.userId)
@@ -29,7 +29,7 @@ export class WorkspaceAccountsInviteMutationHandler
       };
     }
 
-    const account = await databaseContext.appDatabase
+    const account = await databaseManager.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', workspace.account_id)
@@ -43,7 +43,7 @@ export class WorkspaceAccountsInviteMutationHandler
       };
     }
 
-    const server = await databaseContext.appDatabase
+    const server = await databaseManager.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -69,7 +69,7 @@ export class WorkspaceAccountsInviteMutationHandler
       },
     );
 
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

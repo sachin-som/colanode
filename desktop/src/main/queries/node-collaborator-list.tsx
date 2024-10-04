@@ -1,5 +1,5 @@
 import { NodeCollaboratorListQueryInput } from '@/types/queries/node-collaborator-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
 import { NodeTypes } from '@/lib/constants';
@@ -75,7 +75,7 @@ export class NodeCollaboratorListQueryHandler
   private async fetchCollaborators(
     input: NodeCollaboratorListQueryInput,
   ): Promise<NodeCollaboratorRow[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

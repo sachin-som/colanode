@@ -1,5 +1,5 @@
 import { LoginOutput } from '@/types/accounts';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { buildAxiosInstance } from '@/lib/servers';
 import { EmailLoginMutationInput } from '@/types/mutations/email-login';
 import {
@@ -14,7 +14,7 @@ export class EmailLoginMutationHandler
   async handleMutation(
     input: EmailLoginMutationInput,
   ): Promise<MutationResult<EmailLoginMutationInput>> {
-    const server = await databaseContext.appDatabase
+    const server = await databaseManager.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', input.server)
@@ -35,7 +35,7 @@ export class EmailLoginMutationHandler
     });
 
     const changedTables: MutationChange[] = [];
-    await databaseContext.appDatabase.transaction().execute(async (trx) => {
+    await databaseManager.appDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('accounts')
         .values({

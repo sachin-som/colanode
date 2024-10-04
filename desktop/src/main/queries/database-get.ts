@@ -1,5 +1,5 @@
 import { DatabaseGetQueryInput } from '@/types/queries/database-get';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
@@ -69,7 +69,7 @@ export class DatabaseGetQueryHandler
   private async fetchNodes(
     input: DatabaseGetQueryInput,
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

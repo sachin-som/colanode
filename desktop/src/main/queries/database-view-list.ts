@@ -1,5 +1,5 @@
 import { DatabaseViewListQueryInput } from '@/types/queries/database-view-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { mapNode } from '@/lib/nodes';
@@ -68,7 +68,7 @@ export class DatabaseViewListQueryHandler
   private async fetchNodes(
     input: DatabaseViewListQueryInput,
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

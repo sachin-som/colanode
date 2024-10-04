@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
@@ -11,7 +11,7 @@ export class RecordCreateMutationHandler
   async handleMutation(
     input: RecordCreateMutationInput,
   ): Promise<MutationResult<RecordCreateMutationInput>> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

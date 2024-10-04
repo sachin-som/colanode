@@ -7,7 +7,7 @@ import { buildSqlite } from '@/main/data/utils';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
 
-class DatabaseContext {
+class DatabaseManager {
   private readonly appPath: string;
   private initPromise: Promise<void> | null = null;
   private readonly workspaceDatabases: Map<
@@ -131,4 +131,4 @@ class DatabaseContext {
   }
 }
 
-export const databaseContext = new DatabaseContext();
+export const databaseManager = new DatabaseManager();

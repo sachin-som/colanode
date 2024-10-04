@@ -1,5 +1,5 @@
 import { WorkspaceUserListQueryInput } from '@/types/queries/workspace-user-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { NodeTypes } from '@/lib/constants';
 import { mapNode } from '@/lib/nodes';
@@ -62,7 +62,7 @@ export class WorkspaceUserListQueryHandler
   private async fetchNodes(
     input: WorkspaceUserListQueryInput,
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

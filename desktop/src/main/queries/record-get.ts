@@ -1,5 +1,5 @@
 import { RecordGetQueryInput } from '@/types/queries/record-get';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { mapNode } from '@/lib/nodes';
 import { sql } from 'kysely';
@@ -61,7 +61,7 @@ export class RecordGetQueryHandler
   }
 
   private async fetchNodes(input: RecordGetQueryInput): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

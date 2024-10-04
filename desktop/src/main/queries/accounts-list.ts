@@ -1,5 +1,5 @@
 import { AccountListQueryInput } from '@/types/queries/account-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { Account } from '@/types/accounts';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { SelectAccount } from '@/main/data/app/schema';
@@ -55,7 +55,7 @@ export class AccountListQueryHandler
   }
 
   private fetchAccounts(): Promise<SelectAccount[]> {
-    return databaseContext.appDatabase
+    return databaseManager.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('status', '=', 'active')

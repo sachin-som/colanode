@@ -1,5 +1,5 @@
 import { mapContentsToEditorNodes } from '@/renderer/editor/mappers';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildCreateNode } from '@/lib/nodes';
@@ -14,7 +14,7 @@ export class MessageCreateMutationHandler
   async handleMutation(
     input: MessageCreateMutationInput,
   ): Promise<MutationResult<MessageCreateMutationInput>> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

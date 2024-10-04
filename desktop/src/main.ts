@@ -4,7 +4,7 @@ import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/types/mutations';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { mediator } from '@/main/mediator';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
 
@@ -16,7 +16,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = async () => {
-  await databaseContext.init();
+  await databaseManager.init();
   socketManager.init();
   synchronizer.init();
 

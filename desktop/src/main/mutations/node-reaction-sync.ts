@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeReactionSyncMutationInput } from '@/types/mutations/node-reaction-sync';
 import { ServerNodeReaction } from '@/types/nodes';
@@ -9,7 +9,7 @@ export class NodeReactionSyncMutationHandler
   public async handleMutation(
     input: NodeReactionSyncMutationInput,
   ): Promise<MutationResult<NodeReactionSyncMutationInput>> {
-    const workspace = await databaseContext.appDatabase
+    const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where((eb) =>
@@ -54,7 +54,7 @@ export class NodeReactionSyncMutationHandler
     nodeReaction: ServerNodeReaction,
   ): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .insertInto('node_reactions')
@@ -78,7 +78,7 @@ export class NodeReactionSyncMutationHandler
     nodeReaction: ServerNodeReaction,
   ): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .deleteFrom('node_reactions')

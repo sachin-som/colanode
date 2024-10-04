@@ -1,6 +1,6 @@
 import { buildAxiosInstance } from '@/lib/servers';
 import { SelectWorkspace } from '@/main/data/app/schema';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ServerSyncResponse, WorkspaceSyncData } from '@/types/sync';
 
 const EVENT_LOOP_INTERVAL = 100;
@@ -33,7 +33,7 @@ class Synchronizer {
   }
 
   private async checkForWorkspaceSyncs(): Promise<void> {
-    const unsyncedWorkspaces = await databaseContext.appDatabase
+    const unsyncedWorkspaces = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('synced', '=', 0)
@@ -49,7 +49,7 @@ class Synchronizer {
   }
 
   private async checkForWorkspaceChanges() {
-    const workspaces = await databaseContext.appDatabase
+    const workspaces = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
@@ -64,7 +64,7 @@ class Synchronizer {
       .execute();
 
     for (const workspace of workspaces) {
-      const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+      const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
         workspace.user_id,
       );
 
@@ -127,7 +127,7 @@ class Synchronizer {
   }
 
   private async syncWorkspace(workspace: SelectWorkspace): Promise<void> {
-    const credentials = await databaseContext.appDatabase
+    const credentials = await databaseManager.appDatabase
       .selectFrom('accounts')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
       .select(['domain', 'attributes', 'token'])
@@ -147,7 +147,7 @@ class Synchronizer {
       `/v1/sync/${workspace.workspace_id}`,
     );
 
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       workspace.user_id,
     );
 
@@ -197,7 +197,7 @@ class Synchronizer {
       }
     });
 
-    await databaseContext.appDatabase
+    await databaseManager.appDatabase
       .updateTable('workspaces')
       .set({
         synced: 1,

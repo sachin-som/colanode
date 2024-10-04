@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeReactionCreateMutationInput } from '@/types/mutations/node-reaction-create';
 
@@ -9,7 +9,7 @@ export class NodeReactionCreateMutationHandler
     input: NodeReactionCreateMutationInput,
   ): Promise<MutationResult<NodeReactionCreateMutationInput>> {
     console.log('create node reaction', input);
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

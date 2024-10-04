@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeCollaboratorDeleteMutationInput } from '@/types/mutations/node-collaborator-delete';
 
@@ -8,7 +8,7 @@ export class NodeCollaboratorDeleteMutationHandler
   async handleMutation(
     input: NodeCollaboratorDeleteMutationInput,
   ): Promise<MutationResult<NodeCollaboratorDeleteMutationInput>> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

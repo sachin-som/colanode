@@ -1,5 +1,5 @@
 import { BreadcrumbListQueryInput } from '@/types/queries/breadcrumb-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
@@ -62,7 +62,7 @@ export class BreadcrumbListQueryHandler
   private async fetchNodes(
     input: BreadcrumbListQueryInput,
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

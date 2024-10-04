@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { buildAxiosInstance } from '@/lib/servers';
 import { WorkspaceCreateMutationInput } from '@/types/mutations/workspace-create';
 import {
@@ -14,7 +14,7 @@ export class WorkspaceCreateMutationHandler
   async handleMutation(
     input: WorkspaceCreateMutationInput,
   ): Promise<MutationResult<WorkspaceCreateMutationInput>> {
-    const account = await databaseContext.appDatabase
+    const account = await databaseManager.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', input.accountId)
@@ -24,7 +24,7 @@ export class WorkspaceCreateMutationHandler
       throw new Error('Account not found!');
     }
 
-    const server = await databaseContext.appDatabase
+    const server = await databaseManager.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -44,7 +44,7 @@ export class WorkspaceCreateMutationHandler
       description: input.description,
     });
 
-    await databaseContext.appDatabase
+    await databaseManager.appDatabase
       .insertInto('workspaces')
       .values({
         workspace_id: data.id ?? data.id,

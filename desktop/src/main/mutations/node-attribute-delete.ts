@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { NeuronId } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeAttributeDeleteMutationInput } from '@/types/mutations/node-attribute-delete';
@@ -11,7 +11,7 @@ export class NodeAttributeDeleteMutationHandler
   async handleMutation(
     input: NodeAttributeDeleteMutationInput,
   ): Promise<MutationResult<NodeAttributeDeleteMutationInput>> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

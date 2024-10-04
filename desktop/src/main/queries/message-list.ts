@@ -1,5 +1,5 @@
 import { MessageListQueryInput } from '@/types/queries/message-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { MutationChange } from '@/types/mutations';
 import { SelectNode } from '@/main/data/workspace/schema';
@@ -71,7 +71,7 @@ export class MessageListQueryHandler
   private async fetchMesssages(
     input: MessageListQueryInput,
   ): Promise<MessageRow[]> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

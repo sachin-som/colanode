@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeSyncMutationInput } from '@/types/mutations/node-sync';
 import { ServerNode } from '@/types/nodes';
@@ -11,7 +11,7 @@ export class NodeSyncMutationHandler
   public async handleMutation(
     input: NodeSyncMutationInput,
   ): Promise<MutationResult<NodeSyncMutationInput>> {
-    const workspace = await databaseContext.appDatabase
+    const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where((eb) =>
@@ -55,7 +55,7 @@ export class NodeSyncMutationHandler
 
   private async insertNode(userId: string, node: ServerNode): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .insertInto('nodes')
@@ -86,7 +86,7 @@ export class NodeSyncMutationHandler
 
   private async updateNode(userId: string, node: ServerNode): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     const existingNode = await workspaceDatabase
       .selectFrom('nodes')
@@ -127,7 +127,7 @@ export class NodeSyncMutationHandler
 
   private async deleteNode(userId: string, node: ServerNode): Promise<void> {
     const workspaceDatabase =
-      await databaseContext.getWorkspaceDatabase(userId);
+      await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .deleteFrom('nodes')

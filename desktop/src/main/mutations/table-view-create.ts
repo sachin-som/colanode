@@ -1,4 +1,4 @@
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { NeuronId } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
@@ -12,7 +12,7 @@ export class TableViewCreateMutationHandler
   async handleMutation(
     input: TableViewCreateMutationInput,
   ): Promise<MutationResult<TableViewCreateMutationInput>> {
-    const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 

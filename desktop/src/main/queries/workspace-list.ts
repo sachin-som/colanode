@@ -1,5 +1,5 @@
 import { WorkspaceListQueryInput } from '@/types/queries/workspace-list';
-import { databaseContext } from '@/main/data/database-context';
+import { databaseManager } from '@/main/data/database-manager';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
 import { Workspace, WorkspaceRole } from '@/types/workspaces';
 import { SelectWorkspace } from '@/main/data/app/schema';
@@ -56,13 +56,13 @@ export class WorkspaceListQueryHandler
   }
 
   private fetchWorkspaces(): Promise<SelectWorkspace[]> {
-    return databaseContext.appDatabase
+    return databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where(
         'account_id',
         'in',
-        databaseContext.appDatabase
+        databaseManager.appDatabase
           .selectFrom('accounts')
           .where('status', '=', 'active')
           .select('id'),

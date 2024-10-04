@@ -88,10 +88,6 @@ export class RecordListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const database = await this.fetchDatabase(input.userId, input.databaseId);
     const filterQuery = this.buildFiltersQuery(input.filters, database.fields);
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.fields) : 'n."index" ASC'}`;

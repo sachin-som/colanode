@@ -16,10 +16,6 @@ export class TableViewCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const siblings = await workspaceDatabase
       .selectFrom('nodes')
       .where((eb) =>
@@ -60,7 +56,7 @@ export class TableViewCreateMutationHandler
       output: {
         id: id,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

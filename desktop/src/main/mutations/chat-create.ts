@@ -8,16 +8,12 @@ import { ChatCreateMutationInput } from '@/types/mutations/chat-create';
 export class ChatCreateMutationHandler
   implements MutationHandler<ChatCreateMutationInput>
 {
-  async handleMutation(
+  public async handleMutation(
     input: ChatCreateMutationInput,
   ): Promise<MutationResult<ChatCreateMutationInput>> {
     const workspaceDatabase = await databaseContext.getWorkspaceDatabase(
       input.userId,
     );
-
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
 
     const existingChats = await workspaceDatabase
       .selectFrom('nodes')
@@ -88,7 +84,7 @@ export class ChatCreateMutationHandler
       output: {
         id: id,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

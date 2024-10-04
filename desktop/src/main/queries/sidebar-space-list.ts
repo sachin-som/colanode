@@ -68,10 +68,6 @@ export class SidebarSpaceListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
         WITH space_nodes AS (
           SELECT *

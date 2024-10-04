@@ -66,10 +66,6 @@ export class NodeCollaboratorSearchQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
       SELECT n.*
       FROM nodes n

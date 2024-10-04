@@ -75,10 +75,6 @@ export class MessageListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const offset = input.page * input.count;
     const query = sql<MessageRow>`
       WITH message_nodes AS (

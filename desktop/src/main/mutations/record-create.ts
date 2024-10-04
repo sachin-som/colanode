@@ -15,10 +15,6 @@ export class RecordCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const lastChild = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()
@@ -56,7 +52,7 @@ export class RecordCreateMutationHandler
       output: {
         id: id,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

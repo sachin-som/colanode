@@ -11,7 +11,7 @@ export interface MutationHandler<T extends MutationInput> {
 
 export type MutationResult<T extends MutationInput> = {
   output: MutationMap[T['type']]['output'];
-  changedTables?: MutationChange[];
+  changes?: MutationChange[];
 };
 
 export type MutationChange = AppMutationChange | WorkspaceMutationChange;
@@ -31,7 +31,7 @@ export type ServerMutation = {
   id: string;
   table: string;
   action: string;
-  workspaceId: string;
+  workspaceId: string | null;
   before: any | null;
   after: any | null;
 };

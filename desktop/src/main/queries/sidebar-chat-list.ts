@@ -71,10 +71,6 @@ export class SidebarChatListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<ChatRow>`
         WITH chat_nodes AS (
           SELECT *

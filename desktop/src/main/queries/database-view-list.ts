@@ -72,10 +72,6 @@ export class DatabaseViewListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const rows = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()

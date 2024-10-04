@@ -13,10 +13,6 @@ export class NodeReactionCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     await workspaceDatabase
       .insertInto('node_reactions')
       .values({
@@ -32,7 +28,7 @@ export class NodeReactionCreateMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'node_reactions',

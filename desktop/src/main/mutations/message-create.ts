@@ -18,10 +18,6 @@ export class MessageCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const id = NeuronId.generate(NeuronId.Type.Message);
     const editorNodes = mapContentsToEditorNodes(
       input.content.content,
@@ -60,7 +56,7 @@ export class MessageCreateMutationHandler
       output: {
         id: id,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

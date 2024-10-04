@@ -66,10 +66,6 @@ export class WorkspaceUserListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const offset = input.page * input.count;
     const rows = await workspaceDatabase
       .selectFrom('nodes')

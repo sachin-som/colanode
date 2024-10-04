@@ -73,10 +73,6 @@ export class DatabaseGetQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
         WITH database_node AS (
           SELECT *

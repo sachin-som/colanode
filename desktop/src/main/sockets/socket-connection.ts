@@ -3,18 +3,14 @@ import { Account } from '@/types/accounts';
 import { Server } from '@/types/servers';
 import { buildSynapseUrl } from '@/lib/servers';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
-
-export type SocketMessage = {
-  type: string;
-  payload: any;
-};
+import { MessageInput } from '@/operations/messages';
+import { mediator } from '@/main/mediator';
 
 export class SocketConnection {
   private readonly server: Server;
   private readonly account: Account;
   private socket: WebSocket | null;
   private backoffCalculator: BackoffCalculator;
-  private listeners: Map<string, ((payload: any) => void)[]>;
   private closingCount: number;
 
   constructor(server: Server, account: Account) {
@@ -22,7 +18,6 @@ export class SocketConnection {
     this.account = account;
     this.socket = null;
     this.backoffCalculator = new BackoffCalculator();
-    this.listeners = new Map();
     this.closingCount = 0;
   }
 
@@ -39,7 +34,7 @@ export class SocketConnection {
       buildSynapseUrl(this.server, this.account.deviceId),
     );
 
-    this.socket.onmessage = (event) => {
+    this.socket.onmessage = async (event) => {
       let data: string;
 
       if (typeof event.data === 'string') {
@@ -51,11 +46,8 @@ export class SocketConnection {
         return;
       }
 
-      const message: SocketMessage = JSON.parse(data);
-      const listeners = this.listeners.get(message.type) || [];
-      for (const listener of listeners) {
-        listener(message.payload);
-      }
+      const message: MessageInput = JSON.parse(data);
+      await mediator.executeMessage(message);
     };
 
     this.socket.onopen = () => {
@@ -103,17 +95,5 @@ export class SocketConnection {
         this.closingCount = 0;
       }
     }
-  }
-
-  public send(message: SocketMessage): void {
-    if (this.isConnected()) {
-      this.socket?.send(JSON.stringify(message));
-    }
-  }
-
-  public on(type: string, listener: (payload: any) => void): void {
-    const listeners = this.listeners.get(type) || [];
-    listeners.push(listener);
-    this.listeners.set(type, listeners);
   }
 }

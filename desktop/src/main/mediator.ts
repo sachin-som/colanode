@@ -13,6 +13,8 @@ import {
 } from '@/types/queries';
 import { queryHandlerMap } from '@/main/queries';
 import { eventBus } from '@/lib/event-bus';
+import { MessageHandler, MessageInput } from '@/operations/messages';
+import { messageHandlerMap } from '@/main/messages';
 
 class Mediator {
   private readonly subscribedQueries: Map<string, SubscribedQuery<QueryInput>> =
@@ -24,8 +26,8 @@ class Mediator {
     const handler = mutationHandlerMap[input.type] as MutationHandler<T>;
     const result = await handler.handleMutation(input);
 
-    if (result.changedTables) {
-      await this.checkForQueryChanges(result.changedTables);
+    if (result.changes) {
+      await this.checkForQueryChanges(result.changes);
     }
 
     return result.output;
@@ -50,6 +52,11 @@ class Mediator {
       result,
     });
     return result.output;
+  }
+
+  public async executeMessage<T extends MessageInput>(input: T): Promise<void> {
+    const handler = messageHandlerMap[input.type] as MessageHandler<T>;
+    await handler.handleMessage(input);
   }
 
   public unsubscribeQuery(id: string) {

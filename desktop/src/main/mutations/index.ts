@@ -26,6 +26,9 @@ import { WorkspaceAccountRoleUpdateMutationHandler } from '@/main/mutations/work
 import { WorkspaceAccountsInviteMutationHandler } from '@/main/mutations/workspace-accounts-invite';
 import { WorkspaceCreateMutationHandler } from '@/main/mutations/workspace-create';
 import { WorkspaceUpdateMutationHandler } from '@/main/mutations/workspace-update';
+import { NodeSyncMutationHandler } from '@/main/mutations/node-sync';
+import { NodeReactionSyncMutationHandler } from '@/main/mutations/node-reaction-sync';
+import { NodeCollaboratorSyncMutationHandler } from '@/main/mutations/node-collaborator-sync';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -60,4 +63,7 @@ export const mutationHandlerMap: MutationHandlerMap = {
   workspace_accounts_invite: new WorkspaceAccountsInviteMutationHandler(),
   workspace_create: new WorkspaceCreateMutationHandler(),
   workspace_update: new WorkspaceUpdateMutationHandler(),
+  node_sync: new NodeSyncMutationHandler(),
+  node_reaction_sync: new NodeReactionSyncMutationHandler(),
+  node_collaborator_sync: new NodeCollaboratorSyncMutationHandler(),
 };

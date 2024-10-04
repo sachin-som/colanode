@@ -72,7 +72,7 @@ export class WorkspaceUpdateMutationHandler
       output: {
         success: true,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   }
 }

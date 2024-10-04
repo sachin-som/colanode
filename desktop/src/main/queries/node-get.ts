@@ -60,10 +60,6 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const row = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()

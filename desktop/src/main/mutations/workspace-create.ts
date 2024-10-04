@@ -76,7 +76,7 @@ export class WorkspaceCreateMutationHandler
       output: {
         id: data.id,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   }
 }

@@ -12,10 +12,6 @@ export class NodeReactionDeleteMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     await workspaceDatabase
       .deleteFrom('node_reactions')
       .where((eb) =>
@@ -31,7 +27,7 @@ export class NodeReactionDeleteMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'node_reactions',

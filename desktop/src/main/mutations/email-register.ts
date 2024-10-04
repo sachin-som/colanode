@@ -90,7 +90,7 @@ export class EmailRegisterMutationHandler
       output: {
         success: true,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   };
 }

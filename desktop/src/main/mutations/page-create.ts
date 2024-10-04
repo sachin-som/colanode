@@ -16,10 +16,6 @@ export class PageCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const siblings = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()
@@ -55,7 +51,7 @@ export class PageCreateMutationHandler
       output: {
         id: id,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

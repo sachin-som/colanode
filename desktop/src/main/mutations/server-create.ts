@@ -30,7 +30,7 @@ export class ServerCreateMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'app',
           table: 'servers',

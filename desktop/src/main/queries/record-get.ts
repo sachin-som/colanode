@@ -65,10 +65,6 @@ export class RecordGetQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
       WITH record_node AS (
         SELECT *

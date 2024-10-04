@@ -74,10 +74,6 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     await workspaceDatabase
       .updateTable('nodes')
       .set({
@@ -103,7 +99,7 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       output: {
         success: true,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   }
 }

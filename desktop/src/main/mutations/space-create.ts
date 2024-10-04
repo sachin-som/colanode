@@ -15,10 +15,6 @@ export class SpaceCreateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const spaceId = NeuronId.generate(NeuronId.Type.Space);
     const pageId = NeuronId.generate(NeuronId.Type.Page);
     const channelId = NeuronId.generate(NeuronId.Type.Channel);
@@ -71,7 +67,7 @@ export class SpaceCreateMutationHandler
       output: {
         id: spaceId,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

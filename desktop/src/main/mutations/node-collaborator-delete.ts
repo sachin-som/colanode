@@ -12,10 +12,6 @@ export class NodeCollaboratorDeleteMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     await workspaceDatabase
       .deleteFrom('node_collaborators')
       .where((eb) =>
@@ -30,7 +26,7 @@ export class NodeCollaboratorDeleteMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'node_collaborators',

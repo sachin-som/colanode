@@ -66,10 +66,6 @@ export class BreadcrumbListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
         WITH RECURSIVE breadcrumb_nodes AS (
           SELECT *

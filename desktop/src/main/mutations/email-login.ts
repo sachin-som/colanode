@@ -88,7 +88,7 @@ export class EmailLoginMutationHandler
       output: {
         success: true,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   }
 }

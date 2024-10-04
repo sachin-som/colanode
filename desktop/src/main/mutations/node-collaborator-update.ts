@@ -13,10 +13,6 @@ export class NodeCollaboratorUpdateMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     await workspaceDatabase
       .updateTable('node_collaborators')
       .set({
@@ -37,7 +33,7 @@ export class NodeCollaboratorUpdateMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'node_collaborators',

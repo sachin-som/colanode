@@ -79,10 +79,6 @@ export class NodeCollaboratorListQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<NodeCollaboratorRow>`
       WITH RECURSIVE ancestors(id, parent_id, level) AS (
         SELECT id, parent_id, 0 AS level

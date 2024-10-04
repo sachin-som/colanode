@@ -75,10 +75,6 @@ export class WorkspaceAccountsInviteMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const usersToCreate: CreateNode[] = data.users.map((user) => {
       return {
         id: user.id,
@@ -113,7 +109,7 @@ export class WorkspaceAccountsInviteMutationHandler
       output: {
         success: true,
       },
-      changedTables: changedTables,
+      changes: changedTables,
     };
   }
 }

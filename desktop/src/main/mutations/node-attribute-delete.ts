@@ -15,10 +15,6 @@ export class NodeAttributeDeleteMutationHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const node = await workspaceDatabase
       .selectFrom('nodes')
       .where('id', '=', input.nodeId)
@@ -64,7 +60,7 @@ export class NodeAttributeDeleteMutationHandler
       output: {
         success: true,
       },
-      changedTables: [
+      changes: [
         {
           type: 'workspace',
           table: 'nodes',

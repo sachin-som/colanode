@@ -71,10 +71,6 @@ export class DocumentGetQueryHandler
       input.userId,
     );
 
-    if (workspaceDatabase === null) {
-      throw new Error('Workspace database not found.');
-    }
-
     const query = sql<SelectNode>`
       WITH RECURSIVE document_nodes AS (
           SELECT *

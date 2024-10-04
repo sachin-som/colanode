@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { LoginOutput } from '@/types/accounts';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl, mapServer } from '@/lib/servers';
+import { buildApiBaseUrl } from '@/lib/servers';
 import { EmailRegisterMutationInput } from '@/types/mutations/email-register';
 import {
   MutationChange,
@@ -15,13 +15,13 @@ export class EmailRegisterMutationHandler
   handleMutation = async (
     input: EmailRegisterMutationInput,
   ): Promise<MutationResult<EmailRegisterMutationInput>> => {
-    const serverRow = await databaseContext.appDatabase
+    const server = await databaseContext.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', input.server)
       .executeTakeFirst();
 
-    if (!serverRow) {
+    if (!server) {
       return {
         output: {
           success: false,
@@ -29,7 +29,6 @@ export class EmailRegisterMutationHandler
       };
     }
 
-    const server = mapServer(serverRow);
     const { data } = await axios.post<LoginOutput>(
       `${buildApiBaseUrl(server)}/v1/accounts/register/email`,
       {
@@ -50,7 +49,7 @@ export class EmailRegisterMutationHandler
           device_id: data.account.deviceId,
           email: data.account.email,
           token: data.account.token,
-          server: serverRow.domain,
+          server: server.domain,
         })
         .execute();
 

@@ -1,43 +1,43 @@
 import { database } from '@/data/database';
-import { SelectWorkspaceAccount } from '@/data/schema';
+import { SelectWorkspaceUser } from '@/data/schema';
 import { getCollaboratorRole } from '@/lib/nodes';
 import {
-  ExecuteLocalMutationResult,
-  LocalMutation,
-  LocalNodeMutationData,
-} from '@/types/mutations';
+  SyncLocalChangeResult,
+  LocalChange,
+  LocalNodeChangeData,
+} from '@/types/sync';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import * as Y from 'yjs';
 
-export const handleNodeMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  switch (mutation.action) {
+export const handleNodeChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  switch (change.action) {
     case 'insert': {
-      return handleCreateNodeMutation(workspaceAccount, mutation);
+      return handleCreateNodeChange(workspaceUser, change);
     }
     case 'update': {
-      return handleUpdateNodeMutation(workspaceAccount, mutation);
+      return handleUpdateNodeChange(workspaceUser, change);
     }
     case 'delete': {
-      return handleDeleteNodeMutation(workspaceAccount, mutation);
+      return handleDeleteNodeChange(workspaceUser, change);
     }
   }
 };
 
-const handleCreateNodeMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.after) {
+const handleCreateNodeChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.after) {
     return {
       status: 'error',
     };
   }
 
-  const nodeData = JSON.parse(mutation.after) as LocalNodeMutationData;
+  const nodeData = JSON.parse(change.after) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', nodeData.id)
@@ -53,7 +53,7 @@ const handleCreateNodeMutation = async (
   if (attributes.parentId) {
     const parentRole = await getCollaboratorRole(
       attributes.parentId,
-      workspaceAccount.user_id,
+      workspaceUser.id,
     );
 
     if (
@@ -71,7 +71,7 @@ const handleCreateNodeMutation = async (
     .values({
       id: nodeData.id,
       attributes: nodeData.attributes,
-      workspace_id: workspaceAccount.workspace_id,
+      workspace_id: workspaceUser.workspace_id,
       state: nodeData.state,
       created_at: new Date(nodeData.created_at),
       created_by: nodeData.created_by,
@@ -85,17 +85,17 @@ const handleCreateNodeMutation = async (
   };
 };
 
-const handleUpdateNodeMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.after) {
+const handleUpdateNodeChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.after) {
     return {
       status: 'error',
     };
   }
 
-  const nodeData = JSON.parse(mutation.after) as LocalNodeMutationData;
+  const nodeData = JSON.parse(change.after) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
     .select(['id', 'workspace_id', 'state'])
@@ -104,14 +104,14 @@ const handleUpdateNodeMutation = async (
 
   if (
     !existingNode ||
-    existingNode.workspace_id != workspaceAccount.workspace_id
+    existingNode.workspace_id != workspaceUser.workspace_id
   ) {
     return {
       status: 'error',
     };
   }
 
-  const role = await getCollaboratorRole(nodeData.id, workspaceAccount.user_id);
+  const role = await getCollaboratorRole(nodeData.id, workspaceUser.id);
   if (role === null) {
     return {
       status: 'error',
@@ -121,7 +121,7 @@ const handleUpdateNodeMutation = async (
   const updatedAt = nodeData.updated_at
     ? new Date(nodeData.updated_at)
     : new Date();
-  const updatedBy = nodeData.updated_by ?? workspaceAccount.user_id;
+  const updatedBy = nodeData.updated_by ?? workspaceUser.id;
 
   const doc = new Y.Doc({
     guid: nodeData.id,
@@ -152,17 +152,17 @@ const handleUpdateNodeMutation = async (
   };
 };
 
-const handleDeleteNodeMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.before) {
+const handleDeleteNodeChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.before) {
     return {
       status: 'error',
     };
   }
 
-  const nodeData = JSON.parse(mutation.before) as LocalNodeMutationData;
+  const nodeData = JSON.parse(change.before) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', nodeData.id)
@@ -175,13 +175,13 @@ const handleDeleteNodeMutation = async (
     };
   }
 
-  if (existingNode.workspace_id !== workspaceAccount.workspace_id) {
+  if (existingNode.workspace_id !== workspaceUser.workspace_id) {
     return {
       status: 'error',
     };
   }
 
-  const role = await getCollaboratorRole(nodeData.id, workspaceAccount.user_id);
+  const role = await getCollaboratorRole(nodeData.id, workspaceUser.id);
   if (role === null) {
     return {
       status: 'error',

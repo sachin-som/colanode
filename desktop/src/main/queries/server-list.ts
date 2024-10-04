@@ -1,10 +1,10 @@
 import { ServerListQueryInput } from '@/types/queries/server-list';
 import { databaseContext } from '@/main/data/database-context';
 import { ChangeCheckResult, QueryHandler, QueryResult } from '@/types/queries';
-import { mapServer } from '@/lib/servers';
 import { SelectServer } from '@/main/data/app/schema';
 import { MutationChange } from '@/types/mutations';
 import { isEqual } from 'lodash';
+import { Server } from '@/types/servers';
 
 export class ServerListQueryHandler
   implements QueryHandler<ServerListQueryInput>
@@ -14,7 +14,7 @@ export class ServerListQueryHandler
   ): Promise<QueryResult<ServerListQueryInput>> {
     const rows = await this.fetchServers();
     return {
-      output: rows.map(mapServer),
+      output: this.mapServers(rows),
       state: {
         rows,
       },
@@ -46,7 +46,7 @@ export class ServerListQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: rows.map(mapServer),
+        output: this.mapServers(rows),
         state: {
           rows,
         },
@@ -60,4 +60,18 @@ export class ServerListQueryHandler
       .selectAll()
       .execute();
   }
+
+  private mapServers = (rows: SelectServer[]): Server[] => {
+    return rows.map((row) => {
+      return {
+        domain: row.domain,
+        name: row.name,
+        avatar: row.avatar,
+        attributes: JSON.parse(row.attributes),
+        version: row.version,
+        createdAt: new Date(row.created_at),
+        lastSyncedAt: row.last_synced_at ? new Date(row.last_synced_at) : null,
+      };
+    });
+  };
 }

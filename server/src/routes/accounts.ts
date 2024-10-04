@@ -258,14 +258,14 @@ const buildLoginOutput = async (
     email,
   });
 
-  const accountWorkspaces = await database
-    .selectFrom('workspace_accounts')
+  const workspaceUsers = await database
+    .selectFrom('workspace_users')
     .where('account_id', '=', id)
     .selectAll()
     .execute();
 
   const workspaceOutputs: WorkspaceOutput[] = [];
-  const workspaceIds = accountWorkspaces.map((wa) => wa.workspace_id);
+  const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
   if (workspaceIds.length > 0) {
     const workspaces = await database
       .selectFrom('workspaces')
@@ -273,9 +273,9 @@ const buildLoginOutput = async (
       .selectAll()
       .execute();
 
-    for (const accountWorkspace of accountWorkspaces) {
+    for (const workspaceUser of workspaceUsers) {
       const workspace = workspaces.find(
-        (w) => w.id === accountWorkspace.workspace_id,
+        (w) => w.id === workspaceUser.workspace_id,
       );
       if (!workspace) {
         continue;
@@ -284,10 +284,10 @@ const buildLoginOutput = async (
       workspaceOutputs.push({
         id: workspace.id,
         name: workspace.name,
-        role: accountWorkspace.role,
-        userId: accountWorkspace.user_id,
-        versionId: accountWorkspace.version_id,
-        accountId: accountWorkspace.account_id,
+        role: workspaceUser.role,
+        userId: workspaceUser.id,
+        versionId: workspaceUser.version_id,
+        accountId: workspaceUser.account_id,
         avatar: workspace.avatar,
         description: workspace.description,
       });

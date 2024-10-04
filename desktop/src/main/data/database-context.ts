@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import * as fs from 'node:fs';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
-import { AppDatabaseSchema, SelectWorkspace } from '@/main/data/app/schema';
+import { AppDatabaseSchema } from '@/main/data/app/schema';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { buildSqlite } from '@/main/data/utils';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
@@ -55,7 +55,7 @@ class DatabaseContext {
       return null;
     }
 
-    await this.initWorkspaceDatabase(workspace);
+    await this.initWorkspaceDatabase(userId);
     if (this.workspaceDatabases.has(userId)) {
       return this.workspaceDatabases.get(userId);
     }
@@ -80,14 +80,12 @@ class DatabaseContext {
       .execute();
 
     for (const workspace of workspaces) {
-      await this.initWorkspaceDatabase(workspace);
+      await this.initWorkspaceDatabase(workspace.user_id);
     }
   }
 
-  private async initWorkspaceDatabase(
-    workspace: SelectWorkspace,
-  ): Promise<void> {
-    const workspaceDir = `${this.appPath}/${workspace.user_id}`;
+  private async initWorkspaceDatabase(userId: string): Promise<void> {
+    const workspaceDir = `${this.appPath}/${userId}`;
     if (!fs.existsSync(workspaceDir)) {
       fs.mkdirSync(workspaceDir);
     }
@@ -101,7 +99,7 @@ class DatabaseContext {
     });
 
     await this.migrateWorkspaceDatabase(workspaceDatabase);
-    this.workspaceDatabases.set(workspace.user_id, workspaceDatabase);
+    this.workspaceDatabases.set(userId, workspaceDatabase);
   }
 
   private async migrateAppDatabase(): Promise<void> {

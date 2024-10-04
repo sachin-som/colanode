@@ -26,7 +26,7 @@ import { isStringArray } from '@/lib/utils';
 import { UserNode } from '@/types/users';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
-import { DatabaseGetQueryHandler } from './database-get';
+import { DatabaseGetQueryHandler } from '@/main/queries/database-get';
 import { isEqual } from 'lodash';
 
 export class RecordListQueryHandler

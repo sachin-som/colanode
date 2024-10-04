@@ -1,7 +1,7 @@
-export type ChangeMessage<T> = {
+export type CdcMessage<T> = {
   before?: T | null;
   after: T;
-  source: ChangeSource;
+  source: CdcSource;
   op: string;
   ts_ms: number;
   ts_ns: number;
@@ -9,7 +9,7 @@ export type ChangeMessage<T> = {
   transaction: any;
 };
 
-type ChangeSource = {
+type CdcSource = {
   version: string;
   connector: string;
   name: string;
@@ -25,7 +25,7 @@ type ChangeSource = {
   lsn: number;
 };
 
-export type MutationChangeData = {
+export type ChangeCdcData = {
   id: string;
   workspace_id: string;
   table: string;
@@ -36,7 +36,7 @@ export type MutationChangeData = {
   device_ids: string[];
 };
 
-export type NodeChangeData = {
+export type NodeCdcData = {
   id: string;
   workspace_id: string;
   parent_id: string | null;
@@ -53,7 +53,7 @@ export type NodeChangeData = {
   server_updated_at: string | null;
 };
 
-export type NodeCollaboratorChangeData = {
+export type NodeCollaboratorCdcData = {
   node_id: string;
   collaborator_id: string;
   role: string;
@@ -67,7 +67,7 @@ export type NodeCollaboratorChangeData = {
   server_updated_at: string | null;
 };
 
-export type NodeReactionChangeData = {
+export type NodeReactionCdcData = {
   node_id: string;
   actor_id: string;
   reaction: string;

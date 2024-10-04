@@ -1,5 +1,5 @@
 import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
-import { ChangeMessage, NodeCollaboratorChangeData } from '@/types/changes';
+import { CdcMessage, NodeCollaboratorCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { NeuronId } from '@/lib/id';
@@ -7,11 +7,11 @@ import { ServerNodeCollaborator } from '@/types/nodes';
 
 export const initNodeCollaboratorChangesConsumer = async () => {
   const consumer = kafka.consumer({
-    groupId: CONSUMER_IDS.NODE_COLLABORATOR_CHANGES,
+    groupId: CONSUMER_IDS.NODE_COLLABORATOR_CDC,
   });
 
   await consumer.connect();
-  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_COLLABORATOR_CHANGES });
+  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_COLLABORATOR_CDC });
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -21,15 +21,15 @@ export const initNodeCollaboratorChangesConsumer = async () => {
 
       const change = JSON.parse(
         message.value.toString(),
-      ) as ChangeMessage<NodeCollaboratorChangeData>;
+      ) as CdcMessage<NodeCollaboratorCdcData>;
 
-      await handleNodeCollaboratorChange(change);
+      await handleNodeCollaboratorCdc(change);
     },
   });
 };
 
-const handleNodeCollaboratorChange = async (
-  change: ChangeMessage<NodeCollaboratorChangeData>,
+const handleNodeCollaboratorCdc = async (
+  change: CdcMessage<NodeCollaboratorCdcData>,
 ) => {
   switch (change.op) {
     case PostgresOperation.CREATE: {
@@ -48,27 +48,27 @@ const handleNodeCollaboratorChange = async (
 };
 
 const handleNodeCollaboratorCreate = async (
-  change: ChangeMessage<NodeCollaboratorChangeData>,
+  change: CdcMessage<NodeCollaboratorCdcData>,
 ) => {
-  const reaction = change.after;
-  if (!reaction) {
+  const nodeCollaborator = change.after;
+  if (!nodeCollaborator) {
     return;
   }
 
-  const deviceIds = await getDeviceIds(reaction.workspace_id);
+  const deviceIds = await getDeviceIds(nodeCollaborator.workspace_id);
   if (deviceIds.length == 0) {
     return;
   }
 
   const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(reaction);
+    mapNodeCollaborator(nodeCollaborator);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'node_collaborators',
       action: 'insert',
-      workspace_id: reaction.workspace_id,
+      workspace_id: nodeCollaborator.workspace_id,
       created_at: new Date(),
       after: JSON.stringify(serverNodeCollaborator),
       device_ids: deviceIds,
@@ -77,27 +77,27 @@ const handleNodeCollaboratorCreate = async (
 };
 
 const handleNodeCollaboratorUpdate = async (
-  change: ChangeMessage<NodeCollaboratorChangeData>,
+  change: CdcMessage<NodeCollaboratorCdcData>,
 ) => {
-  const reaction = change.after;
-  if (!reaction) {
+  const nodeCollaborator = change.after;
+  if (!nodeCollaborator) {
     return;
   }
 
-  const deviceIds = await getDeviceIds(reaction.workspace_id);
+  const deviceIds = await getDeviceIds(nodeCollaborator.workspace_id);
   if (deviceIds.length == 0) {
     return;
   }
 
   const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(reaction);
+    mapNodeCollaborator(nodeCollaborator);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'node_collaborators',
       action: 'update',
-      workspace_id: reaction.workspace_id,
+      workspace_id: nodeCollaborator.workspace_id,
       created_at: new Date(),
       after: JSON.stringify(serverNodeCollaborator),
       device_ids: deviceIds,
@@ -106,27 +106,27 @@ const handleNodeCollaboratorUpdate = async (
 };
 
 const handleNodeCollaboratorDelete = async (
-  change: ChangeMessage<NodeCollaboratorChangeData>,
+  change: CdcMessage<NodeCollaboratorCdcData>,
 ) => {
-  const reaction = change.before;
-  if (!reaction) {
+  const nodeCollaborator = change.before;
+  if (!nodeCollaborator) {
     return;
   }
 
-  const deviceIds = await getDeviceIds(reaction.workspace_id);
+  const deviceIds = await getDeviceIds(nodeCollaborator.workspace_id);
   if (deviceIds.length == 0) {
     return;
   }
 
   const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(reaction);
+    mapNodeCollaborator(nodeCollaborator);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'node_collaborators',
       action: 'delete',
-      workspace_id: reaction.workspace_id,
+      workspace_id: nodeCollaborator.workspace_id,
       created_at: new Date(),
       before: JSON.stringify(serverNodeCollaborator),
       after: null,
@@ -142,7 +142,7 @@ const getDeviceIds = async (workspaceId: string) => {
       'account_id',
       'in',
       database
-        .selectFrom('workspace_accounts')
+        .selectFrom('workspace_users')
         .where('workspace_id', '=', workspaceId)
         .select('account_id'),
     )
@@ -154,21 +154,23 @@ const getDeviceIds = async (workspaceId: string) => {
 };
 
 const mapNodeCollaborator = (
-  reaction: NodeCollaboratorChangeData,
+  nodeCollaborator: NodeCollaboratorCdcData,
 ): ServerNodeCollaborator => {
   return {
-    nodeId: reaction.node_id,
-    collaboratorId: reaction.collaborator_id,
-    role: reaction.role,
-    workspaceId: reaction.workspace_id,
-    createdAt: new Date(reaction.created_at),
-    createdBy: reaction.created_by,
-    updatedAt: reaction.updated_at ? new Date(reaction.updated_at) : null,
-    updatedBy: reaction.updated_by,
-    versionId: reaction.version_id,
-    serverCreatedAt: new Date(reaction.server_created_at),
-    serverUpdatedAt: reaction.server_updated_at
-      ? new Date(reaction.server_updated_at)
+    nodeId: nodeCollaborator.node_id,
+    collaboratorId: nodeCollaborator.collaborator_id,
+    role: nodeCollaborator.role,
+    workspaceId: nodeCollaborator.workspace_id,
+    createdAt: new Date(nodeCollaborator.created_at),
+    createdBy: nodeCollaborator.created_by,
+    updatedAt: nodeCollaborator.updated_at
+      ? new Date(nodeCollaborator.updated_at)
+      : null,
+    updatedBy: nodeCollaborator.updated_by,
+    versionId: nodeCollaborator.version_id,
+    serverCreatedAt: new Date(nodeCollaborator.server_created_at),
+    serverUpdatedAt: nodeCollaborator.server_updated_at
+      ? new Date(nodeCollaborator.server_updated_at)
       : null,
   };
 };

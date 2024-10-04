@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl, mapServer } from '@/lib/servers';
+import { buildApiBaseUrl } from '@/lib/servers';
 import { WorkspaceCreateMutationInput } from '@/types/mutations/workspace-create';
 import {
   MutationChange,
@@ -15,27 +15,26 @@ export class WorkspaceCreateMutationHandler
   async handleMutation(
     input: WorkspaceCreateMutationInput,
   ): Promise<MutationResult<WorkspaceCreateMutationInput>> {
-    const accountRow = await databaseContext.appDatabase
+    const account = await databaseContext.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', input.accountId)
       .executeTakeFirst();
 
-    if (!accountRow) {
+    if (!account) {
       throw new Error('Account not found!');
     }
 
-    const serverRow = await databaseContext.appDatabase
+    const server = await databaseContext.appDatabase
       .selectFrom('servers')
       .selectAll()
-      .where('domain', '=', accountRow.server)
+      .where('domain', '=', account.server)
       .executeTakeFirst();
 
-    if (!serverRow) {
+    if (!server) {
       throw new Error('Account not found');
     }
 
-    const server = mapServer(serverRow);
     const { data } = await axios.post<Workspace>(
       `${buildApiBaseUrl(server)}/v1/workspaces`,
       {
@@ -44,7 +43,7 @@ export class WorkspaceCreateMutationHandler
       },
       {
         headers: {
-          Authorization: `Bearer ${accountRow.token}`,
+          Authorization: `Bearer ${account.token}`,
         },
       },
     );

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl, mapServer } from '@/lib/servers';
+import { buildApiBaseUrl } from '@/lib/servers';
 import { WorkspaceAccountRoleUpdateMutationInput } from '@/types/mutations/workspace-account-role-update';
 import {
   MutationChange,
@@ -15,13 +15,13 @@ export class WorkspaceAccountRoleUpdateMutationHandler
   async handleMutation(
     input: WorkspaceAccountRoleUpdateMutationInput,
   ): Promise<MutationResult<WorkspaceAccountRoleUpdateMutationInput>> {
-    const workspaceRow = await databaseContext.appDatabase
+    const workspace = await databaseContext.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', input.userId)
       .executeTakeFirst();
 
-    if (!workspaceRow) {
+    if (!workspace) {
       return {
         output: {
           success: false,
@@ -29,13 +29,13 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       };
     }
 
-    const accountRow = await databaseContext.appDatabase
+    const account = await databaseContext.appDatabase
       .selectFrom('accounts')
       .selectAll()
-      .where('id', '=', workspaceRow.account_id)
+      .where('id', '=', workspace.account_id)
       .executeTakeFirst();
 
-    if (!accountRow) {
+    if (!account) {
       return {
         output: {
           success: false,
@@ -43,13 +43,13 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       };
     }
 
-    const serverRow = await databaseContext.appDatabase
+    const server = await databaseContext.appDatabase
       .selectFrom('servers')
       .selectAll()
-      .where('domain', '=', accountRow.server)
+      .where('domain', '=', account.server)
       .executeTakeFirst();
 
-    if (!serverRow) {
+    if (!server) {
       return {
         output: {
           success: false,
@@ -57,15 +57,14 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       };
     }
 
-    const server = mapServer(serverRow);
     const { data } = await axios.post<WorkspaceAccountRoleUpdateOutput>(
-      `${buildApiBaseUrl(server)}/v1/workspaces/${workspaceRow.workspace_id}/accounts/${input.accountId}`,
+      `${buildApiBaseUrl(server)}/v1/workspaces/${workspace.workspace_id}/accounts/${input.accountId}`,
       {
         role: input.role,
       },
       {
         headers: {
-          Authorization: `Bearer ${accountRow.token}`,
+          Authorization: `Bearer ${account.token}`,
         },
       },
     );

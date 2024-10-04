@@ -10,7 +10,7 @@ export enum WorkspaceRole {
   Viewer = 'viewer',
 }
 
-export enum WorkspaceAccountStatus {
+export enum WorkspaceUserStatus {
   Active = 1,
   Inactive = 2,
 }
@@ -28,16 +28,16 @@ export type Workspace = {
   versionId: string;
 };
 
-export type WorkspaceAccount = {
+export type WorkspaceUser = {
+  id: string;
   workspaceId: string;
   accountId: string;
-  userId: string;
   role: WorkspaceRole;
   createdAt: Date;
   createdBy: string;
   updatedAt?: Date | null;
   updatedBy?: string | null;
-  status: WorkspaceAccountStatus;
+  status: WorkspaceUserStatus;
   versionId: string;
 };
 

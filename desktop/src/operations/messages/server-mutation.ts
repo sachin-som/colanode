@@ -1,9 +1,9 @@
-import { ServerMutation } from '@/types/mutations';
+import { ServerChange } from '@/types/sync';
 
 export type ServerMutationMessageInput = {
   type: 'server_mutation';
   accountId: string;
-  mutation: ServerMutation;
+  change: ServerChange;
 };
 
 declare module '@/operations/messages' {

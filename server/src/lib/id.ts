@@ -7,7 +7,7 @@ enum IdType {
   Workspace = 'wc',
   User = 'us',
   Version = 've',
-  Mutation = 'mu',
+  Change = 'cd',
   Space = 'sp',
   Page = 'pg',
   Channel = 'ch',
@@ -40,8 +40,8 @@ export class NeuronId {
         return IdType.User;
       case 'version':
         return IdType.Version;
-      case 'mutation':
-        return IdType.Mutation;
+      case 'change':
+        return IdType.Change;
       case 'space':
         return IdType.Space;
       case 'page':

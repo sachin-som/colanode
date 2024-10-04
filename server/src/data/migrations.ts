@@ -42,13 +42,13 @@ const createWorkspacesTable: Migration = {
   },
 };
 
-const createWorkspaceAccountsTable: Migration = {
+const createWorkspaceUsersTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('workspace_accounts')
+      .createTable('workspace_users')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
       .addColumn('attrs', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
@@ -57,14 +57,14 @@ const createWorkspaceAccountsTable: Migration = {
       .addColumn('updated_by', 'varchar(30)')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addPrimaryKeyConstraint('workspace_accounts_pkey', [
+      .addUniqueConstraint('unique_workspace_account_combination', [
         'workspace_id',
         'account_id',
       ])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('workspace_accounts').execute();
+    await db.schema.dropTable('workspace_users').execute();
   },
 };
 
@@ -182,10 +182,10 @@ const createAccountDevicesTable: Migration = {
   },
 };
 
-const createMutationsTable: Migration = {
+const createChangesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('mutations')
+      .createTable('changes')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('table', 'varchar(30)', (col) => col.notNull())
@@ -197,17 +197,17 @@ const createMutationsTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('mutations').execute();
+    await db.schema.dropTable('changes').execute();
   },
 };
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
   '00002_create_workspaces_table': createWorkspacesTable,
-  '00003_create_workspace_accounts_table': createWorkspaceAccountsTable,
+  '00003_create_workspace_users_table': createWorkspaceUsersTable,
   '00004_create_nodes_table': createNodesTable,
   '00005_create_node_collaborators_table': createNodeCollaboratorsTable,
   '00006_create_node_reactions_table': createNodeReactionsTable,
   '00007_create_account_devices_table': createAccountDevicesTable,
-  '00008_create_mutations_table': createMutationsTable,
+  '00008_create_changes_table': createChangesTable,
 };

@@ -3,8 +3,8 @@ import { IncomingMessage } from 'http';
 import { SocketMessage } from '@/types/sockets';
 import { database } from '@/data/database';
 import { sql } from 'kysely';
-import { SelectMutation } from '@/data/schema';
-import { ServerMutation } from '@/types/mutations';
+import { SelectChange } from '@/data/schema';
+import { ServerChange } from '@/types/sync';
 
 class SynapseManager {
   private readonly sockets: Map<string, WebSocket> = new Map();
@@ -25,7 +25,7 @@ class SynapseManager {
     });
 
     this.sockets.set(deviceId, socket);
-    await this.sendPendingMutations(deviceId);
+    await this.sendPendingChanges(deviceId);
   }
 
   public send(deviceId: string, message: SocketMessage) {
@@ -54,7 +54,7 @@ class SynapseManager {
     }
 
     await database
-      .updateTable('mutations')
+      .updateTable('changes')
       .set({
         device_ids: sql`array_remove(device_ids, ${deviceId})`,
       })
@@ -62,37 +62,37 @@ class SynapseManager {
       .execute();
   }
 
-  private async sendPendingMutations(deviceId: string) {
+  private async sendPendingChanges(deviceId: string) {
     let lastId = '0';
     let hasMore = true;
 
     while (hasMore) {
-      const pendingMutations = await sql<SelectMutation>`
+      const pendingChanges = await sql<SelectChange>`
         SELECT *
-        FROM mutations
+        FROM changes
         WHERE ${deviceId} = ANY(device_ids)
           AND id > ${lastId}
         ORDER BY id ASC
         LIMIT 50
       `.execute(database);
 
-      for (const mutation of pendingMutations.rows) {
-        const serverMutation: ServerMutation = {
-          id: mutation.id,
-          action: mutation.action as 'insert' | 'update' | 'delete',
-          table: mutation.table,
-          workspaceId: mutation.workspace_id,
-          before: mutation.before,
-          after: mutation.after,
+      for (const change of pendingChanges.rows) {
+        const serverChange: ServerChange = {
+          id: change.id,
+          action: change.action as 'insert' | 'update' | 'delete',
+          table: change.table,
+          workspaceId: change.workspace_id,
+          before: change.before,
+          after: change.after,
         };
         this.send(deviceId, {
-          type: 'mutation',
-          payload: serverMutation,
+          type: 'change',
+          payload: serverChange,
         });
-        lastId = mutation.id;
+        lastId = change.id;
       }
 
-      hasMore = pendingMutations.rows.length === 50;
+      hasMore = pendingChanges.rows.length === 50;
     }
   }
 }

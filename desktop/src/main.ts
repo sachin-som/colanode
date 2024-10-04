@@ -6,6 +6,7 @@ import { QueryInput, QueryMap } from '@/types/queries';
 import { mediator } from '@/main/mediator';
 import { databaseContext } from '@/main/data/database-context';
 import { socketManager } from '@/main/sockets/socket-manager';
+import { synchronizer } from '@/main/synchronizer';
 
 let subscriptionId: string | null = null;
 
@@ -17,6 +18,7 @@ if (require('electron-squirrel-startup')) {
 const createWindow = async () => {
   await databaseContext.init();
   socketManager.init();
+  synchronizer.init();
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({

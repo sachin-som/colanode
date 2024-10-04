@@ -21,31 +21,27 @@ export const kafka = new Kafka({
 export const producer = kafka.producer();
 
 export const TOPIC_NAMES = {
-  NODE_CHANGES:
-    process.env.KAFKA_NODE_CHANGES_TOPIC_NAME ?? 'neuron_node_changes',
-  NODE_COLLABORATOR_CHANGES:
-    process.env.KAFKA_NODE_COLLABORATOR_CHANGES_TOPIC_NAME ??
-    'neuron_node_collaborator_changes',
-  NODE_REACTION_CHANGES:
-    process.env.KAFKA_NODE_REACTION_CHANGES_TOPIC_NAME ??
-    'neuron_node_reaction_changes',
-  MUTATION_CHANGES:
-    process.env.KAFKA_MUTATION_CHANGES_TOPIC_NAME ?? 'neuron_mutation_changes',
+  NODE_CDC: process.env.KAFKA_NODE_CDC_TOPIC_NAME ?? 'neuron_node_cdc',
+  NODE_COLLABORATOR_CDC:
+    process.env.KAFKA_NODE_COLLABORATOR_CDC_TOPIC_NAME ??
+    'neuron_node_collaborator_cdc',
+  NODE_REACTION_CDC:
+    process.env.KAFKA_NODE_REACTION_CDC_TOPIC_NAME ??
+    'neuron_node_reaction_cdc',
+  CHANGE_CDC: process.env.KAFKA_CHANGE_CDC_TOPIC_NAME ?? 'neuron_change_cdc',
 };
 
 export const CONSUMER_IDS = {
-  NODE_CHANGES:
-    process.env.KAFKA_NODE_CHANGES_CONSUMER_ID ??
-    'neuron_node_changes_consumer',
-  NODE_COLLABORATOR_CHANGES:
-    process.env.KAFKA_NODE_COLLABORATOR_CHANGES_CONSUMER_ID ??
-    'neuron_node_collaborator_changes_consumer',
-  NODE_REACTION_CHANGES:
-    process.env.KAFKA_NODE_REACTION_CHANGES_CONSUMER_ID ??
-    'neuron_node_reaction_changes_consumer',
-  MUTATION_CHANGES:
-    process.env.KAFKA_MUTATION_CHANGES_CONSUMER_ID ??
-    'neuron_mutation_changes_consumer',
+  NODE_CDC:
+    process.env.KAFKA_NODE_CDC_CONSUMER_ID ?? 'neuron_node_cdc_consumer',
+  NODE_COLLABORATOR_CDC:
+    process.env.KAFKA_NODE_COLLABORATOR_CDC_CONSUMER_ID ??
+    'neuron_node_collaborator_cdc_consumer',
+  NODE_REACTION_CDC:
+    process.env.KAFKA_NODE_REACTION_CDC_CONSUMER_ID ??
+    'neuron_node_reaction_cdc_consumer',
+  CHANGE_CDC:
+    process.env.KAFKA_CHANGE_CDC_CONSUMER_ID ?? 'neuron_change_cdc_consumer',
 };
 
 const connectProducer = async () => {

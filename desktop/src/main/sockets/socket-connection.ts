@@ -1,19 +1,18 @@
 import { WebSocket } from 'ws';
-import { Account } from '@/types/accounts';
-import { Server } from '@/types/servers';
 import { buildSynapseUrl } from '@/lib/servers';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
 import { MessageInput } from '@/operations/messages';
 import { mediator } from '@/main/mediator';
+import { SelectAccount, SelectServer } from '@/main/data/app/schema';
 
 export class SocketConnection {
-  private readonly server: Server;
-  private readonly account: Account;
+  private readonly server: SelectServer;
+  private readonly account: SelectAccount;
   private socket: WebSocket | null;
   private backoffCalculator: BackoffCalculator;
   private closingCount: number;
 
-  constructor(server: Server, account: Account) {
+  constructor(server: SelectServer, account: SelectAccount) {
     this.server = server;
     this.account = account;
     this.socket = null;
@@ -31,7 +30,12 @@ export class SocketConnection {
     }
 
     this.socket = new WebSocket(
-      buildSynapseUrl(this.server, this.account.deviceId),
+      buildSynapseUrl(this.server, this.account.device_id),
+      {
+        headers: {
+          authorization: this.account.token,
+        },
+      },
     );
 
     this.socket.onmessage = async (event) => {
@@ -70,14 +74,6 @@ export class SocketConnection {
   }
 
   public checkConnection(): void {
-    if (this.account.status === 'logout') {
-      if (this.isConnected()) {
-        this.close();
-      }
-
-      return;
-    }
-
     if (this.isConnected()) {
       return;
     }

@@ -6,41 +6,41 @@ export class ServerMutationMessageHandler
   implements MessageHandler<ServerMutationMessageInput>
 {
   public async handleMessage(input: ServerMutationMessageInput): Promise<void> {
-    if (input.mutation.table === 'nodes' && input.mutation.workspaceId) {
+    if (input.change.table === 'nodes' && input.change.workspaceId) {
       await mediator.executeMutation({
         type: 'node_sync',
-        id: input.mutation.id,
+        id: input.change.id,
         accountId: input.accountId,
-        workspaceId: input.mutation.workspaceId,
-        action: input.mutation.action,
-        after: input.mutation.after,
-        before: input.mutation.before,
+        workspaceId: input.change.workspaceId,
+        action: input.change.action,
+        after: input.change.after,
+        before: input.change.before,
       });
     } else if (
-      input.mutation.table === 'node_reactions' &&
-      input.mutation.workspaceId
+      input.change.table === 'node_reactions' &&
+      input.change.workspaceId
     ) {
       await mediator.executeMutation({
         type: 'node_reaction_sync',
-        id: input.mutation.id,
+        id: input.change.id,
         accountId: input.accountId,
-        workspaceId: input.mutation.workspaceId,
-        action: input.mutation.action,
-        after: input.mutation.after,
-        before: input.mutation.before,
+        workspaceId: input.change.workspaceId,
+        action: input.change.action,
+        after: input.change.after,
+        before: input.change.before,
       });
     } else if (
-      input.mutation.table === 'node_collaborator' &&
-      input.mutation.workspaceId
+      input.change.table === 'node_collaborator' &&
+      input.change.workspaceId
     ) {
       await mediator.executeMutation({
         type: 'node_collaborator_sync',
-        id: input.mutation.id,
+        id: input.change.id,
         accountId: input.accountId,
-        workspaceId: input.mutation.workspaceId,
-        action: input.mutation.action,
-        after: input.mutation.after,
-        before: input.mutation.before,
+        workspaceId: input.change.workspaceId,
+        action: input.change.action,
+        after: input.change.after,
+        before: input.change.before,
       });
     }
   }

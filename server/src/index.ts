@@ -1,35 +1,35 @@
 import { initApi } from '@/api';
 import { initRedis } from '@/data/redis';
-import { initNodeChangesConsumer } from '@/consumers/node-changes';
-import { initMutationChangesConsumer } from '@/consumers/mutation-changes';
-import { initMutationsSubscriber } from '@/consumers/mutations';
-import { initNodeCollaboratorChangesConsumer } from '@/consumers/node-collaborator-changes';
-import { initNodeReactionChangesConsumer } from '@/consumers/node-reaction-changes';
+import { initNodeChangesConsumer } from '@/consumers/node-cdc';
+import { initChangeCdcConsumer } from '@/consumers/change-cdc';
+import { initChangesSubscriber } from '@/consumers/mutations';
+import { initNodeCollaboratorChangesConsumer } from '@/consumers/node-collaborator-cdc';
+import { initNodeReactionChangesConsumer } from '@/consumers/node-reaction-cdc';
 import { migrate } from '@/data/database';
 
 migrate().then(() => {
   initApi();
 
   initNodeChangesConsumer().then(() => {
-    console.log('Node changes consumer started');
+    console.log('Node cdc consumer started');
   });
 
   initNodeCollaboratorChangesConsumer().then(() => {
-    console.log('Node collaborator change consumer started');
+    console.log('Node collaborator cdc consumer started');
   });
 
   initNodeReactionChangesConsumer().then(() => {
-    console.log('Node reaction change consumer started');
+    console.log('Node reaction cdc consumer started');
   });
 
-  initMutationChangesConsumer().then(() => {
-    console.log('Mutation changes consumer started');
+  initChangeCdcConsumer().then(() => {
+    console.log('Change cdc consumer started');
   });
 
   initRedis().then(() => {
     console.log('Redis initialized');
-    initMutationsSubscriber().then(() => {
-      console.log('Mutation subscriber started');
+    initChangesSubscriber().then(() => {
+      console.log('Change subscriber started');
     });
   });
 });

@@ -41,10 +41,10 @@ export type SelectWorkspace = Selectable<WorkspaceTable>;
 export type CreateWorkspace = Insertable<WorkspaceTable>;
 export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
-interface WorkspaceAccountTable {
+interface WorkspaceUserTable {
+  id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
-  user_id: ColumnType<string, string, never>;
   role: ColumnType<string, string, string>;
   attrs: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
@@ -55,9 +55,9 @@ interface WorkspaceAccountTable {
   version_id: ColumnType<string, string, string>;
 }
 
-export type SelectWorkspaceAccount = Selectable<WorkspaceAccountTable>;
-export type CreateWorkspaceAccount = Insertable<WorkspaceAccountTable>;
-export type UpdateWorkspaceAccount = Updateable<WorkspaceAccountTable>;
+export type SelectWorkspaceUser = Selectable<WorkspaceUserTable>;
+export type CreateWorkspaceUser = Insertable<WorkspaceUserTable>;
+export type UpdateWorkspaceUser = Updateable<WorkspaceUserTable>;
 
 interface AccountDeviceTable {
   id: ColumnType<string, string, never>;
@@ -132,7 +132,7 @@ export type SelectNodeReaction = Selectable<NodeReactionTable>;
 export type CreateNodeReaction = Insertable<NodeReactionTable>;
 export type UpdateNodeReaction = Updateable<NodeReactionTable>;
 
-interface MutationTable {
+interface ChangeTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   table: ColumnType<string, string, never>;
@@ -143,17 +143,17 @@ interface MutationTable {
   device_ids: ColumnType<string[], string[], string[]>;
 }
 
-export type SelectMutation = Selectable<MutationTable>;
-export type CreateMutation = Insertable<MutationTable>;
-export type UpdateMutation = Updateable<MutationTable>;
+export type SelectChange = Selectable<ChangeTable>;
+export type CreateChange = Insertable<ChangeTable>;
+export type UpdateChange = Updateable<ChangeTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
   workspaces: WorkspaceTable;
-  workspace_accounts: WorkspaceAccountTable;
+  workspace_users: WorkspaceUserTable;
   account_devices: AccountDeviceTable;
   nodes: NodeTable;
   node_collaborators: NodeCollaboratorTable;
   node_reactions: NodeReactionTable;
-  mutations: MutationTable;
+  changes: ChangeTable;
 }

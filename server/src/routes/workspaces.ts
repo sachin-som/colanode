@@ -1,9 +1,9 @@
 import {
   Workspace,
-  WorkspaceAccount,
+  WorkspaceUser,
   WorkspaceAccountRoleUpdateInput,
   WorkspaceAccountsInviteInput,
-  WorkspaceAccountStatus,
+  WorkspaceUserStatus,
   WorkspaceInput,
   WorkspaceOutput,
   WorkspaceRole,
@@ -18,9 +18,9 @@ import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
   CreateAccount,
   CreateNode,
-  CreateWorkspaceAccount,
+  CreateWorkspaceUser,
   SelectNode,
-  SelectWorkspaceAccount,
+  SelectWorkspaceUser,
 } from '@/data/schema';
 import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
@@ -89,14 +89,14 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const userAttributes = JSON.stringify(userAttributesMap.toJSON());
   const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
 
-  const workspaceAccount: WorkspaceAccount = {
+  const workspaceUser: WorkspaceUser = {
+    id: userId,
     accountId: req.accountId,
     workspaceId: workspace.id,
-    userId: userId,
     role: WorkspaceRole.Owner,
     createdAt: new Date(),
     createdBy: req.accountId,
-    status: WorkspaceAccountStatus.Active,
+    status: WorkspaceUserStatus.Active,
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
 
@@ -122,24 +122,24 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
         workspace_id: workspace.id,
         attributes: userAttributes,
         state: userState,
-        created_at: workspaceAccount.createdAt,
-        created_by: workspaceAccount.createdBy,
+        created_at: workspaceUser.createdAt,
+        created_by: workspaceUser.createdBy,
         version_id: userVersionId,
         server_created_at: new Date(),
       })
       .execute();
 
     await trx
-      .insertInto('workspace_accounts')
+      .insertInto('workspace_users')
       .values({
-        account_id: workspaceAccount.accountId,
-        workspace_id: workspaceAccount.workspaceId,
-        user_id: workspaceAccount.userId,
-        role: workspaceAccount.role,
-        created_at: workspaceAccount.createdAt,
-        created_by: workspaceAccount.createdBy,
-        status: workspaceAccount.status,
-        version_id: workspaceAccount.versionId,
+        id: workspaceUser.id,
+        account_id: workspaceUser.accountId,
+        workspace_id: workspaceUser.workspaceId,
+        role: workspaceUser.role,
+        created_at: workspaceUser.createdAt,
+        created_by: workspaceUser.createdBy,
+        status: workspaceUser.status,
+        version_id: workspaceUser.versionId,
       })
       .execute();
   });
@@ -151,7 +151,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     avatar: workspace.avatar,
     versionId: workspace.versionId,
     accountId: account.id,
-    role: workspaceAccount.role,
+    role: workspaceUser.role,
     userId: userId,
   };
 
@@ -184,35 +184,35 @@ workspacesRouter.put(
       });
     }
 
-    const workspaceAccount = await database
-      .selectFrom('workspace_accounts')
+    const workspaceUser = await database
+      .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
       .where('account_id', '=', req.accountId)
       .executeTakeFirst();
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
       });
     }
 
-    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+    if (workspaceUser.role !== WorkspaceRole.Owner) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
       });
     }
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
       });
     }
 
-    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+    if (workspaceUser.role !== WorkspaceRole.Owner) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -246,8 +246,8 @@ workspacesRouter.put(
       avatar: updatedWorkspace.avatar,
       versionId: updatedWorkspace.version_id,
       accountId: req.accountId,
-      role: workspaceAccount.role,
-      userId: workspaceAccount.user_id,
+      role: workspaceUser.role,
+      userId: workspaceUser.id,
     };
 
     return res.status(200).json(output);
@@ -279,28 +279,26 @@ workspacesRouter.delete(
       });
     }
 
-    const workspaceAccount = await database
-      .selectFrom('workspace_accounts')
+    const workspaceUser = await database
+      .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
       .where('account_id', '=', req.accountId)
       .executeTakeFirst();
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
       });
     }
 
-    if (workspaceAccount.role !== WorkspaceRole.Owner) {
+    if (workspaceUser.role !== WorkspaceRole.Owner) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
       });
     }
-
-    await database.deleteFrom('workspaces').where('id', '=', id).execute();
 
     await database.deleteFrom('workspaces').where('id', '=', id).execute();
 
@@ -310,56 +308,59 @@ workspacesRouter.delete(
   },
 );
 
-workspacesRouter.get(':id', async (req: NeuronRequest, res: NeuronResponse) => {
-  const id = req.params.id;
+workspacesRouter.get(
+  '/:id',
+  async (req: NeuronRequest, res: NeuronResponse) => {
+    const id = req.params.id;
 
-  if (!req.accountId) {
-    return res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
-    });
-  }
+    if (!req.accountId) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
 
-  const workspace = await database
-    .selectFrom('workspaces')
-    .selectAll()
-    .where('id', '=', id)
-    .executeTakeFirst();
+    const workspace = await database
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
-  if (!workspace) {
-    return res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Workspace not found.',
-    });
-  }
+    if (!workspace) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Workspace not found.',
+      });
+    }
 
-  const workspaceAccount = await database
-    .selectFrom('workspace_accounts')
-    .selectAll()
-    .where('workspace_id', '=', id)
-    .where('account_id', '=', req.accountId)
-    .executeTakeFirst();
+    const workspaceUser = await database
+      .selectFrom('workspace_users')
+      .selectAll()
+      .where('workspace_id', '=', id)
+      .where('account_id', '=', req.accountId)
+      .executeTakeFirst();
 
-  if (!workspaceAccount) {
-    return res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
-    });
-  }
+    if (!workspaceUser) {
+      return res.status(403).json({
+        code: ApiError.Forbidden,
+        message: 'Forbidden.',
+      });
+    }
 
-  const output: WorkspaceOutput = {
-    id: workspace.id,
-    name: workspace.name,
-    description: workspace.description,
-    avatar: workspace.avatar,
-    versionId: workspace.version_id,
-    accountId: req.accountId,
-    role: workspaceAccount.role,
-    userId: workspaceAccount.user_id,
-  };
+    const output: WorkspaceOutput = {
+      id: workspace.id,
+      name: workspace.name,
+      description: workspace.description,
+      avatar: workspace.avatar,
+      versionId: workspace.version_id,
+      accountId: req.accountId,
+      role: workspaceUser.role,
+      userId: workspaceUser.id,
+    };
 
-  return res.status(200).json(output);
-});
+    return res.status(200).json(output);
+  },
+);
 
 workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
   if (!req.accountId) {
@@ -369,13 +370,13 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const workspaceAccounts = await database
-    .selectFrom('workspace_accounts')
+  const workspaceUsers = await database
+    .selectFrom('workspace_users')
     .selectAll()
     .where('account_id', '=', req.accountId)
     .execute();
 
-  const workspaceIds = workspaceAccounts.map((wa) => wa.workspace_id);
+  const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
   const workspaces = await database
     .selectFrom('workspaces')
     .selectAll()
@@ -385,7 +386,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const outputs: WorkspaceOutput[] = [];
 
   for (const workspace of workspaces) {
-    const workspaceAccount = workspaceAccounts.find(
+    const workspaceAccount = workspaceUsers.find(
       (wa) => wa.workspace_id === workspace.id,
     );
 
@@ -401,7 +402,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
       versionId: workspace.version_id,
       accountId: req.accountId,
       role: workspaceAccount.role,
-      userId: workspaceAccount.user_id,
+      userId: workspaceAccount.id,
     };
 
     outputs.push(output);
@@ -411,7 +412,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
 });
 
 workspacesRouter.post(
-  '/:id/accounts',
+  '/:id/users',
   async (req: NeuronRequest, res: NeuronResponse) => {
     const id = req.params.id;
     const input: WorkspaceAccountsInviteInput = req.body;
@@ -443,14 +444,14 @@ workspacesRouter.post(
       });
     }
 
-    const workspaceAccount = await database
-      .selectFrom('workspace_accounts')
+    const workspaceUser = await database
+      .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
       .where('account_id', '=', req.accountId)
       .executeTakeFirst();
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -458,8 +459,8 @@ workspacesRouter.post(
     }
 
     if (
-      workspaceAccount.role !== WorkspaceRole.Owner &&
-      workspaceAccount.role !== WorkspaceRole.Admin
+      workspaceUser.role !== WorkspaceRole.Owner &&
+      workspaceUser.role !== WorkspaceRole.Admin
     ) {
       return res.status(403).json({
         code: ApiError.Forbidden,
@@ -473,12 +474,12 @@ workspacesRouter.post(
       .where('email', 'in', input.emails)
       .execute();
 
-    let existingWorkspaceAccounts: SelectWorkspaceAccount[] = [];
+    let existingWorkspaceUsers: SelectWorkspaceUser[] = [];
     let existingUsers: SelectNode[] = [];
     if (existingAccounts.length > 0) {
       const existingAccountIds = existingAccounts.map((account) => account.id);
-      existingWorkspaceAccounts = await database
-        .selectFrom('workspace_accounts')
+      existingWorkspaceUsers = await database
+        .selectFrom('workspace_users')
         .selectAll()
         .where((eb) =>
           eb.and([
@@ -489,9 +490,9 @@ workspacesRouter.post(
         .execute();
     }
 
-    if (existingWorkspaceAccounts.length > 0) {
-      const existingUserIds = existingWorkspaceAccounts.map(
-        (workspaceAccount) => workspaceAccount.user_id,
+    if (existingWorkspaceUsers.length > 0) {
+      const existingUserIds = existingWorkspaceUsers.map(
+        (workspaceAccount) => workspaceAccount.id,
       );
       existingUsers = await database
         .selectFrom('nodes')
@@ -501,7 +502,7 @@ workspacesRouter.post(
     }
 
     const accountsToCreate: CreateAccount[] = [];
-    const workspaceAccountsToCreate: CreateWorkspaceAccount[] = [];
+    const workspaceUsersToCreate: CreateWorkspaceUser[] = [];
     const usersToCreate: CreateNode[] = [];
 
     const users: ServerNode[] = [];
@@ -530,13 +531,13 @@ workspacesRouter.post(
         });
       }
 
-      const existingWorkspaceAccount = existingWorkspaceAccounts.find(
-        (workspaceAccount) => workspaceAccount.account_id === account!.id,
+      const existingWorkspaceUser = existingWorkspaceUsers.find(
+        (workspaceUser) => workspaceUser.account_id === account!.id,
       );
 
-      if (existingWorkspaceAccount) {
+      if (existingWorkspaceUser) {
         const existingUser = existingUsers.find(
-          (user) => user.id === existingWorkspaceAccount.user_id,
+          (user) => user.id === existingWorkspaceUser.id,
         );
         if (!existingUser) {
           return res.status(500).json({
@@ -568,14 +569,14 @@ workspacesRouter.post(
       const userAttributes = JSON.stringify(userAttributesMap.toJSON());
       const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
 
-      workspaceAccountsToCreate.push({
+      workspaceUsersToCreate.push({
+        id: userId,
         account_id: account!.id,
         workspace_id: workspace.id,
-        user_id: userId,
         role: WorkspaceRole.Collaborator,
         created_at: new Date(),
         created_by: req.accountId,
-        status: WorkspaceAccountStatus.Active,
+        status: WorkspaceUserStatus.Active,
         version_id: NeuronId.generate(NeuronId.Type.Version),
       });
 
@@ -585,7 +586,7 @@ workspacesRouter.post(
         attributes: JSON.parse(userAttributes),
         state: userState,
         createdAt: new Date(),
-        createdBy: workspaceAccount.user_id,
+        createdBy: workspaceUser.id,
         serverCreatedAt: new Date(),
         versionId: userVersionId,
         workspaceId: workspace.id,
@@ -608,7 +609,7 @@ workspacesRouter.post(
 
     if (
       accountsToCreate.length > 0 ||
-      workspaceAccountsToCreate.length > 0 ||
+      workspaceUsersToCreate.length > 0 ||
       usersToCreate.length > 0
     ) {
       await database.transaction().execute(async (trx) => {
@@ -616,10 +617,10 @@ workspacesRouter.post(
           await trx.insertInto('accounts').values(accountsToCreate).execute();
         }
 
-        if (workspaceAccountsToCreate.length > 0) {
+        if (workspaceUsersToCreate.length > 0) {
           await trx
-            .insertInto('workspace_accounts')
-            .values(workspaceAccountsToCreate)
+            .insertInto('workspace_users')
+            .values(workspaceUsersToCreate)
             .execute();
         }
 
@@ -636,10 +637,10 @@ workspacesRouter.post(
 );
 
 workspacesRouter.put(
-  '/:id/accounts/:accountId',
+  '/:id/users/:userId',
   async (req: NeuronRequest, res: NeuronResponse) => {
     const id = req.params.id;
-    const accountId = req.params.accountId;
+    const userId = req.params.userId;
     const input: WorkspaceAccountRoleUpdateInput = req.body;
 
     if (!req.accountId) {
@@ -662,18 +663,14 @@ workspacesRouter.put(
       });
     }
 
-    const workspaceAccounts = await database
-      .selectFrom('workspace_accounts')
+    const currentWorkspaceUser = await database
+      .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', 'in', [req.accountId, accountId])
-      .execute();
+      .where('account_id', '=', req.accountId)
+      .executeTakeFirst();
 
-    const currentWorkspaceAccount = workspaceAccounts.find(
-      (workspaceAccount) => workspaceAccount.account_id === req.accountId,
-    );
-
-    if (!currentWorkspaceAccount) {
+    if (!currentWorkspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -681,8 +678,8 @@ workspacesRouter.put(
     }
 
     if (
-      currentWorkspaceAccount.role !== WorkspaceRole.Owner &&
-      currentWorkspaceAccount.role !== WorkspaceRole.Admin
+      currentWorkspaceUser.role !== WorkspaceRole.Owner &&
+      currentWorkspaceUser.role !== WorkspaceRole.Admin
     ) {
       return res.status(403).json({
         code: ApiError.Forbidden,
@@ -690,11 +687,13 @@ workspacesRouter.put(
       });
     }
 
-    const workspaceAccountToUpdate = workspaceAccounts.find(
-      (workspaceAccount) => workspaceAccount.account_id === accountId,
-    );
+    const workspaceUserToUpdate = await database
+      .selectFrom('workspace_users')
+      .selectAll()
+      .where('id', '=', userId)
+      .executeTakeFirst();
 
-    if (!workspaceAccountToUpdate) {
+    if (!workspaceUserToUpdate) {
       return res.status(404).json({
         code: ApiError.ResourceNotFound,
         message: 'NotFound.',
@@ -704,7 +703,7 @@ workspacesRouter.put(
     const user = await database
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', workspaceAccountToUpdate.user_id)
+      .where('id', '=', workspaceUserToUpdate.id)
       .executeTakeFirst();
 
     if (!user) {
@@ -741,18 +740,19 @@ workspacesRouter.put(
       serverUpdatedAt: updatedAt,
       versionId: NeuronId.generate(NeuronId.Type.Version),
       updatedAt: updatedAt,
-      updatedBy: currentWorkspaceAccount.user_id,
+      updatedBy: currentWorkspaceUser.id,
     };
 
     await database.transaction().execute(async (trx) => {
       await database
-        .updateTable('workspace_accounts')
+        .updateTable('workspace_users')
         .set({
           role: input.role,
           updated_at: new Date(),
-          updated_by: currentWorkspaceAccount.account_id,
+          updated_by: currentWorkspaceUser.account_id,
           version_id: NeuronId.generate(NeuronId.Type.Version),
         })
+        .where('id', '=', userId)
         .execute();
 
       await database
@@ -762,7 +762,7 @@ workspacesRouter.put(
           state: encodedState,
           server_updated_at: updatedAt,
           updated_at: updatedAt,
-          updated_by: currentWorkspaceAccount.user_id,
+          updated_by: currentWorkspaceUser.id,
           version_id: userNode.versionId,
         })
         .where('id', '=', userNode.id)

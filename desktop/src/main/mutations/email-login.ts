@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { LoginOutput } from '@/types/accounts';
 import { databaseContext } from '@/main/data/database-context';
-import { buildApiBaseUrl, mapServer } from '@/lib/servers';
+import { buildApiBaseUrl } from '@/lib/servers';
 import { EmailLoginMutationInput } from '@/types/mutations/email-login';
 import {
   MutationChange,
@@ -15,13 +15,13 @@ export class EmailLoginMutationHandler
   async handleMutation(
     input: EmailLoginMutationInput,
   ): Promise<MutationResult<EmailLoginMutationInput>> {
-    const serverRow = await databaseContext.appDatabase
+    const server = await databaseContext.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', input.server)
       .executeTakeFirst();
 
-    if (!serverRow) {
+    if (!server) {
       return {
         output: {
           success: false,
@@ -29,7 +29,6 @@ export class EmailLoginMutationHandler
       };
     }
 
-    const server = mapServer(serverRow);
     const { data } = await axios.post<LoginOutput>(
       `${buildApiBaseUrl(server)}/v1/accounts/login/email`,
       {

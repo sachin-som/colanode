@@ -1,5 +1,5 @@
 import { SocketConnection } from '@/main/sockets/socket-connection';
-import { mediator } from '@/main/mediator';
+import { databaseContext } from '@/main/data/database-context';
 
 const EVENT_LOOP_INTERVAL = 5000;
 
@@ -29,13 +29,16 @@ class SocketManager {
   }
 
   private async checkAccounts() {
-    const servers = await mediator.executeQuery({
-      type: 'server_list',
-    });
+    const servers = await databaseContext.appDatabase
+      .selectFrom('servers')
+      .selectAll()
+      .execute();
 
-    const accounts = await mediator.executeQuery({
-      type: 'account_list',
-    });
+    const accounts = await databaseContext.appDatabase
+      .selectFrom('accounts')
+      .selectAll()
+      .where('status', '=', 'active')
+      .execute();
 
     // Update accounts map
     for (const account of accounts) {

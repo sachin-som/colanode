@@ -19,11 +19,6 @@ export type Workspace = {
   synced: boolean;
 };
 
-export type WorkspaceSyncData = {
-  nodes: ServerNode[];
-  nodeReactions: ServerNodeReaction[];
-};
-
 export type WorkspaceAccountsInviteOutput = {
   users: ServerNode[];
 };

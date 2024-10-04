@@ -1,5 +1,5 @@
 import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
-import { ChangeMessage, NodeReactionChangeData } from '@/types/changes';
+import { CdcMessage, NodeReactionCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { NeuronId } from '@/lib/id';
@@ -7,11 +7,11 @@ import { ServerNodeReaction } from '@/types/nodes';
 
 export const initNodeReactionChangesConsumer = async () => {
   const consumer = kafka.consumer({
-    groupId: CONSUMER_IDS.NODE_REACTION_CHANGES,
+    groupId: CONSUMER_IDS.NODE_REACTION_CDC,
   });
 
   await consumer.connect();
-  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_REACTION_CHANGES });
+  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_REACTION_CDC });
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -21,15 +21,15 @@ export const initNodeReactionChangesConsumer = async () => {
 
       const change = JSON.parse(
         message.value.toString(),
-      ) as ChangeMessage<NodeReactionChangeData>;
+      ) as CdcMessage<NodeReactionCdcData>;
 
-      await handleNodeReactionChange(change);
+      await handleNodeReactionCdc(change);
     },
   });
 };
 
-const handleNodeReactionChange = async (
-  change: ChangeMessage<NodeReactionChangeData>,
+const handleNodeReactionCdc = async (
+  change: CdcMessage<NodeReactionCdcData>,
 ) => {
   switch (change.op) {
     case PostgresOperation.CREATE: {
@@ -44,7 +44,7 @@ const handleNodeReactionChange = async (
 };
 
 const handleNodeReactionCreate = async (
-  change: ChangeMessage<NodeReactionChangeData>,
+  change: CdcMessage<NodeReactionCdcData>,
 ) => {
   const reaction = change.after;
   if (!reaction) {
@@ -58,9 +58,9 @@ const handleNodeReactionCreate = async (
 
   const serverNodeReaction: ServerNodeReaction = mapNodeReaction(reaction);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'node_reactions',
       action: 'insert',
       workspace_id: reaction.workspace_id,
@@ -72,7 +72,7 @@ const handleNodeReactionCreate = async (
 };
 
 const handleNodeReactionDelete = async (
-  change: ChangeMessage<NodeReactionChangeData>,
+  change: CdcMessage<NodeReactionCdcData>,
 ) => {
   const reaction = change.before;
   if (!reaction) {
@@ -86,9 +86,9 @@ const handleNodeReactionDelete = async (
 
   const serverNodeReaction: ServerNodeReaction = mapNodeReaction(reaction);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'node_reactions',
       action: 'delete',
       workspace_id: reaction.workspace_id,
@@ -107,7 +107,7 @@ const getDeviceIds = async (workspaceId: string) => {
       'account_id',
       'in',
       database
-        .selectFrom('workspace_accounts')
+        .selectFrom('workspace_users')
         .where('workspace_id', '=', workspaceId)
         .select('account_id'),
     )
@@ -118,9 +118,7 @@ const getDeviceIds = async (workspaceId: string) => {
   return deviceIds;
 };
 
-const mapNodeReaction = (
-  reaction: NodeReactionChangeData,
-): ServerNodeReaction => {
+const mapNodeReaction = (reaction: NodeReactionCdcData): ServerNodeReaction => {
   return {
     nodeId: reaction.node_id,
     reactorId: reaction.actor_id,

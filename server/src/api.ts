@@ -5,7 +5,6 @@ import { WebSocketServer } from 'ws';
 
 import { accountsRouter } from '@/routes/accounts';
 import { workspacesRouter } from '@/routes/workspaces';
-import { mutationsRouter } from '@/routes/mutations';
 import { authMiddleware } from '@/middlewares/auth';
 import { syncRouter } from '@/routes/sync';
 import { configRouter } from '@/routes/config';
@@ -25,8 +24,7 @@ export const initApi = () => {
   app.use('/v1/accounts', accountsRouter);
   app.use('/v1/config', configRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
-  app.use('/v1/mutations', authMiddleware, mutationsRouter);
-  app.use('/v1/', authMiddleware, syncRouter);
+  app.use('/v1/sync', authMiddleware, syncRouter);
 
   const server = http.createServer(app);
 

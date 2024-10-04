@@ -119,10 +119,10 @@ const createNodeReactionsTable: Migration = {
   },
 };
 
-const createMutationsTable: Migration = {
+const createChangesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('mutations')
+      .createTable('changes')
       .addColumn('id', 'integer', (col) => col.notNull().primaryKey())
       .addColumn('table', 'text', (col) => col.notNull())
       .addColumn('action', 'text', (col) => col.notNull())
@@ -133,19 +133,19 @@ const createMutationsTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('mutations').execute();
+    await db.schema.dropTable('changes').execute();
   },
 };
 
-const createNodeInsertMutationTrigger: Migration = {
+const createNodeInsertChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_insert_mutation
+      CREATE TRIGGER node_insert_change
       AFTER INSERT ON nodes
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'after', 'created_at')
+          INSERT INTO changes ('action', 'table', 'after', 'created_at')
           VALUES (
               'insert',
               'nodes',
@@ -171,19 +171,19 @@ const createNodeInsertMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_insert_mutation`.execute(db);
+    await sql`DROP TRIGGER node_insert_change`.execute(db);
   },
 };
 
-const createNodeUpdateMutationTrigger: Migration = {
+const createNodeUpdateChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_update_mutation
+      CREATE TRIGGER node_update_change
       AFTER UPDATE ON nodes
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'before', 'after', 'created_at')
+          INSERT INTO changes ('action', 'table', 'before', 'after', 'created_at')
           VALUES (
               'update',
               'nodes',
@@ -225,18 +225,18 @@ const createNodeUpdateMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_update_mutation`.execute(db);
+    await sql`DROP TRIGGER node_update_change`.execute(db);
   },
 };
 
-const createNodeDeleteMutationTrigger: Migration = {
+const createNodeDeleteChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_delete_mutation
+      CREATE TRIGGER node_delete_change
       AFTER DELETE ON nodes
       FOR EACH ROW
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'before', 'created_at')
+          INSERT INTO changes ('action', 'table', 'before', 'created_at')
           VALUES (
               'delete',
               'nodes',
@@ -262,7 +262,7 @@ const createNodeDeleteMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_delete_mutation`.execute(db);
+    await sql`DROP TRIGGER node_delete_change`.execute(db);
   },
 };
 
@@ -329,15 +329,15 @@ const createNodeDeleteNameTrigger: Migration = {
   },
 };
 
-const createNodeCollaboratorInsertMutationTrigger: Migration = {
+const createNodeCollaboratorInsertChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_collaborator_insert_mutation
+      CREATE TRIGGER node_collaborator_insert_change
       AFTER INSERT ON node_collaborators
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'after', 'created_at')
+          INSERT INTO changes ('action', 'table', 'after', 'created_at')
           VALUES (
               'insert',
               'node_collaborators',
@@ -360,19 +360,19 @@ const createNodeCollaboratorInsertMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_collaborator_insert_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_insert_change`.execute(db);
   },
 };
 
-const createNodeCollaboratorUpdateMutationTrigger: Migration = {
+const createNodeCollaboratorUpdateChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_collaborator_update_mutation
+      CREATE TRIGGER node_collaborator_update_change
       AFTER UPDATE ON node_collaborators
       FOR EACH ROW
       WHEN NEW.server_version_id IS NULL OR NEW.version_id != NEW.server_version_id
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'before', 'after', 'created_at')
+          INSERT INTO changes ('action', 'table', 'before', 'after', 'created_at')
           VALUES (
               'update',
               'node_collaborators',
@@ -408,18 +408,18 @@ const createNodeCollaboratorUpdateMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_collaborator_update_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_update_change`.execute(db);
   },
 };
 
-const createNodeCollaboratorDeleteMutationTrigger: Migration = {
+const createNodeCollaboratorDeleteChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_collaborator_delete_mutation
+      CREATE TRIGGER node_collaborator_delete_change
       AFTER DELETE ON node_collaborators
       FOR EACH ROW
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'before', 'created_at')
+          INSERT INTO changes ('action', 'table', 'before', 'created_at')
           VALUES (
               'delete',
               'node_collaborators',
@@ -442,19 +442,19 @@ const createNodeCollaboratorDeleteMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_collaborator_delete_mutation`.execute(db);
+    await sql`DROP TRIGGER node_collaborator_delete_change`.execute(db);
   },
 };
 
-const createNodeReactionInsertMutationTrigger: Migration = {
+const createNodeReactionInsertChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_reaction_insert_mutation
+      CREATE TRIGGER node_reaction_insert_change
       AFTER INSERT ON node_reactions
       FOR EACH ROW
       WHEN NEW.server_created_at IS NULL
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'after', 'created_at')
+          INSERT INTO changes ('action', 'table', 'after', 'created_at')
           VALUES (
               'insert',
               'node_reactions',
@@ -475,14 +475,14 @@ const createNodeReactionInsertMutationTrigger: Migration = {
   },
 };
 
-const createNodeReactionDeleteMutationTrigger: Migration = {
+const createNodeReactionDeleteChangeTrigger: Migration = {
   up: async (db) => {
     await sql`
-      CREATE TRIGGER node_reaction_delete_mutation
+      CREATE TRIGGER node_reaction_delete_change
       AFTER DELETE ON node_reactions
       FOR EACH ROW
       BEGIN
-          INSERT INTO mutations ('action', 'table', 'before', 'created_at')
+          INSERT INTO changes ('action', 'table', 'before', 'created_at')
           VALUES (
               'delete',
               'node_reactions',
@@ -499,7 +499,7 @@ const createNodeReactionDeleteMutationTrigger: Migration = {
     `.execute(db);
   },
   down: async (db) => {
-    await sql`DROP TRIGGER node_reaction_delete_mutation`.execute(db);
+    await sql`DROP TRIGGER node_reaction_delete_change`.execute(db);
   },
 };
 
@@ -510,21 +510,21 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00003_create_node_reactions_table': createNodeReactionsTable,
   '00004_create_node_names_table': createNodeNamesTable,
   '00005_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00006_create_mutations_table': createMutationsTable,
-  '00007_create_node_insert_mutation_trigger': createNodeInsertMutationTrigger,
-  '00008_create_node_update_mutation_trigger': createNodeUpdateMutationTrigger,
-  '00009_create_node_delete_mutation_trigger': createNodeDeleteMutationTrigger,
+  '00006_create_changes_table': createChangesTable,
+  '00007_create_node_insert_change_trigger': createNodeInsertChangeTrigger,
+  '00008_create_node_update_change_trigger': createNodeUpdateChangeTrigger,
+  '00009_create_node_delete_change_trigger': createNodeDeleteChangeTrigger,
   '00010_create_node_insert_name_trigger': createNodeInsertNameTrigger,
   '00011_create_node_update_name_trigger': createNodeUpdateNameTrigger,
   '00012_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
-  '00013_create_node_collaborator_insert_mutation_trigger':
-    createNodeCollaboratorInsertMutationTrigger,
-  '00014_create_node_collaborator_update_mutation_trigger':
-    createNodeCollaboratorUpdateMutationTrigger,
-  '00015_create_node_collaborator_delete_mutation_trigger':
-    createNodeCollaboratorDeleteMutationTrigger,
-  '00016_create_node_reaction_insert_mutation_trigger':
-    createNodeReactionInsertMutationTrigger,
-  '00017_create_node_reaction_delete_mutation_trigger':
-    createNodeReactionDeleteMutationTrigger,
+  '00013_create_node_collaborator_insert_change_trigger':
+    createNodeCollaboratorInsertChangeTrigger,
+  '00014_create_node_collaborator_update_change_trigger':
+    createNodeCollaboratorUpdateChangeTrigger,
+  '00015_create_node_collaborator_delete_change_trigger':
+    createNodeCollaboratorDeleteChangeTrigger,
+  '00016_create_node_reaction_insert_change_trigger':
+    createNodeReactionInsertChangeTrigger,
+  '00017_create_node_reaction_delete_change_trigger':
+    createNodeReactionDeleteChangeTrigger,
 };

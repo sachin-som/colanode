@@ -1,22 +1,22 @@
 import { database } from '@/data/database';
-import { SelectWorkspaceAccount } from '@/data/schema';
+import { SelectWorkspaceUser } from '@/data/schema';
 import { getCollaboratorRole } from '@/lib/nodes';
 import {
-  ExecuteLocalMutationResult,
-  LocalMutation,
-  LocalNodeReactionMutationData,
-} from '@/types/mutations';
+  SyncLocalChangeResult,
+  LocalChange,
+  LocalNodeReactionChangeData,
+} from '@/types/sync';
 
-export const handleNodeReactionMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
+export const handleNodeReactionChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  mutation: LocalChange,
+): Promise<SyncLocalChangeResult> => {
   switch (mutation.action) {
     case 'insert': {
-      return handleCreateNodeReactionMutation(workspaceAccount, mutation);
+      return handleCreateNodeReactionChange(workspaceUser, mutation);
     }
     case 'delete': {
-      return handleDeleteNodeReactionMutation(workspaceAccount, mutation);
+      return handleDeleteNodeReactionChange(workspaceUser, mutation);
     }
   }
 
@@ -25,21 +25,21 @@ export const handleNodeReactionMutation = async (
   };
 };
 
-const handleCreateNodeReactionMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.after) {
+const handleCreateNodeReactionChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.after) {
     return {
       status: 'error',
     };
   }
 
   const nodeReactionData = JSON.parse(
-    mutation.after,
-  ) as LocalNodeReactionMutationData;
+    change.after,
+  ) as LocalNodeReactionChangeData;
 
-  if (nodeReactionData.actor_id !== workspaceAccount.user_id) {
+  if (nodeReactionData.actor_id !== workspaceUser.id) {
     return {
       status: 'error',
     };
@@ -47,7 +47,7 @@ const handleCreateNodeReactionMutation = async (
 
   const nodeRole = await getCollaboratorRole(
     nodeReactionData.node_id,
-    workspaceAccount.user_id,
+    workspaceUser.id,
   );
 
   if (nodeRole === null) {
@@ -63,7 +63,7 @@ const handleCreateNodeReactionMutation = async (
       actor_id: nodeReactionData.actor_id,
       reaction: nodeReactionData.reaction,
       created_at: new Date(nodeReactionData.created_at),
-      workspace_id: workspaceAccount.workspace_id,
+      workspace_id: workspaceUser.workspace_id,
       server_created_at: new Date(),
     })
     .onConflict((ob) => ob.doNothing())
@@ -74,21 +74,21 @@ const handleCreateNodeReactionMutation = async (
   };
 };
 
-const handleDeleteNodeReactionMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.before) {
+const handleDeleteNodeReactionChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.before) {
     return {
       status: 'error',
     };
   }
 
   const nodeReactionData = JSON.parse(
-    mutation.before,
-  ) as LocalNodeReactionMutationData;
+    change.before,
+  ) as LocalNodeReactionChangeData;
 
-  if (nodeReactionData.actor_id !== workspaceAccount.user_id) {
+  if (nodeReactionData.actor_id !== workspaceUser.id) {
     return {
       status: 'error',
     };

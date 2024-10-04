@@ -1,15 +1,15 @@
 import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
-import { ChangeMessage, NodeChangeData } from '@/types/changes';
+import { CdcMessage, NodeCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { NeuronId } from '@/lib/id';
 import { ServerNode } from '@/types/nodes';
 
 export const initNodeChangesConsumer = async () => {
-  const consumer = kafka.consumer({ groupId: CONSUMER_IDS.NODE_CHANGES });
+  const consumer = kafka.consumer({ groupId: CONSUMER_IDS.NODE_CDC });
 
   await consumer.connect();
-  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_CHANGES });
+  await consumer.subscribe({ topic: TOPIC_NAMES.NODE_CDC });
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -19,14 +19,14 @@ export const initNodeChangesConsumer = async () => {
 
       const change = JSON.parse(
         message.value.toString(),
-      ) as ChangeMessage<NodeChangeData>;
+      ) as CdcMessage<NodeCdcData>;
 
-      await handleNodeChange(change);
+      await handleNodeCdc(change);
     },
   });
 };
 
-const handleNodeChange = async (change: ChangeMessage<NodeChangeData>) => {
+const handleNodeCdc = async (change: CdcMessage<NodeCdcData>) => {
   switch (change.op) {
     case PostgresOperation.CREATE: {
       await handleNodeCreate(change);
@@ -43,7 +43,7 @@ const handleNodeChange = async (change: ChangeMessage<NodeChangeData>) => {
   }
 };
 
-const handleNodeCreate = async (change: ChangeMessage<NodeChangeData>) => {
+const handleNodeCreate = async (change: CdcMessage<NodeCdcData>) => {
   const node = change.after;
   if (!node) {
     return;
@@ -56,9 +56,9 @@ const handleNodeCreate = async (change: ChangeMessage<NodeChangeData>) => {
 
   const serverNode: ServerNode = mapNode(node);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'nodes',
       action: 'insert',
       workspace_id: node.workspace_id,
@@ -69,7 +69,7 @@ const handleNodeCreate = async (change: ChangeMessage<NodeChangeData>) => {
     .execute();
 };
 
-const handleNodeUpdate = async (change: ChangeMessage<NodeChangeData>) => {
+const handleNodeUpdate = async (change: CdcMessage<NodeCdcData>) => {
   const node = change.after;
   if (!node) {
     return;
@@ -82,9 +82,9 @@ const handleNodeUpdate = async (change: ChangeMessage<NodeChangeData>) => {
 
   const serverNode: ServerNode = mapNode(node);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'nodes',
       action: 'update',
       workspace_id: node.workspace_id,
@@ -96,7 +96,7 @@ const handleNodeUpdate = async (change: ChangeMessage<NodeChangeData>) => {
     .execute();
 };
 
-const handleNodeDelete = async (change: ChangeMessage<NodeChangeData>) => {
+const handleNodeDelete = async (change: CdcMessage<NodeCdcData>) => {
   const node = change.before;
   if (!node) {
     return;
@@ -109,9 +109,9 @@ const handleNodeDelete = async (change: ChangeMessage<NodeChangeData>) => {
 
   const serverNode: ServerNode = mapNode(node);
   await database
-    .insertInto('mutations')
+    .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Mutation),
+      id: NeuronId.generate(NeuronId.Type.Change),
       table: 'nodes',
       action: 'delete',
       workspace_id: node.workspace_id,
@@ -130,7 +130,7 @@ const getDeviceIds = async (workspaceId: string) => {
       'account_id',
       'in',
       database
-        .selectFrom('workspace_accounts')
+        .selectFrom('workspace_users')
         .where('workspace_id', '=', workspaceId)
         .select('account_id'),
     )
@@ -141,7 +141,7 @@ const getDeviceIds = async (workspaceId: string) => {
   return deviceIds;
 };
 
-const mapNode = (node: NodeChangeData): ServerNode => {
+const mapNode = (node: NodeCdcData): ServerNode => {
   return {
     id: node.id,
     workspaceId: node.workspace_id,

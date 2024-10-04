@@ -1,45 +1,45 @@
 import { database } from '@/data/database';
-import { SelectWorkspaceAccount } from '@/data/schema';
+import { SelectWorkspaceUser } from '@/data/schema';
 import { getCollaboratorRole } from '@/lib/nodes';
 import {
-  ExecuteLocalMutationResult,
-  LocalMutation,
-  LocalNodeCollaboratorMutationData,
-} from '@/types/mutations';
+  SyncLocalChangeResult,
+  LocalChange,
+  LocalNodeCollaboratorChangeData,
+} from '@/types/sync';
 
-export const handleNodeCollaboratorMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  switch (mutation.action) {
+export const handleNodeCollaboratorChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  switch (change.action) {
     case 'insert': {
-      return handleCreateNodeCollaboratorMutation(workspaceAccount, mutation);
+      return handleCreateNodeCollaboratorChange(workspaceUser, change);
     }
     case 'update': {
-      return handleUpdateNodeCollaboratorMutation(workspaceAccount, mutation);
+      return handleUpdateNodeCollaboratorChange(workspaceUser, change);
     }
     case 'delete': {
-      return handleDeleteNodeCollaboratorMutation(workspaceAccount, mutation);
+      return handleDeleteNodeCollaboratorChange(workspaceUser, change);
     }
   }
 };
 
-const handleCreateNodeCollaboratorMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.after) {
+const handleCreateNodeCollaboratorChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.after) {
     return {
       status: 'error',
     };
   }
 
   const nodeCollaboratorData = JSON.parse(
-    mutation.after,
-  ) as LocalNodeCollaboratorMutationData;
+    change.after,
+  ) as LocalNodeCollaboratorChangeData;
 
   const canCreate = await canCreateNodeCollaborator(
-    workspaceAccount,
+    workspaceUser,
     nodeCollaboratorData,
   );
 
@@ -55,7 +55,7 @@ const handleCreateNodeCollaboratorMutation = async (
       node_id: nodeCollaboratorData.node_id,
       collaborator_id: nodeCollaboratorData.collaborator_id,
       role: nodeCollaboratorData.role,
-      workspace_id: workspaceAccount.workspace_id,
+      workspace_id: workspaceUser.workspace_id,
       created_at: new Date(nodeCollaboratorData.created_at),
       created_by: nodeCollaboratorData.created_by,
       server_created_at: new Date(),
@@ -70,8 +70,8 @@ const handleCreateNodeCollaboratorMutation = async (
 };
 
 const canCreateNodeCollaborator = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  data: LocalNodeCollaboratorMutationData,
+  workspaceUser: SelectWorkspaceUser,
+  data: LocalNodeCollaboratorChangeData,
 ): Promise<boolean> => {
   const node = await database
     .selectFrom('nodes')
@@ -86,8 +86,8 @@ const canCreateNodeCollaborator = async (
   // If the node is a root node and created by the current user
   if (
     node.parent_id === null &&
-    node.created_by === workspaceAccount.user_id &&
-    data.collaborator_id === workspaceAccount.user_id
+    node.created_by === workspaceUser.id &&
+    data.collaborator_id === workspaceUser.id
   ) {
     return true;
   }
@@ -95,7 +95,7 @@ const canCreateNodeCollaborator = async (
   // Get the current user's role for the node or its ancestors
   const currentUserRole = await getCollaboratorRole(
     data.node_id,
-    workspaceAccount.user_id,
+    workspaceUser.id,
   );
 
   if (currentUserRole === null) {
@@ -120,19 +120,19 @@ const canCreateNodeCollaborator = async (
   return false;
 };
 
-const handleUpdateNodeCollaboratorMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.after) {
+const handleUpdateNodeCollaboratorChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.after) {
     return {
       status: 'error',
     };
   }
 
   const nodeCollaboratorData = JSON.parse(
-    mutation.after,
-  ) as LocalNodeCollaboratorMutationData;
+    change.after,
+  ) as LocalNodeCollaboratorChangeData;
 
   const existingNodeCollaborator = await database
     .selectFrom('node_collaborators')
@@ -147,7 +147,7 @@ const handleUpdateNodeCollaboratorMutation = async (
 
   if (
     !existingNodeCollaborator ||
-    existingNodeCollaborator.workspace_id != workspaceAccount.workspace_id ||
+    existingNodeCollaborator.workspace_id != workspaceUser.workspace_id ||
     existingNodeCollaborator.updated_at === null ||
     existingNodeCollaborator.updated_by === null
   ) {
@@ -157,7 +157,7 @@ const handleUpdateNodeCollaboratorMutation = async (
   }
 
   const canUpdate = await canUpdateNodeCollaborator(
-    workspaceAccount,
+    workspaceUser,
     nodeCollaboratorData,
   );
 
@@ -209,8 +209,8 @@ const handleUpdateNodeCollaboratorMutation = async (
 };
 
 const canUpdateNodeCollaborator = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  data: LocalNodeCollaboratorMutationData,
+  workspaceUser: SelectWorkspaceUser,
+  data: LocalNodeCollaboratorChangeData,
 ): Promise<boolean> => {
   const node = await database
     .selectFrom('nodes')
@@ -225,7 +225,7 @@ const canUpdateNodeCollaborator = async (
   // Get the current user's role for the node or its ancestors
   const currentUserRole = await getCollaboratorRole(
     data.node_id,
-    workspaceAccount.user_id,
+    workspaceUser.id,
   );
 
   if (currentUserRole === null) {
@@ -250,19 +250,19 @@ const canUpdateNodeCollaborator = async (
   return false;
 };
 
-const handleDeleteNodeCollaboratorMutation = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  mutation: LocalMutation,
-): Promise<ExecuteLocalMutationResult> => {
-  if (!mutation.before) {
+const handleDeleteNodeCollaboratorChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  change: LocalChange,
+): Promise<SyncLocalChangeResult> => {
+  if (!change.before) {
     return {
       status: 'error',
     };
   }
 
   const nodeCollaboratorData = JSON.parse(
-    mutation.before,
-  ) as LocalNodeCollaboratorMutationData;
+    change.before,
+  ) as LocalNodeCollaboratorChangeData;
 
   const existingNodeCollaborator = await database
     .selectFrom('node_collaborators')
@@ -277,7 +277,7 @@ const handleDeleteNodeCollaboratorMutation = async (
 
   if (
     !existingNodeCollaborator ||
-    existingNodeCollaborator.workspace_id != workspaceAccount.workspace_id
+    existingNodeCollaborator.workspace_id != workspaceUser.workspace_id
   ) {
     return {
       status: 'error',
@@ -285,7 +285,7 @@ const handleDeleteNodeCollaboratorMutation = async (
   }
 
   const canDelete = await canDeleteNodeCollaborator(
-    workspaceAccount,
+    workspaceUser,
     nodeCollaboratorData,
   );
   if (!canDelete) {
@@ -310,8 +310,8 @@ const handleDeleteNodeCollaboratorMutation = async (
 };
 
 const canDeleteNodeCollaborator = async (
-  workspaceAccount: SelectWorkspaceAccount,
-  data: LocalNodeCollaboratorMutationData,
+  workspaceUser: SelectWorkspaceUser,
+  data: LocalNodeCollaboratorChangeData,
 ): Promise<boolean> => {
   const node = await database
     .selectFrom('nodes')
@@ -326,7 +326,7 @@ const canDeleteNodeCollaborator = async (
   // Get the current user's role for the node or its ancestors
   const currentUserRole = await getCollaboratorRole(
     data.node_id,
-    workspaceAccount.user_id,
+    workspaceUser.id,
   );
 
   if (currentUserRole === null) {

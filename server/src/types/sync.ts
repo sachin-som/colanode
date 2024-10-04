@@ -1,20 +1,20 @@
-export type ExecuteLocalMutationsInput = {
+export type SyncLocalChangesInput = {
   workspaceId: string;
-  mutations: LocalMutation[];
+  changes: LocalChange[];
 };
 
-export type ExecuteLocalMutationResult = {
-  status: ExecuteLocalMutationStatus;
+export type SyncLocalChangeResult = {
+  status: SyncLocalChangeStatus;
 };
 
-export type ExecuteLocalMutationStatus = 'success' | 'error';
+export type SyncLocalChangeStatus = 'success' | 'error';
 
-export type ServerExecuteMutationResult = {
+export type ServerSyncChangeResult = {
   id: number;
-  status: ExecuteLocalMutationStatus;
+  status: SyncLocalChangeStatus;
 };
 
-export type LocalMutation = {
+export type LocalChange = {
   id: number;
   table: string;
   action: 'insert' | 'update' | 'delete';
@@ -23,7 +23,7 @@ export type LocalMutation = {
   createdAt: string;
 };
 
-export type LocalNodeMutationData = {
+export type LocalNodeChangeData = {
   id: string;
   attributes: string;
   state: string;
@@ -37,7 +37,7 @@ export type LocalNodeMutationData = {
   server_version_id: string;
 };
 
-export type LocalNodeCollaboratorMutationData = {
+export type LocalNodeCollaboratorChangeData = {
   node_id: string;
   collaborator_id: string;
   role: string;
@@ -51,14 +51,14 @@ export type LocalNodeCollaboratorMutationData = {
   server_version_id: string;
 };
 
-export type LocalNodeReactionMutationData = {
+export type LocalNodeReactionChangeData = {
   node_id: string;
   actor_id: string;
   reaction: string;
   created_at: string;
 };
 
-export type ServerMutation = {
+export type ServerChange = {
   id: string;
   table: string;
   action: 'insert' | 'update' | 'delete';

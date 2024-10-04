@@ -13,8 +13,13 @@ export enum ApiError {
   BadRequest = 'BadRequest',
 }
 
+export type NeuronRequestAccount = {
+  id: string;
+  deviceId: string;
+};
+
 export type NeuronRequest = Request & {
-  accountId?: string | null;
+  account?: NeuronRequestAccount;
 };
 
 export type NeuronResponse = Response;

@@ -32,7 +32,7 @@ export const workspacesRouter = Router();
 workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const input: WorkspaceInput = req.body;
 
-  if (!req.accountId) {
+  if (!req.account) {
     return res.status(401).json({
       code: ApiError.Unauthorized,
       message: 'Unauthorized.',
@@ -49,7 +49,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const account = await database
     .selectFrom('accounts')
     .selectAll()
-    .where('id', '=', req.accountId)
+    .where('id', '=', req.account.id)
     .executeTakeFirst();
 
   if (!account) {
@@ -65,7 +65,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     description: input.description,
     avatar: input.avatar,
     createdAt: new Date(),
-    createdBy: req.accountId,
+    createdBy: account.id,
     status: WorkspaceStatus.Active,
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
@@ -91,11 +91,11 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   const workspaceUser: WorkspaceUser = {
     id: userId,
-    accountId: req.accountId,
+    accountId: account.id,
     workspaceId: workspace.id,
     role: WorkspaceRole.Owner,
     createdAt: new Date(),
-    createdBy: req.accountId,
+    createdBy: account.id,
     status: WorkspaceUserStatus.Active,
     versionId: NeuronId.generate(NeuronId.Type.Version),
   };
@@ -164,7 +164,7 @@ workspacesRouter.put(
     const id = req.params.id;
     const input: WorkspaceInput = req.body;
 
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -188,7 +188,7 @@ workspacesRouter.put(
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
     if (!workspaceUser) {
@@ -226,7 +226,7 @@ workspacesRouter.put(
         description: input.description,
         avatar: input.avatar,
         updated_at: new Date(),
-        updated_by: req.accountId,
+        updated_by: req.account.id,
       })
       .where('id', '=', id)
       .returningAll()
@@ -245,7 +245,7 @@ workspacesRouter.put(
       description: updatedWorkspace.description,
       avatar: updatedWorkspace.avatar,
       versionId: updatedWorkspace.version_id,
-      accountId: req.accountId,
+      accountId: req.account.id,
       role: workspaceUser.role,
       userId: workspaceUser.id,
     };
@@ -259,7 +259,7 @@ workspacesRouter.delete(
   async (req: NeuronRequest, res: NeuronResponse) => {
     const id = req.params.id;
 
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -283,7 +283,7 @@ workspacesRouter.delete(
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
     if (!workspaceUser) {
@@ -313,7 +313,7 @@ workspacesRouter.get(
   async (req: NeuronRequest, res: NeuronResponse) => {
     const id = req.params.id;
 
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -337,7 +337,7 @@ workspacesRouter.get(
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
     if (!workspaceUser) {
@@ -353,7 +353,7 @@ workspacesRouter.get(
       description: workspace.description,
       avatar: workspace.avatar,
       versionId: workspace.version_id,
-      accountId: req.accountId,
+      accountId: req.account.id,
       role: workspaceUser.role,
       userId: workspaceUser.id,
     };
@@ -363,7 +363,7 @@ workspacesRouter.get(
 );
 
 workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
-  if (!req.accountId) {
+  if (!req.account) {
     return res.status(401).json({
       code: ApiError.Unauthorized,
       message: 'Unauthorized.',
@@ -373,7 +373,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
   const workspaceUsers = await database
     .selectFrom('workspace_users')
     .selectAll()
-    .where('account_id', '=', req.accountId)
+    .where('account_id', '=', req.account.id)
     .execute();
 
   const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
@@ -400,7 +400,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
       description: workspace.description,
       avatar: workspace.avatar,
       versionId: workspace.version_id,
-      accountId: req.accountId,
+      accountId: req.account.id,
       role: workspaceAccount.role,
       userId: workspaceAccount.id,
     };
@@ -424,7 +424,7 @@ workspacesRouter.post(
       });
     }
 
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -448,7 +448,7 @@ workspacesRouter.post(
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
     if (!workspaceUser) {
@@ -575,7 +575,7 @@ workspacesRouter.post(
         workspace_id: workspace.id,
         role: WorkspaceRole.Collaborator,
         created_at: new Date(),
-        created_by: req.accountId,
+        created_by: req.account.id,
         status: WorkspaceUserStatus.Active,
         version_id: NeuronId.generate(NeuronId.Type.Version),
       });
@@ -643,7 +643,7 @@ workspacesRouter.put(
     const userId = req.params.userId;
     const input: WorkspaceAccountRoleUpdateInput = req.body;
 
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -667,7 +667,7 @@ workspacesRouter.put(
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
     if (!currentWorkspaceUser) {

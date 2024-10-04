@@ -13,8 +13,8 @@ import { NeuronId } from '@/lib/id';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput } from '@/types/workspaces';
-import { createJwtToken } from '@/lib/jwt';
 import { authMiddleware } from '@/middlewares/auth';
+import { generateToken } from '@/lib/tokens';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -202,45 +202,19 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
 });
 
 accountsRouter.delete(
-  '/logout/:deviceId',
+  '/logout',
   authMiddleware,
   async (req: NeuronRequest, res: NeuronResponse) => {
-    console.log('logout endpoint called', req.params.deviceId);
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
-      });
-    }
-
-    const deviceId = req.params.deviceId as string;
-    if (!deviceId) {
-      return res.status(401).json({
-        code: ApiError.Unauthorized,
-        message: 'Unauthorized.',
-      });
-    }
-
-    const accountDevice = await database
-      .selectFrom('account_devices')
-      .selectAll()
-      .where('id', '=', deviceId)
-      .executeTakeFirst();
-
-    if (!accountDevice) {
-      return res.status(200).end();
-    }
-
-    if (accountDevice.account_id != req.accountId) {
-      return res.status(403).json({
-        code: ApiError.Forbidden,
-        message: 'Forbidden',
       });
     }
 
     await database
       .deleteFrom('account_devices')
-      .where('id', '=', deviceId)
+      .where('id', '=', req.account.deviceId)
       .execute();
 
     return res.status(200).end();
@@ -252,12 +226,6 @@ const buildLoginOutput = async (
   name: string,
   email: string,
 ): Promise<LoginOutput> => {
-  const token = createJwtToken({
-    id,
-    name,
-    email,
-  });
-
   const workspaceUsers = await database
     .selectFrom('workspace_users')
     .where('account_id', '=', id)
@@ -294,11 +262,17 @@ const buildLoginOutput = async (
     }
   }
 
+  const deviceId = NeuronId.generate(NeuronId.Type.Device);
+  const { token, salt, hash } = generateToken(deviceId);
+
   const accountDevice = await database
     .insertInto('account_devices')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Device),
+      id: deviceId,
       account_id: id,
+      token_hash: hash,
+      token_salt: salt,
+      token_generated_at: new Date(),
       type: 1,
       created_at: new Date(),
       version: '0.1.0',

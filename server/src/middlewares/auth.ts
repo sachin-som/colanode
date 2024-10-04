@@ -4,9 +4,9 @@ import {
   NeuronRequest,
   NeuronResponse,
 } from '@/types/api';
-import { verifyJwtToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/tokens';
 
-export const authMiddleware = (
+export const authMiddleware = async (
   req: NeuronRequest,
   res: NeuronResponse,
   next: NeuronNextFunction,
@@ -20,14 +20,14 @@ export const authMiddleware = (
     });
   }
 
-  const payload = verifyJwtToken(token);
-  if (!payload) {
+  const result = await verifyToken(token);
+  if (!result.authenticated) {
     return res.status(400).json({
       code: ApiError.Unauthorized,
       message: 'Invalid Token',
     });
   }
 
-  req.accountId = payload.id as string;
+  req.account = result.account;
   next();
 };

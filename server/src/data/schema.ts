@@ -62,6 +62,11 @@ export type UpdateWorkspaceUser = Updateable<WorkspaceUserTable>;
 interface AccountDeviceTable {
   id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
+  token_hash: ColumnType<string, string, string>;
+  token_salt: ColumnType<string, string, string>;
+  token_generated_at: ColumnType<Date, Date, Date>;
+  previous_token_hash: ColumnType<string | null, string | null, string | null>;
+  previous_token_salt: ColumnType<string | null, string | null, string | null>;
   type: ColumnType<number, number, number>;
   version: ColumnType<string, string, string>;
   platform: ColumnType<string | null, string | null, string | null>;

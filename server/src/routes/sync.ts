@@ -90,7 +90,7 @@ syncRouter.post(
   async (req: NeuronRequest, res: NeuronResponse) => {
     const workspaceId = req.params.workspaceId as string;
     const input = req.body as SyncLocalChangesInput;
-    if (!req.accountId) {
+    if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
         message: 'Unauthorized.',
@@ -110,14 +110,14 @@ syncRouter.post(
       });
     }
 
-    const workspaceAccount = await database
+    const workspaceUser = await database
       .selectFrom('workspace_users')
       .selectAll()
       .where('workspace_id', '=', workspace.id)
-      .where('account_id', '=', req.accountId)
+      .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -127,7 +127,7 @@ syncRouter.post(
     const results: ServerSyncChangeResult[] = [];
     for (const mutation of input.changes) {
       try {
-        const result = await handleLocalChange(workspaceAccount, mutation);
+        const result = await handleLocalChange(workspaceUser, mutation);
         results.push({
           id: mutation.id,
           status: result.status,

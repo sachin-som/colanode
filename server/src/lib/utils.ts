@@ -30,3 +30,7 @@ export const getNameFromEmail = (email: string): string => {
 
   return displayName;
 };
+
+export const uuid = () => {
+  return crypto.randomUUID().replace(/-/g, '');
+};

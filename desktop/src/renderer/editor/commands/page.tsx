@@ -1,6 +1,6 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 
 const PageCommand: EditorCommand = {
   key: 'page',
@@ -21,7 +21,7 @@ const PageCommand: EditorCommand = {
       .insertContent({
         type: NodeTypes.Page,
         attrs: {
-          id: NeuronId.generate(NeuronId.Type.Page),
+          id: generateId(IdType.Page),
         },
       })
       .run();

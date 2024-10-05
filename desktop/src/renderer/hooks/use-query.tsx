@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { sha256 } from 'js-sha256';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 
 export const useQuery = <T extends QueryInput>(input: T) => {
   const eventBus = useEventBus();
@@ -16,7 +16,7 @@ export const useQuery = <T extends QueryInput>(input: T) => {
   >(undefined);
 
   React.useEffect(() => {
-    const queryId = NeuronId.generate(NeuronId.Type.Query);
+    const queryId = generateId(IdType.Query);
     const fetchData = async () => {
       try {
         const result = await window.neuron.executeQueryAndSubscribe(

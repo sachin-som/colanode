@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeAttributeDeleteMutationInput } from '@/types/mutations/node-attribute-delete';
 import { fromUint8Array, toUint8Array } from 'js-base64';
@@ -51,7 +51,7 @@ export class NodeAttributeDeleteMutationHandler
         attributes: attributes,
         updated_at: new Date().toISOString(),
         updated_by: input.userId,
-        version_id: NeuronId.generate(NeuronId.Type.Version),
+        version_id: generateId(IdType.Version),
       })
       .where('id', '=', input.nodeId)
       .execute();

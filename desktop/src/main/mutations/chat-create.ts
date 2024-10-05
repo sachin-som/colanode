@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { ChatCreateMutationInput } from '@/types/mutations/chat-create';
@@ -40,7 +40,7 @@ export class ChatCreateMutationHandler
       };
     }
 
-    const id = NeuronId.generate(NeuronId.Type.Chat);
+    const id = generateId(IdType.Chat);
     await workspaceDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('nodes')
@@ -66,7 +66,7 @@ export class ChatCreateMutationHandler
             role: 'owner',
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            version_id: generateId(IdType.Version),
           },
           {
             node_id: id,
@@ -74,7 +74,7 @@ export class ChatCreateMutationHandler
             role: 'owner',
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            version_id: generateId(IdType.Version),
           },
         ])
         .compile();

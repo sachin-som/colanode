@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { NodeCollaboratorCreateMutationInput } from '@/types/mutations/node-collaborator-create';
 
@@ -23,7 +23,7 @@ export class NodeCollaboratorCreateMutationHandler
             role: input.role,
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            version_id: generateId(IdType.Version),
           };
         }),
       ])

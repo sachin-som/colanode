@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { SelectOptionCreateMutationInput } from '@/types/mutations/select-option-create';
@@ -29,7 +29,7 @@ export class SelectOptionCreateMutationHandler
       .executeTakeFirst();
 
     const maxIndex = lastChild?.index ? lastChild.index : null;
-    const id = NeuronId.generate(NeuronId.Type.SelectOption);
+    const id = generateId(IdType.SelectOption);
     await workspaceDatabase
       .insertInto('nodes')
       .values(

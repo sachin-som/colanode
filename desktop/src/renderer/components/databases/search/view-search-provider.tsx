@@ -2,7 +2,7 @@ import React from 'react';
 import { ViewSearchContext } from '@/renderer/contexts/view-search';
 import { ViewFieldFilter, ViewFilter, ViewSort } from '@/types/databases';
 import { useDatabase } from '@/renderer/contexts/database';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { getFieldFilterOperators } from '@/lib/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -61,7 +61,7 @@ export const ViewSearchProvider = ({
           const operators = getFieldFilterOperators(field.dataType);
           const filter: ViewFieldFilter = {
             type: 'field',
-            id: NeuronId.generate(NeuronId.Type.ViewFilter),
+            id: generateId(IdType.ViewFilter),
             fieldId,
             operator: operators[0].value,
             value: null,
@@ -136,7 +136,7 @@ export const ViewSearchProvider = ({
           }
 
           const sort: ViewSort = {
-            id: NeuronId.generate(NeuronId.Type.ViewFilter),
+            id: generateId(IdType.ViewFilter),
             fieldId,
             direction: 'asc',
           };

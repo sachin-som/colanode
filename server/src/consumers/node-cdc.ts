@@ -2,7 +2,7 @@ import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
 import { CdcMessage, NodeCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { ServerNode } from '@/types/nodes';
 
 export const initNodeChangesConsumer = async () => {
@@ -58,7 +58,7 @@ const handleNodeCreate = async (change: CdcMessage<NodeCdcData>) => {
   await database
     .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Change),
+      id: generateId(IdType.Change),
       table: 'nodes',
       action: 'insert',
       workspace_id: node.workspace_id,
@@ -84,7 +84,7 @@ const handleNodeUpdate = async (change: CdcMessage<NodeCdcData>) => {
   await database
     .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Change),
+      id: generateId(IdType.Change),
       table: 'nodes',
       action: 'update',
       workspace_id: node.workspace_id,
@@ -111,7 +111,7 @@ const handleNodeDelete = async (change: CdcMessage<NodeCdcData>) => {
   await database
     .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Change),
+      id: generateId(IdType.Change),
       table: 'nodes',
       action: 'delete',
       workspace_id: node.workspace_id,

@@ -1,7 +1,7 @@
 import { mapContentsToEditorNodes } from '@/renderer/editor/mappers';
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { MessageCreateMutationInput } from '@/types/mutations/message-create';
@@ -18,7 +18,7 @@ export class MessageCreateMutationHandler
       input.userId,
     );
 
-    const id = NeuronId.generate(NeuronId.Type.Message);
+    const id = generateId(IdType.Message);
     const editorNodes = mapContentsToEditorNodes(
       input.content.content,
       id,

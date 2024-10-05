@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryInput, QueryMap } from '@/types/queries';
 import { sha256 } from 'js-sha256';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 
 export const useInfiniteQuery = <T extends QueryInput>({
   initialPageInput,
@@ -62,7 +62,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
   // Function to fetch a page
   const fetchPage = React.useCallback(
     async (input: T, pageIndex: number) => {
-      const queryId = NeuronId.generate(NeuronId.Type.Query);
+      const queryId = generateId(IdType.Query);
 
       try {
         const result = await window.neuron.executeQueryAndSubscribe(

@@ -1,5 +1,5 @@
 import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, getIdTypeFromNode, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { EditorNode } from '@/types/editor';
@@ -590,10 +590,7 @@ const mapPageToContent = (node: LocalNode): JSONContent => {
 };
 
 const getIdFromContent = (content: JSONContent): string => {
-  return (
-    content.attrs?.id ??
-    NeuronId.generate(NeuronId.getIdTypeFromNode(content.type))
-  );
+  return content.attrs?.id ?? generateId(getIdTypeFromNode(content.type));
 };
 
 const mapContentsToNodeBlocks = (

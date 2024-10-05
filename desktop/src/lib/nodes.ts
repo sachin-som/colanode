@@ -6,9 +6,8 @@ import {
 } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
-import { CompiledQuery, Kysely } from 'kysely';
 import * as Y from 'yjs';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { fromUint8Array } from 'js-base64';
 
 export const buildNodeWithChildren = (
@@ -62,7 +61,7 @@ export const buildCreateNode = (
     state: encodedState,
     created_at: new Date().toISOString(),
     created_by: userId,
-    version_id: NeuronId.generate(NeuronId.Type.Version),
+    version_id: generateId(IdType.Version),
   };
 };
 

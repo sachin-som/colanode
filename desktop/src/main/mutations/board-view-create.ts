@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/types/mutations';
@@ -34,7 +34,7 @@ export class BoardViewCreateMutationHandler
           ].index
         : null;
 
-    const id = NeuronId.generate(NeuronId.Type.BoardView);
+    const id = generateId(IdType.BoardView);
     await workspaceDatabase
       .insertInto('nodes')
       .values(

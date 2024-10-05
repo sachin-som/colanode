@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/react';
 import { Plugin, PluginKey } from 'prosemirror-state';
-import { NeuronId } from '@/lib/id';
+import { generateId, getIdTypeFromNode, IdType } from '@/lib/id';
 import { EditorNodeTypes } from '@/lib/constants';
 
 const types = [
@@ -59,9 +59,7 @@ export const IdExtension = Extension.create({
             if (!node.attrs.id || typeof node.attrs.id !== 'string') {
               tr.setNodeMarkup(pos, null, {
                 ...node.attrs,
-                id: NeuronId.generate(
-                  NeuronId.getIdTypeFromNode(node.type.name),
-                ),
+                id: generateId(getIdTypeFromNode(node.type.name)),
               });
             }
           });

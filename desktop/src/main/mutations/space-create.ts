@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/types/mutations';
 import { SpaceCreateMutationInput } from '@/types/mutations/space-create';
@@ -15,9 +15,9 @@ export class SpaceCreateMutationHandler
       input.userId,
     );
 
-    const spaceId = NeuronId.generate(NeuronId.Type.Space);
-    const pageId = NeuronId.generate(NeuronId.Type.Page);
-    const channelId = NeuronId.generate(NeuronId.Type.Channel);
+    const spaceId = generateId(IdType.Space);
+    const pageId = generateId(IdType.Page);
+    const channelId = generateId(IdType.Channel);
 
     const pageIndex = generateNodeIndex(null, null);
     const channelIndex = generateNodeIndex(pageIndex, null);
@@ -72,7 +72,7 @@ export class SpaceCreateMutationHandler
           role: 'owner',
           created_at: new Date().toISOString(),
           created_by: input.userId,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
+          version_id: generateId(IdType.Version),
         })
         .execute();
     });

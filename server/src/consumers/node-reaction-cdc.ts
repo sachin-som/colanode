@@ -2,7 +2,7 @@ import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
 import { CdcMessage, NodeReactionCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { ServerNodeReaction } from '@/types/nodes';
 
 export const initNodeReactionChangesConsumer = async () => {
@@ -60,7 +60,7 @@ const handleNodeReactionCreate = async (
   await database
     .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Change),
+      id: generateId(IdType.Change),
       table: 'node_reactions',
       action: 'insert',
       workspace_id: reaction.workspace_id,
@@ -88,7 +88,7 @@ const handleNodeReactionDelete = async (
   await database
     .insertInto('changes')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Change),
+      id: generateId(IdType.Change),
       table: 'node_reactions',
       action: 'delete',
       workspace_id: reaction.workspace_id,

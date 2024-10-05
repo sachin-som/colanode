@@ -3,7 +3,7 @@ import { NodeTypes } from '@/lib/constants';
 
 const ulid = monotonicFactory();
 
-enum IdType {
+export enum IdType {
   Account = 'ac',
   Workspace = 'wc',
   User = 'us',
@@ -42,77 +42,73 @@ enum IdType {
   Query = 'qu',
 }
 
-export class NeuronId {
-  public static generate(type: IdType): string {
-    return ulid().toLowerCase() + type;
-  }
+export const generateId = (type: IdType): string => {
+  return ulid().toLowerCase() + type;
+};
 
-  public static is(id: string, type: IdType): boolean {
-    return id.endsWith(type);
-  }
+export const isIdOfType = (id: string, type: IdType): boolean => {
+  return id.endsWith(type);
+};
 
-  public static getNodeTypeFromId(id: string): IdType {
-    return id.substring(id.length - 2) as IdType;
-  }
+export const getIdType = (id: string): IdType => {
+  return id.substring(id.length - 2) as IdType;
+};
 
-  public static getIdTypeFromNode(nodeType: string): IdType {
-    switch (nodeType) {
-      case NodeTypes.User:
-        return IdType.User;
-      case NodeTypes.Space:
-        return IdType.Space;
-      case NodeTypes.Page:
-        return IdType.Page;
-      case NodeTypes.Channel:
-        return IdType.Channel;
-      case NodeTypes.Message:
-        return IdType.Message;
-      case NodeTypes.Paragraph:
-        return IdType.Paragraph;
-      case NodeTypes.Heading1:
-        return IdType.Heading1;
-      case NodeTypes.Heading2:
-        return IdType.Heading2;
-      case NodeTypes.Heading3:
-        return IdType.Heading3;
-      case NodeTypes.Blockquote:
-        return IdType.Blockquote;
-      case NodeTypes.BulletList:
-        return IdType.BulletList;
-      case NodeTypes.CodeBlock:
-        return IdType.CodeBlock;
-      case NodeTypes.ListItem:
-        return IdType.ListItem;
-      case NodeTypes.OrderedList:
-        return IdType.OrderedList;
-      case NodeTypes.TaskList:
-        return IdType.TaskList;
-      case NodeTypes.TaskItem:
-        return IdType.TaskItem;
-      case NodeTypes.HorizontalRule:
-        return IdType.HorizontalRule;
-      case NodeTypes.Database:
-        return IdType.Database;
-      case NodeTypes.DatabaseReplica:
-        return IdType.DatabaseReplica;
-      case NodeTypes.Record:
-        return IdType.Record;
-      case NodeTypes.Folder:
-        return IdType.Folder;
-      case NodeTypes.TableView:
-        return IdType.TableView;
-      case NodeTypes.BoardView:
-        return IdType.BoardView;
-      case NodeTypes.CalendarView:
-        return IdType.CalendarView;
-      case NodeTypes.Field:
-        return IdType.Field;
-      case NodeTypes.SelectOption:
-        return IdType.SelectOption;
-      default:
-        return IdType.Node;
-    }
+export const getIdTypeFromNode = (nodeType: string): IdType => {
+  switch (nodeType) {
+    case NodeTypes.User:
+      return IdType.User;
+    case NodeTypes.Space:
+      return IdType.Space;
+    case NodeTypes.Page:
+      return IdType.Page;
+    case NodeTypes.Channel:
+      return IdType.Channel;
+    case NodeTypes.Message:
+      return IdType.Message;
+    case NodeTypes.Paragraph:
+      return IdType.Paragraph;
+    case NodeTypes.Heading1:
+      return IdType.Heading1;
+    case NodeTypes.Heading2:
+      return IdType.Heading2;
+    case NodeTypes.Heading3:
+      return IdType.Heading3;
+    case NodeTypes.Blockquote:
+      return IdType.Blockquote;
+    case NodeTypes.BulletList:
+      return IdType.BulletList;
+    case NodeTypes.CodeBlock:
+      return IdType.CodeBlock;
+    case NodeTypes.ListItem:
+      return IdType.ListItem;
+    case NodeTypes.OrderedList:
+      return IdType.OrderedList;
+    case NodeTypes.TaskList:
+      return IdType.TaskList;
+    case NodeTypes.TaskItem:
+      return IdType.TaskItem;
+    case NodeTypes.HorizontalRule:
+      return IdType.HorizontalRule;
+    case NodeTypes.Database:
+      return IdType.Database;
+    case NodeTypes.DatabaseReplica:
+      return IdType.DatabaseReplica;
+    case NodeTypes.Record:
+      return IdType.Record;
+    case NodeTypes.Folder:
+      return IdType.Folder;
+    case NodeTypes.TableView:
+      return IdType.TableView;
+    case NodeTypes.BoardView:
+      return IdType.BoardView;
+    case NodeTypes.CalendarView:
+      return IdType.CalendarView;
+    case NodeTypes.Field:
+      return IdType.Field;
+    case NodeTypes.SelectOption:
+      return IdType.SelectOption;
+    default:
+      return IdType.Node;
   }
-
-  public static Type = IdType;
-}
+};

@@ -9,7 +9,7 @@ import {
 } from '@/types/accounts';
 import axios from 'axios';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput } from '@/types/workspaces';
@@ -42,7 +42,7 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
   const account = await database
     .insertInto('accounts')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Account),
+      id: generateId(IdType.Account),
       name: input.name,
       email: email,
       password: password,
@@ -176,7 +176,7 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
   const newAccount = await database
     .insertInto('accounts')
     .values({
-      id: NeuronId.generate(NeuronId.Type.Account),
+      id: generateId(IdType.Account),
       name: googleUser.name,
       email: googleUser.email,
       status: AccountStatus.Active,
@@ -262,7 +262,7 @@ const buildLoginOutput = async (
     }
   }
 
-  const deviceId = NeuronId.generate(NeuronId.Type.Device);
+  const deviceId = generateId(IdType.Device);
   const { token, salt, hash } = generateToken(deviceId);
 
   const accountDevice = await database

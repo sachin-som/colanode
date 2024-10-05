@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/types/mutations';
@@ -29,9 +29,9 @@ export class DatabaseCreateMutationHandler
           ].index
         : null;
 
-    const databaseId = NeuronId.generate(NeuronId.Type.Database);
-    const tableViewId = NeuronId.generate(NeuronId.Type.TableView);
-    const fieldId = NeuronId.generate(NeuronId.Type.Field);
+    const databaseId = generateId(IdType.Database);
+    const tableViewId = generateId(IdType.TableView);
+    const fieldId = generateId(IdType.Field);
 
     await workspaceDatabase
       .insertInto('nodes')

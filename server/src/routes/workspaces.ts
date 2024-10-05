@@ -10,7 +10,7 @@ import {
   WorkspaceStatus,
 } from '@/types/workspaces';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { database } from '@/data/database';
 import { Router } from 'express';
 import * as Y from 'yjs';
@@ -60,18 +60,18 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
   }
 
   const workspace: Workspace = {
-    id: NeuronId.generate(NeuronId.Type.Workspace),
+    id: generateId(IdType.Workspace),
     name: input.name,
     description: input.description,
     avatar: input.avatar,
     createdAt: new Date(),
     createdBy: account.id,
     status: WorkspaceStatus.Active,
-    versionId: NeuronId.generate(NeuronId.Type.Version),
+    versionId: generateId(IdType.Version),
   };
 
-  const userId = NeuronId.generate(NeuronId.Type.User);
-  const userVersionId = NeuronId.generate(NeuronId.Type.Version);
+  const userId = generateId(IdType.User);
+  const userVersionId = generateId(IdType.Version);
   const userDoc = new Y.Doc({
     guid: userId,
   });
@@ -97,7 +97,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     createdAt: new Date(),
     createdBy: account.id,
     status: WorkspaceUserStatus.Active,
-    versionId: NeuronId.generate(NeuronId.Type.Version),
+    versionId: generateId(IdType.Version),
   };
 
   await database.transaction().execute(async (trx) => {
@@ -511,7 +511,7 @@ workspacesRouter.post(
 
       if (!account) {
         account = {
-          id: NeuronId.generate(NeuronId.Type.Account),
+          id: generateId(IdType.Account),
           name: getNameFromEmail(email),
           email: email,
           avatar: null,
@@ -550,8 +550,8 @@ workspacesRouter.post(
         continue;
       }
 
-      const userId = NeuronId.generate(NeuronId.Type.User);
-      const userVersionId = NeuronId.generate(NeuronId.Type.Version);
+      const userId = generateId(IdType.User);
+      const userVersionId = generateId(IdType.Version);
       const userDoc = new Y.Doc({
         guid: userId,
       });
@@ -577,7 +577,7 @@ workspacesRouter.post(
         created_at: new Date(),
         created_by: req.account.id,
         status: WorkspaceUserStatus.Active,
-        version_id: NeuronId.generate(NeuronId.Type.Version),
+        version_id: generateId(IdType.Version),
       });
 
       const user: ServerNode = {
@@ -738,7 +738,7 @@ workspacesRouter.put(
       createdBy: user.created_by,
       serverCreatedAt: user.server_created_at,
       serverUpdatedAt: updatedAt,
-      versionId: NeuronId.generate(NeuronId.Type.Version),
+      versionId: generateId(IdType.Version),
       updatedAt: updatedAt,
       updatedBy: currentWorkspaceUser.id,
     };
@@ -750,7 +750,7 @@ workspacesRouter.put(
           role: input.role,
           updated_at: new Date(),
           updated_by: currentWorkspaceUser.account_id,
-          version_id: NeuronId.generate(NeuronId.Type.Version),
+          version_id: generateId(IdType.Version),
         })
         .where('id', '=', userId)
         .execute();

@@ -1,5 +1,5 @@
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
-import { NeuronId } from '@/lib/id';
+import { generateId, IdType } from '@/lib/id';
 import { LocalNode } from '@/types/nodes';
 import { Workspace } from '@/types/workspaces';
 import { Editor, JSONContent } from '@tiptap/core';
@@ -125,7 +125,7 @@ export class EditorObserver {
           state: state,
           createdAt: new Date().toISOString(),
           createdBy: this.workspace.userId,
-          versionId: NeuronId.generate(NeuronId.Type.Version),
+          versionId: generateId(IdType.Version),
           updatedAt: null,
           updatedBy: null,
           serverCreatedAt: null,
@@ -141,7 +141,7 @@ export class EditorObserver {
             state: state,
             created_at: new Date().toISOString(),
             created_by: this.workspace.userId,
-            version_id: NeuronId.generate(NeuronId.Type.Version),
+            version_id: generateId(IdType.Version),
           })
           .compile();
 
@@ -225,7 +225,7 @@ export class EditorObserver {
           existingNode.attributes = editorNode.attributes;
           existingNode.updatedAt = new Date().toISOString();
           existingNode.updatedBy = this.workspace.userId;
-          existingNode.versionId = NeuronId.generate(NeuronId.Type.Version);
+          existingNode.versionId = generateId(IdType.Version);
 
           const query = this.database
             .updateTable('nodes')

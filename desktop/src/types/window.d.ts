@@ -1,9 +1,9 @@
 import { EventBus } from '@/lib/event-bus';
 import { CompiledQuery, QueryResult } from 'kysely';
-import { LocalMutationInput } from '@/types/mutations';
-import { SubscribedQueryContext } from '@/types/queries';
-import { MutationMap, MutationInput } from '@/types/mutations';
-import { QueryMap, QueryInput } from '@/types/queries';
+import { LocalMutationInput } from '@/operations/mutations';
+import { SubscribedQueryContext } from '@/operations/queries';
+import { MutationMap, MutationInput } from '@/operations/mutations';
+import { QueryMap, QueryInput } from '@/operations/queries';
 
 interface NeuronApi {
   init: () => Promise<void>;

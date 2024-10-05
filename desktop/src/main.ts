@@ -1,8 +1,8 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
-import { MutationInput, MutationMap } from '@/types/mutations';
-import { QueryInput, QueryMap } from '@/types/queries';
+import { MutationInput, MutationMap } from '@/operations/mutations';
+import { QueryInput, QueryMap } from '@/operations/queries';
 import { mediator } from '@/main/mediator';
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';

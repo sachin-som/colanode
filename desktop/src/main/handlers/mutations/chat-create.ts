@@ -1,0 +1,101 @@
+import { databaseManager } from '@/main/data/database-manager';
+import { NodeTypes } from '@/lib/constants';
+import { generateId, IdType } from '@/lib/id';
+import { buildCreateNode } from '@/lib/nodes';
+import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
+
+export class ChatCreateMutationHandler
+  implements MutationHandler<ChatCreateMutationInput>
+{
+  public async handleMutation(
+    input: ChatCreateMutationInput,
+  ): Promise<MutationResult<ChatCreateMutationInput>> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    const existingChats = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('type', '=', NodeTypes.Chat)
+      .where(
+        'id',
+        'in',
+        workspaceDatabase
+          .selectFrom('node_collaborators')
+          .select('node_id')
+          .where('collaborator_id', 'in', [input.userId, input.otherUserId])
+          .groupBy('node_id')
+          .having(workspaceDatabase.fn.count('collaborator_id'), '=', 2),
+      )
+      .execute();
+
+    if (existingChats.length > 0) {
+      const chat = existingChats[0];
+      return {
+        output: {
+          id: chat.id,
+        },
+      };
+    }
+
+    const id = generateId(IdType.Chat);
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('nodes')
+        .values(
+          buildCreateNode(
+            {
+              id: id,
+              attributes: {
+                type: NodeTypes.Chat,
+              },
+            },
+            input.userId,
+          ),
+        )
+        .execute();
+
+      await trx
+        .insertInto('node_collaborators')
+        .values([
+          {
+            node_id: id,
+            collaborator_id: input.userId,
+            role: 'owner',
+            created_at: new Date().toISOString(),
+            created_by: input.userId,
+            version_id: generateId(IdType.Version),
+          },
+          {
+            node_id: id,
+            collaborator_id: input.otherUserId,
+            role: 'owner',
+            created_at: new Date().toISOString(),
+            created_by: input.userId,
+            version_id: generateId(IdType.Version),
+          },
+        ])
+        .compile();
+    });
+
+    return {
+      output: {
+        id: id,
+      },
+      changes: [
+        {
+          type: 'workspace',
+          table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'node_collaborators',
+          userId: input.userId,
+        },
+      ],
+    };
+  }
+}

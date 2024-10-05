@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueryInput, QueryMap } from '@/types/queries';
+import { QueryInput, QueryMap } from '@/operations/queries';
 import { sha256 } from 'js-sha256';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
 import { generateId, IdType } from '@/lib/id';

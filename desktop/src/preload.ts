@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { eventBus, Event } from '@/lib/event-bus';
-import { MutationInput, MutationMap } from '@/types/mutations';
-import { QueryInput, QueryMap } from '@/types/queries';
+import { MutationInput, MutationMap } from '@/operations/mutations';
+import { QueryInput, QueryMap } from '@/operations/queries';
 
 contextBridge.exposeInMainWorld('neuron', {
   init: () => ipcRenderer.invoke('init'),

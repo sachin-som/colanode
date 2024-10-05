@@ -3,18 +3,18 @@ import {
   MutationHandler,
   MutationInput,
   MutationMap,
-} from '@/types/mutations';
-import { mutationHandlerMap } from '@/main/mutations';
+} from '@/operations/mutations';
+import { mutationHandlerMap } from '@/main/handlers/mutations';
 import {
   QueryHandler,
   QueryInput,
   QueryMap,
   SubscribedQuery,
-} from '@/types/queries';
-import { queryHandlerMap } from '@/main/queries';
+} from '@/operations/queries';
+import { queryHandlerMap } from '@/main/handlers/queries';
 import { eventBus } from '@/lib/event-bus';
 import { MessageHandler, MessageInput } from '@/operations/messages';
-import { messageHandlerMap } from '@/main/messages';
+import { messageHandlerMap } from '@/main/handlers/messages';
 
 class Mediator {
   private readonly subscribedQueries: Map<string, SubscribedQuery<QueryInput>> =

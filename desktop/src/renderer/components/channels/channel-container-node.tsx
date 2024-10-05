@@ -1,11 +1,10 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { Conversation } from '@/renderer/components/messages/conversation';
 
 interface ChannelContainerNodeProps {
-  node: LocalNode;
+  nodeId: string;
 }
 
-export const ChannelContainerNode = ({ node }: ChannelContainerNodeProps) => {
-  return <Conversation conversationId={node.id} />;
+export const ChannelContainerNode = ({ nodeId }: ChannelContainerNodeProps) => {
+  return <Conversation conversationId={nodeId} />;
 };

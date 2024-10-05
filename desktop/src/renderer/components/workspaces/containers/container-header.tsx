@@ -1,17 +1,16 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { Breadcrumb } from '@/renderer/components/workspaces/containers/breadcrumb';
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 
 interface ContainerHeaderProps {
-  node: LocalNode;
+  nodeId: string;
 }
 
-export const ContainerHeader = ({ node }: ContainerHeaderProps) => {
+export const ContainerHeader = ({ nodeId }: ContainerHeaderProps) => {
   return (
     <div className="mx-1 flex h-12 items-center justify-between p-2 pr-4 text-foreground/80">
-      <Breadcrumb node={node} />
-      <NodeCollaboratorsPopover id={node.id} />
+      <Breadcrumb nodeId={nodeId} />
+      <NodeCollaboratorsPopover nodeId={nodeId} />
     </div>
   );
 };

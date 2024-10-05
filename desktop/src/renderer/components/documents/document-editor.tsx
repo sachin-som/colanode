@@ -54,15 +54,15 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { EditorObserver } from '@/renderer/editor/observer';
 
 interface DocumentEditorProps {
-  node: LocalNode;
+  nodeId: string;
   nodes: Map<string, LocalNode>;
 }
 
-export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
+export const DocumentEditor = ({ nodeId, nodes }: DocumentEditorProps) => {
   const workspace = useWorkspace();
   const observer = React.useMemo<EditorObserver>(
-    () => new EditorObserver(workspace, workspace as any, node, nodes),
-    [node.id],
+    () => new EditorObserver(workspace, workspace as any, nodeId, nodes),
+    [nodeId],
   );
 
   const editor = useEditor(
@@ -133,7 +133,7 @@ export const DocumentEditor = ({ node, nodes }: DocumentEditorProps) => {
         }
       },
     },
-    [node.id],
+    [nodeId],
   );
 
   React.useEffect(() => {

@@ -16,7 +16,7 @@ import { fromUint8Array, toUint8Array } from 'js-base64';
 export class EditorObserver {
   private readonly workspace: Workspace;
   private readonly database: Kysely<WorkspaceDatabaseSchema>;
-  private readonly rootNode: LocalNode;
+  private readonly rootNodeId: string;
   private readonly nodesMap: Map<string, LocalNode>;
   private editorContent: JSONContent;
 
@@ -29,12 +29,12 @@ export class EditorObserver {
   constructor(
     workspace: Workspace,
     database: Kysely<WorkspaceDatabaseSchema>,
-    rootNode: LocalNode,
+    rootNodeId: string,
     nodesMap: Map<string, LocalNode>,
   ) {
     this.workspace = workspace;
     this.database = database;
-    this.rootNode = rootNode;
+    this.rootNodeId = rootNodeId;
     this.nodesMap = nodesMap;
     this.editorContent = this.buildEditorContent();
     this.onEditorUpdateDebounced = debounce(
@@ -59,7 +59,7 @@ export class EditorObserver {
 
   private buildEditorContent(): JSONContent {
     const nodesArray = Array.from(this.nodesMap.values());
-    const contents = mapNodesToContents(this.rootNode.id, nodesArray);
+    const contents = mapNodesToContents(this.rootNodeId, nodesArray);
 
     if (!contents.length) {
       contents.push({
@@ -76,7 +76,7 @@ export class EditorObserver {
   private async checkEditorContentChanges() {
     const editorNodes = mapContentsToEditorNodes(
       this.editorContent.content,
-      this.rootNode.id,
+      this.rootNodeId,
       this.nodesMap,
     );
 

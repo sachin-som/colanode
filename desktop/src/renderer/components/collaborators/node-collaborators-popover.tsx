@@ -8,11 +8,11 @@ import { Icon } from '@/renderer/components/ui/icon';
 import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
 
 interface NodeCollaboratorsPopoverProps {
-  id: string;
+  nodeId: string;
 }
 
 export const NodeCollaboratorsPopover = ({
-  id,
+  nodeId,
 }: NodeCollaboratorsPopoverProps) => {
   return (
     <Popover>
@@ -23,7 +23,7 @@ export const NodeCollaboratorsPopover = ({
         />
       </PopoverTrigger>
       <PopoverContent className="mr-2 max-h-128 w-128 overflow-auto">
-        <NodeCollaborators id={id} />
+        <NodeCollaborators nodeId={nodeId} />
       </PopoverContent>
     </Popover>
   );

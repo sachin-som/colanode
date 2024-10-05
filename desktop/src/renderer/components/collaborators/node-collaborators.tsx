@@ -6,14 +6,14 @@ import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface NodeCollaboratorsProps {
-  id: string;
+  nodeId: string;
 }
 
-export const NodeCollaborators = ({ id }: NodeCollaboratorsProps) => {
+export const NodeCollaborators = ({ nodeId }: NodeCollaboratorsProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     type: 'node_collaborator_list',
-    nodeId: id,
+    nodeId,
     userId: workspace.userId,
   });
 
@@ -24,7 +24,7 @@ export const NodeCollaborators = ({ id }: NodeCollaboratorsProps) => {
   return (
     <div className="flex flex-col gap-2">
       <NodeCollaboratorCreate
-        id={id}
+        nodeId={nodeId}
         existingCollaborators={data.direct.map(
           (collaborator) => collaborator.id,
         )}
@@ -38,7 +38,7 @@ export const NodeCollaborators = ({ id }: NodeCollaboratorsProps) => {
               {data.direct.map((collaborator) => (
                 <NodeCollaborator
                   key={collaborator.id}
-                  nodeId={id}
+                  nodeId={nodeId}
                   collaborator={collaborator}
                   removable={true}
                 />
@@ -62,7 +62,7 @@ export const NodeCollaborators = ({ id }: NodeCollaboratorsProps) => {
               {inheritGroup.collaborators?.map((collaborator) => (
                 <NodeCollaborator
                   key={collaborator.id}
-                  nodeId={id}
+                  nodeId={nodeId}
                   collaborator={collaborator}
                 />
               ))}

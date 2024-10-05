@@ -1,18 +1,17 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import { DocumentEditor } from '@/renderer/components/documents/document-editor';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface DocumentProps {
-  node: LocalNode;
+  nodeId: string;
 }
 
-export const Document = ({ node }: DocumentProps) => {
+export const Document = ({ nodeId }: DocumentProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     type: 'document_get',
-    nodeId: node.id,
+    nodeId,
     userId: workspace.userId,
   });
 
@@ -20,5 +19,5 @@ export const Document = ({ node }: DocumentProps) => {
     return null;
   }
 
-  return <DocumentEditor key={node.id} node={node} nodes={data?.nodes} />;
+  return <DocumentEditor key={nodeId} nodeId={nodeId} nodes={data?.nodes} />;
 };

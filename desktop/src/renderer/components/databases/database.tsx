@@ -1,19 +1,35 @@
 import React from 'react';
 import { DatabaseContext } from '@/renderer/contexts/database';
-import { DatabaseNode } from '@/types/databases';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface DatabaseProps {
-  node: DatabaseNode;
+  databaseId: string;
   children: React.ReactNode;
 }
 
-export const Database = ({ node, children }: DatabaseProps) => {
+export const Database = ({ databaseId, children }: DatabaseProps) => {
+  const workspace = useWorkspace();
+  const { data: database, isPending: isDatabasePending } = useQuery({
+    type: 'database_get',
+    databaseId,
+    userId: workspace.userId,
+  });
+
+  if (isDatabasePending) {
+    return null;
+  }
+
+  if (!database) {
+    return null;
+  }
+
   return (
     <DatabaseContext.Provider
       value={{
-        id: node.id,
-        name: node.name,
-        fields: node.fields,
+        id: database.id,
+        name: database.name,
+        fields: database.fields,
       }}
     >
       {children}

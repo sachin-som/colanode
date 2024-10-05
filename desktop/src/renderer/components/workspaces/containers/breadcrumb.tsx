@@ -1,5 +1,4 @@
 import React from 'react';
-import { LocalNode } from '@/types/nodes';
 import {
   Breadcrumb as BreadcrumbWrapper,
   BreadcrumbEllipsis,
@@ -25,14 +24,14 @@ import { BreadcrumbItemEditor } from '@/renderer/components/workspaces/container
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface BreadcrumbProps {
-  node: LocalNode;
+  nodeId: string;
 }
 
-export const Breadcrumb = ({ node }: BreadcrumbProps) => {
+export const Breadcrumb = ({ nodeId }: BreadcrumbProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     type: 'breadcrumb_list',
-    nodeId: node.id,
+    nodeId,
     userId: workspace.userId,
   });
 
@@ -59,7 +58,7 @@ export const Breadcrumb = ({ node }: BreadcrumbProps) => {
                 }
               }}
             >
-              {breadcrumbNode.id === node.id ? (
+              {breadcrumbNode.id === nodeId ? (
                 <Popover>
                   <PopoverTrigger>
                     <BreadcrumbItem node={breadcrumbNode} />

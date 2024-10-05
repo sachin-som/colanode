@@ -9,12 +9,12 @@ import { toast } from '@/renderer/components/ui/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface NodeCollaboratorCreate {
-  id: string;
+  nodeId: string;
   existingCollaborators: string[];
 }
 
 export const NodeCollaboratorCreate = ({
-  id,
+  nodeId,
   existingCollaborators,
 }: NodeCollaboratorCreate) => {
   const workspace = useWorkspace();
@@ -47,7 +47,7 @@ export const NodeCollaboratorCreate = ({
             mutate({
               input: {
                 type: 'node_collaborator_create',
-                nodeId: id,
+                nodeId,
                 collaboratorIds: collaborators.map(
                   (collaborator) => collaborator.id,
                 ),

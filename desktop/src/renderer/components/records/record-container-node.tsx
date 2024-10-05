@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { LocalNode } from '@/types/nodes';
 import { Database } from '@/renderer/components/databases/database';
 import { RecordAttributes } from '@/renderer/components/records/record-attributes';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
@@ -9,25 +8,19 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordContainerNodeProps {
-  node: LocalNode;
+  nodeId: string;
 }
 
-export const RecordContainerNode = ({ node }: RecordContainerNodeProps) => {
+export const RecordContainerNode = ({ nodeId }: RecordContainerNodeProps) => {
   const workspace = useWorkspace();
 
   const { data: record, isPending: isRecordPending } = useQuery({
     type: 'record_get',
-    recordId: node.id,
+    recordId: nodeId,
     userId: workspace.userId,
   });
 
-  const { data: database, isPending: isDatabasePending } = useQuery({
-    type: 'database_get',
-    databaseId: node.parentId,
-    userId: workspace.userId,
-  });
-
-  if (isRecordPending || isDatabasePending) {
+  if (isRecordPending) {
     return null;
   }
 
@@ -36,11 +29,11 @@ export const RecordContainerNode = ({ node }: RecordContainerNodeProps) => {
   }
 
   return (
-    <Database node={database}>
+    <Database databaseId={record.parentId}>
       <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
         <RecordAttributes record={record} />
         <Separator className="my-4 w-full" />
-        <Document node={node} />
+        <Document nodeId={nodeId} />
       </ScrollArea>
     </Database>
   );

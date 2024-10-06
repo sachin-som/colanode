@@ -25,13 +25,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}
+          
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build and push Neuron server image
         uses: docker/build-push-action@v5
@@ -41,5 +38,7 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-          labels: ${{ steps.meta.outputs.labels }}
+            ${{ env.REGISTRY }}/${{ env.SERVER_IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}

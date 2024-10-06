@@ -1,13 +1,14 @@
-import { LocalNode } from '@/types/nodes';
+import { JSONContent } from '@tiptap/core';
 
 export type DocumentGetQueryInput = {
   type: 'document_get';
-  nodeId: string;
+  documentId: string;
   userId: string;
 };
 
 export type DocumentGetQueryOutput = {
-  nodes: Map<string, LocalNode>;
+  content: JSONContent;
+  hash: string;
 };
 
 declare module '@/operations/queries' {

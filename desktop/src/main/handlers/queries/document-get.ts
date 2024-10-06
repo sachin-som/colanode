@@ -1,17 +1,22 @@
-import { DocumentGetQueryInput } from '@/operations/queries/document-get';
+import { sql } from 'kysely';
+import { sha256 } from 'js-sha256';
+import { isEqual } from 'lodash';
+import {
+  DocumentGetQueryInput,
+  DocumentGetQueryOutput,
+} from '@/operations/queries/document-get';
 import { databaseManager } from '@/main/data/database-manager';
 import {
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
 } from '@/operations/queries';
-import { sql } from 'kysely';
+
 import { SelectNode } from '@/main/data/workspace/schema';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
-import { LocalNode } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
-import { isEqual } from 'lodash';
+import { mapNodesToContents } from '@/lib/editor';
 
 export class DocumentGetQueryHandler
   implements QueryHandler<DocumentGetQueryInput>
@@ -21,9 +26,7 @@ export class DocumentGetQueryHandler
   ): Promise<QueryResult<DocumentGetQueryInput>> {
     const rows = await this.fetchNodes(input);
     return {
-      output: {
-        nodes: this.buildMap(rows),
-      },
+      output: this.buildOutput(input.documentId, rows),
       state: {
         rows,
       },
@@ -58,9 +61,7 @@ export class DocumentGetQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: {
-          nodes: this.buildMap(rows),
-        },
+        output: this.buildOutput(input.documentId, rows),
         state: {
           rows,
         },
@@ -79,7 +80,7 @@ export class DocumentGetQueryHandler
       WITH RECURSIVE document_nodes AS (
           SELECT *
           FROM nodes
-          WHERE parent_id = ${input.nodeId}
+          WHERE parent_id = ${input.documentId}
           
           UNION ALL
           
@@ -96,11 +97,28 @@ export class DocumentGetQueryHandler
     return result.rows;
   }
 
-  private buildMap = (rows: SelectNode[]): Map<string, LocalNode> => {
-    const map = new Map<string, LocalNode>();
-    rows.forEach((row) => {
-      map.set(row.id, mapNode(row));
-    });
-    return map;
-  };
+  private buildOutput(
+    documentId: string,
+    rows: SelectNode[],
+  ): DocumentGetQueryOutput {
+    const nodes = rows.map(mapNode);
+    const contents = mapNodesToContents(documentId, nodes);
+    if (!contents.length) {
+      contents.push({
+        type: 'paragraph',
+      });
+    }
+
+    const content = {
+      type: 'doc',
+      content: contents,
+    };
+
+    const hash = sha256(JSON.stringify(content));
+
+    return {
+      content,
+      hash,
+    };
+  }
 }

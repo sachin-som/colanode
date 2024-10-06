@@ -11,13 +11,20 @@ export const Document = ({ nodeId }: DocumentProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     type: 'document_get',
-    nodeId,
+    documentId: nodeId,
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  if (isPending || !data) {
     return null;
   }
 
-  return <DocumentEditor key={nodeId} nodeId={nodeId} nodes={data?.nodes} />;
+  return (
+    <DocumentEditor
+      key={nodeId}
+      documentId={nodeId}
+      content={data.content}
+      hash={data.hash}
+    />
+  );
 };

@@ -1,5 +1,5 @@
 import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
-import { generateId, getIdTypeFromNode, IdType } from '@/lib/id';
+import { generateId, getIdTypeFromNode } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { EditorNode } from '@/types/editor';

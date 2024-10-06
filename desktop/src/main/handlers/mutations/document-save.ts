@@ -1,83 +1,60 @@
-import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
-import { generateId, IdType } from '@/lib/id';
-import { LocalNode } from '@/types/nodes';
-import { Workspace } from '@/types/workspaces';
-import { Editor, JSONContent } from '@tiptap/core';
-import { CompiledQuery, Kysely } from 'kysely';
-import { debounce, isEqual } from 'lodash';
-import {
-  mapContentsToEditorNodes,
-  mapNodesToContents,
-} from '@/renderer/editor/mappers';
-import { EditorNode } from '@/types/editor';
 import * as Y from 'yjs';
+import { CompiledQuery, sql } from 'kysely';
 import { fromUint8Array, toUint8Array } from 'js-base64';
+import { isEqual } from 'lodash';
+import { NodeTypes } from '@/lib/constants';
+import { mapNode } from '@/lib/nodes';
+import { databaseManager } from '@/main/data/database-manager';
+import { EditorNode } from '@/types/editor';
+import { SelectNode } from '@/main/data/workspace/schema';
+import {
+  MutationChange,
+  MutationHandler,
+  MutationResult,
+} from '@/operations/mutations';
+import { DocumentSaveMutationInput } from '@/operations/mutations/document-save';
+import { LocalNode } from '@/types/nodes';
+import { generateId, IdType } from '@/lib/id';
+import { mapContentsToEditorNodes } from '@/lib/editor';
 
-export class EditorObserver {
-  private readonly workspace: Workspace;
-  private readonly database: Kysely<WorkspaceDatabaseSchema>;
-  private readonly rootNodeId: string;
-  private readonly nodesMap: Map<string, LocalNode>;
-  private editorContent: JSONContent;
-
-  private readonly onEditorUpdateDebounced: () => void;
-  private readonly onNodesChangeDebounced: (
-    newNodesMap: Map<string, LocalNode>,
-    editor: Editor,
-  ) => void;
-
-  constructor(
-    workspace: Workspace,
-    database: Kysely<WorkspaceDatabaseSchema>,
-    rootNodeId: string,
-    nodesMap: Map<string, LocalNode>,
-  ) {
-    this.workspace = workspace;
-    this.database = database;
-    this.rootNodeId = rootNodeId;
-    this.nodesMap = nodesMap;
-    this.editorContent = this.buildEditorContent();
-    this.onEditorUpdateDebounced = debounce(
-      this.checkEditorContentChanges,
-      500,
+export class DocumentSaveMutationHandler
+  implements MutationHandler<DocumentSaveMutationInput>
+{
+  async handleMutation(
+    input: DocumentSaveMutationInput,
+  ): Promise<MutationResult<DocumentSaveMutationInput>> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
     );
-    this.onNodesChangeDebounced = debounce(this.checkNodesChanges, 500);
-  }
 
-  public getEditorContent(): JSONContent {
-    return this.editorContent;
-  }
+    const query = sql<SelectNode>`
+      WITH RECURSIVE document_nodes AS (
+          SELECT *
+          FROM nodes
+          WHERE parent_id = ${input.documentId}
+          
+          UNION ALL
+          
+          SELECT child.*
+          FROM nodes child
+          INNER JOIN document_nodes parent ON child.parent_id = parent.id
+          WHERE parent.type NOT IN (${NodeTypes.Page})
+      )
+      SELECT *
+      FROM document_nodes
+    `.compile(workspaceDatabase);
 
-  public onEditorUpdate(editor: Editor) {
-    this.editorContent = editor.getJSON();
-    this.onEditorUpdateDebounced();
-  }
+    const result = await workspaceDatabase.executeQuery(query);
+    const nodes = result.rows;
+    const map = new Map<string, LocalNode>();
+    nodes.forEach((node) => {
+      map.set(node.id, mapNode(node));
+    });
 
-  public onNodesChange(nodes: Map<string, LocalNode>, editor: Editor) {
-    this.onNodesChangeDebounced(nodes, editor);
-  }
-
-  private buildEditorContent(): JSONContent {
-    const nodesArray = Array.from(this.nodesMap.values());
-    const contents = mapNodesToContents(this.rootNodeId, nodesArray);
-
-    if (!contents.length) {
-      contents.push({
-        type: 'paragraph',
-      });
-    }
-
-    return {
-      type: 'doc',
-      content: contents,
-    };
-  }
-
-  private async checkEditorContentChanges() {
     const editorNodes = mapContentsToEditorNodes(
-      this.editorContent.content,
-      this.rootNodeId,
-      this.nodesMap,
+      input.content.content,
+      input.documentId,
+      map,
     );
 
     const editorNodesMap = new Map<string, EditorNode>();
@@ -86,8 +63,8 @@ export class EditorObserver {
     }
 
     const allNodeIds = new Set([
-      ...this.nodesMap.keys(),
-      ...editorNodesMap.keys(),
+      ...map.keys(),
+      ...editorNodes.map((node) => node.id),
     ]);
 
     const insertQueries: CompiledQuery[] = [];
@@ -95,7 +72,7 @@ export class EditorObserver {
     const deleteQueries: CompiledQuery[] = [];
 
     for (const nodeId of allNodeIds) {
-      const existingNode = this.nodesMap.get(nodeId);
+      const existingNode = map.get(nodeId);
       const editorNode = editorNodesMap.get(nodeId);
 
       if (!existingNode) {
@@ -124,7 +101,7 @@ export class EditorObserver {
           attributes: editorNode.attributes,
           state: state,
           createdAt: new Date().toISOString(),
-          createdBy: this.workspace.userId,
+          createdBy: input.userId,
           versionId: generateId(IdType.Version),
           updatedAt: null,
           updatedBy: null,
@@ -133,28 +110,26 @@ export class EditorObserver {
           serverVersionId: null,
         };
 
-        const insertNodeQuery = this.database
+        const insertNodeQuery = workspaceDatabase
           .insertInto('nodes')
           .values({
             id: editorNode.id,
             attributes: JSON.stringify(attributes),
             state: state,
             created_at: new Date().toISOString(),
-            created_by: this.workspace.userId,
+            created_by: input.userId,
             version_id: generateId(IdType.Version),
           })
           .compile();
 
         insertQueries.push(insertNodeQuery);
-        this.nodesMap.set(newNode.id, newNode);
       } else if (!editorNode) {
-        const query = this.database
+        const query = workspaceDatabase
           .deleteFrom('nodes')
           .where('id', '=', existingNode.id)
           .compile();
 
         deleteQueries.push(query);
-        this.nodesMap.delete(existingNode.id);
       } else {
         if (!isEqual(existingNode.attributes, editorNode.attributes)) {
           const doc = new Y.Doc({
@@ -224,10 +199,10 @@ export class EditorObserver {
           existingNode.index = editorNode.attributes.index;
           existingNode.attributes = editorNode.attributes;
           existingNode.updatedAt = new Date().toISOString();
-          existingNode.updatedBy = this.workspace.userId;
+          existingNode.updatedBy = input.userId;
           existingNode.versionId = generateId(IdType.Version);
 
-          const query = this.database
+          const query = workspaceDatabase
             .updateTable('nodes')
             .set({
               attributes: JSON.stringify(attributes),
@@ -244,66 +219,42 @@ export class EditorObserver {
       }
     }
 
-    if (
+    const hasChanges =
       insertQueries.length > 0 ||
       updateQueries.length > 0 ||
-      deleteQueries.length > 0
-    ) {
-      const queries = [...insertQueries, ...updateQueries, ...deleteQueries];
-      // await window.neuron.executeWorkspaceMutation(
-      //   this.workspace.accountId,
-      //   this.workspace.id,
-      //   queries,
-      // );
-    }
-  }
-
-  private checkNodesChanges(
-    newNodesMap: Map<string, LocalNode>,
-    editor: Editor,
-  ) {
-    const allNodeIds = new Set([
-      ...this.nodesMap.keys(),
-      ...newNodesMap.keys(),
-    ]);
-    let hasChanges = false;
-
-    for (const nodeId of allNodeIds) {
-      const oldNode = this.nodesMap.get(nodeId);
-      const newNode = newNodesMap.get(nodeId);
-
-      if (!oldNode) {
-        this.nodesMap.set(newNode.id, newNode);
-        hasChanges = true;
-      } else if (!newNode) {
-        this.nodesMap.delete(oldNode.id);
-        hasChanges = true;
-      } else if (
-        !isEqual(oldNode, newNode) &&
-        oldNode.updatedAt !== null &&
-        newNode.updatedAt !== null
-      ) {
-        const oldUpdatedAt = new Date(oldNode.updatedAt);
-        const newUpdatedAt = new Date(newNode.updatedAt);
-        if (oldUpdatedAt < newUpdatedAt) {
-          this.nodesMap.set(newNode.id, newNode);
-          hasChanges = true;
-        }
-      }
-    }
+      deleteQueries.length > 0;
 
     if (hasChanges) {
-      this.editorContent = this.buildEditorContent();
-      const selection = editor.state.selection;
-      if (selection.$anchor != null && selection.$head != null) {
-        editor
-          .chain()
-          .setContent(this.editorContent)
-          .setTextSelection(selection)
-          .run();
-      } else {
-        editor.chain().setContent(this.editorContent).run();
-      }
+      await workspaceDatabase.transaction().execute(async (trx) => {
+        for (const query of insertQueries) {
+          await trx.executeQuery(query);
+        }
+
+        for (const query of updateQueries) {
+          await trx.executeQuery(query);
+        }
+
+        for (const query of deleteQueries) {
+          await trx.executeQuery(query);
+        }
+      });
     }
+
+    const changes: MutationChange[] = hasChanges
+      ? [
+          {
+            type: 'workspace',
+            table: 'nodes',
+            userId: input.userId,
+          },
+        ]
+      : [];
+
+    return {
+      output: {
+        success: true,
+      },
+      changes: changes,
+    };
   }
 }

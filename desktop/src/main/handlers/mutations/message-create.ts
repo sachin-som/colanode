@@ -1,4 +1,4 @@
-import { mapContentsToEditorNodes } from '@/renderer/editor/mappers';
+import { mapContentsToEditorNodes } from '@/lib/editor';
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';

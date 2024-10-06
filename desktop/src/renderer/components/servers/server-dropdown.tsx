@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Icon } from '@/renderer/components/ui/icon';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Server } from '@/types/servers';
 import { ServerCreateDialog } from '@/renderer/components/servers/server-create-dialog';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';

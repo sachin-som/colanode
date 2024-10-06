@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { Icon } from '@/renderer/components/ui/icon';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
 import { useNavigate } from 'react-router-dom';
 

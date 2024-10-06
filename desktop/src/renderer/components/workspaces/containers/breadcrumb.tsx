@@ -20,7 +20,7 @@ import {
 import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { BreadcrumbItem } from '@/renderer/components/workspaces/containers/breadcrumb-item';
-import { BreadcrumbItemEditor } from '@/renderer/components/workspaces/containers/breadcrumb-item-editor';
+import { BreadcrumbItemPopover } from '@/renderer/components/workspaces/containers/breadcrumb-item-popover';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface BreadcrumbProps {
@@ -59,14 +59,9 @@ export const Breadcrumb = ({ nodeId }: BreadcrumbProps) => {
               }}
             >
               {breadcrumbNode.id === nodeId ? (
-                <Popover>
-                  <PopoverTrigger>
-                    <BreadcrumbItem node={breadcrumbNode} />
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <BreadcrumbItemEditor node={breadcrumbNode} />
-                  </PopoverContent>
-                </Popover>
+                <BreadcrumbItemPopover node={breadcrumbNode}>
+                  <BreadcrumbItem node={breadcrumbNode} />
+                </BreadcrumbItemPopover>
               ) : (
                 <BreadcrumbItem
                   node={breadcrumbNode}

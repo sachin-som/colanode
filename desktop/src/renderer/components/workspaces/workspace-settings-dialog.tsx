@@ -7,7 +7,7 @@ import {
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
 import { Icon } from '@/renderer/components/ui/icon';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceUpdate } from '@/renderer/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users';

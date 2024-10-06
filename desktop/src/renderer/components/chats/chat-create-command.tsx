@@ -10,7 +10,7 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 
 export const ChatCreateCommand = () => {
   const workspace = useWorkspace();

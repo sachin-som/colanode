@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { BreadcrumbNode } from '@/types/workspaces';
 
 interface BreadcrumbNodeProps {
@@ -10,7 +10,7 @@ interface BreadcrumbNodeProps {
 
 export const BreadcrumbItem = ({ node, className }: BreadcrumbNodeProps) => {
   return (
-    <div className={cn('flex items-center space-x-1', className)}>
+    <div className={cn('flex items-center space-x-2', className)}>
       {node.avatar && (
         <Avatar
           size="small"

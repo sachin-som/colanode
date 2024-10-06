@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow } from 'electron';
+import { app, ipcMain, BrowserWindow, protocol, net } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/operations/mutations';
@@ -17,8 +17,8 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = async () => {
   await databaseManager.init();
-  socketManager.init();
-  synchronizer.init();
+  // socketManager.init();
+  // synchronizer.init();
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -42,6 +42,13 @@ const createWindow = async () => {
 
   subscriptionId = eventBus.subscribe((event) => {
     mainWindow.webContents.send('event', event);
+  });
+
+  protocol.handle('avatar', (request) => {
+    const avatar = request.url.replace('avatar://', '');
+    const appPath = app.getPath('userData');
+    const url = `file://${appPath}/avatars/${avatar}.jpg`;
+    return net.fetch(url);
   });
 };
 

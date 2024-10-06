@@ -8,7 +8,7 @@ interface EmojiPickerItemProps {
 }
 
 export const EmojiPickerItem = ({ emoji }: EmojiPickerItemProps) => {
-  const { skinTone, onEmojiClick } = useEmojiPicker();
+  const { skinTone, onPick: onEmojiClick } = useEmojiPicker();
 
   let id = emoji.id;
   if (

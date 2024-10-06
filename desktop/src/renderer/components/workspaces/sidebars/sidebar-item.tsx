@@ -2,7 +2,7 @@ import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SidebarNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Icon } from '@/renderer/components/ui/icon';
 
 interface SidebarItemProps {

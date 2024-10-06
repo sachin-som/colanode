@@ -6,15 +6,15 @@ import { EmojiPickerBrowser } from '@/renderer/components/emojis/emoji-picker-br
 import { EmojiPickerSearch } from '@/renderer/components/emojis/emoji-picker-search';
 
 interface EmojiPickerProps {
-  onEmojiClick: (emoji: Emoji) => void;
+  onPick: (emoji: Emoji) => void;
 }
 
-export const EmojiPicker = ({ onEmojiClick }: EmojiPickerProps) => {
+export const EmojiPicker = ({ onPick }: EmojiPickerProps) => {
   const [query, setQuery] = React.useState('');
   const [skinTone, setSkinTone] = React.useState(0);
 
   return (
-    <EmojiPickerContext.Provider value={{ skinTone, onEmojiClick }}>
+    <EmojiPickerContext.Provider value={{ skinTone, onPick }}>
       <div className="flex flex-col gap-1 p-1">
         <div className="flex flex-row items-center gap-1">
           <input

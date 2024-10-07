@@ -30,6 +30,7 @@ import { NodeSyncMutationHandler } from '@/main/handlers/mutations/node-sync';
 import { NodeReactionSyncMutationHandler } from '@/main/handlers/mutations/node-reaction-sync';
 import { NodeCollaboratorSyncMutationHandler } from '@/main/handlers/mutations/node-collaborator-sync';
 import { DocumentSaveMutationHandler } from '@/main/handlers/mutations/document-save';
+import { AvatarUploadMutationHandler } from '@/main/handlers/mutations/avatar-upload';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -68,4 +69,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   node_reaction_sync: new NodeReactionSyncMutationHandler(),
   node_collaborator_sync: new NodeCollaboratorSyncMutationHandler(),
   document_save: new DocumentSaveMutationHandler(),
+  avatar_upload: new AvatarUploadMutationHandler(),
 };

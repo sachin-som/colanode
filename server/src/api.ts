@@ -8,6 +8,7 @@ import { workspacesRouter } from '@/routes/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { syncRouter } from '@/routes/sync';
 import { configRouter } from '@/routes/config';
+import { avatarsRouter } from '@/routes/avatars';
 import { synapse } from '@/synapse';
 
 export const initApi = () => {
@@ -25,6 +26,7 @@ export const initApi = () => {
   app.use('/v1/config', configRouter);
   app.use('/v1/workspaces', authMiddleware, workspacesRouter);
   app.use('/v1/sync', authMiddleware, syncRouter);
+  app.use('/v1/avatars', authMiddleware, avatarsRouter);
 
   const server = http.createServer(app);
 

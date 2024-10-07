@@ -1,7 +1,7 @@
 import { hashCode } from '@/lib/utils';
 import { getEmojiUrl } from '@/lib/emojis';
 import { getIconUrl } from '@/lib/icons';
-import { IdType } from '@/lib/id';
+import { getIdType, IdType } from '@/lib/id';
 
 export const getAvatarSizeClasses = (size?: string) => {
   if (size === 'small') {
@@ -38,18 +38,8 @@ export const getColorForId = (id: string) => {
   return colors[index];
 };
 
-export const getAvatarUrl = (avatar: string): string => {
-  if (avatar.startsWith('emoji://')) {
-    const emoji = avatar.split('emoji://')[1];
-    return getEmojiUrl(emoji);
-  }
-
-  if (avatar.startsWith('icon://')) {
-    const icon = avatar.split('icon://')[1];
-    return getIconUrl(icon);
-  }
-
-  return avatar;
+export const getAvatarUrl = (accountId: string, avatar: string): string => {
+  return `avatar://${accountId}/${avatar}`;
 };
 
 export const getDefaultNodeIcon = (type: IdType): string => {

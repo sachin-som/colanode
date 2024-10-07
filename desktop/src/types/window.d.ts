@@ -23,6 +23,10 @@ interface NeuronApi {
   ) => Promise<QueryMap[T['type']]['output']>;
 
   unsubscribeQuery: (id: string) => Promise<void>;
+
+  openFileDialog: (
+    options: Electron.OpenDialogOptions,
+  ) => Promise<Electron.OpenDialogReturnValue>;
 }
 
 declare global {

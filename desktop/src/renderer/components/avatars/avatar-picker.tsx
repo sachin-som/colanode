@@ -7,6 +7,7 @@ import {
 } from '@/renderer/components/ui/tabs';
 import { EmojiPicker } from '@/renderer/components/emojis/emoji-picker';
 import { IconPicker } from '@/renderer/components/icons/icon-picker';
+import { AvatarUpload } from '@/renderer/components/avatars/avatar-upload';
 
 interface AvatarPickerProps {
   onPick: (avatar: string) => void;
@@ -14,7 +15,7 @@ interface AvatarPickerProps {
 
 export const AvatarPicker = ({ onPick }: AvatarPickerProps) => {
   return (
-    <Tabs defaultValue="emojis">
+    <Tabs defaultValue="emojis" className="p-1">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="emojis">Emojis</TabsTrigger>
         <TabsTrigger value="icons">Icons</TabsTrigger>
@@ -23,19 +24,23 @@ export const AvatarPicker = ({ onPick }: AvatarPickerProps) => {
       <TabsContent value="emojis">
         <EmojiPicker
           onPick={(emoji) => {
-            onPick(`emoji://${emoji.id}`);
+            onPick(emoji.id);
           }}
         />
       </TabsContent>
       <TabsContent value="icons">
         <IconPicker
           onPick={(icon) => {
-            onPick(`icon://${icon.id}`);
+            onPick(icon.id);
           }}
         />
       </TabsContent>
       <TabsContent value="custom">
-        <p>Coming soon</p>
+        <AvatarUpload
+          onUpload={(id) => {
+            onPick(id);
+          }}
+        />
       </TabsContent>
     </Tabs>
   );

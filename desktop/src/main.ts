@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow, protocol, net } from 'electron';
+import { app, ipcMain, BrowserWindow, protocol, dialog } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/operations/mutations';
@@ -7,6 +7,7 @@ import { mediator } from '@/main/mediator';
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
+import { avatarManager } from '@/main/avatar-manager';
 
 let subscriptionId: string | null = null;
 
@@ -17,8 +18,8 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = async () => {
   await databaseManager.init();
-  // socketManager.init();
-  // synchronizer.init();
+  socketManager.init();
+  synchronizer.init();
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -45,10 +46,7 @@ const createWindow = async () => {
   });
 
   protocol.handle('avatar', (request) => {
-    const avatar = request.url.replace('avatar://', '');
-    const appPath = app.getPath('userData');
-    const url = `file://${appPath}/avatars/${avatar}.jpg`;
-    return net.fetch(url);
+    return avatarManager.handleAvatarRequest(request);
   });
 };
 
@@ -114,3 +112,13 @@ ipcMain.handle(
 ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
   mediator.unsubscribeQuery(id);
 });
+
+ipcMain.handle(
+  'open-file-dialog',
+  async (
+    _: unknown,
+    options: Electron.OpenDialogOptions,
+  ): Promise<Electron.OpenDialogReturnValue> => {
+    return dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), options);
+  },
+);

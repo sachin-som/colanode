@@ -53,8 +53,19 @@ class AvatarManager {
     }
 
     const fileStream = fs.createWriteStream(avatarPath);
-    response.data.pipe(fileStream);
-    return net.fetch(avatarLocalUrl);
+
+    return new Promise((resolve, reject) => {
+      response.data.pipe(fileStream);
+
+      fileStream.on('finish', async () => {
+        // Ensure the file is written before trying to fetch it
+        resolve(net.fetch(avatarLocalUrl));
+      });
+
+      fileStream.on('error', (err) => {
+        reject(new Response(null, { status: 500, statusText: err.message }));
+      });
+    });
   }
 }
 

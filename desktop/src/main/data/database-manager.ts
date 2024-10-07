@@ -1,5 +1,6 @@
 import { app } from 'electron';
-import * as fs from 'node:fs';
+import path from 'path';
+import fs from 'fs';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import { AppDatabaseSchema } from '@/main/data/app/schema';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
@@ -55,12 +56,13 @@ class DatabaseManager {
       return null;
     }
 
-    await this.initWorkspaceDatabase(userId);
-    if (this.workspaceDatabases.has(userId)) {
-      return this.workspaceDatabases.get(userId);
-    }
+    const workspaceDatabase = await this.initWorkspaceDatabase(
+      userId,
+      workspace.workspace_id,
+    );
 
-    return null;
+    this.workspaceDatabases.set(userId, workspaceDatabase);
+    return workspaceDatabase;
   }
 
   private async waitForInit(): Promise<void> {
@@ -80,14 +82,30 @@ class DatabaseManager {
       .execute();
 
     for (const workspace of workspaces) {
-      await this.initWorkspaceDatabase(workspace.user_id);
+      const workspaceDatabase = await this.initWorkspaceDatabase(
+        workspace.user_id,
+        workspace.workspace_id,
+      );
+
+      this.workspaceDatabases.set(workspace.user_id, workspaceDatabase);
     }
   }
 
-  private async initWorkspaceDatabase(userId: string): Promise<void> {
-    const workspaceDir = `${this.appPath}/${userId}`;
+  private async initWorkspaceDatabase(
+    accountId: string,
+    workspaceId: string,
+  ): Promise<Kysely<WorkspaceDatabaseSchema>> {
+    const workspaceDir = path.join(
+      this.appPath,
+      accountId,
+      'workspaces',
+      workspaceId,
+    );
+
     if (!fs.existsSync(workspaceDir)) {
-      fs.mkdirSync(workspaceDir);
+      fs.mkdirSync(workspaceDir, {
+        recursive: true,
+      });
     }
 
     const dialect = new SqliteDialect({
@@ -99,7 +117,7 @@ class DatabaseManager {
     });
 
     await this.migrateWorkspaceDatabase(workspaceDatabase);
-    this.workspaceDatabases.set(userId, workspaceDatabase);
+    return workspaceDatabase;
   }
 
   private async migrateAppDatabase(): Promise<void> {

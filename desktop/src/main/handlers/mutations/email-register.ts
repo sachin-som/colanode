@@ -66,7 +66,7 @@ export class EmailRegisterMutationHandler
         .insertInto('workspaces')
         .values(
           data.workspaces.map((workspace) => ({
-            id: workspace.id,
+            workspace_id: workspace.id,
             name: workspace.name,
             account_id: data.account.id,
             avatar: workspace.avatar,

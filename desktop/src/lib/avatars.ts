@@ -1,7 +1,5 @@
 import { hashCode } from '@/lib/utils';
-import { getEmojiUrl } from '@/lib/emojis';
-import { getIconUrl } from '@/lib/icons';
-import { getIdType, IdType } from '@/lib/id';
+import { IdType } from '@/lib/id';
 
 export const getAvatarSizeClasses = (size?: string) => {
   if (size === 'small') {

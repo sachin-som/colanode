@@ -1,13 +1,12 @@
 import { ServerChange } from '@/types/sync';
 
-export type ServerMutationMessageInput = {
-  type: 'server_mutation';
-  accountId: string;
+export type ServerChangeMessageInput = {
+  type: 'server_change';
   change: ServerChange;
 };
 
 declare module '@/operations/messages' {
   interface MessageMap {
-    server_mutation: ServerMutationMessageInput;
+    server_change: ServerChangeMessageInput;
   }
 }

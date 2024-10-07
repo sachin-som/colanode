@@ -1,65 +1,92 @@
-import { WebSocket } from 'ws';
-import { IncomingMessage } from 'http';
-import { SocketMessage } from '@/types/sockets';
+import http from 'http';
+import { WebSocket, WebSocketServer } from 'ws';
 import { database } from '@/data/database';
 import { sql } from 'kysely';
 import { SelectChange } from '@/data/schema';
 import { ServerChange } from '@/types/sync';
+import { MessageInput } from '@/messages';
+import { handleChangeAck } from '@/messages/server-change-ack';
+import { verifyToken } from '@/lib/tokens';
+import { NeuronRequestAccount } from '@/types/api';
+
+interface SynapseConnection {
+  socket: WebSocket;
+  account: NeuronRequestAccount;
+}
 
 class SynapseManager {
-  private readonly sockets: Map<string, WebSocket> = new Map();
+  private readonly sockets: Map<string, SynapseConnection> = new Map();
 
-  public async addConnection(socket: WebSocket, req: IncomingMessage) {
-    const deviceId = req.url?.split('device_id=')[1];
-    if (!deviceId) {
-      socket.close();
-      return;
-    }
+  public init(server: http.Server) {
+    const wss = new WebSocketServer({
+      server,
+      path: '/v1/synapse',
+      verifyClient: async (info, callback) => {
+        const req = info.req;
+        const token = req.headers['authorization'];
 
-    socket.on('message', (message) => {
-      this.handleMessage(deviceId, message.toString());
+        if (!token) {
+          return callback(false, 401, 'Unauthorized');
+        }
+
+        callback(true);
+      },
     });
 
-    socket.on('close', () => {
-      this.sockets.delete(deviceId);
-    });
+    wss.on('connection', async (socket, req) => {
+      const token = req.headers['authorization'];
+      if (!token) {
+        socket.close();
+        return;
+      }
 
-    this.sockets.set(deviceId, socket);
-    await this.sendPendingChanges(deviceId);
+      const result = await verifyToken(token);
+      if (!result.authenticated) {
+        socket.close();
+        return;
+      }
+
+      const account = result.account;
+      socket.on('message', (message) => {
+        this.handleMessage(account.deviceId, message.toString());
+      });
+
+      socket.on('close', () => {
+        this.sockets.delete(account.deviceId);
+      });
+
+      this.sockets.set(account.deviceId, {
+        socket,
+        account,
+      });
+
+      await this.sendPendingChanges(account.deviceId);
+    });
   }
 
-  public send(deviceId: string, message: SocketMessage) {
-    const socket = this.sockets.get(deviceId);
-    if (!socket) {
+  public send(deviceId: string, message: MessageInput) {
+    const connection = this.sockets.get(deviceId);
+    if (!connection || !connection.socket) {
       return;
     }
 
-    socket.send(JSON.stringify(message));
+    connection.socket.send(JSON.stringify(message));
   }
 
   private async handleMessage(
-    deviceId: string,
+    account: NeuronRequestAccount,
     message: string,
   ): Promise<void> {
-    const socketMessage: SocketMessage = JSON.parse(message);
-    if (socketMessage.type === 'mutation_ack') {
-      await this.handleMutationAck(deviceId, socketMessage);
+    const messageInput: MessageInput = JSON.parse(message);
+    if (messageInput.type === 'server_change_ack') {
+      await handleChangeAck(
+        {
+          accountId: account.id,
+          deviceId: account.deviceId,
+        },
+        messageInput,
+      );
     }
-  }
-
-  private async handleMutationAck(deviceId: string, message: SocketMessage) {
-    const mutationId = message.payload.id;
-    if (!mutationId) {
-      return;
-    }
-
-    await database
-      .updateTable('changes')
-      .set({
-        device_ids: sql`array_remove(device_ids, ${deviceId})`,
-      })
-      .where('id', '=', mutationId)
-      .execute();
   }
 
   private async sendPendingChanges(deviceId: string) {
@@ -85,9 +112,10 @@ class SynapseManager {
           before: change.before,
           after: change.after,
         };
+
         this.send(deviceId, {
-          type: 'change',
-          payload: serverChange,
+          type: 'server_change',
+          change: serverChange,
         });
         lastId = change.id;
       }

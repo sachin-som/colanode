@@ -2,6 +2,7 @@ import { redis, CHANNEL_NAMES } from '@/data/redis';
 import { synapse } from '@/synapse';
 import { ServerChange } from '@/types/sync';
 import { ChangeCdcData } from '@/types/cdc';
+import { ServerChangeMessageInput } from '@/messages/server-change';
 
 export const initChangesSubscriber = async () => {
   const subscriber = redis.duplicate();
@@ -24,10 +25,12 @@ const handleMessage = async (message: string) => {
     after: changeData.after ? JSON.parse(changeData.after) : null,
   };
 
+  const input: ServerChangeMessageInput = {
+    type: 'server_change',
+    change: serverChange,
+  };
+
   for (const deviceId of changeData.device_ids) {
-    synapse.send(deviceId, {
-      type: 'change',
-      payload: serverChange,
-    });
+    synapse.send(deviceId, input);
   }
 };

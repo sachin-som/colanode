@@ -1,10 +1,12 @@
 import { MessageHandler, MessageMap } from '@/operations/messages';
-import { ServerMutationMessageHandler } from '@/main/handlers/messages/server-mutation';
+import { ServerChangeMessageHandler } from '@/main/handlers/messages/server-change';
+import { ServerChangeAckMessageHandler } from '@/main/handlers/messages/server-change-ack';
 
 type MessageHandlerMap = {
   [K in keyof MessageMap]: MessageHandler<MessageMap[K]>;
 };
 
 export const messageHandlerMap: MessageHandlerMap = {
-  server_mutation: new ServerMutationMessageHandler(),
+  server_change: new ServerChangeMessageHandler(),
+  server_change_ack: new ServerChangeAckMessageHandler(),
 };

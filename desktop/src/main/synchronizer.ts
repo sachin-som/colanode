@@ -22,12 +22,12 @@ class Synchronizer {
   }
 
   private async executeEventLoop() {
-    // try {
-    await this.checkForWorkspaceSyncs();
-    await this.checkForWorkspaceChanges();
-    // } catch (error) {
-    //   console.log('error', error);
-    // }
+    try {
+      await this.checkForWorkspaceSyncs();
+      await this.checkForWorkspaceChanges();
+    } catch (error) {
+      console.log('error', error);
+    }
 
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }

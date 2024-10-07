@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
 import { buildSynapseUrl } from '@/lib/servers';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
-import { MessageInput } from '@/operations/messages';
+import { MessageContext, MessageInput } from '@/operations/messages';
 import { mediator } from '@/main/mediator';
 import { SelectAccount, SelectServer } from '@/main/data/app/schema';
 
@@ -50,8 +50,12 @@ export class SocketConnection {
         return;
       }
 
+      const context: MessageContext = {
+        accountId: this.account.id,
+        deviceId: this.account.device_id,
+      };
       const message: MessageInput = JSON.parse(data);
-      await mediator.executeMessage(message);
+      await mediator.executeMessage(context, message);
     };
 
     this.socket.onopen = () => {
@@ -65,6 +69,12 @@ export class SocketConnection {
 
   public isConnected(): boolean {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
+
+  public sendMessage(message: MessageInput): void {
+    if (this.socket) {
+      this.socket.send(JSON.stringify(message));
+    }
   }
 
   public close(): void {

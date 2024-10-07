@@ -2,7 +2,7 @@ import { initApi } from '@/api';
 import { initRedis } from '@/data/redis';
 import { initNodeChangesConsumer } from '@/consumers/node-cdc';
 import { initChangeCdcConsumer } from '@/consumers/change-cdc';
-import { initChangesSubscriber } from '@/consumers/mutations';
+import { initChangesSubscriber } from '@/consumers/changes-subcriber';
 import { initNodeCollaboratorChangesConsumer } from '@/consumers/node-collaborator-cdc';
 import { initNodeReactionChangesConsumer } from '@/consumers/node-reaction-cdc';
 import { migrate } from '@/data/database';

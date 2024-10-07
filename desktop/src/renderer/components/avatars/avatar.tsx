@@ -37,8 +37,7 @@ export const Avatar = (props: AvatarProps) => {
 };
 
 const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
-  const idType = getIdType(id);
-  if (idType === IdType.User && name) {
+  if (name) {
     const color = getColorForId(id);
     return (
       <div
@@ -54,6 +53,7 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
     );
   }
 
+  const idType = getIdType(id);
   const icon = getDefaultNodeIcon(idType);
   return (
     <Icon name={icon} className={cn(getAvatarSizeClasses(size), className)} />

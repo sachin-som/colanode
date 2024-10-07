@@ -1,5 +1,6 @@
 import { SocketConnection } from '@/main/sockets/socket-connection';
 import { databaseManager } from '@/main/data/database-manager';
+import { MessageInput } from '@/operations/messages';
 
 const EVENT_LOOP_INTERVAL = 5000;
 
@@ -19,6 +20,15 @@ class SocketManager {
     // for the first time we execute event loop almost instantly
     setTimeout(this.executeEventLoop, 10);
     this.initiated = true;
+  }
+
+  public sendMessage(accountId: string, message: MessageInput) {
+    const connection = this.accounts.get(accountId);
+    if (!connection) {
+      return;
+    }
+
+    connection.sendMessage(message);
   }
 
   private async executeEventLoop() {

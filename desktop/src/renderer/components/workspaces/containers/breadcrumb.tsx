@@ -12,11 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/renderer/components/ui/popover';
 import { NodeTypes } from '@/lib/constants';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { BreadcrumbItem } from '@/renderer/components/workspaces/containers/breadcrumb-item';

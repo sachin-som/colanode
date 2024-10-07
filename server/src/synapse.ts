@@ -48,7 +48,7 @@ class SynapseManager {
 
       const account = result.account;
       socket.on('message', (message) => {
-        this.handleMessage(account.deviceId, message.toString());
+        this.handleMessage(account, message.toString());
       });
 
       socket.on('close', () => {

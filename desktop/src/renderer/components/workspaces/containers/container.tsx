@@ -6,6 +6,7 @@ import { ChannelContainerNode } from '@/renderer/components/channels/channel-con
 import { ContainerHeader } from '@/renderer/components/workspaces/containers/container-header';
 import { DatabaseContainerNode } from '@/renderer/components/databases/database-container-node';
 import { RecordContainerNode } from '@/renderer/components/records/record-container-node';
+import { ChatContainerNode } from '@/renderer/components/chats/chat-container-node';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { getIdType, IdType } from '@/lib/id';
 
@@ -25,6 +26,7 @@ export const Container = () => {
         .with(IdType.Page, () => <PageContainerNode nodeId={nodeId} />)
         .with(IdType.Database, () => <DatabaseContainerNode nodeId={nodeId} />)
         .with(IdType.Record, () => <RecordContainerNode nodeId={nodeId} />)
+        .with(IdType.Chat, () => <ChatContainerNode nodeId={nodeId} />)
         .otherwise(() => null)}
     </div>
   );

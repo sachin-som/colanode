@@ -40,30 +40,30 @@ export const getAvatarUrl = (accountId: string, avatar: string): string => {
   return `avatar://${accountId}/${avatar}`;
 };
 
-export const getDefaultNodeIcon = (type: IdType): string => {
+export const getDefaultNodeAvatar = (type: IdType): string => {
   if (type === IdType.Channel) {
-    return 'discuss-line';
+    return '01h37jbxq11hpcnw1mdfgmm70cem';
   }
 
   if (type === IdType.Page) {
-    return 'book-line';
+    return '01h37jbxqc5srhy96v34dxaa2aem';
   }
 
   if (type === IdType.Database) {
-    return 'database-2-line';
+    return '01h37jbxqc5srhy96v34dxaa25em';
   }
 
   if (type === IdType.Record) {
-    return 'article-line';
+    return '01h37jbxqc5srhy96v34dxaa2dem';
   }
 
   if (type === IdType.Folder) {
-    return 'folder-open-line';
+    return '01h37jbxqc5srhy96v34dxaa36em';
   }
 
   if (type === IdType.Space) {
-    return 'team-line';
+    return '01h37jbxq7628n8m2bwdandtbxem';
   }
 
-  return 'file-unknown-line';
+  return null;
 };

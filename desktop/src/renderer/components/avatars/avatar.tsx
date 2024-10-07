@@ -4,10 +4,9 @@ import {
   getAvatarSizeClasses,
   getAvatarUrl,
   getColorForId,
-  getDefaultNodeIcon,
+  getDefaultNodeAvatar,
 } from '@/lib/avatars';
 import { getIdType, IdType } from '@/lib/id';
-import { Icon } from '@/renderer/components/ui/icon';
 import { getEmojiUrl } from '@/lib/emojis';
 import { getIconUrl } from '@/lib/icons';
 import { useAccount } from '@/renderer/contexts/account';
@@ -37,6 +36,20 @@ export const Avatar = (props: AvatarProps) => {
 };
 
 const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
+  const idType = getIdType(id);
+  const defaultAvatar = getDefaultNodeAvatar(idType);
+  if (defaultAvatar) {
+    return (
+      <Avatar
+        id={id}
+        name={name}
+        avatar={defaultAvatar}
+        size={size}
+        className={className}
+      />
+    );
+  }
+
   if (name) {
     const color = getColorForId(id);
     return (
@@ -53,11 +66,7 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
     );
   }
 
-  const idType = getIdType(id);
-  const icon = getDefaultNodeIcon(idType);
-  return (
-    <Icon name={icon} className={cn(getAvatarSizeClasses(size), className)} />
-  );
+  return null;
 };
 
 const EmojiAvatar = ({ avatar, size, className }: AvatarProps) => {

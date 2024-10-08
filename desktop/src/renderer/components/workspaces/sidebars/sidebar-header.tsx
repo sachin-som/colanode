@@ -25,6 +25,7 @@ export const SidebarHeader = () => {
             <Avatar
               id={workspace.id}
               name={workspace.name}
+              avatar={workspace.avatar}
               className="h-7 w-7"
             />
             <p className="flex-grow">{workspace.name}</p>
@@ -38,6 +39,7 @@ export const SidebarHeader = () => {
           <Avatar
             id={account.id}
             name={account.name}
+            avatar={account.avatar}
             className="mt-1 h-7 w-7"
           />
           <div className="flex flex-grow flex-col">
@@ -58,7 +60,12 @@ export const SidebarHeader = () => {
                   setOpen(false);
                 }}
               >
-                <Avatar id={w.id} name={w.name} className="h-7 w-7" />
+                <Avatar
+                  id={w.id}
+                  name={w.name}
+                  avatar={w.avatar}
+                  className="h-7 w-7"
+                />
                 <p>{w.name}</p>
               </li>
             );

@@ -3,6 +3,7 @@ export type WorkspaceCreateMutationInput = {
   name: string;
   description: string;
   accountId: string;
+  avatar: string | null;
 };
 
 export type WorkspaceCreateMutationOutput = {

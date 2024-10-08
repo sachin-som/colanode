@@ -42,6 +42,7 @@ export class WorkspaceCreateMutationHandler
     const { data } = await axios.post<Workspace>(`/v1/workspaces`, {
       name: input.name,
       description: input.description,
+      avatar: input.avatar,
     });
 
     await databaseManager.appDatabase

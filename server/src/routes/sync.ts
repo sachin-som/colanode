@@ -80,7 +80,7 @@ syncRouter.get(
     res.status(200).json({
       nodes,
       nodeReactions,
-      nodeCollabors: nodeCollaborators,
+      nodeCollaborators,
     });
   },
 );

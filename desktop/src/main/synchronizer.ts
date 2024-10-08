@@ -67,8 +67,8 @@ class Synchronizer {
       .execute();
 
     for (const workspace of workspaces) {
-      if (this.workspaceBackoffs.has(workspace.workspace_id)) {
-        const backoff = this.workspaceBackoffs.get(workspace.workspace_id);
+      if (this.workspaceBackoffs.has(workspace.user_id)) {
+        const backoff = this.workspaceBackoffs.get(workspace.user_id);
         if (!backoff.canRetry()) {
           return;
         }
@@ -135,22 +135,22 @@ class Synchronizer {
             .execute();
         }
       } catch (error) {
-        if (!this.workspaceBackoffs.has(workspace.workspace_id)) {
+        if (!this.workspaceBackoffs.has(workspace.user_id)) {
           this.workspaceBackoffs.set(
-            workspace.workspace_id,
+            workspace.user_id,
             new BackoffCalculator(),
           );
         }
 
-        const backoff = this.workspaceBackoffs.get(workspace.workspace_id);
+        const backoff = this.workspaceBackoffs.get(workspace.user_id);
         backoff.increaseError();
       }
     }
   }
 
   private async syncWorkspace(workspace: SelectWorkspace): Promise<void> {
-    if (this.workspaceBackoffs.has(workspace.workspace_id)) {
-      const backoff = this.workspaceBackoffs.get(workspace.workspace_id);
+    if (this.workspaceBackoffs.has(workspace.user_id)) {
+      const backoff = this.workspaceBackoffs.get(workspace.user_id);
       if (!backoff.canRetry()) {
         return;
       }
@@ -177,15 +177,17 @@ class Synchronizer {
         `/v1/sync/${workspace.workspace_id}`,
       );
 
+      await databaseManager.deleteWorkspaceDatabase(
+        workspace.account_id,
+        workspace.workspace_id,
+        workspace.user_id,
+      );
+
       const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
         workspace.user_id,
       );
 
       await workspaceDatabase.transaction().execute(async (trx) => {
-        await trx.deleteFrom('nodes').execute();
-        await trx.deleteFrom('node_reactions').execute();
-        await trx.deleteFrom('node_collaborators').execute();
-
         if (data.nodes.length > 0) {
           await trx
             .insertInto('nodes')
@@ -225,6 +227,29 @@ class Synchronizer {
             )
             .execute();
         }
+
+        if (data.nodeCollaborators.length > 0) {
+          await trx
+            .insertInto('node_collaborators')
+            .values(
+              data.nodeCollaborators.map((nodeCollaborator) => {
+                return {
+                  node_id: nodeCollaborator.nodeId,
+                  collaborator_id: nodeCollaborator.collaboratorId,
+                  role: nodeCollaborator.role,
+                  created_at: nodeCollaborator.createdAt,
+                  created_by: nodeCollaborator.createdBy,
+                  updated_at: nodeCollaborator.updatedAt,
+                  updated_by: nodeCollaborator.updatedBy,
+                  version_id: nodeCollaborator.versionId,
+                  server_created_at: nodeCollaborator.serverCreatedAt,
+                  server_updated_at: nodeCollaborator.serverUpdatedAt,
+                  server_version_id: nodeCollaborator.versionId,
+                };
+              }),
+            )
+            .execute();
+        }
       });
 
       await databaseManager.appDatabase
@@ -235,14 +260,11 @@ class Synchronizer {
         .where('user_id', '=', workspace.user_id)
         .execute();
     } catch (error) {
-      if (!this.workspaceBackoffs.has(workspace.workspace_id)) {
-        this.workspaceBackoffs.set(
-          workspace.workspace_id,
-          new BackoffCalculator(),
-        );
+      if (!this.workspaceBackoffs.has(workspace.user_id)) {
+        this.workspaceBackoffs.set(workspace.user_id, new BackoffCalculator());
       }
 
-      const backoff = this.workspaceBackoffs.get(workspace.workspace_id);
+      const backoff = this.workspaceBackoffs.get(workspace.user_id);
       backoff.increaseError();
     }
   }

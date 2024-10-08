@@ -57,12 +57,35 @@ class DatabaseManager {
     }
 
     const workspaceDatabase = await this.initWorkspaceDatabase(
-      userId,
+      workspace.account_id,
       workspace.workspace_id,
     );
 
     this.workspaceDatabases.set(userId, workspaceDatabase);
     return workspaceDatabase;
+  }
+
+  public async deleteWorkspaceDatabase(
+    accountId: string,
+    workspaceId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.waitForInit();
+
+    if (this.workspaceDatabases.has(userId)) {
+      this.workspaceDatabases.delete(userId);
+    }
+
+    const workspaceDir = path.join(
+      this.appPath,
+      accountId,
+      'workspaces',
+      workspaceId,
+    );
+
+    if (fs.existsSync(workspaceDir)) {
+      fs.rmSync(workspaceDir, { recursive: true, force: true });
+    }
   }
 
   private async waitForInit(): Promise<void> {
@@ -83,7 +106,7 @@ class DatabaseManager {
 
     for (const workspace of workspaces) {
       const workspaceDatabase = await this.initWorkspaceDatabase(
-        workspace.user_id,
+        workspace.account_id,
         workspace.workspace_id,
       );
 

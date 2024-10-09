@@ -40,6 +40,9 @@ export enum IdType {
   ViewFilter = 'vf',
   ViewSort = 'vs',
   Query = 'qu',
+  Emoji = 'em',
+  Avatar = 'av',
+  Icon = 'ic',
 }
 
 export const generateId = (type: IdType): string => {

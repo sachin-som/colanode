@@ -16,7 +16,7 @@ import {
 } from '@/renderer/components/ui/command';
 import { Icon } from '@/renderer/components/ui/icon';
 import { Badge } from '@/renderer/components/ui/badge';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 

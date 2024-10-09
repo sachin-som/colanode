@@ -77,7 +77,7 @@ export class ChatCreateMutationHandler
             version_id: generateId(IdType.Version),
           },
         ])
-        .compile();
+        .execute();
     });
 
     return {

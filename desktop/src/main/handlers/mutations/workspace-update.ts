@@ -39,9 +39,11 @@ export class WorkspaceUpdateMutationHandler
       server.attributes,
       account.token,
     );
-    const { data } = await axios.post<Workspace>(`/v1/workspaces/${input.id}`, {
+
+    const { data } = await axios.put<Workspace>(`/v1/workspaces/${input.id}`, {
       name: input.name,
       description: input.description,
+      avatar: input.avatar,
     });
 
     await databaseManager.appDatabase

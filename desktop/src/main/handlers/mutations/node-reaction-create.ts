@@ -8,7 +8,6 @@ export class NodeReactionCreateMutationHandler
   async handleMutation(
     input: NodeReactionCreateMutationInput,
   ): Promise<MutationResult<NodeReactionCreateMutationInput>> {
-    console.log('create node reaction', input);
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );

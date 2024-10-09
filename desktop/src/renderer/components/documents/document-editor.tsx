@@ -1,6 +1,7 @@
 import React from 'react';
 import '@/renderer/styles/editor.css';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { debounce } from 'lodash';
+import { useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import {
   ParagraphCommand,
   BlockquoteCommand,
@@ -47,22 +48,40 @@ import {
   DeleteControlExtension,
   DropcursorExtension,
 } from '@/renderer/editor/extensions';
-
 import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
-import { LocalNode } from '@/types/nodes';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { EditorObserver } from '@/renderer/editor/observer';
+import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface DocumentEditorProps {
-  nodeId: string;
-  nodes: Map<string, LocalNode>;
+  documentId: string;
+  content: JSONContent;
+  hash: string;
 }
 
-export const DocumentEditor = ({ nodeId, nodes }: DocumentEditorProps) => {
+export const DocumentEditor = ({
+  documentId,
+  content,
+  hash,
+}: DocumentEditorProps) => {
   const workspace = useWorkspace();
-  const observer = React.useMemo<EditorObserver>(
-    () => new EditorObserver(workspace, workspace as any, nodeId, nodes),
-    [nodeId],
+  const { mutate } = useMutation();
+
+  const hasPendingChanges = React.useRef(false);
+  const hashRef = React.useRef(hash);
+  const debouncedSave = React.useMemo(
+    () =>
+      debounce((content: JSONContent) => {
+        hasPendingChanges.current = false;
+        mutate({
+          input: {
+            type: 'document_save',
+            documentId: documentId,
+            userId: workspace.userId,
+            content,
+          },
+        });
+      }, 500),
+    [mutate, documentId, workspace.userId],
   );
 
   const editor = useEditor(
@@ -124,21 +143,37 @@ export const DocumentEditor = ({ nodeId, nodes }: DocumentEditorProps) => {
           spellCheck: 'false',
         },
       },
-      content: observer.getEditorContent(),
+      content: content,
       shouldRerenderOnTransaction: false,
       autofocus: 'start',
       onUpdate: async ({ editor, transaction }) => {
         if (transaction.docChanged) {
-          observer.onEditorUpdate(editor);
+          hasPendingChanges.current = true;
+          debouncedSave(editor.getJSON());
         }
       },
     },
-    [nodeId],
+    [documentId],
   );
 
   React.useEffect(() => {
-    observer.onNodesChange(nodes, editor);
-  }, [nodes]);
+    if (hasPendingChanges.current) {
+      return;
+    }
+
+    if (hashRef.current === hash) {
+      return;
+    }
+
+    const selection = editor.state.selection;
+    if (selection.$anchor != null && selection.$head != null) {
+      editor.chain().setContent(content).setTextSelection(selection).run();
+    } else {
+      editor.chain().setContent(content).run();
+    }
+
+    hashRef.current = hash;
+  }, [content, hash]);
 
   return (
     <div className="min-h-[500px]">

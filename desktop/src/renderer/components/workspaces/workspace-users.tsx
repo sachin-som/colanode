@@ -2,7 +2,7 @@ import React from 'react';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { Separator } from '@/renderer/components/ui/separator';
 import { WorkspaceUserInvite } from '@/renderer/components/workspaces/workspace-user-invite';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';

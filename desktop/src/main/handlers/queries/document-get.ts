@@ -1,17 +1,19 @@
-import { DocumentGetQueryInput } from '@/operations/queries/document-get';
+import { sha256 } from 'js-sha256';
+import { isEqual } from 'lodash';
+import {
+  DocumentGetQueryInput,
+  DocumentGetQueryOutput,
+} from '@/operations/queries/document-get';
 import { databaseManager } from '@/main/data/database-manager';
 import {
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
 } from '@/operations/queries';
-import { sql } from 'kysely';
+
 import { SelectNode } from '@/main/data/workspace/schema';
 import { mapNode } from '@/lib/nodes';
-import { NodeTypes } from '@/lib/constants';
-import { LocalNode } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
-import { isEqual } from 'lodash';
 
 export class DocumentGetQueryHandler
   implements QueryHandler<DocumentGetQueryInput>
@@ -19,13 +21,11 @@ export class DocumentGetQueryHandler
   public async handleQuery(
     input: DocumentGetQueryInput,
   ): Promise<QueryResult<DocumentGetQueryInput>> {
-    const rows = await this.fetchNodes(input);
+    const document = await this.fetchDocument(input);
     return {
-      output: {
-        nodes: this.buildMap(rows),
-      },
+      output: this.buildOutput(document),
       state: {
-        rows,
+        document,
       },
     };
   }
@@ -48,8 +48,8 @@ export class DocumentGetQueryHandler
       };
     }
 
-    const rows = await this.fetchNodes(input);
-    if (isEqual(rows, state.rows)) {
+    const document = await this.fetchDocument(input);
+    if (isEqual(document, state.document)) {
       return {
         hasChanges: false,
       };
@@ -58,49 +58,47 @@ export class DocumentGetQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: {
-          nodes: this.buildMap(rows),
-        },
+        output: this.buildOutput(document),
         state: {
-          rows,
+          document,
         },
       },
     };
   }
 
-  private async fetchNodes(
+  private async fetchDocument(
     input: DocumentGetQueryInput,
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectNode | null> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 
-    const query = sql<SelectNode>`
-      WITH RECURSIVE document_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE parent_id = ${input.nodeId}
-          
-          UNION ALL
-          
-          SELECT child.*
-          FROM nodes child
-          INNER JOIN document_nodes parent ON child.parent_id = parent.id
-          WHERE parent.type NOT IN (${NodeTypes.Page})
-      )
-      SELECT *
-      FROM document_nodes
-    `.compile(workspaceDatabase);
-
-    const result = await workspaceDatabase.executeQuery(query);
-    return result.rows;
+    return workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', input.documentId)
+      .executeTakeFirst();
   }
 
-  private buildMap = (rows: SelectNode[]): Map<string, LocalNode> => {
-    const map = new Map<string, LocalNode>();
-    rows.forEach((row) => {
-      map.set(row.id, mapNode(row));
-    });
-    return map;
-  };
+  private buildOutput(document: SelectNode | null): DocumentGetQueryOutput {
+    const node = mapNode(document);
+    const contents = node.attributes?.content ?? [];
+    if (!contents.length) {
+      contents.push({
+        type: 'paragraph',
+      });
+    }
+
+    const content = {
+      type: 'doc',
+      content: contents,
+    };
+
+    const hash = sha256(JSON.stringify(content));
+
+    return {
+      content,
+      hash,
+    };
+  }
 }

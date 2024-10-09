@@ -13,7 +13,11 @@ import {
 } from '@/operations/queries';
 import { queryHandlerMap } from '@/main/handlers/queries';
 import { eventBus } from '@/lib/event-bus';
-import { MessageHandler, MessageInput } from '@/operations/messages';
+import {
+  MessageContext,
+  MessageHandler,
+  MessageInput,
+} from '@/operations/messages';
 import { messageHandlerMap } from '@/main/handlers/messages';
 
 class Mediator {
@@ -54,9 +58,12 @@ class Mediator {
     return result.output;
   }
 
-  public async executeMessage<T extends MessageInput>(input: T): Promise<void> {
+  public async executeMessage<T extends MessageInput>(
+    context: MessageContext,
+    input: T,
+  ): Promise<void> {
     const handler = messageHandlerMap[input.type] as MessageHandler<T>;
-    await handler.handleMessage(input);
+    await handler.handleMessage(context, input);
   }
 
   public unsubscribeQuery(id: string) {

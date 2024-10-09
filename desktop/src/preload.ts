@@ -29,6 +29,10 @@ contextBridge.exposeInMainWorld('neuron', {
   unsubscribeQuery: (id: string): Promise<void> => {
     return ipcRenderer.invoke('unsubscribe-query', id);
   },
+
+  openFileDialog: (options: Electron.OpenDialogOptions) => {
+    return ipcRenderer.invoke('open-file-dialog', options);
+  },
 });
 
 contextBridge.exposeInMainWorld('eventBus', {

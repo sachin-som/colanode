@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 
 interface EmojiPickerContextProps {
   skinTone: number;
-  onEmojiClick: (emoji: Emoji) => void;
+  onPick: (emoji: Emoji) => void;
 }
 
 export const EmojiPickerContext = createContext<EmojiPickerContextProps>(

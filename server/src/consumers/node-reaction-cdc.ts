@@ -121,7 +121,7 @@ const getDeviceIds = async (workspaceId: string) => {
 const mapNodeReaction = (reaction: NodeReactionCdcData): ServerNodeReaction => {
   return {
     nodeId: reaction.node_id,
-    reactorId: reaction.actor_id,
+    actorId: reaction.actor_id,
     reaction: reaction.reaction,
     workspaceId: reaction.workspace_id,
     createdAt: new Date(reaction.created_at),

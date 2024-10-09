@@ -16,6 +16,7 @@ import { UserSearchQueryHandler } from '@/main/handlers/queries/user-search';
 import { WorkspaceListQueryHandler } from '@/main/handlers/queries/workspace-list';
 import { WorkspaceUserListQueryHandler } from '@/main/handlers/queries/workspace-user-list';
 import { RecordListQueryHandler } from '@/main/handlers/queries/record-list';
+import { ChatGetQueryHandler } from '@/main/handlers/queries/chat-get';
 
 type QueryHandlerMap = {
   [K in keyof QueryMap]: QueryHandler<QueryMap[K]['input']>;
@@ -39,4 +40,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   user_search: new UserSearchQueryHandler(),
   workspace_list: new WorkspaceListQueryHandler(),
   workspace_user_list: new WorkspaceUserListQueryHandler(),
+  chat_get: new ChatGetQueryHandler(),
 };

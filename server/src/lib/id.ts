@@ -41,6 +41,7 @@ export enum IdType {
   Query = 'qu',
   Device = 'dv',
   Change = 'cd',
+  Avatar = 'av',
 }
 
 export const generateId = (type: IdType): string => {

@@ -13,11 +13,12 @@ import { ParagraphRenderer } from '@/renderer/editor/renderers/paragraph';
 import { TaskItemRenderer } from '@/renderer/editor/renderers/task-item';
 import { TaskListRenderer } from '@/renderer/editor/renderers/task-list';
 import { TextRenderer } from '@/renderer/editor/renderers/text';
-import { LocalNodeWithChildren } from '@/types/nodes';
 import { match } from 'ts-pattern';
+import { JSONContent } from '@tiptap/core';
+import { MarkRenderer } from '@/renderer/editor/renderers/mark';
 
 interface NodeRendererProps {
-  node: LocalNodeWithChildren;
+  node: JSONContent;
   keyPrefix: string | null;
 }
 
@@ -25,44 +26,50 @@ export const NodeRenderer = ({
   node,
   keyPrefix,
 }: NodeRendererProps): ReactElement => {
-  return match(node.type)
-    .with('message', () => (
-      <MessageRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('doc', () => <DocumentRenderer node={node} keyPrefix={keyPrefix} />)
-    .with('text', () => <TextRenderer node={node} />)
-    .with('paragraph', () => (
-      <ParagraphRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('heading1', () => (
-      <Heading1Renderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('heading2', () => (
-      <Heading2Renderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('heading3', () => (
-      <Heading3Renderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('blockquote', () => (
-      <BlockquoteRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('bulletList', () => (
-      <BulletListRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('orderedList', () => (
-      <OrderedListRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('listItem', () => (
-      <ListItemRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('taskList', () => (
-      <TaskListRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('taskItem', () => (
-      <TaskItemRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .with('codeBlock', () => (
-      <CodeBlockRenderer node={node} keyPrefix={keyPrefix} />
-    ))
-    .otherwise(null);
+  return (
+    <MarkRenderer node={node}>
+      {match(node.type)
+        .with('message', () => (
+          <MessageRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('doc', () => (
+          <DocumentRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('text', () => <TextRenderer node={node} />)
+        .with('paragraph', () => (
+          <ParagraphRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('heading1', () => (
+          <Heading1Renderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('heading2', () => (
+          <Heading2Renderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('heading3', () => (
+          <Heading3Renderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('blockquote', () => (
+          <BlockquoteRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('bulletList', () => (
+          <BulletListRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('orderedList', () => (
+          <OrderedListRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('listItem', () => (
+          <ListItemRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('taskList', () => (
+          <TaskListRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('taskItem', () => (
+          <TaskItemRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('codeBlock', () => (
+          <CodeBlockRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .otherwise(null)}
+    </MarkRenderer>
+  );
 };

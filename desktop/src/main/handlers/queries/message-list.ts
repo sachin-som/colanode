@@ -10,7 +10,7 @@ import { SelectNode } from '@/main/data/workspace/schema';
 import { sql } from 'kysely';
 import { NodeTypes } from '@/lib/constants';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
-import { buildNodeWithChildren, mapNode } from '@/lib/nodes';
+import { mapNode } from '@/lib/nodes';
 import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash';
@@ -89,15 +89,6 @@ export class MessageListQueryHandler
           LIMIT ${sql.lit(input.count)}
           OFFSET ${sql.lit(offset)}
       ),
-      descendant_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE parent_id IN (SELECT id FROM message_nodes)
-          UNION ALL
-          SELECT child.*
-          FROM nodes child
-          INNER JOIN descendant_nodes parent ON child.parent_id = parent.id
-      ),
       author_nodes AS (
           SELECT *
           FROM nodes
@@ -105,8 +96,6 @@ export class MessageListQueryHandler
       ),
       all_nodes AS (
           SELECT * FROM message_nodes
-          UNION ALL
-          SELECT * FROM descendant_nodes
           UNION ALL
           SELECT * FROM author_nodes
       ),
@@ -151,11 +140,6 @@ export class MessageListQueryHandler
   private buildMessages = (rows: MessageRow[]): MessageNode[] => {
     const messageRows = rows.filter((row) => row.type === NodeTypes.Message);
     const authorRows = rows.filter((row) => row.type === NodeTypes.User);
-    const contentNodes = rows
-      .filter(
-        (row) => row.type !== NodeTypes.User && row.type !== NodeTypes.Message,
-      )
-      .map(mapNode);
 
     const messages: MessageNode[] = [];
     const authorMap = new Map<string, UserNode>();
@@ -176,9 +160,6 @@ export class MessageListQueryHandler
     for (const messageRow of messageRows) {
       const messageNode = mapNode(messageRow);
       const author = authorMap.get(messageNode.createdBy);
-      const children = contentNodes
-        .filter((n) => n.parentId === messageNode.id)
-        .map((n) => buildNodeWithChildren(n, contentNodes));
 
       const reactionCounts: MessageReactionCount[] = JSON.parse(
         messageRow.reaction_counts,
@@ -194,7 +175,7 @@ export class MessageListQueryHandler
           email: 'unknown@neuron.com',
           avatar: null,
         },
-        content: children,
+        content: messageNode.attributes.content,
         reactionCounts,
         userReactions,
       };

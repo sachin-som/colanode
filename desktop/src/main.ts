@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow } from 'electron';
+import { app, ipcMain, BrowserWindow, protocol, dialog } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/operations/mutations';
@@ -7,6 +7,7 @@ import { mediator } from '@/main/mediator';
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
+import { avatarManager } from '@/main/avatar-manager';
 
 let subscriptionId: string | null = null;
 
@@ -42,6 +43,10 @@ const createWindow = async () => {
 
   subscriptionId = eventBus.subscribe((event) => {
     mainWindow.webContents.send('event', event);
+  });
+
+  protocol.handle('avatar', (request) => {
+    return avatarManager.handleAvatarRequest(request);
   });
 };
 
@@ -107,3 +112,13 @@ ipcMain.handle(
 ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
   mediator.unsubscribeQuery(id);
 });
+
+ipcMain.handle(
+  'open-file-dialog',
+  async (
+    _: unknown,
+    options: Electron.OpenDialogOptions,
+  ): Promise<Electron.OpenDialogReturnValue> => {
+    return dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), options);
+  },
+);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NodeCollaboratorNode } from '@/types/nodes';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Icon } from '@/renderer/components/ui/icon';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';

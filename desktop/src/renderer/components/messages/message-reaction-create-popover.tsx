@@ -23,7 +23,7 @@ export const MessageReactionCreatePopover = ({
       </PopoverTrigger>
       <PopoverContent className="w-max p-0" align="end">
         <EmojiPicker
-          onEmojiClick={(emoji) => {
+          onPick={(emoji) => {
             onReactionClick(emoji.id);
             setOpen(false);
           }}

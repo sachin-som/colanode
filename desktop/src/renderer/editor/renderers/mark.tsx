@@ -1,16 +1,16 @@
 import React from 'react';
 import { defaultClasses } from '@/renderer/editor/classes';
-import { NodeBlock } from '@/types/nodes';
+import { JSONContent } from '@tiptap/core';
 
 interface MarkRendererProps {
-  node: NodeBlock;
+  node: JSONContent;
   children: any | any[];
 }
 
 export const MarkRenderer = ({ node, children }: MarkRendererProps) => {
   let result = <React.Fragment>{children}</React.Fragment>;
 
-  if (node.marks) {
+  if (node.marks && node.marks.length > 0) {
     node.marks.forEach((mark) => {
       if (mark.type === 'bold') {
         result = <strong>{result}</strong>;

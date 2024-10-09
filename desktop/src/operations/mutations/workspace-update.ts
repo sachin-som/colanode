@@ -3,6 +3,7 @@ export type WorkspaceUpdateMutationInput = {
   id: string;
   name: string;
   description: string;
+  avatar: string | null;
   accountId: string;
 };
 

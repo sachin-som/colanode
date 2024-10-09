@@ -1,11 +1,11 @@
 import React from 'react';
 import { defaultClasses } from '@/renderer/editor/classes';
 import { NodeChildrenRenderer } from '@/renderer/editor/renderers/node-children';
-import { LocalNodeWithChildren } from '@/types/nodes';
 import { cn } from '@/lib/utils';
+import { JSONContent } from '@tiptap/core';
 
 interface ParagraphRendererProps {
-  node: LocalNodeWithChildren;
+  node: JSONContent;
   keyPrefix: string | null;
 }
 
@@ -13,10 +13,6 @@ export const ParagraphRenderer = ({
   node,
   keyPrefix,
 }: ParagraphRendererProps) => {
-  if (!node.attributes.content || node.attributes.content.length === 0) {
-    return null;
-  }
-
   return (
     <p className={cn(defaultClasses.paragraph, 'py-0.5')}>
       <NodeChildrenRenderer node={node} keyPrefix={keyPrefix} />

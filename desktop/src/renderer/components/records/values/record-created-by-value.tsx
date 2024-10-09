@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar } from '@/renderer/components/ui/avatar';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { CreatedByFieldNode, RecordNode } from '@/types/databases';
 
 interface RecordCreatedByValueProps {

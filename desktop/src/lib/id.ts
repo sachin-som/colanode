@@ -69,28 +69,6 @@ export const getIdTypeFromNode = (nodeType: string): IdType => {
       return IdType.Channel;
     case NodeTypes.Message:
       return IdType.Message;
-    case NodeTypes.Paragraph:
-      return IdType.Paragraph;
-    case NodeTypes.Heading1:
-      return IdType.Heading1;
-    case NodeTypes.Heading2:
-      return IdType.Heading2;
-    case NodeTypes.Heading3:
-      return IdType.Heading3;
-    case NodeTypes.Blockquote:
-      return IdType.Blockquote;
-    case NodeTypes.BulletList:
-      return IdType.BulletList;
-    case NodeTypes.CodeBlock:
-      return IdType.CodeBlock;
-    case NodeTypes.ListItem:
-      return IdType.ListItem;
-    case NodeTypes.OrderedList:
-      return IdType.OrderedList;
-    case NodeTypes.TaskList:
-      return IdType.TaskList;
-    case NodeTypes.TaskItem:
-      return IdType.TaskItem;
     case NodeTypes.HorizontalRule:
       return IdType.HorizontalRule;
     case NodeTypes.Database:

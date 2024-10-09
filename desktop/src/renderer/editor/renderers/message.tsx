@@ -1,9 +1,9 @@
 import React from 'react';
 import { NodeChildrenRenderer } from '@/renderer/editor/renderers/node-children';
-import { LocalNodeWithChildren } from '@/types/nodes';
+import { JSONContent } from '@tiptap/core';
 
 interface MessageRendererProps {
-  node: LocalNodeWithChildren;
+  node: JSONContent;
   keyPrefix: string | null;
 }
 

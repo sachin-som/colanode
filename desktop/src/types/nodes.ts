@@ -1,3 +1,5 @@
+import { JSONContent } from '@tiptap/core';
+
 export type LocalNode = {
   id: string;
   parentId: string | null;
@@ -19,7 +21,7 @@ export type LocalNodeAttributes = {
   type: string;
   parentId?: string | null;
   index?: string | null;
-  content?: NodeBlock[] | null;
+  content?: JSONContent[] | null;
   [key: string]: any;
 };
 

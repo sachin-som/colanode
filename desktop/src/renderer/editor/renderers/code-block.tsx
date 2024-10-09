@@ -2,11 +2,11 @@ import React from 'react';
 
 import { Icon } from '@/renderer/components/ui/icon';
 import { defaultClasses } from '@/renderer/editor/classes';
-import { LocalNodeWithChildren } from '@/types/nodes';
 import { highlightCode, languages } from '@/lib/lowlight';
+import { JSONContent } from '@tiptap/core';
 
 interface CodeBlockRendererProps {
-  node: LocalNodeWithChildren;
+  node: JSONContent;
   keyPrefix: string | null;
 }
 

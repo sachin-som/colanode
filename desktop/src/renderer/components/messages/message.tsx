@@ -130,7 +130,11 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           </ul>
           <div className="text-foreground">
             {message.content.map((node) => (
-              <NodeRenderer key={node.id} node={node} keyPrefix={node.id} />
+              <NodeRenderer
+                key={node.attrs?.id}
+                node={node}
+                keyPrefix={node.attrs?.id}
+              />
             ))}
           </div>
           {message.reactionCounts.length > 0 && (

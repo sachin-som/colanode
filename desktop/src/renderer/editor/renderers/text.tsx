@@ -1,6 +1,10 @@
 import React from 'react';
-import { NodeBlock } from '@/types/nodes';
+import { JSONContent } from '@tiptap/core';
 
-export const TextRenderer = ({ node }: { node: NodeBlock }) => {
+interface TextRendererProps {
+  node: JSONContent;
+}
+
+export const TextRenderer = ({ node }: TextRendererProps) => {
   return <React.Fragment>{node.text ?? ''}</React.Fragment>;
 };

@@ -51,7 +51,7 @@ syncRouter.get(
       (nodeReaction) => {
         return {
           nodeId: nodeReaction.node_id,
-          reactorId: nodeReaction.actor_id,
+          actorId: nodeReaction.actor_id,
           reaction: nodeReaction.reaction,
           workspaceId: nodeReaction.workspace_id,
           createdAt: nodeReaction.created_at,

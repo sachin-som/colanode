@@ -1,12 +1,9 @@
-import { mapContentsToEditorNodes } from '@/lib/editor';
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { buildCreateNode } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
-import { LocalNode } from '@/types/nodes';
-import { CreateNode } from '@/main/data/workspace/schema';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -19,38 +16,22 @@ export class MessageCreateMutationHandler
     );
 
     const id = generateId(IdType.Message);
-    const editorNodes = mapContentsToEditorNodes(
-      input.content.content,
-      id,
-      new Map<string, LocalNode>(),
-    );
-
-    const nodesToCreate: CreateNode[] = [
-      buildCreateNode(
-        {
-          id: id,
-          attributes: {
-            type: NodeTypes.Message,
-            parentId: input.conversationId,
-          },
-        },
-        input.userId,
-      ),
-    ];
-
-    for (const editorNode of editorNodes) {
-      nodesToCreate.push(
+    await workspaceDatabase
+      .insertInto('nodes')
+      .values(
         buildCreateNode(
           {
-            id: editorNode.id,
-            attributes: editorNode.attributes,
+            id: id,
+            attributes: {
+              type: NodeTypes.Message,
+              parentId: input.conversationId,
+              content: input.content.content,
+            },
           },
           input.userId,
         ),
-      );
-    }
-
-    await workspaceDatabase.insertInto('nodes').values(nodesToCreate).execute();
+      )
+      .execute();
 
     return {
       output: {

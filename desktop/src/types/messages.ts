@@ -1,9 +1,9 @@
-import { LocalNodeWithChildren } from '@/types/nodes';
 import { UserNode } from '@/types/users';
+import { JSONContent } from '@tiptap/core';
 
 export type MessageNode = {
   id: string;
-  content: LocalNodeWithChildren[];
+  content: JSONContent[];
   createdAt: string;
   author: UserNode;
   reactionCounts: MessageReactionCount[];

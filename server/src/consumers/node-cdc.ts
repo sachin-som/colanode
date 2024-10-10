@@ -3,7 +3,11 @@ import { CdcMessage, NodeCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { generateId, IdType } from '@/lib/id';
-import { ServerNode } from '@/types/nodes';
+import {
+  ServerNodeCreateChangeData,
+  ServerNodeDeleteChangeData,
+  ServerNodeUpdateChangeData,
+} from '@/types/sync';
 
 export const initNodeChangesConsumer = async () => {
   const consumer = kafka.consumer({ groupId: CONSUMER_IDS.NODE_CDC });
@@ -54,18 +58,31 @@ const handleNodeCreate = async (change: CdcMessage<NodeCdcData>) => {
     return;
   }
 
-  const serverNode: ServerNode = mapNode(node);
+  const data: ServerNodeCreateChangeData = {
+    type: 'node_create',
+    id: node.id,
+    workspaceId: node.workspace_id,
+    state: node.state,
+    createdAt: node.created_at,
+    createdBy: node.created_by,
+    serverCreatedAt: node.server_created_at,
+    versionId: node.version_id,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'nodes',
-      action: 'insert',
-      workspace_id: node.workspace_id,
-      created_at: new Date(),
-      after: JSON.stringify(serverNode),
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: node.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -80,19 +97,31 @@ const handleNodeUpdate = async (change: CdcMessage<NodeCdcData>) => {
     return;
   }
 
-  const serverNode: ServerNode = mapNode(node);
+  const data: ServerNodeUpdateChangeData = {
+    type: 'node_update',
+    id: node.id,
+    workspaceId: node.workspace_id,
+    update: node.state,
+    updatedAt: node.updated_at ?? new Date().toISOString(),
+    updatedBy: node.updated_by ?? node.created_by,
+    serverUpdatedAt: node.server_updated_at ?? new Date().toISOString(),
+    versionId: node.version_id,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'nodes',
-      action: 'update',
-      workspace_id: node.workspace_id,
-      created_at: new Date(),
-      before: change.before ? JSON.stringify(change.before) : null,
-      after: JSON.stringify(serverNode),
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: node.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -107,19 +136,26 @@ const handleNodeDelete = async (change: CdcMessage<NodeCdcData>) => {
     return;
   }
 
-  const serverNode: ServerNode = mapNode(node);
+  const data: ServerNodeDeleteChangeData = {
+    type: 'node_delete',
+    id: node.id,
+    workspaceId: node.workspace_id,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'nodes',
-      action: 'delete',
-      workspace_id: node.workspace_id,
-      created_at: new Date(),
-      before: JSON.stringify(serverNode),
-      after: null,
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: node.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -139,25 +175,4 @@ const getDeviceIds = async (workspaceId: string) => {
 
   const deviceIds = accountDevices.map((account) => account.id);
   return deviceIds;
-};
-
-const mapNode = (node: NodeCdcData): ServerNode => {
-  return {
-    id: node.id,
-    workspaceId: node.workspace_id,
-    parentId: node.parent_id,
-    type: node.type,
-    index: node.index,
-    attributes: JSON.parse(node.attributes),
-    state: node.state,
-    createdAt: new Date(node.created_at),
-    createdBy: node.created_by,
-    updatedAt: node.updated_at ? new Date(node.updated_at) : null,
-    updatedBy: node.updated_by,
-    versionId: node.version_id,
-    serverCreatedAt: new Date(node.server_created_at),
-    serverUpdatedAt: node.server_updated_at
-      ? new Date(node.server_updated_at)
-      : null,
-  };
 };

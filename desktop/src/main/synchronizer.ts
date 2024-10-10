@@ -1,8 +1,12 @@
 import { BackoffCalculator } from '@/lib/backoff-calculator';
 import { buildAxiosInstance } from '@/lib/servers';
-import { SelectWorkspace } from '@/main/data/app/schema';
 import { databaseManager } from '@/main/data/database-manager';
-import { ServerSyncResponse, WorkspaceSyncData } from '@/types/sync';
+import {
+  ServerChange,
+  ServerChangeData,
+  ServerSyncResponse,
+} from '@/types/sync';
+import { mediator } from '@/main/mediator';
 
 const EVENT_LOOP_INTERVAL = 100;
 
@@ -26,7 +30,6 @@ class Synchronizer {
 
   private async executeEventLoop() {
     try {
-      await this.checkForWorkspaceSyncs();
       await this.checkForWorkspaceChanges();
     } catch (error) {
       console.log('error', error);
@@ -35,19 +38,140 @@ class Synchronizer {
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 
-  private async checkForWorkspaceSyncs(): Promise<void> {
-    const unsyncedWorkspaces = await databaseManager.appDatabase
-      .selectFrom('workspaces')
-      .selectAll()
-      .where('synced', '=', 0)
-      .execute();
-
-    if (unsyncedWorkspaces.length === 0) {
-      return;
+  public async handleServerChange(accountId: string, change: ServerChange) {
+    const executed = await this.executeServerChange(accountId, change.data);
+    if (executed) {
+      await mediator.executeMessage(
+        {
+          accountId,
+          deviceId: change.deviceId,
+        },
+        {
+          type: 'server_change_result',
+          changeId: change.id,
+          success: executed,
+        },
+      );
     }
+  }
 
-    for (const workspace of unsyncedWorkspaces) {
-      await this.syncWorkspace(workspace);
+  private async executeServerChange(
+    accountId: string,
+    data: ServerChangeData,
+  ): Promise<boolean> {
+    switch (data.type) {
+      case 'node_create': {
+        const result = await mediator.executeMutation({
+          type: 'node_server_create',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          id: data.id,
+          state: data.state,
+          createdAt: data.createdAt,
+          serverCreatedAt: data.serverCreatedAt,
+          createdBy: data.createdBy,
+          versionId: data.versionId,
+        });
+
+        return result.success;
+      }
+      case 'node_update': {
+        const result = await mediator.executeMutation({
+          type: 'node_server_update',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          id: data.id,
+          update: data.update,
+          updatedAt: data.updatedAt,
+          updatedBy: data.updatedBy,
+          versionId: data.versionId,
+          serverUpdatedAt: data.serverUpdatedAt,
+        });
+
+        return result.success;
+      }
+      case 'node_delete': {
+        const result = await mediator.executeMutation({
+          type: 'node_server_delete',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          id: data.id,
+        });
+
+        return result.success;
+      }
+      case 'node_collaborator_create': {
+        const result = await mediator.executeMutation({
+          type: 'node_collaborator_server_create',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          nodeId: data.nodeId,
+          collaboratorId: data.collaboratorId,
+          role: data.role,
+          createdAt: data.createdAt,
+          createdBy: data.createdBy,
+          versionId: data.versionId,
+          serverCreatedAt: data.serverCreatedAt,
+        });
+
+        return result.success;
+      }
+      case 'node_collaborator_update': {
+        const result = await mediator.executeMutation({
+          type: 'node_collaborator_server_update',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          nodeId: data.nodeId,
+          collaboratorId: data.collaboratorId,
+          role: data.role,
+          updatedAt: data.updatedAt,
+          updatedBy: data.updatedBy,
+          versionId: data.versionId,
+          serverUpdatedAt: data.serverUpdatedAt,
+        });
+
+        return result.success;
+      }
+      case 'node_collaborator_delete': {
+        const result = await mediator.executeMutation({
+          type: 'node_collaborator_server_delete',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          nodeId: data.nodeId,
+          collaboratorId: data.collaboratorId,
+        });
+
+        return result.success;
+      }
+      case 'node_reaction_create': {
+        const result = await mediator.executeMutation({
+          type: 'node_reaction_server_create',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          nodeId: data.nodeId,
+          actorId: data.actorId,
+          reaction: data.reaction,
+          createdAt: data.createdAt,
+          serverCreatedAt: data.serverCreatedAt,
+        });
+
+        return result.success;
+      }
+      case 'node_reaction_delete': {
+        const result = await mediator.executeMutation({
+          type: 'node_reaction_server_delete',
+          accountId: accountId,
+          workspaceId: data.workspaceId,
+          nodeId: data.nodeId,
+          actorId: data.actorId,
+          reaction: data.reaction,
+        });
+
+        return result.success;
+      }
+      default: {
+        return false;
+      }
     }
   }
 
@@ -63,7 +187,6 @@ class Synchronizer {
         'servers.domain',
         'servers.attributes',
       ])
-      .where('workspaces.synced', '=', 1)
       .execute();
 
     for (const workspace of workspaces) {
@@ -145,127 +268,6 @@ class Synchronizer {
         const backoff = this.workspaceBackoffs.get(workspace.user_id);
         backoff.increaseError();
       }
-    }
-  }
-
-  private async syncWorkspace(workspace: SelectWorkspace): Promise<void> {
-    if (this.workspaceBackoffs.has(workspace.user_id)) {
-      const backoff = this.workspaceBackoffs.get(workspace.user_id);
-      if (!backoff.canRetry()) {
-        return;
-      }
-    }
-
-    try {
-      const credentials = await databaseManager.appDatabase
-        .selectFrom('accounts')
-        .innerJoin('servers', 'accounts.server', 'servers.domain')
-        .select(['domain', 'attributes', 'token'])
-        .where('id', '=', workspace.account_id)
-        .executeTakeFirst();
-
-      if (!credentials) {
-        return;
-      }
-
-      const axios = buildAxiosInstance(
-        credentials.domain,
-        credentials.attributes,
-        credentials.token,
-      );
-      const { data } = await axios.get<WorkspaceSyncData>(
-        `/v1/sync/${workspace.workspace_id}`,
-      );
-
-      await databaseManager.deleteWorkspaceDatabase(
-        workspace.account_id,
-        workspace.workspace_id,
-        workspace.user_id,
-      );
-
-      const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-        workspace.user_id,
-      );
-
-      await workspaceDatabase.transaction().execute(async (trx) => {
-        if (data.nodes.length > 0) {
-          await trx
-            .insertInto('nodes')
-            .values(
-              data.nodes.map((node) => {
-                return {
-                  id: node.id,
-                  attributes: JSON.stringify(node.attributes),
-                  state: node.state,
-                  created_at: node.createdAt,
-                  created_by: node.createdBy,
-                  updated_at: node.updatedAt,
-                  updated_by: node.updatedBy,
-                  version_id: node.versionId,
-                  server_created_at: node.serverCreatedAt,
-                  server_updated_at: node.serverUpdatedAt,
-                  server_version_id: node.versionId,
-                };
-              }),
-            )
-            .execute();
-        }
-
-        if (data.nodeReactions.length > 0) {
-          await trx
-            .insertInto('node_reactions')
-            .values(
-              data.nodeReactions.map((nodeReaction) => {
-                return {
-                  node_id: nodeReaction.nodeId,
-                  actor_id: nodeReaction.actorId,
-                  reaction: nodeReaction.reaction,
-                  created_at: nodeReaction.createdAt,
-                  server_created_at: nodeReaction.serverCreatedAt,
-                };
-              }),
-            )
-            .execute();
-        }
-
-        if (data.nodeCollaborators.length > 0) {
-          await trx
-            .insertInto('node_collaborators')
-            .values(
-              data.nodeCollaborators.map((nodeCollaborator) => {
-                return {
-                  node_id: nodeCollaborator.nodeId,
-                  collaborator_id: nodeCollaborator.collaboratorId,
-                  role: nodeCollaborator.role,
-                  created_at: nodeCollaborator.createdAt,
-                  created_by: nodeCollaborator.createdBy,
-                  updated_at: nodeCollaborator.updatedAt,
-                  updated_by: nodeCollaborator.updatedBy,
-                  version_id: nodeCollaborator.versionId,
-                  server_created_at: nodeCollaborator.serverCreatedAt,
-                  server_updated_at: nodeCollaborator.serverUpdatedAt,
-                  server_version_id: nodeCollaborator.versionId,
-                };
-              }),
-            )
-            .execute();
-        }
-      });
-
-      await databaseManager.appDatabase
-        .updateTable('workspaces')
-        .set({
-          synced: 1,
-        })
-        .where('user_id', '=', workspace.user_id)
-        .execute();
-    } catch (error) {
-      if (!this.workspaceBackoffs.has(workspace.user_id)) {
-        this.workspaceBackoffs.set(workspace.user_id, new BackoffCalculator());
-      }
-
-      const backoff = this.workspaceBackoffs.get(workspace.user_id);
-      backoff.increaseError();
     }
   }
 }

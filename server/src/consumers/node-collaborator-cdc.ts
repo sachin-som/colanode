@@ -3,7 +3,11 @@ import { CdcMessage, NodeCollaboratorCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { generateId, IdType } from '@/lib/id';
-import { ServerNodeCollaborator } from '@/types/nodes';
+import {
+  ServerNodeCollaboratorCreateChangeData,
+  ServerNodeCollaboratorDeleteChangeData,
+  ServerNodeCollaboratorUpdateChangeData,
+} from '@/types/sync';
 
 export const initNodeCollaboratorChangesConsumer = async () => {
   const consumer = kafka.consumer({
@@ -60,19 +64,32 @@ const handleNodeCollaboratorCreate = async (
     return;
   }
 
-  const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(nodeCollaborator);
+  const data: ServerNodeCollaboratorCreateChangeData = {
+    type: 'node_collaborator_create',
+    nodeId: nodeCollaborator.node_id,
+    collaboratorId: nodeCollaborator.collaborator_id,
+    role: nodeCollaborator.role,
+    workspaceId: nodeCollaborator.workspace_id,
+    createdAt: nodeCollaborator.created_at,
+    createdBy: nodeCollaborator.created_by,
+    versionId: nodeCollaborator.version_id,
+    serverCreatedAt: nodeCollaborator.server_created_at,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'node_collaborators',
-      action: 'insert',
-      workspace_id: nodeCollaborator.workspace_id,
-      created_at: new Date(),
-      after: JSON.stringify(serverNodeCollaborator),
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: nodeCollaborator.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -89,19 +106,33 @@ const handleNodeCollaboratorUpdate = async (
     return;
   }
 
-  const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(nodeCollaborator);
+  const data: ServerNodeCollaboratorUpdateChangeData = {
+    type: 'node_collaborator_update',
+    nodeId: nodeCollaborator.node_id,
+    collaboratorId: nodeCollaborator.collaborator_id,
+    role: nodeCollaborator.role,
+    workspaceId: nodeCollaborator.workspace_id,
+    updatedAt: nodeCollaborator.updated_at ?? new Date().toISOString(),
+    updatedBy: nodeCollaborator.updated_by ?? nodeCollaborator.created_by,
+    versionId: nodeCollaborator.version_id,
+    serverUpdatedAt:
+      nodeCollaborator.server_updated_at ?? new Date().toISOString(),
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'node_collaborators',
-      action: 'update',
-      workspace_id: nodeCollaborator.workspace_id,
-      created_at: new Date(),
-      after: JSON.stringify(serverNodeCollaborator),
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: nodeCollaborator.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -118,20 +149,27 @@ const handleNodeCollaboratorDelete = async (
     return;
   }
 
-  const serverNodeCollaborator: ServerNodeCollaborator =
-    mapNodeCollaborator(nodeCollaborator);
+  const data: ServerNodeCollaboratorDeleteChangeData = {
+    type: 'node_collaborator_delete',
+    nodeId: nodeCollaborator.node_id,
+    collaboratorId: nodeCollaborator.collaborator_id,
+    workspaceId: nodeCollaborator.workspace_id,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'node_collaborators',
-      action: 'delete',
-      workspace_id: nodeCollaborator.workspace_id,
-      created_at: new Date(),
-      before: JSON.stringify(serverNodeCollaborator),
-      after: null,
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: nodeCollaborator.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -151,26 +189,4 @@ const getDeviceIds = async (workspaceId: string) => {
 
   const deviceIds = accountDevices.map((account) => account.id);
   return deviceIds;
-};
-
-const mapNodeCollaborator = (
-  nodeCollaborator: NodeCollaboratorCdcData,
-): ServerNodeCollaborator => {
-  return {
-    nodeId: nodeCollaborator.node_id,
-    collaboratorId: nodeCollaborator.collaborator_id,
-    role: nodeCollaborator.role,
-    workspaceId: nodeCollaborator.workspace_id,
-    createdAt: new Date(nodeCollaborator.created_at),
-    createdBy: nodeCollaborator.created_by,
-    updatedAt: nodeCollaborator.updated_at
-      ? new Date(nodeCollaborator.updated_at)
-      : null,
-    updatedBy: nodeCollaborator.updated_by,
-    versionId: nodeCollaborator.version_id,
-    serverCreatedAt: new Date(nodeCollaborator.server_created_at),
-    serverUpdatedAt: nodeCollaborator.server_updated_at
-      ? new Date(nodeCollaborator.server_updated_at)
-      : null,
-  };
 };

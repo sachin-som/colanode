@@ -26,11 +26,16 @@ import { WorkspaceAccountRoleUpdateMutationHandler } from '@/main/handlers/mutat
 import { WorkspaceAccountsInviteMutationHandler } from '@/main/handlers/mutations/workspace-accounts-invite';
 import { WorkspaceCreateMutationHandler } from '@/main/handlers/mutations/workspace-create';
 import { WorkspaceUpdateMutationHandler } from '@/main/handlers/mutations/workspace-update';
-import { NodeSyncMutationHandler } from '@/main/handlers/mutations/node-sync';
-import { NodeReactionSyncMutationHandler } from '@/main/handlers/mutations/node-reaction-sync';
-import { NodeCollaboratorSyncMutationHandler } from '@/main/handlers/mutations/node-collaborator-sync';
 import { DocumentSaveMutationHandler } from '@/main/handlers/mutations/document-save';
 import { AvatarUploadMutationHandler } from '@/main/handlers/mutations/avatar-upload';
+import { NodeServerCreateMutationHandler } from '@/main/handlers/mutations/node-server-create';
+import { NodeServerUpdateMutationHandler } from '@/main/handlers/mutations/node-server-update';
+import { NodeServerDeleteMutationHandler } from '@/main/handlers/mutations/node-server-delete';
+import { NodeCollaboratorServerCreateMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-create';
+import { NodeCollaboratorServerUpdateMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-update';
+import { NodeCollaboratorServerDeleteMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-delete';
+import { NodeReactionServerCreateMutationHandler } from '@/main/handlers/mutations/node-reaction-server-create';
+import { NodeReactionServerDeleteMutationHandler } from '@/main/handlers/mutations/node-reaction-server-delete';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -65,9 +70,17 @@ export const mutationHandlerMap: MutationHandlerMap = {
   workspace_accounts_invite: new WorkspaceAccountsInviteMutationHandler(),
   workspace_create: new WorkspaceCreateMutationHandler(),
   workspace_update: new WorkspaceUpdateMutationHandler(),
-  node_sync: new NodeSyncMutationHandler(),
-  node_reaction_sync: new NodeReactionSyncMutationHandler(),
-  node_collaborator_sync: new NodeCollaboratorSyncMutationHandler(),
   document_save: new DocumentSaveMutationHandler(),
   avatar_upload: new AvatarUploadMutationHandler(),
+  node_server_create: new NodeServerCreateMutationHandler(),
+  node_server_update: new NodeServerUpdateMutationHandler(),
+  node_server_delete: new NodeServerDeleteMutationHandler(),
+  node_collaborator_server_create:
+    new NodeCollaboratorServerCreateMutationHandler(),
+  node_collaborator_server_update:
+    new NodeCollaboratorServerUpdateMutationHandler(),
+  node_collaborator_server_delete:
+    new NodeCollaboratorServerDeleteMutationHandler(),
+  node_reaction_server_create: new NodeReactionServerCreateMutationHandler(),
+  node_reaction_server_delete: new NodeReactionServerDeleteMutationHandler(),
 };

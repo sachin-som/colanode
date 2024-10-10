@@ -3,7 +3,10 @@ import { CdcMessage, NodeReactionCdcData } from '@/types/cdc';
 import { PostgresOperation } from '@/lib/constants';
 import { database } from '@/data/database';
 import { generateId, IdType } from '@/lib/id';
-import { ServerNodeReaction } from '@/types/nodes';
+import {
+  ServerNodeReactionCreateChangeData,
+  ServerNodeReactionDeleteChangeData,
+} from '@/types/sync';
 
 export const initNodeReactionChangesConsumer = async () => {
   const consumer = kafka.consumer({
@@ -56,18 +59,30 @@ const handleNodeReactionCreate = async (
     return;
   }
 
-  const serverNodeReaction: ServerNodeReaction = mapNodeReaction(reaction);
+  const data: ServerNodeReactionCreateChangeData = {
+    type: 'node_reaction_create',
+    nodeId: reaction.node_id,
+    actorId: reaction.actor_id,
+    reaction: reaction.reaction,
+    workspaceId: reaction.workspace_id,
+    createdAt: reaction.created_at,
+    serverCreatedAt: reaction.server_created_at,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'node_reactions',
-      action: 'insert',
-      workspace_id: reaction.workspace_id,
-      created_at: new Date(),
-      after: JSON.stringify(serverNodeReaction),
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: reaction.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -84,19 +99,28 @@ const handleNodeReactionDelete = async (
     return;
   }
 
-  const serverNodeReaction: ServerNodeReaction = mapNodeReaction(reaction);
+  const data: ServerNodeReactionDeleteChangeData = {
+    type: 'node_reaction_delete',
+    nodeId: reaction.node_id,
+    actorId: reaction.actor_id,
+    reaction: reaction.reaction,
+    workspaceId: reaction.workspace_id,
+  };
+
   await database
     .insertInto('changes')
-    .values({
-      id: generateId(IdType.Change),
-      table: 'node_reactions',
-      action: 'delete',
-      workspace_id: reaction.workspace_id,
-      created_at: new Date(),
-      before: JSON.stringify(serverNodeReaction),
-      after: null,
-      device_ids: deviceIds,
-    })
+    .values(
+      deviceIds.map((deviceId) => {
+        return {
+          id: generateId(IdType.Change),
+          device_id: deviceId,
+          workspace_id: reaction.workspace_id,
+          data: JSON.stringify(data),
+          created_at: new Date(),
+          retry_count: 0,
+        };
+      }),
+    )
     .execute();
 };
 
@@ -116,15 +140,4 @@ const getDeviceIds = async (workspaceId: string) => {
 
   const deviceIds = accountDevices.map((account) => account.id);
   return deviceIds;
-};
-
-const mapNodeReaction = (reaction: NodeReactionCdcData): ServerNodeReaction => {
-  return {
-    nodeId: reaction.node_id,
-    actorId: reaction.actor_id,
-    reaction: reaction.reaction,
-    workspaceId: reaction.workspace_id,
-    createdAt: new Date(reaction.created_at),
-    serverCreatedAt: new Date(reaction.server_created_at),
-  };
 };

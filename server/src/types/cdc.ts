@@ -27,13 +27,10 @@ type CdcSource = {
 
 export type ChangeCdcData = {
   id: string;
+  device_id: string;
   workspace_id: string;
-  table: string;
-  action: string;
-  after: string | null;
-  before: string | null;
+  data: string;
   created_at: string;
-  device_ids: string[];
 };
 
 export type NodeCdcData = {

@@ -8,7 +8,7 @@ import { authMiddleware } from '@/middlewares/auth';
 import { syncRouter } from '@/routes/sync';
 import { configRouter } from '@/routes/config';
 import { avatarsRouter } from '@/routes/avatars';
-import { synapse } from '@/synapse';
+import { socketManager } from '@/sockets/socket-manager';
 
 export const initApi = () => {
   const app = express();
@@ -28,7 +28,7 @@ export const initApi = () => {
   app.use('/v1/avatars', authMiddleware, avatarsRouter);
 
   const server = http.createServer(app);
-  synapse.init(server);
+  socketManager.init(server);
 
   server.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);

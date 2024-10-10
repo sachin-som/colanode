@@ -139,13 +139,11 @@ export type UpdateNodeReaction = Updateable<NodeReactionTable>;
 
 interface ChangeTable {
   id: ColumnType<string, string, never>;
+  device_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  table: ColumnType<string, string, never>;
-  action: ColumnType<string, string, never>;
-  after: ColumnType<string | null, string | null, never>;
-  before: ColumnType<string | null, string | null, never>;
+  data: JSONColumnType<any, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
-  device_ids: ColumnType<string[], string[], string[]>;
+  retry_count: ColumnType<number, number, number>;
 }
 
 export type SelectChange = Selectable<ChangeTable>;

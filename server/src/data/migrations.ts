@@ -192,13 +192,17 @@ const createChangesTable: Migration = {
     await db.schema
       .createTable('changes')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('table', 'varchar(30)', (col) => col.notNull())
-      .addColumn('action', 'varchar(30)', (col) => col.notNull())
-      .addColumn('after', 'jsonb')
-      .addColumn('before', 'jsonb')
+      .addColumn('data', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('device_ids', sql`text[]`, (col) => col.notNull())
+      .addColumn('retry_count', 'integer', (col) => col.notNull().defaultTo(0))
+      .execute();
+
+    await db.schema
+      .createIndex('changes_device_id_index')
+      .on('changes')
+      .column('device_id')
       .execute();
   },
   down: async (db) => {

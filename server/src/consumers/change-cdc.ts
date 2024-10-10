@@ -2,7 +2,6 @@ import { kafka, TOPIC_NAMES, CONSUMER_IDS } from '@/data/kafka';
 import { CdcMessage, ChangeCdcData } from '@/types/cdc';
 import { redis, CHANNEL_NAMES } from '@/data/redis';
 import { PostgresOperation } from '@/lib/constants';
-import { database } from '@/data/database';
 
 export const initChangeCdcConsumer = async () => {
   const consumer = kafka.consumer({ groupId: CONSUMER_IDS.CHANGE_CDC });
@@ -52,18 +51,7 @@ const handleChangeCreate = async (change: CdcMessage<ChangeCdcData>) => {
 };
 
 const handleChangeUpdate = async (change: CdcMessage<ChangeCdcData>) => {
-  const changeData = change.after;
-  if (!changeData) {
-    return;
-  }
-
-  // if all devices have acknowledged the mutation, delete it
-  if (changeData.device_ids == null || changeData.device_ids.length == 0) {
-    await database
-      .deleteFrom('changes')
-      .where('id', '=', changeData.id)
-      .execute();
-  }
+  console.log('Change update:', change.after?.id);
 };
 
 const handleChangeDelete = async (change: CdcMessage<ChangeCdcData>) => {

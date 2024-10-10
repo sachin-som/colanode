@@ -65,6 +65,34 @@ class DatabaseManager {
     return workspaceDatabase;
   }
 
+  public async deleteAccountData(accountId: string): Promise<void> {
+    await this.waitForInit();
+
+    const workspaces = await this.appDatabase
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('account_id', '=', accountId)
+      .execute();
+
+    for (const workspace of workspaces) {
+      await this.deleteWorkspaceDatabase(
+        accountId,
+        workspace.workspace_id,
+        workspace.user_id,
+      );
+    }
+
+    await this.appDatabase
+      .deleteFrom('workspaces')
+      .where('account_id', '=', accountId)
+      .execute();
+
+    const accountDir = path.join(this.appPath, accountId);
+    if (fs.existsSync(accountDir)) {
+      fs.rmSync(accountDir, { recursive: true, force: true });
+    }
+  }
+
   public async deleteWorkspaceDatabase(
     accountId: string,
     workspaceId: string,

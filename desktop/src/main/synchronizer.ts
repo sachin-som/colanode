@@ -12,8 +12,7 @@ const EVENT_LOOP_INTERVAL = 100;
 
 class Synchronizer {
   private initiated: boolean = false;
-  private readonly workspaceBackoffs: Map<string, BackoffCalculator> =
-    new Map();
+  private readonly backoffs: Map<string, BackoffCalculator> = new Map();
 
   constructor() {
     this.executeEventLoop = this.executeEventLoop.bind(this);
@@ -30,6 +29,7 @@ class Synchronizer {
 
   private async executeEventLoop() {
     try {
+      await this.checkForLoggedOutAccount();
       await this.checkForWorkspaceChanges();
     } catch (error) {
       console.log('error', error);
@@ -175,6 +175,65 @@ class Synchronizer {
     }
   }
 
+  private async checkForLoggedOutAccount() {
+    const accounts = await databaseManager.appDatabase
+      .selectFrom('accounts')
+      .innerJoin('servers', 'accounts.server', 'servers.domain')
+      .select([
+        'accounts.id',
+        'accounts.token',
+        'servers.domain',
+        'servers.attributes',
+      ])
+      .where('status', '=', 'logged_out')
+      .execute();
+
+    if (accounts.length === 0) {
+      return;
+    }
+
+    for (const account of accounts) {
+      const backoffKey = account.id;
+      if (this.backoffs.has(backoffKey)) {
+        const backoff = this.backoffs.get(backoffKey);
+        if (!backoff.canRetry()) {
+          return;
+        }
+      }
+
+      try {
+        const axios = buildAxiosInstance(
+          account.domain,
+          account.attributes,
+          account.token,
+        );
+
+        const { status } = await axios.delete(`/v1/accounts/logout`);
+
+        if (status !== 200) {
+          return;
+        }
+
+        await databaseManager.deleteAccountData(account.id);
+        await databaseManager.appDatabase
+          .deleteFrom('accounts')
+          .where('id', '=', account.id)
+          .execute();
+
+        if (this.backoffs.has(backoffKey)) {
+          this.backoffs.delete(backoffKey);
+        }
+      } catch (error) {
+        if (!this.backoffs.has(backoffKey)) {
+          this.backoffs.set(backoffKey, new BackoffCalculator());
+        }
+
+        const backoff = this.backoffs.get(account.id);
+        backoff.increaseError();
+      }
+    }
+  }
+
   private async checkForWorkspaceChanges() {
     const workspaces = await databaseManager.appDatabase
       .selectFrom('workspaces')
@@ -190,8 +249,9 @@ class Synchronizer {
       .execute();
 
     for (const workspace of workspaces) {
-      if (this.workspaceBackoffs.has(workspace.user_id)) {
-        const backoff = this.workspaceBackoffs.get(workspace.user_id);
+      const backoffKey = workspace.user_id;
+      if (this.backoffs.has(backoffKey)) {
+        const backoff = this.backoffs.get(backoffKey);
         if (!backoff.canRetry()) {
           return;
         }
@@ -257,15 +317,16 @@ class Synchronizer {
             .where('retry_count', '>=', 5)
             .execute();
         }
+
+        if (this.backoffs.has(backoffKey)) {
+          this.backoffs.delete(backoffKey);
+        }
       } catch (error) {
-        if (!this.workspaceBackoffs.has(workspace.user_id)) {
-          this.workspaceBackoffs.set(
-            workspace.user_id,
-            new BackoffCalculator(),
-          );
+        if (!this.backoffs.has(backoffKey)) {
+          this.backoffs.set(backoffKey, new BackoffCalculator());
         }
 
-        const backoff = this.workspaceBackoffs.get(workspace.user_id);
+        const backoff = this.backoffs.get(backoffKey);
         backoff.increaseError();
       }
     }

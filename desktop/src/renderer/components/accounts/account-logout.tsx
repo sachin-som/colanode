@@ -10,6 +10,8 @@ import {
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
+import { useMutation } from '@/renderer/hooks/use-mutation';
+import { toast } from '@/renderer/components/ui/use-toast';
 
 interface AccountLogoutProps {
   id: string;
@@ -17,7 +19,7 @@ interface AccountLogoutProps {
 }
 
 export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const { mutate, isPending } = useMutation();
   return (
     <AlertDialog
       open={true}
@@ -38,14 +40,28 @@ export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={isLoggingOut}
+            disabled={isPending}
             onClick={async () => {
-              setIsLoggingOut(true);
-              await window.neuron.logout(id);
-              window.location.href = '/';
+              mutate({
+                input: {
+                  type: 'logout',
+                  accountId: id,
+                },
+                onSuccess() {
+                  window.location.href = '/';
+                },
+                onError() {
+                  toast({
+                    title: 'Failed to logout',
+                    description:
+                      'Something went wrong trying to logout. Please try again.',
+                    variant: 'destructive',
+                  });
+                },
+              });
             }}
           >
-            {isLoggingOut && <Spinner className="mr-1" />}
+            {isPending && <Spinner className="mr-1" />}
             Logout
           </Button>
         </AlertDialogFooter>

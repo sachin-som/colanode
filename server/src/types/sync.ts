@@ -60,9 +60,13 @@ export type LocalNodeReactionChangeData = {
 export type ServerChange = {
   id: string;
   workspaceId: string;
-  deviceId: string;
   data: ServerChangeData;
   createdAt: string;
+};
+
+export type ServerChangeBroadcastMessage = {
+  changeId: string;
+  deviceIds: string[];
 };
 
 export type ServerChangeData =
@@ -90,7 +94,7 @@ export type ServerNodeUpdateChangeData = {
   type: 'node_update';
   id: string;
   workspaceId: string;
-  update: string;
+  updates: string[];
   updatedAt: string;
   updatedBy: string;
   versionId: string;

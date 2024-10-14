@@ -1,8 +1,8 @@
-import { Workspace } from '@/types/workspaces';
+import { WorkspaceOutput } from '@/types/workspaces';
 
 export type LoginOutput = {
   account: Account;
-  workspaces: Workspace[];
+  workspaces: WorkspaceOutput[];
 };
 
 export type Account = {

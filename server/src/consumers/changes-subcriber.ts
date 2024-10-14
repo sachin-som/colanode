@@ -1,8 +1,11 @@
+import { database } from '@/data/database';
 import { redis, CHANNEL_NAMES } from '@/data/redis';
 import { socketManager } from '@/sockets/socket-manager';
-import { ServerChange } from '@/types/sync';
-import { ChangeCdcData } from '@/types/cdc';
-import { ServerChangeMessageInput } from '@/messages/server-change';
+import {
+  ServerChange,
+  ServerChangeBroadcastMessage,
+  ServerChangeData,
+} from '@/types/sync';
 
 export const initChangesSubscriber = async () => {
   const subscriber = redis.duplicate();
@@ -11,20 +14,41 @@ export const initChangesSubscriber = async () => {
 };
 
 const handleMessage = async (message: string) => {
-  const changeData = JSON.parse(message) as ChangeCdcData;
+  const data: ServerChangeBroadcastMessage = JSON.parse(message);
+  if (!data.deviceIds) {
+    return;
+  }
+
+  if (!data.changeId) {
+    return;
+  }
+
+  const connections = socketManager.getConnections(data.deviceIds);
+  if (connections.length === 0) {
+    return;
+  }
+
+  const change = await database
+    .selectFrom('changes')
+    .selectAll()
+    .where('id', '=', data.changeId)
+    .executeTakeFirst();
+
+  if (!change) {
+    return;
+  }
 
   const serverChange: ServerChange = {
-    id: changeData.id,
-    workspaceId: changeData.workspace_id,
-    deviceId: changeData.device_id,
-    data: JSON.parse(changeData.data),
-    createdAt: changeData.created_at,
+    id: change.id,
+    workspaceId: change.workspace_id,
+    data: change.data as ServerChangeData,
+    createdAt: change.created_at.toISOString(),
   };
 
-  const input: ServerChangeMessageInput = {
-    type: 'server_change',
-    change: serverChange,
-  };
-
-  socketManager.send(changeData.device_id, input);
+  connections.forEach((connection) => {
+    connection.send({
+      type: 'server_change',
+      change: serverChange,
+    });
+  });
 };

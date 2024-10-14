@@ -85,7 +85,6 @@ export class WorkspaceListQueryHandler
         accountId: row.account_id,
         role: row.role as WorkspaceRole,
         userId: row.user_id,
-        synced: row.synced === 1,
       };
     });
   }

@@ -12,9 +12,10 @@ import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { generateId, IdType } from '@/lib/id';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
-import { WorkspaceOutput } from '@/types/workspaces';
+import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
+import { mapNode } from '@/lib/nodes';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -233,31 +234,47 @@ const buildLoginOutput = async (
     .execute();
 
   const workspaceOutputs: WorkspaceOutput[] = [];
-  const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
-  if (workspaceIds.length > 0) {
+  if (workspaceUsers.length > 0) {
+    const workspaceIds = workspaceUsers.map((wu) => wu.workspace_id);
     const workspaces = await database
       .selectFrom('workspaces')
       .where('id', 'in', workspaceIds)
       .selectAll()
       .execute();
 
+    const userIds = workspaceUsers.map((wu) => wu.id);
+    const userNodes = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', 'in', userIds)
+      .execute();
+
     for (const workspaceUser of workspaceUsers) {
       const workspace = workspaces.find(
         (w) => w.id === workspaceUser.workspace_id,
       );
+
       if (!workspace) {
+        continue;
+      }
+
+      const userNode = userNodes.find((n) => n.id === workspaceUser.id);
+      if (!userNode) {
         continue;
       }
 
       workspaceOutputs.push({
         id: workspace.id,
         name: workspace.name,
-        role: workspaceUser.role,
-        userId: workspaceUser.id,
         versionId: workspaceUser.version_id,
-        accountId: workspaceUser.account_id,
         avatar: workspace.avatar,
         description: workspace.description,
+        user: {
+          id: workspaceUser.id,
+          accountId: workspaceUser.account_id,
+          role: workspaceUser.role as WorkspaceRole,
+          node: mapNode(userNode),
+        },
       });
     }
   }

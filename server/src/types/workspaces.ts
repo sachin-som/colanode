@@ -1,3 +1,5 @@
+import { ServerNode } from '@/types/nodes';
+
 export enum WorkspaceStatus {
   Active = 1,
   Inactive = 2,
@@ -14,19 +16,6 @@ export enum WorkspaceUserStatus {
   Active = 1,
   Inactive = 2,
 }
-
-export type Workspace = {
-  id: string;
-  name: string;
-  description?: string | null;
-  avatar?: string | null;
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date | null;
-  updatedBy?: string | null;
-  status: WorkspaceStatus;
-  versionId: string;
-};
 
 export type WorkspaceUser = {
   id: string;
@@ -53,9 +42,14 @@ export type WorkspaceOutput = {
   description?: string | null;
   avatar?: string | null;
   versionId: string;
+  user: WorkspaceUserOutput;
+};
+
+export type WorkspaceUserOutput = {
+  id: string;
   accountId: string;
-  role: string;
-  userId: string;
+  role: WorkspaceRole;
+  node: ServerNode;
 };
 
 export type WorkspaceAccountsInviteInput = {

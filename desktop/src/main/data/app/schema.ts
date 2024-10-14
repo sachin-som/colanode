@@ -38,7 +38,6 @@ interface WorkspaceTable {
   avatar: ColumnType<string | null, string | null, string | null>;
   version_id: ColumnType<string, string, string>;
   role: ColumnType<string, string, string>;
-  synced: ColumnType<number, number, number>;
 }
 
 export type SelectWorkspace = Selectable<WorkspaceTable>;

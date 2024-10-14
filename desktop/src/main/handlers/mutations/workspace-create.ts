@@ -6,7 +6,7 @@ import {
   MutationHandler,
   MutationResult,
 } from '@/operations/mutations';
-import { Workspace } from '@/types/workspaces';
+import { WorkspaceOutput } from '@/types/workspaces';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>
@@ -39,7 +39,7 @@ export class WorkspaceCreateMutationHandler
       server.attributes,
       account.token,
     );
-    const { data } = await axios.post<Workspace>(`/v1/workspaces`, {
+    const { data } = await axios.post<WorkspaceOutput>(`/v1/workspaces`, {
       name: input.name,
       description: input.description,
       avatar: input.avatar,
@@ -49,14 +49,36 @@ export class WorkspaceCreateMutationHandler
       .insertInto('workspaces')
       .values({
         workspace_id: data.id ?? data.id,
-        account_id: data.accountId,
+        account_id: data.user.accountId,
         name: data.name,
         description: data.description,
         avatar: data.avatar,
-        role: data.role,
-        synced: 0,
-        user_id: data.userId,
+        role: data.user.role,
+        user_id: data.user.id,
         version_id: data.versionId,
+      })
+      .onConflict((cb) => cb.doNothing())
+      .execute();
+
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      data.user.id,
+    );
+
+    const user = data.user.node;
+    await workspaceDatabase
+      .insertInto('nodes')
+      .values({
+        id: user.id,
+        attributes: JSON.stringify(user.attributes),
+        state: user.state,
+        created_at: user.createdAt,
+        created_by: user.createdBy,
+        updated_at: user.updatedAt,
+        updated_by: user.updatedBy,
+        server_created_at: user.serverCreatedAt,
+        server_updated_at: user.serverUpdatedAt,
+        version_id: user.versionId,
+        server_version_id: user.versionId,
       })
       .onConflict((cb) => cb.doNothing())
       .execute();
@@ -65,6 +87,11 @@ export class WorkspaceCreateMutationHandler
       {
         type: 'app',
         table: 'workspaces',
+      },
+      {
+        type: 'workspace',
+        table: 'nodes',
+        userId: user.id,
       },
     ];
 

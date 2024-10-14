@@ -16,7 +16,22 @@ export type Workspace = {
   accountId: string;
   role: WorkspaceRole;
   userId: string;
-  synced: boolean;
+};
+
+export type WorkspaceOutput = {
+  id: string;
+  name: string;
+  description?: string | null;
+  avatar?: string | null;
+  versionId: string;
+  user: WorkspaceUserOutput;
+};
+
+export type WorkspaceUserOutput = {
+  id: string;
+  accountId: string;
+  role: WorkspaceRole;
+  node: ServerNode;
 };
 
 export type WorkspaceAccountsInviteOutput = {

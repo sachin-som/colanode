@@ -66,10 +66,10 @@ export class EmailLoginMutationHandler
             name: workspace.name,
             account_id: data.account.id,
             avatar: workspace.avatar,
-            role: workspace.role,
+            role: workspace.user.role,
             description: workspace.description,
             synced: 0,
-            user_id: workspace.userId,
+            user_id: workspace.user.id,
             version_id: workspace.versionId,
           })),
         )
@@ -79,6 +79,37 @@ export class EmailLoginMutationHandler
         type: 'app',
         table: 'workspaces',
       });
+
+      for (const workspace of data.workspaces) {
+        const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+          workspace.id,
+        );
+
+        const user = workspace.user.node;
+        await workspaceDatabase
+          .insertInto('nodes')
+          .values({
+            id: user.id,
+            attributes: JSON.stringify(user.attributes),
+            state: user.state,
+            created_at: user.createdAt,
+            created_by: user.createdBy,
+            updated_at: user.updatedAt,
+            updated_by: user.updatedBy,
+            server_created_at: user.serverCreatedAt,
+            server_updated_at: user.serverUpdatedAt,
+            version_id: user.versionId,
+            server_version_id: user.versionId,
+          })
+          .onConflict((cb) => cb.doNothing())
+          .execute();
+
+        changedTables.push({
+          type: 'workspace',
+          table: 'nodes',
+          userId: workspace.user.id,
+        });
+      }
     });
 
     return {

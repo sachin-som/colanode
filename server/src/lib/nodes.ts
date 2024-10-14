@@ -28,7 +28,11 @@ type NodeCollaboratorRow = {
   role: string;
 };
 
-export const getCollaboratorRole = async (
+type NodeIdRow = {
+  id: string;
+};
+
+export const fetchCollaboratorRole = async (
   nodeId: string,
   collaboratorId: string,
 ): Promise<string | null> => {
@@ -64,4 +68,25 @@ export const getCollaboratorRole = async (
   }, 'collaborator');
 
   return highestRole;
+};
+
+export const fetchNodeTree = async (nodeId: string): Promise<string[]> => {
+  const query = sql<NodeIdRow>`
+    WITH RECURSIVE ancestors(id, parent_id, level) AS (
+      SELECT id, parent_id, 0 AS level
+      FROM nodes
+      WHERE id = ${nodeId}
+      UNION ALL
+      SELECT n.id, n.parent_id, a.level + 1
+      FROM nodes n
+      INNER JOIN ancestors a ON n.id = a.parent_id
+    )
+    SELECT n.id
+    FROM nodes n
+    JOIN ancestors a ON n.id = a.id
+    ORDER BY a.level DESC;
+  `.compile(database);
+
+  const result = await database.executeQuery(query);
+  return result.rows.map((row) => row.id);
 };

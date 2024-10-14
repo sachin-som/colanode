@@ -1,16 +1,20 @@
 import { database } from '@/data/database';
 import { MessageInput } from '@/messages';
 import { NeuronRequestAccount } from '@/types/api';
+import { ServerChange } from '@/types/sync';
 import { WebSocket } from 'ws';
 
 export class SocketConnection {
   private readonly socket: WebSocket;
-  private readonly account: NeuronRequestAccount;
   private readonly pendingChanges: Set<string> = new Set();
+
+  public accountId: string;
+  public deviceId: string;
 
   constructor(socket: WebSocket, account: NeuronRequestAccount) {
     this.socket = socket;
-    this.account = account;
+    this.accountId = account.id;
+    this.deviceId = account.deviceId;
 
     socket.on('message', (message) => {
       this.handleMessage(message.toString());
@@ -46,14 +50,24 @@ export class SocketConnection {
     if (messageInput.type === 'server_change_result') {
       if (messageInput.success) {
         await database
-          .deleteFrom('changes')
-          .where('id', '=', messageInput.changeId)
+          .deleteFrom('change_devices')
+          .where((eb) =>
+            eb.and([
+              eb('change_id', '=', messageInput.changeId),
+              eb('device_id', '=', this.deviceId),
+            ]),
+          )
           .execute();
       } else {
         await database
-          .updateTable('changes')
+          .updateTable('change_devices')
           .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
-          .where('id', '=', messageInput.changeId)
+          .where((eb) =>
+            eb.and([
+              eb('change_id', '=', messageInput.changeId),
+              eb('device_id', '=', this.deviceId),
+            ]),
+          )
           .execute();
       }
 
@@ -66,9 +80,16 @@ export class SocketConnection {
 
   private async sendPendingChanges() {
     const changes = await database
-      .selectFrom('changes')
-      .selectAll()
-      .where('device_id', '=', this.account.deviceId)
+      .selectFrom('changes as c')
+      .fullJoin('change_devices as cd', 'c.id', 'cd.change_id')
+      .select([
+        'c.id',
+        'c.workspace_id',
+        'cd.device_id',
+        'c.created_at',
+        'c.data',
+      ])
+      .where('cd.device_id', '=', this.deviceId)
       .orderBy('id', 'asc')
       .limit(100)
       .execute();
@@ -77,15 +98,28 @@ export class SocketConnection {
       return;
     }
 
-    this.send({
-      type: 'server_change_batch',
-      changes: changes.map((change) => ({
+    const serverChanges: ServerChange[] = [];
+    for (const change of changes) {
+      if (
+        !change.id ||
+        !change.workspace_id ||
+        !change.created_at ||
+        !change.data
+      ) {
+        continue;
+      }
+
+      serverChanges.push({
         id: change.id,
         workspaceId: change.workspace_id,
-        deviceId: change.device_id,
         createdAt: change.created_at.toISOString(),
         data: change.data,
-      })),
+      });
+    }
+
+    this.send({
+      type: 'server_change_batch',
+      changes: serverChanges,
     });
   }
 }

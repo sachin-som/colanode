@@ -49,6 +49,18 @@ class SocketManager {
     });
   }
 
+  public getConnections(deviceIds: string[]): SocketConnection[] {
+    const result: SocketConnection[] = [];
+    for (const deviceId of deviceIds) {
+      const connection = this.sockets.get(deviceId);
+      if (connection) {
+        result.push(connection);
+      }
+    }
+
+    return result;
+  }
+
   public send(deviceId: string, message: MessageInput) {
     const connection = this.sockets.get(deviceId);
     if (!connection) {

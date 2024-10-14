@@ -139,16 +139,25 @@ export type UpdateNodeReaction = Updateable<NodeReactionTable>;
 
 interface ChangeTable {
   id: ColumnType<string, string, never>;
-  device_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   data: JSONColumnType<any, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
-  retry_count: ColumnType<number, number, number>;
+  notified_at: ColumnType<Date | null, Date | null, Date>;
 }
 
 export type SelectChange = Selectable<ChangeTable>;
 export type CreateChange = Insertable<ChangeTable>;
 export type UpdateChange = Updateable<ChangeTable>;
+
+interface ChangeDeviceTable {
+  change_id: ColumnType<string, string, never>;
+  device_id: ColumnType<string, string, never>;
+  retry_count: ColumnType<number, number, number>;
+}
+
+export type SelectChangeDevice = Selectable<ChangeDeviceTable>;
+export type CreateChangeDevice = Insertable<ChangeDeviceTable>;
+export type UpdateChangeDevice = Updateable<ChangeDeviceTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
@@ -159,4 +168,5 @@ export interface DatabaseSchema {
   node_collaborators: NodeCollaboratorTable;
   node_reactions: NodeReactionTable;
   changes: ChangeTable;
+  change_devices: ChangeDeviceTable;
 }

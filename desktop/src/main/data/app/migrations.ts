@@ -12,14 +12,7 @@ const createServersTable: Migration = {
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('last_synced_at', 'text')
       .execute();
-  },
-  down: async (db) => {
-    await db.schema.dropTable('servers').execute();
-  },
-};
 
-const insertNeuronServers: Migration = {
-  up: async (db) => {
     await db
       .insertInto('servers')
       .values([
@@ -51,10 +44,7 @@ const insertNeuronServers: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db
-      .deleteFrom('servers')
-      .where('id', 'in', ['localhost', 'eu.neuronapp.io', 'us.neuronapp.io'])
-      .execute();
+    await db.schema.dropTable('servers').execute();
   },
 };
 
@@ -91,7 +81,6 @@ const createWorkspacesTable: Migration = {
       .addColumn('avatar', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
       .addColumn('role', 'text', (col) => col.notNull())
-      .addColumn('synced', 'integer')
       .execute();
   },
   down: async (db) => {
@@ -101,7 +90,6 @@ const createWorkspacesTable: Migration = {
 
 export const appDatabaseMigrations: Record<string, Migration> = {
   '00001_create_servers_table': createServersTable,
-  '00002_insert_neuron_servers': insertNeuronServers,
-  '00003_create_accounts_table': createAccountsTable,
-  '00004_create_workspaces_table': createWorkspacesTable,
+  '00002_create_accounts_table': createAccountsTable,
+  '00003_create_workspaces_table': createWorkspacesTable,
 };

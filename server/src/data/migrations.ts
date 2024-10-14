@@ -192,21 +192,34 @@ const createChangesTable: Migration = {
     await db.schema
       .createTable('changes')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('data', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('retry_count', 'integer', (col) => col.notNull().defaultTo(0))
-      .execute();
-
-    await db.schema
-      .createIndex('changes_device_id_index')
-      .on('changes')
-      .column('device_id')
+      .addColumn('notified_at', 'timestamptz')
       .execute();
   },
   down: async (db) => {
     await db.schema.dropTable('changes').execute();
+  },
+};
+
+const createChangeDevicesTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('change_devices')
+      .addColumn('change_id', 'varchar(30)', (col) =>
+        col.notNull().references('changes.id').onDelete('cascade'),
+      )
+      .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('retry_count', 'integer', (col) => col.notNull().defaultTo(0))
+      .addPrimaryKeyConstraint('change_devices_pkey', [
+        'change_id',
+        'device_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('change_devices').execute();
   },
 };
 
@@ -219,4 +232,5 @@ export const databaseMigrations: Record<string, Migration> = {
   '00006_create_node_reactions_table': createNodeReactionsTable,
   '00007_create_account_devices_table': createAccountDevicesTable,
   '00008_create_changes_table': createChangesTable,
+  '00009_create_change_devices_table': createChangeDevicesTable,
 };

@@ -1,6 +1,4 @@
 import {
-  Workspace,
-  WorkspaceUser,
   WorkspaceAccountRoleUpdateInput,
   WorkspaceAccountsInviteInput,
   WorkspaceUserStatus,
@@ -17,6 +15,7 @@ import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
   CreateAccount,
+  CreateChange,
   CreateNode,
   CreateWorkspaceUser,
   SelectNode,
@@ -26,6 +25,11 @@ import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
 import { ServerNode } from '@/types/nodes';
 import { mapNode } from '@/lib/nodes';
+import {
+  ServerNodeCreateChangeData,
+  ServerNodeUpdateChangeData,
+} from '@/types/sync';
+import { enqueueChange, enqueueChanges } from '@/queues/changes';
 
 export const workspacesRouter = Router();
 
@@ -59,16 +63,9 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
     });
   }
 
-  const workspace: Workspace = {
-    id: generateId(IdType.Workspace),
-    name: input.name,
-    description: input.description,
-    avatar: input.avatar,
-    createdAt: new Date(),
-    createdBy: account.id,
-    status: WorkspaceStatus.Active,
-    versionId: generateId(IdType.Version),
-  };
+  const createdAt = new Date();
+  const workspaceId = generateId(IdType.Workspace);
+  const workspaceVersionId = generateId(IdType.Version);
 
   const userId = generateId(IdType.User);
   const userVersionId = generateId(IdType.Version);
@@ -88,30 +85,44 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   const userAttributes = JSON.stringify(userAttributesMap.toJSON());
   const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
-
-  const workspaceUser: WorkspaceUser = {
+  const userChangeId = generateId(IdType.Change);
+  const changeData: ServerNodeCreateChangeData = {
+    type: 'node_create',
     id: userId,
-    accountId: account.id,
-    workspaceId: workspace.id,
-    role: WorkspaceRole.Owner,
-    createdAt: new Date(),
+    workspaceId: workspaceId,
+    state: userState,
+    createdAt: createdAt.toISOString(),
+    serverCreatedAt: createdAt.toISOString(),
+    versionId: userVersionId,
     createdBy: account.id,
-    status: WorkspaceUserStatus.Active,
-    versionId: generateId(IdType.Version),
   };
 
   await database.transaction().execute(async (trx) => {
     await trx
       .insertInto('workspaces')
       .values({
-        id: workspace.id,
-        name: workspace.name,
-        description: workspace.description,
-        avatar: workspace.avatar,
-        created_at: workspace.createdAt,
-        created_by: workspace.createdBy,
-        status: workspace.status,
-        version_id: workspace.versionId,
+        id: workspaceId,
+        name: input.name,
+        description: input.description,
+        avatar: input.avatar,
+        created_at: createdAt,
+        created_by: account.id,
+        status: WorkspaceStatus.Active,
+        version_id: workspaceVersionId,
+      })
+      .execute();
+
+    await trx
+      .insertInto('workspace_users')
+      .values({
+        id: userId,
+        account_id: account.id,
+        workspace_id: workspaceId,
+        role: WorkspaceRole.Owner,
+        created_at: createdAt,
+        created_by: account.id,
+        status: WorkspaceUserStatus.Active,
+        version_id: generateId(IdType.Version),
       })
       .execute();
 
@@ -119,40 +130,52 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
       .insertInto('nodes')
       .values({
         id: userId,
-        workspace_id: workspace.id,
+        workspace_id: workspaceId,
         attributes: userAttributes,
         state: userState,
-        created_at: workspaceUser.createdAt,
-        created_by: workspaceUser.createdBy,
+        created_at: createdAt,
+        created_by: account.id,
         version_id: userVersionId,
-        server_created_at: new Date(),
+        server_created_at: createdAt,
       })
       .execute();
 
     await trx
-      .insertInto('workspace_users')
+      .insertInto('changes')
       .values({
-        id: workspaceUser.id,
-        account_id: workspaceUser.accountId,
-        workspace_id: workspaceUser.workspaceId,
-        role: workspaceUser.role,
-        created_at: workspaceUser.createdAt,
-        created_by: workspaceUser.createdBy,
-        status: workspaceUser.status,
-        version_id: workspaceUser.versionId,
+        id: userChangeId,
+        workspace_id: workspaceId,
+        data: JSON.stringify(changeData),
+        created_at: createdAt,
       })
       .execute();
   });
 
+  await enqueueChange(userChangeId);
+
   const output: WorkspaceOutput = {
-    id: workspace.id,
-    name: workspace.name,
-    description: workspace.description,
-    avatar: workspace.avatar,
-    versionId: workspace.versionId,
-    accountId: account.id,
-    role: workspaceUser.role,
-    userId: userId,
+    id: workspaceId,
+    name: input.name,
+    description: input.description,
+    avatar: input.avatar,
+    versionId: workspaceVersionId,
+    user: {
+      id: userId,
+      accountId: account.id,
+      role: WorkspaceRole.Owner,
+      node: {
+        id: userId,
+        workspaceId: workspaceId,
+        type: 'user',
+        attributes: JSON.parse(userAttributes),
+        state: userState,
+        createdAt: new Date(),
+        createdBy: account.id,
+        versionId: userVersionId,
+        serverCreatedAt: new Date(),
+        index: null,
+      },
+    },
   };
 
   return res.status(200).json(output);
@@ -219,6 +242,19 @@ workspacesRouter.put(
       });
     }
 
+    const userNode = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', workspaceUser.id)
+      .executeTakeFirst();
+
+    if (!userNode) {
+      return res.status(500).json({
+        code: ApiError.InternalServerError,
+        message: 'Internal server error.',
+      });
+    }
+
     const updatedWorkspace = await database
       .updateTable('workspaces')
       .set({
@@ -245,9 +281,12 @@ workspacesRouter.put(
       description: updatedWorkspace.description,
       avatar: updatedWorkspace.avatar,
       versionId: updatedWorkspace.version_id,
-      accountId: req.account.id,
-      role: workspaceUser.role,
-      userId: workspaceUser.id,
+      user: {
+        id: workspaceUser.id,
+        accountId: workspaceUser.account_id,
+        role: workspaceUser.role,
+        node: mapNode(userNode),
+      },
     };
 
     return res.status(200).json(output);
@@ -347,15 +386,31 @@ workspacesRouter.get(
       });
     }
 
+    const userNode = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', workspaceUser.id)
+      .executeTakeFirst();
+
+    if (!userNode) {
+      return res.status(500).json({
+        code: ApiError.InternalServerError,
+        message: 'Internal server error.',
+      });
+    }
+
     const output: WorkspaceOutput = {
       id: workspace.id,
       name: workspace.name,
       description: workspace.description,
       avatar: workspace.avatar,
       versionId: workspace.version_id,
-      accountId: req.account.id,
-      role: workspaceUser.role,
-      userId: workspaceUser.id,
+      user: {
+        id: workspaceUser.id,
+        accountId: workspaceUser.account_id,
+        role: workspaceUser.role as WorkspaceRole,
+        node: mapNode(userNode),
+      },
     };
 
     return res.status(200).json(output);
@@ -383,14 +438,30 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
     .where('id', 'in', workspaceIds)
     .execute();
 
+  const userNodes = await database
+    .selectFrom('nodes')
+    .selectAll()
+    .where(
+      'id',
+      'in',
+      workspaceUsers.map((wa) => wa.id),
+    )
+    .execute();
+
   const outputs: WorkspaceOutput[] = [];
 
   for (const workspace of workspaces) {
-    const workspaceAccount = workspaceUsers.find(
+    const workspaceUser = workspaceUsers.find(
       (wa) => wa.workspace_id === workspace.id,
     );
 
-    if (!workspaceAccount) {
+    if (!workspaceUser) {
+      continue;
+    }
+
+    const userNode = userNodes.find((un) => un.id === workspaceUser.id);
+
+    if (!userNode) {
       continue;
     }
 
@@ -400,9 +471,12 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
       description: workspace.description,
       avatar: workspace.avatar,
       versionId: workspace.version_id,
-      accountId: req.account.id,
-      role: workspaceAccount.role,
-      userId: workspaceAccount.id,
+      user: {
+        id: workspaceUser.id,
+        accountId: workspaceUser.account_id,
+        role: workspaceUser.role as WorkspaceRole,
+        node: mapNode(userNode),
+      },
     };
 
     outputs.push(output);
@@ -504,6 +578,7 @@ workspacesRouter.post(
     const accountsToCreate: CreateAccount[] = [];
     const workspaceUsersToCreate: CreateWorkspaceUser[] = [];
     const usersToCreate: CreateNode[] = [];
+    const changesToCreate: CreateChange[] = [];
 
     const users: ServerNode[] = [];
     for (const email of input.emails) {
@@ -568,6 +643,7 @@ workspacesRouter.post(
 
       const userAttributes = JSON.stringify(userAttributesMap.toJSON());
       const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
+      const userChangeId = generateId(IdType.Change);
 
       workspaceUsersToCreate.push({
         id: userId,
@@ -604,6 +680,24 @@ workspacesRouter.post(
         workspace_id: user.workspaceId,
       });
 
+      const changeData: ServerNodeCreateChangeData = {
+        type: 'node_create',
+        id: user.id,
+        workspaceId: user.workspaceId,
+        state: user.state,
+        createdAt: user.createdAt.toISOString(),
+        createdBy: user.createdBy,
+        versionId: user.versionId,
+        serverCreatedAt: user.serverCreatedAt.toISOString(),
+      };
+
+      changesToCreate.push({
+        id: userChangeId,
+        workspace_id: workspace.id,
+        data: JSON.stringify(changeData),
+        created_at: new Date(),
+      });
+
       users.push(user);
     }
 
@@ -627,7 +721,16 @@ workspacesRouter.post(
         if (usersToCreate.length > 0) {
           await trx.insertInto('nodes').values(usersToCreate).execute();
         }
+
+        if (changesToCreate.length > 0) {
+          await trx.insertInto('changes').values(changesToCreate).execute();
+        }
       });
+
+      if (changesToCreate.length > 0) {
+        const changeIds = changesToCreate.map((change) => change.id);
+        await enqueueChanges(changeIds);
+      }
     }
 
     return res.status(200).json({
@@ -719,12 +822,18 @@ workspacesRouter.put(
 
     Y.applyUpdate(userDoc, toUint8Array(user.state));
 
+    const userUpdates: string[] = [];
+    userDoc.on('update', (update) => {
+      userUpdates.push(fromUint8Array(update));
+    });
+
     const userAttributesMap = userDoc.getMap('attributes');
     userAttributesMap.set('role', input.role);
 
     const userAttributes = JSON.stringify(userAttributesMap.toJSON());
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
     const updatedAt = new Date();
+    const userChangeId = generateId(IdType.Change);
 
     const userNode: ServerNode = {
       id: user.id,
@@ -741,6 +850,17 @@ workspacesRouter.put(
       versionId: generateId(IdType.Version),
       updatedAt: updatedAt,
       updatedBy: currentWorkspaceUser.id,
+    };
+
+    const changeData: ServerNodeUpdateChangeData = {
+      type: 'node_update',
+      id: userNode.id,
+      workspaceId: userNode.workspaceId,
+      updates: userUpdates,
+      updatedAt: updatedAt.toISOString(),
+      updatedBy: currentWorkspaceUser.id,
+      versionId: userNode.versionId,
+      serverUpdatedAt: updatedAt.toISOString(),
     };
 
     await database.transaction().execute(async (trx) => {
@@ -767,7 +887,19 @@ workspacesRouter.put(
         })
         .where('id', '=', userNode.id)
         .execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          id: userChangeId,
+          workspace_id: workspace.id,
+          data: JSON.stringify(changeData),
+          created_at: new Date(),
+        })
+        .execute();
     });
+
+    await enqueueChange(userChangeId);
 
     return res.status(200).json({
       user: userNode,

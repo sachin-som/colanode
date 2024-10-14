@@ -44,19 +44,18 @@ class Synchronizer {
       change.workspaceId,
       change.data,
     );
-    if (executed) {
-      await mediator.executeMessage(
-        {
-          accountId,
-          deviceId: change.deviceId,
-        },
-        {
-          type: 'server_change_result',
-          changeId: change.id,
-          success: executed,
-        },
-      );
-    }
+
+    await mediator.executeMessage(
+      {
+        accountId,
+        deviceId: change.deviceId,
+      },
+      {
+        type: 'server_change_result',
+        changeId: change.id,
+        success: executed,
+      },
+    );
   }
 
   private async executeServerChange(

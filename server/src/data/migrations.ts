@@ -107,7 +107,6 @@ const createNodesTable: Migration = {
 
 const createClosureTable: Migration = {
   up: async (db) => {
-    // Create closure table for storing paths between nodes
     await db.schema
       .createTable('node_paths')
       .addColumn('ancestor_id', 'varchar(30)', (col) =>

@@ -125,16 +125,16 @@ syncRouter.post(
     }
 
     const results: ServerSyncChangeResult[] = [];
-    for (const mutation of input.changes) {
+    for (const change of input.changes) {
       try {
-        const result = await handleLocalChange(workspaceUser, mutation);
+        const result = await handleLocalChange(workspaceUser, change);
         results.push({
-          id: mutation.id,
+          id: change.id,
           status: result.status,
         });
       } catch (error) {
         results.push({
-          id: mutation.id,
+          id: change.id,
           status: 'error',
         });
       }

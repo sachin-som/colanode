@@ -37,6 +37,7 @@ import { NodeCollaboratorServerDeleteMutationHandler } from '@/main/handlers/mut
 import { NodeReactionServerCreateMutationHandler } from '@/main/handlers/mutations/node-reaction-server-create';
 import { NodeReactionServerDeleteMutationHandler } from '@/main/handlers/mutations/node-reaction-server-delete';
 import { LogoutMutationHandler } from '@/main/handlers/mutations/logout';
+import { NodeBatchSyncMutationHandler } from '@/main/handlers/mutations/node-batch-sync';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -85,4 +86,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   node_reaction_server_create: new NodeReactionServerCreateMutationHandler(),
   node_reaction_server_delete: new NodeReactionServerDeleteMutationHandler(),
   logout: new LogoutMutationHandler(),
+  node_batch_sync: new NodeBatchSyncMutationHandler(),
 };

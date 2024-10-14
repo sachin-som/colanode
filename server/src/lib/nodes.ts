@@ -1,7 +1,6 @@
 import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
 import { ServerNode } from '@/types/nodes';
-import { sql } from 'kysely';
 
 export const mapNode = (node: SelectNode): ServerNode => {
   return {
@@ -36,32 +35,20 @@ export const fetchCollaboratorRole = async (
   nodeId: string,
   collaboratorId: string,
 ): Promise<string | null> => {
-  const query = sql<NodeCollaboratorRow>`
-    WITH RECURSIVE ancestors(id, parent_id, level) AS (
-      SELECT id, parent_id, 0 AS level
-      FROM nodes
-      WHERE id = ${nodeId}
-      UNION ALL
-      SELECT n.id, n.parent_id, a.level + 1
-      FROM nodes n
-      INNER JOIN ancestors a ON n.id = a.parent_id
-    )
-    SELECT
-      nc.node_id,
-      a.level AS node_level,
-      nc.role
-    FROM node_collaborators nc
-    JOIN ancestors a ON nc.node_id = a.id
-    WHERE nc.collaborator_id = ${collaboratorId};
-  `.compile(database);
+  const result = await database
+    .selectFrom('node_paths as np')
+    .innerJoin('node_collaborators as nc', 'np.ancestor_id', 'nc.node_id')
+    .select(['np.ancestor_id as node_id', 'np.level as node_level', 'nc.role'])
+    .where('np.descendant_id', '=', nodeId)
+    .where('nc.collaborator_id', '=', collaboratorId)
+    .execute();
 
-  const result = await database.executeQuery(query);
-  if (result.rows.length === 0) {
+  if (result.length === 0) {
     return null;
   }
 
   const roleHierarchy = ['owner', 'admin', 'collaborator'];
-  const highestRole = result.rows.reduce((highest, row) => {
+  const highestRole = result.reduce((highest, row) => {
     const currentRoleIndex = roleHierarchy.indexOf(row.role);
     const highestRoleIndex = roleHierarchy.indexOf(highest);
     return currentRoleIndex < highestRoleIndex ? row.role : highest;
@@ -70,23 +57,28 @@ export const fetchCollaboratorRole = async (
   return highestRole;
 };
 
-export const fetchNodeTree = async (nodeId: string): Promise<string[]> => {
-  const query = sql<NodeIdRow>`
-    WITH RECURSIVE ancestors(id, parent_id, level) AS (
-      SELECT id, parent_id, 0 AS level
-      FROM nodes
-      WHERE id = ${nodeId}
-      UNION ALL
-      SELECT n.id, n.parent_id, a.level + 1
-      FROM nodes n
-      INNER JOIN ancestors a ON n.id = a.parent_id
-    )
-    SELECT n.id
-    FROM nodes n
-    JOIN ancestors a ON n.id = a.id
-    ORDER BY a.level DESC;
-  `.compile(database);
+export const fetchNodeAscendants = async (
+  nodeId: string,
+): Promise<string[]> => {
+  const result = await database
+    .selectFrom('node_paths')
+    .select('ancestor_id')
+    .where('descendant_id', '=', nodeId)
+    .orderBy('level', 'desc')
+    .execute();
 
-  const result = await database.executeQuery(query);
-  return result.rows.map((row) => row.id);
+  return result.map((row) => row.ancestor_id);
+};
+
+export const fetchNodeDescendants = async (
+  nodeId: string,
+): Promise<string[]> => {
+  const result = await database
+    .selectFrom('node_paths')
+    .select('descendant_id')
+    .where('ancestor_id', '=', nodeId)
+    .orderBy('level', 'asc')
+    .execute();
+
+  return result.map((row) => row.descendant_id);
 };

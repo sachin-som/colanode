@@ -1,7 +1,7 @@
 import { database } from '@/data/database';
 import { CHANNEL_NAMES, redis } from '@/data/redis';
 import { getIdType, IdType } from '@/lib/id';
-import { fetchNodeTree } from '@/lib/nodes';
+import { fetchNodeAscendants } from '@/lib/nodes';
 import { ServerChangeData } from '@/types/sync';
 import { Job, Queue, Worker } from 'bullmq';
 
@@ -137,7 +137,7 @@ const fetchDevicesForNode = async (
     return fetchAllWorkspaceDevices(workspaceId);
   }
 
-  const nodeTree = await fetchNodeTree(nodeId);
+  const nodeTree = await fetchNodeAscendants(nodeId);
   return fetchDevicesForNodes(nodeTree);
 };
 
@@ -146,7 +146,7 @@ const fetchAllWorkspaceDevices = async (
 ): Promise<string[]> => {
   const deviceIds = await database
     .selectFrom('workspace_users as wu')
-    .fullJoin('account_devices as ad', 'wu.account_id', 'ad.account_id')
+    .innerJoin('account_devices as ad', 'wu.account_id', 'ad.account_id')
     .select('ad.id')
     .where('wu.workspace_id', '=', workspaceId)
     .execute();
@@ -159,8 +159,8 @@ const fetchAllWorkspaceDevices = async (
 const fetchDevicesForNodes = async (nodeIds: string[]): Promise<string[]> => {
   const deviceIds = await database
     .selectFrom('node_collaborators as nc')
-    .fullJoin('workspace_users as wu', 'nc.collaborator_id', 'wu.id')
-    .fullJoin('account_devices as ad', 'wu.account_id', 'ad.account_id')
+    .innerJoin('workspace_users as wu', 'nc.collaborator_id', 'wu.id')
+    .innerJoin('account_devices as ad', 'wu.account_id', 'ad.account_id')
     .select('ad.id')
     .where('nc.node_id', 'in', nodeIds)
     .execute();

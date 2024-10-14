@@ -81,7 +81,6 @@ const handleCreateNodeChange = async (
   const changeData: ServerNodeCreateChangeData = {
     type: 'node_create',
     id: nodeData.id,
-    workspaceId: workspaceUser.workspace_id,
     state: nodeData.state,
     createdAt: nodeData.created_at,
     createdBy: nodeData.created_by,
@@ -186,7 +185,6 @@ const handleUpdateNodeChange = async (
   const changeData: ServerNodeUpdateChangeData = {
     type: 'node_update',
     id: nodeData.id,
-    workspaceId: workspaceUser.workspace_id,
     updates: updates,
     updatedAt: updatedAt.toISOString(),
     updatedBy: updatedBy,
@@ -270,7 +268,6 @@ const handleDeleteNodeChange = async (
   const changeData: ServerNodeDeleteChangeData = {
     type: 'node_delete',
     id: nodeData.id,
-    workspaceId: workspaceUser.workspace_id,
   };
 
   await database.transaction().execute(async (trx) => {

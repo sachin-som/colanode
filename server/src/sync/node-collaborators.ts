@@ -8,6 +8,7 @@ import { SelectWorkspaceUser } from '@/data/schema';
 import { generateId, IdType } from '@/lib/id';
 import { fetchCollaboratorRole } from '@/lib/nodes';
 import { enqueueChange } from '@/queues/changes';
+import { enqueueCollaboratorSync } from '@/queues/sync';
 import {
   SyncLocalChangeResult,
   LocalChange,
@@ -68,7 +69,6 @@ const handleCreateNodeCollaboratorChange = async (
     role: nodeCollaboratorData.role,
     createdAt: nodeCollaboratorData.created_at,
     serverCreatedAt: serverCreatedAt.toISOString(),
-    workspaceId: workspaceUser.workspace_id,
     createdBy: nodeCollaboratorData.created_by,
     versionId: nodeCollaboratorData.version_id,
   };
@@ -105,6 +105,10 @@ const handleCreateNodeCollaboratorChange = async (
   });
 
   await enqueueChange(changeId);
+  await enqueueCollaboratorSync(
+    nodeCollaboratorData.node_id,
+    nodeCollaboratorData.collaborator_id,
+  );
 
   return {
     status: 'success',
@@ -235,7 +239,6 @@ const handleUpdateNodeCollaboratorChange = async (
     collaboratorId: nodeCollaboratorData.collaborator_id,
     role: nodeCollaboratorData.role,
     serverUpdatedAt: serverUpdatedAt.toISOString(),
-    workspaceId: workspaceUser.workspace_id,
     versionId: nodeCollaboratorData.version_id,
     updatedAt: updatedAt.toISOString(),
     updatedBy:
@@ -375,7 +378,6 @@ const handleDeleteNodeCollaboratorChange = async (
     type: 'node_collaborator_delete',
     nodeId: nodeCollaboratorData.node_id,
     collaboratorId: nodeCollaboratorData.collaborator_id,
-    workspaceId: workspaceUser.workspace_id,
   };
 
   await database.transaction().execute(async (trx) => {

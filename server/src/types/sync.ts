@@ -77,12 +77,12 @@ export type ServerChangeData =
   | ServerNodeCollaboratorUpdateChangeData
   | ServerNodeCollaboratorDeleteChangeData
   | ServerNodeReactionCreateChangeData
-  | ServerNodeReactionDeleteChangeData;
+  | ServerNodeReactionDeleteChangeData
+  | ServerNodeBatchSyncChangeData;
 
 export type ServerNodeCreateChangeData = {
   type: 'node_create';
   id: string;
-  workspaceId: string;
   state: string;
   createdAt: string;
   createdBy: string;
@@ -93,7 +93,6 @@ export type ServerNodeCreateChangeData = {
 export type ServerNodeUpdateChangeData = {
   type: 'node_update';
   id: string;
-  workspaceId: string;
   updates: string[];
   updatedAt: string;
   updatedBy: string;
@@ -104,7 +103,6 @@ export type ServerNodeUpdateChangeData = {
 export type ServerNodeDeleteChangeData = {
   type: 'node_delete';
   id: string;
-  workspaceId: string;
 };
 
 export type ServerNodeCollaboratorCreateChangeData = {
@@ -112,7 +110,6 @@ export type ServerNodeCollaboratorCreateChangeData = {
   nodeId: string;
   collaboratorId: string;
   role: string;
-  workspaceId: string;
   createdAt: string;
   createdBy: string;
   versionId: string;
@@ -123,7 +120,6 @@ export type ServerNodeCollaboratorUpdateChangeData = {
   type: 'node_collaborator_update';
   nodeId: string;
   collaboratorId: string;
-  workspaceId: string;
   role: string;
   updatedAt: string;
   updatedBy: string;
@@ -135,7 +131,6 @@ export type ServerNodeCollaboratorDeleteChangeData = {
   type: 'node_collaborator_delete';
   nodeId: string;
   collaboratorId: string;
-  workspaceId: string;
 };
 
 export type ServerNodeReactionCreateChangeData = {
@@ -143,7 +138,6 @@ export type ServerNodeReactionCreateChangeData = {
   nodeId: string;
   actorId: string;
   reaction: string;
-  workspaceId: string;
   createdAt: string;
   serverCreatedAt: string;
 };
@@ -153,5 +147,21 @@ export type ServerNodeReactionDeleteChangeData = {
   nodeId: string;
   actorId: string;
   reaction: string;
-  workspaceId: string;
+};
+
+export type ServerNodeBatchSyncChangeData = {
+  type: 'node_batch_sync';
+  nodes: ServerNodeBatchSyncData[];
+};
+
+export type ServerNodeBatchSyncData = {
+  id: string;
+  state: string;
+  createdAt: string;
+  createdBy: string;
+  versionId: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  serverCreatedAt: string;
+  serverUpdatedAt?: string | null;
 };

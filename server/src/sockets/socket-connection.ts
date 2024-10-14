@@ -81,7 +81,7 @@ export class SocketConnection {
   private async sendPendingChanges() {
     const changes = await database
       .selectFrom('changes as c')
-      .fullJoin('change_devices as cd', 'c.id', 'cd.change_id')
+      .innerJoin('change_devices as cd', 'c.id', 'cd.change_id')
       .select([
         'c.id',
         'c.workspace_id',

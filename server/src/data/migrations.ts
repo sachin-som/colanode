@@ -105,6 +105,83 @@ const createNodesTable: Migration = {
   },
 };
 
+const createClosureTable: Migration = {
+  up: async (db) => {
+    // Create closure table for storing paths between nodes
+    await db.schema
+      .createTable('node_paths')
+      .addColumn('ancestor_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('descendant_id', 'varchar(30)', (col) =>
+        col.notNull().references('nodes.id').onDelete('cascade'),
+      )
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('level', 'integer', (col) => col.notNull())
+      .addPrimaryKeyConstraint('node_paths_pkey', [
+        'ancestor_id',
+        'descendant_id',
+      ])
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION fn_insert_node_path() RETURNS TRIGGER AS $$
+      BEGIN
+        -- Insert direct path from the new node to itself
+        INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+        VALUES (NEW.id, NEW.id, NEW.workspace_id, 0);
+
+        -- Insert paths from ancestors to the new node
+        INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+        SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
+        FROM node_paths
+        WHERE descendant_id = NEW.parent_id;
+
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_insert_node_path
+      AFTER INSERT ON nodes
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_insert_node_path();
+
+      CREATE OR REPLACE FUNCTION fn_update_node_path() RETURNS TRIGGER AS $$
+      BEGIN
+        IF OLD.parent_id IS DISTINCT FROM NEW.parent_id THEN
+          -- Delete old paths involving the updated node
+          DELETE FROM node_paths
+          WHERE descendant_id = NEW.id AND ancestor_id <> NEW.id;
+
+          INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+          SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
+          FROM node_paths
+          WHERE descendant_id = NEW.parent_id;
+        END IF;
+
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_node_path
+      AFTER UPDATE OF parent_id ON nodes
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_update_node_path();
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_insert_node_path ON nodes;
+      DROP TRIGGER IF EXISTS trg_update_node_path ON nodes;
+      DROP FUNCTION IF EXISTS fn_insert_node_path();
+      DROP FUNCTION IF EXISTS fn_update_node_path();
+    `.execute(db);
+
+    // Drop closure table
+    await db.schema.dropTable('node_paths').execute();
+  },
+};
+
 const createNodeCollaboratorsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -228,9 +305,10 @@ export const databaseMigrations: Record<string, Migration> = {
   '00002_create_workspaces_table': createWorkspacesTable,
   '00003_create_workspace_users_table': createWorkspaceUsersTable,
   '00004_create_nodes_table': createNodesTable,
-  '00005_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00006_create_node_reactions_table': createNodeReactionsTable,
-  '00007_create_account_devices_table': createAccountDevicesTable,
-  '00008_create_changes_table': createChangesTable,
-  '00009_create_change_devices_table': createChangeDevicesTable,
+  '00005_create_closure_table': createClosureTable,
+  '00006_create_node_collaborators_table': createNodeCollaboratorsTable,
+  '00007_create_node_reactions_table': createNodeReactionsTable,
+  '00008_create_account_devices_table': createAccountDevicesTable,
+  '00009_create_changes_table': createChangesTable,
+  '00010_create_change_devices_table': createChangeDevicesTable,
 };

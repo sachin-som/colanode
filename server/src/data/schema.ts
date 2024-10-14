@@ -106,6 +106,17 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
+interface NodePathTable {
+  ancestor_id: ColumnType<string, string, never>;
+  descendant_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  level: ColumnType<number, number, number>;
+}
+
+export type SelectNodePath = Selectable<NodePathTable>;
+export type CreateNodePath = Insertable<NodePathTable>;
+export type UpdateNodePath = Updateable<NodePathTable>;
+
 interface NodeCollaboratorTable {
   node_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
@@ -165,6 +176,7 @@ export interface DatabaseSchema {
   workspace_users: WorkspaceUserTable;
   account_devices: AccountDeviceTable;
   nodes: NodeTable;
+  node_paths: NodePathTable;
   node_collaborators: NodeCollaboratorTable;
   node_reactions: NodeReactionTable;
   changes: ChangeTable;

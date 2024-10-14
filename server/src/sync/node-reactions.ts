@@ -69,7 +69,6 @@ const handleCreateNodeReactionChange = async (
     reaction: nodeReactionData.reaction,
     createdAt: nodeReactionData.created_at,
     serverCreatedAt: serverCreatedAt.toISOString(),
-    workspaceId: workspaceUser.workspace_id,
   };
 
   await database.transaction().execute(async (trx) => {
@@ -134,7 +133,6 @@ const handleDeleteNodeReactionChange = async (
     nodeId: nodeReactionData.node_id,
     actorId: nodeReactionData.actor_id,
     reaction: nodeReactionData.reaction,
-    workspaceId: workspaceUser.workspace_id,
   };
 
   await database.transaction().execute(async (trx) => {

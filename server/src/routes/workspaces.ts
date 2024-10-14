@@ -30,6 +30,7 @@ import {
   ServerNodeUpdateChangeData,
 } from '@/types/sync';
 import { enqueueChange, enqueueChanges } from '@/queues/changes';
+import { enqueueWorkspaceUserSync } from '@/queues/sync';
 
 export const workspacesRouter = Router();
 
@@ -85,17 +86,6 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   const userAttributes = JSON.stringify(userAttributesMap.toJSON());
   const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
-  const userChangeId = generateId(IdType.Change);
-  const changeData: ServerNodeCreateChangeData = {
-    type: 'node_create',
-    id: userId,
-    workspaceId: workspaceId,
-    state: userState,
-    createdAt: createdAt.toISOString(),
-    serverCreatedAt: createdAt.toISOString(),
-    versionId: userVersionId,
-    createdBy: account.id,
-  };
 
   await database.transaction().execute(async (trx) => {
     await trx
@@ -139,19 +129,9 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
         server_created_at: createdAt,
       })
       .execute();
-
-    await trx
-      .insertInto('changes')
-      .values({
-        id: userChangeId,
-        workspace_id: workspaceId,
-        data: JSON.stringify(changeData),
-        created_at: createdAt,
-      })
-      .execute();
   });
 
-  await enqueueChange(userChangeId);
+  await enqueueWorkspaceUserSync(workspaceId, userId);
 
   const output: WorkspaceOutput = {
     id: workspaceId,
@@ -683,7 +663,6 @@ workspacesRouter.post(
       const changeData: ServerNodeCreateChangeData = {
         type: 'node_create',
         id: user.id,
-        workspaceId: user.workspaceId,
         state: user.state,
         createdAt: user.createdAt.toISOString(),
         createdBy: user.createdBy,
@@ -716,6 +695,13 @@ workspacesRouter.post(
             .insertInto('workspace_users')
             .values(workspaceUsersToCreate)
             .execute();
+
+          for (const workspaceUser of workspaceUsersToCreate) {
+            await enqueueWorkspaceUserSync(
+              workspaceUser.workspace_id,
+              workspaceUser.id,
+            );
+          }
         }
 
         if (usersToCreate.length > 0) {
@@ -855,7 +841,6 @@ workspacesRouter.put(
     const changeData: ServerNodeUpdateChangeData = {
       type: 'node_update',
       id: userNode.id,
-      workspaceId: userNode.workspaceId,
       updates: userUpdates,
       updatedAt: updatedAt.toISOString(),
       updatedBy: currentWorkspaceUser.id,

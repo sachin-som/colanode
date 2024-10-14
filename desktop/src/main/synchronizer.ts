@@ -39,7 +39,11 @@ class Synchronizer {
   }
 
   public async handleServerChange(accountId: string, change: ServerChange) {
-    const executed = await this.executeServerChange(accountId, change.data);
+    const executed = await this.executeServerChange(
+      accountId,
+      change.workspaceId,
+      change.data,
+    );
     if (executed) {
       await mediator.executeMessage(
         {
@@ -57,6 +61,7 @@ class Synchronizer {
 
   private async executeServerChange(
     accountId: string,
+    workspaceId: string,
     data: ServerChangeData,
   ): Promise<boolean> {
     switch (data.type) {
@@ -64,7 +69,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_server_create',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           id: data.id,
           state: data.state,
           createdAt: data.createdAt,
@@ -79,7 +84,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_server_update',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           id: data.id,
           update: data.update,
           updatedAt: data.updatedAt,
@@ -94,7 +99,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_server_delete',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           id: data.id,
         });
 
@@ -104,7 +109,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_collaborator_server_create',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           nodeId: data.nodeId,
           collaboratorId: data.collaboratorId,
           role: data.role,
@@ -120,7 +125,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_collaborator_server_update',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           nodeId: data.nodeId,
           collaboratorId: data.collaboratorId,
           role: data.role,
@@ -136,7 +141,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_collaborator_server_delete',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           nodeId: data.nodeId,
           collaboratorId: data.collaboratorId,
         });
@@ -147,7 +152,7 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_reaction_server_create',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           nodeId: data.nodeId,
           actorId: data.actorId,
           reaction: data.reaction,
@@ -161,10 +166,20 @@ class Synchronizer {
         const result = await mediator.executeMutation({
           type: 'node_reaction_server_delete',
           accountId: accountId,
-          workspaceId: data.workspaceId,
+          workspaceId: workspaceId,
           nodeId: data.nodeId,
           actorId: data.actorId,
           reaction: data.reaction,
+        });
+
+        return result.success;
+      }
+      case 'node_batch_sync': {
+        const result = await mediator.executeMutation({
+          type: 'node_batch_sync',
+          accountId: accountId,
+          workspaceId: workspaceId,
+          nodes: data.nodes,
         });
 
         return result.success;

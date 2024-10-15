@@ -19,8 +19,11 @@ export const MessageReactions = ({
   return (
     <div className="my-1 flex flex-row gap-2">
       {message.reactionCounts.map((reaction) => {
-        const hasReacted = message.userReactions.includes(reaction.reaction);
+        if (reaction.count === 0) {
+          return null;
+        }
 
+        const hasReacted = reaction.isReactedTo;
         return (
           <div
             key={reaction.reaction}

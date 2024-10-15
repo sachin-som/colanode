@@ -16,7 +16,6 @@ import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
 import { mapNode } from '@/lib/nodes';
-import { enqueueAccountDeviceSync } from '@/queues/sync';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -215,7 +214,7 @@ accountsRouter.delete(
     }
 
     await database
-      .deleteFrom('account_devices')
+      .deleteFrom('devices')
       .where('id', '=', req.account.deviceId)
       .execute();
 
@@ -283,8 +282,8 @@ const buildLoginOutput = async (
   const deviceId = generateId(IdType.Device);
   const { token, salt, hash } = generateToken(deviceId);
 
-  const accountDevice = await database
-    .insertInto('account_devices')
+  const device = await database
+    .insertInto('devices')
     .values({
       id: deviceId,
       account_id: id,
@@ -298,11 +297,9 @@ const buildLoginOutput = async (
     .returningAll()
     .executeTakeFirst();
 
-  if (!accountDevice) {
-    throw new Error('Failed to create account device.');
+  if (!device) {
+    throw new Error('Failed to create device.');
   }
-
-  await enqueueAccountDeviceSync(id, deviceId);
 
   return {
     account: {
@@ -310,7 +307,7 @@ const buildLoginOutput = async (
       id,
       name,
       email,
-      deviceId: accountDevice.id,
+      deviceId: device.id,
     },
     workspaces: workspaceOutputs,
   };

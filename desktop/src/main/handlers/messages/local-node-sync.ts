@@ -1,13 +1,13 @@
 import { MessageContext, MessageHandler } from '@/operations/messages';
-import { ServerChangeResultMessageInput } from '@/operations/messages/server-change-result';
+import { LocalNodeSyncMessageInput } from '@/operations/messages/local-node-sync';
 import { socketManager } from '@/main/sockets/socket-manager';
 
-export class ServerChangeResultMessageHandler
-  implements MessageHandler<ServerChangeResultMessageInput>
+export class LocalNodeSyncMessageHandler
+  implements MessageHandler<LocalNodeSyncMessageInput>
 {
   public async handleMessage(
     context: MessageContext,
-    input: ServerChangeResultMessageInput,
+    input: LocalNodeSyncMessageInput,
   ): Promise<void> {
     socketManager.sendMessage(context.accountId, input);
   }

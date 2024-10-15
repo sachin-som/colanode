@@ -1,4 +1,4 @@
-import { ServerNode, ServerNodeReaction } from '@/types/nodes';
+import { ServerNode } from '@/types/nodes';
 
 export enum WorkspaceRole {
   Owner = 'owner',

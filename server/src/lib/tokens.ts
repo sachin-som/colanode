@@ -37,21 +37,19 @@ export const verifyToken = async (
   const id = token.slice(0, 28);
   const secret = token.slice(28);
 
-  const accountDevice = await database
-    .selectFrom('account_devices')
+  const device = await database
+    .selectFrom('devices')
     .selectAll()
     .where('id', '=', id)
     .executeTakeFirst();
 
-  if (!accountDevice) {
+  if (!device) {
     return {
       authenticated: false,
     };
   }
 
-  if (
-    !verifySecret(secret, accountDevice.token_salt, accountDevice.token_hash)
-  ) {
+  if (!verifySecret(secret, device.token_salt, device.token_hash)) {
     return {
       authenticated: false,
     };
@@ -60,8 +58,8 @@ export const verifyToken = async (
   return {
     authenticated: true,
     account: {
-      id: accountDevice.account_id,
-      deviceId: accountDevice.id,
+      id: device.account_id,
+      deviceId: device.id,
     },
   };
 };

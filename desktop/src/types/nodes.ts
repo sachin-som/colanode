@@ -64,29 +64,6 @@ export type ServerNodeAttributes = {
   [key: string]: any;
 };
 
-export type ServerNodeCollaborator = {
-  nodeId: string;
-  collaboratorId: string;
-  role: string;
-  workspaceId: string;
-  createdAt: string;
-  createdBy: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  versionId: string;
-  serverCreatedAt: string;
-  serverUpdatedAt?: string | null;
-};
-
-export type ServerNodeReaction = {
-  nodeId: string;
-  actorId: string;
-  reaction: string;
-  workspaceId: string;
-  createdAt: string;
-  serverCreatedAt: string;
-};
-
 export type NodeInsertInput = {
   id: string;
   attributes: LocalNodeAttributes;

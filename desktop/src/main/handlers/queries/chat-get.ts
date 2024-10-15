@@ -6,7 +6,6 @@ import {
   QueryResult,
 } from '@/operations/queries';
 import { mapNode } from '@/lib/nodes';
-import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
@@ -16,11 +15,20 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
   async handleQuery(
     input: ChatGetQueryInput,
   ): Promise<QueryResult<ChatGetQueryInput>> {
-    const rows = await this.fetchNodes(input);
+    const chat = await this.fetchChat(input);
+    if (!chat) {
+      return {
+        output: null,
+        state: {},
+      };
+    }
+
+    const collaborators = await this.fetchCollaborators(input, chat);
     return {
-      output: this.buildChat(input.chatId, rows),
+      output: this.buildChat(chat, collaborators),
       state: {
-        rows,
+        chat,
+        collaborators,
       },
     };
   }
@@ -34,7 +42,7 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          (change.table === 'nodes' || change.table === 'node_collaborators') &&
+          change.table === 'nodes' &&
           change.userId === input.userId,
       )
     ) {
@@ -43,8 +51,13 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
       };
     }
 
-    const rows = await this.fetchNodes(input);
-    if (isEqual(rows, state.rows)) {
+    const chat = await this.fetchChat(input);
+    const collaborators = await this.fetchCollaborators(input, chat);
+
+    if (
+      isEqual(chat, state.chat) &&
+      isEqual(collaborators, state.collaborators)
+    ) {
       return {
         hasChanges: false,
       };
@@ -53,59 +66,80 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
     return {
       hasChanges: true,
       result: {
-        output: this.buildChat(input.chatId, rows),
+        output: this.buildChat(chat, collaborators),
         state: {
-          rows,
+          chat,
+          collaborators,
         },
       },
     };
   }
 
-  private async fetchNodes(input: ChatGetQueryInput): Promise<SelectNode[]> {
+  private async fetchChat(
+    input: ChatGetQueryInput,
+  ): Promise<SelectNode | null> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 
-    const query = sql<SelectNode>`
-      WITH chat_node AS (
-        SELECT *
-        FROM nodes
-        WHERE id = ${input.chatId}
-      ),
-      collaborator_nodes AS (
-        SELECT *
-        FROM nodes
-        WHERE id IN 
-        (
-          SELECT DISTINCT collaborator_id 
-          FROM node_collaborators 
-          WHERE node_id = ${input.chatId} AND collaborator_id != ${input.userId}
-        )
-      )
-      SELECT * FROM chat_node
-      UNION ALL
-      SELECT * FROM collaborator_nodes
-      `.compile(workspaceDatabase);
+    const chat = await workspaceDatabase
+      .selectFrom('nodes')
+      .where('id', '=', input.chatId)
+      .selectAll()
+      .executeTakeFirst();
 
-    const result = await workspaceDatabase.executeQuery(query);
-    return result.rows;
+    return chat;
   }
 
-  private buildChat = (chatId: string, rows: SelectNode[]): ChatNode | null => {
-    const nodes = rows.map(mapNode);
-    const chatNode = nodes.find((node) => node.id === chatId);
-    if (!chatNode) {
-      return null;
+  private async fetchCollaborators(
+    input: ChatGetQueryInput,
+    chat: SelectNode,
+  ): Promise<SelectNode[]> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    if (!chat.attributes) {
+      return [];
     }
 
-    const collaborators = rows.filter((node) => node.id !== chatId);
-    if (collaborators.length === 0) {
-      return null;
+    const attributes = JSON.parse(chat.attributes);
+    if (!attributes.collaborators) {
+      return [];
     }
 
+    const collaboratorIds = Object.keys(attributes.collaborators);
+    if (attributes.collaborators) {
+      for (const collaboratorId of collaboratorIds) {
+        if (collaboratorId === input.userId) {
+          continue;
+        }
+
+        if (collaboratorIds.includes(collaboratorId)) {
+          continue;
+        }
+
+        collaboratorIds.push(collaboratorId);
+      }
+    }
+
+    const collaborators = await workspaceDatabase
+      .selectFrom('nodes')
+      .where('id', 'in', collaboratorIds)
+      .selectAll()
+      .execute();
+
+    const nodes = [chat, ...collaborators];
+    return nodes;
+  }
+
+  private buildChat = (
+    chat: SelectNode,
+    collaborators: SelectNode[],
+  ): ChatNode | null => {
     const collaborator = mapNode(collaborators[0]);
     return {
-      id: chatNode.id,
+      id: chat.id,
       name: collaborator.attributes.name ?? 'Unknown',
       avatar: collaborator.attributes.avatar ?? null,
     };

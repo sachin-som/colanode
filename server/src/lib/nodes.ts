@@ -21,16 +21,6 @@ export const mapNode = (node: SelectNode): ServerNode => {
   };
 };
 
-type NodeCollaboratorRow = {
-  node_id: string;
-  node_level: number;
-  role: string;
-};
-
-type NodeIdRow = {
-  id: string;
-};
-
 export const fetchCollaboratorRole = async (
   nodeId: string,
   collaboratorId: string,

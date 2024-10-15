@@ -1,9 +1,15 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
-import { buildCreateNode } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
+import { sql } from 'kysely';
+import * as Y from 'yjs';
+import { fromUint8Array } from 'js-base64';
+
+interface ChatRow {
+  id: string;
+}
 
 export class ChatCreateMutationHandler
   implements MutationHandler<ChatCreateMutationInput>
@@ -15,24 +21,17 @@ export class ChatCreateMutationHandler
       input.userId,
     );
 
-    const existingChats = await workspaceDatabase
-      .selectFrom('nodes')
-      .selectAll()
-      .where('type', '=', NodeTypes.Chat)
-      .where(
-        'id',
-        'in',
-        workspaceDatabase
-          .selectFrom('node_collaborators')
-          .select('node_id')
-          .where('collaborator_id', 'in', [input.userId, input.otherUserId])
-          .groupBy('node_id')
-          .having(workspaceDatabase.fn.count('collaborator_id'), '=', 2),
-      )
-      .execute();
+    const query = sql<ChatRow>`
+      SELECT id
+      FROM nodes
+      WHERE type = ${NodeTypes.Chat}
+      AND json_extract(attributes, '$.collaborators.${input.userId}') = 'owner'
+      AND json_extract(attributes, '$.collaborators.${input.otherUserId}') = 'owner'
+    `.compile(workspaceDatabase);
 
-    if (existingChats.length > 0) {
-      const chat = existingChats[0];
+    const existingChats = await workspaceDatabase.executeQuery(query);
+    if (existingChats.rows?.length > 0) {
+      const chat = existingChats.rows[0];
       return {
         output: {
           id: chat.id,
@@ -41,44 +40,35 @@ export class ChatCreateMutationHandler
     }
 
     const id = generateId(IdType.Chat);
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
-        .insertInto('nodes')
-        .values(
-          buildCreateNode(
-            {
-              id: id,
-              attributes: {
-                type: NodeTypes.Chat,
-              },
-            },
-            input.userId,
-          ),
-        )
-        .execute();
-
-      await trx
-        .insertInto('node_collaborators')
-        .values([
-          {
-            node_id: id,
-            collaborator_id: input.userId,
-            role: 'owner',
-            created_at: new Date().toISOString(),
-            created_by: input.userId,
-            version_id: generateId(IdType.Version),
-          },
-          {
-            node_id: id,
-            collaborator_id: input.otherUserId,
-            role: 'owner',
-            created_at: new Date().toISOString(),
-            created_by: input.userId,
-            version_id: generateId(IdType.Version),
-          },
-        ])
-        .execute();
+    const doc = new Y.Doc({
+      guid: id,
     });
+
+    const attributesMap = doc.getMap('attributes');
+
+    doc.transact(() => {
+      attributesMap.set('type', NodeTypes.Chat);
+      attributesMap.set('collaborators', new Y.Map());
+
+      const collaboratorsMap = attributesMap.get('collaborators') as Y.Map<any>;
+      collaboratorsMap.set(input.userId, 'owner');
+      collaboratorsMap.set(input.otherUserId, 'owner');
+    });
+
+    const attributes = JSON.stringify(attributesMap.toJSON());
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    await workspaceDatabase
+      .insertInto('nodes')
+      .values({
+        id: id,
+        attributes: attributes,
+        state: encodedState,
+        created_at: new Date().toISOString(),
+        created_by: input.userId,
+        version_id: generateId(IdType.Version),
+      })
+      .execute();
 
     return {
       output: {
@@ -88,11 +78,6 @@ export class ChatCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'node_collaborators',
           userId: input.userId,
         },
       ],

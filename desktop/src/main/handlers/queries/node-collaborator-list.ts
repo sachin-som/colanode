@@ -49,7 +49,7 @@ export class NodeCollaboratorListQueryHandler
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          (change.table === 'nodes' || change.table === 'node_collaborators') &&
+          change.table === 'nodes' &&
           change.userId === input.userId,
       )
     ) {

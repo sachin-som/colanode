@@ -95,9 +95,12 @@ const createNodesTable: Migration = {
       .addColumn('updated_at', 'timestamptz')
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_by', 'varchar(30)')
+      .addColumn('deleted_at', 'timestamptz')
+      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('server_created_at', 'timestamptz')
+      .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('server_updated_at', 'timestamptz')
+      .addColumn('server_deleted_at', 'timestamptz')
       .execute();
   },
   down: async (db) => {
@@ -105,7 +108,7 @@ const createNodesTable: Migration = {
   },
 };
 
-const createClosureTable: Migration = {
+const createNodePathsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('node_paths')
@@ -163,8 +166,7 @@ const createClosureTable: Migration = {
       $$ LANGUAGE plpgsql;
 
       CREATE TRIGGER trg_update_node_path
-      AFTER UPDATE OF parent_id ON nodes
-      FOR EACH ROW
+      AFTER UPDATE ON nodes
       EXECUTE FUNCTION fn_update_node_path();
     `.execute(db);
   },
@@ -176,7 +178,6 @@ const createClosureTable: Migration = {
       DROP FUNCTION IF EXISTS fn_update_node_path();
     `.execute(db);
 
-    // Drop closure table
     await db.schema.dropTable('node_paths').execute();
   },
 };
@@ -192,55 +193,75 @@ const createNodeCollaboratorsTable: Migration = {
         col.notNull().references('nodes.id').onDelete('cascade'),
       )
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
-      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('updated_at', 'timestamptz')
-      .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
-      .addColumn('updated_by', 'varchar(30)')
-      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('server_created_at', 'timestamptz')
-      .addColumn('server_updated_at', 'timestamptz')
       .addPrimaryKeyConstraint('node_collaborators_pkey', [
         'node_id',
         'collaborator_id',
       ])
       .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION fn_insert_node_collaborators() RETURNS TRIGGER AS $$
+      DECLARE
+        collaborator_key text;
+        collaborator_role text;
+      BEGIN
+        FOR collaborator_key, collaborator_role IN
+          SELECT * FROM jsonb_each_text(NEW.attributes->'collaborators')
+        LOOP
+          INSERT INTO node_collaborators (node_id, collaborator_id, role, created_at)
+          VALUES (NEW.id, collaborator_key, collaborator_role, NOW());
+        END LOOP;
+
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_insert_node_collaborators
+      AFTER INSERT ON nodes
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_insert_node_collaborators();
+
+      CREATE OR REPLACE FUNCTION fn_update_node_collaborators() RETURNS TRIGGER AS $$
+      DECLARE
+        collaborator_key text;
+        collaborator_role text;
+      BEGIN
+        DELETE FROM node_collaborators WHERE node_id = NEW.id;
+
+        FOR collaborator_key, collaborator_role IN
+          SELECT * FROM jsonb_each_text(NEW.attributes->'collaborators')
+        LOOP
+          INSERT INTO node_collaborators (node_id, collaborator_id, role, created_at)
+          VALUES (NEW.id, collaborator_key, collaborator_role, NOW());
+        END LOOP;
+
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_node_collaborators
+      AFTER UPDATE ON nodes
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_update_node_collaborators();
+    `.execute(db);
   },
   down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_insert_node_collaborators ON nodes;
+      DROP TRIGGER IF EXISTS trg_update_node_collaborators ON nodes;
+      DROP FUNCTION IF EXISTS fn_insert_node_collaborators();
+      DROP FUNCTION IF EXISTS fn_update_node_collaborators();
+    `.execute(db);
+
     await db.schema.dropTable('node_collaborators').execute();
   },
 };
 
-const createNodeReactionsTable: Migration = {
+const createDevicesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_reactions')
-      .addColumn('node_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
-      )
-      .addColumn('actor_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
-      )
-      .addColumn('reaction', 'varchar(30)', (col) => col.notNull())
-      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
-      .addPrimaryKeyConstraint('node_reactions_pkey', [
-        'node_id',
-        'actor_id',
-        'reaction',
-      ])
-      .execute();
-  },
-  down: async (db) => {
-    await db.schema.dropTable('node_reactions').execute();
-  },
-};
-
-const createAccountDevicesTable: Migration = {
-  up: async (db) => {
-    await db.schema
-      .createTable('account_devices')
+      .createTable('devices')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('token_hash', 'varchar(100)', (col) => col.notNull())
@@ -259,43 +280,28 @@ const createAccountDevicesTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('account_devices').execute();
+    await db.schema.dropTable('devices').execute();
   },
 };
 
-const createChangesTable: Migration = {
+const createDeviceNodeVersionTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('changes')
-      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('data', 'jsonb')
-      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('notified_at', 'timestamptz')
-      .execute();
-  },
-  down: async (db) => {
-    await db.schema.dropTable('changes').execute();
-  },
-};
-
-const createChangeDevicesTable: Migration = {
-  up: async (db) => {
-    await db.schema
-      .createTable('change_devices')
-      .addColumn('change_id', 'varchar(30)', (col) =>
-        col.notNull().references('changes.id').onDelete('cascade'),
+      .createTable('device_node_versions')
+      .addColumn('device_id', 'varchar(30)', (col) =>
+        col.notNull().references('devices.id').onDelete('cascade'),
       )
-      .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('retry_count', 'integer', (col) => col.notNull().defaultTo(0))
-      .addPrimaryKeyConstraint('change_devices_pkey', [
-        'change_id',
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('synced_at', 'timestamptz', (col) => col.notNull())
+      .addPrimaryKeyConstraint('device_node_versions_pkey', [
         'device_id',
+        'node_id',
       ])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('change_devices').execute();
+    await db.schema.dropTable('device_node_versions').execute();
   },
 };
 
@@ -304,10 +310,8 @@ export const databaseMigrations: Record<string, Migration> = {
   '00002_create_workspaces_table': createWorkspacesTable,
   '00003_create_workspace_users_table': createWorkspaceUsersTable,
   '00004_create_nodes_table': createNodesTable,
-  '00005_create_closure_table': createClosureTable,
+  '00005_create_node_paths_table': createNodePathsTable,
   '00006_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00007_create_node_reactions_table': createNodeReactionsTable,
-  '00008_create_account_devices_table': createAccountDevicesTable,
-  '00009_create_changes_table': createChangesTable,
-  '00010_create_change_devices_table': createChangeDevicesTable,
+  '00007_create_devices_table': createDevicesTable,
+  '00008_create_device_node_version_table': createDeviceNodeVersionTable,
 };

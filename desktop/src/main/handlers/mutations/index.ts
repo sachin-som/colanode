@@ -31,13 +31,8 @@ import { AvatarUploadMutationHandler } from '@/main/handlers/mutations/avatar-up
 import { NodeServerCreateMutationHandler } from '@/main/handlers/mutations/node-server-create';
 import { NodeServerUpdateMutationHandler } from '@/main/handlers/mutations/node-server-update';
 import { NodeServerDeleteMutationHandler } from '@/main/handlers/mutations/node-server-delete';
-import { NodeCollaboratorServerCreateMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-create';
-import { NodeCollaboratorServerUpdateMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-update';
-import { NodeCollaboratorServerDeleteMutationHandler } from '@/main/handlers/mutations/node-collaborator-server-delete';
-import { NodeReactionServerCreateMutationHandler } from '@/main/handlers/mutations/node-reaction-server-create';
-import { NodeReactionServerDeleteMutationHandler } from '@/main/handlers/mutations/node-reaction-server-delete';
 import { LogoutMutationHandler } from '@/main/handlers/mutations/logout';
-import { NodeBatchSyncMutationHandler } from '@/main/handlers/mutations/node-batch-sync';
+import { NodeSyncMutationHandler } from '@/main/handlers/mutations/node-sync';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -77,14 +72,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   node_server_create: new NodeServerCreateMutationHandler(),
   node_server_update: new NodeServerUpdateMutationHandler(),
   node_server_delete: new NodeServerDeleteMutationHandler(),
-  node_collaborator_server_create:
-    new NodeCollaboratorServerCreateMutationHandler(),
-  node_collaborator_server_update:
-    new NodeCollaboratorServerUpdateMutationHandler(),
-  node_collaborator_server_delete:
-    new NodeCollaboratorServerDeleteMutationHandler(),
-  node_reaction_server_create: new NodeReactionServerCreateMutationHandler(),
-  node_reaction_server_delete: new NodeReactionServerDeleteMutationHandler(),
   logout: new LogoutMutationHandler(),
-  node_batch_sync: new NodeBatchSyncMutationHandler(),
+  node_sync: new NodeSyncMutationHandler(),
 };

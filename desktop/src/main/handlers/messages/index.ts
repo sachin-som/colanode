@@ -1,14 +1,12 @@
 import { MessageHandler, MessageMap } from '@/operations/messages';
-import { ServerChangeMessageHandler } from '@/main/handlers/messages/server-change';
-import { ServerChangeResultMessageHandler } from '@/main/handlers/messages/server-change-result';
-import { ServerChangeBatchMessageHandler } from '@/main/handlers/messages/server-change-batch';
+import { LocalNodeSyncMessageHandler } from '@/main/handlers/messages/local-node-sync';
+import { ServerNodesSyncMessageHandler } from '@/main/handlers/messages/server-nodes-sync';
 
 type MessageHandlerMap = {
   [K in keyof MessageMap]: MessageHandler<MessageMap[K]>;
 };
 
 export const messageHandlerMap: MessageHandlerMap = {
-  server_change: new ServerChangeMessageHandler(),
-  server_change_result: new ServerChangeResultMessageHandler(),
-  server_change_batch: new ServerChangeBatchMessageHandler(),
+  local_node_sync: new LocalNodeSyncMessageHandler(),
+  server_nodes_sync: new ServerNodesSyncMessageHandler(),
 };

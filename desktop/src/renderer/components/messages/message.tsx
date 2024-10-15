@@ -137,7 +137,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
               />
             ))}
           </div>
-          {message.reactionCounts.length > 0 && (
+          {message.reactionCounts?.length > 0 && (
             <MessageReactions
               message={message}
               onReactionClick={(reaction) => {
@@ -145,7 +145,13 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
                   return;
                 }
 
-                if (message.userReactions.includes(reaction)) {
+                if (
+                  message.reactionCounts.some(
+                    (reactionCount) =>
+                      reactionCount.reaction === reaction &&
+                      reactionCount.isReactedTo,
+                  )
+                ) {
                   mutate({
                     input: {
                       type: 'node_reaction_delete',

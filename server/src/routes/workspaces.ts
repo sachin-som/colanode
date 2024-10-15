@@ -15,7 +15,6 @@ import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
   CreateAccount,
-  CreateChange,
   CreateNode,
   CreateWorkspaceUser,
   SelectNode,
@@ -25,12 +24,6 @@ import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
 import { ServerNode } from '@/types/nodes';
 import { mapNode } from '@/lib/nodes';
-import {
-  ServerNodeCreateChangeData,
-  ServerNodeUpdateChangeData,
-} from '@/types/sync';
-import { enqueueChange, enqueueChanges } from '@/queues/changes';
-import { enqueueWorkspaceUserSync } from '@/queues/sync';
 
 export const workspacesRouter = Router();
 
@@ -130,8 +123,6 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
       })
       .execute();
   });
-
-  await enqueueWorkspaceUserSync(workspaceId, userId);
 
   const output: WorkspaceOutput = {
     id: workspaceId,
@@ -558,7 +549,6 @@ workspacesRouter.post(
     const accountsToCreate: CreateAccount[] = [];
     const workspaceUsersToCreate: CreateWorkspaceUser[] = [];
     const usersToCreate: CreateNode[] = [];
-    const changesToCreate: CreateChange[] = [];
 
     const users: ServerNode[] = [];
     for (const email of input.emails) {
@@ -623,7 +613,6 @@ workspacesRouter.post(
 
       const userAttributes = JSON.stringify(userAttributesMap.toJSON());
       const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
-      const userChangeId = generateId(IdType.Change);
 
       workspaceUsersToCreate.push({
         id: userId,
@@ -660,23 +649,6 @@ workspacesRouter.post(
         workspace_id: user.workspaceId,
       });
 
-      const changeData: ServerNodeCreateChangeData = {
-        type: 'node_create',
-        id: user.id,
-        state: user.state,
-        createdAt: user.createdAt.toISOString(),
-        createdBy: user.createdBy,
-        versionId: user.versionId,
-        serverCreatedAt: user.serverCreatedAt.toISOString(),
-      };
-
-      changesToCreate.push({
-        id: userChangeId,
-        workspace_id: workspace.id,
-        data: JSON.stringify(changeData),
-        created_at: new Date(),
-      });
-
       users.push(user);
     }
 
@@ -695,28 +667,12 @@ workspacesRouter.post(
             .insertInto('workspace_users')
             .values(workspaceUsersToCreate)
             .execute();
-
-          for (const workspaceUser of workspaceUsersToCreate) {
-            await enqueueWorkspaceUserSync(
-              workspaceUser.workspace_id,
-              workspaceUser.id,
-            );
-          }
         }
 
         if (usersToCreate.length > 0) {
           await trx.insertInto('nodes').values(usersToCreate).execute();
         }
-
-        if (changesToCreate.length > 0) {
-          await trx.insertInto('changes').values(changesToCreate).execute();
-        }
       });
-
-      if (changesToCreate.length > 0) {
-        const changeIds = changesToCreate.map((change) => change.id);
-        await enqueueChanges(changeIds);
-      }
     }
 
     return res.status(200).json({
@@ -819,7 +775,6 @@ workspacesRouter.put(
     const userAttributes = JSON.stringify(userAttributesMap.toJSON());
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
     const updatedAt = new Date();
-    const userChangeId = generateId(IdType.Change);
 
     const userNode: ServerNode = {
       id: user.id,
@@ -838,18 +793,8 @@ workspacesRouter.put(
       updatedBy: currentWorkspaceUser.id,
     };
 
-    const changeData: ServerNodeUpdateChangeData = {
-      type: 'node_update',
-      id: userNode.id,
-      updates: userUpdates,
-      updatedAt: updatedAt.toISOString(),
-      updatedBy: currentWorkspaceUser.id,
-      versionId: userNode.versionId,
-      serverUpdatedAt: updatedAt.toISOString(),
-    };
-
     await database.transaction().execute(async (trx) => {
-      await database
+      await trx
         .updateTable('workspace_users')
         .set({
           role: input.role,
@@ -860,7 +805,7 @@ workspacesRouter.put(
         .where('id', '=', userId)
         .execute();
 
-      await database
+      await trx
         .updateTable('nodes')
         .set({
           attributes: userAttributes,
@@ -872,19 +817,7 @@ workspacesRouter.put(
         })
         .where('id', '=', userNode.id)
         .execute();
-
-      await trx
-        .insertInto('changes')
-        .values({
-          id: userChangeId,
-          workspace_id: workspace.id,
-          data: JSON.stringify(changeData),
-          created_at: new Date(),
-        })
-        .execute();
     });
-
-    await enqueueChange(userChangeId);
 
     return res.status(200).json({
       user: userNode,

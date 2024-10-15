@@ -1,11 +1,8 @@
-import { ServerChangeMessageInput } from '@/messages/server-change';
-import { ServerChangeResultMessageInput } from '@/messages/server-change-result';
-import { ServerChangeBatchMessageInput } from '@/messages/server-change-batch';
-
+import { LocalNodeSyncMessageInput } from '@/messages/local-node-sync';
+import { ServerNodesSyncMessageInput } from '@/messages/server-nodes-sync';
 export interface MessageMap {
-  server_change: ServerChangeMessageInput;
-  server_change_result: ServerChangeResultMessageInput;
-  server_change_batch: ServerChangeBatchMessageInput;
+  local_node_sync: LocalNodeSyncMessageInput;
+  server_nodes_sync: ServerNodesSyncMessageInput;
 }
 
 export type MessageInput = MessageMap[keyof MessageMap];

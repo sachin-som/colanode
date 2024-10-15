@@ -7,7 +7,6 @@ import {
 } from '@/operations/queries';
 import { MutationChange } from '@/operations/mutations';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { sql } from 'kysely';
 import { NodeTypes } from '@/lib/constants';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
 import { mapNode } from '@/lib/nodes';
@@ -15,23 +14,20 @@ import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash';
 
-type MessageRow = SelectNode & {
-  reaction_counts: string | null;
-  user_reactions: string | null;
-};
-
 export class MessageListQueryHandler
   implements QueryHandler<MessageListQueryInput>
 {
   public async handleQuery(
     input: MessageListQueryInput,
   ): Promise<QueryResult<MessageListQueryInput>> {
-    const rows = await this.fetchMesssages(input);
+    const messages = await this.fetchMesssages(input);
+    const authors = await this.fetchAuthors(input, messages);
 
     return {
-      output: this.buildMessages(rows),
+      output: this.buildMessages(input.userId, messages, authors),
       state: {
-        rows,
+        messages,
+        authors,
       },
     };
   }
@@ -45,7 +41,7 @@ export class MessageListQueryHandler
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          (change.table === 'nodes' || change.table === 'node_reactions') &&
+          change.table === 'nodes' &&
           change.userId === input.userId,
       )
     ) {
@@ -54,8 +50,10 @@ export class MessageListQueryHandler
       };
     }
 
-    const rows = await this.fetchMesssages(input);
-    if (isEqual(rows, state.rows)) {
+    const messages = await this.fetchMesssages(input);
+    const authors = await this.fetchAuthors(input, messages);
+
+    if (isEqual(messages, state.messages) && isEqual(authors, state.authors)) {
       return {
         hasChanges: false,
       };
@@ -64,9 +62,10 @@ export class MessageListQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: this.buildMessages(rows),
+        output: this.buildMessages(input.userId, messages, authors),
         state: {
-          rows,
+          messages,
+          authors,
         },
       },
     };
@@ -74,73 +73,56 @@ export class MessageListQueryHandler
 
   private async fetchMesssages(
     input: MessageListQueryInput,
-  ): Promise<MessageRow[]> {
+  ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 
     const offset = input.page * input.count;
-    const query = sql<MessageRow>`
-      WITH message_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE parent_id = ${input.conversationId} AND type = ${NodeTypes.Message}
-          ORDER BY id DESC
-          LIMIT ${sql.lit(input.count)}
-          OFFSET ${sql.lit(offset)}
-      ),
-      author_nodes AS (
-          SELECT *
-          FROM nodes
-          WHERE id IN (SELECT DISTINCT created_by FROM message_nodes)
-      ),
-      all_nodes AS (
-          SELECT * FROM message_nodes
-          UNION ALL
-          SELECT * FROM author_nodes
-      ),
-      message_reaction_counts AS (
-          SELECT
-              mrc.node_id,
-              json_group_array(
-                  json_object(
-                      'reaction', mrc.'reaction',
-                      'count', mrc.'count'
-                  )
-              ) AS reaction_counts
-          FROM (
-              SELECT node_id, reaction, COUNT(*) as count
-              FROM node_reactions
-              WHERE node_id IN (SELECT id FROM message_nodes)
-              GROUP BY node_id, reaction
-          ) mrc
-          GROUP BY mrc.node_id
-      ),
-      user_reactions AS (
-          SELECT
-              ur.node_id,
-              json_group_array(ur.reaction) AS user_reactions
-          FROM node_reactions ur
-          WHERE ur.node_id IN (SELECT id FROM message_nodes) AND ur.actor_id = ${input.userId}
-          GROUP BY ur.node_id
+    const messages = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where((eb) =>
+        eb.and([
+          eb('parent_id', '=', input.conversationId),
+          eb('type', '=', NodeTypes.Message),
+        ]),
       )
-      SELECT
-          n.*,
-          COALESCE(mrc.reaction_counts, json('[]')) AS reaction_counts,
-          COALESCE(ur.user_reactions, json('[]')) AS user_reactions
-      FROM all_nodes n
-      LEFT JOIN message_reaction_counts mrc ON n.id = mrc.node_id
-      LEFT JOIN user_reactions ur ON n.id = ur.node_id;
-    `.compile(workspaceDatabase);
+      .orderBy('id', 'desc')
+      .limit(input.count)
+      .offset(offset)
+      .execute();
 
-    const result = await workspaceDatabase.executeQuery(query);
-    return result.rows;
+    return messages;
   }
 
-  private buildMessages = (rows: MessageRow[]): MessageNode[] => {
-    const messageRows = rows.filter((row) => row.type === NodeTypes.Message);
-    const authorRows = rows.filter((row) => row.type === NodeTypes.User);
+  private async fetchAuthors(
+    input: MessageListQueryInput,
+    messages: SelectNode[],
+  ): Promise<SelectNode[]> {
+    if (messages.length === 0) {
+      return [];
+    }
 
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    const authorIds = messages.map((message) => message.created_by);
+    const authors = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', 'in', authorIds)
+      .execute();
+
+    return authors;
+  }
+
+  private buildMessages = (
+    userId: string,
+    messageRows: SelectNode[],
+    authorRows: SelectNode[],
+  ): MessageNode[] => {
     const messages: MessageNode[] = [];
     const authorMap = new Map<string, UserNode>();
     for (const authorRow of authorRows) {
@@ -160,11 +142,16 @@ export class MessageListQueryHandler
     for (const messageRow of messageRows) {
       const messageNode = mapNode(messageRow);
       const author = authorMap.get(messageNode.createdBy);
+      const reactions =
+        (messageNode.attributes.reactions as Record<string, string[]>) ?? {};
 
-      const reactionCounts: MessageReactionCount[] = JSON.parse(
-        messageRow.reaction_counts,
-      );
-      const userReactions: string[] = JSON.parse(messageRow.user_reactions);
+      const reactionCounts: MessageReactionCount[] = Object.entries(reactions)
+        .map(([reaction, users]) => ({
+          reaction,
+          count: users.length,
+          isReactedTo: users.includes(userId),
+        }))
+        .filter((reactionCount) => reactionCount.count > 0);
 
       const message: MessageNode = {
         id: messageNode.id,
@@ -177,7 +164,6 @@ export class MessageListQueryHandler
         },
         content: messageNode.attributes.content,
         reactionCounts,
-        userReactions,
       };
 
       messages.push(message);

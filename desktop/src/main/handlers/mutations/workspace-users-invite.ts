@@ -1,19 +1,20 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { buildAxiosInstance } from '@/lib/servers';
-import { WorkspaceAccountRoleUpdateMutationInput } from '@/operations/mutations/workspace-account-role-update';
+import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
 import {
   MutationChange,
   MutationHandler,
   MutationResult,
 } from '@/operations/mutations';
-import { WorkspaceAccountRoleUpdateOutput } from '@/types/workspaces';
+import { WorkspaceUsersInviteOutput } from '@/types/workspaces';
+import { CreateNode } from '@/main/data/workspace/schema';
 
-export class WorkspaceAccountRoleUpdateMutationHandler
-  implements MutationHandler<WorkspaceAccountRoleUpdateMutationInput>
+export class WorkspaceUsersInviteMutationHandler
+  implements MutationHandler<WorkspaceUsersInviteMutationInput>
 {
   async handleMutation(
-    input: WorkspaceAccountRoleUpdateMutationInput,
-  ): Promise<MutationResult<WorkspaceAccountRoleUpdateMutationInput>> {
+    input: WorkspaceUsersInviteMutationInput,
+  ): Promise<MutationResult<WorkspaceUsersInviteMutationInput>> {
     const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -61,10 +62,10 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       server.attributes,
       account.token,
     );
-    const { data } = await axios.post<WorkspaceAccountRoleUpdateOutput>(
-      `/v1/workspaces/${workspace.workspace_id}/users/${input.accountId}`,
+    const { data } = await axios.post<WorkspaceUsersInviteOutput>(
+      `/v1/workspaces/${workspace.workspace_id}/users`,
       {
-        role: input.role,
+        emails: input.emails,
       },
     );
 
@@ -72,17 +73,26 @@ export class WorkspaceAccountRoleUpdateMutationHandler
       input.userId,
     );
 
+    const usersToCreate: CreateNode[] = data.users.map((user) => {
+      return {
+        id: user.id,
+        attributes: JSON.stringify(user.attributes),
+        state: user.state,
+        created_at: user.createdAt,
+        created_by: user.createdBy,
+        updated_at: user.updatedAt,
+        updated_by: user.updatedBy,
+        server_created_at: user.serverCreatedAt,
+        server_updated_at: user.serverUpdatedAt,
+        server_version_id: user.versionId,
+        version_id: user.versionId,
+      };
+    });
+
     await workspaceDatabase
-      .updateTable('nodes')
-      .set({
-        attributes: JSON.stringify(data.user.attributes),
-        updated_at: data.user.updatedAt,
-        updated_by: data.user.updatedBy,
-        version_id: data.user.versionId,
-        server_updated_at: data.user.updatedAt,
-        server_version_id: data.user.versionId,
-      })
-      .where('id', '=', data.user.id)
+      .insertInto('nodes')
+      .values(usersToCreate)
+      .onConflict((cb) => cb.doNothing())
       .execute();
 
     const changedTables: MutationChange[] = [

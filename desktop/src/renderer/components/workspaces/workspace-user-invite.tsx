@@ -77,7 +77,7 @@ export const WorkspaceUserInvite = () => {
 
             mutate({
               input: {
-                type: 'workspace_accounts_invite',
+                type: 'workspace_users_invite',
                 emails: emails,
                 userId: workspace.userId,
               },

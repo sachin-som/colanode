@@ -75,7 +75,7 @@ export const WorkspaceUsers = () => {
                 <p className="text-sm font-medium leading-none">{name}</p>
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
-              <WorkspaceUserRoleDropdown accountId={accountId} value={role} />
+              <WorkspaceUserRoleDropdown userId={user.id} value={role} />
             </div>
           );
         })}

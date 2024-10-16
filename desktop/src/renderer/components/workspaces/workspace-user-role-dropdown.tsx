@@ -41,12 +41,12 @@ const roles: WorkspaceRoleItem[] = [
 ];
 
 interface WorkspaceUserRoleDropdownProps {
-  accountId: string;
+  userId: string;
   value: WorkspaceRole;
 }
 
 export const WorkspaceUserRoleDropdown = ({
-  accountId,
+  userId,
   value,
 }: WorkspaceUserRoleDropdownProps) => {
   const workspace = useWorkspace();
@@ -79,8 +79,8 @@ export const WorkspaceUserRoleDropdown = ({
 
               mutate({
                 input: {
-                  type: 'workspace_account_role_update',
-                  accountId: accountId,
+                  type: 'workspace_user_role_update',
+                  userToUpdateId: userId,
                   role: role.value,
                   userId: workspace.userId,
                 },

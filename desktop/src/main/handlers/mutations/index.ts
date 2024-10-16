@@ -22,8 +22,8 @@ import { RecordCreateMutationHandler } from '@/main/handlers/mutations/record-cr
 import { SelectOptionCreateMutationHandler } from '@/main/handlers/mutations/select-option-create';
 import { ServerCreateMutationHandler } from '@/main/handlers/mutations/server-create';
 import { SpaceCreateMutationHandler } from '@/main/handlers/mutations/space-create';
-import { WorkspaceAccountRoleUpdateMutationHandler } from '@/main/handlers/mutations/workspace-account-role-update';
-import { WorkspaceAccountsInviteMutationHandler } from '@/main/handlers/mutations/workspace-accounts-invite';
+import { WorkspaceUserRoleUpdateMutationHandler } from '@/main/handlers/mutations/workspace-user-role-update';
+import { WorkspaceUsersInviteMutationHandler } from '@/main/handlers/mutations/workspace-users-invite';
 import { WorkspaceCreateMutationHandler } from '@/main/handlers/mutations/workspace-create';
 import { WorkspaceUpdateMutationHandler } from '@/main/handlers/mutations/workspace-update';
 import { DocumentSaveMutationHandler } from '@/main/handlers/mutations/document-save';
@@ -62,9 +62,8 @@ export const mutationHandlerMap: MutationHandlerMap = {
   select_option_create: new SelectOptionCreateMutationHandler(),
   server_create: new ServerCreateMutationHandler(),
   space_create: new SpaceCreateMutationHandler(),
-  workspace_account_role_update:
-    new WorkspaceAccountRoleUpdateMutationHandler(),
-  workspace_accounts_invite: new WorkspaceAccountsInviteMutationHandler(),
+  workspace_user_role_update: new WorkspaceUserRoleUpdateMutationHandler(),
+  workspace_users_invite: new WorkspaceUsersInviteMutationHandler(),
   workspace_create: new WorkspaceCreateMutationHandler(),
   workspace_update: new WorkspaceUpdateMutationHandler(),
   document_save: new DocumentSaveMutationHandler(),

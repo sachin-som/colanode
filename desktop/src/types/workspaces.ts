@@ -34,11 +34,11 @@ export type WorkspaceUserOutput = {
   node: ServerNode;
 };
 
-export type WorkspaceAccountsInviteOutput = {
+export type WorkspaceUsersInviteOutput = {
   users: ServerNode[];
 };
 
-export type WorkspaceAccountRoleUpdateOutput = {
+export type WorkspaceUserRoleUpdateOutput = {
   user: ServerNode;
 };
 

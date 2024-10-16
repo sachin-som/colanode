@@ -16,18 +16,23 @@ export class PageCreateMutationHandler
       input.userId,
     );
 
-    const siblings = await workspaceDatabase
-      .selectFrom('nodes')
-      .selectAll()
-      .where('parent_id', '=', input.spaceId)
-      .execute();
+    let index: string | undefined = undefined;
+    if (input.generateIndex) {
+      const siblings = await workspaceDatabase
+        .selectFrom('nodes')
+        .selectAll()
+        .where('parent_id', '=', input.parentId)
+        .execute();
 
-    const maxIndex =
-      siblings.length > 0
-        ? siblings.sort((a, b) => compareString(a.index, b.index))[
-            siblings.length - 1
-          ].index
-        : null;
+      const maxIndex =
+        siblings.length > 0
+          ? siblings.sort((a, b) => compareString(a.index, b.index))[
+              siblings.length - 1
+            ].index
+          : null;
+
+      index = generateNodeIndex(maxIndex, null);
+    }
 
     const id = generateId(IdType.Page);
     await workspaceDatabase
@@ -38,8 +43,8 @@ export class PageCreateMutationHandler
             id: id,
             attributes: {
               type: NodeTypes.Page,
-              parentId: input.spaceId,
-              index: generateNodeIndex(maxIndex, null),
+              parentId: input.parentId,
+              index: index,
             },
           },
           input.userId,

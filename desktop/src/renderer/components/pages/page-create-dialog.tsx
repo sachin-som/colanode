@@ -58,8 +58,9 @@ export const PageCreateDialog = ({
     mutate({
       input: {
         type: 'page_create',
-        spaceId: spaceId,
+        parentId: spaceId,
         name: values.name,
+        generateIndex: true,
         userId: workspace.userId,
       },
       onSuccess(output) {

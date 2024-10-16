@@ -15,8 +15,9 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
     input: NodeGetQueryInput,
   ): Promise<QueryResult<NodeGetQueryInput>> {
     const row = await this.fetchNode(input);
+
     return {
-      output: mapNode(row),
+      output: row ? mapNode(row) : null,
       state: {
         row,
       },
@@ -51,7 +52,7 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
     return {
       hasChanges: true,
       result: {
-        output: mapNode(row),
+        output: row ? mapNode(row) : null,
         state: {
           row,
         },

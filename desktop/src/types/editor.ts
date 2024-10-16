@@ -7,7 +7,10 @@ export type EditorCommandProps = {
   context: EditorCommandContext | null;
 };
 
-export type EditorCommandContext = {};
+export type EditorCommandContext = {
+  documentId: string;
+  userId: string;
+};
 
 export type EditorCommand = {
   key: string;
@@ -15,7 +18,7 @@ export type EditorCommand = {
   description: string;
   keywords?: string[];
   icon: string;
-  handler: (props: EditorCommandProps) => void;
+  handler: (props: EditorCommandProps) => void | Promise<void>;
   disabled?: boolean;
 };
 

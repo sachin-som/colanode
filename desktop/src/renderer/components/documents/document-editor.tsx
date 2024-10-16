@@ -126,7 +126,10 @@ export const DocumentEditor = ({
             DividerCommand,
             TodoCommand,
           ],
-          context: {},
+          context: {
+            documentId,
+            userId: workspace.userId,
+          },
         }),
         BoldMark,
         ItalicMark,

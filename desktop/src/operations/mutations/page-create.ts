@@ -1,8 +1,9 @@
 export type PageCreateMutationInput = {
   type: 'page_create';
   userId: string;
-  spaceId: string;
+  parentId: string;
   name: string;
+  generateIndex: boolean;
 };
 
 export type PageCreateMutationOutput = {

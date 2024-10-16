@@ -193,7 +193,7 @@ export const CommanderExtension = Extension.create<CommanderOptions>({
       Suggestion({
         editor: this.editor,
         char: '/',
-        command: ({
+        command: async ({
           editor,
           range,
           props,
@@ -202,7 +202,15 @@ export const CommanderExtension = Extension.create<CommanderOptions>({
           range: Range;
           props: EditorCommand;
         }) => {
-          props.handler({ editor, range, context: this.options.context });
+          const result = props.handler({
+            editor,
+            range,
+            context: this.options.context,
+          });
+
+          if (result instanceof Promise) {
+            await result;
+          }
         },
         items: ({ query }: { query: string }) =>
           filterCommands({ query, commands: this.options.commands }),

@@ -1,6 +1,5 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
-import { generateId, IdType } from '@/lib/id';
 
 const PageCommand: EditorCommand = {
   key: 'page',
@@ -9,8 +8,21 @@ const PageCommand: EditorCommand = {
   keywords: ['page'],
   icon: 'draft-line',
   disabled: false,
-  handler({ editor, range, context }) {
+  async handler({ editor, range, context }) {
     if (context == null) {
+      return;
+    }
+
+    const { userId, documentId } = context;
+    const output = await window.neuron.executeMutation({
+      type: 'page_create',
+      name: 'Untitled',
+      userId,
+      parentId: documentId,
+      generateIndex: false,
+    });
+
+    if (!output.id) {
       return;
     }
 
@@ -21,7 +33,7 @@ const PageCommand: EditorCommand = {
       .insertContent({
         type: NodeTypes.Page,
         attrs: {
-          id: generateId(IdType.Page),
+          id: output.id,
         },
       })
       .run();

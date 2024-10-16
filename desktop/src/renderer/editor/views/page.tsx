@@ -3,16 +3,23 @@ import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 export const PageNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();
   const id = node.attrs.id;
-  const name = node.attrs.name ?? 'Unnamed';
-  const avatar = node.attrs.avatar;
+  const { data, isPending } = useQuery({
+    type: 'node_get',
+    nodeId: id,
+    userId: workspace.userId,
+  });
 
   if (!id) {
     return null;
   }
+
+  const name = data?.attributes.name ?? 'Unnamed';
+  const avatar = data?.attributes.avatar;
 
   return (
     <NodeViewWrapper

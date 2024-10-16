@@ -10,7 +10,7 @@ declare module '@/operations/queries' {
   interface QueryMap {
     node_get: {
       input: NodeGetQueryInput;
-      output: LocalNode;
+      output: LocalNode | null;
     };
   }
 }

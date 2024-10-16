@@ -54,6 +54,7 @@ export const BreadcrumbItemPopover = ({
           </AvatarPopover>
           <SmartTextInput
             value={node.name}
+            placeholder="Unnamed"
             onChange={(newName) => {
               if (isPending) return;
               if (newName === node.name) return;

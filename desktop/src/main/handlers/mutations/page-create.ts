@@ -45,6 +45,7 @@ export class PageCreateMutationHandler
               type: NodeTypes.Page,
               parentId: input.parentId,
               index: index,
+              name: input.name,
             },
           },
           input.userId,

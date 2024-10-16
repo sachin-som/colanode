@@ -13,6 +13,7 @@ import { mapNode } from '@/lib/nodes';
 import { LocalNode } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
+import { compareString } from '@/lib/utils';
 
 export class SidebarSpaceListQueryHandler
   implements QueryHandler<SidebarSpaceListQueryInput>
@@ -101,7 +102,10 @@ export class SidebarSpaceListQueryHandler
         continue;
       }
 
-      const children = nodes.filter((n) => n.parentId === node.id);
+      const children = nodes
+        .filter((n) => n.parentId === node.id)
+        .sort((a, b) => compareString(a.index, b.index));
+
       spaces.push(this.buildSpaceNode(node, children));
     }
 

@@ -81,6 +81,13 @@ export class DocumentGetQueryHandler
   }
 
   private buildOutput(document: SelectNode | null): DocumentGetQueryOutput {
+    if (!document) {
+      return {
+        content: null,
+        hash: null,
+      };
+    }
+
     const node = mapNode(document);
     const contents = node.attributes?.content ?? [];
     if (!contents.length) {

@@ -16,6 +16,8 @@ export const useQuery = <T extends QueryInput>(input: T) => {
   >(undefined);
 
   React.useEffect(() => {
+    setIsPending(true);
+    setData(undefined);
     const queryId = generateId(IdType.Query);
     const fetchData = async () => {
       try {

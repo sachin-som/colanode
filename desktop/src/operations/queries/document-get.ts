@@ -7,8 +7,8 @@ export type DocumentGetQueryInput = {
 };
 
 export type DocumentGetQueryOutput = {
-  content: JSONContent;
-  hash: string;
+  content: JSONContent | null;
+  hash: string | null;
 };
 
 declare module '@/operations/queries' {

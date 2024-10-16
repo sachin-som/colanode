@@ -15,7 +15,7 @@ export const Document = ({ nodeId }: DocumentProps) => {
     userId: workspace.userId,
   });
 
-  if (isPending || !data) {
+  if (isPending || !data || !data.hash) {
     return null;
   }
 

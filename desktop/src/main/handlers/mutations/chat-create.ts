@@ -25,8 +25,8 @@ export class ChatCreateMutationHandler
       SELECT id
       FROM nodes
       WHERE type = ${NodeTypes.Chat}
-      AND json_extract(attributes, '$.collaborators.${input.userId}') = 'owner'
-      AND json_extract(attributes, '$.collaborators.${input.otherUserId}') = 'owner'
+      AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') = 'owner'
+      AND json_extract(attributes, '$.collaborators.${sql.raw(input.otherUserId)}') = 'owner'
     `.compile(workspaceDatabase);
 
     const existingChats = await workspaceDatabase.executeQuery(query);

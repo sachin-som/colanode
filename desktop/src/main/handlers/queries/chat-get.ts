@@ -108,9 +108,9 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
       return [];
     }
 
-    const collaboratorIds = Object.keys(attributes.collaborators);
+    const collaboratorIds: string[] = [];
     if (attributes.collaborators) {
-      for (const collaboratorId of collaboratorIds) {
+      for (const collaboratorId of Object.keys(attributes.collaborators)) {
         if (collaboratorId === input.userId) {
           continue;
         }
@@ -129,8 +129,7 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
       .selectAll()
       .execute();
 
-    const nodes = [chat, ...collaborators];
-    return nodes;
+    return collaborators;
   }
 
   private buildChat = (

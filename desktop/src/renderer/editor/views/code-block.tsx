@@ -34,7 +34,7 @@ export const CodeBlockNodeView = ({
 
   return (
     <NodeViewWrapper
-      data-block-id={node.attrs.blockId}
+      data-id={node.attrs.id}
       as="pre"
       className={defaultClasses.codeBlock}
     >

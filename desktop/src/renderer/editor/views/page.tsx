@@ -8,7 +8,7 @@ import { useQuery } from '@/renderer/hooks/use-query';
 export const PageNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();
   const id = node.attrs.id;
-  const { data, isPending } = useQuery({
+  const { data } = useQuery({
     type: 'node_get',
     nodeId: id,
     userId: workspace.userId,
@@ -23,7 +23,7 @@ export const PageNodeView = ({ node }: NodeViewProps) => {
 
   return (
     <NodeViewWrapper
-      data-block-id={node.attrs.blockId}
+      data-id={node.attrs.id}
       className="my-0.5 flex h-12 w-full cursor-pointer flex-row items-center gap-1 rounded-md bg-gray-50 p-2 hover:bg-gray-100"
       onClick={() => {
         workspace.navigateToNode(id);

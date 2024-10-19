@@ -4,10 +4,12 @@ import { Message } from '@/renderer/components/messages/message';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { compareString } from '@/lib/utils';
+import { MessageNode } from '@/types/messages';
 
 interface MessageListProps {
   conversationId: string;
   onLastMessageIdChange: (id: string) => void;
+  onReply: (replyTo: MessageNode | null) => void;
 }
 
 const MESSAGES_PER_PAGE = 50;
@@ -15,6 +17,7 @@ const MESSAGES_PER_PAGE = 50;
 export const MessageList = ({
   conversationId,
   onLastMessageIdChange,
+  onReply,
 }: MessageListProps) => {
   const workspace = useWorkspace();
   const lastMessageId = React.useRef<string | null>(null);
@@ -98,7 +101,11 @@ export const MessageList = ({
                 <div className="flex-grow border-t border-gray-100" />
               </div>
             )}
-            <Message message={message} previousMessage={previousMessage} />
+            <Message
+              message={message}
+              previousMessage={previousMessage}
+              onReply={onReply}
+            />
           </React.Fragment>
         );
       })}

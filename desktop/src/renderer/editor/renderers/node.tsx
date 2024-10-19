@@ -13,6 +13,7 @@ import { ParagraphRenderer } from '@/renderer/editor/renderers/paragraph';
 import { TaskItemRenderer } from '@/renderer/editor/renderers/task-item';
 import { TaskListRenderer } from '@/renderer/editor/renderers/task-list';
 import { TextRenderer } from '@/renderer/editor/renderers/text';
+import { MessageReferenceRenderer } from '@/renderer/editor/renderers/message-reference';
 import { match } from 'ts-pattern';
 import { JSONContent } from '@tiptap/core';
 import { MarkRenderer } from '@/renderer/editor/renderers/mark';
@@ -68,6 +69,9 @@ export const NodeRenderer = ({
         ))
         .with('codeBlock', () => (
           <CodeBlockRenderer node={node} keyPrefix={keyPrefix} />
+        ))
+        .with('messageReference', () => (
+          <MessageReferenceRenderer node={node} keyPrefix={keyPrefix} />
         ))
         .otherwise(null)}
     </MarkRenderer>

@@ -1,20 +1,20 @@
 import React from 'react';
-import { defaultClasses } from '@/renderer/editor/classes';
 import { NodeChildrenRenderer } from '@/renderer/editor/renderers/node-children';
 import { JSONContent } from '@tiptap/core';
 
-interface BlockquoteRendererProps {
+interface MessageReferenceRendererProps {
   node: JSONContent;
   keyPrefix: string | null;
 }
 
-export const BlockquoteRenderer = ({
+export const MessageReferenceRenderer = ({
   node,
   keyPrefix,
-}: BlockquoteRendererProps) => {
+}: MessageReferenceRendererProps) => {
   return (
-    <blockquote className={defaultClasses.blockquote}>
+    <div className="items-top flex flex-col gap-2 border-l-4 p-2 text-sm text-foreground">
+      <p className="font-medium">{node.attrs.name}</p>
       <NodeChildrenRenderer node={node} keyPrefix={keyPrefix} />
-    </blockquote>
+    </div>
   );
 };

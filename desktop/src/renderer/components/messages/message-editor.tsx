@@ -42,7 +42,15 @@ interface MessageEditorProps {
   onSubmit: (content: JSONContent) => void;
 }
 
-export const MessageEditor = (props: MessageEditorProps) => {
+export interface MessageEditorRefProps {
+  focus: () => void;
+  clear: () => void;
+}
+
+export const MessageEditor = React.forwardRef<
+  MessageEditorRefProps,
+  MessageEditorProps
+>((props, ref) => {
   const editor = useEditor(
     {
       extensions: [
@@ -93,6 +101,20 @@ export const MessageEditor = (props: MessageEditorProps) => {
     props.onSubmit(editor.getJSON());
     editor.chain().clearContent(true).focus().run();
   }, [editor, props]);
+
+  React.useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (editor == null) {
+        return;
+      }
+
+      editor.chain().focus('end').run();
+      editor?.view?.focus();
+    },
+    clear: () => {
+      editor?.chain().clearContent(true).focus().run();
+    },
+  }));
 
   return (
     <div className="flex min-h-0 flex-row items-center rounded bg-gray-100 p-2 pl-0">
@@ -175,4 +197,4 @@ export const MessageEditor = (props: MessageEditorProps) => {
       </div>
     </div>
   );
-};
+});

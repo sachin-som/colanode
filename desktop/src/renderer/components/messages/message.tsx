@@ -19,6 +19,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 interface MessageProps {
   message: MessageNode;
   previousMessage?: MessageNode;
+  onReply: (replyTo: MessageNode | null) => void;
 }
 
 const shouldDisplayUserInfo = (
@@ -39,7 +40,11 @@ const shouldDisplayUserInfo = (
   return previousMessage.author.id !== message.author.id;
 };
 
-export const Message = ({ message, previousMessage }: MessageProps) => {
+export const Message = ({
+  message,
+  previousMessage,
+  onReply,
+}: MessageProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
@@ -120,7 +125,13 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
               />
             </li>
             <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-              <Icon name="reply-line" className="cursor-pointer" />
+              <Icon
+                name="reply-line"
+                className="cursor-pointer"
+                onClick={() => {
+                  onReply(message);
+                }}
+              />
             </li>
             {canDelete && (
               <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">

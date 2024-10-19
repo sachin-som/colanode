@@ -1,6 +1,9 @@
 import React from 'react';
 import { MessageList } from '@/renderer/components/messages/message-list';
-import { MessageCreate } from '@/renderer/components/messages/message-create';
+import {
+  MessageCreate,
+  MessageCreateRefProps,
+} from '@/renderer/components/messages/message-create';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { InView } from 'react-intersection-observer';
 
@@ -12,13 +15,14 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const observerRef = React.useRef<ResizeObserver | null>(null);
-  const scrollPosition = React.useRef<number>(0);
+  const scrollPositionRef = React.useRef<number>(0);
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const bottomVisibleRef = React.useRef<boolean>(false);
-  const shouldScrollToBottom = React.useRef<boolean>(true);
+  const shouldScrollToBottomRef = React.useRef<boolean>(true);
+  const messageCreateRef = React.useRef<MessageCreateRefProps>(null);
 
   React.useEffect(() => {
-    if (bottomRef.current && scrollPosition.current == 0) {
+    if (bottomRef.current && scrollPositionRef.current == 0) {
       bottomRef.current.scrollIntoView();
     }
 
@@ -29,11 +33,11 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
           return;
         }
 
-        if (shouldScrollToBottom.current) {
+        if (shouldScrollToBottomRef.current) {
           bottomRef.current?.scrollIntoView();
         } else {
           viewportRef.current.scrollTop =
-            viewportRef.current.scrollHeight - scrollPosition.current;
+            viewportRef.current.scrollHeight - scrollPositionRef.current;
         }
       });
 
@@ -49,10 +53,10 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
 
   const handleScroll = () => {
     if (viewportRef.current) {
-      scrollPosition.current =
+      scrollPositionRef.current =
         viewportRef.current.scrollHeight - viewportRef.current.scrollTop;
 
-      shouldScrollToBottom.current = bottomVisibleRef.current;
+      shouldScrollToBottomRef.current = bottomVisibleRef.current;
     }
   };
 
@@ -67,8 +71,13 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
           <MessageList
             conversationId={conversationId}
             onLastMessageIdChange={() => {
-              if (shouldScrollToBottom.current && bottomRef.current) {
+              if (shouldScrollToBottomRef.current && bottomRef.current) {
                 bottomRef.current.scrollIntoView();
+              }
+            }}
+            onReply={(message) => {
+              if (messageCreateRef.current) {
+                messageCreateRef.current.setReplyTo(message);
               }
             }}
           />
@@ -83,7 +92,7 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
           <div ref={bottomRef} className="h-4"></div>
         </InView>
       </ScrollArea>
-      <MessageCreate conversationId={conversationId} />
+      <MessageCreate ref={messageCreateRef} conversationId={conversationId} />
     </React.Fragment>
   );
 };

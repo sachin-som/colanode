@@ -11,7 +11,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { Label } from '@/renderer/components/ui/label';
 import { Input } from '@/renderer/components/ui/input';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface ServerCreateDialogProps {

@@ -14,7 +14,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { Input } from '@/renderer/components/ui/input';
 import { Textarea } from '@/renderer/components/ui/textarea';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useAccount } from '@/renderer/contexts/account';
 import { Avatar } from '@/renderer/components/avatars/avatar';

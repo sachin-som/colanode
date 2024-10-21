@@ -9,7 +9,7 @@ import { WorkspaceRole } from '@/types/workspaces';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { Icon } from '@/renderer/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface WorkspaceRoleItem {

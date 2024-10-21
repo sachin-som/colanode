@@ -1,8 +1,15 @@
 import React from 'react';
-import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-button';
 import { SidebarSpaceItem } from '@/renderer/components/workspaces/sidebars/sidebar-space-item';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupLabel,
+  SidebarMenu,
+} from '@/renderer/components/ui/sidebar';
+import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-button';
 
 export const SidebarSpaces = () => {
   const workspace = useWorkspace();
@@ -12,14 +19,14 @@ export const SidebarSpaces = () => {
   });
 
   return (
-    <div className="pt-2 first:pt-0">
-      <div className="flex items-center justify-between p-1 pb-2 text-xs text-muted-foreground">
-        <span>Spaces</span>
+    <SidebarGroup className="group/sidebar-spaces">
+      <SidebarGroupLabel>Spaces</SidebarGroupLabel>
+      <SidebarGroupAction className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100">
         <SpaceCreateButton />
-      </div>
-      <div className="flex flex-col gap-0.5">
+      </SidebarGroupAction>
+      <SidebarMenu>
         {data?.map((space) => <SidebarSpaceItem node={space} key={space.id} />)}
-      </div>
-    </div>
+      </SidebarMenu>
+    </SidebarGroup>
   );
 };

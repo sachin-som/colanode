@@ -11,7 +11,7 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 
 interface AccountLogoutProps {
   id: string;

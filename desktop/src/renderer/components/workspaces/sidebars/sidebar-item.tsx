@@ -16,17 +16,19 @@ export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
   const directCount = 0;
 
   return (
-    <div
+    <button
       key={node.id}
       className={cn(
-        'flex cursor-pointer items-center rounded-md p-1 text-sm text-foreground/80 hover:bg-gray-100',
-        isActive && 'bg-gray-100',
+        'flex w-full items-center',
+        isActive && 'bg-sidebar-accent',
       )}
-      onClick={() => {
-        workspace.navigateToNode(node.id);
-      }}
     >
-      <Avatar id={node.id} avatar={node.avatar} name={node.name} size="small" />
+      <Avatar
+        id={node.id}
+        avatar={node.avatar}
+        name={node.name}
+        className="h-4 w-4"
+      />
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
@@ -36,7 +38,7 @@ export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
         {node.name ?? 'Unnamed'}
       </span>
       {directCount > 0 && (
-        <span className="mr-1 rounded-md bg-red-500 px-1 py-0.5 text-xs text-white">
+        <span className="bg-sidebar-accent text-sidebar-accent-foreground mr-1 rounded-md px-1 py-0.5 text-xs">
           {directCount}
         </span>
       )}
@@ -46,6 +48,6 @@ export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
           className="mr-2 h-3 w-3 p-0.5 text-red-500"
         />
       )}
-    </div>
+    </button>
   );
 };

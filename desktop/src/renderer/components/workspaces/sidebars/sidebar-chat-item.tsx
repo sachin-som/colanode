@@ -1,5 +1,4 @@
 import React from 'react';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SidebarChatNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -12,7 +11,6 @@ interface SidebarChatItemProps {
 export const SidebarChatItem = ({
   node,
 }: SidebarChatItemProps): React.ReactNode => {
-  const workspace = useWorkspace();
   const isActive = false;
   const isUnread = false;
   const directCount = 0;
@@ -21,12 +19,9 @@ export const SidebarChatItem = ({
     <div
       key={node.id}
       className={cn(
-        'flex cursor-pointer items-center rounded-md p-1 text-sm text-foreground/80 hover:bg-gray-100',
-        isActive && 'bg-gray-100',
+        'flex w-full items-center',
+        isActive && 'bg-sidebar-accent',
       )}
-      onClick={() => {
-        workspace.navigateToNode(node.id);
-      }}
     >
       <Avatar id={node.id} avatar={node.avatar} name={node.name} size="small" />
       <span
@@ -38,7 +33,7 @@ export const SidebarChatItem = ({
         {node.name ?? 'Unnamed'}
       </span>
       {directCount > 0 && (
-        <span className="mr-1 rounded-md bg-red-500 px-1 py-0.5 text-xs text-white">
+        <span className="bg-sidebar-accent text-sidebar-accent-foreground mr-1 rounded-md px-1 py-0.5 text-xs">
           {directCount}
         </span>
       )}

@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { Icon } from '@/renderer/components/ui/icon';
 import { useDatabase } from '@/renderer/contexts/database';
 import { FieldSelect } from '@/renderer/components/databases/fields/field-select';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 

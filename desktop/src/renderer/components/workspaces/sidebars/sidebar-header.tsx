@@ -1,107 +1,104 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/renderer/components/ui/popover';
 import { Icon } from '@/renderer/components/ui/icon';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
 import { useNavigate } from 'react-router-dom';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/renderer/components/ui/dropdown-menu';
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@/renderer/components/ui/sidebar';
+
 export const SidebarHeader = () => {
   const workspace = useWorkspace();
   const account = useAccount();
   const navigate = useNavigate();
-
-  const [open, setOpen] = React.useState(false);
+  const sidebar = useSidebar();
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="mb-1 flex h-12 cursor-pointer items-center justify-between border-b-2 border-gray-100 p-2 text-foreground/80 hover:bg-gray-200">
-          <div className="flex flex-grow items-center gap-2">
-            <Avatar
-              id={workspace.id}
-              name={workspace.name}
-              avatar={workspace.avatar}
-              className="h-7 w-7"
-            />
-            <p className="flex-grow">{workspace.name}</p>
-          </div>
-          <Icon name="expand-up-down-line" />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="flex w-96 flex-col gap-2 p-2">
-        <h2 className="text-sm font-semibold">Account</h2>
-        <div className="flex flex-grow items-start gap-2">
-          <Avatar
-            id={account.id}
-            name={account.name}
-            avatar={account.avatar}
-            className="mt-1 h-7 w-7"
-          />
-          <div className="flex flex-grow flex-col">
-            <p>{account.name}</p>
-            <p className="text-xs text-muted-foreground">{account.email}</p>
-          </div>
-        </div>
-        <hr className="-mx-1 my-1 h-px bg-muted" />
-        <h2 className="text-sm font-semibold">Workspaces</h2>
-        <ul className="flex flex-col gap-0.5">
-          {account.workspaces.map((w) => {
-            return (
-              <li
-                key={w.id}
-                className="flex flex-row items-center gap-2 rounded-md p-2 pl-1 hover:cursor-pointer hover:bg-gray-100"
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-0"
+            >
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <Avatar
+                  id={workspace.id}
+                  avatar={workspace.avatar}
+                  name={workspace.name}
+                  className="h-full w-full"
+                />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{workspace.name}</span>
+                <span className="truncate text-xs">Free Plan</span>
+              </div>
+              <Icon name="arrow-down-s-line" className="ml-auto" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            align="start"
+            side={sidebar.isMobile ? 'bottom' : 'right'}
+            sideOffset={4}
+          >
+            <DropdownMenuItem
+              className="gap-2 p-2 text-muted-foreground"
+              onClick={() => {
+                workspace.openSettings();
+              }}
+            >
+              <Icon name="settings-4-line" className="size-4" />
+              <p className="font-medium">Settings</p>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Workspaces
+            </DropdownMenuLabel>
+            {account.workspaces.map((workspace) => (
+              <DropdownMenuItem
+                key={workspace.id}
                 onClick={() => {
-                  navigate(`/${w.id}`);
-                  setOpen(false);
+                  navigate(`/${workspace.id}`);
                 }}
+                className="gap-2 p-2"
               >
                 <Avatar
-                  id={w.id}
-                  name={w.name}
-                  avatar={w.avatar}
-                  className="h-7 w-7"
+                  id={workspace.id}
+                  avatar={workspace.avatar}
+                  name={workspace.name}
+                  size="small"
                 />
-                <p>{w.name}</p>
-              </li>
-            );
-          })}
-        </ul>
-        <hr />
-        <div className="flex flex-col">
-          <button
-            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
-            onClick={() => {
-              navigate('/create');
-            }}
-          >
-            <Icon name="add-line" />
-            <span>Create workspace</span>
-          </button>
-          <button
-            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
-            onClick={() => {
-              workspace.openSettings();
-            }}
-          >
-            <Icon name="settings-4-line" />
-            <span>Settings</span>
-          </button>
-          <button
-            className="flex flex-row items-center gap-2 rounded-md p-1 pl-0 text-sm outline-none hover:cursor-pointer hover:bg-gray-100"
-            onClick={() => {
-              account.logout();
-            }}
-          >
-            <Icon name="logout-circle-r-line" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </PopoverContent>
-    </Popover>
+                {workspace.name}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 p-2 text-muted-foreground"
+              onClick={() => {
+                navigate('/create');
+              }}
+            >
+              <Icon name="add-line" className="size-4" />
+              <p className="font-medium">Create workspace</p>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 };

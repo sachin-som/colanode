@@ -4,7 +4,7 @@ import { isValidEmail } from '@/lib/utils';
 import { Button } from '@/renderer/components/ui/button';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const WorkspaceUserInvite = () => {

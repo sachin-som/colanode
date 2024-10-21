@@ -19,7 +19,7 @@ export const NodeCollaboratorsPopover = ({
       <PopoverTrigger asChild>
         <Icon
           name="user-add-line"
-          className="h-5 w-5 cursor-pointer text-muted-foreground"
+          className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
         />
       </PopoverTrigger>
       <PopoverContent className="mr-2 max-h-128 w-128 overflow-auto">

@@ -10,6 +10,10 @@ import {
 import { useAccount } from '@/renderer/contexts/account';
 import { Modal } from '@/renderer/components/workspaces/modals/modal';
 import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '@/renderer/components/ui/sidebar';
 
 export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -45,32 +49,32 @@ export const Workspace = () => {
         },
       }}
     >
-      <div className="flex h-screen max-h-screen flex-row">
-        <div className="w-96">
-          <Sidebar />
-        </div>
-        <main className="h-full w-full min-w-128 flex-grow overflow-hidden bg-white">
-          <Outlet />
-        </main>
-        {modal && (
-          <Modal
-            nodeId={modal}
-            key={modal}
-            onClose={() => {
-              setSearchParams((prev) => {
-                prev.delete('modal');
-                return prev;
-              });
-            }}
+      <SidebarProvider>
+        <Sidebar />
+        <SidebarInset>
+          <main className="h-full max-h-screen w-full min-w-128 flex-grow overflow-hidden bg-white">
+            <Outlet />
+          </main>
+          {modal && (
+            <Modal
+              nodeId={modal}
+              key={modal}
+              onClose={() => {
+                setSearchParams((prev) => {
+                  prev.delete('modal');
+                  return prev;
+                });
+              }}
+            />
+          )}
+        </SidebarInset>
+        {openSettings && (
+          <WorkspaceSettingsDialog
+            open={openSettings}
+            onOpenChange={setOpenSettings}
           />
         )}
-      </div>
-      {openSettings && (
-        <WorkspaceSettingsDialog
-          open={openSettings}
-          onOpenChange={setOpenSettings}
-        />
-      )}
+      </SidebarProvider>
     </WorkspaceContext.Provider>
   );
 };

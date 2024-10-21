@@ -3,7 +3,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useAccount } from '@/renderer/contexts/account';
-import { toast } from '@/renderer/components/ui/use-toast';
+import { toast } from '@/renderer/hooks/use-toast';
 
 interface AvatarUploadProps {
   onUpload: (id: string) => void;

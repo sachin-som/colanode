@@ -4,6 +4,15 @@ import { useQuery } from '@/renderer/hooks/use-query';
 import { SidebarChatItem } from '@/renderer/components/workspaces/sidebars/sidebar-chat-item';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/renderer/components/ui/sidebar';
+
 export const SidebarChats = () => {
   const workspace = useWorkspace();
   const { data } = useQuery({
@@ -12,14 +21,24 @@ export const SidebarChats = () => {
   });
 
   return (
-    <div className="pt-2 first:pt-0">
-      <div className="flex items-center justify-between p-1 pb-2 text-xs text-muted-foreground">
-        <span>Chats</span>
+    <SidebarGroup className="group/sidebar-chats group-data-[collapsible=icon]:hidden">
+      <SidebarGroupLabel>Chats</SidebarGroupLabel>
+      <SidebarGroupAction className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100">
         <ChatCreatePopover />
-      </div>
-      <div className="flex flex-col gap-0.5">
-        {data?.map((chat) => <SidebarChatItem key={chat.id} node={chat} />)}
-      </div>
-    </div>
+      </SidebarGroupAction>
+      <SidebarMenu>
+        {data?.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton
+              onClick={() => {
+                workspace.navigateToNode(item.id);
+              }}
+            >
+              <SidebarChatItem node={item} />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
   );
 };

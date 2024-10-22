@@ -40,7 +40,7 @@ export function SidebarFooter() {
                 <span className="truncate font-semibold">{account.name}</span>
                 <span className="truncate text-xs">{account.email}</span>
               </div>
-              <Icon name="arrow-down-s-line" className="ml-auto" />
+              <Icon name="expand-up-down-line" className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent

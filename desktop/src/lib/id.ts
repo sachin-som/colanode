@@ -43,6 +43,7 @@ export enum IdType {
   Emoji = 'em',
   Avatar = 'av',
   Icon = 'ic',
+  File = 'fi',
 }
 
 export const generateId = (type: IdType): string => {

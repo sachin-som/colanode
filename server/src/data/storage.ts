@@ -6,6 +6,12 @@ const AVATARS_STORAGE_REGION = process.env.AVATARS_STORAGE_REGION;
 const AVATARS_STORAGE_ACCESS_KEY = process.env.AVATARS_STORAGE_ACCESS_KEY;
 const AVATARS_STORAGE_SECRET_KEY = process.env.AVATARS_STORAGE_SECRET_KEY;
 
+const FILES_STORAGE_ENDPOINT = process.env.FILES_STORAGE_ENDPOINT;
+const FILES_STORAGE_BUCKET_NAME = process.env.FILES_STORAGE_BUCKET_NAME;
+const FILES_STORAGE_REGION = process.env.FILES_STORAGE_REGION;
+const FILES_STORAGE_ACCESS_KEY = process.env.FILES_STORAGE_ACCESS_KEY;
+const FILES_STORAGE_SECRET_KEY = process.env.FILES_STORAGE_SECRET_KEY;
+
 if (
   !AVATARS_STORAGE_ENDPOINT ||
   !AVATARS_STORAGE_ACCESS_KEY ||
@@ -14,6 +20,16 @@ if (
   !AVATARS_STORAGE_REGION
 ) {
   throw new Error('Avatar storage credentials not set');
+}
+
+if (
+  !FILES_STORAGE_ENDPOINT ||
+  !FILES_STORAGE_ACCESS_KEY ||
+  !FILES_STORAGE_SECRET_KEY ||
+  !FILES_STORAGE_BUCKET_NAME ||
+  !FILES_STORAGE_REGION
+) {
+  throw new Error('Files storage credentials not set');
 }
 
 export const avatarStorage = new S3Client({
@@ -25,6 +41,16 @@ export const avatarStorage = new S3Client({
   },
 });
 
+export const filesStorage = new S3Client({
+  endpoint: FILES_STORAGE_ENDPOINT,
+  region: FILES_STORAGE_REGION,
+  credentials: {
+    accessKeyId: FILES_STORAGE_ACCESS_KEY,
+    secretAccessKey: FILES_STORAGE_SECRET_KEY,
+  },
+});
+
 export const BUCKET_NAMES = {
   AVATARS: AVATARS_STORAGE_BUCKET_NAME,
+  FILES: FILES_STORAGE_BUCKET_NAME,
 };

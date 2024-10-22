@@ -66,3 +66,12 @@ export type BreadcrumbNode = {
   name: string | null;
   avatar: string | null;
 };
+
+export type WorkspaceCredentials = {
+  workspaceId: string;
+  accountId: string;
+  userId: string;
+  token: string;
+  serverDomain: string;
+  serverAttributes: string;
+};

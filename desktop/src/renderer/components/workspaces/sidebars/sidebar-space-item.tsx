@@ -30,6 +30,7 @@ import {
   SidebarMenuSubItem,
 } from '@/renderer/components/ui/sidebar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { FolderCreateDialog } from '@/renderer/components/folders/folder-create-dialog';
 
 interface SettingsState {
   open: boolean;
@@ -63,16 +64,19 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
       >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={node.name}>
-              <Icon
-                name="arrow-right-s-line"
-                className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-              />
+            <SidebarMenuButton
+              tooltip={node.name}
+              className="group/space-button"
+            >
               <Avatar
                 id={node.id}
                 avatar={node.avatar}
                 name={node.name}
-                className="h-4 w-4"
+                className="h-4 w-4 group-hover/space-button:hidden"
+              />
+              <Icon
+                name="arrow-right-s-line"
+                className="hidden h-4 w-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/collapsible:rotate-90"
               />
               <span>{node.name}</span>
             </SidebarMenuButton>
@@ -146,6 +150,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                   onClick={() => {
                     workspace.navigateToNode(child.id);
                   }}
+                  className="cursor-pointer"
                 >
                   <SidebarMenuSubButton>
                     <SidebarItem node={child} />
@@ -175,6 +180,13 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
           spaceId={node.id}
           open={openCreateDatabase}
           onOpenChange={setOpenCreateDatabase}
+        />
+      )}
+      {openCreateFolder && (
+        <FolderCreateDialog
+          spaceId={node.id}
+          open={openCreateFolder}
+          onOpenChange={setOpenCreateFolder}
         />
       )}
     </React.Fragment>

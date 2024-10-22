@@ -35,7 +35,20 @@ export type SelectChange = Selectable<ChangeTable>;
 export type CreateChange = Insertable<ChangeTable>;
 export type UpdateChange = Updateable<ChangeTable>;
 
+interface UploadTable {
+  node_id: ColumnType<string, string, never>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  progress: ColumnType<number, number, number>;
+  retry_count: ColumnType<number, number, number>;
+}
+
+export type SelectUpload = Selectable<UploadTable>;
+export type CreateUpload = Insertable<UploadTable>;
+export type UpdateUpload = Updateable<UploadTable>;
+
 export interface WorkspaceDatabaseSchema {
   nodes: NodeTable;
   changes: ChangeTable;
+  uploads: UploadTable;
 }

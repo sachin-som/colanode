@@ -7,11 +7,11 @@ import { Document } from '@/renderer/components/documents/document';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
-interface RecordContainerNodeProps {
+interface RecordContainerProps {
   nodeId: string;
 }
 
-export const RecordContainerNode = ({ nodeId }: RecordContainerNodeProps) => {
+export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
   const workspace = useWorkspace();
 
   const { data: record, isPending: isRecordPending } = useQuery({

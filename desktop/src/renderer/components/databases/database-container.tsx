@@ -4,13 +4,11 @@ import { Database } from '@/renderer/components/databases/database';
 import { DatabaseViews } from '@/renderer/components/databases/database-views';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
-interface DatabaseContainerNodeProps {
+interface DatabaseContainerProps {
   nodeId: string;
 }
 
-export const DatabaseContainerNode = ({
-  nodeId,
-}: DatabaseContainerNodeProps) => {
+export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
   const workspace = useWorkspace();
 
   const { data: views, isPending: isViewsPending } = useQuery({

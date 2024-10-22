@@ -2,8 +2,10 @@ import { BackoffCalculator } from '@/lib/backoff-calculator';
 import { buildAxiosInstance } from '@/lib/servers';
 import { databaseManager } from '@/main/data/database-manager';
 import { ServerSyncResponse } from '@/types/sync';
+import { WorkspaceCredentials } from '@/types/workspaces';
+import { fileManager } from './file-manager';
 
-const EVENT_LOOP_INTERVAL = 100;
+const EVENT_LOOP_INTERVAL = 1000;
 
 class Synchronizer {
   private initiated: boolean = false;
@@ -24,8 +26,8 @@ class Synchronizer {
 
   private async executeEventLoop() {
     try {
-      await this.checkForLoggedOutAccount();
-      await this.checkForWorkspaceChanges();
+      await this.syncLoggedOutAccounts();
+      await this.syncWorkspaces();
     } catch (error) {
       console.log('error', error);
     }
@@ -33,7 +35,7 @@ class Synchronizer {
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 
-  private async checkForLoggedOutAccount() {
+  private async syncLoggedOutAccounts() {
     const accounts = await databaseManager.appDatabase
       .selectFrom('accounts')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
@@ -92,7 +94,7 @@ class Synchronizer {
     }
   }
 
-  private async checkForWorkspaceChanges() {
+  private async syncWorkspaces() {
     const workspaces = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
@@ -100,6 +102,7 @@ class Synchronizer {
       .select([
         'workspaces.workspace_id',
         'workspaces.user_id',
+        'workspaces.account_id',
         'accounts.token',
         'servers.domain',
         'servers.attributes',
@@ -115,71 +118,24 @@ class Synchronizer {
         }
       }
 
+      const credentials: WorkspaceCredentials = {
+        workspaceId: workspace.workspace_id,
+        accountId: workspace.account_id,
+        userId: workspace.user_id,
+        token: workspace.token,
+        serverDomain: workspace.domain,
+        serverAttributes: workspace.attributes,
+      };
+
       try {
-        const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-          workspace.user_id,
-        );
-
-        const changes = await workspaceDatabase
-          .selectFrom('changes')
-          .selectAll()
-          .orderBy('id asc')
-          .limit(20)
-          .execute();
-
-        if (changes.length === 0) {
-          return;
-        }
-
-        const axios = buildAxiosInstance(
-          workspace.domain,
-          workspace.attributes,
-          workspace.token,
-        );
-
-        const { data } = await axios.post<ServerSyncResponse>(
-          `/v1/sync/${workspace.workspace_id}`,
-          {
-            changes: changes,
-          },
-        );
-
-        const syncedChangeIds: number[] = [];
-        const unsyncedChangeIds: number[] = [];
-        for (const result of data.results) {
-          if (result.status === 'success') {
-            syncedChangeIds.push(result.id);
-          } else {
-            unsyncedChangeIds.push(result.id);
-          }
-        }
-
-        if (syncedChangeIds.length > 0) {
-          await workspaceDatabase
-            .deleteFrom('changes')
-            .where('id', 'in', syncedChangeIds)
-            .execute();
-        }
-
-        if (unsyncedChangeIds.length > 0) {
-          await workspaceDatabase
-            .updateTable('changes')
-            .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
-            .where('id', 'in', unsyncedChangeIds)
-            .execute();
-
-          //we just delete changes that have failed to sync for more than 5 times.
-          //in the future we might need to revert the change locally.
-          await workspaceDatabase
-            .deleteFrom('changes')
-            .where('retry_count', '>=', 5)
-            .execute();
-        }
+        await this.checkForChanges(credentials);
+        // await fileManager.checkForUploads(credentials);
 
         if (this.backoffs.has(backoffKey)) {
           this.backoffs.delete(backoffKey);
         }
       } catch (error) {
+        console.log('error', error);
         if (!this.backoffs.has(backoffKey)) {
           this.backoffs.set(backoffKey, new BackoffCalculator());
         }
@@ -187,6 +143,68 @@ class Synchronizer {
         const backoff = this.backoffs.get(backoffKey);
         backoff.increaseError();
       }
+    }
+  }
+
+  private async checkForChanges(credentials: WorkspaceCredentials) {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      credentials.userId,
+    );
+
+    const changes = await workspaceDatabase
+      .selectFrom('changes')
+      .selectAll()
+      .orderBy('id asc')
+      .limit(20)
+      .execute();
+
+    if (changes.length === 0) {
+      return;
+    }
+
+    const axios = buildAxiosInstance(
+      credentials.serverDomain,
+      credentials.serverAttributes,
+      credentials.token,
+    );
+
+    const { data } = await axios.post<ServerSyncResponse>(
+      `/v1/sync/${credentials.workspaceId}`,
+      {
+        changes: changes,
+      },
+    );
+
+    const syncedChangeIds: number[] = [];
+    const unsyncedChangeIds: number[] = [];
+    for (const result of data.results) {
+      if (result.status === 'success') {
+        syncedChangeIds.push(result.id);
+      } else {
+        unsyncedChangeIds.push(result.id);
+      }
+    }
+
+    if (syncedChangeIds.length > 0) {
+      await workspaceDatabase
+        .deleteFrom('changes')
+        .where('id', 'in', syncedChangeIds)
+        .execute();
+    }
+
+    if (unsyncedChangeIds.length > 0) {
+      await workspaceDatabase
+        .updateTable('changes')
+        .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
+        .where('id', 'in', unsyncedChangeIds)
+        .execute();
+
+      //we just delete changes that have failed to sync for more than 5 times.
+      //in the future we might need to revert the change locally.
+      await workspaceDatabase
+        .deleteFrom('changes')
+        .where('retry_count', '>=', 5)
+        .execute();
     }
   }
 }

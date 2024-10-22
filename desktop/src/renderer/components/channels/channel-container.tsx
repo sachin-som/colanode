@@ -1,10 +1,10 @@
 import React from 'react';
 import { Conversation } from '@/renderer/components/messages/conversation';
 
-interface ChatContainerNodeProps {
+interface ChannelContainerProps {
   nodeId: string;
 }
 
-export const ChatContainerNode = ({ nodeId }: ChatContainerNodeProps) => {
+export const ChannelContainer = ({ nodeId }: ChannelContainerProps) => {
   return <Conversation conversationId={nodeId} />;
 };

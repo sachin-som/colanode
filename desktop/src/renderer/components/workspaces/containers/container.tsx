@@ -1,12 +1,13 @@
 import React from 'react';
 import { match } from 'ts-pattern';
 import { useParams } from 'react-router-dom';
-import { PageContainerNode } from '@/renderer/components/pages/page-container-node';
-import { ChannelContainerNode } from '@/renderer/components/channels/channel-container-node';
+import { PageContainer } from '@/renderer/components/pages/page-container';
+import { ChannelContainer } from '@/renderer/components/channels/channel-container';
 import { ContainerHeader } from '@/renderer/components/workspaces/containers/container-header';
-import { DatabaseContainerNode } from '@/renderer/components/databases/database-container-node';
-import { RecordContainerNode } from '@/renderer/components/records/record-container-node';
-import { ChatContainerNode } from '@/renderer/components/chats/chat-container-node';
+import { DatabaseContainer } from '@/renderer/components/databases/database-container';
+import { RecordContainer } from '@/renderer/components/records/record-container';
+import { ChatContainer } from '@/renderer/components/chats/chat-container';
+import { FolderContainer } from '@/renderer/components/folders/folder-container';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { getIdType, IdType } from '@/lib/id';
 
@@ -22,11 +23,12 @@ export const Container = () => {
     <div className="flex h-full w-full flex-col">
       <ContainerHeader nodeId={nodeId} />
       {match(idType)
-        .with(IdType.Channel, () => <ChannelContainerNode nodeId={nodeId} />)
-        .with(IdType.Page, () => <PageContainerNode nodeId={nodeId} />)
-        .with(IdType.Database, () => <DatabaseContainerNode nodeId={nodeId} />)
-        .with(IdType.Record, () => <RecordContainerNode nodeId={nodeId} />)
-        .with(IdType.Chat, () => <ChatContainerNode nodeId={nodeId} />)
+        .with(IdType.Channel, () => <ChannelContainer nodeId={nodeId} />)
+        .with(IdType.Page, () => <PageContainer nodeId={nodeId} />)
+        .with(IdType.Database, () => <DatabaseContainer nodeId={nodeId} />)
+        .with(IdType.Record, () => <RecordContainer nodeId={nodeId} />)
+        .with(IdType.Chat, () => <ChatContainer nodeId={nodeId} />)
+        .with(IdType.Folder, () => <FolderContainer nodeId={nodeId} />)
         .otherwise(() => null)}
     </div>
   );

@@ -47,7 +47,7 @@ export const SidebarHeader = () => {
                 <span className="truncate font-semibold">{workspace.name}</span>
                 <span className="truncate text-xs">Free Plan</span>
               </div>
-              <Icon name="arrow-down-s-line" className="ml-auto" />
+              <Icon name="expand-up-down-line" className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent

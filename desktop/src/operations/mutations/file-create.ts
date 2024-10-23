@@ -1,8 +1,6 @@
 export type FileCreateMutationInput = {
   type: 'file_create';
   userId: string;
-  workspaceId: string;
-  accountId: string;
   parentId: string;
   filePath: string;
 };

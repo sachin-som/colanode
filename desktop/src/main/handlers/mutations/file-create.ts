@@ -31,13 +31,7 @@ export class FileCreateMutationHandler
     }
 
     const id = generateId(IdType.File);
-    fileManager.copyFileToWorkspace(
-      filePath,
-      id,
-      extension,
-      input.accountId,
-      input.workspaceId,
-    );
+    fileManager.copyFileToWorkspace(filePath, id, extension, input.userId);
 
     await workspaceDatabase.transaction().execute(async (tx) => {
       await tx

@@ -14,7 +14,7 @@ export const FilePreviewVideo = ({
   extension,
 }: FilePreviewVideoProps) => {
   const workspace = useWorkspace();
-  const url = getFileUrl(workspace.accountId, workspace.id, id, extension);
+  const url = getFileUrl(workspace.userId, id, extension);
 
   return <video controls src={url} className="h-full w-full object-contain" />;
 };

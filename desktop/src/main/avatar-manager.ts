@@ -1,20 +1,15 @@
-import { app, net } from 'electron';
+import { net } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
+import { getAccountAvatarsDirectoryPath } from '@/main/utils';
 
 class AvatarManager {
-  private readonly appPath: string;
-
-  constructor() {
-    this.appPath = app.getPath('userData');
-  }
-
   public async handleAvatarRequest(request: Request): Promise<Response> {
     const url = request.url.replace('avatar://', '');
     const [accountId, avatarId] = url.split('/');
-    const avatarsDir = path.join(this.appPath, accountId, 'avatars');
+    const avatarsDir = getAccountAvatarsDirectoryPath(accountId);
     const avatarPath = path.join(avatarsDir, `${avatarId}.jpeg`);
     const avatarLocalUrl = `file://${avatarPath}`;
 

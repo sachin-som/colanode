@@ -11,18 +11,13 @@ import { databaseManager } from './data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { LocalNodeAttributes } from '@/types/nodes';
 import { mediator } from '@/main/mediator';
+import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
 
 class FileManager {
-  private readonly appPath: string;
-
-  constructor() {
-    this.appPath = app.getPath('userData');
-  }
-
   public async handleFileRequest(request: Request): Promise<Response> {
     const url = request.url.replace('local-file://', '');
-    const [accountId, workspaceId, file] = url.split('/');
-    const filesDir = this.getWorkspaceFilesDir(accountId, workspaceId);
+    const [userId, file] = url.split('/');
+    const filesDir = getWorkspaceFilesDirectoryPath(userId);
     const filePath = path.join(filesDir, file);
 
     if (fs.existsSync(filePath)) {
@@ -37,10 +32,9 @@ class FileManager {
     filePath: string,
     fileId: string,
     fileExtension: string,
-    accountId: string,
-    workspaceId: string,
+    userId: string,
   ): void {
-    const filesDir = this.getWorkspaceFilesDir(accountId, workspaceId);
+    const filesDir = getWorkspaceFilesDirectoryPath(userId);
 
     if (!fs.existsSync(filesDir)) {
       fs.mkdirSync(filesDir, { recursive: true });
@@ -70,11 +64,7 @@ class FileManager {
       return;
     }
 
-    const filesDir = this.getWorkspaceFilesDir(
-      credentials.accountId,
-      credentials.workspaceId,
-    );
-
+    const filesDir = getWorkspaceFilesDirectoryPath(credentials.userId);
     for (const upload of uploads) {
       if (upload.retry_count >= 5) {
         await workspaceDatabase
@@ -175,10 +165,10 @@ class FileManager {
       return;
     }
 
-    const filesDir = this.getWorkspaceFilesDir(
-      credentials.accountId,
-      credentials.workspaceId,
-    );
+    const filesDir = getWorkspaceFilesDirectoryPath(credentials.userId);
+    if (!fs.existsSync(filesDir)) {
+      fs.mkdirSync(filesDir, { recursive: true });
+    }
 
     for (const download of downloads) {
       const file = await workspaceDatabase
@@ -256,13 +246,6 @@ class FileManager {
         table: 'downloads',
       },
     ]);
-  }
-
-  private getWorkspaceFilesDir(accountId: string, workspaceId: string): string {
-    const accountDir = path.join(this.appPath, accountId);
-    const workspaceDir = path.join(accountDir, 'workspaces', workspaceId);
-    const filesDir = path.join(workspaceDir, 'files');
-    return filesDir;
   }
 }
 

@@ -1,5 +1,3 @@
-import { app } from 'electron';
-import path from 'path';
 import fs from 'fs';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import { AppDatabaseSchema } from '@/main/data/app/schema';
@@ -7,9 +5,9 @@ import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { buildSqlite } from '@/main/data/utils';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
+import { appDatabasePath, getWorkspaceDirectoryPath } from '@/main/utils';
 
 class DatabaseManager {
-  private readonly appPath: string;
   private initPromise: Promise<void> | null = null;
   private readonly workspaceDatabases: Map<
     string,
@@ -19,10 +17,8 @@ class DatabaseManager {
   public readonly appDatabase: Kysely<AppDatabaseSchema>;
 
   constructor() {
-    this.appPath = app.getPath('userData');
-
     const dialect = new SqliteDialect({
-      database: buildSqlite(`${this.appPath}/app.db`),
+      database: buildSqlite(appDatabasePath),
     });
 
     this.appDatabase = new Kysely<AppDatabaseSchema>({ dialect });
@@ -56,63 +52,16 @@ class DatabaseManager {
       return null;
     }
 
-    const workspaceDatabase = await this.initWorkspaceDatabase(
-      workspace.account_id,
-      workspace.workspace_id,
-    );
-
+    const workspaceDatabase = await this.initWorkspaceDatabase(userId);
     this.workspaceDatabases.set(userId, workspaceDatabase);
     return workspaceDatabase;
   }
 
-  public async deleteAccountData(accountId: string): Promise<void> {
-    await this.waitForInit();
-
-    const workspaces = await this.appDatabase
-      .selectFrom('workspaces')
-      .selectAll()
-      .where('account_id', '=', accountId)
-      .execute();
-
-    for (const workspace of workspaces) {
-      await this.deleteWorkspaceDatabase(
-        accountId,
-        workspace.workspace_id,
-        workspace.user_id,
-      );
-    }
-
-    await this.appDatabase
-      .deleteFrom('workspaces')
-      .where('account_id', '=', accountId)
-      .execute();
-
-    const accountDir = path.join(this.appPath, accountId);
-    if (fs.existsSync(accountDir)) {
-      fs.rmSync(accountDir, { recursive: true, force: true });
-    }
-  }
-
-  public async deleteWorkspaceDatabase(
-    accountId: string,
-    workspaceId: string,
-    userId: string,
-  ): Promise<void> {
+  public async deleteWorkspaceDatabase(userId: string): Promise<void> {
     await this.waitForInit();
 
     if (this.workspaceDatabases.has(userId)) {
       this.workspaceDatabases.delete(userId);
-    }
-
-    const workspaceDir = path.join(
-      this.appPath,
-      accountId,
-      'workspaces',
-      workspaceId,
-    );
-
-    if (fs.existsSync(workspaceDir)) {
-      fs.rmSync(workspaceDir, { recursive: true, force: true });
     }
   }
 
@@ -129,13 +78,12 @@ class DatabaseManager {
 
     const workspaces = await this.appDatabase
       .selectFrom('workspaces')
-      .selectAll()
+      .select('user_id')
       .execute();
 
     for (const workspace of workspaces) {
       const workspaceDatabase = await this.initWorkspaceDatabase(
-        workspace.account_id,
-        workspace.workspace_id,
+        workspace.user_id,
       );
 
       this.workspaceDatabases.set(workspace.user_id, workspaceDatabase);
@@ -143,15 +91,9 @@ class DatabaseManager {
   }
 
   private async initWorkspaceDatabase(
-    accountId: string,
-    workspaceId: string,
+    userId: string,
   ): Promise<Kysely<WorkspaceDatabaseSchema>> {
-    const workspaceDir = path.join(
-      this.appPath,
-      accountId,
-      'workspaces',
-      workspaceId,
-    );
+    const workspaceDir = getWorkspaceDirectoryPath(userId);
 
     if (!fs.existsSync(workspaceDir)) {
       fs.mkdirSync(workspaceDir, {

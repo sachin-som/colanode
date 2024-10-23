@@ -85,12 +85,11 @@ export const getFileIcon = (mimeType: string) => {
 };
 
 export const getFileUrl = (
-  accountId: string,
-  workspaceId: string,
+  userId: string,
   fileId: string,
   extension: string,
 ) => {
-  return `local-file://${accountId}/${workspaceId}/${fileId}${extension}`;
+  return `local-file://${userId}/${fileId}${extension}`;
 };
 
 const friendlyNameMapping: Record<string, string> = {

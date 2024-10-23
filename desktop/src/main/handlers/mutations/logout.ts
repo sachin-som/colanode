@@ -30,8 +30,6 @@ export class LogoutMutationHandler
       .where('id', '=', input.accountId)
       .execute();
 
-    await databaseManager.deleteAccountData(input.accountId);
-
     return {
       output: {
         success: true,

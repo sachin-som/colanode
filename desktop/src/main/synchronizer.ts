@@ -1,8 +1,13 @@
+import fs from 'fs';
 import { httpClient } from '@/lib/http-client';
 import { databaseManager } from '@/main/data/database-manager';
 import { ServerSyncResponse } from '@/types/sync';
 import { WorkspaceCredentials } from '@/types/workspaces';
 import { fileManager } from '@/main/file-manager';
+import {
+  getAccountAvatarsDirectoryPath,
+  getWorkspaceDirectoryPath,
+} from '@/main/utils';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
@@ -62,10 +67,34 @@ class Synchronizer {
           return;
         }
 
-        await databaseManager.deleteAccountData(account.id);
+        const workspaces = await databaseManager.appDatabase
+          .selectFrom('workspaces')
+          .selectAll()
+          .where('account_id', '=', account.id)
+          .execute();
+
+        for (const workspace of workspaces) {
+          await databaseManager.deleteWorkspaceDatabase(workspace.user_id);
+
+          const workspaceDir = getWorkspaceDirectoryPath(workspace.user_id);
+          if (fs.existsSync(workspaceDir)) {
+            fs.rmSync(workspaceDir, { recursive: true });
+          }
+        }
+
+        const avatarsDir = getAccountAvatarsDirectoryPath(account.id);
+        if (fs.existsSync(avatarsDir)) {
+          fs.rmSync(avatarsDir, { recursive: true });
+        }
+
         await databaseManager.appDatabase
           .deleteFrom('accounts')
           .where('id', '=', account.id)
+          .execute();
+
+        await databaseManager.appDatabase
+          .deleteFrom('servers')
+          .where('domain', '=', account.domain)
           .execute();
       } catch (error) {
         // console.log('error', error);

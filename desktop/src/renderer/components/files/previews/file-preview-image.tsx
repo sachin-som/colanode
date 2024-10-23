@@ -14,7 +14,7 @@ export const FilePreviewImage = ({
   extension,
 }: FilePreviewImageProps) => {
   const workspace = useWorkspace();
-  const url = getFileUrl(workspace.accountId, workspace.id, id, extension);
+  const url = getFileUrl(workspace.userId, id, extension);
 
   return (
     <img

@@ -9,6 +9,7 @@ import { OrderedListCommand } from '@/renderer/editor/commands/ordered-list';
 import { ParagraphCommand } from '@/renderer/editor/commands/paragraph';
 import { TodoCommand } from '@/renderer/editor/commands/todo';
 import { PageCommand } from '@/renderer/editor/commands/page';
+import { FolderCommand } from '@/renderer/editor/commands/folder';
 import { EditorCommand, EditorCommandProps } from '@/types/editor';
 
 export type { EditorCommand, EditorCommandProps };
@@ -25,4 +26,5 @@ export {
   DividerCommand,
   TodoCommand,
   PageCommand,
+  FolderCommand,
 };

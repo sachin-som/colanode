@@ -1,12 +1,12 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
 
-export const PageCommand: EditorCommand = {
-  key: 'page',
-  name: 'Page',
-  description: 'Insert a nested page',
-  keywords: ['page'],
-  icon: 'draft-line',
+export const FolderCommand: EditorCommand = {
+  key: 'folder',
+  name: 'Folder',
+  description: 'Insert a nested folder',
+  keywords: ['folder'],
+  icon: 'folder-line',
   disabled: false,
   async handler({ editor, range, context }) {
     if (context == null) {
@@ -15,7 +15,7 @@ export const PageCommand: EditorCommand = {
 
     const { userId, documentId } = context;
     const output = await window.neuron.executeMutation({
-      type: 'page_create',
+      type: 'folder_create',
       name: 'Untitled',
       userId,
       parentId: documentId,
@@ -31,7 +31,7 @@ export const PageCommand: EditorCommand = {
       .focus()
       .deleteRange(range)
       .insertContent({
-        type: NodeTypes.Page,
+        type: NodeTypes.Folder,
         attrs: {
           id: output.id,
         },

@@ -1,9 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { PageNodeView } from '@/renderer/editor/views';
+import { FolderNodeView } from '@/renderer/editor/views';
 
-const PageNode = Node.create({
-  name: 'page',
+export const FolderNode = Node.create({
+  name: 'folder',
   group: 'block',
   atom: true,
   defining: true,
@@ -16,13 +16,11 @@ const PageNode = Node.create({
     };
   },
   renderHTML({ HTMLAttributes }) {
-    return ['page', mergeAttributes(HTMLAttributes)];
+    return ['folder', mergeAttributes(HTMLAttributes)];
   },
   addNodeView() {
-    return ReactNodeViewRenderer(PageNodeView, {
-      as: 'page',
+    return ReactNodeViewRenderer(FolderNodeView, {
+      as: 'folder',
     });
   },
 });
-
-export { PageNode };

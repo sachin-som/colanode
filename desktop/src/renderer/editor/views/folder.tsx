@@ -5,7 +5,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
-export const PageNodeView = ({ node }: NodeViewProps) => {
+export const FolderNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();
 
   const id = node.attrs.id;

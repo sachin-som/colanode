@@ -14,11 +14,13 @@ import {
   DividerCommand,
   TodoCommand,
   PageCommand,
+  FolderCommand,
 } from '@/renderer/editor/commands';
 import {
   IdExtension,
   DocumentNode,
   PageNode,
+  FolderNode,
   TextNode,
   ParagraphNode,
   Heading1Node,
@@ -90,6 +92,7 @@ export const DocumentEditor = ({
         IdExtension,
         DocumentNode,
         PageNode,
+        FolderNode,
         TextNode,
         ParagraphNode,
         Heading1Node,
@@ -125,6 +128,7 @@ export const DocumentEditor = ({
             OrderedListCommand,
             DividerCommand,
             TodoCommand,
+            FolderCommand,
           ],
           context: {
             documentId,

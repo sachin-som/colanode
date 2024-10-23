@@ -31,6 +31,7 @@ import { TaskItemNode } from '@/renderer/editor/extensions/task-item';
 import { TaskListNode } from '@/renderer/editor/extensions/task-list';
 import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
 import { PageNode } from '@/renderer/editor/extensions/page';
+import { FolderNode } from '@/renderer/editor/extensions/folder';
 
 export {
   IdExtension,
@@ -65,4 +66,5 @@ export {
   UnderlineMark,
   DropcursorExtension,
   PageNode,
+  FolderNode,
 };

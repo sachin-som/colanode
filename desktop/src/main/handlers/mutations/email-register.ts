@@ -1,6 +1,6 @@
 import { LoginOutput } from '@/types/accounts';
 import { databaseManager } from '@/main/data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 import { EmailRegisterMutationInput } from '@/operations/mutations/email-register';
 import {
   MutationChange,
@@ -28,13 +28,16 @@ export class EmailRegisterMutationHandler
       };
     }
 
-    const axios = buildAxiosInstance(server.domain, server.attributes);
-    const { data } = await axios.post<LoginOutput>(
+    const { data } = await httpClient.post<LoginOutput>(
       '/v1/accounts/register/email',
       {
         name: input.name,
         email: input.email,
         password: input.password,
+      },
+      {
+        serverDomain: server.domain,
+        serverAttributes: server.attributes,
       },
     );
 

@@ -5,7 +5,7 @@ import FormData from 'form-data';
 import { ServerFileUploadResponse } from '@/types/files';
 import { WorkspaceCredentials } from '@/types/workspaces';
 import { databaseManager } from './data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 import { LocalNodeAttributes } from '@/types/nodes';
 import axios from 'axios';
 
@@ -103,15 +103,15 @@ class FileManager {
         continue;
       }
 
-      const accountAxios = buildAxiosInstance(
-        credentials.serverDomain,
-        credentials.serverAttributes,
-        credentials.token,
-      );
-
       try {
-        const { data } = await accountAxios.post<ServerFileUploadResponse>(
+        const { data } = await httpClient.post<ServerFileUploadResponse>(
           `/v1/files/${credentials.workspaceId}/${upload.node_id}`,
+          {},
+          {
+            serverDomain: credentials.serverDomain,
+            serverAttributes: credentials.serverAttributes,
+            token: credentials.token,
+          },
         );
 
         const presignedUrl = data.url;

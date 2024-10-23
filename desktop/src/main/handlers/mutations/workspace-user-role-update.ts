@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
 import {
   MutationChange,
@@ -56,15 +56,15 @@ export class WorkspaceUserRoleUpdateMutationHandler
       };
     }
 
-    const axios = buildAxiosInstance(
-      server.domain,
-      server.attributes,
-      account.token,
-    );
-    const { data } = await axios.put<WorkspaceUserRoleUpdateOutput>(
+    const { data } = await httpClient.put<WorkspaceUserRoleUpdateOutput>(
       `/v1/workspaces/${workspace.workspace_id}/users/${input.userToUpdateId}`,
       {
         role: input.role,
+      },
+      {
+        serverDomain: server.domain,
+        serverAttributes: server.attributes,
+        token: account.token,
       },
     );
 

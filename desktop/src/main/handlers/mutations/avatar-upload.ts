@@ -1,9 +1,9 @@
 import fs from 'fs';
 import FormData from 'form-data';
 import { databaseManager } from '@/main/data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { AvatarUploadMutationInput } from '@/operations/mutations/avatar-upload';
+import { httpClient } from '@/lib/http-client';
 
 interface AvatarUploadResponse {
   id: string;
@@ -31,22 +31,19 @@ export class AvatarUploadMutationHandler
       };
     }
 
-    const axios = buildAxiosInstance(
-      credentials.domain,
-      credentials.attributes,
-      credentials.token,
-    );
-
     const filePath = input.filePath;
     const fileStream = fs.createReadStream(filePath);
 
     const formData = new FormData();
     formData.append('avatar', fileStream);
 
-    const { data } = await axios.post<AvatarUploadResponse>(
+    const { data } = await httpClient.post<AvatarUploadResponse>(
       '/v1/avatars',
       formData,
       {
+        serverDomain: credentials.domain,
+        serverAttributes: credentials.attributes,
+        token: credentials.token,
         headers: formData.getHeaders(),
       },
     );

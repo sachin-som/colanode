@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
 import {
   MutationChange,
@@ -57,15 +57,15 @@ export class WorkspaceUsersInviteMutationHandler
       };
     }
 
-    const axios = buildAxiosInstance(
-      server.domain,
-      server.attributes,
-      account.token,
-    );
-    const { data } = await axios.post<WorkspaceUsersInviteOutput>(
+    const { data } = await httpClient.post<WorkspaceUsersInviteOutput>(
       `/v1/workspaces/${workspace.workspace_id}/users`,
       {
         emails: input.emails,
+      },
+      {
+        serverDomain: server.domain,
+        serverAttributes: server.attributes,
+        token: account.token,
       },
     );
 

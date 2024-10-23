@@ -2,7 +2,7 @@ import { app, net } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { databaseManager } from '@/main/data/database-manager';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 
 class AvatarManager {
   private readonly appPath: string;
@@ -35,15 +35,13 @@ class AvatarManager {
       return new Response(null, { status: 404 });
     }
 
-    const axios = buildAxiosInstance(
-      credentials.domain,
-      credentials.attributes,
-      credentials.token,
-    );
-
-    const response = await axios.get(`/v1/avatars/${avatarId}`, {
+    const response = await httpClient.get<any>(`/v1/avatars/${avatarId}`, {
+      serverDomain: credentials.domain,
+      serverAttributes: credentials.attributes,
+      token: credentials.token,
       responseType: 'stream',
     });
+
     if (response.status !== 200 || !response.data) {
       return new Response(null, { status: 404 });
     }

@@ -1,15 +1,13 @@
-import { BackoffCalculator } from '@/lib/backoff-calculator';
-import { buildAxiosInstance } from '@/lib/servers';
+import { httpClient } from '@/lib/http-client';
 import { databaseManager } from '@/main/data/database-manager';
 import { ServerSyncResponse } from '@/types/sync';
 import { WorkspaceCredentials } from '@/types/workspaces';
-import { fileManager } from './file-manager';
+import { fileManager } from '@/main/file-manager';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
 class Synchronizer {
   private initiated: boolean = false;
-  private readonly backoffs: Map<string, BackoffCalculator> = new Map();
 
   constructor() {
     this.executeEventLoop = this.executeEventLoop.bind(this);
@@ -53,22 +51,12 @@ class Synchronizer {
     }
 
     for (const account of accounts) {
-      const backoffKey = account.id;
-      if (this.backoffs.has(backoffKey)) {
-        const backoff = this.backoffs.get(backoffKey);
-        if (!backoff.canRetry()) {
-          return;
-        }
-      }
-
       try {
-        const axios = buildAxiosInstance(
-          account.domain,
-          account.attributes,
-          account.token,
-        );
-
-        const { status } = await axios.delete(`/v1/accounts/logout`);
+        const { status } = await httpClient.delete(`/v1/accounts/logout`, {
+          serverDomain: account.domain,
+          serverAttributes: account.attributes,
+          token: account.token,
+        });
 
         if (status !== 200) {
           return;
@@ -79,17 +67,8 @@ class Synchronizer {
           .deleteFrom('accounts')
           .where('id', '=', account.id)
           .execute();
-
-        if (this.backoffs.has(backoffKey)) {
-          this.backoffs.delete(backoffKey);
-        }
       } catch (error) {
-        if (!this.backoffs.has(backoffKey)) {
-          this.backoffs.set(backoffKey, new BackoffCalculator());
-        }
-
-        const backoff = this.backoffs.get(account.id);
-        backoff.increaseError();
+        console.log('error', error);
       }
     }
   }
@@ -110,14 +89,6 @@ class Synchronizer {
       .execute();
 
     for (const workspace of workspaces) {
-      const backoffKey = workspace.user_id;
-      if (this.backoffs.has(backoffKey)) {
-        const backoff = this.backoffs.get(backoffKey);
-        if (!backoff.canRetry()) {
-          return;
-        }
-      }
-
       const credentials: WorkspaceCredentials = {
         workspaceId: workspace.workspace_id,
         accountId: workspace.account_id,
@@ -130,18 +101,8 @@ class Synchronizer {
       try {
         await this.checkForChanges(credentials);
         // await fileManager.checkForUploads(credentials);
-
-        if (this.backoffs.has(backoffKey)) {
-          this.backoffs.delete(backoffKey);
-        }
       } catch (error) {
         console.log('error', error);
-        if (!this.backoffs.has(backoffKey)) {
-          this.backoffs.set(backoffKey, new BackoffCalculator());
-        }
-
-        const backoff = this.backoffs.get(backoffKey);
-        backoff.increaseError();
       }
     }
   }
@@ -162,16 +123,15 @@ class Synchronizer {
       return;
     }
 
-    const axios = buildAxiosInstance(
-      credentials.serverDomain,
-      credentials.serverAttributes,
-      credentials.token,
-    );
-
-    const { data } = await axios.post<ServerSyncResponse>(
+    const { data } = await httpClient.post<ServerSyncResponse>(
       `/v1/sync/${credentials.workspaceId}`,
       {
         changes: changes,
+      },
+      {
+        serverDomain: credentials.serverDomain,
+        serverAttributes: credentials.serverAttributes,
+        token: credentials.token,
       },
     );
 

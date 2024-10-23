@@ -2,6 +2,7 @@ import React from 'react';
 import { FileNode } from '@/types/files';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';
+import { GridItem } from './grid-item';
 
 interface GridFileProps {
   file: FileNode;
@@ -10,7 +11,7 @@ interface GridFileProps {
 export const GridFile = ({ file }: GridFileProps) => {
   return (
     <FileContextMenu id={file.id}>
-      <React.Fragment>
+      <GridItem id={file.id}>
         <div className="flex w-full justify-center">
           <FileThumbnail
             id={file.id}
@@ -27,7 +28,7 @@ export const GridFile = ({ file }: GridFileProps) => {
         >
           {file.name}
         </p>
-      </React.Fragment>
+      </GridItem>
     </FileContextMenu>
   );
 };

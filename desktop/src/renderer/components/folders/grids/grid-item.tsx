@@ -1,14 +1,13 @@
 import React from 'react';
-import { FileNode } from '@/types/files';
 import { cn } from '@/lib/utils';
 import { useFolder } from '@/renderer/contexts/folder';
-import { GridFile } from '@/renderer/components/folders/grids/grid-file';
 
 interface GridItemProps {
-  file: FileNode;
+  id: string;
+  children: React.ReactNode;
 }
 
-export const GridItem = ({ file }: GridItemProps) => {
+export const GridItem = ({ id, children }: GridItemProps) => {
   const folder = useFolder();
 
   const ref = React.useRef<HTMLDivElement>(null);
@@ -21,10 +20,10 @@ export const GridItem = ({ file }: GridItemProps) => {
         'flex cursor-pointer select-none flex-col items-center gap-2 p-2',
         selected ? 'bg-blue-100' : 'hover:bg-blue-50',
       )}
-      onClick={(event) => folder.onClick(event, file.id)}
-      onDoubleClick={(event) => folder.onDoubleClick(event, file.id)}
+      onClick={(event) => folder.onClick(event, id)}
+      onDoubleClick={(event) => folder.onDoubleClick(event, id)}
     >
-      <GridFile file={file} />
+      {children}
     </div>
   );
 };

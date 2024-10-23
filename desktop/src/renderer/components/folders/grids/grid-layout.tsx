@@ -1,6 +1,6 @@
 import React from 'react';
-import { GridItem } from '@/renderer/components/folders/grids/grid-item';
 import { useFolder } from '@/renderer/contexts/folder';
+import { GridFile } from '@/renderer/components/folders/grids/grid-file';
 
 export const GridLayout = () => {
   const folder = useFolder();
@@ -8,7 +8,7 @@ export const GridLayout = () => {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
       {folder.files.map((file) => (
-        <GridItem key={file.id} file={file} />
+        <GridFile key={file.id} file={file} />
       ))}
     </div>
   );

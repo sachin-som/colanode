@@ -4,7 +4,11 @@ import { cn } from '@/lib/utils';
 import { useFolder } from '@/renderer/contexts/folder';
 import { GridFile } from '@/renderer/components/folders/grids/grid-file';
 
-export const GridItem = ({ file }: { file: FileNode }) => {
+interface GridItemProps {
+  file: FileNode;
+}
+
+export const GridItem = ({ file }: GridItemProps) => {
   const folder = useFolder();
 
   const ref = React.useRef<HTMLDivElement>(null);

@@ -55,7 +55,9 @@ export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
         id,
         name,
         files,
-        onClick: () => {},
+        onClick: () => {
+          console.log('onClick');
+        },
         onDoubleClick: (_, id) => {
           const idType = getIdType(id);
 

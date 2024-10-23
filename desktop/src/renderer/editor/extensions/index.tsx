@@ -32,6 +32,7 @@ import { TaskListNode } from '@/renderer/editor/extensions/task-list';
 import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
 import { PageNode } from '@/renderer/editor/extensions/page';
 import { FolderNode } from '@/renderer/editor/extensions/folder';
+import { FileNode } from '@/renderer/editor/extensions/file';
 
 export {
   IdExtension,
@@ -67,4 +68,5 @@ export {
   DropcursorExtension,
   PageNode,
   FolderNode,
+  FileNode,
 };

@@ -10,6 +10,7 @@ import { ParagraphCommand } from '@/renderer/editor/commands/paragraph';
 import { TodoCommand } from '@/renderer/editor/commands/todo';
 import { PageCommand } from '@/renderer/editor/commands/page';
 import { FolderCommand } from '@/renderer/editor/commands/folder';
+import { FileCommand } from '@/renderer/editor/commands/file';
 import { EditorCommand, EditorCommandProps } from '@/types/editor';
 
 export type { EditorCommand, EditorCommandProps };
@@ -27,4 +28,5 @@ export {
   TodoCommand,
   PageCommand,
   FolderCommand,
+  FileCommand,
 };

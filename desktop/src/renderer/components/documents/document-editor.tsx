@@ -15,12 +15,14 @@ import {
   TodoCommand,
   PageCommand,
   FolderCommand,
+  FileCommand,
 } from '@/renderer/editor/commands';
 import {
   IdExtension,
   DocumentNode,
   PageNode,
   FolderNode,
+  FileNode,
   TextNode,
   ParagraphNode,
   Heading1Node,
@@ -93,6 +95,7 @@ export const DocumentEditor = ({
         DocumentNode,
         PageNode,
         FolderNode,
+        FileNode,
         TextNode,
         ParagraphNode,
         Heading1Node,
@@ -128,6 +131,7 @@ export const DocumentEditor = ({
             OrderedListCommand,
             DividerCommand,
             TodoCommand,
+            FileCommand,
             FolderCommand,
           ],
           context: {

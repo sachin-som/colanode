@@ -68,7 +68,7 @@ class Synchronizer {
           .where('id', '=', account.id)
           .execute();
       } catch (error) {
-        console.log('error', error);
+        // console.log('error', error);
       }
     }
   }
@@ -100,9 +100,9 @@ class Synchronizer {
 
       try {
         await this.checkForChanges(credentials);
-        // await fileManager.checkForUploads(credentials);
+        await fileManager.checkForUploads(credentials);
       } catch (error) {
-        console.log('error', error);
+        // console.log('error', error);
       }
     }
   }

@@ -116,11 +116,12 @@ class FileManager {
 
         const presignedUrl = data.url;
         const fileStream = fs.createReadStream(filePath);
-
-        const formData = new FormData();
-        formData.append('file', fileStream);
-
-        await axios.put(presignedUrl, formData);
+        await axios.put(presignedUrl, fileStream, {
+          headers: {
+            'Content-Type': attributes.mimeType,
+            'Content-Length': attributes.size,
+          },
+        });
 
         await workspaceDatabase
           .deleteFrom('uploads')

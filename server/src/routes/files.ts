@@ -148,6 +148,8 @@ filesRouter.post(
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAMES.FILES,
       Key: `files/${fileId}${node.attributes.extension}`,
+      ContentLength: node.attributes.size,
+      ContentType: node.attributes.mimeType,
     });
 
     const presignedUrl = await getSignedUrl(filesStorage, command, {

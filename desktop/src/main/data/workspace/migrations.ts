@@ -285,6 +285,24 @@ const createUploadsTable: Migration = {
   },
 };
 
+const createDownloadsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('downloads')
+      .addColumn('node_id', 'text', (col) =>
+        col.notNull().primaryKey().references('nodes.id'),
+      )
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('progress', 'integer', (col) => col.defaultTo(0))
+      .addColumn('retry_count', 'integer', (col) => col.defaultTo(0))
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('downloads').execute();
+  },
+};
+
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_nodes_table': createNodesTable,
   '00002_create_node_names_table': createNodeNamesTable,
@@ -296,4 +314,5 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00008_create_node_update_name_trigger': createNodeUpdateNameTrigger,
   '00009_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
   '00010_create_uploads_table': createUploadsTable,
+  '00011_create_downloads_table': createDownloadsTable,
 };

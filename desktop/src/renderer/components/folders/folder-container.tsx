@@ -14,6 +14,7 @@ import { folderLayouts, FolderLayoutType } from '@/types/folders';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { FolderFiles } from '@/renderer/components/folders/folder-files';
 
 interface FolderContainerProps {
   nodeId: string;
@@ -21,7 +22,7 @@ interface FolderContainerProps {
 
 export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
   const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+  const { mutate } = useMutation();
 
   const [layout, setLayout] = React.useState<FolderLayoutType>('grid');
   const currentLayout =
@@ -105,8 +106,7 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
           </div>
         </div>
         <ScrollArea className="flex-grow">
-          {/* <FolderFiles files={query.folder} layout={layout} /> */}
-          List files here
+          <FolderFiles id={nodeId} name="Folder" layout={layout} />
         </ScrollArea>
       </div>
       {/* <FolderUploads

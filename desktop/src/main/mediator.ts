@@ -70,7 +70,7 @@ class Mediator {
     this.subscribedQueries.delete(id);
   }
 
-  private async checkForQueryChanges(changes: MutationChange[]): Promise<void> {
+  public async checkForQueryChanges(changes: MutationChange[]): Promise<void> {
     if (changes.length === 0) {
       return;
     }

@@ -6,6 +6,7 @@ import { DatabaseContainer } from '@/renderer/components/databases/database-cont
 import { RecordContainer } from '@/renderer/components/records/record-container';
 import { ChatContainer } from '@/renderer/components/chats/chat-container';
 import { FolderContainer } from '@/renderer/components/folders/folder-container';
+import { FileContainer } from '@/renderer/components/files/file-container';
 import { getIdType, IdType } from '@/lib/id';
 
 interface ModalContentProps {
@@ -23,6 +24,7 @@ export const ModalContent = ({ nodeId }: ModalContentProps) => {
         .with(IdType.Record, () => <RecordContainer nodeId={nodeId} />)
         .with(IdType.Chat, () => <ChatContainer nodeId={nodeId} />)
         .with(IdType.Folder, () => <FolderContainer nodeId={nodeId} />)
+        .with(IdType.File, () => <FileContainer nodeId={nodeId} />)
         .otherwise(() => null)}
     </div>
   );

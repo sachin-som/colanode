@@ -35,6 +35,7 @@ import { LogoutMutationHandler } from '@/main/handlers/mutations/logout';
 import { NodeSyncMutationHandler } from '@/main/handlers/mutations/node-sync';
 import { FolderCreateMutationHandler } from '@/main/handlers/mutations/folder-create';
 import { FileCreateMutationHandler } from '@/main/handlers/mutations/file-create';
+import { FileDownloadMutationHandler } from '@/main/handlers/mutations/file-download';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -77,4 +78,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   node_sync: new NodeSyncMutationHandler(),
   folder_create: new FolderCreateMutationHandler(),
   file_create: new FileCreateMutationHandler(),
+  file_download: new FileDownloadMutationHandler(),
 };

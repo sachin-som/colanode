@@ -70,12 +70,39 @@ export class FileCreateMutationHandler
           retry_count: 0,
         })
         .execute();
+
+      await tx
+        .insertInto('downloads')
+        .values({
+          node_id: id,
+          created_at: new Date().toISOString(),
+          progress: 100,
+          retry_count: 0,
+        })
+        .execute();
     });
 
     return {
       output: {
         id: id,
       },
+      changes: [
+        {
+          type: 'workspace',
+          table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'downloads',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'uploads',
+          userId: input.userId,
+        },
+      ],
     };
   }
 }

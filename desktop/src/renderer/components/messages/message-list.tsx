@@ -31,7 +31,7 @@ export const MessageList = ({
         page: 0,
         count: MESSAGES_PER_PAGE,
       },
-      getNextPageInput(page, pages) {
+      getNextPageInput: (page, pages) => {
         if (page > pages.length) {
           return undefined;
         }

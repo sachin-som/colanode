@@ -8,6 +8,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
 import { avatarManager } from '@/main/avatar-manager';
+import { fileManager } from '@/main/file-manager';
 
 let subscriptionId: string | null = null;
 
@@ -47,6 +48,10 @@ const createWindow = async () => {
 
   protocol.handle('avatar', (request) => {
     return avatarManager.handleAvatarRequest(request);
+  });
+
+  protocol.handle('local-file', (request) => {
+    return fileManager.handleFileRequest(request);
   });
 };
 

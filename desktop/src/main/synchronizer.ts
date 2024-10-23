@@ -101,6 +101,7 @@ class Synchronizer {
       try {
         await this.checkForChanges(credentials);
         await fileManager.checkForUploads(credentials);
+        await fileManager.checkForDownloads(credentials);
       } catch (error) {
         // console.log('error', error);
       }

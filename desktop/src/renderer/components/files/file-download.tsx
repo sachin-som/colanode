@@ -17,15 +17,18 @@ export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {
     return (
       <div
         className="flex cursor-pointer flex-col items-center gap-3 text-muted-foreground hover:text-primary"
-        onClick={() =>
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+
           mutate({
             input: {
               type: 'file_download',
               userId: workspace.userId,
               fileId: id,
             },
-          })
-        }
+          });
+        }}
       >
         <Icon name="download-2-line" className="h-10 w-10" />
         <p className="text-sm">

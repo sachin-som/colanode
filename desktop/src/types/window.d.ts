@@ -27,6 +27,8 @@ interface NeuronApi {
   openFileDialog: (
     options: Electron.OpenDialogOptions,
   ) => Promise<Electron.OpenDialogReturnValue>;
+
+  openFile: (userId: string, id: string, extension: string) => Promise<void>;
 }
 
 declare global {

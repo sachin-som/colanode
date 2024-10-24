@@ -1,4 +1,4 @@
-import { app, net } from 'electron';
+import { net, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
@@ -45,6 +45,12 @@ class FileManager {
       `${fileId}${fileExtension}`,
     );
     fs.copyFileSync(filePath, destinationFilePath);
+  }
+
+  public openFile(userId: string, id: string, extension: string): void {
+    const filesDir = getWorkspaceFilesDirectoryPath(userId);
+    const filePath = path.join(filesDir, `${id}${extension}`);
+    shell.openPath(filePath);
   }
 
   public async checkForUploads(

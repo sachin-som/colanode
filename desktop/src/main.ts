@@ -127,3 +127,15 @@ ipcMain.handle(
     return dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), options);
   },
 );
+
+ipcMain.handle(
+  'open-file',
+  async (
+    _: unknown,
+    userId: string,
+    id: string,
+    extension: string,
+  ): Promise<void> => {
+    return fileManager.openFile(userId, id, extension);
+  },
+);

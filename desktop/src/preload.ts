@@ -33,6 +33,10 @@ contextBridge.exposeInMainWorld('neuron', {
   openFileDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke('open-file-dialog', options);
   },
+
+  openFile: (userId: string, id: string, extension: string) => {
+    return ipcRenderer.invoke('open-file', userId, id, extension);
+  },
 });
 
 contextBridge.exposeInMainWorld('eventBus', {

@@ -3,6 +3,8 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
+import { Button } from '@/renderer/components/ui/button';
+import { Icon } from '@/renderer/components/ui/icon';
 
 interface FileContainerProps {
   nodeId: string;
@@ -22,8 +24,21 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
 
   return (
     <div className="flex h-full max-h-full w-full flex-row items-center gap-2">
-      <div className="flex h-full max-h-full w-full max-w-full flex-grow items-center justify-center overflow-hidden">
-        <FilePreview file={data} />
+      <div className="flex h-full max-h-full w-full max-w-full flex-grow flex-col items-center justify-center overflow-hidden">
+        <div className="mr-2 flex w-full flex-row justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              window.neuron.openFile(workspace.userId, data.id, data.extension)
+            }
+          >
+            <Icon name="external-link-line" className="mr-1" /> Open
+          </Button>
+        </div>
+        <div className="flex w-full max-w-full flex-grow items-center justify-center overflow-hidden">
+          <FilePreview file={data} />
+        </div>
       </div>
       <div className="h-full w-72 min-w-72 overflow-hidden border-l border-gray-100 p-2 pl-3">
         <FileSidebar file={data} />

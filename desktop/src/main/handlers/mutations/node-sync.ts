@@ -37,6 +37,15 @@ export class NodeSyncMutationHandler
       const workspaceDatabase =
         await databaseManager.getWorkspaceDatabase(userId);
 
+      if (node.deletedAt) {
+        await workspaceDatabase
+          .deleteFrom('nodes')
+          .where('id', '=', node.id)
+          .execute();
+
+        continue;
+      }
+
       const existingNode = await workspaceDatabase
         .selectFrom('nodes')
         .where('id', '=', node.id)

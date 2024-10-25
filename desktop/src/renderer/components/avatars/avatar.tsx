@@ -74,7 +74,7 @@ const EmojiAvatar = ({ avatar, size, className }: AvatarProps) => {
   return (
     <img
       src={url}
-      className={cn('rounded shadow', getAvatarSizeClasses(size), className)}
+      className={cn(getAvatarSizeClasses(size), className)}
       alt={'Emoji'}
     />
   );
@@ -85,7 +85,7 @@ const IconAvatar = ({ avatar, size, className }: AvatarProps) => {
   return (
     <img
       src={url}
-      className={cn('rounded shadow', getAvatarSizeClasses(size), className)}
+      className={cn(getAvatarSizeClasses(size), className)}
       alt={'Icon'}
     />
   );
@@ -98,7 +98,7 @@ const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
   return (
     <img
       src={url}
-      className={cn('rounded shadow', getAvatarSizeClasses(size), className)}
+      className={cn(getAvatarSizeClasses(size), className)}
       alt={'Custom Avatar'}
     />
   );

@@ -45,6 +45,8 @@ export class CalendarViewCreateMutationHandler
               type: NodeTypes.CalendarView,
               parentId: input.databaseId,
               index: generateNodeIndex(maxIndex, null),
+              name: input.name,
+              groupBy: input.groupBy,
             },
           },
           input.userId,

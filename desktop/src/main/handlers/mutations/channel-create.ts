@@ -40,6 +40,7 @@ export class ChannelCreateMutationHandler
               type: NodeTypes.Channel,
               parentId: input.spaceId,
               index: generateNodeIndex(maxIndex, null),
+              name: input.name,
             },
           },
           input.userId,

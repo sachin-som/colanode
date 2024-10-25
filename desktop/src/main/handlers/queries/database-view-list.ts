@@ -17,6 +17,7 @@ import {
 } from '@/types/databases';
 import { isEqual } from 'lodash';
 import { MutationChange } from '@/operations/mutations';
+import { compareString } from '@/lib/utils';
 
 export class DatabaseViewListQueryHandler
   implements QueryHandler<DatabaseViewListQueryInput>
@@ -90,7 +91,9 @@ export class DatabaseViewListQueryHandler
   }
 
   private buildViewNodes = (rows: SelectNode[]): ViewNode[] => {
-    const nodes = rows.map((row) => mapNode(row));
+    const nodes = rows
+      .sort((a, b) => compareString(a.index, b.index))
+      .map((row) => mapNode(row));
     const views: ViewNode[] = [];
     for (const node of nodes) {
       const view = this.buildViewNode(node);

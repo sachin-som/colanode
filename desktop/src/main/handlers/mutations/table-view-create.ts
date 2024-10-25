@@ -45,6 +45,7 @@ export class TableViewCreateMutationHandler
               type: NodeTypes.TableView,
               parentId: input.databaseId,
               index: generateNodeIndex(maxIndex, null),
+              name: input.name,
             },
           },
           input.userId,

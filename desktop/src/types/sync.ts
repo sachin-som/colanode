@@ -24,3 +24,33 @@ export type ServerNodeSyncData = {
   serverUpdatedAt?: string | null;
   serverDeletedAt?: string | null;
 };
+
+export type LocalCreateNodeChangeData = {
+  type: 'node_create';
+  id: string;
+  state: string;
+  createdAt: string;
+  createdBy: string;
+  versionId: string;
+};
+
+export type LocalUpdateNodeChangeData = {
+  type: 'node_update';
+  id: string;
+  updates: string[];
+  updatedAt: string;
+  updatedBy: string;
+  versionId: string;
+};
+
+export type LocalDeleteNodeChangeData = {
+  type: 'node_delete';
+  id: string;
+  deletedAt: string;
+  deletedBy: string;
+};
+
+export type LocalNodeChangeData =
+  | LocalCreateNodeChangeData
+  | LocalUpdateNodeChangeData
+  | LocalDeleteNodeChangeData;

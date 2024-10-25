@@ -23,10 +23,7 @@ export type UpdateNode = Updateable<NodeTable>;
 
 interface ChangeTable {
   id: ColumnType<number, never, never>;
-  table: ColumnType<string, string, never>;
-  action: ColumnType<string, string, never>;
-  before: ColumnType<string | null, string | null, never>;
-  after: ColumnType<string | null, string | null, never>;
+  data: ColumnType<string, string, never>;
   created_at: ColumnType<string, string, never>;
   retry_count: ColumnType<number, number, number>;
 }

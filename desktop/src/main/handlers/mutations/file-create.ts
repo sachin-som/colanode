@@ -1,14 +1,15 @@
 import fs from 'fs';
 import mime from 'mime-types';
 import path from 'path';
+import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { generateId, IdType } from '@/lib/id';
 import { FileCreateMutationInput } from '@/operations/mutations/file-create';
-import { buildCreateNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
 import { fileManager } from '@/main/file-manager';
-
+import { LocalCreateNodeChangeData } from '@/types/sync';
+import { fromUint8Array } from 'js-base64';
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
 {
@@ -31,31 +32,60 @@ export class FileCreateMutationHandler
     }
 
     const id = generateId(IdType.File);
+    const versionId = generateId(IdType.Version);
+    const createdAt = new Date().toISOString();
+
     fileManager.copyFileToWorkspace(filePath, id, extension, input.userId);
 
-    await workspaceDatabase.transaction().execute(async (tx) => {
-      await tx
+    const doc = new Y.Doc({
+      guid: id,
+    });
+
+    const attributesMap = doc.getMap('attributes');
+    doc.transact(() => {
+      attributesMap.set('type', NodeTypes.File);
+      attributesMap.set('parentId', input.parentId);
+      attributesMap.set('name', fileName);
+      attributesMap.set('fileName', fileName);
+      attributesMap.set('extension', extension);
+      attributesMap.set('size', size);
+      attributesMap.set('mimeType', mimeType);
+    });
+
+    const attributes = JSON.stringify(attributesMap.toJSON());
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    const changeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: id,
+      state: encodedState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: versionId,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
         .insertInto('nodes')
-        .values(
-          buildCreateNode(
-            {
-              id: id,
-              attributes: {
-                type: NodeTypes.File,
-                parentId: input.parentId,
-                name: fileName,
-                fileName: fileName,
-                extension: extension,
-                size: size,
-                mimeType: mimeType,
-              },
-            },
-            input.userId,
-          ),
-        )
+        .values({
+          id: id,
+          attributes: attributes,
+          state: encodedState,
+          created_at: createdAt,
+          created_by: input.userId,
+          version_id: versionId,
+        })
         .execute();
 
-      await tx
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: createdAt,
+        })
+        .execute();
+
+      await trx
         .insertInto('uploads')
         .values({
           node_id: id,
@@ -65,7 +95,7 @@ export class FileCreateMutationHandler
         })
         .execute();
 
-      await tx
+      await trx
         .insertInto('downloads')
         .values({
           node_id: id,
@@ -84,6 +114,11 @@ export class FileCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
         {

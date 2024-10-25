@@ -76,6 +76,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       .updateTable('nodes')
       .set({
         attributes: JSON.stringify(data.user.attributes),
+        state: data.user.state,
         updated_at: data.user.updatedAt,
         updated_by: data.user.updatedBy,
         version_id: data.user.versionId,

@@ -1,10 +1,13 @@
+import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
-import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
+import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { DatabaseCreateMutationInput } from '@/operations/mutations/database-create';
+import { fromUint8Array } from 'js-base64';
+import { LocalCreateNodeChangeData } from '@/types/sync';
 
 export class DatabaseCreateMutationHandler
   implements MutationHandler<DatabaseCreateMutationInput>
@@ -29,52 +32,143 @@ export class DatabaseCreateMutationHandler
           ].index
         : null;
 
-    const databaseId = generateId(IdType.Database);
-    const tableViewId = generateId(IdType.TableView);
-    const fieldId = generateId(IdType.Field);
+    const createdAt = new Date().toISOString();
 
-    await workspaceDatabase
-      .insertInto('nodes')
-      .values([
-        buildCreateNode(
+    const databaseId = generateId(IdType.Database);
+    const databaseVersionId = generateId(IdType.Version);
+
+    const databaseDoc = new Y.Doc({
+      guid: databaseId,
+    });
+
+    const attributesMap = databaseDoc.getMap('attributes');
+    databaseDoc.transact(() => {
+      attributesMap.set('type', NodeTypes.Database);
+      attributesMap.set('parentId', input.spaceId);
+      attributesMap.set('index', generateNodeIndex(maxIndex, null));
+      attributesMap.set('name', input.name);
+    });
+
+    const databaseAttributes = JSON.stringify(attributesMap.toJSON());
+    const databaseEncodedState = fromUint8Array(
+      Y.encodeStateAsUpdate(databaseDoc),
+    );
+
+    const databaseChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: databaseId,
+      state: databaseEncodedState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: databaseVersionId,
+    };
+
+    const tableViewId = generateId(IdType.TableView);
+    const tableViewVersionId = generateId(IdType.Version);
+
+    const tableViewDoc = new Y.Doc({
+      guid: tableViewId,
+    });
+
+    const tableViewAttributesMap = tableViewDoc.getMap('attributes');
+    tableViewDoc.transact(() => {
+      tableViewAttributesMap.set('type', NodeTypes.TableView);
+      tableViewAttributesMap.set('parentId', databaseId);
+      tableViewAttributesMap.set('index', generateNodeIndex(null, null));
+      tableViewAttributesMap.set('name', 'Default');
+    });
+
+    const tableViewAttributes = JSON.stringify(tableViewAttributesMap.toJSON());
+    const tableViewEncodedState = fromUint8Array(
+      Y.encodeStateAsUpdate(tableViewDoc),
+    );
+
+    const tableViewChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: tableViewId,
+      state: tableViewEncodedState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: tableViewVersionId,
+    };
+
+    const fieldId = generateId(IdType.Field);
+    const fieldVersionId = generateId(IdType.Version);
+
+    const fieldDoc = new Y.Doc({
+      guid: fieldId,
+    });
+
+    const fieldAttributesMap = fieldDoc.getMap('attributes');
+    fieldDoc.transact(() => {
+      fieldAttributesMap.set('type', NodeTypes.Field);
+      fieldAttributesMap.set('parentId', databaseId);
+      fieldAttributesMap.set('index', generateNodeIndex(null, null));
+      fieldAttributesMap.set('name', 'Comment');
+      fieldAttributesMap.set('dataType', 'text');
+    });
+
+    const fieldAttributes = JSON.stringify(fieldAttributesMap.toJSON());
+    const fieldEncodedState = fromUint8Array(Y.encodeStateAsUpdate(fieldDoc));
+
+    const fieldChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: fieldId,
+      state: fieldEncodedState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: fieldVersionId,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('nodes')
+        .values([
           {
             id: databaseId,
-            attributes: {
-              type: NodeTypes.Database,
-              parentId: input.spaceId,
-              index: generateNodeIndex(maxIndex, null),
-              name: input.name,
-            },
+            attributes: databaseAttributes,
+            state: databaseEncodedState,
+            created_at: createdAt,
+            created_by: input.userId,
+            version_id: databaseVersionId,
           },
-          input.userId,
-        ),
-        buildCreateNode(
           {
             id: tableViewId,
-            attributes: {
-              type: NodeTypes.TableView,
-              parentId: databaseId,
-              index: generateNodeIndex(null, null),
-              name: 'Default',
-            },
+            attributes: tableViewAttributes,
+            state: tableViewEncodedState,
+            created_at: createdAt,
+            created_by: input.userId,
+            version_id: tableViewVersionId,
           },
-          input.userId,
-        ),
-        buildCreateNode(
           {
             id: fieldId,
-            attributes: {
-              type: NodeTypes.Field,
-              parentId: databaseId,
-              index: generateNodeIndex(null, null),
-              name: 'Comment',
-              dataType: 'text',
-            },
+            attributes: fieldAttributes,
+            state: fieldEncodedState,
+            created_at: createdAt,
+            created_by: input.userId,
+            version_id: fieldVersionId,
           },
-          input.userId,
-        ),
-      ])
-      .execute();
+        ])
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values([
+          {
+            data: JSON.stringify(databaseChangeData),
+            created_at: createdAt,
+          },
+          {
+            data: JSON.stringify(tableViewChangeData),
+            created_at: createdAt,
+          },
+          {
+            data: JSON.stringify(fieldChangeData),
+            created_at: createdAt,
+          },
+        ])
+        .execute();
+    });
 
     return {
       output: {
@@ -84,6 +178,11 @@ export class DatabaseCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

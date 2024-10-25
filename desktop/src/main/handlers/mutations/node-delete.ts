@@ -1,6 +1,7 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeDeleteMutationInput } from '@/operations/mutations/node-delete';
+import { LocalDeleteNodeChangeData } from '@/types/sync';
 
 export class NodeDeleteMutationHandler
   implements MutationHandler<NodeDeleteMutationInput>
@@ -12,10 +13,38 @@ export class NodeDeleteMutationHandler
       input.userId,
     );
 
-    await workspaceDatabase
-      .deleteFrom('nodes')
+    const node = await workspaceDatabase
+      .selectFrom('nodes')
+      .select(['id'])
       .where('id', '=', input.nodeId)
-      .execute();
+      .executeTakeFirst();
+
+    if (!node) {
+      return {
+        output: {
+          success: false,
+        },
+      };
+    }
+
+    const changeData: LocalDeleteNodeChangeData = {
+      type: 'node_delete',
+      id: node.id,
+      deletedAt: new Date().toISOString(),
+      deletedBy: input.userId,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx.deleteFrom('nodes').where('id', '=', input.nodeId).execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: new Date().toISOString(),
+        })
+        .execute();
+    });
 
     return {
       output: {
@@ -25,6 +54,11 @@ export class NodeDeleteMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

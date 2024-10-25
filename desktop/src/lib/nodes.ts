@@ -1,14 +1,7 @@
-import { CreateNode, SelectNode } from '@/main/data/workspace/schema';
-import {
-  LocalNode,
-  LocalNodeWithChildren,
-  NodeInsertInput,
-} from '@/types/nodes';
+import { SelectNode } from '@/main/data/workspace/schema';
+import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
-import * as Y from 'yjs';
-import { generateId, IdType } from '@/lib/id';
-import { fromUint8Array } from 'js-base64';
 
 export const buildNodeWithChildren = (
   node: LocalNode,
@@ -32,37 +25,6 @@ export const generateNodeIndex = (
   const upper = next === undefined ? null : next;
 
   return generateKeyBetween(lower, upper);
-};
-
-export const buildCreateNode = (
-  input: NodeInsertInput,
-  userId: string,
-): CreateNode => {
-  const doc = new Y.Doc({
-    guid: input.id,
-  });
-
-  const attributesMap = doc.getMap('attributes');
-
-  doc.transact(() => {
-    for (const [key, value] of Object.entries(input.attributes)) {
-      if (value !== undefined) {
-        attributesMap.set(key, value);
-      }
-    }
-  });
-
-  const attributes = JSON.stringify(attributesMap.toJSON());
-  const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
-
-  return {
-    id: input.id,
-    attributes: attributes,
-    state: encodedState,
-    created_at: new Date().toISOString(),
-    created_by: userId,
-    version_id: generateId(IdType.Version),
-  };
 };
 
 export const mapNode = (row: SelectNode): LocalNode => {

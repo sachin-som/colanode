@@ -15,26 +15,39 @@ export type ServerSyncChangeResult = {
 
 export type LocalChange = {
   id: number;
-  table: string;
-  action: 'insert' | 'update' | 'delete';
-  before?: string | null;
-  after?: string | null;
+  data: string;
   createdAt: string;
 };
 
-export type LocalNodeChangeData = {
+export type LocalCreateNodeChangeData = {
+  type: 'node_create';
   id: string;
-  attributes: string;
   state: string;
-  created_at: string;
-  updated_at?: string | null;
-  created_by: string;
-  updated_by?: string | null;
-  version_id: string;
-  server_created_at: string;
-  server_updated_at: string;
-  server_version_id: string;
+  createdAt: string;
+  createdBy: string;
+  versionId: string;
 };
+
+export type LocalUpdateNodeChangeData = {
+  type: 'node_update';
+  id: string;
+  updates: string[];
+  updatedAt: string;
+  updatedBy: string;
+  versionId: string;
+};
+
+export type LocalDeleteNodeChangeData = {
+  type: 'node_delete';
+  id: string;
+  deletedAt: string;
+  deletedBy: string;
+};
+
+export type LocalNodeChangeData =
+  | LocalCreateNodeChangeData
+  | LocalUpdateNodeChangeData
+  | LocalDeleteNodeChangeData;
 
 export type ServerNodeSyncData = {
   id: string;

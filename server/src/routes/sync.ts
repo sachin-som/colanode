@@ -3,7 +3,10 @@ import { database } from '@/data/database';
 import { Router } from 'express';
 import {
   LocalChange,
+  LocalCreateNodeChangeData,
+  LocalDeleteNodeChangeData,
   LocalNodeChangeData,
+  LocalUpdateNodeChangeData,
   ServerSyncChangeResult,
   SyncLocalChangeResult,
   SyncLocalChangesInput,
@@ -82,15 +85,16 @@ const handleLocalChange = async (
   workspaceUser: SelectWorkspaceUser,
   change: LocalChange,
 ): Promise<SyncLocalChangeResult> => {
-  switch (change.action) {
-    case 'insert': {
-      return handleCreateNodeChange(workspaceUser, change);
+  const changeData = JSON.parse(change.data) as LocalNodeChangeData;
+  switch (changeData.type) {
+    case 'node_create': {
+      return handleCreateNodeChange(workspaceUser, changeData);
     }
-    case 'update': {
-      return handleUpdateNodeChange(workspaceUser, change);
+    case 'node_update': {
+      return handleUpdateNodeChange(workspaceUser, changeData);
     }
-    case 'delete': {
-      return handleDeleteNodeChange(workspaceUser, change);
+    case 'node_delete': {
+      return handleDeleteNodeChange(workspaceUser, changeData);
     }
     default: {
       return {
@@ -102,18 +106,11 @@ const handleLocalChange = async (
 
 const handleCreateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  change: LocalChange,
+  changeData: LocalCreateNodeChangeData,
 ): Promise<SyncLocalChangeResult> => {
-  if (!change.after) {
-    return {
-      status: 'error',
-    };
-  }
-
-  const nodeData = JSON.parse(change.after) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
-    .where('id', '=', nodeData.id)
+    .where('id', '=', changeData.id)
     .executeTakeFirst();
 
   if (existingNode) {
@@ -122,7 +119,15 @@ const handleCreateNodeChange = async (
     };
   }
 
-  const attributes: ServerNodeAttributes = JSON.parse(nodeData.attributes);
+  const doc = new Y.Doc({
+    guid: changeData.id,
+  });
+
+  Y.applyUpdate(doc, toUint8Array(changeData.state));
+
+  const attributesMap = doc.getMap('attributes');
+  const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+
   if (attributes.parentId) {
     const parentRole = await fetchCollaboratorRole(
       attributes.parentId,
@@ -142,18 +147,18 @@ const handleCreateNodeChange = async (
   await database
     .insertInto('nodes')
     .values({
-      id: nodeData.id,
-      attributes: nodeData.attributes,
+      id: changeData.id,
+      attributes: JSON.stringify(attributes),
       workspace_id: workspaceUser.workspace_id,
-      state: nodeData.state,
-      created_at: new Date(nodeData.created_at),
-      created_by: nodeData.created_by,
-      version_id: nodeData.version_id,
+      state: changeData.state,
+      created_at: new Date(changeData.createdAt),
+      created_by: changeData.createdBy,
+      version_id: changeData.versionId,
       server_created_at: new Date(),
     })
     .execute();
 
-  await publishChange(nodeData.id, workspaceUser.workspace_id);
+  await publishChange(changeData.id, workspaceUser.workspace_id);
 
   return {
     status: 'success',
@@ -162,19 +167,12 @@ const handleCreateNodeChange = async (
 
 const handleUpdateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  change: LocalChange,
+  changeData: LocalUpdateNodeChangeData,
 ): Promise<SyncLocalChangeResult> => {
-  if (!change.after) {
-    return {
-      status: 'error',
-    };
-  }
-
-  const nodeData = JSON.parse(change.after) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
     .select(['id', 'workspace_id', 'state'])
-    .where('id', '=', nodeData.id)
+    .where('id', '=', changeData.id)
     .executeTakeFirst();
 
   if (
@@ -186,24 +184,22 @@ const handleUpdateNodeChange = async (
     };
   }
 
-  const role = await fetchCollaboratorRole(nodeData.id, workspaceUser.id);
+  const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
   if (role === null) {
     return {
       status: 'error',
     };
   }
 
-  const updatedAt = nodeData.updated_at
-    ? new Date(nodeData.updated_at)
-    : new Date();
-  const updatedBy = nodeData.updated_by ?? workspaceUser.id;
-
   const doc = new Y.Doc({
-    guid: nodeData.id,
+    guid: changeData.id,
   });
 
   Y.applyUpdate(doc, toUint8Array(existingNode.state));
-  Y.applyUpdate(doc, toUint8Array(nodeData.state));
+
+  for (const update of changeData.updates) {
+    Y.applyUpdate(doc, toUint8Array(update));
+  }
 
   const attributesMap = doc.getMap('attributes');
   const attributes = JSON.stringify(attributesMap.toJSON());
@@ -214,15 +210,15 @@ const handleUpdateNodeChange = async (
     .set({
       attributes: attributes,
       state: encodedState,
-      updated_at: updatedAt,
-      updated_by: updatedBy,
-      version_id: nodeData.version_id,
+      updated_at: new Date(changeData.updatedAt),
+      updated_by: changeData.updatedBy,
+      version_id: changeData.versionId,
       server_updated_at: new Date(),
     })
-    .where('id', '=', nodeData.id)
+    .where('id', '=', changeData.id)
     .execute();
 
-  await publishChange(nodeData.id, workspaceUser.workspace_id);
+  await publishChange(changeData.id, workspaceUser.workspace_id);
 
   return {
     status: 'success',
@@ -231,18 +227,11 @@ const handleUpdateNodeChange = async (
 
 const handleDeleteNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  change: LocalChange,
+  changeData: LocalDeleteNodeChangeData,
 ): Promise<SyncLocalChangeResult> => {
-  if (!change.before) {
-    return {
-      status: 'error',
-    };
-  }
-
-  const nodeData = JSON.parse(change.before) as LocalNodeChangeData;
   const existingNode = await database
     .selectFrom('nodes')
-    .where('id', '=', nodeData.id)
+    .where('id', '=', changeData.id)
     .select(['id', 'workspace_id'])
     .executeTakeFirst();
 
@@ -258,25 +247,15 @@ const handleDeleteNodeChange = async (
     };
   }
 
-  const role = await fetchCollaboratorRole(nodeData.id, workspaceUser.id);
+  const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
   if (role === null) {
     return {
       status: 'error',
     };
   }
 
-  await database
-    .updateTable('nodes')
-    .set({
-      deleted_at: new Date(),
-      deleted_by: workspaceUser.id,
-      version_id: nodeData.version_id,
-      server_deleted_at: new Date(),
-    })
-    .where('id', '=', nodeData.id)
-    .execute();
-
-  await publishChange(nodeData.id, workspaceUser.workspace_id);
+  await database.deleteFrom('nodes').where('id', '=', changeData.id).execute();
+  await publishChange(changeData.id, workspaceUser.workspace_id);
 
   return {
     status: 'success',

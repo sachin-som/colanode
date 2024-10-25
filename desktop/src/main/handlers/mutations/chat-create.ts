@@ -6,6 +6,7 @@ import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
 import { sql } from 'kysely';
 import * as Y from 'yjs';
 import { fromUint8Array } from 'js-base64';
+import { LocalCreateNodeChangeData } from '@/types/sync';
 
 interface ChatRow {
   id: string;
@@ -40,6 +41,9 @@ export class ChatCreateMutationHandler
     }
 
     const id = generateId(IdType.Chat);
+    const versionId = generateId(IdType.Version);
+    const createdAt = new Date().toISOString();
+
     const doc = new Y.Doc({
       guid: id,
     });
@@ -58,17 +62,36 @@ export class ChatCreateMutationHandler
     const attributes = JSON.stringify(attributesMap.toJSON());
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
 
-    await workspaceDatabase
-      .insertInto('nodes')
-      .values({
-        id: id,
-        attributes: attributes,
-        state: encodedState,
-        created_at: new Date().toISOString(),
-        created_by: input.userId,
-        version_id: generateId(IdType.Version),
-      })
-      .execute();
+    const changeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: id,
+      state: encodedState,
+      createdAt: new Date().toISOString(),
+      createdBy: input.userId,
+      versionId: versionId,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('nodes')
+        .values({
+          id: id,
+          attributes: attributes,
+          state: encodedState,
+          created_at: createdAt,
+          created_by: input.userId,
+          version_id: versionId,
+        })
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: createdAt,
+        })
+        .execute();
+    });
 
     return {
       output: {

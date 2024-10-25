@@ -6,6 +6,7 @@ import { SpaceCreateMutationInput } from '@/operations/mutations/space-create';
 import * as Y from 'yjs';
 import { NodeTypes } from '@/lib/constants';
 import { fromUint8Array } from 'js-base64';
+import { LocalCreateNodeChangeData } from '@/types/sync';
 
 export class SpaceCreateMutationHandler
   implements MutationHandler<SpaceCreateMutationInput>
@@ -17,7 +18,10 @@ export class SpaceCreateMutationHandler
       input.userId,
     );
 
+    const createdAt = new Date().toISOString();
+
     const spaceId = generateId(IdType.Space);
+    const spaceVersionId = generateId(IdType.Version);
     const spaceDoc = new Y.Doc({
       guid: spaceId,
     });
@@ -45,8 +49,18 @@ export class SpaceCreateMutationHandler
     const spaceAttributes = JSON.stringify(spaceAttributesMap.toJSON());
     const spaceState = fromUint8Array(Y.encodeStateAsUpdate(spaceDoc));
 
+    const spaceChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: spaceId,
+      state: spaceState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: spaceVersionId,
+    };
+
     const pageId = generateId(IdType.Page);
     const pageIndex = generateNodeIndex(null, null);
+    const pageVersionId = generateId(IdType.Version);
     const pageDoc = new Y.Doc({
       guid: pageId,
     });
@@ -62,8 +76,18 @@ export class SpaceCreateMutationHandler
     const pageAttributes = JSON.stringify(pageAttributesMap.toJSON());
     const pageState = fromUint8Array(Y.encodeStateAsUpdate(pageDoc));
 
+    const pageChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: pageId,
+      state: pageState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: pageVersionId,
+    };
+
     const channelId = generateId(IdType.Channel);
     const channelIndex = generateNodeIndex(pageIndex, null);
+    const channelVersionId = generateId(IdType.Version);
     const channelDoc = new Y.Doc({
       guid: channelId,
     });
@@ -79,6 +103,15 @@ export class SpaceCreateMutationHandler
     const channelAttributes = JSON.stringify(channelAttributesMap.toJSON());
     const channelState = fromUint8Array(Y.encodeStateAsUpdate(channelDoc));
 
+    const channelChangeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: channelId,
+      state: channelState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: channelVersionId,
+    };
+
     await workspaceDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('nodes')
@@ -89,7 +122,7 @@ export class SpaceCreateMutationHandler
             state: spaceState,
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: generateId(IdType.Version),
+            version_id: spaceVersionId,
           },
           {
             id: pageId,
@@ -97,7 +130,7 @@ export class SpaceCreateMutationHandler
             state: pageState,
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: generateId(IdType.Version),
+            version_id: pageVersionId,
           },
           {
             id: channelId,
@@ -105,7 +138,25 @@ export class SpaceCreateMutationHandler
             state: channelState,
             created_at: new Date().toISOString(),
             created_by: input.userId,
-            version_id: generateId(IdType.Version),
+            version_id: channelVersionId,
+          },
+        ])
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values([
+          {
+            data: JSON.stringify(spaceChangeData),
+            created_at: createdAt,
+          },
+          {
+            data: JSON.stringify(pageChangeData),
+            created_at: createdAt,
+          },
+          {
+            data: JSON.stringify(channelChangeData),
+            created_at: createdAt,
           },
         ])
         .execute();
@@ -119,6 +170,11 @@ export class SpaceCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

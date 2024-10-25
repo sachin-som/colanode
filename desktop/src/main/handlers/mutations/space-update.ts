@@ -5,6 +5,7 @@ import { SpaceUpdateMutationInput } from '@/operations/mutations/space-update';
 import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import { LocalNodeAttributes } from '@/types/nodes';
+import { LocalUpdateNodeChangeData } from '@/types/sync';
 
 export class SpaceUpdateMutationHandler
   implements MutationHandler<SpaceUpdateMutationInput>
@@ -30,42 +31,68 @@ export class SpaceUpdateMutationHandler
       };
     }
 
-    const spaceDoc = new Y.Doc({
+    const versionId = generateId(IdType.Version);
+    const updatedAt = new Date().toISOString();
+    const updates: string[] = [];
+
+    const doc = new Y.Doc({
       guid: space.id,
     });
+    Y.applyUpdate(doc, toUint8Array(space.state));
 
-    Y.applyUpdate(spaceDoc, toUint8Array(space.state));
+    doc.on('update', (update) => {
+      updates.push(fromUint8Array(update));
+    });
 
-    const attributes: LocalNodeAttributes = JSON.parse(space.attributes);
-    const spaceAttributesMap = spaceDoc.getMap('attributes');
-    spaceDoc.transact(() => {
-      if (input.name !== attributes.name) {
-        spaceAttributesMap.set('name', input.name);
+    const currentAttributes: LocalNodeAttributes = JSON.parse(space.attributes);
+    const attributesMap = doc.getMap('attributes');
+    doc.transact(() => {
+      if (input.name !== currentAttributes.name) {
+        attributesMap.set('name', input.name);
       }
 
-      if (input.description !== attributes.description) {
-        spaceAttributesMap.set('description', input.description);
+      if (input.description !== currentAttributes.description) {
+        attributesMap.set('description', input.description);
       }
 
-      if (input.avatar !== attributes.avatar) {
-        spaceAttributesMap.set('avatar', input.avatar);
+      if (input.avatar !== currentAttributes.avatar) {
+        attributesMap.set('avatar', input.avatar);
       }
     });
 
-    const spaceAttributes = JSON.stringify(spaceAttributesMap.toJSON());
-    const spaceState = fromUint8Array(Y.encodeStateAsUpdate(spaceDoc));
+    const attributes = JSON.stringify(attributesMap.toJSON());
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
 
-    await workspaceDatabase
-      .updateTable('nodes')
-      .set({
-        attributes: spaceAttributes,
-        state: spaceState,
-        updated_at: new Date().toISOString(),
-        updated_by: input.userId,
-        version_id: generateId(IdType.Version),
-      })
-      .where('id', '=', space.id)
-      .execute();
+    const changeData: LocalUpdateNodeChangeData = {
+      type: 'node_update',
+      id: space.id,
+      updatedAt: updatedAt,
+      updatedBy: input.userId,
+      versionId: versionId,
+      updates: updates,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('nodes')
+        .set({
+          attributes: attributes,
+          state: encodedState,
+          updated_at: updatedAt,
+          updated_by: input.userId,
+          version_id: versionId,
+        })
+        .where('id', '=', input.id)
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: updatedAt,
+        })
+        .execute();
+    });
 
     return {
       output: {
@@ -75,6 +102,11 @@ export class SpaceUpdateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

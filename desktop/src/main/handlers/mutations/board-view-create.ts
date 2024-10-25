@@ -1,10 +1,13 @@
+import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
-import { buildCreateNode, generateNodeIndex } from '@/lib/nodes';
+import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { BoardViewCreateMutationInput } from '@/operations/mutations/board-view-create';
+import { fromUint8Array } from 'js-base64';
+import { LocalCreateNodeChangeData } from '@/types/sync';
 
 export class BoardViewCreateMutationHandler
   implements MutationHandler<BoardViewCreateMutationInput>
@@ -35,24 +38,55 @@ export class BoardViewCreateMutationHandler
         : null;
 
     const id = generateId(IdType.BoardView);
-    await workspaceDatabase
-      .insertInto('nodes')
-      .values(
-        buildCreateNode(
-          {
-            id: id,
-            attributes: {
-              type: NodeTypes.BoardView,
-              parentId: input.databaseId,
-              index: generateNodeIndex(maxIndex, null),
-              name: input.name,
-              groupBy: input.groupBy,
-            },
-          },
-          input.userId,
-        ),
-      )
-      .execute();
+    const versionId = generateId(IdType.Version);
+    const createdAt = new Date().toISOString();
+
+    const doc = new Y.Doc({
+      guid: id,
+    });
+
+    const attributesMap = doc.getMap('attributes');
+    doc.transact(() => {
+      attributesMap.set('type', NodeTypes.BoardView);
+      attributesMap.set('parentId', input.databaseId);
+      attributesMap.set('index', generateNodeIndex(maxIndex, null));
+      attributesMap.set('name', input.name);
+      attributesMap.set('groupBy', input.groupBy);
+    });
+
+    const attributes = JSON.stringify(attributesMap.toJSON());
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    const changeData: LocalCreateNodeChangeData = {
+      type: 'node_create',
+      id: id,
+      state: encodedState,
+      createdAt: createdAt,
+      createdBy: input.userId,
+      versionId: versionId,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('nodes')
+        .values({
+          id: id,
+          attributes: attributes,
+          state: encodedState,
+          created_at: createdAt,
+          created_by: input.userId,
+          version_id: versionId,
+        })
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: createdAt,
+        })
+        .execute();
+    });
 
     return {
       output: {

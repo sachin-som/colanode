@@ -4,6 +4,7 @@ import { NodeReactionDeleteMutationInput } from '@/operations/mutations/node-rea
 import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import { generateId, IdType } from '@/lib/id';
+import { LocalUpdateNodeChangeData } from '@/types/sync';
 
 export class NodeReactionDeleteMutationHandler
   implements MutationHandler<NodeReactionDeleteMutationInput>
@@ -25,11 +26,18 @@ export class NodeReactionDeleteMutationHandler
       throw new Error('Node not found');
     }
 
+    const versionId = generateId(IdType.Version);
+    const updatedAt = new Date().toISOString();
+    const updates: string[] = [];
+
     const doc = new Y.Doc({
       guid: node.id,
     });
-
     Y.applyUpdate(doc, toUint8Array(node.state));
+
+    doc.on('update', (update) => {
+      updates.push(fromUint8Array(update));
+    });
 
     const attributesMap = doc.getMap('attributes');
 
@@ -60,17 +68,36 @@ export class NodeReactionDeleteMutationHandler
       return;
     }
 
-    await workspaceDatabase
-      .updateTable('nodes')
-      .set({
-        attributes: attributes,
-        state: encodedState,
-        updated_at: new Date().toISOString(),
-        updated_by: input.userId,
-        version_id: generateId(IdType.Version),
-      })
-      .where('id', '=', node.id)
-      .execute();
+    const changeData: LocalUpdateNodeChangeData = {
+      type: 'node_update',
+      id: node.id,
+      updatedAt: updatedAt,
+      updatedBy: input.userId,
+      versionId: versionId,
+      updates: updates,
+    };
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('nodes')
+        .set({
+          attributes: attributes,
+          state: encodedState,
+          updated_at: updatedAt,
+          updated_by: input.userId,
+          version_id: versionId,
+        })
+        .where('id', '=', input.nodeId)
+        .execute();
+
+      await trx
+        .insertInto('changes')
+        .values({
+          data: JSON.stringify(changeData),
+          created_at: updatedAt,
+        })
+        .execute();
+    });
 
     return {
       output: {
@@ -80,6 +107,11 @@ export class NodeReactionDeleteMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

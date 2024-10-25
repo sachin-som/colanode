@@ -4,6 +4,7 @@ import { createContext, useContext } from 'react';
 interface TableViewContext {
   id: string;
   name: string;
+  avatar: string | null;
   fields: FieldNode[];
   hideField: (id: string) => void;
   showField: (id: string) => void;

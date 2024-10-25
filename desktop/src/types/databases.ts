@@ -11,6 +11,7 @@ export type ViewNode = TableViewNode | BoardViewNode | CalendarViewNode;
 export type TableViewNode = {
   id: string;
   name: string;
+  avatar: string | null;
   type: 'table_view';
   hiddenFields: string[];
   fieldIndexes: Record<string, string>;
@@ -24,6 +25,7 @@ export type TableViewNode = {
 export type BoardViewNode = {
   id: string;
   name: string;
+  avatar: string | null;
   type: 'board_view';
   filters: ViewFilter[];
   sorts: ViewSort[];
@@ -33,6 +35,7 @@ export type BoardViewNode = {
 export type CalendarViewNode = {
   id: string;
   name: string;
+  avatar: string | null;
   type: 'calendar_view';
   filters: ViewFilter[];
   sorts: ViewSort[];

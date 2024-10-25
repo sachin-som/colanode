@@ -62,6 +62,7 @@ export const TableView = ({ node }: TableViewProps) => {
       value={{
         id: node.id,
         name: node.name,
+        avatar: node.avatar,
         fields,
         hideField: (id: string) => {
           if (hiddenFields.includes(id)) {

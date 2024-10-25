@@ -119,6 +119,7 @@ export class DatabaseViewListQueryHandler
 
   private buildTableViewNode = (node: LocalNode): TableViewNode => {
     const name = node.attributes.name;
+    const avatar = node.attributes.avatar;
     const hiddenFields = node.attributes.hiddenFields;
     const fieldIndexes = node.attributes.fieldIndexes;
     const fieldWidths = node.attributes.fieldWidths;
@@ -130,6 +131,7 @@ export class DatabaseViewListQueryHandler
     return {
       id: node.id,
       name: name ?? 'Unnamed',
+      avatar,
       type: 'table_view',
       hiddenFields,
       fieldIndexes,
@@ -143,6 +145,7 @@ export class DatabaseViewListQueryHandler
 
   private buildBoardViewNode = (node: LocalNode): BoardViewNode => {
     const name = node.attributes.name;
+    const avatar = node.attributes.avatar;
     const groupBy = node.attributes.groupBy;
     const viewFilters = node.attributes.filters;
     const viewSorts = node.attributes.sorts;
@@ -150,6 +153,7 @@ export class DatabaseViewListQueryHandler
     return {
       id: node.id,
       name: name ?? 'Unnamed',
+      avatar,
       type: 'board_view',
       filters: viewFilters ?? [],
       sorts: viewSorts ?? [],
@@ -159,6 +163,7 @@ export class DatabaseViewListQueryHandler
 
   private buildCalendarViewNode = (node: LocalNode): CalendarViewNode => {
     const name = node.attributes.name;
+    const avatar = node.attributes.avatar;
     const groupBy = node.attributes.groupBy;
 
     const viewFilters = node.attributes.filters;
@@ -167,6 +172,7 @@ export class DatabaseViewListQueryHandler
     return {
       id: node.id,
       name: name ?? 'Unnamed',
+      avatar,
       type: 'calendar_view',
       filters: viewFilters ?? [],
       sorts: viewSorts ?? [],

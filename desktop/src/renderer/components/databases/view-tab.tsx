@@ -20,7 +20,7 @@ export const ViewTab = ({ view, isActive, onClick }: ViewTabProps) => {
       onClick={() => onClick()}
       onKeyDown={() => onClick()}
     >
-      <Avatar id={view.id} name={view.name} size="small" />
+      <Avatar id={view.id} name={view.name} avatar={view.avatar} size="small" />
       {view.name}
     </div>
   );

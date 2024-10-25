@@ -20,6 +20,9 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { ViewDeleteDialog } from '@/renderer/components/databases/view-delete-dialog';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { AvatarPopover } from '@/renderer/components/avatars/avatar-popover';
+import { Button } from '@/renderer/components/ui/button';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 
 export const TableViewSettingsPopover = () => {
   const workspace = useWorkspace();
@@ -44,23 +47,50 @@ export const TableViewSettingsPopover = () => {
           </div>
         </PopoverTrigger>
         <PopoverContent className="mr-4 flex w-[600px] flex-col gap-1.5 p-2">
-          <SmartTextInput
-            value={tableView.name}
-            onChange={(newName) => {
-              if (isPending) return;
-              if (newName === tableView.name) return;
+          <div className="flex flex-row items-center gap-2">
+            <AvatarPopover
+              onPick={(avatar) => {
+                if (isPending) return;
+                if (avatar === tableView.avatar) return;
 
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: tableView.id,
-                  attribute: 'name',
-                  value: newName,
-                  userId: workspace.userId,
-                },
-              });
-            }}
-          />
+                mutate({
+                  input: {
+                    type: 'node_attribute_set',
+                    nodeId: tableView.id,
+                    attribute: 'avatar',
+                    value: avatar,
+                    userId: workspace.userId,
+                  },
+                });
+              }}
+            >
+              <Button variant="outline" size="icon">
+                <Avatar
+                  id={tableView.id}
+                  name={tableView.name}
+                  avatar={tableView.avatar}
+                  className="h-6 w-6"
+                />
+              </Button>
+            </AvatarPopover>
+            <SmartTextInput
+              value={tableView.name}
+              onChange={(newName) => {
+                if (isPending) return;
+                if (newName === tableView.name) return;
+
+                mutate({
+                  input: {
+                    type: 'node_attribute_set',
+                    nodeId: tableView.id,
+                    attribute: 'name',
+                    value: newName,
+                    userId: workspace.userId,
+                  },
+                });
+              }}
+            />
+          </div>
           <Separator />
           <div className="flex flex-col gap-2 text-sm">
             <p className="my-1 font-semibold">Fields</p>

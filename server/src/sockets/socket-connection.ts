@@ -136,6 +136,10 @@ export class SocketConnection {
       .where('account_id', '=', this.accountId)
       .execute();
 
+    if (users.length === 0) {
+      return;
+    }
+
     const userIds = users.map((user) => user.id);
     const nodes = await database
       .selectFrom('node_collaborators')

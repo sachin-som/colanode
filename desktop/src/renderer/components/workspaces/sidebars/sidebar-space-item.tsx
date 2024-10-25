@@ -31,6 +31,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { FolderCreateDialog } from '@/renderer/components/folders/folder-create-dialog';
+import { SpaceSettingsDialog } from '@/renderer/components/spaces/space-settings-dialog';
 
 interface SettingsState {
   open: boolean;
@@ -187,6 +188,18 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
           spaceId={node.id}
           open={openCreateFolder}
           onOpenChange={setOpenCreateFolder}
+        />
+      )}
+      {settingsState.open && (
+        <SpaceSettingsDialog
+          id={node.id}
+          name={node.name}
+          avatar={node.avatar}
+          open={settingsState.open}
+          onOpenChange={(open) =>
+            setSettingsState({ open, tab: settingsState.tab })
+          }
+          defaultTab={settingsState.tab}
         />
       )}
     </React.Fragment>

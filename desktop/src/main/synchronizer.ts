@@ -142,59 +142,63 @@ class Synchronizer {
       credentials.userId,
     );
 
-    const changes = await workspaceDatabase
-      .selectFrom('changes')
-      .selectAll()
-      .orderBy('id asc')
-      .limit(20)
-      .execute();
+    let hasMoreChanges = true;
+    while (hasMoreChanges) {
+      const changes = await workspaceDatabase
+        .selectFrom('changes')
+        .selectAll()
+        .orderBy('id asc')
+        .limit(20)
+        .execute();
 
-    if (changes.length === 0) {
-      return;
-    }
-
-    const { data } = await httpClient.post<ServerSyncResponse>(
-      `/v1/sync/${credentials.workspaceId}`,
-      {
-        changes: changes,
-      },
-      {
-        serverDomain: credentials.serverDomain,
-        serverAttributes: credentials.serverAttributes,
-        token: credentials.token,
-      },
-    );
-
-    const syncedChangeIds: number[] = [];
-    const unsyncedChangeIds: number[] = [];
-    for (const result of data.results) {
-      if (result.status === 'success') {
-        syncedChangeIds.push(result.id);
-      } else {
-        unsyncedChangeIds.push(result.id);
+      if (changes.length === 0) {
+        hasMoreChanges = false;
+        break;
       }
-    }
 
-    if (syncedChangeIds.length > 0) {
-      await workspaceDatabase
-        .deleteFrom('changes')
-        .where('id', 'in', syncedChangeIds)
-        .execute();
-    }
+      const { data } = await httpClient.post<ServerSyncResponse>(
+        `/v1/sync/${credentials.workspaceId}`,
+        {
+          changes: changes,
+        },
+        {
+          serverDomain: credentials.serverDomain,
+          serverAttributes: credentials.serverAttributes,
+          token: credentials.token,
+        },
+      );
 
-    if (unsyncedChangeIds.length > 0) {
-      await workspaceDatabase
-        .updateTable('changes')
-        .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
-        .where('id', 'in', unsyncedChangeIds)
-        .execute();
+      const syncedChangeIds: number[] = [];
+      const unsyncedChangeIds: number[] = [];
+      for (const result of data.results) {
+        if (result.status === 'success') {
+          syncedChangeIds.push(result.id);
+        } else {
+          unsyncedChangeIds.push(result.id);
+        }
+      }
 
-      //we just delete changes that have failed to sync for more than 5 times.
-      //in the future we might need to revert the change locally.
-      await workspaceDatabase
-        .deleteFrom('changes')
-        .where('retry_count', '>=', 5)
-        .execute();
+      if (syncedChangeIds.length > 0) {
+        await workspaceDatabase
+          .deleteFrom('changes')
+          .where('id', 'in', syncedChangeIds)
+          .execute();
+      }
+
+      if (unsyncedChangeIds.length > 0) {
+        await workspaceDatabase
+          .updateTable('changes')
+          .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
+          .where('id', 'in', unsyncedChangeIds)
+          .execute();
+
+        //we just delete changes that have failed to sync for more than 5 times.
+        //in the future we might need to revert the change locally.
+        await workspaceDatabase
+          .deleteFrom('changes')
+          .where('retry_count', '>=', 5)
+          .execute();
+      }
     }
   }
 }

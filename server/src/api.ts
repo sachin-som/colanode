@@ -15,7 +15,11 @@ export const initApi = () => {
   const app = express();
   const port = 3000;
 
-  app.use(express.json());
+  app.use(
+    express.json({
+      limit: '50mb',
+    }),
+  );
   app.use(cors());
 
   app.get('/', (_: Request, res: Response) => {

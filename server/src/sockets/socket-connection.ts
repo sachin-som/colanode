@@ -13,12 +13,14 @@ export class SocketConnection {
   private readonly accountId: string;
   private readonly deviceId: string;
   private readonly workspaceUsers: WorkspaceUser[];
+  private readonly pendingSyncs: Set<string>;
 
   constructor(socket: WebSocket, account: NeuronRequestAccount) {
     this.socket = socket;
     this.accountId = account.id;
     this.deviceId = account.deviceId;
     this.workspaceUsers = [];
+    this.pendingSyncs = new Set();
 
     socket.on('message', (message) => {
       this.handleMessage(message.toString());
@@ -71,6 +73,7 @@ export class SocketConnection {
     const messageInput: MessageInput = JSON.parse(message);
     console.log(messageInput);
     if (messageInput.type === 'local_node_sync') {
+      this.pendingSyncs.delete(messageInput.nodeId);
       await database
         .insertInto('node_device_states')
         .values({
@@ -90,12 +93,21 @@ export class SocketConnection {
           }),
         )
         .execute();
+
+      if (this.pendingSyncs.size === 0) {
+        this.sendPendingChanges();
+      }
     } else if (messageInput.type === 'local_node_delete') {
+      this.pendingSyncs.delete(messageInput.nodeId);
       await database
         .deleteFrom('node_device_states')
         .where('device_id', '=', this.deviceId)
         .where('node_id', '=', messageInput.nodeId)
         .execute();
+
+      if (this.pendingSyncs.size === 0) {
+        this.sendPendingChanges();
+      }
     }
   }
 
@@ -147,13 +159,12 @@ export class SocketConnection {
       .limit(100)
       .execute();
 
-    console.log('unsyncedNodes', unsyncedNodes);
-
     if (unsyncedNodes.length === 0) {
       return;
     }
 
     for (const row of unsyncedNodes) {
+      this.pendingSyncs.add(row.node_id);
       if (row.id === null) {
         this.send({
           type: 'server_node_delete',

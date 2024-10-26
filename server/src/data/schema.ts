@@ -23,6 +23,28 @@ export type SelectAccount = Selectable<AccountTable>;
 export type CreateAccount = Insertable<AccountTable>;
 export type UpdateAccount = Updateable<AccountTable>;
 
+interface DeviceTable {
+  id: ColumnType<string, string, never>;
+  account_id: ColumnType<string, string, never>;
+  token_hash: ColumnType<string, string, string>;
+  token_salt: ColumnType<string, string, string>;
+  token_generated_at: ColumnType<Date, Date, Date>;
+  previous_token_hash: ColumnType<string | null, string | null, string | null>;
+  previous_token_salt: ColumnType<string | null, string | null, string | null>;
+  type: ColumnType<number, number, number>;
+  version: ColumnType<string, string, string>;
+  platform: ColumnType<string | null, string | null, string | null>;
+  cpu: ColumnType<string | null, string | null, string | null>;
+  hostname: ColumnType<string | null, string | null, string | null>;
+  created_at: ColumnType<Date, Date, never>;
+  last_online_at: ColumnType<Date | null, Date | null, Date>;
+  last_active_at: ColumnType<Date | null, Date | null, Date>;
+}
+
+export type SelectDevice = Selectable<DeviceTable>;
+export type CreateDevice = Insertable<DeviceTable>;
+export type UpdateDevice = Updateable<DeviceTable>;
+
 interface WorkspaceTable {
   id: ColumnType<string, string, never>;
   name: ColumnType<string, string, string>;
@@ -106,48 +128,45 @@ export type SelectNodeCollaborator = Selectable<NodeCollaboratorTable>;
 export type CreateNodeCollaborator = Insertable<NodeCollaboratorTable>;
 export type UpdateNodeCollaborator = Updateable<NodeCollaboratorTable>;
 
-interface DeviceTable {
-  id: ColumnType<string, string, never>;
-  account_id: ColumnType<string, string, never>;
-  token_hash: ColumnType<string, string, string>;
-  token_salt: ColumnType<string, string, string>;
-  token_generated_at: ColumnType<Date, Date, Date>;
-  previous_token_hash: ColumnType<string | null, string | null, string | null>;
-  previous_token_salt: ColumnType<string | null, string | null, string | null>;
-  type: ColumnType<number, number, number>;
-  version: ColumnType<string, string, string>;
-  platform: ColumnType<string | null, string | null, string | null>;
-  cpu: ColumnType<string | null, string | null, string | null>;
-  hostname: ColumnType<string | null, string | null, string | null>;
-  created_at: ColumnType<Date, Date, never>;
-  last_online_at: ColumnType<Date | null, Date | null, Date>;
-  last_active_at: ColumnType<Date | null, Date | null, Date>;
-}
-
-export type SelectDevice = Selectable<DeviceTable>;
-export type CreateDevice = Insertable<DeviceTable>;
-export type UpdateDevice = Updateable<DeviceTable>;
-
-interface DeviceNodeVersionTable {
-  device_id: ColumnType<string, string, never>;
+interface NodeUserStateTable {
   node_id: ColumnType<string, string, never>;
-  version_id: ColumnType<string, string, string>;
+  user_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  synced_at: ColumnType<Date | null, Date | null, Date>;
+  last_seen_version_id: ColumnType<string | null, string | null, string | null>;
+  last_seen_at: ColumnType<Date | null, Date | null, Date>;
+  mentions_count: ColumnType<number, number, number>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date>;
   access_removed_at: ColumnType<Date | null, Date | null, Date>;
+  version_id: ColumnType<string, string, string>;
 }
 
-export type SelectDeviceNodeVersion = Selectable<DeviceNodeVersionTable>;
-export type CreateDeviceNodeVersion = Insertable<DeviceNodeVersionTable>;
-export type UpdateDeviceNodeVersion = Updateable<DeviceNodeVersionTable>;
+export type SelectNodeUserState = Selectable<NodeUserStateTable>;
+export type CreateNodeUserState = Insertable<NodeUserStateTable>;
+export type UpdateNodeUserState = Updateable<NodeUserStateTable>;
+
+interface NodeDeviceStateTable {
+  node_id: ColumnType<string, string, never>;
+  device_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, string>;
+  node_version_id: ColumnType<string | null, string | null, string | null>;
+  user_state_version_id: ColumnType<
+    string | null,
+    string | null,
+    string | null
+  >;
+  node_synced_at: ColumnType<Date | null, Date | null, Date>;
+  user_state_synced_at: ColumnType<Date | null, Date | null, Date>;
+}
 
 export interface DatabaseSchema {
   accounts: AccountTable;
+  devices: DeviceTable;
   workspaces: WorkspaceTable;
   workspace_users: WorkspaceUserTable;
   nodes: NodeTable;
   node_paths: NodePathTable;
   node_collaborators: NodeCollaboratorTable;
-  devices: DeviceTable;
-  device_node_versions: DeviceNodeVersionTable;
+  node_user_states: NodeUserStateTable;
+  node_device_states: NodeDeviceStateTable;
 }

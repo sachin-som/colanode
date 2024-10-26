@@ -115,6 +115,7 @@ export class ServerNodeSyncMutationHandler
       type: 'local_node_sync',
       nodeId: input.id,
       versionId: input.versionId,
+      workspaceId: input.workspaceId,
     });
 
     return {

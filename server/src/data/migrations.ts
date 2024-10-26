@@ -20,6 +20,32 @@ const createAccountsTable: Migration = {
   },
 };
 
+const createDevicesTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('devices')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('token_hash', 'varchar(100)', (col) => col.notNull())
+      .addColumn('token_salt', 'varchar(100)', (col) => col.notNull())
+      .addColumn('token_generated_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('previous_token_hash', 'varchar(100)')
+      .addColumn('previous_token_salt', 'varchar(100)')
+      .addColumn('type', 'integer', (col) => col.notNull())
+      .addColumn('version', 'varchar(30)', (col) => col.notNull())
+      .addColumn('platform', 'varchar(30)')
+      .addColumn('cpu', 'varchar(30)')
+      .addColumn('hostname', 'varchar(30)')
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('last_online_at', 'timestamptz')
+      .addColumn('last_active_at', 'timestamptz')
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('devices').execute();
+  },
+};
+
 const createWorkspacesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -255,62 +281,60 @@ const createNodeCollaboratorsTable: Migration = {
   },
 };
 
-const createDevicesTable: Migration = {
+const createNodeUserStatesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('devices')
-      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('token_hash', 'varchar(100)', (col) => col.notNull())
-      .addColumn('token_salt', 'varchar(100)', (col) => col.notNull())
-      .addColumn('token_generated_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('previous_token_hash', 'varchar(100)')
-      .addColumn('previous_token_salt', 'varchar(100)')
-      .addColumn('type', 'integer', (col) => col.notNull())
-      .addColumn('version', 'varchar(30)', (col) => col.notNull())
-      .addColumn('platform', 'varchar(30)')
-      .addColumn('cpu', 'varchar(30)')
-      .addColumn('hostname', 'varchar(30)')
+      .createTable('node_user_states')
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('last_seen_version_id', 'varchar(30)')
+      .addColumn('last_seen_at', 'timestamptz')
+      .addColumn('mentions_count', 'integer', (col) =>
+        col.notNull().defaultTo(0),
+      )
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('last_online_at', 'timestamptz')
-      .addColumn('last_active_at', 'timestamptz')
+      .addColumn('updated_at', 'timestamptz')
+      .addColumn('access_removed_at', 'timestamptz')
+      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addPrimaryKeyConstraint('node_user_states_pkey', ['node_id', 'user_id'])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('devices').execute();
+    await db.schema.dropTable('node_user_states').execute();
   },
 };
 
-const createDeviceNodeVersionTable: Migration = {
+const createNodeDeviceStatesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('device_node_versions')
-      .addColumn('device_id', 'varchar(30)', (col) =>
-        col.notNull().references('devices.id').onDelete('cascade'),
-      )
+      .createTable('node_device_states')
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('synced_at', 'timestamptz')
-      .addColumn('access_removed_at', 'timestamptz')
-      .addPrimaryKeyConstraint('device_node_versions_pkey', [
-        'device_id',
+      .addColumn('node_version_id', 'varchar(30)')
+      .addColumn('user_state_version_id', 'varchar(30)')
+      .addColumn('node_synced_at', 'timestamptz')
+      .addColumn('user_state_synced_at', 'timestamptz')
+      .addPrimaryKeyConstraint('node_device_states_pkey', [
         'node_id',
+        'device_id',
       ])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('device_node_versions').execute();
+    await db.schema.dropTable('node_device_states').execute();
   },
 };
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
-  '00002_create_workspaces_table': createWorkspacesTable,
-  '00003_create_workspace_users_table': createWorkspaceUsersTable,
-  '00004_create_nodes_table': createNodesTable,
-  '00005_create_node_paths_table': createNodePathsTable,
-  '00006_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00007_create_devices_table': createDevicesTable,
-  '00008_create_device_node_version_table': createDeviceNodeVersionTable,
+  '00002_create_devices_table': createDevicesTable,
+  '00003_create_workspaces_table': createWorkspacesTable,
+  '00004_create_workspace_users_table': createWorkspaceUsersTable,
+  '00005_create_nodes_table': createNodesTable,
+  '00006_create_node_paths_table': createNodePathsTable,
+  '00007_create_node_collaborators_table': createNodeCollaboratorsTable,
+  '00008_create_node_user_states_table': createNodeUserStatesTable,
+  '00009_create_node_device_states_table': createNodeDeviceStatesTable,
 };

@@ -3,15 +3,22 @@ import { MessageInput } from '@/messages';
 import { NeuronRequestAccount } from '@/types/api';
 import { WebSocket } from 'ws';
 
+interface WorkspaceUser {
+  workspaceId: string;
+  userId: string;
+}
+
 export class SocketConnection {
   private readonly socket: WebSocket;
   private readonly accountId: string;
   private readonly deviceId: string;
+  private readonly workspaceUsers: WorkspaceUser[];
 
   constructor(socket: WebSocket, account: NeuronRequestAccount) {
     this.socket = socket;
     this.accountId = account.id;
     this.deviceId = account.deviceId;
+    this.workspaceUsers = [];
 
     socket.on('message', (message) => {
       this.handleMessage(message.toString());
@@ -23,11 +30,32 @@ export class SocketConnection {
   }
 
   public init(): void {
-    this.sendPendingChanges();
+    this.fetchWorkspaceUsers().then(() => {
+      this.sendPendingChanges();
+    });
   }
 
   public getDeviceId(): string {
     return this.deviceId;
+  }
+
+  public getWorkspaceUsers(): WorkspaceUser[] {
+    return this.workspaceUsers;
+  }
+
+  private async fetchWorkspaceUsers(): Promise<void> {
+    const workspaceUsers = await database
+      .selectFrom('workspace_users')
+      .selectAll()
+      .where('account_id', '=', this.accountId)
+      .execute();
+
+    for (const workspaceUser of workspaceUsers) {
+      this.workspaceUsers.push({
+        workspaceId: workspaceUser.workspace_id,
+        userId: workspaceUser.id,
+      });
+    }
   }
 
   private async handleMessage(message: string): Promise<void> {
@@ -35,28 +63,52 @@ export class SocketConnection {
     console.log(messageInput);
     if (messageInput.type === 'local_node_sync') {
       await database
-        .updateTable('device_node_versions')
-        .set({
-          version_id: messageInput.versionId,
-          synced_at: new Date(),
+        .insertInto('node_device_states')
+        .values({
+          node_id: messageInput.nodeId,
+          device_id: this.deviceId,
+          node_version_id: messageInput.versionId,
+          user_state_version_id: null,
+          user_state_synced_at: null,
+          workspace_id: messageInput.workspaceId,
+          node_synced_at: new Date(),
         })
-        .where('device_id', '=', this.deviceId)
-        .where('node_id', '=', messageInput.nodeId)
+        .onConflict((cb) =>
+          cb.columns(['node_id', 'device_id']).doUpdateSet({
+            workspace_id: messageInput.workspaceId,
+            node_version_id: messageInput.versionId,
+            node_synced_at: new Date(),
+          }),
+        )
         .execute();
     } else if (messageInput.type === 'local_node_delete') {
       await database
-        .deleteFrom('device_node_versions')
+        .deleteFrom('node_device_states')
         .where('device_id', '=', this.deviceId)
         .where('node_id', '=', messageInput.nodeId)
-        .where('workspace_id', '=', messageInput.workspaceId)
         .execute();
     }
   }
 
   private async sendPendingChanges() {
+    const userIds = this.workspaceUsers.map(
+      (workspaceUser) => workspaceUser.userId,
+    );
+
+    if (userIds.length === 0) {
+      return;
+    }
+
+    console.log('userIds', userIds);
+
     const unsyncedNodes = await database
-      .selectFrom('device_node_versions as dnv')
-      .leftJoin('nodes as n', 'n.id', 'dnv.node_id')
+      .selectFrom('node_user_states as nus')
+      .leftJoin('nodes as n', 'n.id', 'nus.node_id')
+      .leftJoin('node_device_states as nds', (join) =>
+        join
+          .onRef('nds.node_id', '=', 'n.id')
+          .on('nds.device_id', '=', this.deviceId),
+      )
       .select([
         'n.id',
         'n.state',
@@ -66,24 +118,27 @@ export class SocketConnection {
         'n.updated_by',
         'n.server_created_at',
         'n.server_updated_at',
-        'dnv.access_removed_at',
+        'nus.access_removed_at',
         'n.version_id',
-        'dnv.node_id',
-        'dnv.workspace_id',
+        'nus.node_id',
+        'nus.workspace_id',
       ])
       .where((eb) =>
         eb.and([
-          eb('dnv.device_id', '=', this.deviceId),
+          eb('nus.user_id', 'in', userIds),
           eb.or([
             eb('n.id', 'is', null),
-            eb('dnv.version_id', '!=', eb.ref('n.version_id')),
-            eb('dnv.access_removed_at', 'is not', null),
+            eb('nds.node_version_id', 'is', null),
+            eb('nds.node_version_id', '!=', eb.ref('n.version_id')),
+            eb('nus.access_removed_at', 'is not', null),
           ]),
         ]),
       )
       .orderBy('n.id', 'asc')
       .limit(100)
       .execute();
+
+    console.log('unsyncedNodes', unsyncedNodes);
 
     if (unsyncedNodes.length === 0) {
       return;

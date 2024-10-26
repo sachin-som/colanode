@@ -12,27 +12,34 @@ export const initChangesSubscriber = async () => {
 const handleEvent = async (event: string) => {
   const data: ServerNodeChangeEvent = JSON.parse(event);
 
-  const deviceIds: string[] = [];
+  const userDevices = new Map<string, string[]>();
   for (const connection of socketManager.getConnections()) {
-    deviceIds.push(connection.getDeviceId());
+    const workspaceUsers = connection.getWorkspaceUsers();
+    for (const workspaceUser of workspaceUsers) {
+      if (workspaceUser.workspaceId !== data.workspaceId) {
+        continue;
+      }
+
+      const userIds = userDevices.get(workspaceUser.userId) ?? [];
+      userIds.push(connection.getDeviceId());
+      userDevices.set(workspaceUser.userId, userIds);
+    }
   }
 
-  if (deviceIds.length === 0) {
+  const userIds = Array.from(userDevices.keys());
+  if (userIds.length === 0) {
     return;
   }
 
-  const nodeVersions = await database
-    .selectFrom('device_node_versions')
+  const nodeUserStates = await database
+    .selectFrom('node_user_states')
     .selectAll()
     .where((eb) =>
-      eb.and([
-        eb('device_id', 'in', deviceIds),
-        eb('node_id', '=', data.nodeId),
-      ]),
+      eb.and([eb('user_id', 'in', userIds), eb('node_id', '=', data.nodeId)]),
     )
     .execute();
 
-  if (nodeVersions.length === 0) {
+  if (nodeUserStates.length === 0) {
     return;
   }
 
@@ -52,32 +59,43 @@ const handleEvent = async (event: string) => {
     .where('id', '=', data.nodeId)
     .executeTakeFirst();
 
-  for (const nodeVersion of nodeVersions) {
-    const socketConnection = socketManager.getConnection(nodeVersion.device_id);
-    if (!socketConnection) {
+  if (!node) {
+    return;
+  }
+
+  for (const nodeUserState of nodeUserStates) {
+    const deviceIds = userDevices.get(nodeUserState.user_id) ?? [];
+    if (deviceIds.length === 0) {
       continue;
     }
 
-    if (nodeVersion.access_removed_at !== null || !node) {
-      socketConnection.send({
-        type: 'server_node_delete',
-        id: data.nodeId,
-        workspaceId: data.workspaceId,
-      });
-    } else {
-      socketConnection.send({
-        type: 'server_node_sync',
-        id: node.id,
-        workspaceId: data.workspaceId,
-        state: node.state!,
-        createdAt: node.created_at.toISOString(),
-        createdBy: node.created_by,
-        updatedAt: node.updated_at?.toISOString() ?? null,
-        updatedBy: node.updated_by ?? null,
-        serverCreatedAt: node.server_created_at.toISOString(),
-        serverUpdatedAt: node.server_updated_at?.toISOString() ?? null,
-        versionId: node.version_id,
-      });
+    for (const deviceId of deviceIds) {
+      const socketConnection = socketManager.getConnection(deviceId);
+      if (socketConnection === undefined) {
+        continue;
+      }
+
+      if (nodeUserState.access_removed_at !== null) {
+        socketConnection.send({
+          type: 'server_node_delete',
+          id: data.nodeId,
+          workspaceId: data.workspaceId,
+        });
+      } else {
+        socketConnection.send({
+          type: 'server_node_sync',
+          id: node.id,
+          workspaceId: data.workspaceId,
+          state: node.state!,
+          createdAt: node.created_at.toISOString(),
+          createdBy: node.created_by,
+          updatedAt: node.updated_at?.toISOString() ?? null,
+          updatedBy: node.updated_by ?? null,
+          serverCreatedAt: node.server_created_at.toISOString(),
+          serverUpdatedAt: node.server_updated_at?.toISOString() ?? null,
+          versionId: node.version_id,
+        });
+      }
     }
   }
 };

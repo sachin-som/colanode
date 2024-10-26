@@ -1,7 +1,8 @@
 import { database } from '@/data/database';
 import { CHANNEL_NAMES, redis } from '@/data/redis';
-import { CreateDeviceNodeVersion } from '@/data/schema';
+import { CreateNodeUserState } from '@/data/schema';
 import { NodeTypes } from '@/lib/constants';
+import { generateId, IdType } from '@/lib/id';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
 import {
   NodeCreatedEvent,
@@ -79,17 +80,20 @@ const handleNodeCreatedEvent = async (
     return;
   }
 
-  const deviceIds = await getDeviceIdsForCollaborators(collaboratorIds);
   await database
-    .insertInto('device_node_versions')
+    .insertInto('node_user_states')
     .values(
-      deviceIds.map((deviceId) => ({
-        device_id: deviceId,
+      collaboratorIds.map((collaboratorId) => ({
+        user_id: collaboratorId,
         node_id: event.id,
-        version_id: 'null',
+        last_seen_version_id: null,
         workspace_id: event.workspaceId,
-        synced_at: null,
+        last_seen_at: null,
+        mentions_count: 0,
+        created_at: new Date(),
         access_removed_at: null,
+        version_id: generateId(IdType.Version),
+        updated_at: null,
       })),
     )
     .onConflict((cb) => cb.doNothing())
@@ -115,7 +119,6 @@ const handleNodeUpdatedEvent = async (
   );
 
   if (addedCollaborators.length > 0) {
-    const deviceIds = await getDeviceIdsForCollaborators(addedCollaborators);
     const descendants = await database
       .selectFrom('node_paths')
       .select('descendant_id')
@@ -123,40 +126,41 @@ const handleNodeUpdatedEvent = async (
       .execute();
 
     const descendantIds = descendants.map((d) => d.descendant_id);
-    const deviceNodeVersionsToCreated: CreateDeviceNodeVersion[] = [];
-    for (const deviceId of deviceIds) {
+    const userStatesToCreated: CreateNodeUserState[] = [];
+    for (const collaboratorId of addedCollaborators) {
       for (const descendantId of descendantIds) {
-        deviceNodeVersionsToCreated.push({
-          device_id: deviceId,
+        userStatesToCreated.push({
+          user_id: collaboratorId,
           node_id: descendantId,
-          version_id: 'null',
+          last_seen_version_id: null,
           workspace_id: event.workspaceId,
-          synced_at: null,
+          last_seen_at: null,
+          mentions_count: 0,
+          created_at: new Date(),
           access_removed_at: null,
+          version_id: generateId(IdType.Version),
         });
       }
     }
 
-    if (deviceNodeVersionsToCreated.length > 0) {
+    if (userStatesToCreated.length > 0) {
       await database
-        .insertInto('device_node_versions')
-        .values(deviceNodeVersionsToCreated)
+        .insertInto('node_user_states')
+        .values(userStatesToCreated)
         .onConflict((cb) => cb.doNothing())
         .execute();
     }
   }
 
   if (removedCollaborators.length > 0) {
-    const deviceIds = await getDeviceIdsForCollaborators(removedCollaborators);
-
     await database
-      .updateTable('device_node_versions')
+      .updateTable('node_user_states')
       .set({
         access_removed_at: new Date(),
       })
       .where((eb) =>
         eb.and([
-          eb('device_id', 'in', deviceIds),
+          eb('user_id', 'in', removedCollaborators),
           eb(
             'node_id',
             'in',
@@ -185,19 +189,6 @@ const handleNodeDeletedEvent = async (
   event: NodeDeletedEvent,
 ): Promise<void> => {
   await publishChange(event.id, event.workspaceId);
-};
-
-const getDeviceIdsForCollaborators = async (
-  collaboratorIds: string[],
-): Promise<string[]> => {
-  const devices = await database
-    .selectFrom('devices as d')
-    .select('d.id')
-    .innerJoin('workspace_users as wu', 'd.account_id', 'wu.account_id')
-    .where('wu.id', 'in', collaboratorIds)
-    .execute();
-
-  return devices.map((d) => d.id);
 };
 
 const publishChange = async (

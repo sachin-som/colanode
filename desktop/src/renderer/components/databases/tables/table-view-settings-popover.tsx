@@ -64,7 +64,7 @@ export const TableViewSettingsPopover = () => {
                 });
               }}
             >
-              <Button variant="outline" size="icon">
+              <Button type="button" variant="outline" size="icon">
                 <Avatar
                   id={tableView.id}
                   name={tableView.name}

@@ -105,6 +105,7 @@ export const ChannelCreateDialog = ({
             </div>
             <DialogFooter>
               <Button
+                type="button"
                 variant="outline"
                 disabled={isPending}
                 onClick={handleCancel}

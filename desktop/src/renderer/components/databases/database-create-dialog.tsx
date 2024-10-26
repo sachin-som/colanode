@@ -100,7 +100,7 @@ export const DatabaseCreateDialog = ({
               />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCancel}>
+              <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

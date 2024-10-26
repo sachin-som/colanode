@@ -128,7 +128,12 @@ export const FieldCreatePopover = () => {
               <FieldAttrs />
             </div>
             <div className="mt-2 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-              <Button variant="outline" size="sm" onClick={handleCancelClick}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCancelClick}
+              >
                 Cancel
               </Button>
               <Button type="submit" size="sm" disabled={isPending}>

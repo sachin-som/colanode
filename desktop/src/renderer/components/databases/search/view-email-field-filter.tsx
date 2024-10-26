@@ -51,6 +51,7 @@ export const ViewEmailFieldFilter = ({
     >
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           className="border-dashed text-xs text-muted-foreground"

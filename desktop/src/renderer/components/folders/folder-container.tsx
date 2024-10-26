@@ -71,18 +71,18 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
       <div className="flex h-full max-h-full flex-col gap-4 overflow-y-auto px-10 pt-4">
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-2">
-            <Button variant="outline" onClick={openFileDialog}>
+            <Button type="button" variant="outline" onClick={openFileDialog}>
               <Icon name="upload-line" className="mr-1" /> Upload
             </Button>
           </div>
           <div className="flex flex-row gap-2">
-            <Button variant="outline" size="icon" disabled>
+            <Button type="button" variant="outline" size="icon" disabled>
               <Icon name="filter-line" />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button type="button" variant="outline" size="icon">
                   <Icon name={currentLayout?.icon} />
                 </Button>
               </DropdownMenuTrigger>

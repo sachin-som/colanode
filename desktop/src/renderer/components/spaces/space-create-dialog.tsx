@@ -56,6 +56,14 @@ export const SpaceCreateDialog = ({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isPending) {
+      return;
+    }
+
+    if (values.name.length < 3) {
+      return;
+    }
+
     mutate({
       input: {
         type: 'space_create',
@@ -116,7 +124,7 @@ export const SpaceCreateDialog = ({
               />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCancel}>
+              <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

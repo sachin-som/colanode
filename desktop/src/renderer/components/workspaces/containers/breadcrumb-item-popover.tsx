@@ -43,7 +43,7 @@ export const BreadcrumbItemPopover = ({
               });
             }}
           >
-            <Button variant="outline" size="icon">
+            <Button type="button" variant="outline" size="icon">
               <Avatar
                 size="small"
                 id={node.id}

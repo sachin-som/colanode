@@ -106,7 +106,7 @@ export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
         <div className="space-y-4 pb-4">
           <div className="flex flex-row items-end gap-4">
             <AvatarPopover onPick={(avatar) => form.setValue('avatar', avatar)}>
-              <Button variant="outline" size="icon">
+              <Button type="button" variant="outline" size="icon">
                 <Avatar
                   id={id}
                   name={name}

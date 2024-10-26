@@ -18,7 +18,7 @@ const Icon = React.forwardRef<SVGSVGElement, IconProps>((props, ref) => {
       width={computedSize}
       {...props}
     >
-      <use xlinkHref={`/assets/icons.svg#ri-${props.name}`} />
+      <use href={`asset://icons/sprite.svg#ri-${props.name}`} />
     </svg>
   );
 });

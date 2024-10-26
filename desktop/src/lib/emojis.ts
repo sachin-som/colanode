@@ -30,7 +30,7 @@ export const getEmojiById = (id: string): Emoji | undefined => {
 };
 
 export const getEmojiUrl = (id: string): string => {
-  return `/assets/emojis/${id}.svg`;
+  return `asset://emojis/${id}.svg`;
 };
 
 export const searchEmojis = (query: string): Emoji[] => {

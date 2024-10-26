@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow, protocol, dialog } from 'electron';
+import { app, ipcMain, BrowserWindow, protocol, dialog, net } from 'electron';
 import path from 'path';
 import { eventBus } from '@/lib/event-bus';
 import { MutationInput, MutationMap } from '@/operations/mutations';
@@ -52,6 +52,20 @@ const createWindow = async () => {
 
   protocol.handle('local-file', (request) => {
     return fileManager.handleFileRequest(request);
+  });
+
+  protocol.handle('asset', (request) => {
+    const url = request.url.replace('asset://', '');
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+      return net.fetch(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/assets/${url}`);
+    }
+
+    const localFileUrl = `file://${path.join(
+      process.resourcesPath,
+      'assets',
+      url,
+    )}`;
+    return net.fetch(localFileUrl);
   });
 };
 

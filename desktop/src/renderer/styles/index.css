@@ -86,7 +86,7 @@
 
 @font-face {
   font-family: 'neotrax';
-  src: url('/assets/neotrax.otf') format('truetype');
+  src: url('asset://fonts/neotrax.otf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

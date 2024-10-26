@@ -17,7 +17,7 @@ type IconPickerEmojiRow = {
 };
 
 export const getIconUrl = (id: string): string => {
-  return `/assets/icons/${id}.svg`;
+  return `asset://icons/${id}.svg`;
 };
 
 export const searchIcons = (query: string): Icon[] => {

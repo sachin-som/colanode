@@ -52,4 +52,5 @@ export type LocalNodeChangeData =
 export type ServerNodeChangeEvent = {
   workspaceId: string;
   nodeId: string;
+  type: 'node_create' | 'node_update' | 'node_delete';
 };

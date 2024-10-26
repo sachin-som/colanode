@@ -43,6 +43,15 @@ export class SocketConnection {
     return this.workspaceUsers;
   }
 
+  public addWorkspaceUser(workspaceUser: WorkspaceUser): void {
+    if (this.workspaceUsers.find((wu) => wu.userId === workspaceUser.userId)) {
+      return;
+    }
+
+    this.workspaceUsers.push(workspaceUser);
+    this.sendPendingChanges();
+  }
+
   private async fetchWorkspaceUsers(): Promise<void> {
     const workspaceUsers = await database
       .selectFrom('workspace_users')

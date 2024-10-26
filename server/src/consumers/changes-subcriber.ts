@@ -1,5 +1,6 @@
 import { database } from '@/data/database';
 import { redis, CHANNEL_NAMES } from '@/data/redis';
+import { getIdType, IdType } from '@/lib/id';
 import { socketManager } from '@/sockets/socket-manager';
 import { ServerNodeChangeEvent } from '@/types/sync';
 
@@ -11,6 +12,39 @@ export const initChangesSubscriber = async () => {
 
 const handleEvent = async (event: string) => {
   const data: ServerNodeChangeEvent = JSON.parse(event);
+  if (data.type === 'node_create') {
+    const id = data.nodeId;
+    const idType = getIdType(id);
+    if (idType === IdType.User) {
+      const workspaceUser = await database
+        .selectFrom('workspace_users')
+        .selectAll()
+        .where('id', '=', id)
+        .executeTakeFirst();
+
+      if (!workspaceUser) {
+        return;
+      }
+
+      const devices = await database
+        .selectFrom('devices')
+        .selectAll()
+        .where('account_id', '=', workspaceUser.account_id)
+        .execute();
+
+      for (const device of devices) {
+        const socketConnection = socketManager.getConnection(device.id);
+        if (socketConnection === undefined) {
+          continue;
+        }
+
+        socketConnection.addWorkspaceUser({
+          workspaceId: data.workspaceId,
+          userId: id,
+        });
+      }
+    }
+  }
 
   const userDevices = new Map<string, string[]>();
   for (const connection of socketManager.getConnections()) {

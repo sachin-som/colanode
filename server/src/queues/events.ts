@@ -99,7 +99,7 @@ const handleNodeCreatedEvent = async (
     .onConflict((cb) => cb.doNothing())
     .execute();
 
-  await publishChange(event.id, event.workspaceId);
+  await publishChange(event.id, event.workspaceId, 'node_create');
 };
 
 const handleNodeUpdatedEvent = async (
@@ -174,7 +174,7 @@ const handleNodeUpdatedEvent = async (
       .execute();
   }
 
-  await publishChange(event.id, event.workspaceId);
+  await publishChange(event.id, event.workspaceId, 'node_update');
 };
 
 const extractCollaboratorIds = (collaborators: ServerNodeAttributes) => {
@@ -188,16 +188,18 @@ const extractCollaboratorIds = (collaborators: ServerNodeAttributes) => {
 const handleNodeDeletedEvent = async (
   event: NodeDeletedEvent,
 ): Promise<void> => {
-  await publishChange(event.id, event.workspaceId);
+  await publishChange(event.id, event.workspaceId, 'node_delete');
 };
 
 const publishChange = async (
   nodeId: string,
   workspaceId: string,
+  type: 'node_create' | 'node_update' | 'node_delete',
 ): Promise<void> => {
   const changeJson = JSON.stringify({
     nodeId,
     workspaceId,
+    type,
   });
 
   await redis.publish(CHANNEL_NAMES.CHANGES, changeJson);

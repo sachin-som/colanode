@@ -16,7 +16,12 @@ import { fetchCollaboratorRole } from '@/lib/nodes';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import * as Y from 'yjs';
-import { CHANNEL_NAMES, redis } from '@/data/redis';
+import {
+  NodeCreatedEvent,
+  NodeDeletedEvent,
+  NodeUpdatedEvent,
+} from '@/types/events';
+import { enqueueEvent } from '@/queues/events';
 
 export const syncRouter = Router();
 
@@ -158,7 +163,18 @@ const handleCreateNodeChange = async (
     })
     .execute();
 
-  await publishChange(changeData.id, workspaceUser.workspace_id);
+  const event: NodeCreatedEvent = {
+    type: 'node_created',
+    id: changeData.id,
+    workspaceId: workspaceUser.workspace_id,
+    attributes: attributes,
+    createdBy: changeData.createdBy,
+    createdAt: changeData.createdAt,
+    serverCreatedAt: new Date().toISOString(),
+    versionId: changeData.versionId,
+  };
+
+  await enqueueEvent(event);
 
   return {
     status: 'success',
@@ -171,7 +187,7 @@ const handleUpdateNodeChange = async (
 ): Promise<SyncLocalChangeResult> => {
   const existingNode = await database
     .selectFrom('nodes')
-    .select(['id', 'workspace_id', 'state'])
+    .select(['id', 'workspace_id', 'attributes', 'state'])
     .where('id', '=', changeData.id)
     .executeTakeFirst();
 
@@ -202,13 +218,14 @@ const handleUpdateNodeChange = async (
   }
 
   const attributesMap = doc.getMap('attributes');
-  const attributes = JSON.stringify(attributesMap.toJSON());
+  const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+  const attributesJson = JSON.stringify(attributes);
   const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
 
   await database
     .updateTable('nodes')
     .set({
-      attributes: attributes,
+      attributes: attributesJson,
       state: encodedState,
       updated_at: new Date(changeData.updatedAt),
       updated_by: changeData.updatedBy,
@@ -218,7 +235,19 @@ const handleUpdateNodeChange = async (
     .where('id', '=', changeData.id)
     .execute();
 
-  await publishChange(changeData.id, workspaceUser.workspace_id);
+  const event: NodeUpdatedEvent = {
+    type: 'node_updated',
+    id: changeData.id,
+    workspaceId: workspaceUser.workspace_id,
+    beforeAttributes: existingNode.attributes,
+    afterAttributes: attributes,
+    updatedBy: changeData.updatedBy,
+    updatedAt: changeData.updatedAt,
+    serverUpdatedAt: new Date().toISOString(),
+    versionId: changeData.versionId,
+  };
+
+  await enqueueEvent(event);
 
   return {
     status: 'success',
@@ -255,18 +284,15 @@ const handleDeleteNodeChange = async (
   }
 
   await database.deleteFrom('nodes').where('id', '=', changeData.id).execute();
-  await publishChange(changeData.id, workspaceUser.workspace_id);
+  const event: NodeDeletedEvent = {
+    type: 'node_deleted',
+    id: changeData.id,
+    workspaceId: workspaceUser.workspace_id,
+  };
+
+  await enqueueEvent(event);
 
   return {
     status: 'success',
   };
-};
-
-const publishChange = async (nodeId: string, workspaceId: string) => {
-  const changeJson = JSON.stringify({
-    nodeId,
-    workspaceId,
-  });
-
-  await redis.publish(CHANNEL_NAMES.CHANGES, changeJson);
 };

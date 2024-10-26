@@ -95,12 +95,9 @@ const createNodesTable: Migration = {
       .addColumn('updated_at', 'timestamptz')
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_by', 'varchar(30)')
-      .addColumn('deleted_at', 'timestamptz')
-      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('server_updated_at', 'timestamptz')
-      .addColumn('server_deleted_at', 'timestamptz')
       .execute();
   },
   down: async (db) => {
@@ -292,8 +289,10 @@ const createDeviceNodeVersionTable: Migration = {
         col.notNull().references('devices.id').onDelete('cascade'),
       )
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('synced_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('synced_at', 'timestamptz')
+      .addColumn('access_removed_at', 'timestamptz')
       .addPrimaryKeyConstraint('device_node_versions_pkey', [
         'device_id',
         'node_id',

@@ -23,29 +23,6 @@ export type ServerNodeAttributes = {
   [key: string]: any;
 };
 
-export type ServerNodeCollaborator = {
-  nodeId: string;
-  collaboratorId: string;
-  role: string;
-  workspaceId: string;
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date | null;
-  updatedBy?: string | null;
-  versionId: string;
-  serverCreatedAt: Date;
-  serverUpdatedAt?: Date | null;
-};
-
-export type ServerNodeReaction = {
-  nodeId: string;
-  actorId: string;
-  reaction: string;
-  workspaceId: string;
-  createdAt: Date;
-  serverCreatedAt: Date;
-};
-
 export type NodeBlock = {
   type: string;
   text?: string | null;
@@ -55,4 +32,11 @@ export type NodeBlock = {
 export type NodeBlockMark = {
   type: string;
   attrs: any;
+};
+
+export type NodeCollaborator = {
+  nodeId: string;
+  level: number;
+  collaboratorId: string;
+  role: string;
 };

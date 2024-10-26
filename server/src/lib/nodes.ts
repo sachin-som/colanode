@@ -1,6 +1,6 @@
 import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
-import { ServerNode } from '@/types/nodes';
+import { NodeCollaborator, ServerNode } from '@/types/nodes';
 
 export const mapNode = (node: SelectNode): ServerNode => {
   return {
@@ -71,4 +71,39 @@ export const fetchNodeDescendants = async (
     .execute();
 
   return result.map((row) => row.descendant_id);
+};
+
+export const fetchNodeCollaborators = async (
+  nodeId: string,
+): Promise<NodeCollaborator[]> => {
+  const result = await database
+    .selectFrom('node_paths as np')
+    .innerJoin('node_collaborators as nc', 'np.ancestor_id', 'nc.node_id')
+    .select([
+      'np.ancestor_id as node_id',
+      'np.level as node_level',
+      'nc.collaborator_id',
+      'nc.role',
+    ])
+    .where('np.descendant_id', '=', nodeId)
+    .execute();
+
+  return result.map((row) => ({
+    nodeId: row.node_id,
+    level: row.node_level,
+    collaboratorId: row.collaborator_id,
+    role: row.role,
+  }));
+};
+
+export const fetchWorkspaceUsers = async (
+  workspaceId: string,
+): Promise<string[]> => {
+  const result = await database
+    .selectFrom('workspace_users')
+    .select('id')
+    .where('workspace_id', '=', workspaceId)
+    .execute();
+
+  return result.map((row) => row.id);
 };

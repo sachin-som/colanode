@@ -53,6 +53,10 @@ class SocketManager {
     return this.sockets.values();
   }
 
+  public getConnection(deviceId: string): SocketConnection | undefined {
+    return this.sockets.get(deviceId);
+  }
+
   public send(deviceId: string, message: MessageInput) {
     const connection = this.sockets.get(deviceId);
     if (!connection) {

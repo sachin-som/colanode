@@ -24,6 +24,8 @@ import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
 import { ServerNode } from '@/types/nodes';
 import { mapNode } from '@/lib/nodes';
+import { NodeCreatedEvent } from '@/types/events';
+import { enqueueEvent } from '@/queues/events';
 
 export const workspacesRouter = Router();
 
@@ -123,6 +125,19 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
       })
       .execute();
   });
+
+  const userEvent: NodeCreatedEvent = {
+    type: 'node_created',
+    id: userId,
+    workspaceId: workspaceId,
+    attributes: JSON.parse(userAttributes),
+    createdBy: account.id,
+    createdAt: createdAt.toISOString(),
+    versionId: userVersionId,
+    serverCreatedAt: createdAt.toISOString(),
+  };
+
+  await enqueueEvent(userEvent);
 
   const output: WorkspaceOutput = {
     id: workspaceId,
@@ -671,6 +686,21 @@ workspacesRouter.post(
 
         if (usersToCreate.length > 0) {
           await trx.insertInto('nodes').values(usersToCreate).execute();
+
+          for (const user of usersToCreate) {
+            const userEvent: NodeCreatedEvent = {
+              type: 'node_created',
+              id: user.id,
+              workspaceId: user.workspace_id,
+              attributes: JSON.parse(user.attributes ?? '{}'),
+              createdBy: user.created_by,
+              createdAt: user.created_at.toISOString(),
+              serverCreatedAt: user.server_created_at.toISOString(),
+              versionId: user.version_id,
+            };
+
+            await enqueueEvent(userEvent);
+          }
         }
       });
     }

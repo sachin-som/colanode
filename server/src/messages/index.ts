@@ -1,8 +1,13 @@
 import { LocalNodeSyncMessageInput } from '@/messages/local-node-sync';
-import { ServerNodesSyncMessageInput } from '@/messages/server-nodes-sync';
+import { LocalNodeDeleteMessageInput } from '@/messages/local-node-delete';
+import { ServerNodeSyncMessageInput } from '@/messages/server-node-sync';
+import { ServerNodeDeleteMessageInput } from '@/messages/server-node-delete';
+
 export interface MessageMap {
   local_node_sync: LocalNodeSyncMessageInput;
-  server_nodes_sync: ServerNodesSyncMessageInput;
+  local_node_delete: LocalNodeDeleteMessageInput;
+  server_node_sync: ServerNodeSyncMessageInput;
+  server_node_delete: ServerNodeDeleteMessageInput;
 }
 
 export type MessageInput = MessageMap[keyof MessageMap];

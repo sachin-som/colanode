@@ -29,7 +29,8 @@ import { WorkspaceUpdateMutationHandler } from '@/main/handlers/mutations/worksp
 import { DocumentSaveMutationHandler } from '@/main/handlers/mutations/document-save';
 import { AvatarUploadMutationHandler } from '@/main/handlers/mutations/avatar-upload';
 import { LogoutMutationHandler } from '@/main/handlers/mutations/logout';
-import { NodeSyncMutationHandler } from '@/main/handlers/mutations/node-sync';
+import { ServerNodeSyncMutationHandler } from '@/main/handlers/mutations/server-node-sync';
+import { ServerNodeDeleteMutationHandler } from '@/main/handlers/mutations/server-node-delete';
 import { FolderCreateMutationHandler } from '@/main/handlers/mutations/folder-create';
 import { FileCreateMutationHandler } from '@/main/handlers/mutations/file-create';
 import { FileDownloadMutationHandler } from '@/main/handlers/mutations/file-download';
@@ -70,7 +71,8 @@ export const mutationHandlerMap: MutationHandlerMap = {
   document_save: new DocumentSaveMutationHandler(),
   avatar_upload: new AvatarUploadMutationHandler(),
   logout: new LogoutMutationHandler(),
-  node_sync: new NodeSyncMutationHandler(),
+  server_node_sync: new ServerNodeSyncMutationHandler(),
+  server_node_delete: new ServerNodeDeleteMutationHandler(),
   folder_create: new FolderCreateMutationHandler(),
   file_create: new FileCreateMutationHandler(),
   file_download: new FileDownloadMutationHandler(),

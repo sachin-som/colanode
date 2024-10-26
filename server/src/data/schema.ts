@@ -75,12 +75,9 @@ interface NodeTable {
   updated_at: ColumnType<Date | null, Date | null, Date>;
   created_by: ColumnType<string, string, never>;
   updated_by: ColumnType<string | null, string | null, string>;
-  deleted_at: ColumnType<Date | null, Date | null, Date>;
-  deleted_by: ColumnType<string | null, string | null, string>;
   version_id: ColumnType<string, string, string>;
   server_created_at: ColumnType<Date, Date, never>;
   server_updated_at: ColumnType<Date | null, Date | null, Date>;
-  server_deleted_at: ColumnType<Date | null, Date | null, Date>;
 }
 
 export type SelectNode = Selectable<NodeTable>;
@@ -135,7 +132,9 @@ interface DeviceNodeVersionTable {
   device_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
   version_id: ColumnType<string, string, string>;
-  synced_at: ColumnType<Date, Date, Date>;
+  workspace_id: ColumnType<string, string, never>;
+  synced_at: ColumnType<Date | null, Date | null, Date>;
+  access_removed_at: ColumnType<Date | null, Date | null, Date>;
 }
 
 export type SelectDeviceNodeVersion = Selectable<DeviceNodeVersionTable>;

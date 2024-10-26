@@ -1,7 +1,4 @@
 import { EventBus } from '@/lib/event-bus';
-import { CompiledQuery, QueryResult } from 'kysely';
-import { LocalMutationInput } from '@/operations/mutations';
-import { SubscribedQueryContext } from '@/operations/queries';
 import { MutationMap, MutationInput } from '@/operations/mutations';
 import { QueryMap, QueryInput } from '@/operations/queries';
 

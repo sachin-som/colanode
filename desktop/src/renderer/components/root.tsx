@@ -6,12 +6,12 @@ import { Toaster } from '@/renderer/components/ui/toaster';
 import { WorkspaceCreate } from '@/renderer/components/workspaces/workspace-create';
 import { Workspace } from '@/renderer/components/workspaces/workspace';
 import { WorkspaceRedirect } from '@/renderer/components/workspaces/workspace-redirect';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/renderer/components/workspaces/containers/container';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '',
     element: <App />,

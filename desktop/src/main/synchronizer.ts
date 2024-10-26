@@ -93,8 +93,8 @@ class Synchronizer {
           .execute();
 
         await databaseManager.appDatabase
-          .deleteFrom('servers')
-          .where('domain', '=', account.domain)
+          .deleteFrom('workspaces')
+          .where('account_id', '=', account.id)
           .execute();
       } catch (error) {
         // console.log('error', error);

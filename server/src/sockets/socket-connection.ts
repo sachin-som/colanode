@@ -99,11 +99,24 @@ export class SocketConnection {
       }
     } else if (messageInput.type === 'local_node_delete') {
       this.pendingSyncs.delete(messageInput.nodeId);
+
       await database
         .deleteFrom('node_device_states')
         .where('device_id', '=', this.deviceId)
         .where('node_id', '=', messageInput.nodeId)
         .execute();
+
+      const userId = this.workspaceUsers.find(
+        (wu) => wu.workspaceId === messageInput.workspaceId,
+      )?.userId;
+
+      if (userId) {
+        await database
+          .deleteFrom('node_user_states')
+          .where('node_id', '=', messageInput.nodeId)
+          .where('user_id', '=', userId)
+          .execute();
+      }
 
       if (this.pendingSyncs.size === 0) {
         this.sendPendingChanges();

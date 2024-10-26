@@ -77,6 +77,26 @@ const handleEvent = async (event: string) => {
     return;
   }
 
+  if (data.type === 'node_delete') {
+    for (const nodeUserState of nodeUserStates) {
+      const deviceIds = userDevices.get(nodeUserState.user_id) ?? [];
+      for (const deviceId of deviceIds) {
+        const socketConnection = socketManager.getConnection(deviceId);
+        if (socketConnection === undefined) {
+          continue;
+        }
+
+        socketConnection.send({
+          type: 'server_node_delete',
+          id: data.nodeId,
+          workspaceId: data.workspaceId,
+        });
+      }
+    }
+
+    return;
+  }
+
   const node = await database
     .selectFrom('nodes')
     .select([

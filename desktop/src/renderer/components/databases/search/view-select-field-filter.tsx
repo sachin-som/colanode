@@ -114,7 +114,7 @@ export const ViewSelectFieldFilter = ({
         {!hideInput && (
           <Popover>
             <PopoverTrigger asChild>
-              <div className="flex h-full w-full cursor-pointer flex-row items-center gap-1 rounded-md border border-input p-1">
+              <div className="flex h-full w-full cursor-pointer flex-row items-center gap-1 rounded-md border border-input p-2">
                 {selectedOptions.map((option) => (
                   <SelectOptionBadge
                     key={option.id}
@@ -122,6 +122,11 @@ export const ViewSelectFieldFilter = ({
                     color={option.color}
                   />
                 ))}
+                {selectedOptions.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No options selected
+                  </p>
+                )}
               </div>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-1">

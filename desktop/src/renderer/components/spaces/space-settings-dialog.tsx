@@ -8,9 +8,9 @@ import {
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Icon } from '@/renderer/components/ui/icon';
 import { SpaceUpdateForm } from '@/renderer/components/spaces/space-update-form';
 import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form';
+import { Info, Trash2, Users } from 'lucide-react';
 
 interface SpaceSettingsDialogProps {
   id: string;
@@ -48,7 +48,7 @@ export const SpaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="info"
             >
-              <Icon name="information-line" className="mr-2" />
+              <Info className="mr-2 size-4" />
               Info
             </TabsTrigger>
             <TabsTrigger
@@ -56,7 +56,7 @@ export const SpaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="collaborators"
             >
-              <Icon name="group-line" className="mr-2" />
+              <Users className="mr-2 size-4" />
               Collaborators
             </TabsTrigger>
             <TabsTrigger
@@ -64,7 +64,7 @@ export const SpaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="delete"
             >
-              <Icon name="delete-bin-line" className="mr-2" />
+              <Trash2 className="mr-2 size-4" />
               Delete
             </TabsTrigger>
           </TabsList>

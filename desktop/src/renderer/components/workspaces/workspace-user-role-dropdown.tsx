@@ -7,10 +7,10 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 import { WorkspaceRole } from '@/types/workspaces';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Check, ChevronDown } from 'lucide-react';
 
 interface WorkspaceRoleItem {
   name: string;
@@ -59,12 +59,9 @@ export const WorkspaceUserRoleDropdown = ({
         <p className="flex cursor-pointer flex-row items-center p-1 text-sm text-muted-foreground hover:bg-gray-50">
           {currentRole?.name}
           {isPending ? (
-            <Spinner className="ml-2 text-muted-foreground" />
+            <Spinner className="ml-2 size-4 text-muted-foreground" />
           ) : (
-            <Icon
-              name="arrow-down-s-line"
-              className="ml-2 h-4 w-4 text-muted-foreground"
-            />
+            <ChevronDown className="ml-2 size-4 text-muted-foreground" />
           )}
         </p>
       </DropdownMenuTrigger>
@@ -104,9 +101,7 @@ export const WorkspaceUserRoleDropdown = ({
                   {role.description}
                 </p>
               </div>
-              {value === role.value && (
-                <Icon name="check-line" className="mr-2 h-4 w-4" />
-              )}
+              {value === role.value && <Check className="mr-2 size-4" />}
             </div>
           </DropdownMenuItem>
         ))}

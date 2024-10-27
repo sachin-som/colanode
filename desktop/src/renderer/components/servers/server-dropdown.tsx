@@ -5,11 +5,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Server } from '@/types/servers';
 import { ServerCreateDialog } from '@/renderer/components/servers/server-create-dialog';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 
 interface ServerDropdownProps {
   servers: Server[];
@@ -33,11 +33,7 @@ export const ServerDropdown = ({
               <p className="flex-grow font-semibold">{value.name}</p>
               <p className="text-xs text-muted-foreground">{value.domain}</p>
             </div>
-
-            <Icon
-              name="arrow-down-s-line"
-              className="h-4 w-4 text-muted-foreground"
-            />
+            <ChevronDown className="size-4 text-muted-foreground" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-96">

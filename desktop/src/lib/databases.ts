@@ -7,41 +7,6 @@ import {
 } from '@/types/databases';
 import { isStringArray } from '@/lib/utils';
 
-export const getFieldIcon = (type?: FieldDataType): string => {
-  if (!type) return '';
-
-  switch (type) {
-    case 'boolean':
-      return 'checkbox-line';
-    case 'collaborator':
-      return 'user-line';
-    case 'created_at':
-      return 'calendar-event-line';
-    case 'created_by':
-      return 'user-received-line';
-    case 'date':
-      return 'calendar-event-line';
-    case 'email':
-      return 'mail-line';
-    case 'file':
-      return 'file-line';
-    case 'multi_select':
-      return 'list-check';
-    case 'number':
-      return 'hashtag';
-    case 'phone':
-      return 'smartphone-line';
-    case 'select':
-      return 'radio-button-line';
-    case 'text':
-      return 'text';
-    case 'url':
-      return 'link';
-    default:
-      return 'close-line';
-  }
-};
-
 export const getDefaultFieldWidth = (type: FieldDataType): number => {
   if (!type) return 0;
 

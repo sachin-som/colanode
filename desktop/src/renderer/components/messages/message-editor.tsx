@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import {
   MessageNode,
@@ -32,6 +31,7 @@ import {
   DropcursorExtension,
 } from '@/renderer/editor/extensions';
 import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
+import { Plus, Search, Send, Upload } from 'lucide-react';
 
 interface MessageEditorProps {
   conversationId: string;
@@ -122,19 +122,19 @@ export const MessageEditor = React.forwardRef<
         <DropdownMenu>
           <DropdownMenuTrigger disabled={!props.canEdit}>
             <span>
-              <Icon name="add-circle-line" size={20} />
+              <Plus size={20} />
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem disabled={true}>
               <div className="flex flex-row items-center gap-2 text-sm">
-                <Icon name="search-line" />
+                <Search className="size-4" />
                 <span>Browse</span>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem disabled={true}>
               <div className="flex cursor-pointer flex-row items-center gap-2 text-sm">
-                <Icon name="upload-2-line" />
+                <Upload className="size-4" />
                 <span>Upload</span>
               </div>
             </DropdownMenuItem>
@@ -191,7 +191,7 @@ export const MessageEditor = React.forwardRef<
               handleSubmit();
             }}
           >
-            <Icon name="send-plane-line" size={20} />
+            <Send size={20} />
           </button>
         )}
       </div>

@@ -1,12 +1,13 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
+import { Folder } from 'lucide-react';
 
 export const FolderCommand: EditorCommand = {
   key: 'folder',
   name: 'Folder',
   description: 'Insert a nested folder',
   keywords: ['folder'],
-  icon: 'folder-line',
+  icon: Folder,
   disabled: false,
   async handler({ editor, range, context }) {
     if (context == null) {

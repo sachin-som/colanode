@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Spinner } from '@/renderer/components/ui/spinner';
+import { ArrowDown } from 'lucide-react';
 
 interface TableViewLoadMoreRowProps {
   isPending: boolean;
@@ -20,7 +20,7 @@ export const TableViewLoadMoreRow = ({
         onClick();
       }}
     >
-      {isPending ? <Spinner /> : <Icon name="arrow-down-line" />}
+      {isPending ? <Spinner /> : <ArrowDown className="size-4" />}
       <span className="text-sm">Load more</span>
     </button>
   );

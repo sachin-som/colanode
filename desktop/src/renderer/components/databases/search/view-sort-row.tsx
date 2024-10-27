@@ -1,5 +1,4 @@
-import { Icon } from '@/renderer/components/ui/icon';
-import { getFieldIcon } from '@/lib/databases';
+import React from 'react';
 import { FieldNode, ViewSort } from '@/types/databases';
 import {
   DropdownMenu,
@@ -7,10 +6,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import React from 'react';
 import { Button } from '@/renderer/components/ui/button';
 import { SortDirections } from '@/lib/constants';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { FieldIcon } from '../fields/field-icon';
+import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewSortProps {
   sort: ViewSort;
@@ -23,7 +23,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
   return (
     <div className="flex flex-row items-center gap-3 text-sm">
       <div className="flex flex-row items-center gap-0.5 p-1">
-        <Icon name={getFieldIcon(field.dataType)} className="h-4 w-4" />
+        <FieldIcon type={field.dataType} className="size-4" />
         <p>{field.name}</p>
       </div>
       <DropdownMenu>
@@ -34,10 +34,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
                 ? 'Ascending'
                 : 'Descending'}
             </p>
-            <Icon
-              name="arrow-down-s-line"
-              className="h-4 w-4 text-muted-foreground"
-            />
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -70,7 +67,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
           viewSearch.removeSort(sort.id);
         }}
       >
-        <Icon name="delete-bin-line" className="h-4 w-4" />
+        <Trash2 className="size-4" />
       </Button>
     </div>
   );

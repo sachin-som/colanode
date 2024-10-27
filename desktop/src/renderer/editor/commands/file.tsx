@@ -1,12 +1,13 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
+import { FilePlus } from 'lucide-react';
 
 export const FileCommand: EditorCommand = {
   key: 'file',
   name: 'File',
   description: 'Insert a nested file',
   keywords: ['file', 'image', 'video', 'audio'],
-  icon: 'file-text-line',
+  icon: FilePlus,
   disabled: false,
   async handler({ editor, range, context }) {
     if (context == null) {

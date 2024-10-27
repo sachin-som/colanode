@@ -3,7 +3,6 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SidebarNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Icon } from '@/renderer/components/ui/icon';
 
 interface SidebarItemProps {
   node: SidebarNode;
@@ -38,15 +37,12 @@ export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
         {node.name ?? 'Unnamed'}
       </span>
       {directCount > 0 && (
-        <span className="bg-sidebar-accent text-sidebar-accent-foreground mr-1 rounded-md px-1 py-0.5 text-xs">
+        <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">
           {directCount}
         </span>
       )}
       {directCount == 0 && isUnread && (
-        <Icon
-          name="checkbox-blank-circle-fill"
-          className="mr-2 h-3 w-3 p-0.5 text-red-500"
-        />
+        <span className="mr-2 size-3 rounded-full bg-red-500 p-0.5" />
       )}
     </button>
   );

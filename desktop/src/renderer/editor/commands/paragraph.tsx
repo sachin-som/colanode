@@ -1,11 +1,12 @@
 import { EditorCommand } from '@/types/editor';
+import { Pilcrow } from 'lucide-react';
 
 export const ParagraphCommand: EditorCommand = {
   key: 'paragraph',
   name: 'Text',
   description: 'Insert a text paragraph.tsx',
   keywords: ['paragraph', 'text'],
-  icon: 'paragraph',
+  icon: Pilcrow,
   disabled: false,
   handler: ({ editor, range }) => {
     editor

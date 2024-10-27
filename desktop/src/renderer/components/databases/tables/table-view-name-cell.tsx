@@ -1,10 +1,10 @@
 import React from 'react';
 import isHotkey from 'is-hotkey';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { RecordNode } from '@/types/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import { Maximize2 } from 'lucide-react';
 
 interface NameEditorProps {
   initialValue: string;
@@ -98,7 +98,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
             className="absolute right-2 flex h-6 cursor-pointer flex-row items-center gap-1 rounded-md border bg-white p-1 text-sm text-muted-foreground opacity-0 hover:bg-gray-50 group-hover:opacity-100"
             onClick={() => workspace.openModal(record.id)}
           >
-            <Icon name="edit-box-line" /> <p>Open</p>
+            <Maximize2 className="mr-1 size-4" /> <p>Open</p>
           </button>
           {isPending && (
             <span className="absolute right-2 text-muted-foreground">

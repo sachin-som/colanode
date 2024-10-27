@@ -1,7 +1,5 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { cn } from '@/lib/utils';
-import { getFieldIcon } from '@/lib/databases';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 're-resizable';
 import { FieldNode } from '@/types/databases';
@@ -14,6 +12,8 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { FieldDeleteDialog } from '@/renderer/components/databases/fields/field-delete-dialog';
 import { FieldRenameInput } from '@/renderer/components/databases/fields/field-rename-input';
 import { useTableView } from '@/renderer/contexts/table-view';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
+import { ArrowDownAz, ArrowDownZa, EyeOff, Filter, Trash2 } from 'lucide-react';
 
 interface TableViewFieldHeaderProps {
   field: FieldNode;
@@ -104,7 +104,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
               )}
               ref={dragDropRef as any}
             >
-              <Icon name={getFieldIcon(field.dataType)} />
+              <FieldIcon type={field.dataType} className="size-4" />
               <p>{field.name}</p>
             </div>
           </PopoverTrigger>
@@ -124,7 +124,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
                     // });
                   }}
                 >
-                  <Icon name="sort-asc" />
+                  <ArrowDownAz className="size-4" />
                   <span>Sort ascending</span>
                 </div>
 
@@ -139,13 +139,13 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
                     // });
                   }}
                 >
-                  <Icon name="sort-desc" />
+                  <ArrowDownZa className="size-4" />
                   <span>Sort descending</span>
                 </div>
               </>
             )}
             <div className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100">
-              <Icon name="filter-line" />
+              <Filter className="size-4" />
               <span>Filter</span>
             </div>
             <Separator />
@@ -156,7 +156,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
                   tableView.hideField(field.id);
                 }}
               >
-                <Icon name="eye-off-line" />
+                <EyeOff className="size-4" />
                 <span>Hide in view</span>
               </div>
             )}
@@ -167,7 +167,7 @@ export const TableViewFieldHeader = ({ field }: TableViewFieldHeaderProps) => {
                   setShowDeleteDialog(true);
                 }}
               >
-                <Icon name="delete-bin-line" />
+                <Trash2 className="size-4" />
                 <span>Delete field</span>
               </div>
             )}

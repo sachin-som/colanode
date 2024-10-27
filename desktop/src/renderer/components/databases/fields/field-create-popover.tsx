@@ -22,9 +22,9 @@ import { useDatabase } from '@/renderer/contexts/database';
 import { FieldDataTypeSelect } from '@/renderer/components/databases/fields/field-type-select';
 import { FieldAttrs } from '@/renderer/components/databases/fields/field-attrs';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Plus } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string(),
@@ -87,8 +87,8 @@ export const FieldCreatePopover = () => {
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger asChild>
-        <Icon name="add-line" className="ml-2 h-3 w-3 cursor-pointer" />
+      <PopoverTrigger>
+        <Plus className="ml-2 size-4 cursor-pointer" />
       </PopoverTrigger>
       <PopoverContent className="mr-5 w-128" side="bottom">
         <Form {...form}>

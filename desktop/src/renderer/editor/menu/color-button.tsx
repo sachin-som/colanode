@@ -1,13 +1,12 @@
 import React from 'react';
 import { Editor } from '@tiptap/core';
-
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@/renderer/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { Baseline } from 'lucide-react';
 
 interface ColorItem {
   color: string;
@@ -99,7 +98,7 @@ export const ColorButton = ({
             activeHighlight?.bgClass ?? 'bg-white',
           )}
         >
-          <Icon name="font-color" className={activeColor?.textClass ?? ''} />
+          <Baseline className={cn('size-4', activeColor?.textClass ?? '')} />
         </span>
       </PopoverTrigger>
 

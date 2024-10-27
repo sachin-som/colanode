@@ -13,9 +13,9 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/renderer/hooks/use-toast';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Server } from '@/types/servers';
+import { Mail } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -107,9 +107,9 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
           disabled={isPending}
         >
           {isPending ? (
-            <Spinner className="mr-2 h-4 w-4" />
+            <Spinner className="mr-2 size-4" />
           ) : (
-            <Icon name="mail-line" className="mr-2 h-4 w-4" />
+            <Mail className="mr-2 size-4" />
           )}
           Register
         </Button>

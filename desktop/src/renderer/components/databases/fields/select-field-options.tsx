@@ -8,12 +8,12 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { Icon } from '@/renderer/components/ui/icon';
 import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/renderer/components/databases/fields/select-option-settings-popover';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import { Check, Plus, X } from 'lucide-react';
 
 interface SelectFieldOptionsProps {
   field: SelectFieldNode | MultiSelectFieldNode;
@@ -65,20 +65,11 @@ export const SelectFieldOptions = ({
                 <div className="flex flex-row items-center gap-2">
                   {isSelected ? (
                     <React.Fragment>
-                      <Icon
-                        name="check-line"
-                        className="h-4 w-4 group-hover:hidden"
-                      />
-                      <Icon
-                        name="close-line"
-                        className="hidden h-4 w-4 group-hover:block"
-                      />
+                      <Check className="size-4 group-hover:hidden" />
+                      <X className="hidden size-4 group-hover:block" />
                     </React.Fragment>
                   ) : (
-                    <Icon
-                      name="add-line"
-                      className="hidden h-4 w-4 group-hover:block"
-                    />
+                    <Plus className="hidden size-4 group-hover:block" />
                   )}
                 </div>
                 <div

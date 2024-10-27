@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dropzone } from '@/renderer/components/ui/dropzone';
 import { Button } from '@/renderer/components/ui/button';
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +9,47 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { folderLayouts, FolderLayoutType } from '@/types/folders';
+import { FolderLayoutType } from '@/types/folders';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { FolderFiles } from '@/renderer/components/folders/folder-files';
+import {
+  Check,
+  Filter,
+  GalleryVertical,
+  LayoutGrid,
+  List,
+  Upload,
+} from 'lucide-react';
+
+export type FolderLayout = {
+  value: FolderLayoutType;
+  name: string;
+  description: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+};
+
+export const folderLayouts: FolderLayout[] = [
+  {
+    name: 'Grid',
+    value: 'grid',
+    description: 'Show files in grid layout',
+    icon: LayoutGrid,
+  },
+  {
+    name: 'List',
+    value: 'list',
+    description: 'Show files in list layout',
+    icon: List,
+  },
+  {
+    name: 'Gallery',
+    value: 'gallery',
+    description: 'Show files in gallery layout',
+    icon: GalleryVertical,
+  },
+];
 
 interface FolderContainerProps {
   nodeId: string;
@@ -72,18 +107,18 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-2">
             <Button type="button" variant="outline" onClick={openFileDialog}>
-              <Icon name="upload-line" className="mr-1" /> Upload
+              <Upload className="mr-2 size-4" /> Upload
             </Button>
           </div>
           <div className="flex flex-row gap-2">
             <Button type="button" variant="outline" size="icon" disabled>
-              <Icon name="filter-line" />
+              <Filter className="size-4" />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button type="button" variant="outline" size="icon">
-                  <Icon name={currentLayout?.icon} />
+                  {currentLayout && <currentLayout.icon className="size-4" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="mr-5 w-56">
@@ -95,9 +130,9 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
                     onClick={() => setLayout(item.value)}
                   >
                     <div className="flex w-full flex-row items-center gap-2">
-                      <Icon name={item.icon} />
+                      <item.icon className="size-4" />
                       <p className="flex-grow">{item.name}</p>
-                      {layout === item.value && <Icon name="check-line" />}
+                      {layout === item.value && <Check className="size-4" />}
                     </div>
                   </DropdownMenuItem>
                 ))}

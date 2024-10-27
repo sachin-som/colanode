@@ -22,12 +22,12 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useDatabase } from '@/renderer/contexts/database';
 import { FieldSelect } from '@/renderer/components/databases/fields/field-select';
 import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Calendar, Columns, Table } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -37,24 +37,24 @@ const formSchema = z.object({
 
 interface ViewTypeOption {
   name: string;
-  icon: string;
+  icon: React.FC;
   type: 'TABLE' | 'BOARD' | 'CALENDAR';
 }
 
 const viewTypes: ViewTypeOption[] = [
   {
     name: 'Table',
-    icon: 'table-2',
+    icon: Table,
     type: 'TABLE',
   },
   {
     name: 'Board',
-    icon: 'layout-column-line',
+    icon: Columns,
     type: 'BOARD',
   },
   {
     name: 'Calendar',
-    icon: 'calendar-2-line',
+    icon: Calendar,
     type: 'CALENDAR',
   },
 ];
@@ -201,7 +201,7 @@ export const ViewCreateDialog = ({
                         )}
                         onClick={() => field.onChange(viewType.type)}
                       >
-                        <Icon name={viewType.icon} />
+                        <viewType.icon />
                         <p>{viewType.name}</p>
                       </div>
                     ))}

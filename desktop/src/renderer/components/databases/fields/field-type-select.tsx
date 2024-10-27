@@ -13,10 +13,10 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { Icon } from '@/renderer/components/ui/icon';
-import { getFieldIcon } from '@/lib/databases';
 import { FieldDataType } from '@/types/databases';
 import { cn } from '@/lib/utils';
+import { FieldIcon } from './field-icon';
+import { Check, ChevronsUpDown } from 'lucide-react';
 
 interface FieldTypeOption {
   name: string;
@@ -100,16 +100,13 @@ export const FieldDataTypeSelect = ({
           className="w-full justify-between p-2"
         >
           <span className="flex flex-row items-center gap-1">
-            <Icon name={getFieldIcon(dataType as FieldDataType)} />
+            <FieldIcon type={dataType as FieldDataType} className="size-4" />
             {dataType
               ? fieldTypes.find((fieldType) => fieldType.dataType === dataType)
                   ?.name
               : 'Select field type...'}
           </span>
-          <Icon
-            name="expand-up-down-line"
-            className="ml-2 h-4 w-4 shrink-0 opacity-50"
-          />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-1">
@@ -127,12 +124,11 @@ export const FieldDataTypeSelect = ({
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <Icon name={getFieldIcon(fieldType.dataType)} />
+                    <FieldIcon type={fieldType.dataType} className="size-4" />
                     <p>{fieldType.name}</p>
-                    <Icon
-                      name="check-line"
+                    <Check
                       className={cn(
-                        'ml-auto h-4 w-4',
+                        'ml-auto size-4',
                         dataType === fieldType.dataType
                           ? 'opacity-100'
                           : 'opacity-0',

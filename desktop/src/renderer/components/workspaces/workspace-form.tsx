@@ -18,9 +18,9 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useAccount } from '@/renderer/contexts/account';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Icon } from '@/renderer/components/ui/icon';
 import { generateId, IdType } from '@/lib/id';
 import { cn } from '@/lib/utils';
+import { Upload } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -126,12 +126,9 @@ export const WorkspaceForm = ({
                 )}
               >
                 {isPending ? (
-                  <Spinner className="h-5 w-5" />
+                  <Spinner className="size-5" />
                 ) : (
-                  <Icon
-                    name="upload-2-line"
-                    className="h-5 w-6 text-foreground"
-                  />
+                  <Upload className="size-5 text-foreground" />
                 )}
               </div>
             </div>

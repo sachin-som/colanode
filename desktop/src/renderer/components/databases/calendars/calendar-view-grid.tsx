@@ -1,6 +1,5 @@
 import React from 'react';
 import { buttonVariants } from '@/renderer/components/ui/button';
-import { Icon } from '@/renderer/components/ui/icon';
 import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
@@ -9,6 +8,7 @@ import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useDatabase } from '@/renderer/contexts/database';
 import { filterRecords } from '@/lib/databases';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const RECORDS_PER_PAGE = 50;
 
@@ -114,10 +114,10 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
       }}
       components={{
         IconLeft: ({ ...props }) => (
-          <Icon name="arrow-left-s-line" className="h-4 w-4" {...props} />
+          <ChevronLeft className="size-4" {...props} />
         ),
         IconRight: ({ ...props }) => (
-          <Icon name="arrow-right-s-line" className="h-4 w-4" {...props} />
+          <ChevronRight className="size-4" {...props} />
         ),
         Day: (props: DayProps) => {
           const filter: ViewFilter = {

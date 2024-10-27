@@ -1,5 +1,4 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Label } from '@/renderer/components/ui/label';
 import {
   Popover,
@@ -14,6 +13,7 @@ import { SelectOptionDeleteDialog } from '@/renderer/components/databases/fields
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Ellipsis, Trash2 } from 'lucide-react';
 
 interface SelectOptionSettingsPopoverProps {
   option: SelectOptionNode;
@@ -36,7 +36,7 @@ export const SelectOptionSettingsPopover = ({
         onOpenChange={setOpenSetttingsPopover}
       >
         <PopoverTrigger asChild>
-          <Icon name="more-line" />
+          <Ellipsis className="size-4" />
         </PopoverTrigger>
         <PopoverContent className="ml-1 flex w-72 flex-col gap-1 p-2 text-sm">
           <div className="p-1">
@@ -92,7 +92,7 @@ export const SelectOptionSettingsPopover = ({
               setOpenSetttingsPopover(false);
             }}
           >
-            <Icon name="delete-bin-line" />
+            <Trash2 className="size-4" />
             <span>Delete option</span>
           </div>
         </PopoverContent>

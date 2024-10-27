@@ -1,8 +1,7 @@
+import '@/renderer/styles/highlight.css';
 import React from 'react';
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
-import '@/renderer/styles/highlight.css';
-
 import {
   Command,
   CommandEmpty,
@@ -11,7 +10,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   Popover,
   PopoverContent,
@@ -20,6 +18,7 @@ import {
 import { defaultClasses } from '@/renderer/editor/classes';
 import { languages } from '@/lib/lowlight';
 import { cn } from '@/lib/utils';
+import { ChevronDown, Check, Clipboard } from 'lucide-react';
 
 export const CodeBlockNodeView = ({
   node,
@@ -42,7 +41,7 @@ export const CodeBlockNodeView = ({
         <Popover open={open} onOpenChange={setOpen} modal={true}>
           <PopoverTrigger className="flex cursor-pointer flex-row items-center gap-1 outline-none hover:text-foreground">
             <p>{languageItem?.name ?? ' '}</p>
-            <Icon name="arrow-down-s-line" />
+            <ChevronDown className="size-4" />
           </PopoverTrigger>
           <PopoverContent className="p-2">
             <Command className="max-h-80">
@@ -62,10 +61,9 @@ export const CodeBlockNodeView = ({
                       }}
                     >
                       {languageItem.name}
-                      <Icon
-                        name="check-line"
+                      <Check
                         className={cn(
-                          'ml-auto mr-2 h-4 w-4',
+                          'ml-auto mr-2 size-4',
                           language === languageItem.code
                             ? 'opacity-100'
                             : 'opacity-0',
@@ -86,7 +84,7 @@ export const CodeBlockNodeView = ({
             });
           }}
         >
-          <Icon name="clipboard-line" />
+          <Clipboard className="size-4" />
           <p>{copied ? 'Copied' : 'Copy code'}</p>
         </div>
       </div>

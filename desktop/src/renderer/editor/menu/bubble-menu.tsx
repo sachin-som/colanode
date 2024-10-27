@@ -5,11 +5,10 @@ import {
   isNodeSelection,
 } from '@tiptap/react';
 import { useState } from 'react';
-
-import { Icon } from '@/renderer/components/ui/icon';
 import { ColorButton } from '@/renderer/editor/menu/color-button';
 import { LinkButton } from '@/renderer/editor/menu/link-button';
 import { cn } from '@/lib/utils';
+import { Bold, Code, Italic, Strikethrough, Underline } from 'lucide-react';
 
 type EditorBubbleMenuProps = Omit<BubbleMenuProps, 'children'>;
 
@@ -63,7 +62,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         )}
         onClick={() => props.editor?.chain().focus().toggleBold().run()}
       >
-        <Icon name="bold" />
+        <Bold className="size-4" />
       </button>
       <button
         type="button"
@@ -75,7 +74,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         )}
         onClick={() => props.editor?.chain().focus().toggleItalic().run()}
       >
-        <Icon name="italic" />
+        <Italic className="size-4" />
       </button>
       <button
         type="button"
@@ -87,7 +86,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         )}
         onClick={() => props.editor?.chain().focus().toggleUnderline().run()}
       >
-        <Icon name="underline" />
+        <Underline className="size-4" />
       </button>
       <button
         type="button"
@@ -99,7 +98,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         )}
         onClick={() => props.editor?.chain().focus().toggleStrike().run()}
       >
-        <Icon name="strikethrough" />
+        <Strikethrough className="size-4" />
       </button>
       <button
         type="button"
@@ -109,7 +108,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         )}
         onClick={() => props.editor?.chain().focus().toggleCode().run()}
       >
-        <Icon name="code-line" />
+        <Code className="size-4" />
       </button>
       <ColorButton
         editor={props.editor}

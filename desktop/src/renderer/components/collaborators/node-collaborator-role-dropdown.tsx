@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { Icon } from '@/renderer/components/ui/icon';
+import { Check, ChevronsDown } from 'lucide-react';
 
 interface NodeCollaboratorRole {
   name: string;
@@ -51,10 +51,7 @@ export const NodeCollaboratorRoleDropdown = ({
       <DropdownMenuTrigger asChild>
         <p className="flex cursor-pointer flex-row items-center p-1 text-sm text-muted-foreground hover:bg-gray-50">
           {currentRole?.name}
-          <Icon
-            name="arrow-down-s-line"
-            className="ml-2 h-4 w-4 text-muted-foreground"
-          />
+          <ChevronsDown className="ml-2 size-4 text-muted-foreground" />
         </p>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
@@ -74,9 +71,7 @@ export const NodeCollaboratorRoleDropdown = ({
                   {role.description}
                 </p>
               </div>
-              {value === role.value && (
-                <Icon name="check-line" className="mr-2 h-4 w-4" />
-              )}
+              {value === role.value && <Check className="mr-2 size-4" />}
             </div>
           </DropdownMenuItem>
         ))}

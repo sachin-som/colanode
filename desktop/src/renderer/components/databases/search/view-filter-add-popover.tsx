@@ -1,5 +1,4 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   Popover,
   PopoverContent,
@@ -14,8 +13,8 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { useDatabase } from '@/renderer/contexts/database';
-import { getFieldIcon } from '@/lib/databases';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 
 interface ViewFilterAddPopoverProps {
   children: React.ReactNode;
@@ -57,7 +56,7 @@ export const ViewFilterAddPopover = ({
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <Icon name={getFieldIcon(field.dataType)} />
+                    <FieldIcon type={field.dataType} className="size-4" />
                     <p>{field.name}</p>
                   </div>
                 </CommandItem>

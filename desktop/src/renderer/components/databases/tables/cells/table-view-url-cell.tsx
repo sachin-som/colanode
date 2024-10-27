@@ -6,10 +6,10 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/renderer/components/ui/hover-card';
-import { Icon } from '@/renderer/components/ui/icon';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { ExternalLink } from 'lucide-react';
 
 interface TableViewUrlCellProps {
   record: RecordNode;
@@ -76,10 +76,7 @@ export const TableViewUrlCell = ({ record, field }: TableViewUrlCellProps) => {
         >
           {text}
         </a>
-        <Icon
-          name="external-link-line"
-          className="h-4 min-h-4 w-4 min-w-4 text-muted-foreground"
-        />
+        <ExternalLink className="size-4 min-h-4 min-w-4 text-muted-foreground" />
       </HoverCardContent>
     </HoverCard>
   );

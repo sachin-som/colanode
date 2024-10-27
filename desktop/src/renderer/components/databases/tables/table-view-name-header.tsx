@@ -1,5 +1,4 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Resizable } from 're-resizable';
 import {
   Popover,
@@ -11,6 +10,7 @@ import { Input } from '@/renderer/components/ui/input';
 import { useTableView } from '@/renderer/contexts/table-view';
 import { useDrop } from 'react-dnd';
 import { cn } from '@/lib/utils';
+import { ArrowDownAz, ArrowDownZa, Filter, Type } from 'lucide-react';
 
 export const TableViewNameHeader = () => {
   const tableView = useTableView();
@@ -72,7 +72,7 @@ export const TableViewNameHeader = () => {
             )}
             ref={dropRef}
           >
-            <Icon name="text" />
+            <Type className="size-4" />
             <p>Name</p>
           </div>
         </PopoverTrigger>
@@ -100,7 +100,7 @@ export const TableViewNameHeader = () => {
                   // });
                 }}
               >
-                <Icon name="sort-asc" />
+                <ArrowDownAz className="size-4" />
                 <span>Sort ascending</span>
               </div>
 
@@ -115,13 +115,13 @@ export const TableViewNameHeader = () => {
                   // });
                 }}
               >
-                <Icon name="sort-desc" />
+                <ArrowDownZa className="size-4" />
                 <span>Sort descending</span>
               </div>
             </>
           )}
           <div className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100">
-            <Icon name="filter-line" />
+            <Filter className="size-4" />
             <span>Filter</span>
           </div>
         </PopoverContent>

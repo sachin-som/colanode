@@ -1,8 +1,8 @@
 import React from 'react';
-import { getFileIcon, getFileUrl } from '@/lib/files';
-import { Icon } from '@/renderer/components/ui/icon';
+import { getFileUrl } from '@/lib/files';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { cn } from '@/lib/utils';
+import { FileIcon } from '@/renderer/components/files/file-icon';
 
 interface FileThumbnailProps {
   id: string;
@@ -34,6 +34,5 @@ export const FileThumbnail = ({
     );
   }
 
-  const icon = getFileIcon(mimeType);
-  return <Icon name={icon} className={className} />;
+  return <FileIcon mimeType={mimeType} className="size-10" />;
 };

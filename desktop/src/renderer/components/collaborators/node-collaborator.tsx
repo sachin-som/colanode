@@ -1,10 +1,10 @@
 import React from 'react';
 import { NodeCollaboratorNode } from '@/types/nodes';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Icon } from '@/renderer/components/ui/icon';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Trash2 } from 'lucide-react';
 
 interface NodeCollaboratorProps {
   nodeId: string;
@@ -51,9 +51,8 @@ export const NodeCollaborator = ({
           }}
         />
         {removable && (
-          <Icon
-            name="delete-bin-line"
-            className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
+          <Trash2
+            className="size-4 cursor-pointer text-muted-foreground hover:text-foreground"
             onClick={() => {
               mutate({
                 input: {

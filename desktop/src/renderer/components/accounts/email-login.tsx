@@ -13,9 +13,9 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/renderer/hooks/use-toast';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Server } from '@/types/servers';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import { Mail } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
@@ -92,9 +92,9 @@ export const EmailLogin = ({ server }: EmailLoginProps) => {
           disabled={isPending}
         >
           {isPending ? (
-            <Spinner className="mr-2 h-4 w-4" />
+            <Spinner className="mr-2 size-4" />
           ) : (
-            <Icon name="mail-line" className="mr-2 h-4 w-4" />
+            <Mail className="mr-2 size-4" />
           )}
           Login
         </Button>

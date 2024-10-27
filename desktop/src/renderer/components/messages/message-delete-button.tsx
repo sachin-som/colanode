@@ -9,9 +9,9 @@ import {
   AlertDialogTitle,
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Trash2 } from 'lucide-react';
 
 interface MessageDeleteButtonProps {
   id: string;
@@ -24,7 +24,10 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
 
   return (
     <React.Fragment>
-      <Icon name="delete-bin-line" onClick={() => setShowDeleteModal(true)} />
+      <Trash2
+        className="size-4 cursor-pointer"
+        onClick={() => setShowDeleteModal(true)}
+      />
       <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>

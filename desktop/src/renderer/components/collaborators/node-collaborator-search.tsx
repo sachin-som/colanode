@@ -14,11 +14,11 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Badge } from '@/renderer/components/ui/badge';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { X } from 'lucide-react';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];
@@ -63,10 +63,7 @@ export const NodeCollaboratorSearch = ({
                   onChange(value.filter((v) => v.id !== collaborator.id));
                 }}
               >
-                <Icon
-                  name="close-line"
-                  className="h-3 w-3 text-muted-foreground hover:text-foreground"
-                />
+                <X className="size-3 text-muted-foreground hover:text-foreground" />
               </span>
             </Badge>
           ))}

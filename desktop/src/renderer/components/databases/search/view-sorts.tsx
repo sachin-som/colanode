@@ -8,8 +8,8 @@ import { Button } from '@/renderer/components/ui/button';
 import { ViewSortRow } from '@/renderer/components/databases/search/view-sort-row';
 import { useDatabase } from '@/renderer/contexts/database';
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { Plus } from 'lucide-react';
 
 export const ViewSorts = () => {
   const database = useDatabase();
@@ -47,7 +47,7 @@ export const ViewSorts = () => {
         })}
         <ViewSortAddPopover>
           <button className="flex cursor-pointer flex-row items-center gap-1 rounded-lg p-1 text-sm text-muted-foreground hover:bg-gray-50">
-            <Icon name="add-line" />
+            <Plus className="size-4" />
             Add sort
           </button>
         </ViewSortAddPopover>

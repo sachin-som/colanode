@@ -1,12 +1,13 @@
 import { EditorCommand } from '@/types/editor';
 import { NodeTypes } from '@/lib/constants';
+import { FileText } from 'lucide-react';
 
 export const PageCommand: EditorCommand = {
   key: 'page',
   name: 'Page',
   description: 'Insert a nested page',
   keywords: ['page'],
-  icon: 'draft-line',
+  icon: FileText,
   disabled: false,
   async handler({ editor, range, context }) {
     if (context == null) {

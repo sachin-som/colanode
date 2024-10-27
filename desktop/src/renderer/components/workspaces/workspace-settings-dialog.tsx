@@ -6,13 +6,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceUpdate } from '@/renderer/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { DialogTitle } from '@radix-ui/react-dialog';
+import { Info, Trash2, Users } from 'lucide-react';
 
 interface WorkspaceSettingsDialogProps {
   open: boolean;
@@ -55,7 +55,7 @@ export const WorkspaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="info"
             >
-              <Icon name="information-line" className="mr-2" />
+              <Info className="mr-2" />
               Info
             </TabsTrigger>
             <TabsTrigger
@@ -63,7 +63,7 @@ export const WorkspaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="users"
             >
-              <Icon name="group-line" className="mr-2" />
+              <Users className="mr-2 size-4" />
               Users
             </TabsTrigger>
             <TabsTrigger
@@ -71,7 +71,7 @@ export const WorkspaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="delete"
             >
-              <Icon name="delete-bin-line" className="mr-2" />
+              <Trash2 className="mr-2 size-4" />
               Delete
             </TabsTrigger>
           </TabsList>

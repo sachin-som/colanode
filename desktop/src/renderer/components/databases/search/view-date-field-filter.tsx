@@ -12,10 +12,11 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
-import { Icon } from '@/renderer/components/ui/icon';
-import { getFieldIcon, dateFieldFilterOperators } from '@/lib/databases';
+import { dateFieldFilterOperators } from '@/lib/databases';
 import { DatePicker } from '@/renderer/components/ui/date-picker';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
+import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewDateFieldFilterProps {
   field: DateFieldNode;
@@ -63,17 +64,14 @@ export const ViewDateFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <Icon name={getFieldIcon(field.dataType)} className="h-4 w-4" />
+            <FieldIcon type={field.dataType} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex flex-grow flex-row items-center gap-1 rounded-md p-1 font-semibold hover:cursor-pointer hover:bg-gray-100">
                 <p>{operator.label}</p>
-                <Icon
-                  name="arrow-down-s-line"
-                  className="h-4 w-4 text-muted-foreground"
-                />
+                <ChevronDown className="size-4 text-muted-foreground" />
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -106,7 +104,7 @@ export const ViewDateFieldFilter = ({
               viewSearch.removeFilter(filter.id);
             }}
           >
-            <Icon name="delete-bin-line" className="h-4 w-4" />
+            <Trash2 className="size-4" />
           </Button>
         </div>
         {!hideInput && (

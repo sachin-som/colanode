@@ -1,7 +1,7 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { ArrowDownAz } from 'lucide-react';
 
 export const ViewSortButton = () => {
   const viewSearch = useViewSearch();
@@ -12,7 +12,7 @@ export const ViewSortButton = () => {
         className="flex cursor-pointer items-center rounded-md p-1.5 hover:bg-gray-50"
         onClick={() => viewSearch.openSearchBar()}
       >
-        <Icon name="sort-desc" />
+        <ArrowDownAz className="size-4" />
       </button>
     );
   }
@@ -20,7 +20,7 @@ export const ViewSortButton = () => {
   return (
     <ViewSortAddPopover>
       <button className="flex cursor-pointer items-center rounded-md p-1.5 hover:bg-gray-50">
-        <Icon name="sort-desc" />
+        <ArrowDownAz className="size-4" />
       </button>
     </ViewSortAddPopover>
   );

@@ -11,8 +11,8 @@ import { ViewMultiSelectFieldFilter } from '@/renderer/components/databases/sear
 import { ViewDateFieldFilter } from '@/renderer/components/databases/search/view-date-field-filter';
 import { ViewCreatedAtFieldFilter } from '@/renderer/components/databases/search/view-created-at-field-fitler';
 import { ViewFilterAddPopover } from '@/renderer/components/databases/search/view-filter-add-popover';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useViewSearch } from '@/renderer/contexts/view-search';
+import { Plus } from 'lucide-react';
 
 export const ViewFilters = () => {
   const database = useDatabase();
@@ -129,7 +129,7 @@ export const ViewFilters = () => {
         })}
       <ViewFilterAddPopover>
         <button className="flex cursor-pointer flex-row items-center gap-1 rounded-lg p-1 text-sm text-muted-foreground hover:bg-gray-50">
-          <Icon name="add-line" />
+          <Plus className="size-4" />
           Add filter
         </button>
       </ViewFilterAddPopover>

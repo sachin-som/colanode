@@ -1,6 +1,5 @@
 import React from 'react';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { getDefaultNodeIcon } from '@/lib/nodes';
-import { NodeTypes } from '@/lib/constants';
 import { ChannelCreateDialog } from '@/renderer/components/channels/channel-create-dialog';
 import { PageCreateDialog } from '@/renderer/components/pages/page-create-dialog';
 import { DatabaseCreateDialog } from '@/renderer/components/databases/database-create-dialog';
@@ -32,6 +29,16 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { FolderCreateDialog } from '@/renderer/components/folders/folder-create-dialog';
 import { SpaceSettingsDialog } from '@/renderer/components/spaces/space-settings-dialog';
+import {
+  Ellipsis,
+  MessageCircle,
+  StickyNote,
+  Database,
+  Folder,
+  Settings,
+  Plus,
+  ChevronRight,
+} from 'lucide-react';
 
 interface SettingsState {
   open: boolean;
@@ -73,12 +80,9 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                 id={node.id}
                 avatar={node.avatar}
                 name={node.name}
-                className="h-4 w-4 group-hover/space-button:hidden"
+                className="size-4 group-hover/space-button:hidden"
               />
-              <Icon
-                name="arrow-right-s-line"
-                className="hidden h-4 w-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/collapsible:rotate-90"
-              />
+              <ChevronRight className="hidden size-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/collapsible:rotate-90" />
               <span>{node.name}</span>
             </SidebarMenuButton>
           </CollapsibleTrigger>
@@ -86,9 +90,9 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
             <DropdownMenuTrigger asChild>
               <SidebarMenuAction
                 showOnHover
-                className="h-5 w-5 focus-visible:outline-none focus-visible:ring-0"
+                className="size-4 focus-visible:outline-none focus-visible:ring-0"
               >
-                <Icon name="more-line" />
+                <Ellipsis />
               </SidebarMenuAction>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="ml-1 w-72">
@@ -96,25 +100,25 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name={getDefaultNodeIcon(NodeTypes.Page)} />
+                  <StickyNote className="size-4" />
                   <span>Add page</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setOpenCreateChannel(true)}>
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name={getDefaultNodeIcon(NodeTypes.Channel)} />
+                  <MessageCircle className="size-4" />
                   <span>Add channel</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setOpenCreateDatabase(true)}>
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name={getDefaultNodeIcon(NodeTypes.Database)} />
+                  <Database className="size-4" />
                   <span>Add database</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setOpenCreateFolder(true)}>
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name={getDefaultNodeIcon(NodeTypes.Folder)} />
+                  <Folder className="size-4" />
                   <span>Add folder</span>
                 </div>
               </DropdownMenuItem>
@@ -123,7 +127,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                 onClick={() => setSettingsState({ open: true })}
               >
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name="settings-3-line" />
+                  <Settings className="size-4" />
                   <span>Settings</span>
                 </div>
               </DropdownMenuItem>
@@ -136,7 +140,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                 }
               >
                 <div className="flex flex-row items-center gap-2">
-                  <Icon name="user-add-line" />
+                  <Plus className="size-4" />
                   <span>Add collaborators</span>
                 </div>
               </DropdownMenuItem>

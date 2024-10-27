@@ -8,13 +8,13 @@ import {
 import { formatDate, timeAgo } from '@/lib/utils';
 import { InView } from 'react-intersection-observer';
 import { MessageReactionCreatePopover } from '@/renderer/components/messages/message-reaction-create-popover';
-import { Icon } from '@/renderer/components/ui/icon';
 import { MessageDeleteButton } from '@/renderer/components/messages/message-delete-button';
 import { NodeRenderer } from '@/renderer/editor/renderers/node';
 import { MessageNode } from '@/types/messages';
 import { MessageReactions } from '@/renderer/components/messages/message-reactions';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { MessagesSquare, Reply } from 'lucide-react';
 
 interface MessageProps {
   message: MessageNode;
@@ -103,7 +103,7 @@ export const Message = ({
           <ul className="invisible absolute -top-2 right-1 z-10 flex flex-row bg-gray-100 text-muted-foreground shadow group-hover:visible">
             {canReplyInThread && (
               <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-                <Icon name="question-answer-line" className="cursor-pointer" />
+                <MessagesSquare className="size-4 cursor-pointer" />
               </li>
             )}
             <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
@@ -125,9 +125,8 @@ export const Message = ({
               />
             </li>
             <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-              <Icon
-                name="reply-line"
-                className="cursor-pointer"
+              <Reply
+                className="size-4 cursor-pointer"
                 onClick={() => {
                   onReply(message);
                 }}

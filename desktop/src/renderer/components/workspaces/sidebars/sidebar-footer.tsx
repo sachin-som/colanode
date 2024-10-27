@@ -15,7 +15,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
-import { Icon } from '@/renderer/components/ui/icon';
+import { ChevronsDownUp, ChevronsUpDown, LogOut } from 'lucide-react';
 
 export function SidebarFooter() {
   const account = useAccount();
@@ -40,7 +40,7 @@ export function SidebarFooter() {
                 <span className="truncate font-semibold">{account.name}</span>
                 <span className="truncate text-xs">{account.email}</span>
               </div>
-              <Icon name="expand-up-down-line" className="ml-auto" />
+              <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -70,7 +70,7 @@ export function SidebarFooter() {
                 account.logout();
               }}
             >
-              <Icon name="logout-circle-r-line" />
+              <LogOut className="size-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

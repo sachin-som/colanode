@@ -1,7 +1,6 @@
 import React from 'react';
 import { Editor } from '@tiptap/core';
 
-import { Icon } from '@/renderer/components/ui/icon';
 import { Input } from '@/renderer/components/ui/input';
 import {
   Popover,
@@ -9,6 +8,7 @@ import {
   PopoverContent,
 } from '@/renderer/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { Check, Link, Trash2 } from 'lucide-react';
 
 const isValidUrl = (url: string) => {
   try {
@@ -48,7 +48,7 @@ export const LinkButton = ({ editor, isOpen, setIsOpen }: LinkButtonProps) => {
             editor.isActive('link') ? 'bg-gray-100' : 'bg-white',
           )}
         >
-          <Icon name="link" />
+          <Link className="size-4" />
         </span>
       </PopoverTrigger>
 
@@ -81,14 +81,14 @@ export const LinkButton = ({ editor, isOpen, setIsOpen }: LinkButtonProps) => {
                 setIsOpen(false);
               }}
             >
-              <Icon name="delete-bin-line" />
+              <Trash2 className="size-4" />
             </button>
           ) : (
             <button
               type="submit"
               className="flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100"
             >
-              <Icon name="check-line" />
+              <Check className="size-4" />
             </button>
           )}
         </form>

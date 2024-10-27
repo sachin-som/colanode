@@ -1,9 +1,8 @@
 import React from 'react';
-
-import { Icon } from '@/renderer/components/ui/icon';
 import { defaultClasses } from '@/renderer/editor/classes';
 import { highlightCode, languages } from '@/lib/lowlight';
 import { JSONContent } from '@tiptap/core';
+import { Clipboard } from 'lucide-react';
 
 interface CodeBlockRendererProps {
   node: JSONContent;
@@ -39,7 +38,7 @@ export const CodeBlockRenderer = ({
             });
           }}
         >
-          <Icon name="clipboard-line" />
+          <Clipboard className="size-4" />
           <p>{copied ? 'Copied' : 'Copy code'}</p>
         </div>
       </div>

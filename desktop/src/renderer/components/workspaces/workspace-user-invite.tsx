@@ -1,11 +1,11 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { isValidEmail } from '@/lib/utils';
 import { Button } from '@/renderer/components/ui/button';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { toast } from '@/renderer/hooks/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { X } from 'lucide-react';
 
 export const WorkspaceUserInvite = () => {
   const workspace = useWorkspace();
@@ -32,9 +32,8 @@ export const WorkspaceUserInvite = () => {
               className="flex h-full flex-row items-center gap-1 border border-gray-200 bg-gray-100 p-0.5 px-1 text-primary shadow"
             >
               <span>{email}</span>
-              <Icon
-                name="close-line"
-                className="text-muted-foreground hover:cursor-pointer hover:text-primary"
+              <X
+                className="size-3 text-muted-foreground hover:cursor-pointer hover:text-primary"
                 onClick={() => {
                   setEmails((emails) => emails.filter((e) => e !== email));
                 }}

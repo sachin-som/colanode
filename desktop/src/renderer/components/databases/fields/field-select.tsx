@@ -13,10 +13,10 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { Icon } from '@/renderer/components/ui/icon';
-import { getFieldIcon } from '@/lib/databases';
 import { FieldDataType, FieldNode } from '@/types/databases';
 import { cn } from '@/lib/utils';
+import { FieldIcon } from './field-icon';
+import { Check, ChevronDown } from 'lucide-react';
 
 interface FieldSelectProps {
   fields: FieldNode[];
@@ -39,15 +39,13 @@ export const FieldSelect = ({ fields, value, onChange }: FieldSelectProps) => {
           className="w-full justify-between p-2"
         >
           <span className="flex flex-row items-center gap-1">
-            <Icon
-              name={getFieldIcon(selectedField?.dataType as FieldDataType)}
+            <FieldIcon
+              type={selectedField?.dataType as FieldDataType}
+              className="size-4"
             />
             {value ? selectedField?.name : 'Select field...'}
           </span>
-          <Icon
-            name="expand-up-down-line"
-            className="ml-2 h-4 w-4 shrink-0 opacity-50"
-          />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-1">
@@ -65,12 +63,11 @@ export const FieldSelect = ({ fields, value, onChange }: FieldSelectProps) => {
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <Icon name={getFieldIcon(field.dataType)} />
+                    <FieldIcon type={field.dataType} className="size-4" />
                     <p>{field.name}</p>
-                    <Icon
-                      name="check-line"
+                    <Check
                       className={cn(
-                        'ml-auto h-4 w-4',
+                        'ml-auto size-4',
                         value === field.id ? 'opacity-100' : 'opacity-0',
                       )}
                     />

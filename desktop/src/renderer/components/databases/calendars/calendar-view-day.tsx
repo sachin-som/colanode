@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn, isSameDay } from '@/lib/utils';
 import { RecordNode } from '@/types/databases';
-import { Icon } from '@/renderer/components/ui/icon';
 import { CalendarViewCard } from '@/renderer/components/databases/calendars/calendar-view-card';
+import { Plus } from 'lucide-react';
 
 interface CalendarViewDayProps {
   date: Date;
@@ -30,10 +30,9 @@ export const CalendarViewDay = ({
           isOutside ? 'text-muted-foreground' : '',
         )}
       >
-        <Icon
-          name="add-line"
+        <Plus
           className={cn(
-            'cursor-pointer opacity-0',
+            'size-4 cursor-pointer opacity-0',
             canCreateRecord ? 'group-hover:opacity-100' : '',
           )}
           onClick={() => {}}

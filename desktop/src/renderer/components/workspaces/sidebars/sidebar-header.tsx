@@ -1,10 +1,8 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { Icon } from '@/renderer/components/ui/icon';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
 import { useNavigate } from 'react-router-dom';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/renderer/components/ui/sidebar';
+import { ChevronsUpDown, Settings, Plus } from 'lucide-react';
 
 export const SidebarHeader = () => {
   const workspace = useWorkspace();
@@ -33,9 +32,9 @@ export const SidebarHeader = () => {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-0"
+              className="focus-visible:outline-none focus-visible:ring-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Avatar
                   id={workspace.id}
                   avatar={workspace.avatar}
@@ -47,7 +46,7 @@ export const SidebarHeader = () => {
                 <span className="truncate font-semibold">{workspace.name}</span>
                 <span className="truncate text-xs">Free Plan</span>
               </div>
-              <Icon name="expand-up-down-line" className="ml-auto" />
+              <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -62,7 +61,7 @@ export const SidebarHeader = () => {
                 workspace.openSettings();
               }}
             >
-              <Icon name="settings-4-line" className="size-4" />
+              <Settings className="size-4" />
               <p className="font-medium">Settings</p>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -93,7 +92,7 @@ export const SidebarHeader = () => {
                 navigate('/create');
               }}
             >
-              <Icon name="add-line" className="size-4" />
+              <Plus className="size-4" />
               <p className="font-medium">Create workspace</p>
             </DropdownMenuItem>
           </DropdownMenuContent>

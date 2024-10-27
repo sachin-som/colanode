@@ -4,7 +4,7 @@ import { useQuery } from '@/renderer/hooks/use-query';
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
-import { Icon } from '@/renderer/components/ui/icon';
+import { SquareArrowOutUpRight } from 'lucide-react';
 
 interface FileContainerProps {
   nodeId: string;
@@ -33,7 +33,7 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
               window.neuron.openFile(workspace.userId, data.id, data.extension)
             }
           >
-            <Icon name="external-link-line" className="mr-1" /> Open
+            <SquareArrowOutUpRight className="mr-1 size-4" /> Open
           </Button>
         </div>
         <div className="flex w-full max-w-full flex-grow items-center justify-center overflow-hidden">

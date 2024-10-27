@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Fullscreen } from 'lucide-react';
 
 interface ModalHeaderProps {
   nodeId: string;
@@ -14,7 +14,7 @@ export const ModalHeader = ({ nodeId }: ModalHeaderProps) => {
         className="cursor-pointer hover:bg-gray-50"
         onClick={() => workspace.navigateToNode(nodeId)}
       >
-        <Icon name="fullscreen-exit-line" />
+        <Fullscreen className="size-4" />
       </button>
     </div>
   );

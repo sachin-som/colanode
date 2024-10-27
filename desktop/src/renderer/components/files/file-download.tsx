@@ -1,8 +1,8 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Spinner } from '@/renderer/components/ui/spinner';
+import { Download } from 'lucide-react';
 
 interface FileDownloadProps {
   id: string;
@@ -30,7 +30,7 @@ export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {
           });
         }}
       >
-        <Icon name="download-2-line" className="h-10 w-10" />
+        <Download className="size-10" />
         <p className="text-sm">
           File is not downloaded in your device. Click to download.
         </p>

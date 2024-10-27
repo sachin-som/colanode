@@ -1,8 +1,8 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Plus } from 'lucide-react';
 
 export const TableViewRecordCreateRow = () => {
   const workspace = useWorkspace();
@@ -27,7 +27,7 @@ export const TableViewRecordCreateRow = () => {
         });
       }}
     >
-      <Icon name="add-line" />
+      <Plus className="size-4" />
       <span className="text-sm">Add record</span>
     </button>
   );

@@ -4,12 +4,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useTableView } from '@/renderer/contexts/table-view';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useDatabase } from '@/renderer/contexts/database';
 import { cn } from '@/lib/utils';
-import { getFieldIcon } from '@/lib/databases';
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +21,8 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { AvatarPopover } from '@/renderer/components/avatars/avatar-popover';
 import { Button } from '@/renderer/components/ui/button';
 import { Avatar } from '@/renderer/components/avatars/avatar';
+import { Eye, EyeOff, Settings, Trash2 } from 'lucide-react';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 
 export const TableViewSettingsPopover = () => {
   const workspace = useWorkspace();
@@ -43,7 +43,7 @@ export const TableViewSettingsPopover = () => {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger>
           <div className="flex cursor-pointer items-center rounded-md p-1.5 hover:bg-gray-50">
-            <Icon name="settings-3-line" />
+            <Settings className="size-4" />
           </div>
         </PopoverTrigger>
         <PopoverContent className="mr-4 flex w-[600px] flex-col gap-1.5 p-2">
@@ -106,17 +106,16 @@ export const TableViewSettingsPopover = () => {
                   )}
                 >
                   <div className="flex flex-row items-center gap-2">
-                    <Icon name={getFieldIcon(field.dataType)} />
+                    <FieldIcon type={field.dataType} className="size-4" />
                     <div>{field.name}</div>
                   </div>
                   <div className="flex flex-row items-center gap-2">
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Icon
-                          name={isHidden ? 'eye-off-line' : 'eye-line'}
-                          className={
-                            canEditView ? 'cursor-pointer' : 'opacity-50'
-                          }
+                      <TooltipTrigger>
+                        <span
+                          className={cn(
+                            canEditView ? 'cursor-pointer' : 'opacity-50',
+                          )}
                           onClick={() => {
                             if (!canEditView) return;
 
@@ -126,7 +125,13 @@ export const TableViewSettingsPopover = () => {
                               tableView.hideField(field.id);
                             }
                           }}
-                        />
+                        >
+                          {isHidden ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent className="flex flex-row items-center gap-2">
                         {isHidden
@@ -137,8 +142,11 @@ export const TableViewSettingsPopover = () => {
                     {canEditDatabase && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Icon
-                            name="delete-bin-line"
+                          <Trash2
+                            className={cn(
+                              'size-4',
+                              canEditView ? 'cursor-pointer' : 'opacity-50',
+                            )}
                             onClick={() => {
                               setDeleteFieldId(field.id);
                               setOpen(false);
@@ -167,7 +175,7 @@ export const TableViewSettingsPopover = () => {
                     setOpen(false);
                   }}
                 >
-                  <Icon name="delete-bin-line" />
+                  <Trash2 className="size-4" />
                   <span>Delete view</span>
                 </div>
               </div>

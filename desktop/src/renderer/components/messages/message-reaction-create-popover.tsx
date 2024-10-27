@@ -1,11 +1,11 @@
 import React from 'react';
-import { Icon } from '@/renderer/components/ui/icon';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { EmojiPicker } from '@/renderer/components/emojis/emoji-picker';
+import { SmilePlus } from 'lucide-react';
 
 interface MessageReactionProps {
   onReactionClick: (reaction: string) => void;
@@ -18,8 +18,8 @@ export const MessageReactionCreatePopover = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger asChild>
-        <Icon name="emoji-sticker-line" />
+      <PopoverTrigger>
+        <SmilePlus className="size-4" />
       </PopoverTrigger>
       <PopoverContent className="w-max p-0" align="end">
         <EmojiPicker

@@ -4,8 +4,8 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/renderer/components/ui/popover';
-import { Icon } from '@/renderer/components/ui/icon';
 import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
+import { UserRoundPlus } from 'lucide-react';
 
 interface NodeCollaboratorsPopoverProps {
   nodeId: string;
@@ -17,10 +17,7 @@ export const NodeCollaboratorsPopover = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Icon
-          name="user-add-line"
-          className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
-        />
+        <UserRoundPlus className="size-4 cursor-pointer text-muted-foreground hover:text-foreground" />
       </PopoverTrigger>
       <PopoverContent className="mr-2 max-h-128 w-128 overflow-auto">
         <NodeCollaborators nodeId={nodeId} />

@@ -7,8 +7,6 @@ import Suggestion, {
   type SuggestionProps,
 } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
-
-import { Icon } from '@/renderer/components/ui/icon';
 import { EditorCommandContext, EditorCommand } from '@/types/editor';
 import { updateScrollView } from '@/lib/utils';
 
@@ -116,8 +114,8 @@ const CommandList = ({
           key={item.key}
           onClick={() => selectItem(index)}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-md border border-stone-200 bg-white">
-            <Icon name={item.icon} />
+          <div className="flex size-10 items-center justify-center rounded-md border border-stone-200 bg-white">
+            <item.icon className="size-5" />
           </div>
           <div>
             <p className="font-medium">{item.name}</p>

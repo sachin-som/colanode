@@ -7,8 +7,8 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/renderer/components/ui/context-menu';
-import { Icon } from '@/renderer/components/ui/icon';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { Folder, Trash2 } from 'lucide-react';
 
 interface FileContextMenuProps {
   id: string;
@@ -31,7 +31,7 @@ export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
             className="pl-2"
           >
             <ContextMenuShortcut className="ml-0">
-              <Icon name="folder-line" className="mr-2 h-4 w-4" />
+              <Folder className="mr-2 size-4" />
             </ContextMenuShortcut>
             Open
           </ContextMenuItem>
@@ -40,7 +40,7 @@ export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
             className="flex items-center gap-x-2 pl-2 text-red-500"
           >
             <ContextMenuShortcut className="ml-0">
-              <Icon name="delete-bin-line" className="h-4 w-4 text-red-500" />
+              <Trash2 className="size-4 text-red-500" />
             </ContextMenuShortcut>
             <span className="text-red-500">Delete</span>
           </ContextMenuItem>

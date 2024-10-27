@@ -6,7 +6,7 @@ import {
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessageNode } from '@/types/messages';
-import { Icon } from '@/renderer/components/ui/icon';
+import { CircleX } from 'lucide-react';
 
 interface MessageCreateProps {
   conversationId: string;
@@ -50,7 +50,7 @@ export const MessageCreate = React.forwardRef<
                 setReplyTo(null);
               }}
             >
-              <Icon name="close-circle-line" />
+              <CircleX className="size-4" />
             </button>
           </div>
         )}

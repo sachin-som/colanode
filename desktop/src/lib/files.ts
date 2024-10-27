@@ -24,66 +24,6 @@ export const getFilePreviewType = (mimeType: string): FilePreviewType => {
   return 'other';
 };
 
-const fileIconMapping: Record<string, string> = {
-  'application/json': 'braces-fill',
-  'application/pdf': 'file-pdf-fill',
-  'application/msword': 'file-word-fill',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-    'file-word-fill',
-  'application/vnd.ms-excel': 'file-excel-fill',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-    'file-excel-fill',
-  'application/vnd.ms-powerpoint': 'file-ppt-fill',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-    'file-ppt-fill',
-
-  'text/css': 'css3-fill',
-  'text/html': 'html5-fill',
-  'text/csv': 'file-text-fill',
-  'text/plain': 'file-text-fill',
-
-  'image/jpeg': 'image-fill',
-  'image/png': 'image-fill',
-  'image/gif': 'image-fill',
-  'image/bmp': 'image-fill',
-  'image/svg+xml': 'image-fill',
-  'image/tiff': 'image-fill',
-  'image/webp': 'image-fill',
-  'image/heic': 'image-fill',
-  'image/heif': 'image-fill',
-
-  'video/mp4': 'video-fill',
-  'video/quicktime': 'video-fill', // For .mov files
-  'video/x-msvideo': 'video-fill', // For .avi files
-  'video/x-ms-wmv': 'video-fill', // For .wmv files
-  'video/mpeg': 'video-fill', // For .mpeg files
-  'video/webm': 'video-fill',
-  'video/ogg': 'video-fill',
-  'video/x-matroska': 'video-fill', // For .mkv files
-  'video/3gpp': 'video-fill', // For .3gp files
-  'video/3gpp2': 'video-fill', // For .3g2 files
-
-  'audio/mpeg': 'music-2-fill',
-  'audio/wav': 'music-2-fill',
-  'audio/ogg': 'music-2-fill',
-  'audio/flac': 'music-2-fill',
-  'audio/aac': 'music-2-fill',
-  'audio/webm': 'music-2-fill',
-  'audio/3gpp': 'music-2-fill',
-  'audio/3gpp2': 'music-2-fill',
-
-  'application/octet-stream': 'javascript-fill',
-  'application/x-javascript': 'javascript-fill',
-  'application/javascript': 'javascript-fill',
-  'application/zip': 'file-zip-fill',
-  'application/x-rar-compressed': 'file-zip-fill',
-  'application/x-7z-compressed': 'file-zip-fill',
-};
-
-export const getFileIcon = (mimeType: string) => {
-  return fileIconMapping[mimeType] || 'file-fill';
-};
-
 export const getFileUrl = (
   userId: string,
   fileId: string,

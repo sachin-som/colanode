@@ -5,11 +5,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { Icon } from '@/renderer/components/ui/icon';
-import { getFieldIcon } from '@/lib/databases';
 import { FieldRenameInput } from '@/renderer/components/databases/fields/field-rename-input';
 import { Separator } from '@/renderer/components/ui/separator';
 import { FieldDeleteDialog } from '@/renderer/components/databases/fields/field-delete-dialog';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
+import { Trash2 } from 'lucide-react';
 
 interface RecordFieldProps {
   field: FieldNode;
@@ -24,7 +24,7 @@ export const RecordField = ({ field }: RecordFieldProps) => {
       <Popover modal={true}>
         <PopoverTrigger asChild>
           <div className="flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50">
-            <Icon name={getFieldIcon(field.dataType)} />
+            <FieldIcon type={field.dataType} className="size-4" />
             <p>{field.name}</p>
           </div>
         </PopoverTrigger>
@@ -38,7 +38,7 @@ export const RecordField = ({ field }: RecordFieldProps) => {
                 setShowDeleteDialog(true);
               }}
             >
-              <Icon name="delete-bin-line" />
+              <Trash2 className="size-4" />
               <span>Delete field</span>
             </div>
           )}

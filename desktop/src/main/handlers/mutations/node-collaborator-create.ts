@@ -47,7 +47,9 @@ export class NodeCollaboratorCreateMutationHandler
       }
 
       const collaboratorsMap = attributesMap.get('collaborators') as Y.Map<any>;
-      collaboratorsMap.set(input.userId, input.role);
+      input.collaboratorIds.forEach((collaboratorId) => {
+        collaboratorsMap.set(collaboratorId, input.role);
+      });
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { Check, ChevronsDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 
 interface NodeCollaboratorRole {
   name: string;
@@ -51,7 +51,7 @@ export const NodeCollaboratorRoleDropdown = ({
       <DropdownMenuTrigger asChild>
         <p className="flex cursor-pointer flex-row items-center p-1 text-sm text-muted-foreground hover:bg-gray-50">
           {currentRole?.name}
-          <ChevronsDown className="ml-2 size-4 text-muted-foreground" />
+          <ChevronDown className="ml-2 size-4 text-muted-foreground" />
         </p>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

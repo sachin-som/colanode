@@ -6,23 +6,31 @@ import {
   QueryResult,
 } from '@/operations/queries';
 import { sql } from 'kysely';
-import { NodeTypes } from '@/lib/constants';
 import {
   InheritNodeCollaboratorsGroup,
+  LocalNodeAttributes,
   NodeCollaboratorNode,
   NodeCollaboratorsWrapper,
 } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
-type NodeCollaboratorRow = {
-  node_id: string;
-  node_level: number;
-  node_attributes: string;
-  node_parent_id: string | null;
-  collaborator_id: string;
-  collaborator_attributes: string;
+type NodeRow = {
+  id: string;
+  attributes: string;
+  parent_id: string | null;
+  level: number;
+};
+
+type NodeCollaboratorWithRole = {
+  nodeId: string;
+  collaboratorId: string;
   role: string;
+};
+
+type CollaboratorNodeRow = {
+  id: string;
+  attributes: string;
 };
 
 export class NodeCollaboratorListQueryHandler
@@ -31,11 +39,27 @@ export class NodeCollaboratorListQueryHandler
   public async handleQuery(
     input: NodeCollaboratorListQueryInput,
   ): Promise<QueryResult<NodeCollaboratorListQueryInput>> {
-    const rows = await this.fetchCollaborators(input);
+    const nodes = await this.fetchAncestors(input);
+    const collaboratorsWithRoles = this.extractCollaborators(nodes);
+    const collaboratorIds = collaboratorsWithRoles.map(
+      (collaborator) => collaborator.collaboratorId,
+    );
+    const collaboratorNodes = await this.fetchCollaborators(
+      input,
+      collaboratorIds,
+    );
+
     return {
-      output: this.buildNodeCollaborators(input.nodeId, rows),
+      output: this.buildNodeCollaborators(
+        input.nodeId,
+        nodes,
+        collaboratorNodes,
+        collaboratorsWithRoles,
+      ),
       state: {
-        rows,
+        nodes,
+        collaboratorsWithRoles,
+        collaboratorNodes,
       },
     };
   }
@@ -58,8 +82,21 @@ export class NodeCollaboratorListQueryHandler
       };
     }
 
-    const rows = await this.fetchCollaborators(input);
-    if (isEqual(rows, state.rows)) {
+    const nodes = await this.fetchAncestors(input);
+    const collaboratorsWithRoles = this.extractCollaborators(nodes);
+    const collaboratorIds = collaboratorsWithRoles.map(
+      (collaborator) => collaborator.collaboratorId,
+    );
+    const collaboratorNodes = await this.fetchCollaborators(
+      input,
+      collaboratorIds,
+    );
+
+    if (
+      isEqual(nodes, state.nodes) &&
+      isEqual(collaboratorsWithRoles, state.collaboratorsWithRoles) &&
+      isEqual(collaboratorNodes, state.collaboratorNodes)
+    ) {
       return {
         hasChanges: false,
       };
@@ -68,77 +105,137 @@ export class NodeCollaboratorListQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: this.buildNodeCollaborators(input.nodeId, rows),
+        output: this.buildNodeCollaborators(
+          input.nodeId,
+          nodes,
+          collaboratorNodes,
+          collaboratorsWithRoles,
+        ),
         state: {
-          rows,
+          nodes,
+          collaboratorsWithRoles,
+          collaboratorNodes,
         },
       },
     };
   }
 
-  private async fetchCollaborators(
+  private async fetchAncestors(
     input: NodeCollaboratorListQueryInput,
-  ): Promise<NodeCollaboratorRow[]> {
+  ): Promise<NodeRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 
-    const query = sql<NodeCollaboratorRow>`
-      WITH RECURSIVE ancestors(id, parent_id, level) AS (
-        SELECT id, parent_id, 0 AS level
+    const query = sql<NodeRow>`
+      WITH RECURSIVE ancestors(id, attributes, parent_id, level) AS (
+        SELECT id, attributes, parent_id, 0 AS level
         FROM nodes
         WHERE id = ${input.nodeId}
         UNION ALL
-        SELECT n.id, n.parent_id, a.level + 1
+        SELECT n.id, n.attributes, n.parent_id, a.level + 1
         FROM nodes n
         INNER JOIN ancestors a ON n.id = a.parent_id
       )
-      SELECT
-        nc.node_id,
-        a.level AS node_level,
-        nn.attributes AS node_attributes,
-        nn.parent_id AS node_parent_id,
-        nc.collaborator_id,
-        cn.attributes AS collaborator_attributes,
-        nc.role
-      FROM node_collaborators nc
-      JOIN ancestors a ON nc.node_id = a.id
-      JOIN nodes nn ON nc.node_id = nn.id
-      JOIN nodes cn ON nc.collaborator_id = cn.id
-      WHERE cn.type = ${NodeTypes.User};
+      SELECT id, attributes, parent_id, level
+      FROM ancestors
+      ORDER BY level DESC;
     `.compile(workspaceDatabase);
 
     const result = await workspaceDatabase.executeQuery(query);
     return result.rows;
   }
 
+  private extractCollaborators(nodes: NodeRow[]): NodeCollaboratorWithRole[] {
+    const extractedCollaborators: NodeCollaboratorWithRole[] = [];
+
+    for (const node of nodes) {
+      const attributes = JSON.parse(node.attributes) as LocalNodeAttributes;
+      const collaborators = attributes.collaborators;
+      if (!collaborators) {
+        continue;
+      }
+
+      const collaboratorIds = Object.keys(collaborators);
+      for (const collaboratorId of collaboratorIds) {
+        extractedCollaborators.push({
+          nodeId: node.id,
+          collaboratorId,
+          role: collaborators[collaboratorId],
+        });
+      }
+    }
+
+    return extractedCollaborators;
+  }
+
+  private async fetchCollaborators(
+    input: NodeCollaboratorListQueryInput,
+    collaboratorIds: string[],
+  ): Promise<CollaboratorNodeRow[]> {
+    if (collaboratorIds.length === 0) {
+      return [];
+    }
+
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    const result = await workspaceDatabase
+      .selectFrom('nodes')
+      .select(['id', 'attributes'])
+      .where('id', 'in', collaboratorIds)
+      .execute();
+
+    return result;
+  }
+
   private buildNodeCollaborators = (
     nodeId: string,
-    rows: NodeCollaboratorRow[],
+    nodes: NodeRow[],
+    collaboratorNodes: CollaboratorNodeRow[],
+    collaboratorsWithRoles: NodeCollaboratorWithRole[],
   ): NodeCollaboratorsWrapper => {
     const direct: NodeCollaboratorNode[] = [];
-    const inheritCollaboratorMap: Map<string, NodeCollaboratorRow> = new Map();
+    const inheritCollaboratorMap: Map<string, NodeCollaboratorWithRole> =
+      new Map();
 
-    for (const row of rows) {
-      if (row.node_id === nodeId) {
-        const collaboratorAttributes = JSON.parse(row.collaborator_attributes);
+    for (const collaboratorWithRole of collaboratorsWithRoles) {
+      if (collaboratorWithRole.nodeId === nodeId) {
+        const collaboratorAttributes = JSON.parse(
+          collaboratorNodes.find(
+            (row) => row.id === collaboratorWithRole.collaboratorId,
+          )?.attributes,
+        );
 
         const collaborator: NodeCollaboratorNode = {
-          id: row.collaborator_id,
+          id: collaboratorWithRole.collaboratorId,
           name: collaboratorAttributes.name,
           email: collaboratorAttributes.email,
           avatar: collaboratorAttributes.avatar || null,
-          role: row.role,
+          role: collaboratorWithRole.role,
         };
 
         direct.push(collaborator);
       } else {
-        if (!inheritCollaboratorMap.has(row.collaborator_id)) {
-          inheritCollaboratorMap.set(row.collaborator_id, row);
+        if (!inheritCollaboratorMap.has(collaboratorWithRole.collaboratorId)) {
+          inheritCollaboratorMap.set(collaboratorWithRole.collaboratorId, {
+            nodeId: collaboratorWithRole.nodeId,
+            collaboratorId: collaboratorWithRole.collaboratorId,
+            role: collaboratorWithRole.role,
+          });
         } else {
-          const existingRow = inheritCollaboratorMap.get(row.collaborator_id);
-          if (!existingRow || existingRow.node_level < row.node_level) {
-            inheritCollaboratorMap.set(row.collaborator_id, row);
+          const existingRow = inheritCollaboratorMap.get(
+            collaboratorWithRole.collaboratorId,
+          );
+          if (
+            !existingRow ||
+            existingRow.nodeId !== collaboratorWithRole.nodeId
+          ) {
+            inheritCollaboratorMap.set(
+              collaboratorWithRole.collaboratorId,
+              collaboratorWithRole,
+            );
           }
         }
       }
@@ -147,25 +244,49 @@ export class NodeCollaboratorListQueryHandler
     const inheritLeveledMap: Map<number, InheritNodeCollaboratorsGroup> =
       new Map();
 
-    for (const row of inheritCollaboratorMap.values()) {
-      if (!inheritLeveledMap.has(row.node_level)) {
-        const nodeAttributes = JSON.parse(row.node_attributes);
-        inheritLeveledMap.set(row.node_level, {
-          id: row.node_id,
+    for (const collaboratorWithRole of inheritCollaboratorMap.values()) {
+      if (
+        direct.some(
+          (collaborator) =>
+            collaborator.id === collaboratorWithRole.collaboratorId,
+        )
+      ) {
+        continue;
+      }
+
+      const nodeLevel = nodes.find(
+        (node) => node.id === collaboratorWithRole.nodeId,
+      )?.level;
+
+      if (nodeLevel === undefined) {
+        continue;
+      }
+
+      if (!inheritLeveledMap.has(nodeLevel)) {
+        const nodeAttributes = JSON.parse(
+          nodes.find((node) => node.id === collaboratorWithRole.nodeId)
+            ?.attributes,
+        );
+        inheritLeveledMap.set(nodeLevel, {
+          id: collaboratorWithRole.nodeId,
           name: nodeAttributes.name,
           avatar: nodeAttributes.avatar,
           collaborators: [],
         });
       }
 
-      const group = inheritLeveledMap.get(row.node_level);
-      const collaboratorAttributes = JSON.parse(row.collaborator_attributes);
+      const group = inheritLeveledMap.get(nodeLevel);
+      const collaboratorAttributes = JSON.parse(
+        collaboratorNodes.find(
+          (row) => row.id === collaboratorWithRole.collaboratorId,
+        )?.attributes,
+      );
       group.collaborators.push({
-        id: row.collaborator_id,
+        id: collaboratorWithRole.collaboratorId,
         name: collaboratorAttributes.name,
         avatar: collaboratorAttributes.avatar,
         email: collaboratorAttributes.email,
-        role: row.role,
+        role: collaboratorWithRole.role,
       });
     }
 

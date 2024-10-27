@@ -75,6 +75,10 @@ export class NodeCollaboratorSearchQueryHandler
   private async fetchNodes(
     input: NodeCollaboratorSearchQueryInput,
   ): Promise<SelectNode[]> {
+    if (input.searchQuery.length === 0) {
+      return [];
+    }
+
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );

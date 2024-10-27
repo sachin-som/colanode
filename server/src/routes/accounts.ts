@@ -16,6 +16,7 @@ import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
 import { mapNode } from '@/lib/nodes';
+import { enqueueTask } from '@/queues/tasks';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -217,6 +218,11 @@ accountsRouter.delete(
       .deleteFrom('devices')
       .where('id', '=', req.account.deviceId)
       .execute();
+
+    await enqueueTask({
+      type: 'clean_device_data',
+      deviceId: req.account.deviceId,
+    });
 
     return res.status(200).end();
   },

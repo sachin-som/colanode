@@ -1,5 +1,5 @@
 import { database } from '@/data/database';
-import { CHANNEL_NAMES, redis } from '@/data/redis';
+import { CHANNEL_NAMES, redis, redisConfig } from '@/data/redis';
 import { CreateNodeUserState } from '@/data/schema';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
@@ -14,21 +14,12 @@ import { ServerNodeAttributes } from '@/types/nodes';
 import { Job, Queue, Worker } from 'bullmq';
 import { difference } from 'lodash';
 
-const REDIS_HOST = process.env.REDIS_HOST;
-const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
-const REDIS_PORT = process.env.REDIS_PORT;
-const REDIS_DB = process.env.REDIS_DB;
-
-if (!REDIS_HOST || !REDIS_PASSWORD || !REDIS_PORT || !REDIS_DB) {
-  throw new Error('Redis configuration is missing');
-}
-
 const eventQueue = new Queue('events', {
   connection: {
-    host: REDIS_HOST,
-    password: REDIS_PASSWORD,
-    port: parseInt(REDIS_PORT),
-    db: parseInt(REDIS_DB),
+    host: redisConfig.host,
+    password: redisConfig.password,
+    port: redisConfig.port,
+    db: redisConfig.db,
   },
   defaultJobOptions: {
     removeOnComplete: true,
@@ -42,10 +33,10 @@ export const enqueueEvent = async (event: NodeEvent): Promise<void> => {
 export const initEventWorker = () => {
   return new Worker('events', handleEventJob, {
     connection: {
-      host: REDIS_HOST,
-      password: REDIS_PASSWORD,
-      port: parseInt(REDIS_PORT),
-      db: parseInt(REDIS_DB),
+      host: redisConfig.host,
+      password: redisConfig.password,
+      port: redisConfig.port,
+      db: redisConfig.db,
     },
   });
 };

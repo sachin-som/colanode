@@ -50,27 +50,33 @@ const createWindow = async () => {
     });
   }
 
-  protocol.handle('avatar', (request) => {
-    return avatarManager.handleAvatarRequest(request);
-  });
+  if (!protocol.isProtocolHandled('avatar')) {
+    protocol.handle('avatar', (request) => {
+      return avatarManager.handleAvatarRequest(request);
+    });
+  }
 
-  protocol.handle('local-file', (request) => {
-    return fileManager.handleFileRequest(request);
-  });
+  if (!protocol.isProtocolHandled('local-file')) {
+    protocol.handle('local-file', (request) => {
+      return fileManager.handleFileRequest(request);
+    });
+  }
 
-  protocol.handle('asset', (request) => {
-    const url = request.url.replace('asset://', '');
-    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-      return net.fetch(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/assets/${url}`);
-    }
+  if (!protocol.isProtocolHandled('asset')) {
+    protocol.handle('asset', (request) => {
+      const url = request.url.replace('asset://', '');
+      if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+        return net.fetch(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/assets/${url}`);
+      }
 
-    const localFileUrl = `file://${path.join(
-      process.resourcesPath,
-      'assets',
-      url,
-    )}`;
-    return net.fetch(localFileUrl);
-  });
+      const localFileUrl = `file://${path.join(
+        process.resourcesPath,
+        'assets',
+        url,
+      )}`;
+      return net.fetch(localFileUrl);
+    });
+  }
 };
 
 // This method will be called when Electron has finished
@@ -82,6 +88,8 @@ app.on('ready', createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  eventBus.unsubscribe(subscriptionId);
+  subscriptionId = null;
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -92,12 +100,6 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  }
-});
-
-app.on('before-quit', () => {
-  if (subscriptionId !== null) {
-    eventBus.unsubscribe(subscriptionId);
   }
 });
 

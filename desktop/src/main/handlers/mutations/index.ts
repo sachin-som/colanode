@@ -35,6 +35,7 @@ import { FolderCreateMutationHandler } from '@/main/handlers/mutations/folder-cr
 import { FileCreateMutationHandler } from '@/main/handlers/mutations/file-create';
 import { FileDownloadMutationHandler } from '@/main/handlers/mutations/file-download';
 import { SpaceUpdateMutationHandler } from '@/main/handlers/mutations/space-update';
+import { AccountUpdateMutationHandler } from '@/main/handlers/mutations/account-update';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -77,4 +78,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   file_create: new FileCreateMutationHandler(),
   file_download: new FileDownloadMutationHandler(),
   space_update: new SpaceUpdateMutationHandler(),
+  account_update: new AccountUpdateMutationHandler(),
 };

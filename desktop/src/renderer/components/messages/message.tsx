@@ -70,6 +70,7 @@ export const Message = ({
           <Avatar
             id={message.author.id}
             name={message.author.name}
+            avatar={message.author.avatar}
             size="medium"
           />
         )}

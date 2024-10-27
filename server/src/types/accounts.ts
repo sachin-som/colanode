@@ -43,14 +43,13 @@ export enum AccountStatus {
   Active = 2,
 }
 
-export type Account = {
+export type AccountUpdateInput = {
+  name: string;
+  avatar?: string | null;
+};
+
+export type AccountUpdateOutput = {
   id: string;
   name: string;
-  email: string;
   avatar?: string | null;
-  password?: string | null;
-  attrs?: Record<string, any>;
-  createdAt: Date;
-  updatedAt?: Date | null;
-  status: AccountStatus;
 };

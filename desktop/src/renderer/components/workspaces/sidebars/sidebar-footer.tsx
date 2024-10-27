@@ -15,7 +15,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
-import { ChevronsDownUp, ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
 export function SidebarFooter() {
   const account = useAccount();
@@ -64,6 +64,15 @@ export function SidebarFooter() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="flex items-center gap-2"
+              onClick={() => {
+                account.openSettings();
+              }}
+            >
+              <Settings className="size-4" />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center gap-2"
               onClick={() => {

@@ -6,9 +6,11 @@ import { Outlet } from 'react-router-dom';
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { DelayedComponent } from '@/renderer/components/ui/delayed-component';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
 
 export const App = () => {
   const [showLogout, setShowLogout] = React.useState(false);
+  const [showAccountSettings, setShowAccountSettings] = React.useState(false);
 
   const { data: servers, isPending: isPendingServers } = useQuery({
     type: 'server_list',
@@ -54,6 +56,9 @@ export const App = () => {
         logout: () => {
           setShowLogout(true);
         },
+        openSettings: () => {
+          setShowAccountSettings(true);
+        },
       }}
     >
       <Outlet />
@@ -66,6 +71,13 @@ export const App = () => {
           onLogout={() => {
             setShowLogout(false);
           }}
+        />
+      )}
+      {showAccountSettings && (
+        <AccountSettingsDialog
+          id={account.id}
+          open={showAccountSettings}
+          onOpenChange={setShowAccountSettings}
         />
       )}
     </AccountContext.Provider>

@@ -1,23 +1,19 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
-import { WorkspaceUpdateMutationInput } from '@/operations/mutations/workspace-update';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
-import { Workspace } from '@/types/workspaces';
+import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { AccountUpdateOutput } from '@/types/accounts';
+import { AccountUpdateMutationInput } from '@/operations/mutations/account-update';
 
-export class WorkspaceUpdateMutationHandler
-  implements MutationHandler<WorkspaceUpdateMutationInput>
+export class AccountUpdateMutationHandler
+  implements MutationHandler<AccountUpdateMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUpdateMutationInput,
-  ): Promise<MutationResult<WorkspaceUpdateMutationInput>> {
+    input: AccountUpdateMutationInput,
+  ): Promise<MutationResult<AccountUpdateMutationInput>> {
     const account = await databaseManager.appDatabase
       .selectFrom('accounts')
       .selectAll()
-      .where('id', '=', input.accountId)
+      .where('id', '=', input.id)
       .executeTakeFirst();
 
     if (!account) {
@@ -34,11 +30,10 @@ export class WorkspaceUpdateMutationHandler
       throw new Error('Account not found');
     }
 
-    const { data } = await httpClient.put<Workspace>(
-      `/v1/workspaces/${input.id}`,
+    const { data } = await httpClient.put<AccountUpdateOutput>(
+      `/v1/accounts/${input.id}`,
       {
         name: input.name,
-        description: input.description,
         avatar: input.avatar,
       },
       {
@@ -49,20 +44,12 @@ export class WorkspaceUpdateMutationHandler
     );
 
     await databaseManager.appDatabase
-      .updateTable('workspaces')
+      .updateTable('accounts')
       .set({
         name: data.name,
-        description: data.description,
         avatar: data.avatar,
-        role: data.role,
-        version_id: data.versionId,
       })
-      .where((eb) =>
-        eb.and([
-          eb('account_id', '=', input.accountId),
-          eb('workspace_id', '=', input.id),
-        ]),
-      )
+      .where('id', '=', input.id)
       .execute();
 
     return {
@@ -72,7 +59,7 @@ export class WorkspaceUpdateMutationHandler
       changes: [
         {
           type: 'app',
-          table: 'workspaces',
+          table: 'accounts',
         },
       ],
     };

@@ -1,11 +1,7 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { WorkspaceOutput } from '@/types/workspaces';
 
 export class WorkspaceCreateMutationHandler
@@ -86,23 +82,21 @@ export class WorkspaceCreateMutationHandler
       .onConflict((cb) => cb.doNothing())
       .execute();
 
-    const changedTables: MutationChange[] = [
-      {
-        type: 'app',
-        table: 'workspaces',
-      },
-      {
-        type: 'workspace',
-        table: 'nodes',
-        userId: user.id,
-      },
-    ];
-
     return {
       output: {
         id: data.id,
       },
-      changes: changedTables,
+      changes: [
+        {
+          type: 'app',
+          table: 'workspaces',
+        },
+        {
+          type: 'workspace',
+          table: 'nodes',
+          userId: user.id,
+        },
+      ],
     };
   }
 }

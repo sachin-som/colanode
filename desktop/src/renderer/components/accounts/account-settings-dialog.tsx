@@ -10,23 +10,24 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
-import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { WorkspaceUpdate } from '@/renderer/components/workspaces/workspace-update';
-import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { Info, Trash2, Users } from 'lucide-react';
+import { Avatar } from '../avatars/avatar';
+import { useAccount } from '@/renderer/contexts/account';
+import { Info, Trash2 } from 'lucide-react';
+import { AccountUpdate } from '@/renderer/components/accounts/account-update';
 
-interface WorkspaceSettingsDialogProps {
+interface AccountSettingsDialogProps {
+  id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const WorkspaceSettingsDialog = ({
+export const AccountSettingsDialog = ({
+  id,
   open,
   onOpenChange,
-}: WorkspaceSettingsDialogProps) => {
-  const workspace = useWorkspace();
+}: AccountSettingsDialogProps) => {
+  const account = useAccount();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,12 +46,12 @@ export const WorkspaceSettingsDialog = ({
             <div className="mb-1 flex h-10 w-full items-center justify-between bg-gray-50 p-1 text-foreground/80">
               <div className="flex items-center gap-2">
                 <Avatar
-                  id={workspace.id}
-                  name={workspace.name}
-                  avatar={workspace.avatar}
+                  id={account.id}
+                  name={account.name}
+                  avatar={account.avatar}
                   size="small"
                 />
-                <span>{workspace.name}</span>
+                <span>{account.name}</span>
               </div>
             </div>
             <TabsTrigger
@@ -60,14 +61,6 @@ export const WorkspaceSettingsDialog = ({
             >
               <Info className="mr-2 size-4" />
               Info
-            </TabsTrigger>
-            <TabsTrigger
-              key={`tab-trigger-collaborators`}
-              className="w-full justify-start p-2 hover:bg-gray-50"
-              value="users"
-            >
-              <Users className="mr-2 size-4" />
-              Users
             </TabsTrigger>
             <TabsTrigger
               key={`tab-trigger-delete`}
@@ -84,14 +77,7 @@ export const WorkspaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="info"
             >
-              <WorkspaceUpdate />
-            </TabsContent>
-            <TabsContent
-              key="tab-content-collaborators"
-              className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="users"
-            >
-              <WorkspaceUsers />
+              <AccountUpdate />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"

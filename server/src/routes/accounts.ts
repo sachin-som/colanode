@@ -1,6 +1,8 @@
 import { Request, Response, Router } from 'express';
 import {
   AccountStatus,
+  AccountUpdateInput,
+  AccountUpdateOutput,
   EmailLoginInput,
   EmailRegisterInput,
   GoogleLoginInput,
@@ -17,6 +19,12 @@ import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
 import { mapNode } from '@/lib/nodes';
 import { enqueueTask } from '@/queues/tasks';
+import * as Y from 'yjs';
+import { fromUint8Array, toUint8Array } from 'js-base64';
+import { CompiledQuery } from 'kysely';
+import { ServerNodeAttributes } from '@/types/nodes';
+import { NodeUpdatedEvent } from '@/types/events';
+import { enqueueEvent } from '@/queues/events';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -225,6 +233,157 @@ accountsRouter.delete(
     });
 
     return res.status(200).end();
+  },
+);
+
+accountsRouter.put(
+  '/:id',
+  authMiddleware,
+  async (req: NeuronRequest, res: NeuronResponse) => {
+    const id = req.params.id;
+    const input: AccountUpdateInput = req.body;
+
+    if (!req.account) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    if (id !== req.account.id) {
+      return res.status(400).json({
+        code: ApiError.BadRequest,
+        message: 'Invalid account id.',
+      });
+    }
+
+    const account = await database
+      .selectFrom('accounts')
+      .where('id', '=', req.account.id)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!account) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Account not found.',
+      });
+    }
+
+    const nameChanged = account.name !== input.name;
+    const avatarChanged = account.avatar !== input.avatar;
+
+    if (!nameChanged && !avatarChanged) {
+      return res.status(400).json({
+        code: ApiError.BadRequest,
+        message: 'Nothing to update.',
+      });
+    }
+
+    const users = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where(
+        'id',
+        'in',
+        database
+          .selectFrom('workspace_users')
+          .select('id')
+          .where('account_id', '=', req.account.id),
+      )
+      .execute();
+
+    const updates: CompiledQuery[] = [];
+    const events: NodeUpdatedEvent[] = [];
+
+    updates.push(
+      database
+        .updateTable('accounts')
+        .set({
+          name: input.name,
+          avatar: input.avatar,
+          updated_at: new Date(),
+        })
+        .where('id', '=', req.account.id)
+        .compile(),
+    );
+
+    for (const user of users) {
+      const name = user.attributes.name;
+      const avatar = user.attributes.avatar;
+
+      if (account.name !== name || account.avatar !== avatar) {
+        continue;
+      }
+
+      const doc = new Y.Doc({
+        guid: user.id,
+      });
+      Y.applyUpdate(doc, toUint8Array(user.state));
+
+      const attributesMap = doc.getMap('attributes');
+      if (name != input.name) {
+        attributesMap.set('name', input.name);
+      }
+
+      if (avatar != input.avatar) {
+        attributesMap.set('avatar', input.avatar);
+      }
+
+      const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+      const attributesJson = JSON.stringify(attributes);
+      const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+      const updatedAt = new Date();
+      const versionId = generateId(IdType.Version);
+
+      updates.push(
+        database
+          .updateTable('nodes')
+          .set({
+            attributes: attributesJson,
+            state: encodedState,
+            updated_at: updatedAt,
+            updated_by: user.id,
+            version_id: versionId,
+            server_updated_at: updatedAt,
+          })
+          .where('id', '=', user.id)
+          .compile(),
+      );
+
+      const event: NodeUpdatedEvent = {
+        type: 'node_updated',
+        id: user.id,
+        workspaceId: user.workspace_id,
+        beforeAttributes: user.attributes,
+        afterAttributes: attributes,
+        updatedBy: user.id,
+        updatedAt: updatedAt.toISOString(),
+        serverUpdatedAt: updatedAt.toISOString(),
+        versionId,
+      };
+
+      events.push(event);
+    }
+
+    await database.transaction().execute(async (trx) => {
+      for (const update of updates) {
+        await trx.executeQuery(update);
+      }
+    });
+
+    for (const event of events) {
+      await enqueueEvent(event);
+    }
+
+    const output: AccountUpdateOutput = {
+      id: account.id,
+      name: input.name,
+      avatar: input.avatar,
+    };
+
+    return res.status(200).json(output);
   },
 );
 

@@ -15,3 +15,9 @@ export type Account = {
   status: string;
   server: string;
 };
+
+export type AccountUpdateOutput = {
+  id: string;
+  name: string;
+  avatar?: string | null;
+};

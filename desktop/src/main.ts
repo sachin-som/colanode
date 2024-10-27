@@ -44,9 +44,11 @@ const createWindow = async () => {
     mainWindow.webContents.openDevTools();
   }
 
-  subscriptionId = eventBus.subscribe((event) => {
-    mainWindow.webContents.send('event', event);
-  });
+  if (subscriptionId === null) {
+    subscriptionId = eventBus.subscribe((event) => {
+      mainWindow.webContents.send('event', event);
+    });
+  }
 
   protocol.handle('avatar', (request) => {
     return avatarManager.handleAvatarRequest(request);
@@ -94,7 +96,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-  if (subscriptionId) {
+  if (subscriptionId !== null) {
     eventBus.unsubscribe(subscriptionId);
   }
 });

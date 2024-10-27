@@ -12,7 +12,7 @@ export const ChatCreatePopover = () => {
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Plus className="mr-2 size-4 cursor-pointer" />
       </PopoverTrigger>
       <PopoverContent className="w-96 p-1">

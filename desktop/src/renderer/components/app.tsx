@@ -63,6 +63,9 @@ export const App = () => {
           onCancel={() => {
             setShowLogout(false);
           }}
+          onLogout={() => {
+            setShowLogout(false);
+          }}
         />
       )}
     </AccountContext.Provider>

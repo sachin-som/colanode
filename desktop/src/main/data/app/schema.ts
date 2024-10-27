@@ -44,8 +44,16 @@ export type SelectWorkspace = Selectable<WorkspaceTable>;
 export type CreateWorkspace = Insertable<WorkspaceTable>;
 export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
+interface DeletedTokenTable {
+  token: ColumnType<string, string, never>;
+  account_id: ColumnType<string, string, never>;
+  server: ColumnType<string, string, never>;
+  created_at: ColumnType<string, string, string>;
+}
+
 export interface AppDatabaseSchema {
   servers: ServerTable;
   accounts: AccountTable;
   workspaces: WorkspaceTable;
+  deleted_tokens: DeletedTokenTable;
 }

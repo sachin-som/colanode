@@ -16,6 +16,7 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { Server } from '@/types/servers';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
@@ -27,6 +28,7 @@ interface EmailLoginProps {
 }
 
 export const EmailLogin = ({ server }: EmailLoginProps) => {
+  const navigate = useNavigate();
   const { mutate, isPending } = useMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,7 +47,7 @@ export const EmailLogin = ({ server }: EmailLoginProps) => {
         server: server.domain,
       },
       onSuccess() {
-        window.location.href = '/';
+        navigate('/');
       },
       onError() {
         toast({

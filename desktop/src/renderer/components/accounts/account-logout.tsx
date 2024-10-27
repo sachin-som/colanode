@@ -16,9 +16,14 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface AccountLogoutProps {
   id: string;
   onCancel: () => void;
+  onLogout: () => void;
 }
 
-export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
+export const AccountLogout = ({
+  id,
+  onCancel,
+  onLogout,
+}: AccountLogoutProps) => {
   const { mutate, isPending } = useMutation();
   return (
     <AlertDialog
@@ -48,7 +53,7 @@ export const AccountLogout = ({ id, onCancel }: AccountLogoutProps) => {
                   accountId: id,
                 },
                 onSuccess() {
-                  window.location.href = '/';
+                  onLogout();
                 },
                 onError() {
                   toast({

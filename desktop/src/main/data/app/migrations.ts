@@ -25,7 +25,7 @@ const createServersTable: Migration = {
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'eu.neuronapp.io',
+          domain: 'server-eu.neuronapp.io',
           name: 'Neuron Cloud (EU)',
           avatar: '',
           attributes: '{}',
@@ -33,7 +33,7 @@ const createServersTable: Migration = {
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'us.neuronapp.io',
+          domain: 'server-us.neuronapp.io',
           name: 'Neuron Cloud (US)',
           avatar: '',
           attributes: '{}',
@@ -88,8 +88,24 @@ const createWorkspacesTable: Migration = {
   },
 };
 
+const createDeletedTokensTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('deleted_tokens')
+      .addColumn('account_id', 'text', (col) => col.notNull())
+      .addColumn('token', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('server', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('deleted_tokens').execute();
+  },
+};
+
 export const appDatabaseMigrations: Record<string, Migration> = {
   '00001_create_servers_table': createServersTable,
   '00002_create_accounts_table': createAccountsTable,
   '00003_create_workspaces_table': createWorkspacesTable,
+  '00004_create_deleted_tokens_table': createDeletedTokensTable,
 };

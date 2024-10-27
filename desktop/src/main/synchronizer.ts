@@ -29,7 +29,7 @@ class Synchronizer {
 
   private async executeEventLoop() {
     try {
-      await this.syncLoggedOutAccounts();
+      await this.syncDeletedTokens();
       await this.syncWorkspaces();
     } catch (error) {
       console.log('error', error);
@@ -38,63 +38,38 @@ class Synchronizer {
     setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
   }
 
-  private async syncLoggedOutAccounts() {
-    const accounts = await databaseManager.appDatabase
-      .selectFrom('accounts')
-      .innerJoin('servers', 'accounts.server', 'servers.domain')
+  private async syncDeletedTokens() {
+    const deletedTokens = await databaseManager.appDatabase
+      .selectFrom('deleted_tokens')
+      .innerJoin('servers', 'deleted_tokens.server', 'servers.domain')
       .select([
-        'accounts.id',
-        'accounts.token',
+        'deleted_tokens.token',
+        'deleted_tokens.account_id',
         'servers.domain',
         'servers.attributes',
       ])
-      .where('status', '=', 'logged_out')
       .execute();
 
-    if (accounts.length === 0) {
+    if (deletedTokens.length === 0) {
       return;
     }
 
-    for (const account of accounts) {
+    for (const deletedToken of deletedTokens) {
       try {
         const { status } = await httpClient.delete(`/v1/accounts/logout`, {
-          serverDomain: account.domain,
-          serverAttributes: account.attributes,
-          token: account.token,
+          serverDomain: deletedToken.domain,
+          serverAttributes: deletedToken.attributes,
+          token: deletedToken.token,
         });
 
         if (status !== 200) {
           return;
         }
 
-        const workspaces = await databaseManager.appDatabase
-          .selectFrom('workspaces')
-          .selectAll()
-          .where('account_id', '=', account.id)
-          .execute();
-
-        for (const workspace of workspaces) {
-          await databaseManager.deleteWorkspaceDatabase(workspace.user_id);
-
-          const workspaceDir = getWorkspaceDirectoryPath(workspace.user_id);
-          if (fs.existsSync(workspaceDir)) {
-            fs.rmSync(workspaceDir, { recursive: true });
-          }
-        }
-
-        const avatarsDir = getAccountAvatarsDirectoryPath(account.id);
-        if (fs.existsSync(avatarsDir)) {
-          fs.rmSync(avatarsDir, { recursive: true });
-        }
-
         await databaseManager.appDatabase
-          .deleteFrom('accounts')
-          .where('id', '=', account.id)
-          .execute();
-
-        await databaseManager.appDatabase
-          .deleteFrom('workspaces')
-          .where('account_id', '=', account.id)
+          .deleteFrom('deleted_tokens')
+          .where('token', '=', deletedToken.token)
+          .where('account_id', '=', deletedToken.account_id)
           .execute();
       } catch (error) {
         // console.log('error', error);

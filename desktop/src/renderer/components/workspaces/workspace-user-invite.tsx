@@ -80,6 +80,10 @@ export const WorkspaceUserInvite = () => {
                 emails: emails,
                 userId: workspace.userId,
               },
+              onSuccess() {
+                setEmails([]);
+                setInput('');
+              },
               onError() {
                 toast({
                   title: 'Failed to invite users',

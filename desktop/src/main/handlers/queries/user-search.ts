@@ -18,16 +18,10 @@ export class UserSearchQueryHandler
   public async handleQuery(
     input: UserSearchQueryInput,
   ): Promise<QueryResult<UserSearchQueryInput>> {
-    if (input.searchQuery.length === 0) {
-      return {
-        output: [],
-        state: {
-          rows: [],
-        },
-      };
-    }
-
-    const rows = await this.fetchNodes(input);
+    const rows =
+      input.searchQuery.length > 0
+        ? await this.searchUsers(input)
+        : await this.fetchUsers(input);
     return {
       output: this.buildUserNodes(rows),
       state: {
@@ -54,7 +48,11 @@ export class UserSearchQueryHandler
       };
     }
 
-    const rows = await this.fetchNodes(input);
+    const rows =
+      input.searchQuery.length > 0
+        ? await this.searchUsers(input)
+        : await this.fetchUsers(input);
+
     if (isEqual(rows, state.rows)) {
       return {
         hasChanges: false,
@@ -72,7 +70,9 @@ export class UserSearchQueryHandler
     };
   }
 
-  private async fetchNodes(input: UserSearchQueryInput): Promise<SelectNode[]> {
+  private async searchUsers(
+    input: UserSearchQueryInput,
+  ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
@@ -88,6 +88,19 @@ export class UserSearchQueryHandler
 
     const result = await workspaceDatabase.executeQuery(query);
     return result.rows;
+  }
+
+  private async fetchUsers(input: UserSearchQueryInput): Promise<SelectNode[]> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    return workspaceDatabase
+      .selectFrom('nodes')
+      .where('type', '=', NodeTypes.User)
+      .where('id', '!=', input.userId)
+      .selectAll()
+      .execute();
   }
 
   private buildUserNodes = (rows: SelectNode[]): UserNode[] => {

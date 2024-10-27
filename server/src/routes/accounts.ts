@@ -25,6 +25,7 @@ import { CompiledQuery } from 'kysely';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
+import { SelectAccount } from '@/data/schema';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -37,30 +38,47 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
 
   let existingAccount = await database
     .selectFrom('accounts')
+    .selectAll()
     .where('email', '=', email)
     .executeTakeFirst();
 
-  if (existingAccount) {
-    return res.status(400).json({
-      code: ApiError.EmailAlreadyExists,
-      message: 'Email already exists.',
-    });
-  }
-
   const salt = await bcrypt.genSalt(SaltRounds);
   const password = await bcrypt.hash(input.password, salt);
-  const account = await database
-    .insertInto('accounts')
-    .values({
-      id: generateId(IdType.Account),
-      name: input.name,
-      email: email,
-      password: password,
-      status: AccountStatus.Active,
-      created_at: new Date(),
-    })
-    .returningAll()
-    .executeTakeFirst();
+
+  let account: SelectAccount | null | undefined = null;
+  if (existingAccount) {
+    if (existingAccount.status !== AccountStatus.Pending) {
+      return res.status(400).json({
+        code: ApiError.EmailAlreadyExists,
+        message: 'Email already exists.',
+      });
+    }
+
+    account = await database
+      .updateTable('accounts')
+      .set({
+        password: password,
+        name: input.name,
+        updated_at: new Date(),
+        status: AccountStatus.Active,
+      })
+      .where('id', '=', existingAccount.id)
+      .returningAll()
+      .executeTakeFirst();
+  } else {
+    account = await database
+      .insertInto('accounts')
+      .values({
+        id: generateId(IdType.Account),
+        name: input.name,
+        email: email,
+        password: password,
+        status: AccountStatus.Active,
+        created_at: new Date(),
+      })
+      .returningAll()
+      .executeTakeFirst();
+  }
 
   if (!account) {
     return res.status(500).json({
@@ -153,23 +171,17 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
     .executeTakeFirst();
 
   if (existingAccount) {
-    if (existingAccount.status === AccountStatus.Pending) {
-      return res.status(400).json({
-        code: ApiError.UserPendingActivation,
-        message: 'User is pending activation.',
-      });
-    }
-
     const attrs = existingAccount.attrs
       ? JSON.parse(existingAccount.attrs)
       : {};
 
-    if (attrs?.googleId) {
+    if (attrs?.googleId || existingAccount.status === AccountStatus.Pending) {
       await database
         .updateTable('accounts')
         .set({
           attrs: JSON.stringify({ googleId: googleUser.id }),
           updated_at: new Date(),
+          status: AccountStatus.Active,
         })
         .where('id', '=', existingAccount.id)
         .execute();

@@ -33,7 +33,7 @@ export class WorkspaceListQueryHandler
   ): Promise<ChangeCheckResult<WorkspaceListQueryInput>> {
     if (
       !changes.some(
-        (change) => change.type === 'app' && change.table === 'accounts',
+        (change) => change.type === 'app' && change.table === 'workspaces',
       )
     ) {
       return {

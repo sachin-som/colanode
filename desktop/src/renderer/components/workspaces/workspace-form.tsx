@@ -25,7 +25,7 @@ import { Upload } from 'lucide-react';
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
   description: z.string(),
-  avatar: z.string().optional(),
+  avatar: z.string().optional().nullable(),
 });
 
 type formSchemaType = z.infer<typeof formSchema>;

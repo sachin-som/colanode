@@ -32,8 +32,8 @@ export const WorkspaceCreate = () => {
                 accountId: account.id,
                 avatar: values.avatar,
               },
-              onSuccess(id) {
-                navigate(`/${id}`);
+              onSuccess(output) {
+                navigate(`/${output.id}`);
               },
               onError() {
                 toast({

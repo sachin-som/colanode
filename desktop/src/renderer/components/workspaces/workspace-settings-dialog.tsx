@@ -55,7 +55,7 @@ export const WorkspaceSettingsDialog = ({
               className="w-full justify-start p-2 hover:bg-gray-50"
               value="info"
             >
-              <Info className="mr-2" />
+              <Info className="mr-2 size-4" />
               Info
             </TabsTrigger>
             <TabsTrigger

@@ -1,5 +1,9 @@
 import React from 'react';
-import { Dialog, DialogContent } from '@/renderer/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/renderer/components/ui/dialog';
 
 import {
   Tabs,
@@ -11,6 +15,8 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { SpaceUpdateForm } from '@/renderer/components/spaces/space-update-form';
 import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form';
 import { Info, Trash2, Users } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
 
 interface SpaceSettingsDialogProps {
   id: string;
@@ -32,6 +38,9 @@ export const SpaceSettingsDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="md:min-h-3/4 md:max-h-3/4 p-3 md:h-3/4 md:w-3/4 md:max-w-full">
+        <VisuallyHidden>
+          <DialogTitle>Space Settings</DialogTitle>
+        </VisuallyHidden>
         <Tabs
           defaultValue={defaultTab ?? 'info'}
           className="grid h-full max-h-full grid-cols-[240px_minmax(0,1fr)] overflow-hidden"
@@ -81,7 +90,7 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              {/* <SpaceCollaborators id={id} /> */}
+              <NodeCollaborators nodeId={id} />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"

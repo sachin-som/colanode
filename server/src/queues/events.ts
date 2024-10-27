@@ -12,7 +12,7 @@ import {
 } from '@/types/events';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { Job, Queue, Worker } from 'bullmq';
-import { difference, isEqual } from 'lodash';
+import { difference } from 'lodash';
 
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
@@ -66,25 +66,13 @@ const handleEventJob = async (job: Job) => {
 const handleNodeCreatedEvent = async (
   event: NodeCreatedEvent,
 ): Promise<void> => {
-  const collaboratorIds: string[] = [];
-
   if (event.attributes.type === NodeTypes.User) {
     const userIds = await fetchWorkspaceUsers(event.workspaceId);
-    collaboratorIds.push(...userIds);
-  } else {
-    const collaborators = await fetchNodeCollaborators(event.id);
-    collaboratorIds.push(...collaborators.map((c) => c.collaboratorId));
-  }
+    const userStatesToCreate: CreateNodeUserState[] = [];
 
-  if (collaboratorIds.length === 0) {
-    return;
-  }
-
-  await database
-    .insertInto('node_user_states')
-    .values(
-      collaboratorIds.map((collaboratorId) => ({
-        user_id: collaboratorId,
+    for (const userId of userIds) {
+      userStatesToCreate.push({
+        user_id: userId,
         node_id: event.id,
         last_seen_version_id: null,
         workspace_id: event.workspaceId,
@@ -94,10 +82,56 @@ const handleNodeCreatedEvent = async (
         access_removed_at: null,
         version_id: generateId(IdType.Version),
         updated_at: null,
-      })),
-    )
-    .onConflict((cb) => cb.doNothing())
-    .execute();
+      });
+
+      if (userId === event.id) {
+        continue;
+      }
+
+      userStatesToCreate.push({
+        user_id: event.id,
+        node_id: userId,
+        last_seen_version_id: null,
+        workspace_id: event.workspaceId,
+        last_seen_at: null,
+        mentions_count: 0,
+        created_at: new Date(),
+        access_removed_at: null,
+        version_id: generateId(IdType.Version),
+        updated_at: null,
+      });
+    }
+
+    if (userStatesToCreate.length > 0) {
+      await database
+        .insertInto('node_user_states')
+        .values(userStatesToCreate)
+        .onConflict((cb) => cb.doNothing())
+        .execute();
+    }
+  } else {
+    const collaborators = await fetchNodeCollaborators(event.id);
+    const collaboratorIds = collaborators.map((c) => c.collaboratorId);
+
+    await database
+      .insertInto('node_user_states')
+      .values(
+        collaboratorIds.map((collaboratorId) => ({
+          user_id: collaboratorId,
+          node_id: event.id,
+          last_seen_version_id: null,
+          workspace_id: event.workspaceId,
+          last_seen_at: null,
+          mentions_count: 0,
+          created_at: new Date(),
+          access_removed_at: null,
+          version_id: generateId(IdType.Version),
+          updated_at: null,
+        })),
+      )
+      .onConflict((cb) => cb.doNothing())
+      .execute();
+  }
 
   await publishChange(event.id, event.workspaceId, 'node_create');
 };
@@ -126,10 +160,10 @@ const handleNodeUpdatedEvent = async (
       .execute();
 
     const descendantIds = descendants.map((d) => d.descendant_id);
-    const userStatesToCreated: CreateNodeUserState[] = [];
+    const userStatesToCreate: CreateNodeUserState[] = [];
     for (const collaboratorId of addedCollaborators) {
       for (const descendantId of descendantIds) {
-        userStatesToCreated.push({
+        userStatesToCreate.push({
           user_id: collaboratorId,
           node_id: descendantId,
           last_seen_version_id: null,
@@ -143,10 +177,10 @@ const handleNodeUpdatedEvent = async (
       }
     }
 
-    if (userStatesToCreated.length > 0) {
+    if (userStatesToCreate.length > 0) {
       await database
         .insertInto('node_user_states')
-        .values(userStatesToCreated)
+        .values(userStatesToCreate)
         .onConflict((cb) => cb.doNothing())
         .execute();
     }

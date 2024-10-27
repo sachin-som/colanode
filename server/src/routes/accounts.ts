@@ -26,6 +26,7 @@ import { ServerNodeAttributes } from '@/types/nodes';
 import { NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { SelectAccount } from '@/data/schema';
+import { createDefaultWorkspace } from '@/lib/workspaces';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -87,12 +88,7 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
     });
   }
 
-  const output = await buildLoginOutput(
-    account.id,
-    account.name,
-    account.email,
-  );
-
+  const output = await buildLoginOutput(account);
   return res.status(200).json(output);
 });
 
@@ -135,11 +131,7 @@ accountsRouter.post('/login/email', async (req: Request, res: Response) => {
     });
   }
 
-  const output = await buildLoginOutput(
-    account.id,
-    account.name,
-    account.email,
-  );
+  const output = await buildLoginOutput(account);
   return res.status(200).json(output);
 });
 
@@ -187,11 +179,7 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
         .execute();
     }
 
-    const output = await buildLoginOutput(
-      existingAccount.id,
-      existingAccount.name,
-      existingAccount.email,
-    );
+    const output = await buildLoginOutput(existingAccount);
     return res.status(200).json(output);
   }
 
@@ -215,11 +203,7 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
     });
   }
 
-  const output = await buildLoginOutput(
-    newAccount.id,
-    newAccount.name,
-    newAccount.email,
-  );
+  const output = await buildLoginOutput(newAccount);
   return res.status(200).json(output);
 });
 
@@ -400,15 +384,23 @@ accountsRouter.put(
 );
 
 const buildLoginOutput = async (
-  id: string,
-  name: string,
-  email: string,
+  account: SelectAccount,
 ): Promise<LoginOutput> => {
-  const workspaceUsers = await database
+  let workspaceUsers = await database
     .selectFrom('workspace_users')
-    .where('account_id', '=', id)
+    .where('account_id', '=', account.id)
     .selectAll()
     .execute();
+
+  if (workspaceUsers.length === 0) {
+    await createDefaultWorkspace(account);
+
+    workspaceUsers = await database
+      .selectFrom('workspace_users')
+      .where('account_id', '=', account.id)
+      .selectAll()
+      .execute();
+  }
 
   const workspaceOutputs: WorkspaceOutput[] = [];
   if (workspaceUsers.length > 0) {
@@ -463,7 +455,7 @@ const buildLoginOutput = async (
     .insertInto('devices')
     .values({
       id: deviceId,
-      account_id: id,
+      account_id: account.id,
       token_hash: hash,
       token_salt: salt,
       token_generated_at: new Date(),
@@ -481,9 +473,9 @@ const buildLoginOutput = async (
   return {
     account: {
       token,
-      id,
-      name,
-      email,
+      id: account.id,
+      name: account.name,
+      email: account.email,
       deviceId: device.id,
     },
     workspaces: workspaceOutputs,

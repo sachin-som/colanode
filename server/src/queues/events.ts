@@ -130,6 +130,13 @@ const handleNodeCreatedEvent = async (
 const handleNodeUpdatedEvent = async (
   event: NodeUpdatedEvent,
 ): Promise<void> => {
+  await checkForCollaboratorsChange(event);
+  await publishChange(event.id, event.workspaceId, 'node_update');
+};
+
+const checkForCollaboratorsChange = async (
+  event: NodeUpdatedEvent,
+): Promise<void> => {
   const beforeCollaborators = extractCollaboratorIds(event.beforeAttributes);
   const afterCollaborators = extractCollaboratorIds(event.afterAttributes);
 
@@ -143,63 +150,88 @@ const handleNodeUpdatedEvent = async (
     afterCollaborators,
   );
 
+  if (addedCollaborators.length === 0 && removedCollaborators.length === 0) {
+    return;
+  }
+
   if (addedCollaborators.length > 0) {
-    const descendants = await database
-      .selectFrom('node_paths')
-      .select('descendant_id')
-      .where('ancestor_id', '=', event.id)
+    const existingNodeUserStates = await database
+      .selectFrom('node_user_states')
+      .select('user_id')
+      .where('node_id', '=', event.id)
+      .where('user_id', 'in', addedCollaborators)
       .execute();
 
-    const descendantIds = descendants.map((d) => d.descendant_id);
-    const userStatesToCreate: CreateNodeUserState[] = [];
-    for (const collaboratorId of addedCollaborators) {
-      for (const descendantId of descendantIds) {
-        userStatesToCreate.push({
-          user_id: collaboratorId,
-          node_id: descendantId,
-          last_seen_version_id: null,
-          workspace_id: event.workspaceId,
-          last_seen_at: null,
-          mentions_count: 0,
-          created_at: new Date(),
-          access_removed_at: null,
-          version_id: generateId(IdType.Version),
-        });
-      }
-    }
+    const existingCollaboratorIds = existingNodeUserStates.map(
+      (e) => e.user_id,
+    );
 
-    if (userStatesToCreate.length > 0) {
-      await database
-        .insertInto('node_user_states')
-        .values(userStatesToCreate)
-        .onConflict((cb) => cb.doNothing())
+    const actualAddedCollaborators = difference(
+      addedCollaborators,
+      existingCollaboratorIds,
+    );
+
+    if (actualAddedCollaborators.length > 0) {
+      const descendants = await database
+        .selectFrom('node_paths')
+        .select('descendant_id')
+        .where('ancestor_id', '=', event.id)
         .execute();
+
+      const descendantIds = descendants.map((d) => d.descendant_id);
+      const userStatesToCreate: CreateNodeUserState[] = [];
+      for (const collaboratorId of addedCollaborators) {
+        for (const descendantId of descendantIds) {
+          userStatesToCreate.push({
+            user_id: collaboratorId,
+            node_id: descendantId,
+            last_seen_version_id: null,
+            workspace_id: event.workspaceId,
+            last_seen_at: null,
+            mentions_count: 0,
+            created_at: new Date(),
+            access_removed_at: null,
+            version_id: generateId(IdType.Version),
+          });
+        }
+      }
+
+      if (userStatesToCreate.length > 0) {
+        await database
+          .insertInto('node_user_states')
+          .values(userStatesToCreate)
+          .onConflict((cb) => cb.doNothing())
+          .execute();
+      }
     }
   }
 
   if (removedCollaborators.length > 0) {
-    await database
-      .updateTable('node_user_states')
-      .set({
-        access_removed_at: new Date(),
-      })
-      .where((eb) =>
-        eb.and([
-          eb('user_id', 'in', removedCollaborators),
-          eb(
-            'node_id',
-            'in',
-            eb
-              .selectFrom('node_paths')
-              .select('descendant_id')
-              .where('ancestor_id', '=', event.id),
-          ),
-        ]),
-      )
-      .execute();
-  }
+    const nodeCollaborators = await fetchNodeCollaborators(event.id);
+    const nodeCollaboratorIds = nodeCollaborators.map((c) => c.collaboratorId);
+    const actualRemovedCollaborators = difference(
+      removedCollaborators,
+      nodeCollaboratorIds,
+    );
 
-  await publishChange(event.id, event.workspaceId, 'node_update');
+    if (actualRemovedCollaborators.length > 0) {
+      const descendants = await database
+        .selectFrom('node_paths')
+        .select('descendant_id')
+        .where('ancestor_id', '=', event.id)
+        .execute();
+
+      const descendantIds = descendants.map((d) => d.descendant_id);
+      await database
+        .updateTable('node_user_states')
+        .set({
+          access_removed_at: new Date(),
+        })
+        .where('user_id', 'in', actualRemovedCollaborators)
+        .where('node_id', 'in', descendantIds)
+        .execute();
+    }
+  }
 };
 
 const extractCollaboratorIds = (collaborators: ServerNodeAttributes) => {

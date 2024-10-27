@@ -1,3 +1,6 @@
+import { Account } from '@/types/accounts';
+import { WorkspaceOutput } from '@/types/workspaces';
+
 export type EmailLoginMutationInput = {
   type: 'email_login';
   server: string;
@@ -5,8 +8,18 @@ export type EmailLoginMutationInput = {
   password: string;
 };
 
-export type EmailLoginMutationOutput = {
-  success: boolean;
+export type EmailLoginMutationOutput =
+  | EmailLoginMutationSuccessOutput
+  | EmailLoginMutationErrorOutput;
+
+export type EmailLoginMutationSuccessOutput = {
+  success: true;
+  account: Account;
+  workspaces: WorkspaceOutput[];
+};
+
+export type EmailLoginMutationErrorOutput = {
+  success: false;
 };
 
 declare module '@/operations/mutations' {

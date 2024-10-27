@@ -121,6 +121,8 @@ export class EmailRegisterMutationHandler
     return {
       output: {
         success: true,
+        account: data.account,
+        workspaces: data.workspaces,
       },
       changes: changedTables,
     };

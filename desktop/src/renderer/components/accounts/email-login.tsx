@@ -46,8 +46,20 @@ export const EmailLogin = ({ server }: EmailLoginProps) => {
         password: values.password,
         server: server.domain,
       },
-      onSuccess() {
-        navigate('/');
+      onSuccess(output) {
+        if (output.success) {
+          if (output.workspaces.length > 0) {
+            navigate(`/${output.workspaces[0].id}`);
+          } else {
+            navigate('/create');
+          }
+        } else {
+          toast({
+            title: 'Failed to login',
+            description: 'Invalid email or password.',
+            variant: 'destructive',
+          });
+        }
       },
       onError() {
         toast({

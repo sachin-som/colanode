@@ -1,3 +1,6 @@
+import { Account } from '@/types/accounts';
+import { WorkspaceOutput } from '@/types/workspaces';
+
 export type EmailRegisterMutationInput = {
   type: 'email_register';
   server: string;
@@ -6,8 +9,18 @@ export type EmailRegisterMutationInput = {
   password: string;
 };
 
-export type EmailRegisterMutationOutput = {
-  success: boolean;
+export type EmailRegisterMutationOutput =
+  | EmailRegisterMutationSuccessOutput
+  | EmailRegisterMutationErrorOutput;
+
+export type EmailRegisterMutationSuccessOutput = {
+  success: true;
+  account: Account;
+  workspaces: WorkspaceOutput[];
+};
+
+export type EmailRegisterMutationErrorOutput = {
+  success: false;
 };
 
 declare module '@/operations/mutations' {

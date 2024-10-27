@@ -12,7 +12,7 @@ export const WorkspaceCreate = () => {
   const { mutate, isPending } = useMutation();
 
   const handleCancel =
-    account.workspaces.length > 1 ? () => navigate('/') : undefined;
+    account.workspaces.length > 0 ? () => navigate('/') : undefined;
 
   return (
     <div className="container flex flex-row justify-center">

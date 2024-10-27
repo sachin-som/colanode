@@ -49,8 +49,20 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
         password: values.password,
         server: server.domain,
       },
-      onSuccess() {
-        navigate('/');
+      onSuccess(output) {
+        if (output.success) {
+          if (output.workspaces.length > 0) {
+            navigate(`/${output.workspaces[0].id}`);
+          } else {
+            navigate('/create');
+          }
+        } else {
+          toast({
+            title: 'Failed to register',
+            description: 'Email already in use.',
+            variant: 'destructive',
+          });
+        }
       },
       onError() {
         toast({

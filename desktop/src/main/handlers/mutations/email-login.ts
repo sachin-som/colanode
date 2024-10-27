@@ -120,6 +120,8 @@ export class EmailLoginMutationHandler
     return {
       output: {
         success: true,
+        account: data.account,
+        workspaces: data.workspaces,
       },
       changes: changedTables,
     };

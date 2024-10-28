@@ -209,13 +209,24 @@ export const applyChangeToYDoc = (doc: Y.Doc, blocks: NodeBlock[]) => {
   }
 
   const contentMap = attributesMap.get('content') as Y.Map<any>;
+  const blockIds = new Set<string>();
   for (const block of blocks) {
+    blockIds.add(block.id);
+
     if (!contentMap.has(block.id)) {
       contentMap.set(block.id, new Y.Map());
     }
 
     const blockMap = contentMap.get(block.id) as Y.Map<any>;
     applyBlockChangesToYDoc(blockMap, block);
+  }
+
+  const deletedBlockIds = Array.from(contentMap.keys()).filter(
+    (id) => !blockIds.has(id),
+  );
+
+  for (const id of deletedBlockIds) {
+    contentMap.delete(id);
   }
 };
 

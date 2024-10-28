@@ -12,8 +12,9 @@ import {
 } from '@/operations/queries';
 
 import { SelectNode } from '@/main/data/workspace/schema';
-import { mapNode } from '@/lib/nodes';
 import { MutationChange } from '@/operations/mutations';
+import { LocalNodeAttributes } from '@/types/nodes';
+import { mapBlocksToContents } from '@/lib/editor';
 
 export class DocumentGetQueryHandler
   implements QueryHandler<DocumentGetQueryInput>
@@ -88,8 +89,10 @@ export class DocumentGetQueryHandler
       };
     }
 
-    const node = mapNode(document);
-    const contents = node.attributes?.content ?? [];
+    const attributes = JSON.parse(document.attributes) as LocalNodeAttributes;
+    const nodeBlocks = Object.values(attributes?.content ?? {});
+    const contents = mapBlocksToContents(document.id, nodeBlocks);
+
     if (!contents.length) {
       contents.push({
         type: 'paragraph',

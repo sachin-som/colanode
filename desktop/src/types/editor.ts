@@ -1,5 +1,4 @@
 import { Editor, type Range } from '@tiptap/core';
-import { LocalNodeAttributes } from '@/types/nodes';
 import { FC } from 'react';
 
 export type EditorCommandProps = {
@@ -21,9 +20,4 @@ export type EditorCommand = {
   icon: FC<React.SVGProps<SVGSVGElement>>;
   handler: (props: EditorCommandProps) => void | Promise<void>;
   disabled?: boolean;
-};
-
-export type EditorNode = {
-  id: string;
-  attributes: LocalNodeAttributes;
 };

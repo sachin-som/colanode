@@ -1,11 +1,12 @@
 import * as Y from 'yjs';
 import { fromUint8Array, toUint8Array } from 'js-base64';
-import { mapNode } from '@/lib/nodes';
 import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { DocumentSaveMutationInput } from '@/operations/mutations/document-save';
 import { generateId, IdType } from '@/lib/id';
 import { LocalUpdateNodeChangeData } from '@/types/sync';
+import { applyChangeToYDoc, mapContentsToBlocks } from '@/lib/editor';
+import { LocalNodeAttributes, NodeBlock } from '@/types/nodes';
 
 export class DocumentSaveMutationHandler
   implements MutationHandler<DocumentSaveMutationInput>
@@ -32,29 +33,53 @@ export class DocumentSaveMutationHandler
       };
     }
 
-    const node = mapNode(document);
     const versionId = generateId(IdType.Version);
     const updatedAt = new Date().toISOString();
     const updates: string[] = [];
 
     const doc = new Y.Doc({
-      guid: node.id,
+      guid: document.id,
     });
-    Y.applyUpdate(doc, toUint8Array(node.state));
+    Y.applyUpdate(doc, toUint8Array(document.state));
 
     doc.on('update', (update) => {
       updates.push(fromUint8Array(update));
     });
 
-    const attributesMap = doc.getMap('attributes');
-    attributesMap.set('content', input.content.content);
+    const attributes = JSON.parse(document.attributes) as LocalNodeAttributes;
+    const blocksMap = new Map<string, NodeBlock>();
+    if (attributes.content) {
+      for (const [key, value] of Object.entries(attributes.content)) {
+        blocksMap.set(key, value);
+      }
+    }
 
-    const attributes = JSON.stringify(attributesMap.toJSON());
+    const blocks = mapContentsToBlocks(
+      document.id,
+      input.content.content,
+      blocksMap,
+    );
+
+    doc.transact(() => {
+      applyChangeToYDoc(doc, blocks);
+    });
+
+    if (updates.length === 0) {
+      return {
+        output: {
+          success: true,
+        },
+        changes: [],
+      };
+    }
+
+    const attributesMap = doc.getMap('attributes');
+    const attributesJson = JSON.stringify(attributesMap.toJSON());
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
 
     const changeData: LocalUpdateNodeChangeData = {
       type: 'node_update',
-      id: node.id,
+      id: document.id,
       updatedAt: updatedAt,
       updatedBy: input.userId,
       versionId: versionId,
@@ -65,7 +90,7 @@ export class DocumentSaveMutationHandler
       await trx
         .updateTable('nodes')
         .set({
-          attributes: attributes,
+          attributes: attributesJson,
           state: encodedState,
           updated_at: updatedAt,
           updated_by: input.userId,

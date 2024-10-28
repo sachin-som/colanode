@@ -1,5 +1,3 @@
-import { JSONContent } from '@tiptap/core';
-
 export type LocalNode = {
   id: string;
   parentId: string | null;
@@ -21,19 +19,28 @@ export type LocalNodeAttributes = {
   type: string;
   parentId?: string | null;
   index?: string | null;
-  content?: JSONContent[] | null;
+  content?: Record<string, NodeBlock> | null;
   [key: string]: any;
 };
 
 export type NodeBlock = {
+  id: string;
   type: string;
-  text?: string | null;
-  marks?: NodeBlockMark[];
+  index: string;
+  parentId: string;
+  content: NodeBlockContent[] | null;
+  attrs: Record<string, any> | null;
 };
 
-export type NodeBlockMark = {
+export type NodeBlockContent = {
   type: string;
-  attrs: any;
+  text?: string | null;
+  marks?: NodeBlocContentkMark[];
+};
+
+export type NodeBlocContentkMark = {
+  type: string;
+  attrs: Record<string, any>;
 };
 
 export type LocalNodeWithChildren = LocalNode & {
@@ -60,7 +67,7 @@ export type ServerNodeAttributes = {
   type: string;
   parentId?: string | null;
   index?: string | null;
-  content?: NodeBlock[] | null;
+  content?: NodeBlockContent[] | null;
   [key: string]: any;
 };
 

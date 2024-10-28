@@ -13,6 +13,7 @@ import { mapNode } from '@/lib/nodes';
 import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash';
+import { mapBlocksToContents } from '@/lib/editor';
 
 export class MessageListQueryHandler
   implements QueryHandler<MessageListQueryInput>
@@ -159,10 +160,13 @@ export class MessageListQueryHandler
         author: author ?? {
           id: messageNode.createdBy,
           name: 'Unknown User',
-          email: 'unknown@neuron.com',
+          email: 'unknown@colanode.com',
           avatar: null,
         },
-        content: messageNode.attributes.content,
+        content: mapBlocksToContents(
+          messageNode.id,
+          Object.values(messageNode.attributes.content ?? {}),
+        ),
         reactionCounts,
       };
 

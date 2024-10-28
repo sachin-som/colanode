@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { database } from '@/data/database';
+import { database, hasUpdateChanges } from '@/data/database';
 import { Router } from 'express';
 import {
   LocalChange,
@@ -190,72 +190,82 @@ const handleUpdateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
   changeData: LocalUpdateNodeChangeData,
 ): Promise<SyncLocalChangeResult> => {
-  const existingNode = await database
-    .selectFrom('nodes')
-    .select(['id', 'workspace_id', 'attributes', 'state'])
-    .where('id', '=', changeData.id)
-    .executeTakeFirst();
+  let count = 0;
+  while (count++ < 10) {
+    const existingNode = await database
+      .selectFrom('nodes')
+      .select(['id', 'workspace_id', 'attributes', 'state'])
+      .where('id', '=', changeData.id)
+      .executeTakeFirst();
 
-  if (
-    !existingNode ||
-    existingNode.workspace_id != workspaceUser.workspace_id
-  ) {
-    return {
-      status: 'error',
-    };
+    if (
+      !existingNode ||
+      existingNode.workspace_id != workspaceUser.workspace_id
+    ) {
+      return {
+        status: 'error',
+      };
+    }
+
+    const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
+    if (role === null) {
+      return {
+        status: 'error',
+      };
+    }
+
+    const doc = new Y.Doc({
+      guid: changeData.id,
+    });
+
+    Y.applyUpdate(doc, toUint8Array(existingNode.state));
+
+    for (const update of changeData.updates) {
+      Y.applyUpdate(doc, toUint8Array(update));
+    }
+
+    const attributesMap = doc.getMap('attributes');
+    const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+    const attributesJson = JSON.stringify(attributes);
+    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    const result = await database
+      .updateTable('nodes')
+      .set({
+        attributes: attributesJson,
+        state: encodedState,
+        updated_at: new Date(changeData.updatedAt),
+        updated_by: changeData.updatedBy,
+        version_id: changeData.versionId,
+        server_updated_at: new Date(),
+      })
+      .where('id', '=', changeData.id)
+      .where('version_id', '=', changeData.versionId)
+      .execute();
+
+    if (hasUpdateChanges(result)) {
+      const event: NodeUpdatedEvent = {
+        type: 'node_updated',
+        id: changeData.id,
+        workspaceId: workspaceUser.workspace_id,
+        beforeAttributes: existingNode.attributes,
+        afterAttributes: attributes,
+        updatedBy: changeData.updatedBy,
+        updatedAt: changeData.updatedAt,
+        serverUpdatedAt: new Date().toISOString(),
+        versionId: changeData.versionId,
+      };
+
+      await enqueueEvent(event);
+
+      return {
+        status: 'success',
+      };
+    }
   }
-
-  const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
-  if (role === null) {
-    return {
-      status: 'error',
-    };
-  }
-
-  const doc = new Y.Doc({
-    guid: changeData.id,
-  });
-
-  Y.applyUpdate(doc, toUint8Array(existingNode.state));
-
-  for (const update of changeData.updates) {
-    Y.applyUpdate(doc, toUint8Array(update));
-  }
-
-  const attributesMap = doc.getMap('attributes');
-  const attributes = attributesMap.toJSON() as ServerNodeAttributes;
-  const attributesJson = JSON.stringify(attributes);
-  const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
-
-  await database
-    .updateTable('nodes')
-    .set({
-      attributes: attributesJson,
-      state: encodedState,
-      updated_at: new Date(changeData.updatedAt),
-      updated_by: changeData.updatedBy,
-      version_id: changeData.versionId,
-      server_updated_at: new Date(),
-    })
-    .where('id', '=', changeData.id)
-    .execute();
-
-  const event: NodeUpdatedEvent = {
-    type: 'node_updated',
-    id: changeData.id,
-    workspaceId: workspaceUser.workspace_id,
-    beforeAttributes: existingNode.attributes,
-    afterAttributes: attributes,
-    updatedBy: changeData.updatedBy,
-    updatedAt: changeData.updatedAt,
-    serverUpdatedAt: new Date().toISOString(),
-    versionId: changeData.versionId,
-  };
-
-  await enqueueEvent(event);
 
   return {
-    status: 'success',
+    status: 'error',
   };
 };
 

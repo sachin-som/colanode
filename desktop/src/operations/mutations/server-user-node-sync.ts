@@ -1,5 +1,5 @@
-export type ServerNodeUserStateSyncMutationInput = {
-  type: 'server_node_user_state_sync';
+export type ServerUserNodeSyncMutationInput = {
+  type: 'server_user_node_sync';
   accountId: string;
   nodeId: string;
   userId: string;
@@ -12,15 +12,15 @@ export type ServerNodeUserStateSyncMutationInput = {
   updatedAt: string | null;
 };
 
-export type ServerNodeUserStateSyncMutationOutput = {
+export type ServerUserNodeSyncMutationOutput = {
   success: boolean;
 };
 
 declare module '@/operations/mutations' {
   interface MutationMap {
-    server_node_user_state_sync: {
-      input: ServerNodeUserStateSyncMutationInput;
-      output: ServerNodeUserStateSyncMutationOutput;
+    server_user_node_sync: {
+      input: ServerUserNodeSyncMutationInput;
+      output: ServerUserNodeSyncMutationOutput;
     };
   }
 }

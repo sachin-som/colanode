@@ -1,18 +1,14 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
-import { ServerNodeUserStateSyncMutationInput } from '@/operations/mutations/server-node-user-state-sync';
+import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { ServerUserNodeSyncMutationInput } from '@/operations/mutations/server-user-node-sync';
 
-export class ServerNodeUserStateSyncMutationHandler
-  implements MutationHandler<ServerNodeUserStateSyncMutationInput>
+export class ServerUserNodeSyncMutationHandler
+  implements MutationHandler<ServerUserNodeSyncMutationInput>
 {
   public async handleMutation(
-    input: ServerNodeUserStateSyncMutationInput,
-  ): Promise<MutationResult<ServerNodeUserStateSyncMutationInput>> {
+    input: ServerUserNodeSyncMutationInput,
+  ): Promise<MutationResult<ServerUserNodeSyncMutationInput>> {
     const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -37,10 +33,10 @@ export class ServerNodeUserStateSyncMutationHandler
       await databaseManager.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
-      .insertInto('node_user_states')
+      .insertInto('user_nodes')
       .values({
-        node_id: input.nodeId,
         user_id: input.userId,
+        node_id: input.nodeId,
         version_id: input.versionId,
         last_seen_at: input.lastSeenAt,
         last_seen_version_id: input.lastSeenVersionId,
@@ -60,11 +56,11 @@ export class ServerNodeUserStateSyncMutationHandler
       .execute();
 
     socketManager.sendMessage(workspace.account_id, {
-      type: 'local_node_user_state_sync',
+      type: 'local_user_node_sync',
+      userId: input.userId,
       nodeId: input.nodeId,
       versionId: input.versionId,
       workspaceId: input.workspaceId,
-      userId: input.userId,
     });
 
     return {
@@ -74,7 +70,7 @@ export class ServerNodeUserStateSyncMutationHandler
       changes: [
         {
           type: 'workspace',
-          table: 'node_user_states',
+          table: 'user_nodes',
           userId: userId,
         },
       ],

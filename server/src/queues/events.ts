@@ -1,6 +1,6 @@
 import { database } from '@/data/database';
 import { redisConfig } from '@/data/redis';
-import { CreateNodeUserState } from '@/data/schema';
+import { CreateUserNode } from '@/data/schema';
 import { filesStorage } from '@/data/storage';
 import { BUCKET_NAMES } from '@/data/storage';
 import { NodeTypes } from '@/lib/constants';
@@ -61,7 +61,7 @@ const handleEventJob = async (job: Job) => {
 const handleNodeCreatedEvent = async (
   event: NodeCreatedEvent,
 ): Promise<void> => {
-  await createNodeUserStates(event);
+  await createUserNodes(event);
   await synapse.sendSynapseMessage({
     type: 'node_create',
     nodeId: event.id,
@@ -99,13 +99,13 @@ const handleNodeDeletedEvent = async (
   });
 };
 
-const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
-  const userStatesToCreate: CreateNodeUserState[] = [];
+const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
+  const userNodesToCreate: CreateUserNode[] = [];
   if (event.attributes.type === NodeTypes.User) {
     const userIds = await fetchWorkspaceUsers(event.workspaceId);
 
     for (const userId of userIds) {
-      userStatesToCreate.push({
+      userNodesToCreate.push({
         user_id: userId,
         node_id: event.id,
         workspace_id: event.workspaceId,
@@ -122,7 +122,7 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
         continue;
       }
 
-      userStatesToCreate.push({
+      userNodesToCreate.push({
         user_id: event.id,
         node_id: userId,
         workspace_id: event.workspaceId,
@@ -140,7 +140,7 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
     const collaboratorIds = collaborators.map((c) => c.collaboratorId);
 
     for (const collaboratorId of collaboratorIds) {
-      userStatesToCreate.push({
+      userNodesToCreate.push({
         user_id: collaboratorId,
         node_id: event.id,
         workspace_id: event.workspaceId,
@@ -157,10 +157,10 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
     }
   }
 
-  if (userStatesToCreate.length > 0) {
+  if (userNodesToCreate.length > 0) {
     await database
-      .insertInto('node_user_states')
-      .values(userStatesToCreate)
+      .insertInto('user_nodes')
+      .values(userNodesToCreate)
       .onConflict((cb) => cb.doNothing())
       .execute();
   }
@@ -187,16 +187,14 @@ const checkForCollaboratorsChange = async (
   }
 
   if (addedCollaborators.length > 0) {
-    const existingNodeUserStates = await database
-      .selectFrom('node_user_states')
+    const existingUserNodes = await database
+      .selectFrom('user_nodes')
       .select('user_id')
       .where('node_id', '=', event.id)
       .where('user_id', 'in', addedCollaborators)
       .execute();
 
-    const existingCollaboratorIds = existingNodeUserStates.map(
-      (e) => e.user_id,
-    );
+    const existingCollaboratorIds = existingUserNodes.map((e) => e.user_id);
 
     const actualAddedCollaborators = difference(
       addedCollaborators,
@@ -211,10 +209,10 @@ const checkForCollaboratorsChange = async (
         .execute();
 
       const descendantIds = descendants.map((d) => d.descendant_id);
-      const userStatesToCreate: CreateNodeUserState[] = [];
+      const userNodesToCreate: CreateUserNode[] = [];
       for (const collaboratorId of addedCollaborators) {
         for (const descendantId of descendantIds) {
-          userStatesToCreate.push({
+          userNodesToCreate.push({
             user_id: collaboratorId,
             node_id: descendantId,
             last_seen_version_id: null,
@@ -228,10 +226,10 @@ const checkForCollaboratorsChange = async (
         }
       }
 
-      if (userStatesToCreate.length > 0) {
+      if (userNodesToCreate.length > 0) {
         await database
-          .insertInto('node_user_states')
-          .values(userStatesToCreate)
+          .insertInto('user_nodes')
+          .values(userNodesToCreate)
           .onConflict((cb) => cb.doNothing())
           .execute();
       }
@@ -255,7 +253,7 @@ const checkForCollaboratorsChange = async (
 
       const descendantIds = descendants.map((d) => d.descendant_id);
       await database
-        .updateTable('node_user_states')
+        .updateTable('user_nodes')
         .set({
           access_removed_at: new Date(),
         })

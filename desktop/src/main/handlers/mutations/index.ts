@@ -36,7 +36,7 @@ import { FileCreateMutationHandler } from '@/main/handlers/mutations/file-create
 import { FileDownloadMutationHandler } from '@/main/handlers/mutations/file-download';
 import { SpaceUpdateMutationHandler } from '@/main/handlers/mutations/space-update';
 import { AccountUpdateMutationHandler } from '@/main/handlers/mutations/account-update';
-import { ServerNodeUserStateSyncMutationHandler } from '@/main/handlers/mutations/server-node-user-state-sync';
+import { ServerUserNodeSyncMutationHandler } from '@/main/handlers/mutations/server-user-node-sync';
 import { MarkNodeAsSeenMutationHandler } from '@/main/handlers/mutations/mark-node-as-seen';
 
 type MutationHandlerMap = {
@@ -81,6 +81,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   file_download: new FileDownloadMutationHandler(),
   space_update: new SpaceUpdateMutationHandler(),
   account_update: new AccountUpdateMutationHandler(),
-  server_node_user_state_sync: new ServerNodeUserStateSyncMutationHandler(),
+  server_user_node_sync: new ServerUserNodeSyncMutationHandler(),
   mark_node_as_seen: new MarkNodeAsSeenMutationHandler(),
 };

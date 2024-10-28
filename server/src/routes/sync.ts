@@ -315,7 +315,7 @@ const handleNodeUserStateChange = async (
   }
 
   await database
-    .updateTable('node_user_states')
+    .updateTable('user_nodes')
     .set({
       last_seen_version_id: changeData.lastSeenVersionId,
       last_seen_at: new Date(changeData.lastSeenAt),
@@ -328,7 +328,7 @@ const handleNodeUserStateChange = async (
     .execute();
 
   await synapse.sendSynapseMessage({
-    type: 'node_user_state_update',
+    type: 'user_node_update',
     nodeId: changeData.nodeId,
     userId: changeData.userId,
     workspaceId: workspaceUser.workspace_id,

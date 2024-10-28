@@ -1,5 +1,5 @@
-export type ServerNodeUserStateSyncMessageInput = {
-  type: 'server_node_user_state_sync';
+export type ServerUserNodeSyncMessageInput = {
+  type: 'server_user_node_sync';
   nodeId: string;
   userId: string;
   workspaceId: string;
@@ -13,6 +13,6 @@ export type ServerNodeUserStateSyncMessageInput = {
 
 declare module '@/operations/messages' {
   interface MessageMap {
-    server_node_user_state_sync: ServerNodeUserStateSyncMessageInput;
+    server_user_node_sync: ServerUserNodeSyncMessageInput;
   }
 }

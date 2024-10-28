@@ -128,36 +128,37 @@ export type SelectNodeCollaborator = Selectable<NodeCollaboratorTable>;
 export type CreateNodeCollaborator = Insertable<NodeCollaboratorTable>;
 export type UpdateNodeCollaborator = Updateable<NodeCollaboratorTable>;
 
-interface NodeUserStateTable {
+interface UserNodeTable {
   node_id: ColumnType<string, string, never>;
   user_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   last_seen_version_id: ColumnType<string | null, string | null, string | null>;
   last_seen_at: ColumnType<Date | null, Date | null, Date>;
   mentions_count: ColumnType<number, number, number>;
+  attributes: JSONColumnType<any, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   access_removed_at: ColumnType<Date | null, Date | null, Date>;
   version_id: ColumnType<string, string, string>;
 }
 
-export type SelectNodeUserState = Selectable<NodeUserStateTable>;
-export type CreateNodeUserState = Insertable<NodeUserStateTable>;
-export type UpdateNodeUserState = Updateable<NodeUserStateTable>;
+export type SelectUserNode = Selectable<UserNodeTable>;
+export type CreateUserNode = Insertable<UserNodeTable>;
+export type UpdateUserNode = Updateable<UserNodeTable>;
 
-interface NodeDeviceStateTable {
+interface DeviceNodeTable {
   node_id: ColumnType<string, string, never>;
   device_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, string>;
   node_version_id: ColumnType<string | null, string | null, string | null>;
-  user_state_version_id: ColumnType<
-    string | null,
-    string | null,
-    string | null
-  >;
+  user_node_version_id: ColumnType<string | null, string | null, string | null>;
   node_synced_at: ColumnType<Date | null, Date | null, Date>;
-  user_state_synced_at: ColumnType<Date | null, Date | null, Date>;
+  user_node_synced_at: ColumnType<Date | null, Date | null, Date>;
 }
+
+export type SelectDeviceNode = Selectable<DeviceNodeTable>;
+export type CreateDeviceNode = Insertable<DeviceNodeTable>;
+export type UpdateDeviceNode = Updateable<DeviceNodeTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
@@ -167,6 +168,6 @@ export interface DatabaseSchema {
   nodes: NodeTable;
   node_paths: NodePathTable;
   node_collaborators: NodeCollaboratorTable;
-  node_user_states: NodeUserStateTable;
-  node_device_states: NodeDeviceStateTable;
+  user_nodes: UserNodeTable;
+  device_nodes: DeviceNodeTable;
 }

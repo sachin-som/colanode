@@ -54,7 +54,7 @@ const handleCleanDeviceDataTask = async (
   }
 
   await database
-    .deleteFrom('node_device_states')
+    .deleteFrom('device_nodes')
     .where('device_id', '=', task.deviceId)
     .execute();
 };

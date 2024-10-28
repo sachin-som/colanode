@@ -7,8 +7,8 @@ import { redis } from '@/data/redis';
 import {
   SynapseMessage,
   SynapseNodeChangeMessage,
-  SynapseNodeUserStateChangeMessage,
-} from '@/types/events';
+  SynapseUserNodeChangeMessage,
+} from '@/types/synapse';
 import { getIdType, IdType } from '@/lib/id';
 import { MessageInput } from '@/types/messages';
 
@@ -108,13 +108,13 @@ class SynapseService {
   ) {
     if (message.type === 'local_node_sync') {
       await database
-        .insertInto('node_device_states')
+        .insertInto('device_nodes')
         .values({
           node_id: message.nodeId,
           device_id: connection.deviceId,
           node_version_id: message.versionId,
-          user_state_version_id: null,
-          user_state_synced_at: null,
+          user_node_version_id: null,
+          user_node_synced_at: null,
           workspace_id: message.workspaceId,
           node_synced_at: new Date(),
         })
@@ -126,29 +126,29 @@ class SynapseService {
           }),
         )
         .execute();
-    } else if (message.type === 'local_node_user_state_sync') {
+    } else if (message.type === 'local_user_node_sync') {
       await database
-        .insertInto('node_device_states')
+        .insertInto('device_nodes')
         .values({
           node_id: message.nodeId,
           device_id: connection.deviceId,
           node_version_id: null,
-          user_state_version_id: message.versionId,
-          user_state_synced_at: new Date(),
+          user_node_version_id: message.versionId,
+          user_node_synced_at: new Date(),
           workspace_id: message.workspaceId,
           node_synced_at: new Date(),
         })
         .onConflict((cb) =>
           cb.columns(['node_id', 'device_id']).doUpdateSet({
             workspace_id: message.workspaceId,
-            user_state_version_id: message.versionId,
-            user_state_synced_at: new Date(),
+            user_node_version_id: message.versionId,
+            user_node_synced_at: new Date(),
           }),
         )
         .execute();
     } else if (message.type === 'local_node_delete') {
       await database
-        .deleteFrom('node_device_states')
+        .deleteFrom('device_nodes')
         .where('device_id', '=', connection.deviceId)
         .where('node_id', '=', message.nodeId)
         .execute();
@@ -159,7 +159,7 @@ class SynapseService {
 
       if (userId) {
         await database
-          .deleteFrom('node_user_states')
+          .deleteFrom('user_nodes')
           .where('node_id', '=', message.nodeId)
           .where('user_id', '=', userId)
           .execute();
@@ -181,8 +181,8 @@ class SynapseService {
       data.type === 'node_delete'
     ) {
       this.handleNodeChangeMessage(data);
-    } else if (data.type === 'node_user_state_update') {
-      this.handleNodeUserStateUpdateMessage(data);
+    } else if (data.type === 'user_node_update') {
+      this.handleUserNodeUpdateMessage(data);
     }
   }
 
@@ -202,21 +202,21 @@ class SynapseService {
       return;
     }
 
-    const nodeUserStates = await database
-      .selectFrom('node_user_states')
+    const userNodes = await database
+      .selectFrom('user_nodes')
       .selectAll()
       .where((eb) =>
         eb.and([eb('user_id', 'in', userIds), eb('node_id', '=', data.nodeId)]),
       )
       .execute();
 
-    if (nodeUserStates.length === 0) {
+    if (userNodes.length === 0) {
       return;
     }
 
     if (data.type === 'node_delete') {
-      for (const nodeUserState of nodeUserStates) {
-        const deviceIds = userDevices.get(nodeUserState.user_id) ?? [];
+      for (const userNode of userNodes) {
+        const deviceIds = userDevices.get(userNode.user_id) ?? [];
         for (const deviceId of deviceIds) {
           const socketConnection = this.connections.get(deviceId);
           if (socketConnection === undefined) {
@@ -254,8 +254,8 @@ class SynapseService {
       return;
     }
 
-    for (const nodeUserState of nodeUserStates) {
-      const deviceIds = userDevices.get(nodeUserState.user_id) ?? [];
+    for (const userNode of userNodes) {
+      const deviceIds = userDevices.get(userNode.user_id) ?? [];
       if (deviceIds.length === 0) {
         continue;
       }
@@ -266,7 +266,7 @@ class SynapseService {
           continue;
         }
 
-        if (nodeUserState.access_removed_at !== null) {
+        if (userNode.access_removed_at !== null) {
           this.sendSocketMessage(socketConnection, {
             type: 'server_node_delete',
             id: data.nodeId,
@@ -291,22 +291,22 @@ class SynapseService {
     }
   }
 
-  private async handleNodeUserStateUpdateMessage(
-    data: SynapseNodeUserStateChangeMessage,
+  private async handleUserNodeUpdateMessage(
+    data: SynapseUserNodeChangeMessage,
   ) {
     const userDevices = this.getWorkspaceUserDevices(data.workspaceId);
     if (!userDevices.has(data.userId)) {
       return;
     }
 
-    const userState = await database
-      .selectFrom('node_user_states')
+    const userNode = await database
+      .selectFrom('user_nodes')
       .selectAll()
       .where('user_id', '=', data.userId)
       .where('node_id', '=', data.nodeId)
       .executeTakeFirst();
 
-    if (!userState) {
+    if (!userNode) {
       return;
     }
 
@@ -318,16 +318,16 @@ class SynapseService {
       }
 
       this.sendSocketMessage(socketConnection, {
-        type: 'server_node_user_state_sync',
+        type: 'server_user_node_sync',
         userId: data.userId,
         nodeId: data.nodeId,
-        lastSeenVersionId: userState.last_seen_version_id,
+        lastSeenVersionId: userNode.last_seen_version_id,
         workspaceId: data.workspaceId,
-        versionId: userState.version_id,
-        lastSeenAt: userState.last_seen_at?.toISOString() ?? null,
-        createdAt: userState.created_at.toISOString(),
-        updatedAt: userState.updated_at?.toISOString() ?? null,
-        mentionsCount: userState.mentions_count,
+        versionId: userNode.version_id,
+        lastSeenAt: userNode.last_seen_at?.toISOString() ?? null,
+        createdAt: userNode.created_at.toISOString(),
+        updatedAt: userNode.updated_at?.toISOString() ?? null,
+        mentionsCount: userNode.mentions_count,
       });
     }
   }
@@ -354,9 +354,9 @@ class SynapseService {
     }
 
     const unsyncedNodes = await database
-      .selectFrom('node_user_states as nus')
+      .selectFrom('user_nodes as nus')
       .leftJoin('nodes as n', 'n.id', 'nus.node_id')
-      .leftJoin('node_device_states as nds', (join) =>
+      .leftJoin('device_nodes as nds', (join) =>
         join
           .onRef('nds.node_id', '=', 'nus.node_id')
           .on('nds.device_id', '=', connection.deviceId),
@@ -380,9 +380,9 @@ class SynapseService {
         'nus.mentions_count',
         'nus.created_at',
         'nus.updated_at',
-        'nus.version_id as user_state_version_id',
+        'nus.version_id as user_node_version_id',
         'nds.node_version_id as device_node_version_id',
-        'nds.user_state_version_id as device_user_state_version_id',
+        'nds.user_node_version_id as device_user_node_version_id',
       ])
       .where((eb) =>
         eb.and([
@@ -392,8 +392,8 @@ class SynapseService {
             eb('nus.access_removed_at', 'is not', null),
             eb('nds.node_version_id', 'is', null),
             eb('nds.node_version_id', '!=', eb.ref('n.version_id')),
-            eb('nds.user_state_version_id', 'is', null),
-            eb('nds.user_state_version_id', '!=', eb.ref('nus.version_id')),
+            eb('nds.user_node_version_id', 'is', null),
+            eb('nds.user_node_version_id', '!=', eb.ref('nus.version_id')),
           ]),
         ]),
       )
@@ -416,13 +416,13 @@ class SynapseService {
         continue;
       }
 
-      if (row.user_state_version_id !== row.device_user_state_version_id) {
+      if (row.user_node_version_id !== row.device_user_node_version_id) {
         this.sendSocketMessage(connection, {
-          type: 'server_node_user_state_sync',
+          type: 'server_user_node_sync',
           nodeId: row.node_id,
           userId: row.user_id,
           workspaceId: row.workspace_id,
-          versionId: row.user_state_version_id!,
+          versionId: row.user_node_version_id!,
           lastSeenAt: row.last_seen_at?.toISOString() ?? null,
           lastSeenVersionId: row.last_seen_version_id ?? null,
           mentionsCount: row.mentions_count,

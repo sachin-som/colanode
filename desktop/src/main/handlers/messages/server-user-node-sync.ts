@@ -1,16 +1,16 @@
 import { MessageContext, MessageHandler } from '@/operations/messages';
-import { ServerNodeUserStateSyncMessageInput } from '@/operations/messages/server-node-user-state-sync';
+import { ServerUserNodeSyncMessageInput } from '@/operations/messages/server-user-node-sync';
 import { mediator } from '@/main/mediator';
 
-export class ServerNodeUserStateSyncMessageHandler
-  implements MessageHandler<ServerNodeUserStateSyncMessageInput>
+export class ServerUserNodeSyncMessageHandler
+  implements MessageHandler<ServerUserNodeSyncMessageInput>
 {
   public async handleMessage(
     context: MessageContext,
-    input: ServerNodeUserStateSyncMessageInput,
+    input: ServerUserNodeSyncMessageInput,
   ): Promise<void> {
     await mediator.executeMutation({
-      type: 'server_node_user_state_sync',
+      type: 'server_user_node_sync',
       accountId: context.accountId,
       nodeId: input.nodeId,
       userId: input.userId,

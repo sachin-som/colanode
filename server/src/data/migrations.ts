@@ -281,49 +281,47 @@ const createNodeCollaboratorsTable: Migration = {
   },
 };
 
-const createNodeUserStatesTable: Migration = {
+const createUserNodesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_user_states')
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .createTable('user_nodes')
       .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('last_seen_version_id', 'varchar(30)')
       .addColumn('last_seen_at', 'timestamptz')
       .addColumn('mentions_count', 'integer', (col) =>
         col.notNull().defaultTo(0),
       )
+      .addColumn('attributes', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('access_removed_at', 'timestamptz')
       .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
-      .addPrimaryKeyConstraint('node_user_states_pkey', ['node_id', 'user_id'])
+      .addPrimaryKeyConstraint('user_nodes_pkey', ['user_id', 'node_id'])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('node_user_states').execute();
+    await db.schema.dropTable('user_nodes').execute();
   },
 };
 
-const createNodeDeviceStatesTable: Migration = {
+const createDeviceNodesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_device_states')
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .createTable('device_nodes')
       .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('node_version_id', 'varchar(30)')
-      .addColumn('user_state_version_id', 'varchar(30)')
+      .addColumn('user_node_version_id', 'varchar(30)')
       .addColumn('node_synced_at', 'timestamptz')
-      .addColumn('user_state_synced_at', 'timestamptz')
-      .addPrimaryKeyConstraint('node_device_states_pkey', [
-        'node_id',
-        'device_id',
-      ])
+      .addColumn('user_node_synced_at', 'timestamptz')
+      .addPrimaryKeyConstraint('device_nodes_pkey', ['device_id', 'node_id'])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('node_device_states').execute();
+    await db.schema.dropTable('device_nodes').execute();
   },
 };
 
@@ -335,6 +333,6 @@ export const databaseMigrations: Record<string, Migration> = {
   '00005_create_nodes_table': createNodesTable,
   '00006_create_node_paths_table': createNodePathsTable,
   '00007_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00008_create_node_user_states_table': createNodeUserStatesTable,
-  '00009_create_node_device_states_table': createNodeDeviceStatesTable,
+  '00008_create_user_nodes_table': createUserNodesTable,
+  '00009_create_device_nodes_table': createDeviceNodesTable,
 };

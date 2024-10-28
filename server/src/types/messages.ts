@@ -11,8 +11,8 @@ export type LocalNodeDeleteMessageInput = {
   workspaceId: string;
 };
 
-export type LocalNodeUserStateSyncMessageInput = {
-  type: 'local_node_user_state_sync';
+export type LocalUserNodeSyncMessageInput = {
+  type: 'local_user_node_sync';
   nodeId: string;
   userId: string;
   workspaceId: string;
@@ -33,10 +33,10 @@ export type ServerNodeSyncMessageInput = {
   versionId: string;
 };
 
-export type ServerNodeUserStateSyncMessageInput = {
-  type: 'server_node_user_state_sync';
-  nodeId: string;
+export type ServerUserNodeSyncMessageInput = {
+  type: 'server_user_node_sync';
   userId: string;
+  nodeId: string;
   workspaceId: string;
   versionId: string;
   lastSeenAt: string | null;
@@ -57,5 +57,5 @@ export type MessageInput =
   | LocalNodeDeleteMessageInput
   | ServerNodeSyncMessageInput
   | ServerNodeDeleteMessageInput
-  | LocalNodeUserStateSyncMessageInput
-  | ServerNodeUserStateSyncMessageInput;
+  | LocalUserNodeSyncMessageInput
+  | ServerUserNodeSyncMessageInput;

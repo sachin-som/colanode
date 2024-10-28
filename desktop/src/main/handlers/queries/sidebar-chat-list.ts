@@ -52,7 +52,7 @@ export class SidebarChatListQueryHandler
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          (change.table === 'nodes' || change.table === 'node_user_states') &&
+          (change.table === 'nodes' || change.table === 'user_nodes') &&
           change.userId === input.userId,
       )
     ) {
@@ -157,16 +157,16 @@ export class SidebarChatListQueryHandler
 
     const chatIds = chats.map((chat) => chat.id);
     const unreadCounts = await workspaceDatabase
-      .selectFrom('node_user_states as nus')
-      .innerJoin('nodes as n', 'nus.node_id', 'n.id')
-      .where('nus.user_id', '=', input.userId)
+      .selectFrom('user_nodes as un')
+      .innerJoin('nodes as n', 'un.node_id', 'n.id')
+      .where('un.user_id', '=', input.userId)
       .where('n.type', '=', NodeTypes.Message)
       .where('n.parent_id', 'in', chatIds)
-      .where('nus.last_seen_version_id', 'is', null)
+      .where('un.last_seen_version_id', 'is', null)
       .select(['n.parent_id as node_id'])
       .select((eb) => [
-        eb.fn.count<number>('nus.node_id').as('unread_count'),
-        eb.fn.sum<number>('nus.mentions_count').as('mentions_count'),
+        eb.fn.count<number>('un.node_id').as('unread_count'),
+        eb.fn.sum<number>('un.mentions_count').as('mentions_count'),
       ])
       .groupBy('n.parent_id')
       .execute();

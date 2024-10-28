@@ -21,20 +21,21 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
-interface NodeUserStateTable {
-  node_id: ColumnType<string, string, never>;
+interface UserNodeTable {
   user_id: ColumnType<string, string, never>;
+  node_id: ColumnType<string, string, never>;
   last_seen_version_id: ColumnType<string | null, string | null, string | null>;
   last_seen_at: ColumnType<string | null, string | null, string | null>;
   mentions_count: ColumnType<number, number, number>;
+  attributes: ColumnType<string | null, string | null, string | null>;
   version_id: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
 }
 
-export type SelectNodeUserState = Selectable<NodeUserStateTable>;
-export type CreateNodeUserState = Insertable<NodeUserStateTable>;
-export type UpdateNodeUserState = Updateable<NodeUserStateTable>;
+export type SelectUserNode = Selectable<UserNodeTable>;
+export type CreateUserNode = Insertable<UserNodeTable>;
+export type UpdateUserNode = Updateable<UserNodeTable>;
 
 interface ChangeTable {
   id: ColumnType<number, never, never>;
@@ -73,7 +74,7 @@ export type UpdateDownload = Updateable<DownloadTable>;
 
 export interface WorkspaceDatabaseSchema {
   nodes: NodeTable;
-  node_user_states: NodeUserStateTable;
+  user_nodes: UserNodeTable;
   changes: ChangeTable;
   uploads: UploadTable;
   downloads: DownloadTable;

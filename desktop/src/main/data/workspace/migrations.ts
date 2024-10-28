@@ -44,27 +44,28 @@ const createNodesTable: Migration = {
   },
 };
 
-const createNodeUserStatesTable: Migration = {
+const createUserNodesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_user_states')
+      .createTable('user_nodes')
+      .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('node_id', 'text', (col) =>
         col.notNull().references('nodes.id'),
       )
-      .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('last_seen_version_id', 'text')
       .addColumn('last_seen_at', 'text')
       .addColumn('mentions_count', 'integer', (col) =>
         col.notNull().defaultTo(0),
       )
+      .addColumn('attributes', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
-      .addPrimaryKeyConstraint('node_user_states_pk', ['node_id', 'user_id'])
+      .addPrimaryKeyConstraint('user_nodes_pk', ['user_id', 'node_id'])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('node_user_states').execute();
+    await db.schema.dropTable('user_nodes').execute();
   },
 };
 
@@ -167,7 +168,7 @@ const createDownloadsTable: Migration = {
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_nodes_table': createNodesTable,
-  '00002_create_node_user_states_table': createNodeUserStatesTable,
+  '00002_create_user_nodes_table': createUserNodesTable,
   '00003_create_changes_table': createChangesTable,
   '00004_create_node_names_table': createNodeNamesTable,
   '00005_create_uploads_table': createUploadsTable,

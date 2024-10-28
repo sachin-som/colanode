@@ -32,20 +32,3 @@ export type NodeDeletedEvent = {
   attributes: ServerNodeAttributes;
   deletedAt: string;
 };
-
-export type SynapseNodeChangeMessage = {
-  workspaceId: string;
-  nodeId: string;
-  type: 'node_create' | 'node_update' | 'node_delete';
-};
-
-export type SynapseNodeUserStateChangeMessage = {
-  workspaceId: string;
-  nodeId: string;
-  userId: string;
-  type: 'node_user_state_update';
-};
-
-export type SynapseMessage =
-  | SynapseNodeChangeMessage
-  | SynapseNodeUserStateChangeMessage;

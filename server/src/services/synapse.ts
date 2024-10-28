@@ -158,11 +158,36 @@ class SynapseService {
       )?.userId;
 
       if (userId) {
-        await database
-          .deleteFrom('user_nodes')
-          .where('node_id', '=', message.nodeId)
-          .where('user_id', '=', userId)
+        const userDevices = await database
+          .selectFrom('devices')
+          .select('id')
+          .where(
+            'account_id',
+            'in',
+            database
+              .selectFrom('workspace_users')
+              .select('account_id')
+              .where('id', '=', userId),
+          )
           .execute();
+
+        const deviceIds = userDevices.map((device) => device.id);
+        if (deviceIds.length > 0) {
+          const deviceNodes = await database
+            .selectFrom('device_nodes')
+            .select('node_id')
+            .where('device_id', 'in', deviceIds)
+            .where('node_id', '=', message.nodeId)
+            .execute();
+
+          if (deviceNodes.length === 0) {
+            await database
+              .deleteFrom('user_nodes')
+              .where('node_id', '=', message.nodeId)
+              .where('user_id', '=', userId)
+              .execute();
+          }
+        }
       }
     }
 
@@ -416,21 +441,6 @@ class SynapseService {
         continue;
       }
 
-      if (row.user_node_version_id !== row.device_user_node_version_id) {
-        this.sendSocketMessage(connection, {
-          type: 'server_user_node_sync',
-          nodeId: row.node_id,
-          userId: row.user_id,
-          workspaceId: row.workspace_id,
-          versionId: row.user_node_version_id!,
-          lastSeenAt: row.last_seen_at?.toISOString() ?? null,
-          lastSeenVersionId: row.last_seen_version_id ?? null,
-          mentionsCount: row.mentions_count,
-          createdAt: row.created_at!.toISOString(),
-          updatedAt: row.updated_at?.toISOString() ?? null,
-        });
-      }
-
       if (row.node_version_id !== row.device_node_version_id) {
         this.sendSocketMessage(connection, {
           type: 'server_node_sync',
@@ -444,6 +454,21 @@ class SynapseService {
           serverCreatedAt: row.server_created_at!.toISOString(),
           serverUpdatedAt: row.server_updated_at?.toISOString() ?? null,
           versionId: row.node_version_id!,
+        });
+      }
+
+      if (row.user_node_version_id !== row.device_user_node_version_id) {
+        this.sendSocketMessage(connection, {
+          type: 'server_user_node_sync',
+          nodeId: row.node_id,
+          userId: row.user_id,
+          workspaceId: row.workspace_id,
+          versionId: row.user_node_version_id!,
+          lastSeenAt: row.last_seen_at?.toISOString() ?? null,
+          lastSeenVersionId: row.last_seen_version_id ?? null,
+          mentionsCount: row.mentions_count,
+          createdAt: row.created_at!.toISOString(),
+          updatedAt: row.updated_at?.toISOString() ?? null,
         });
       }
     }

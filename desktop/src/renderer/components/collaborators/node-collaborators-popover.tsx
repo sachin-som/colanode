@@ -17,7 +17,7 @@ export const NodeCollaboratorsPopover = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <UserRoundPlus className="size-4 cursor-pointer text-muted-foreground hover:text-foreground" />
+        <UserRoundPlus className="size-5 cursor-pointer text-muted-foreground hover:text-foreground" />
       </PopoverTrigger>
       <PopoverContent className="mr-2 max-h-128 w-128 overflow-auto">
         <NodeCollaborators nodeId={nodeId} />

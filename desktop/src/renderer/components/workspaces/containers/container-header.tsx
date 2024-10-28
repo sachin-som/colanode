@@ -5,6 +5,7 @@ import { ChatBreadcrumb } from '@/renderer/components/workspaces/containers/chat
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { SidebarTrigger } from '@/renderer/components/ui/sidebar';
 import { Separator } from '@/renderer/components/ui/separator';
+import { ContainerSettings } from '@/renderer/components/workspaces/containers/container-settings';
 
 interface ContainerHeaderProps {
   nodeId: string;
@@ -25,7 +26,10 @@ export const ContainerHeader = ({ nodeId }: ContainerHeaderProps) => {
           )}
         </div>
 
-        <NodeCollaboratorsPopover nodeId={nodeId} />
+        <div className="flex items-center gap-2">
+          <NodeCollaboratorsPopover nodeId={nodeId} />
+          <ContainerSettings nodeId={nodeId} />
+        </div>
       </div>
     </header>
   );

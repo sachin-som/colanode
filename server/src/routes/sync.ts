@@ -7,8 +7,8 @@ import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
   LocalNodeChangeData,
-  LocalNodeUserStateChangeData,
   LocalUpdateNodeChangeData,
+  LocalUserNodeChangeData,
   ServerSyncChangeResult,
   SyncLocalChangeResult,
   SyncLocalChangesInput,
@@ -103,8 +103,8 @@ const handleLocalChange = async (
     case 'node_delete': {
       return handleDeleteNodeChange(workspaceUser, changeData);
     }
-    case 'node_user_state_update': {
-      return handleNodeUserStateChange(workspaceUser, changeData);
+    case 'user_node_update': {
+      return handleUserNodeStateChange(workspaceUser, changeData);
     }
     default: {
       return {
@@ -304,9 +304,9 @@ const handleDeleteNodeChange = async (
   };
 };
 
-const handleNodeUserStateChange = async (
+const handleUserNodeStateChange = async (
   workspaceUser: SelectWorkspaceUser,
-  changeData: LocalNodeUserStateChangeData,
+  changeData: LocalUserNodeChangeData,
 ): Promise<SyncLocalChangeResult> => {
   if (workspaceUser.id !== changeData.userId) {
     return {

@@ -304,6 +304,11 @@ const applyBlockContentChangesToYDoc = (
       applyBlockContentItemChangesToYDoc(blockContentMap, blockContent);
     }
   }
+
+  // delete any extra content items
+  while (contentArray.length > block.content.length) {
+    contentArray.delete(contentArray.length - 1);
+  }
 };
 
 const applyBlockContentItemChangesToYDoc = (

@@ -148,7 +148,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
           </DropdownMenu>
 
           <CollapsibleContent>
-            <SidebarMenuSub>
+            <SidebarMenuSub className="mr-0 pr-0">
               {node.children.map((child) => (
                 <SidebarMenuSubItem
                   key={child.id}

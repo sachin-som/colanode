@@ -15,6 +15,12 @@ import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 import { compareString } from '@/lib/utils';
 
+interface UnreadCountRow {
+  node_id: string;
+  unread_count: number;
+  mentions_count: number;
+}
+
 export class SidebarSpaceListQueryHandler
   implements QueryHandler<SidebarSpaceListQueryInput>
 {
@@ -22,10 +28,13 @@ export class SidebarSpaceListQueryHandler
     input: SidebarSpaceListQueryInput,
   ): Promise<QueryResult<SidebarSpaceListQueryInput>> {
     const rows = await this.fetchNodes(input);
+    const unreadCounts = await this.fetchUnreadCounts(input, rows);
+
     return {
-      output: this.buildSidebarSpaceNodes(rows),
+      output: this.buildSidebarSpaceNodes(rows, unreadCounts),
       state: {
         rows,
+        unreadCounts,
       },
     };
   }
@@ -39,7 +48,7 @@ export class SidebarSpaceListQueryHandler
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          change.table === 'nodes' &&
+          (change.table === 'nodes' || change.table === 'node_user_states') &&
           change.userId === input.userId,
       )
     ) {
@@ -49,7 +58,11 @@ export class SidebarSpaceListQueryHandler
     }
 
     const rows = await this.fetchNodes(input);
-    if (isEqual(rows, state.rows)) {
+    const unreadCounts = await this.fetchUnreadCounts(input, rows);
+    if (
+      isEqual(rows, state.rows) &&
+      isEqual(unreadCounts, state.unreadCounts)
+    ) {
       return {
         hasChanges: false,
       };
@@ -58,7 +71,7 @@ export class SidebarSpaceListQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: this.buildSidebarSpaceNodes(rows),
+        output: this.buildSidebarSpaceNodes(rows, unreadCounts),
         state: {
           rows,
         },
@@ -93,7 +106,40 @@ export class SidebarSpaceListQueryHandler
     return result.rows;
   }
 
-  private buildSidebarSpaceNodes = (rows: SelectNode[]): SidebarSpaceNode[] => {
+  private async fetchUnreadCounts(
+    input: SidebarSpaceListQueryInput,
+    rows: SelectNode[],
+  ): Promise<UnreadCountRow[]> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    const channelIds = rows
+      .filter((r) => r.type === NodeTypes.Channel)
+      .map((r) => r.id);
+
+    const unreadCounts = await workspaceDatabase
+      .selectFrom('node_user_states as nus')
+      .innerJoin('nodes as n', 'nus.node_id', 'n.id')
+      .where('nus.user_id', '=', input.userId)
+      .where('n.type', '=', NodeTypes.Message)
+      .where('n.parent_id', 'in', channelIds)
+      .where('nus.last_seen_version_id', 'is', null)
+      .select(['n.parent_id as node_id'])
+      .select((eb) => [
+        eb.fn.count<number>('nus.node_id').as('unread_count'),
+        eb.fn.sum<number>('nus.mentions_count').as('mentions_count'),
+      ])
+      .groupBy('n.parent_id')
+      .execute();
+
+    return unreadCounts;
+  }
+
+  private buildSidebarSpaceNodes = (
+    rows: SelectNode[],
+    unreadCounts: UnreadCountRow[],
+  ): SidebarSpaceNode[] => {
     const nodes: LocalNode[] = rows.map(mapNode);
     const spaces: SidebarSpaceNode[] = [];
 
@@ -106,7 +152,7 @@ export class SidebarSpaceListQueryHandler
         .filter((n) => n.parentId === node.id)
         .sort((a, b) => compareString(a.index, b.index));
 
-      spaces.push(this.buildSpaceNode(node, children));
+      spaces.push(this.buildSpaceNode(node, children, unreadCounts));
     }
 
     return spaces;
@@ -115,22 +161,34 @@ export class SidebarSpaceListQueryHandler
   private buildSpaceNode = (
     node: LocalNode,
     children: LocalNode[],
+    unreadCounts: UnreadCountRow[],
   ): SidebarSpaceNode => {
     return {
       id: node.id,
       type: node.type,
       name: node.attributes?.name ?? null,
       avatar: node.attributes?.avatar ?? null,
-      children: children.map(this.buildSidearNode),
+      children: children.map((child) =>
+        this.buildSidearNode(child, unreadCounts),
+      ),
+      unreadCount: 0,
+      mentionsCount: 0,
     };
   };
 
-  private buildSidearNode = (node: LocalNode): SidebarNode => {
+  private buildSidearNode = (
+    node: LocalNode,
+    unreadCounts: UnreadCountRow[],
+  ): SidebarNode => {
+    const unreadCountRow = unreadCounts.find((r) => r.node_id === node.id);
+
     return {
       id: node.id,
       type: node.type,
       name: node.attributes.name ?? null,
       avatar: node.attributes.avatar ?? null,
+      unreadCount: unreadCountRow?.unread_count ?? 0,
+      mentionsCount: unreadCountRow?.mentions_count ?? 0,
     };
   };
 }

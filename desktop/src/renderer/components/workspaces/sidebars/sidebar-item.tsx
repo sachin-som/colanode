@@ -1,5 +1,4 @@
 import React from 'react';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SidebarNode } from '@/types/workspaces';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -9,10 +8,8 @@ interface SidebarItemProps {
 }
 
 export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
-  const workspace = useWorkspace();
   const isActive = false;
-  const isUnread = false;
-  const directCount = 0;
+  const isUnread = node.unreadCount > 0 || node.mentionsCount > 0;
 
   return (
     <button
@@ -36,13 +33,13 @@ export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
       >
         {node.name ?? 'Unnamed'}
       </span>
-      {directCount > 0 && (
+      {node.mentionsCount > 0 && (
         <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">
-          {directCount}
+          {node.mentionsCount}
         </span>
       )}
-      {directCount == 0 && isUnread && (
-        <span className="mr-2 size-3 rounded-full bg-red-500 p-0.5" />
+      {node.mentionsCount == 0 && isUnread && (
+        <span className="size-2 rounded-full bg-red-500" />
       )}
     </button>
   );

@@ -1,11 +1,12 @@
 import { database } from '@/data/database';
-import { CHANNEL_NAMES, redis, redisConfig } from '@/data/redis';
+import { redisConfig } from '@/data/redis';
 import { CreateNodeUserState } from '@/data/schema';
 import { filesStorage } from '@/data/storage';
 import { BUCKET_NAMES } from '@/data/storage';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
+import { synapse } from '@/services/synapse';
 import {
   NodeCreatedEvent,
   NodeDeletedEvent,
@@ -61,14 +62,22 @@ const handleNodeCreatedEvent = async (
   event: NodeCreatedEvent,
 ): Promise<void> => {
   await createNodeUserStates(event);
-  await publishChange(event.id, event.workspaceId, 'node_create');
+  await synapse.sendSynapseMessage({
+    type: 'node_create',
+    nodeId: event.id,
+    workspaceId: event.workspaceId,
+  });
 };
 
 const handleNodeUpdatedEvent = async (
   event: NodeUpdatedEvent,
 ): Promise<void> => {
   await checkForCollaboratorsChange(event);
-  await publishChange(event.id, event.workspaceId, 'node_update');
+  await synapse.sendSynapseMessage({
+    type: 'node_update',
+    nodeId: event.id,
+    workspaceId: event.workspaceId,
+  });
 };
 
 const handleNodeDeletedEvent = async (
@@ -83,7 +92,11 @@ const handleNodeDeletedEvent = async (
     await filesStorage.send(command);
   }
 
-  await publishChange(event.id, event.workspaceId, 'node_delete');
+  await synapse.sendSynapseMessage({
+    type: 'node_delete',
+    nodeId: event.id,
+    workspaceId: event.workspaceId,
+  });
 };
 
 const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
@@ -95,9 +108,9 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
       userStatesToCreate.push({
         user_id: userId,
         node_id: event.id,
-        last_seen_version_id: null,
         workspace_id: event.workspaceId,
         last_seen_at: null,
+        last_seen_version_id: null,
         mentions_count: 0,
         created_at: new Date(),
         access_removed_at: null,
@@ -112,8 +125,8 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
       userStatesToCreate.push({
         user_id: event.id,
         node_id: userId,
-        last_seen_version_id: null,
         workspace_id: event.workspaceId,
+        last_seen_version_id: null,
         last_seen_at: null,
         mentions_count: 0,
         created_at: new Date(),
@@ -130,9 +143,11 @@ const createNodeUserStates = async (event: NodeCreatedEvent): Promise<void> => {
       userStatesToCreate.push({
         user_id: collaboratorId,
         node_id: event.id,
-        last_seen_version_id: null,
         workspace_id: event.workspaceId,
-        last_seen_at: null,
+        last_seen_at:
+          collaboratorId === event.createdBy ? new Date(event.createdAt) : null,
+        last_seen_version_id:
+          collaboratorId === event.createdBy ? event.versionId : null,
         mentions_count: 0,
         created_at: new Date(),
         access_removed_at: null,
@@ -257,18 +272,4 @@ const extractCollaboratorIds = (collaborators: ServerNodeAttributes) => {
   }
 
   return Object.keys(collaborators.collaborators).sort();
-};
-
-const publishChange = async (
-  nodeId: string,
-  workspaceId: string,
-  type: 'node_create' | 'node_update' | 'node_delete',
-): Promise<void> => {
-  const changeJson = JSON.stringify({
-    nodeId,
-    workspaceId,
-    type,
-  });
-
-  await redis.publish(CHANNEL_NAMES.CHANGES, changeJson);
 };

@@ -47,6 +47,8 @@ export type SidebarNode = {
   type: string;
   name: string | null;
   avatar: string | null;
+  unreadCount: number;
+  mentionsCount: number;
 };
 
 export type SidebarSpaceNode = SidebarNode & {
@@ -58,6 +60,8 @@ export type SidebarChatNode = {
   type: string;
   name: string | null;
   avatar: string | null;
+  unreadCount: number;
+  mentionsCount: number;
 };
 
 export type BreadcrumbNode = {

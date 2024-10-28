@@ -44,16 +44,27 @@ const createNodesTable: Migration = {
   },
 };
 
-const createNodeNamesTable: Migration = {
+const createNodeUserStatesTable: Migration = {
   up: async (db) => {
-    await sql`
-      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
-    `.execute(db);
+    await db.schema
+      .createTable('node_user_states')
+      .addColumn('node_id', 'text', (col) =>
+        col.notNull().references('nodes.id'),
+      )
+      .addColumn('user_id', 'text', (col) => col.notNull())
+      .addColumn('last_seen_version_id', 'text')
+      .addColumn('last_seen_at', 'text')
+      .addColumn('mentions_count', 'integer', (col) =>
+        col.notNull().defaultTo(0),
+      )
+      .addColumn('version_id', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addPrimaryKeyConstraint('node_user_states_pk', ['node_id', 'user_id'])
+      .execute();
   },
   down: async (db) => {
-    await sql`
-      DROP TABLE node_names;
-    `.execute(db);
+    await db.schema.dropTable('node_user_states').execute();
   },
 };
 
@@ -72,9 +83,11 @@ const createChangesTable: Migration = {
   },
 };
 
-const createNodeInsertNameTrigger: Migration = {
+const createNodeNamesTable: Migration = {
   up: async (db) => {
     await sql`
+      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
+
       CREATE TRIGGER node_insert_name
       AFTER INSERT ON nodes
       WHEN json_type(NEW.attributes, '$.name') = 'text'
@@ -85,18 +98,7 @@ const createNodeInsertNameTrigger: Migration = {
           json_extract(NEW.attributes, '$.name')
         );
       END;
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TRIGGER node_insert_name;
-    `.execute(db);
-  },
-};
 
-const createNodeUpdateNameTrigger: Migration = {
-  up: async (db) => {
-    await sql`
       CREATE TRIGGER node_update_name
       AFTER UPDATE ON nodes
       WHEN json_extract(OLD.attributes, '$.name') IS NOT json_extract(NEW.attributes, '$.name')
@@ -109,18 +111,7 @@ const createNodeUpdateNameTrigger: Migration = {
           json_extract(NEW.attributes, '$.name')
         WHERE json_type(NEW.attributes, '$.name') = 'text';
       END;
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TRIGGER node_update_name;
-    `.execute(db);
-  },
-};
 
-const createNodeDeleteNameTrigger: Migration = {
-  up: async (db) => {
-    await sql`
       CREATE TRIGGER node_delete_name
       AFTER DELETE ON nodes
       BEGIN
@@ -130,7 +121,10 @@ const createNodeDeleteNameTrigger: Migration = {
   },
   down: async (db) => {
     await sql`
-      DROP TRIGGER node_delete_name;
+      DROP TABLE node_names;
+      DROP TRIGGER IF EXISTS node_insert_name;
+      DROP TRIGGER IF EXISTS node_update_name;
+      DROP TRIGGER IF EXISTS node_delete_name;
     `.execute(db);
   },
 };
@@ -173,11 +167,9 @@ const createDownloadsTable: Migration = {
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_nodes_table': createNodesTable,
-  '00002_create_node_names_table': createNodeNamesTable,
+  '00002_create_node_user_states_table': createNodeUserStatesTable,
   '00003_create_changes_table': createChangesTable,
-  '00004_create_node_insert_name_trigger': createNodeInsertNameTrigger,
-  '00005_create_node_update_name_trigger': createNodeUpdateNameTrigger,
-  '00006_create_node_delete_name_trigger': createNodeDeleteNameTrigger,
-  '00007_create_uploads_table': createUploadsTable,
-  '00008_create_downloads_table': createDownloadsTable,
+  '00004_create_node_names_table': createNodeNamesTable,
+  '00005_create_uploads_table': createUploadsTable,
+  '00006_create_downloads_table': createDownloadsTable,
 };

@@ -1,3 +1,4 @@
+import * as Y from 'yjs';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { database } from '@/data/database';
 import { Router } from 'express';
@@ -6,6 +7,7 @@ import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
   LocalNodeChangeData,
+  LocalNodeUserStateChangeData,
   LocalUpdateNodeChangeData,
   ServerSyncChangeResult,
   SyncLocalChangeResult,
@@ -15,13 +17,13 @@ import { SelectWorkspaceUser } from '@/data/schema';
 import { fetchCollaboratorRole } from '@/lib/nodes';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { fromUint8Array, toUint8Array } from 'js-base64';
-import * as Y from 'yjs';
 import {
   NodeCreatedEvent,
   NodeDeletedEvent,
   NodeUpdatedEvent,
 } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
+import { synapse } from '@/services/synapse';
 
 export const syncRouter = Router();
 
@@ -100,6 +102,9 @@ const handleLocalChange = async (
     }
     case 'node_delete': {
       return handleDeleteNodeChange(workspaceUser, changeData);
+    }
+    case 'node_user_state_update': {
+      return handleNodeUserStateChange(workspaceUser, changeData);
     }
     default: {
       return {
@@ -297,4 +302,37 @@ const handleDeleteNodeChange = async (
   return {
     status: 'success',
   };
+};
+
+const handleNodeUserStateChange = async (
+  workspaceUser: SelectWorkspaceUser,
+  changeData: LocalNodeUserStateChangeData,
+): Promise<SyncLocalChangeResult> => {
+  if (workspaceUser.id !== changeData.userId) {
+    return {
+      status: 'error',
+    };
+  }
+
+  await database
+    .updateTable('node_user_states')
+    .set({
+      last_seen_version_id: changeData.lastSeenVersionId,
+      last_seen_at: new Date(changeData.lastSeenAt),
+      mentions_count: changeData.mentionsCount,
+      version_id: changeData.versionId,
+      updated_at: new Date(changeData.lastSeenAt),
+    })
+    .where('node_id', '=', changeData.nodeId)
+    .where('user_id', '=', changeData.userId)
+    .execute();
+
+  await synapse.sendSynapseMessage({
+    type: 'node_user_state_update',
+    nodeId: changeData.nodeId,
+    userId: changeData.userId,
+    workspaceId: workspaceUser.workspace_id,
+  });
+
+  return { status: 'success' };
 };

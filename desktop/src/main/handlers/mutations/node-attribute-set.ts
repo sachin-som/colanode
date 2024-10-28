@@ -33,6 +33,7 @@ export class NodeAttributeSetMutationHandler
     const doc = new Y.Doc({
       guid: node.id,
     });
+
     Y.applyUpdate(doc, toUint8Array(node.state));
 
     doc.on('update', (update) => {

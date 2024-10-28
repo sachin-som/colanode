@@ -12,6 +12,12 @@ import { mapNode } from '@/lib/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
+interface UnreadCountRow {
+  node_id: string;
+  unread_count: number;
+  mentions_count: number;
+}
+
 export class SidebarChatListQueryHandler
   implements QueryHandler<SidebarChatListQueryInput>
 {
@@ -20,12 +26,19 @@ export class SidebarChatListQueryHandler
   ): Promise<QueryResult<SidebarChatListQueryInput>> {
     const chats = await this.fetchChats(input);
     const collaborators = await this.fetchChatCollaborators(input, chats);
+    const unreadCounts = await this.fetchUnreadCounts(input, chats);
 
     return {
-      output: this.buildSidebarChatNodes(input.userId, chats, collaborators),
+      output: this.buildSidebarChatNodes(
+        input.userId,
+        chats,
+        collaborators,
+        unreadCounts,
+      ),
       state: {
         chats,
         collaborators,
+        unreadCounts,
       },
     };
   }
@@ -39,7 +52,7 @@ export class SidebarChatListQueryHandler
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
-          change.table === 'nodes' &&
+          (change.table === 'nodes' || change.table === 'node_user_states') &&
           change.userId === input.userId,
       )
     ) {
@@ -50,9 +63,12 @@ export class SidebarChatListQueryHandler
 
     const chats = await this.fetchChats(input);
     const collaborators = await this.fetchChatCollaborators(input, chats);
+    const unreadCounts = await this.fetchUnreadCounts(input, chats);
+
     if (
       isEqual(chats, state.chats) &&
-      isEqual(collaborators, state.collaborators)
+      isEqual(collaborators, state.collaborators) &&
+      isEqual(unreadCounts, state.unreadCounts)
     ) {
       return {
         hasChanges: false,
@@ -62,10 +78,16 @@ export class SidebarChatListQueryHandler
     return {
       hasChanges: true,
       result: {
-        output: this.buildSidebarChatNodes(input.userId, chats, collaborators),
+        output: this.buildSidebarChatNodes(
+          input.userId,
+          chats,
+          collaborators,
+          unreadCounts,
+        ),
         state: {
           chats,
           collaborators,
+          unreadCounts,
         },
       },
     };
@@ -125,10 +147,38 @@ export class SidebarChatListQueryHandler
     return collaborators;
   }
 
+  private async fetchUnreadCounts(
+    input: SidebarChatListQueryInput,
+    chats: SelectNode[],
+  ): Promise<UnreadCountRow[]> {
+    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+      input.userId,
+    );
+
+    const chatIds = chats.map((chat) => chat.id);
+    const unreadCounts = await workspaceDatabase
+      .selectFrom('node_user_states as nus')
+      .innerJoin('nodes as n', 'nus.node_id', 'n.id')
+      .where('nus.user_id', '=', input.userId)
+      .where('n.type', '=', NodeTypes.Message)
+      .where('n.parent_id', 'in', chatIds)
+      .where('nus.last_seen_version_id', 'is', null)
+      .select(['n.parent_id as node_id'])
+      .select((eb) => [
+        eb.fn.count<number>('nus.node_id').as('unread_count'),
+        eb.fn.sum<number>('nus.mentions_count').as('mentions_count'),
+      ])
+      .groupBy('n.parent_id')
+      .execute();
+
+    return unreadCounts;
+  }
+
   private buildSidebarChatNodes = (
     userId: string,
     chats: SelectNode[],
     collaborators: SelectNode[],
+    unreadCounts: UnreadCountRow[],
   ): SidebarChatNode[] => {
     const sidebarChatNodes: SidebarChatNode[] = [];
 
@@ -158,11 +208,15 @@ export class SidebarChatListQueryHandler
       }
 
       const collaboratorNode = mapNode(collaboratorRow);
+      const unreadCountRow = unreadCounts.find((r) => r.node_id === chat.id);
+
       sidebarChatNodes.push({
         id: chatNode.id,
         type: chatNode.type,
         name: collaboratorNode.attributes.name ?? 'Unknown',
         avatar: collaboratorNode.attributes.avatar ?? null,
+        unreadCount: unreadCountRow?.unread_count ?? 0,
+        mentionsCount: unreadCountRow?.mentions_count ?? 0,
       });
     }
 

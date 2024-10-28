@@ -11,8 +11,7 @@ export const SidebarChatItem = ({
   node,
 }: SidebarChatItemProps): React.ReactNode => {
   const isActive = false;
-  const isUnread = false;
-  const directCount = 0;
+  const isUnread = node.unreadCount > 0 || node.mentionsCount > 0;
 
   return (
     <div
@@ -31,13 +30,10 @@ export const SidebarChatItem = ({
       >
         {node.name ?? 'Unnamed'}
       </span>
-      {directCount > 0 && (
-        <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">
-          {directCount}
+      {node.unreadCount > 0 && (
+        <span className="rounded-md bg-red-500 px-1 py-0.5 text-xs text-white">
+          {node.unreadCount}
         </span>
-      )}
-      {directCount == 0 && isUnread && (
-        <span className="mr-2 size-3 rounded-full bg-red-500 p-0.5" />
       )}
     </div>
   );

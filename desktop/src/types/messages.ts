@@ -7,6 +7,7 @@ export type MessageNode = {
   createdAt: string;
   author: UserNode;
   reactionCounts: MessageReactionCount[];
+  versionId: string;
 };
 
 export type MessageReactionCount = {

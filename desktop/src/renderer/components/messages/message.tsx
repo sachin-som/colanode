@@ -98,7 +98,9 @@ export const Message = ({
         <InView
           rootMargin="50px"
           onChange={(inView) => {
-            // onVisibilityChange?.(data.id, inView);
+            if (inView) {
+              workspace.markAsSeen(message.id, message.versionId);
+            }
           }}
         >
           <ul className="invisible absolute -top-2 right-1 z-10 flex flex-row bg-gray-100 text-muted-foreground shadow group-hover:visible">

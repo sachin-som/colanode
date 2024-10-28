@@ -9,9 +9,9 @@ import { syncRouter } from '@/routes/sync';
 import { configRouter } from '@/routes/config';
 import { avatarsRouter } from '@/routes/avatars';
 import { filesRouter } from '@/routes/files';
-import { socketManager } from '@/sockets/socket-manager';
+import { synapse } from '@/services/synapse';
 
-export const initApi = () => {
+export const initApi = async () => {
   const app = express();
   const port = 3000;
 
@@ -34,7 +34,7 @@ export const initApi = () => {
   app.use('/v1/files', authMiddleware, filesRouter);
 
   const server = http.createServer(app);
-  socketManager.init(server);
+  await synapse.init(server);
 
   server.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);

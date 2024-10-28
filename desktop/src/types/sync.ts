@@ -34,7 +34,18 @@ export type LocalDeleteNodeChangeData = {
   deletedBy: string;
 };
 
+export type LocalNodeUserStateChangeData = {
+  type: 'node_user_state_update';
+  nodeId: string;
+  userId: string;
+  lastSeenVersionId: string;
+  lastSeenAt: string;
+  mentionsCount: number;
+  versionId: string;
+};
+
 export type LocalNodeChangeData =
   | LocalCreateNodeChangeData
   | LocalUpdateNodeChangeData
-  | LocalDeleteNodeChangeData;
+  | LocalDeleteNodeChangeData
+  | LocalNodeUserStateChangeData;

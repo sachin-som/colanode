@@ -156,6 +156,7 @@ export class MessageListQueryHandler
 
       const message: MessageNode = {
         id: messageNode.id,
+        versionId: messageNode.versionId,
         createdAt: messageNode.createdAt,
         author: author ?? {
           id: messageNode.createdBy,

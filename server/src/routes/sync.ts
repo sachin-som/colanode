@@ -261,7 +261,7 @@ const handleDeleteNodeChange = async (
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', changeData.id)
-    .select(['id', 'workspace_id'])
+    .select(['id', 'workspace_id', 'attributes'])
     .executeTakeFirst();
 
   if (!existingNode) {
@@ -288,6 +288,8 @@ const handleDeleteNodeChange = async (
     type: 'node_deleted',
     id: changeData.id,
     workspaceId: workspaceUser.workspace_id,
+    attributes: existingNode.attributes,
+    deletedAt: new Date().toISOString(),
   };
 
   await enqueueEvent(event);

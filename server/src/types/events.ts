@@ -29,4 +29,6 @@ export type NodeDeletedEvent = {
   type: 'node_deleted';
   id: string;
   workspaceId: string;
+  attributes: ServerNodeAttributes;
+  deletedAt: string;
 };

@@ -7,6 +7,7 @@ import { PageSettings } from '@/renderer/components/pages/page-settings';
 import { DatabaseSettings } from '@/renderer/components/databases/database-settings';
 import { RecordSettings } from '@/renderer/components/records/record-settings';
 import { FolderSettings } from '@/renderer/components/folders/folder-settings';
+import { FileSettings } from '@/renderer/components/files/file-settings';
 
 interface ContainerSettingsProps {
   nodeId: string;
@@ -20,5 +21,6 @@ export const ContainerSettings = ({ nodeId }: ContainerSettingsProps) => {
     .with(IdType.Database, () => <DatabaseSettings nodeId={nodeId} />)
     .with(IdType.Record, () => <RecordSettings nodeId={nodeId} />)
     .with(IdType.Folder, () => <FolderSettings nodeId={nodeId} />)
+    .with(IdType.File, () => <FileSettings nodeId={nodeId} />)
     .otherwise(() => null);
 };

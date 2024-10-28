@@ -1,5 +1,11 @@
+import { NodeTypes } from '@/lib/constants';
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { fileManager } from '@/main/file-manager';
+import {
+  MutationChange,
+  MutationHandler,
+  MutationResult,
+} from '@/operations/mutations';
 import { NodeDeleteMutationInput } from '@/operations/mutations/node-delete';
 import { LocalDeleteNodeChangeData } from '@/types/sync';
 
@@ -15,7 +21,7 @@ export class NodeDeleteMutationHandler
 
     const node = await workspaceDatabase
       .selectFrom('nodes')
-      .select(['id'])
+      .select(['id', 'type', 'attributes'])
       .where('id', '=', input.nodeId)
       .executeTakeFirst();
 
@@ -34,8 +40,22 @@ export class NodeDeleteMutationHandler
       deletedBy: input.userId,
     };
 
+    const isFile = node.type === NodeTypes.File;
+
     await workspaceDatabase.transaction().execute(async (trx) => {
       await trx.deleteFrom('nodes').where('id', '=', input.nodeId).execute();
+
+      if (isFile) {
+        await trx
+          .deleteFrom('uploads')
+          .where('node_id', '=', node.id)
+          .execute();
+
+        await trx
+          .deleteFrom('downloads')
+          .where('node_id', '=', node.id)
+          .execute();
+      }
 
       await trx
         .insertInto('changes')
@@ -46,22 +66,41 @@ export class NodeDeleteMutationHandler
         .execute();
     });
 
+    const changes: MutationChange[] = [
+      {
+        type: 'workspace',
+        table: 'nodes',
+        userId: input.userId,
+      },
+      {
+        type: 'workspace',
+        table: 'changes',
+        userId: input.userId,
+      },
+    ];
+
+    if (isFile) {
+      const attributes = JSON.parse(node.attributes);
+      fileManager.deleteFile(input.userId, node.id, attributes.extension);
+
+      changes.push({
+        type: 'workspace',
+        table: 'uploads',
+        userId: input.userId,
+      });
+
+      changes.push({
+        type: 'workspace',
+        table: 'downloads',
+        userId: input.userId,
+      });
+    }
+
     return {
       output: {
         success: true,
       },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      changes,
     };
   }
 }

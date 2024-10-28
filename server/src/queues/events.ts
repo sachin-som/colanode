@@ -1,6 +1,8 @@
 import { database } from '@/data/database';
 import { CHANNEL_NAMES, redis, redisConfig } from '@/data/redis';
 import { CreateNodeUserState } from '@/data/schema';
+import { filesStorage } from '@/data/storage';
+import { BUCKET_NAMES } from '@/data/storage';
 import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
@@ -11,6 +13,7 @@ import {
   NodeUpdatedEvent,
 } from '@/types/events';
 import { ServerNodeAttributes } from '@/types/nodes';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Job, Queue, Worker } from 'bullmq';
 import { difference } from 'lodash';
 
@@ -71,6 +74,15 @@ const handleNodeUpdatedEvent = async (
 const handleNodeDeletedEvent = async (
   event: NodeDeletedEvent,
 ): Promise<void> => {
+  if (event.attributes.type === NodeTypes.File) {
+    const command = new DeleteObjectCommand({
+      Bucket: BUCKET_NAMES.FILES,
+      Key: `files/${event.id}${event.attributes.extension}`,
+    });
+
+    await filesStorage.send(command);
+  }
+
   await publishChange(event.id, event.workspaceId, 'node_delete');
 };
 

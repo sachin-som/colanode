@@ -13,13 +13,13 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface FileDeleteDialogProps {
-  id: string;
+  nodeId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const FileDeleteDialog = ({
-  id,
+  nodeId,
   open,
   onOpenChange,
 }: FileDeleteDialogProps) => {
@@ -47,7 +47,7 @@ export const FileDeleteDialog = ({
               mutate({
                 input: {
                   type: 'node_delete',
-                  nodeId: id,
+                  nodeId,
                   userId: workspace.userId,
                 },
                 onSuccess() {

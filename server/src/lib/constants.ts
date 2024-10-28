@@ -21,4 +21,5 @@ export const NodeTypes = {
   CalendarView: 'calendar_view',
   Field: 'field',
   SelectOption: 'select_option',
+  File: 'file',
 };

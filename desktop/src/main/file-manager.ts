@@ -53,6 +53,12 @@ class FileManager {
     shell.openPath(filePath);
   }
 
+  public deleteFile(userId: string, id: string, extension: string): void {
+    const filesDir = getWorkspaceFilesDirectoryPath(userId);
+    const filePath = path.join(filesDir, `${id}${extension}`);
+    fs.rmSync(filePath, { force: true });
+  }
+
   public async checkForUploads(
     credentials: WorkspaceCredentials,
   ): Promise<void> {

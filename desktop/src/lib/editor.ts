@@ -386,3 +386,40 @@ const applyBlockContentMarksChangesToYDoc = (
     blockContentMap.set('marks', blockContent.marks);
   }
 };
+
+export const editorHasContent = (block?: JSONContent) => {
+  if (!block) {
+    return false;
+  }
+
+  if (block.text && block.text?.length > 0) {
+    return true;
+  }
+
+  if (block.type === 'file' && block.attrs?.fileId) {
+    return true;
+  }
+
+  if (block.type === 'upload' && block.attrs?.uploadId) {
+    return true;
+  }
+
+  if (block.type === 'gif' && block.attrs?.gifId) {
+    return true;
+  }
+
+  if (block.type === 'emoji' && block.attrs?.emoji) {
+    return true;
+  }
+
+  if (block.content && block.content?.length > 0) {
+    for (let i = 0; i < block.content.length; i += 1) {
+      const innerBlock = block.content[i];
+      if (editorHasContent(innerBlock)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};

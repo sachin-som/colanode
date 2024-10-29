@@ -7,6 +7,7 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessageNode } from '@/types/messages';
 import { CircleX } from 'lucide-react';
+import { editorHasContent } from '@/lib/editor';
 
 interface MessageCreateProps {
   conversationId: string;
@@ -23,6 +24,7 @@ export const MessageCreate = React.forwardRef<
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
+  const [hasContent, setHasContent] = React.useState<boolean>(false);
   const messageEditorRef = React.useRef<MessageEditorRefProps>(null);
   const [replyTo, setReplyTo] = React.useState<MessageNode | null>(null);
 
@@ -57,7 +59,14 @@ export const MessageCreate = React.forwardRef<
         <MessageEditor
           ref={messageEditorRef}
           conversationId={conversationId}
+          onChange={(content) => {
+            setHasContent(editorHasContent(content));
+          }}
           onSubmit={(content) => {
+            if (!editorHasContent(content)) {
+              return;
+            }
+
             const messageContent = content;
             if (replyTo) {
               messageContent.content.unshift({
@@ -86,7 +95,7 @@ export const MessageCreate = React.forwardRef<
           }}
           loading={isPending}
           canEdit={true}
-          canSubmit={true}
+          canSubmit={hasContent}
         />
       </div>
       <div className="flex h-8 min-h-8 items-center text-xs text-muted-foreground"></div>

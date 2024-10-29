@@ -43,6 +43,11 @@ export class NodeDeleteMutationHandler
     const isFile = node.type === NodeTypes.File;
 
     await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .deleteFrom('user_nodes')
+        .where('node_id', '=', input.nodeId)
+        .execute();
+
       await trx.deleteFrom('nodes').where('id', '=', input.nodeId).execute();
 
       if (isFile) {

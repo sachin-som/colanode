@@ -5,11 +5,15 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 
 interface SidebarItemProps {
   node: SidebarNode;
+  isActive?: boolean;
 }
 
-export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
-  const isActive = false;
-  const isUnread = node.unreadCount > 0 || node.mentionsCount > 0;
+export const SidebarItem = ({
+  node,
+  isActive,
+}: SidebarItemProps): React.ReactNode => {
+  const isUnread =
+    !isActive && (node.unreadCount > 0 || node.mentionsCount > 0);
 
   return (
     <button

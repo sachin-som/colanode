@@ -39,6 +39,7 @@ import {
   Plus,
   ChevronRight,
 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 
 interface SettingsState {
   open: boolean;
@@ -51,6 +52,7 @@ interface SidebarSpaceNodeProps {
 
 export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
   const workspace = useWorkspace();
+  const { nodeId } = useParams<{ nodeId?: string | null }>();
 
   const [openCreatePage, setOpenCreatePage] = React.useState(false);
   const [openCreateChannel, setOpenCreateChannel] = React.useState(false);
@@ -157,8 +159,8 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                   }}
                   className="cursor-pointer"
                 >
-                  <SidebarMenuSubButton>
-                    <SidebarItem node={child} />
+                  <SidebarMenuSubButton isActive={nodeId === child.id}>
+                    <SidebarItem node={child} isActive={nodeId === child.id} />
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}

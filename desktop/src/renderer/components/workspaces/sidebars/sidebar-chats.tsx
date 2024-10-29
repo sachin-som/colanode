@@ -12,9 +12,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/renderer/components/ui/sidebar';
+import { useParams } from 'react-router-dom';
 
 export const SidebarChats = () => {
   const workspace = useWorkspace();
+  const { nodeId } = useParams<{ nodeId?: string | null }>();
+
   const { data } = useQuery({
     type: 'sidebar_chat_list',
     userId: workspace.userId,
@@ -30,11 +33,12 @@ export const SidebarChats = () => {
         {data?.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton
+              isActive={nodeId === item.id}
               onClick={() => {
                 workspace.navigateToNode(item.id);
               }}
             >
-              <SidebarChatItem node={item} />
+              <SidebarChatItem node={item} isActive={nodeId === item.id} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

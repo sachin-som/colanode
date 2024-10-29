@@ -5,13 +5,15 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 
 interface SidebarChatItemProps {
   node: SidebarChatNode;
+  isActive?: boolean;
 }
 
 export const SidebarChatItem = ({
   node,
+  isActive,
 }: SidebarChatItemProps): React.ReactNode => {
-  const isActive = false;
-  const isUnread = node.unreadCount > 0 || node.mentionsCount > 0;
+  const isUnread =
+    !isActive && (node.unreadCount > 0 || node.mentionsCount > 0);
 
   return (
     <div

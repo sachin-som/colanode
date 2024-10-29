@@ -194,7 +194,7 @@ const handleUpdateNodeChange = async (
   while (count++ < 10) {
     const existingNode = await database
       .selectFrom('nodes')
-      .select(['id', 'workspace_id', 'attributes', 'state'])
+      .select(['id', 'workspace_id', 'attributes', 'state', 'version_id'])
       .where('id', '=', changeData.id)
       .executeTakeFirst();
 
@@ -240,7 +240,7 @@ const handleUpdateNodeChange = async (
         server_updated_at: new Date(),
       })
       .where('id', '=', changeData.id)
-      .where('version_id', '=', changeData.versionId)
+      .where('version_id', '=', existingNode.version_id)
       .execute();
 
     if (hasUpdateChanges(result)) {

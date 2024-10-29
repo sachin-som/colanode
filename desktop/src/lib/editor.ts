@@ -202,8 +202,10 @@ const getIdFromContent = (content: JSONContent): string => {
   return content.attrs?.id ?? generateId(getIdTypeFromNode(content.type));
 };
 
-export const applyChangeToYDoc = (doc: Y.Doc, blocks: NodeBlock[]) => {
-  const attributesMap = doc.getMap('attributes');
+export const applyChangeToAttributesMap = (
+  attributesMap: Y.Map<any>,
+  blocks: NodeBlock[],
+) => {
   if (!attributesMap.has('content')) {
     attributesMap.set('content', new Y.Map());
   }

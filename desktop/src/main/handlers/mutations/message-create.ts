@@ -6,7 +6,7 @@ import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
 import { fromUint8Array } from 'js-base64';
 import { LocalCreateNodeChangeData } from '@/types/sync';
-import { applyChangeToYDoc, mapContentsToBlocks } from '@/lib/editor';
+import { applyChangeToAttributesMap, mapContentsToBlocks } from '@/lib/editor';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -32,7 +32,7 @@ export class MessageCreateMutationHandler
     doc.transact(() => {
       attributesMap.set('type', NodeTypes.Message);
       attributesMap.set('parentId', input.conversationId);
-      applyChangeToYDoc(doc, blocks);
+      applyChangeToAttributesMap(attributesMap, blocks);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

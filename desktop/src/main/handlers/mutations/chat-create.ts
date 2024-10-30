@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
@@ -55,8 +55,8 @@ export class ChatCreateMutationHandler
       attributesMap.set('collaborators', new Y.Map());
 
       const collaboratorsMap = attributesMap.get('collaborators') as Y.Map<any>;
-      collaboratorsMap.set(input.userId, 'owner');
-      collaboratorsMap.set(input.otherUserId, 'owner');
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      collaboratorsMap.set(input.otherUserId, NodeRole.Owner);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

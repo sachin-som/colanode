@@ -5,30 +5,22 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/operations/queries';
-import { sql } from 'kysely';
 import {
   InheritNodeCollaboratorsGroup,
   LocalNodeAttributes,
-  NodeCollaboratorNode,
   NodeCollaboratorsWrapper,
+  NodeCollaborator,
 } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
-type NodeRow = {
-  id: string;
-  attributes: string;
-  parent_id: string | null;
-  level: number;
-};
-
-type NodeCollaboratorWithRole = {
+type ExtractedNodeCollaborator = {
   nodeId: string;
   collaboratorId: string;
   role: string;
 };
 
-type CollaboratorNodeRow = {
+type NodeWithAttributesRow = {
   id: string;
   attributes: string;
 };
@@ -39,11 +31,12 @@ export class NodeCollaboratorListQueryHandler
   public async handleQuery(
     input: NodeCollaboratorListQueryInput,
   ): Promise<QueryResult<NodeCollaboratorListQueryInput>> {
-    const nodes = await this.fetchAncestors(input);
-    const collaboratorsWithRoles = this.extractCollaborators(nodes);
-    const collaboratorIds = collaboratorsWithRoles.map(
+    const ancestors = await this.fetchAncestors(input);
+    const extractedCollaborators = this.extractCollaborators(ancestors);
+    const collaboratorIds = extractedCollaborators.map(
       (collaborator) => collaborator.collaboratorId,
     );
+
     const collaboratorNodes = await this.fetchCollaborators(
       input,
       collaboratorIds,
@@ -52,13 +45,13 @@ export class NodeCollaboratorListQueryHandler
     return {
       output: this.buildNodeCollaborators(
         input.nodeId,
-        nodes,
+        ancestors,
         collaboratorNodes,
-        collaboratorsWithRoles,
+        extractedCollaborators,
       ),
       state: {
-        nodes,
-        collaboratorsWithRoles,
+        ancestors,
+        extractedCollaborators,
         collaboratorNodes,
       },
     };
@@ -82,19 +75,20 @@ export class NodeCollaboratorListQueryHandler
       };
     }
 
-    const nodes = await this.fetchAncestors(input);
-    const collaboratorsWithRoles = this.extractCollaborators(nodes);
-    const collaboratorIds = collaboratorsWithRoles.map(
+    const ancestors = await this.fetchAncestors(input);
+    const extractedCollaborators = this.extractCollaborators(ancestors);
+    const collaboratorIds = extractedCollaborators.map(
       (collaborator) => collaborator.collaboratorId,
     );
+
     const collaboratorNodes = await this.fetchCollaborators(
       input,
       collaboratorIds,
     );
 
     if (
-      isEqual(nodes, state.nodes) &&
-      isEqual(collaboratorsWithRoles, state.collaboratorsWithRoles) &&
+      isEqual(ancestors, state.ancestors) &&
+      isEqual(extractedCollaborators, state.extractedCollaborators) &&
       isEqual(collaboratorNodes, state.collaboratorNodes)
     ) {
       return {
@@ -107,13 +101,13 @@ export class NodeCollaboratorListQueryHandler
       result: {
         output: this.buildNodeCollaborators(
           input.nodeId,
-          nodes,
+          ancestors,
           collaboratorNodes,
-          collaboratorsWithRoles,
+          extractedCollaborators,
         ),
         state: {
-          nodes,
-          collaboratorsWithRoles,
+          ancestors,
+          extractedCollaborators,
           collaboratorNodes,
         },
       },
@@ -122,32 +116,26 @@ export class NodeCollaboratorListQueryHandler
 
   private async fetchAncestors(
     input: NodeCollaboratorListQueryInput,
-  ): Promise<NodeRow[]> {
+  ): Promise<NodeWithAttributesRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
 
-    const query = sql<NodeRow>`
-      WITH RECURSIVE ancestors(id, attributes, parent_id, level) AS (
-        SELECT id, attributes, parent_id, 0 AS level
-        FROM nodes
-        WHERE id = ${input.nodeId}
-        UNION ALL
-        SELECT n.id, n.attributes, n.parent_id, a.level + 1
-        FROM nodes n
-        INNER JOIN ancestors a ON n.id = a.parent_id
-      )
-      SELECT id, attributes, parent_id, level
-      FROM ancestors
-      ORDER BY level DESC;
-    `.compile(workspaceDatabase);
+    const result = await workspaceDatabase
+      .selectFrom('nodes')
+      .select(['nodes.id', 'nodes.attributes'])
+      .innerJoin('node_paths', 'nodes.id', 'node_paths.ancestor_id')
+      .where('node_paths.descendant_id', '=', input.nodeId)
+      .orderBy('node_paths.level', 'desc')
+      .execute();
 
-    const result = await workspaceDatabase.executeQuery(query);
-    return result.rows;
+    return result;
   }
 
-  private extractCollaborators(nodes: NodeRow[]): NodeCollaboratorWithRole[] {
-    const extractedCollaborators: NodeCollaboratorWithRole[] = [];
+  private extractCollaborators(
+    nodes: NodeWithAttributesRow[],
+  ): ExtractedNodeCollaborator[] {
+    const map: Map<string, ExtractedNodeCollaborator> = new Map();
 
     for (const node of nodes) {
       const attributes = JSON.parse(node.attributes) as LocalNodeAttributes;
@@ -158,7 +146,7 @@ export class NodeCollaboratorListQueryHandler
 
       const collaboratorIds = Object.keys(collaborators);
       for (const collaboratorId of collaboratorIds) {
-        extractedCollaborators.push({
+        map.set(collaboratorId, {
           nodeId: node.id,
           collaboratorId,
           role: collaborators[collaboratorId],
@@ -166,13 +154,13 @@ export class NodeCollaboratorListQueryHandler
       }
     }
 
-    return extractedCollaborators;
+    return Array.from(map.values());
   }
 
   private async fetchCollaborators(
     input: NodeCollaboratorListQueryInput,
     collaboratorIds: string[],
-  ): Promise<CollaboratorNodeRow[]> {
+  ): Promise<NodeWithAttributesRow[]> {
     if (collaboratorIds.length === 0) {
       return [];
     }
@@ -192,107 +180,65 @@ export class NodeCollaboratorListQueryHandler
 
   private buildNodeCollaborators = (
     nodeId: string,
-    nodes: NodeRow[],
-    collaboratorNodes: CollaboratorNodeRow[],
-    collaboratorsWithRoles: NodeCollaboratorWithRole[],
+    ancestors: NodeWithAttributesRow[],
+    collaboratorNodes: NodeWithAttributesRow[],
+    extractedCollaborators: ExtractedNodeCollaborator[],
   ): NodeCollaboratorsWrapper => {
-    const direct: NodeCollaboratorNode[] = [];
-    const inheritCollaboratorMap: Map<string, NodeCollaboratorWithRole> =
-      new Map();
+    const direct: NodeCollaborator[] = [];
+    const inherit: InheritNodeCollaboratorsGroup[] = [];
 
-    for (const collaboratorWithRole of collaboratorsWithRoles) {
-      if (collaboratorWithRole.nodeId === nodeId) {
-        const collaboratorAttributes = JSON.parse(
-          collaboratorNodes.find(
-            (row) => row.id === collaboratorWithRole.collaboratorId,
-          )?.attributes,
-        );
+    const inheritCollaboratorMap: Map<string, NodeCollaborator[]> = new Map();
 
-        const collaborator: NodeCollaboratorNode = {
-          id: collaboratorWithRole.collaboratorId,
-          name: collaboratorAttributes.name,
-          email: collaboratorAttributes.email,
-          avatar: collaboratorAttributes.avatar || null,
-          role: collaboratorWithRole.role,
-        };
+    for (const extractedCollaborator of extractedCollaborators) {
+      const collaboratorNode = collaboratorNodes.find(
+        (row) => row.id === extractedCollaborator.collaboratorId,
+      );
 
+      if (!collaboratorNode) {
+        continue;
+      }
+
+      const collaboratorAttributes = JSON.parse(collaboratorNode?.attributes);
+
+      const collaborator: NodeCollaborator = {
+        id: extractedCollaborator.collaboratorId,
+        name: collaboratorAttributes.name,
+        email: collaboratorAttributes.email,
+        avatar: collaboratorAttributes.avatar || null,
+        role: extractedCollaborator.role,
+      };
+      if (extractedCollaborator.nodeId === nodeId) {
         direct.push(collaborator);
       } else {
-        if (!inheritCollaboratorMap.has(collaboratorWithRole.collaboratorId)) {
-          inheritCollaboratorMap.set(collaboratorWithRole.collaboratorId, {
-            nodeId: collaboratorWithRole.nodeId,
-            collaboratorId: collaboratorWithRole.collaboratorId,
-            role: collaboratorWithRole.role,
-          });
-        } else {
-          const existingRow = inheritCollaboratorMap.get(
-            collaboratorWithRole.collaboratorId,
-          );
-          if (
-            !existingRow ||
-            existingRow.nodeId !== collaboratorWithRole.nodeId
-          ) {
-            inheritCollaboratorMap.set(
-              collaboratorWithRole.collaboratorId,
-              collaboratorWithRole,
-            );
-          }
+        if (!inheritCollaboratorMap.has(extractedCollaborator.nodeId)) {
+          inheritCollaboratorMap.set(extractedCollaborator.nodeId, []);
         }
+
+        inheritCollaboratorMap
+          .get(extractedCollaborator.nodeId)
+          .push(collaborator);
       }
     }
 
-    const inheritLeveledMap: Map<number, InheritNodeCollaboratorsGroup> =
-      new Map();
-
-    for (const collaboratorWithRole of inheritCollaboratorMap.values()) {
-      if (
-        direct.some(
-          (collaborator) =>
-            collaborator.id === collaboratorWithRole.collaboratorId,
-        )
-      ) {
+    for (const ancestor of ancestors.reverse()) {
+      if (!inheritCollaboratorMap.has(ancestor.id)) {
         continue;
       }
 
-      const nodeLevel = nodes.find(
-        (node) => node.id === collaboratorWithRole.nodeId,
-      )?.level;
+      const ancestorAttributes = JSON.parse(ancestor.attributes);
+      const group: InheritNodeCollaboratorsGroup = {
+        id: ancestor.id,
+        name: ancestorAttributes.name,
+        avatar: ancestorAttributes.avatar || null,
+        collaborators: inheritCollaboratorMap.get(ancestor.id),
+      };
 
-      if (nodeLevel === undefined) {
-        continue;
-      }
-
-      if (!inheritLeveledMap.has(nodeLevel)) {
-        const nodeAttributes = JSON.parse(
-          nodes.find((node) => node.id === collaboratorWithRole.nodeId)
-            ?.attributes,
-        );
-        inheritLeveledMap.set(nodeLevel, {
-          id: collaboratorWithRole.nodeId,
-          name: nodeAttributes.name,
-          avatar: nodeAttributes.avatar,
-          collaborators: [],
-        });
-      }
-
-      const group = inheritLeveledMap.get(nodeLevel);
-      const collaboratorAttributes = JSON.parse(
-        collaboratorNodes.find(
-          (row) => row.id === collaboratorWithRole.collaboratorId,
-        )?.attributes,
-      );
-      group.collaborators.push({
-        id: collaboratorWithRole.collaboratorId,
-        name: collaboratorAttributes.name,
-        avatar: collaboratorAttributes.avatar,
-        email: collaboratorAttributes.email,
-        role: collaboratorWithRole.role,
-      });
+      inherit.push(group);
     }
 
     return {
       direct,
-      inherit: Array.from(inheritLeveledMap.values()),
+      inherit,
     };
   };
 }

@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
@@ -46,6 +46,10 @@ export class RecordCreateMutationHandler
       attributesMap.set('type', NodeTypes.Record);
       attributesMap.set('parentId', input.databaseId);
       attributesMap.set('index', generateNodeIndex(maxIndex, null));
+
+      const collaboratorsMap = new Y.Map<string>();
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

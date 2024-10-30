@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
@@ -51,6 +51,10 @@ export class PageCreateMutationHandler
       attributesMap.set('parentId', input.parentId);
       attributesMap.set('index', index);
       attributesMap.set('name', input.name);
+
+      const collaboratorsMap = new Y.Map<string>();
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

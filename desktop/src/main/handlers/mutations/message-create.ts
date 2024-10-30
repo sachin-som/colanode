@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
+import { EditorNodeTypes, NodeRole, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import {
   MutationChange,
@@ -79,6 +79,10 @@ export class MessageCreateMutationHandler
           fileAttributesMap.set('extension', metadata.extension);
           fileAttributesMap.set('size', metadata.size);
           fileAttributesMap.set('mimeType', metadata.mimeType);
+
+          const collaboratorsMap = new Y.Map<string>();
+          collaboratorsMap.set(input.userId, NodeRole.Owner);
+          fileAttributesMap.set('collaborators', collaboratorsMap);
         });
 
         const fileAttributes = JSON.stringify(fileAttributesMap.toJSON());

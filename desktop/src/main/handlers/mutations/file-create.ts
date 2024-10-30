@@ -3,7 +3,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { generateId, IdType } from '@/lib/id';
 import { FileCreateMutationInput } from '@/operations/mutations/file-create';
-import { NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { fileManager } from '@/main/file-manager';
 import { LocalCreateNodeChangeData } from '@/types/sync';
 import { fromUint8Array } from 'js-base64';
@@ -46,6 +46,10 @@ export class FileCreateMutationHandler
       attributesMap.set('extension', metadata.extension);
       attributesMap.set('size', metadata.size);
       attributesMap.set('mimeType', metadata.mimeType);
+
+      const collaboratorsMap = new Y.Map<string>();
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

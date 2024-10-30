@@ -4,7 +4,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { SpaceCreateMutationInput } from '@/operations/mutations/space-create';
 import * as Y from 'yjs';
-import { NodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes } from '@/lib/constants';
 import { fromUint8Array } from 'js-base64';
 import { LocalCreateNodeChangeData } from '@/types/sync';
 
@@ -35,15 +35,10 @@ export class SpaceCreateMutationHandler
         spaceAttributesMap.set('description', input.description);
       }
 
-      if (!spaceAttributesMap.has('collaborators')) {
-        spaceAttributesMap.set('collaborators', new Y.Map<string>());
-      }
+      const collaboratorsMap = new Y.Map<string>();
+      spaceAttributesMap.set('collaborators', collaboratorsMap);
 
-      const collaboratorsMap = spaceAttributesMap.get(
-        'collaborators',
-      ) as Y.Map<string>;
-
-      collaboratorsMap.set(input.userId, 'owner');
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
     });
 
     const spaceAttributes = JSON.stringify(spaceAttributesMap.toJSON());

@@ -77,7 +77,7 @@ export type NodeInsertInput = {
 };
 
 export type NodeCollaboratorsWrapper = {
-  direct: NodeCollaboratorNode[];
+  direct: NodeCollaborator[];
   inherit: InheritNodeCollaboratorsGroup[];
 };
 
@@ -85,10 +85,10 @@ export type InheritNodeCollaboratorsGroup = {
   id: string;
   name: string;
   avatar: string | null;
-  collaborators: NodeCollaboratorNode[];
+  collaborators: NodeCollaborator[];
 };
 
-export type NodeCollaboratorNode = {
+export type NodeCollaborator = {
   id: string;
   name: string;
   email: string;

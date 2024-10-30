@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes, ViewNodeTypes } from '@/lib/constants';
+import { NodeRole, NodeTypes, ViewNodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
@@ -51,6 +51,10 @@ export class TableViewCreateMutationHandler
       attributesMap.set('parentId', input.databaseId);
       attributesMap.set('index', generateNodeIndex(maxIndex, null));
       attributesMap.set('name', input.name);
+
+      const collaboratorsMap = new Y.Map<string>();
+      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

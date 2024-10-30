@@ -1,6 +1,10 @@
 import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
-import { NodeCollaborator, ServerNode } from '@/types/nodes';
+import {
+  NodeCollaborator,
+  ServerNode,
+  ServerNodeAttributes,
+} from '@/types/nodes';
 
 export const mapNode = (node: SelectNode): ServerNode => {
   return {
@@ -21,43 +25,18 @@ export const mapNode = (node: SelectNode): ServerNode => {
   };
 };
 
-export const fetchCollaboratorRole = async (
+export const fetchNodeAncestors = async (
   nodeId: string,
-  collaboratorId: string,
-): Promise<string | null> => {
+): Promise<SelectNode[]> => {
   const result = await database
-    .selectFrom('node_paths as np')
-    .innerJoin('node_collaborators as nc', 'np.ancestor_id', 'nc.node_id')
-    .select(['np.ancestor_id as node_id', 'np.level as node_level', 'nc.role'])
-    .where('np.descendant_id', '=', nodeId)
-    .where('nc.collaborator_id', '=', collaboratorId)
+    .selectFrom('nodes')
+    .selectAll()
+    .innerJoin('node_paths', 'nodes.id', 'node_paths.ancestor_id')
+    .where('node_paths.descendant_id', '=', nodeId)
+    .orderBy('node_paths.level', 'desc')
     .execute();
 
-  if (result.length === 0) {
-    return null;
-  }
-
-  const roleHierarchy = ['owner', 'admin', 'collaborator'];
-  const highestRole = result.reduce((highest, row) => {
-    const currentRoleIndex = roleHierarchy.indexOf(row.role);
-    const highestRoleIndex = roleHierarchy.indexOf(highest);
-    return currentRoleIndex < highestRoleIndex ? row.role : highest;
-  }, 'collaborator');
-
-  return highestRole;
-};
-
-export const fetchNodeAscendants = async (
-  nodeId: string,
-): Promise<string[]> => {
-  const result = await database
-    .selectFrom('node_paths')
-    .select('ancestor_id')
-    .where('descendant_id', '=', nodeId)
-    .orderBy('level', 'desc')
-    .execute();
-
-  return result.map((row) => row.ancestor_id);
+  return result;
 };
 
 export const fetchNodeDescendants = async (
@@ -76,24 +55,44 @@ export const fetchNodeDescendants = async (
 export const fetchNodeCollaborators = async (
   nodeId: string,
 ): Promise<NodeCollaborator[]> => {
-  const result = await database
-    .selectFrom('node_paths as np')
-    .innerJoin('node_collaborators as nc', 'np.ancestor_id', 'nc.node_id')
-    .select([
-      'np.ancestor_id as node_id',
-      'np.level as node_level',
-      'nc.collaborator_id',
-      'nc.role',
-    ])
-    .where('np.descendant_id', '=', nodeId)
-    .execute();
+  const ancestors = await fetchNodeAncestors(nodeId);
+  const collaboratorsMap = new Map<string, string>();
 
-  return result.map((row) => ({
-    nodeId: row.node_id,
-    level: row.node_level,
-    collaboratorId: row.collaborator_id,
-    role: row.role,
-  }));
+  for (const ancestor of ancestors) {
+    const collaborators = extractCollaborators(ancestor.attributes);
+    for (const [collaboratorId, role] of Object.entries(collaborators)) {
+      collaboratorsMap.set(collaboratorId, role);
+    }
+  }
+
+  return Array.from(collaboratorsMap.entries()).map(
+    ([collaboratorId, role]) => ({
+      nodeId: nodeId,
+      collaboratorId: collaboratorId,
+      role: role,
+    }),
+  );
+};
+
+export const fetchNodeRole = async (
+  nodeId: string,
+  collaboratorId: string,
+): Promise<string | null> => {
+  const ancestors = await fetchNodeAncestors(nodeId);
+  if (ancestors.length === 0) {
+    return null;
+  }
+
+  let role: string | null = null;
+  for (const ancestor of ancestors) {
+    const collaborators = extractCollaborators(ancestor.attributes);
+    const collaboratorRole = collaborators[collaboratorId];
+    if (collaboratorRole) {
+      role = collaboratorRole;
+    }
+  }
+
+  return role;
 };
 
 export const fetchWorkspaceUsers = async (
@@ -106,4 +105,10 @@ export const fetchWorkspaceUsers = async (
     .execute();
 
   return result.map((row) => row.id);
+};
+
+export const extractCollaborators = (
+  attribues: ServerNodeAttributes,
+): Record<string, string> => {
+  return attribues.collaborators ?? {};
 };

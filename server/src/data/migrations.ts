@@ -205,82 +205,6 @@ const createNodePathsTable: Migration = {
   },
 };
 
-const createNodeCollaboratorsTable: Migration = {
-  up: async (db) => {
-    await db.schema
-      .createTable('node_collaborators')
-      .addColumn('node_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
-      )
-      .addColumn('collaborator_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
-      )
-      .addColumn('role', 'varchar(30)', (col) => col.notNull())
-      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addPrimaryKeyConstraint('node_collaborators_pkey', [
-        'node_id',
-        'collaborator_id',
-      ])
-      .execute();
-
-    await sql`
-      CREATE OR REPLACE FUNCTION fn_insert_node_collaborators() RETURNS TRIGGER AS $$
-      DECLARE
-        collaborator_key text;
-        collaborator_role text;
-      BEGIN
-        FOR collaborator_key, collaborator_role IN
-          SELECT * FROM jsonb_each_text(NEW.attributes->'collaborators')
-        LOOP
-          INSERT INTO node_collaborators (node_id, collaborator_id, role, created_at)
-          VALUES (NEW.id, collaborator_key, collaborator_role, NOW());
-        END LOOP;
-
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
-
-      CREATE TRIGGER trg_insert_node_collaborators
-      AFTER INSERT ON nodes
-      FOR EACH ROW
-      EXECUTE FUNCTION fn_insert_node_collaborators();
-
-      CREATE OR REPLACE FUNCTION fn_update_node_collaborators() RETURNS TRIGGER AS $$
-      DECLARE
-        collaborator_key text;
-        collaborator_role text;
-      BEGIN
-        DELETE FROM node_collaborators WHERE node_id = NEW.id;
-
-        FOR collaborator_key, collaborator_role IN
-          SELECT * FROM jsonb_each_text(NEW.attributes->'collaborators')
-        LOOP
-          INSERT INTO node_collaborators (node_id, collaborator_id, role, created_at)
-          VALUES (NEW.id, collaborator_key, collaborator_role, NOW());
-        END LOOP;
-
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
-
-      CREATE TRIGGER trg_update_node_collaborators
-      AFTER UPDATE ON nodes
-      FOR EACH ROW
-      EXECUTE FUNCTION fn_update_node_collaborators();
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TRIGGER IF EXISTS trg_insert_node_collaborators ON nodes;
-      DROP TRIGGER IF EXISTS trg_update_node_collaborators ON nodes;
-      DROP FUNCTION IF EXISTS fn_insert_node_collaborators();
-      DROP FUNCTION IF EXISTS fn_update_node_collaborators();
-    `.execute(db);
-
-    await db.schema.dropTable('node_collaborators').execute();
-  },
-};
-
 const createUserNodesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -332,7 +256,6 @@ export const databaseMigrations: Record<string, Migration> = {
   '00004_create_workspace_users_table': createWorkspaceUsersTable,
   '00005_create_nodes_table': createNodesTable,
   '00006_create_node_paths_table': createNodePathsTable,
-  '00007_create_node_collaborators_table': createNodeCollaboratorsTable,
-  '00008_create_user_nodes_table': createUserNodesTable,
-  '00009_create_device_nodes_table': createDeviceNodesTable,
+  '00007_create_user_nodes_table': createUserNodesTable,
+  '00008_create_device_nodes_table': createDeviceNodesTable,
 };

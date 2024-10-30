@@ -1,6 +1,7 @@
 import { database } from '@/data/database';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
-import { fetchCollaboratorRole } from '@/lib/nodes';
+import { hasCollaboratorAccess, hasViewerAccess } from '@/lib/constants';
+import { fetchNodeRole } from '@/lib/nodes';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -48,8 +49,8 @@ filesRouter.get(
       });
     }
 
-    const role = await fetchCollaboratorRole(fileId, workspaceUser.id);
-    if (role === null) {
+    const role = await fetchNodeRole(fileId, workspaceUser.id);
+    if (role === null || !hasCollaboratorAccess(role)) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -123,8 +124,8 @@ filesRouter.post(
       });
     }
 
-    const role = await fetchCollaboratorRole(fileId, workspaceUser.id);
-    if (role === null) {
+    const role = await fetchNodeRole(fileId, workspaceUser.id);
+    if (role === null || !hasViewerAccess(role)) {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',

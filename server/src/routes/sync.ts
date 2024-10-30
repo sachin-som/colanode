@@ -14,7 +14,6 @@ import {
   SyncLocalChangesInput,
 } from '@/types/sync';
 import { SelectWorkspaceUser } from '@/data/schema';
-import { fetchCollaboratorRole } from '@/lib/nodes';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
@@ -24,6 +23,8 @@ import {
 } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { synapse } from '@/services/synapse';
+import { getValidator } from '@/validators';
+import { mapNode } from '@/lib/nodes';
 
 export const syncRouter = Router();
 
@@ -39,23 +40,10 @@ syncRouter.post(
       });
     }
 
-    const workspace = await database
-      .selectFrom('workspaces')
-      .selectAll()
-      .where('id', '=', workspaceId)
-      .executeTakeFirst();
-
-    if (!workspace) {
-      return res.status(404).json({
-        code: ApiError.ResourceNotFound,
-        message: 'Workspace not found.',
-      });
-    }
-
     const workspaceUser = await database
       .selectFrom('workspace_users')
       .selectAll()
-      .where('workspace_id', '=', workspace.id)
+      .where('workspace_id', '=', workspaceId)
       .where('account_id', '=', req.account.id)
       .executeTakeFirst();
 
@@ -138,20 +126,17 @@ const handleCreateNodeChange = async (
   const attributesMap = doc.getMap('attributes');
   const attributes = attributesMap.toJSON() as ServerNodeAttributes;
 
-  if (attributes.parentId) {
-    const parentRole = await fetchCollaboratorRole(
-      attributes.parentId,
-      workspaceUser.id,
-    );
+  const validator = getValidator(attributes.type);
+  if (!validator) {
+    return {
+      status: 'error',
+    };
+  }
 
-    if (
-      parentRole === null ||
-      (parentRole !== 'owner' && parentRole !== 'admin')
-    ) {
-      return {
-        status: 'error',
-      };
-    }
+  if (!(await validator.canCreate(workspaceUser, attributes))) {
+    return {
+      status: 'error',
+    };
   }
 
   await database
@@ -194,7 +179,7 @@ const handleUpdateNodeChange = async (
   while (count++ < 10) {
     const existingNode = await database
       .selectFrom('nodes')
-      .select(['id', 'workspace_id', 'attributes', 'state', 'version_id'])
+      .selectAll()
       .where('id', '=', changeData.id)
       .executeTakeFirst();
 
@@ -202,13 +187,6 @@ const handleUpdateNodeChange = async (
       !existingNode ||
       existingNode.workspace_id != workspaceUser.workspace_id
     ) {
-      return {
-        status: 'error',
-      };
-    }
-
-    const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
-    if (role === null) {
       return {
         status: 'error',
       };
@@ -228,6 +206,25 @@ const handleUpdateNodeChange = async (
     const attributes = attributesMap.toJSON() as ServerNodeAttributes;
     const attributesJson = JSON.stringify(attributes);
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+
+    const validator = getValidator(existingNode.type);
+    if (!validator) {
+      return {
+        status: 'error',
+      };
+    }
+
+    if (
+      !(await validator.canUpdate(
+        workspaceUser,
+        mapNode(existingNode),
+        attributes,
+      ))
+    ) {
+      return {
+        status: 'error',
+      };
+    }
 
     const result = await database
       .updateTable('nodes')
@@ -276,7 +273,7 @@ const handleDeleteNodeChange = async (
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', changeData.id)
-    .select(['id', 'workspace_id', 'attributes'])
+    .selectAll()
     .executeTakeFirst();
 
   if (!existingNode) {
@@ -291,8 +288,14 @@ const handleDeleteNodeChange = async (
     };
   }
 
-  const role = await fetchCollaboratorRole(changeData.id, workspaceUser.id);
-  if (role === null) {
+  const validator = getValidator(existingNode.type);
+  if (!validator) {
+    return {
+      status: 'error',
+    };
+  }
+
+  if (!(await validator.canDelete(workspaceUser, mapNode(existingNode)))) {
     return {
       status: 'error',
     };

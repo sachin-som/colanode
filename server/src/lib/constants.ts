@@ -1,9 +1,3 @@
-export const PostgresOperation = {
-  CREATE: 'c',
-  UPDATE: 'u',
-  DELETE: 'd',
-} as const;
-
 export const NodeTypes = {
   User: 'user',
   Space: 'space',
@@ -11,7 +5,6 @@ export const NodeTypes = {
   Channel: 'channel',
   Chat: 'chat',
   Message: 'message',
-  HorizontalRule: 'horizontal_rule',
   Database: 'database',
   DatabaseReplica: 'database_replica',
   Record: 'record',
@@ -22,4 +15,43 @@ export const NodeTypes = {
   Field: 'field',
   SelectOption: 'select_option',
   File: 'file',
+};
+
+export const NodeRoles = {
+  Owner: 'owner',
+  Admin: 'admin',
+  Collaborator: 'collaborator',
+  Viewer: 'viewer',
+};
+
+export const nodeRoleHierarchy = [
+  NodeRoles.Owner,
+  NodeRoles.Admin,
+  NodeRoles.Collaborator,
+  NodeRoles.Viewer,
+];
+
+export const hasOwnerAccess = (role: string): boolean => {
+  return role === NodeRoles.Owner;
+};
+
+export const hasAdminAccess = (role: string): boolean => {
+  return role === NodeRoles.Owner || role === NodeRoles.Admin;
+};
+
+export const hasCollaboratorAccess = (role: string): boolean => {
+  return (
+    role === NodeRoles.Owner ||
+    role === NodeRoles.Admin ||
+    role === NodeRoles.Collaborator
+  );
+};
+
+export const hasViewerAccess = (role: string): boolean => {
+  return (
+    role === NodeRoles.Owner ||
+    role === NodeRoles.Admin ||
+    role === NodeRoles.Collaborator ||
+    role === NodeRoles.Viewer
+  );
 };

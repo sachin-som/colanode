@@ -4,7 +4,7 @@ export type ServerNode = {
   parentId?: string | null;
   type: string;
   index: string | null;
-  attributes: ServerNodeAttributes | null;
+  attributes: ServerNodeAttributes;
   state: string;
   createdAt: Date;
   createdBy: string;
@@ -36,7 +36,6 @@ export type NodeBlockMark = {
 
 export type NodeCollaborator = {
   nodeId: string;
-  level: number;
   collaboratorId: string;
   role: string;
 };

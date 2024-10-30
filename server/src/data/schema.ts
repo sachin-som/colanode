@@ -117,17 +117,6 @@ export type SelectNodePath = Selectable<NodePathTable>;
 export type CreateNodePath = Insertable<NodePathTable>;
 export type UpdateNodePath = Updateable<NodePathTable>;
 
-interface NodeCollaboratorTable {
-  node_id: ColumnType<string, string, never>;
-  collaborator_id: ColumnType<string, string, never>;
-  role: ColumnType<string, string, string>;
-  created_at: ColumnType<Date, Date, never>;
-}
-
-export type SelectNodeCollaborator = Selectable<NodeCollaboratorTable>;
-export type CreateNodeCollaborator = Insertable<NodeCollaboratorTable>;
-export type UpdateNodeCollaborator = Updateable<NodeCollaboratorTable>;
-
 interface UserNodeTable {
   node_id: ColumnType<string, string, never>;
   user_id: ColumnType<string, string, never>;
@@ -167,7 +156,6 @@ export interface DatabaseSchema {
   workspace_users: WorkspaceUserTable;
   nodes: NodeTable;
   node_paths: NodePathTable;
-  node_collaborators: NodeCollaboratorTable;
   user_nodes: UserNodeTable;
   device_nodes: DeviceNodeTable;
 }

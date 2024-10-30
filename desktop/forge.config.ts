@@ -24,6 +24,7 @@ const config: ForgeConfig = {
       // /^\/node_modules/
     ],
     extraResource: ['assets'],
+    icon: 'assets/icon', // Path to the icon file. Works for macOS and Windows, but not for Linux.
   },
   rebuildConfig: {},
   makers: [
@@ -31,6 +32,18 @@ const config: ForgeConfig = {
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
     new MakerDeb({}),
+  ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'neuronapp',
+          name: 'neuron',
+        },
+        prerelease: true,
+      }
+    }
   ],
   plugins: [
     new VitePlugin({

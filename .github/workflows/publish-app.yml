@@ -1,0 +1,57 @@
+name: Publish App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      # Set VERSION for Unix-like systems
+      - name: Set VERSION (Unix)
+        if: matrix.os != 'windows-latest'
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      # Set VERSION for Windows
+      - name: Set VERSION (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF -replace '^refs/tags/v',''
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Update package.json version
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            npm version ${VERSION} --no-git-tag-version
+          else
+            npm version $VERSION --no-git-tag-version
+          fi
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Electron App
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm run make
+
+      - name: Publish Release to GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm run publish

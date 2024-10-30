@@ -1,6 +1,5 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { NodeRoles } from '@/lib/constants';
-import { extractCollaborators } from '@/lib/nodes';
+import { hasAdminAccess, hasEditorAccess, NodeRoles } from '@/lib/constants';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
 import { WorkspaceRole } from '@/types/workspaces';
@@ -14,12 +13,10 @@ export class SpaceValidator implements Validator {
       return false;
     }
 
-    const collaborators = extractCollaborators(attributes);
-    if (collaborators[workspaceUser.id] !== NodeRoles.Owner) {
-      return false;
-    }
+    const collaborators = attributes.collaborators ?? {};
+    const role = collaborators[workspaceUser.id];
 
-    return true;
+    return hasAdminAccess(role);
   }
 
   async canUpdate(
@@ -27,25 +24,25 @@ export class SpaceValidator implements Validator {
     node: ServerNode,
     attributes: ServerNodeAttributes,
   ): Promise<boolean> {
-    const collaborators = extractCollaborators(node.attributes);
+    const collaborators = attributes.collaborators ?? {};
     const role = collaborators[workspaceUser.id];
-    if (role !== NodeRoles.Owner && role !== NodeRoles.Admin) {
+    if (!role) {
       return false;
     }
 
-    return true;
+    return hasEditorAccess(role);
   }
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
   ): Promise<boolean> {
-    const collaborators = extractCollaborators(node.attributes);
+    const collaborators = node.attributes.collaborators ?? {};
     const role = collaborators[workspaceUser.id];
-    if (role !== NodeRoles.Owner && role !== NodeRoles.Admin) {
+    if (!role) {
       return false;
     }
 
-    return true;
+    return hasAdminAccess(role);
   }
 }

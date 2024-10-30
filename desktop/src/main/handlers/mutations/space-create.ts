@@ -38,7 +38,7 @@ export class SpaceCreateMutationHandler
       const collaboratorsMap = new Y.Map<string>();
       spaceAttributesMap.set('collaborators', collaboratorsMap);
 
-      collaboratorsMap.set(input.userId, NodeRole.Owner);
+      collaboratorsMap.set(input.userId, NodeRole.Editor);
     });
 
     const spaceAttributes = JSON.stringify(spaceAttributesMap.toJSON());

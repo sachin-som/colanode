@@ -1,6 +1,6 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasAdminAccess } from '@/lib/constants';
-import { fetchNodeRole } from '@/lib/nodes';
+import { hasEditorAccess, NodeTypes } from '@/lib/constants';
+import { extractNodeRole, fetchNodeAncestors } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
 
@@ -13,12 +13,29 @@ export class FileValidator implements Validator {
       return false;
     }
 
-    const role = await fetchNodeRole(attributes.parentId, workspaceUser.id);
+    const ancestors = await fetchNodeAncestors(attributes.parentId);
+    if (ancestors.length === 0) {
+      return false;
+    }
+
+    const parent = ancestors.find(
+      (ancestor) => ancestor.id === attributes.parentId,
+    );
+
+    if (!parent) {
+      return false;
+    }
+
+    if (parent.type === NodeTypes.File) {
+      return parent.created_by === workspaceUser.id;
+    }
+
+    const role = extractNodeRole(ancestors, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 
   async canUpdate(
@@ -26,16 +43,33 @@ export class FileValidator implements Validator {
     node: ServerNode,
     attributes: ServerNodeAttributes,
   ): Promise<boolean> {
-    if (!attributes.parentId || attributes.parentId !== node.parentId) {
+    if (!attributes.parentId) {
       return false;
     }
 
-    const role = await fetchNodeRole(node.id, workspaceUser.id);
+    const ancestors = await fetchNodeAncestors(attributes.parentId);
+    if (ancestors.length === 0) {
+      return false;
+    }
+
+    const parent = ancestors.find(
+      (ancestor) => ancestor.id === attributes.parentId,
+    );
+
+    if (!parent) {
+      return false;
+    }
+
+    if (parent.type === NodeTypes.File) {
+      return parent.created_by === workspaceUser.id;
+    }
+
+    const role = extractNodeRole(ancestors, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 
   async canDelete(
@@ -46,11 +80,25 @@ export class FileValidator implements Validator {
       return false;
     }
 
-    const role = await fetchNodeRole(node.parentId, workspaceUser.id);
+    const ancestors = await fetchNodeAncestors(node.parentId);
+    if (ancestors.length === 0) {
+      return false;
+    }
+
+    const parent = ancestors.find((ancestor) => ancestor.id === node.parentId);
+    if (!parent) {
+      return false;
+    }
+
+    if (parent.type === NodeTypes.File) {
+      return parent.created_by === workspaceUser.id;
+    }
+
+    const role = extractNodeRole(ancestors, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 }

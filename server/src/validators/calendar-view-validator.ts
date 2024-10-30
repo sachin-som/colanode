@@ -1,8 +1,9 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasAdminAccess } from '@/lib/constants';
+import { hasAdminAccess, hasEditorAccess } from '@/lib/constants';
 import { fetchNodeRole } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
+import { isEqual } from 'lodash';
 
 export class CalendarViewValidator implements Validator {
   async canCreate(
@@ -19,7 +20,11 @@ export class CalendarViewValidator implements Validator {
       return false;
     }
 
-    return hasAdminAccess(role);
+    if (attributes.collaborators) {
+      return hasAdminAccess(role);
+    }
+
+    return hasEditorAccess(role);
   }
 
   async canUpdate(
@@ -27,32 +32,27 @@ export class CalendarViewValidator implements Validator {
     node: ServerNode,
     attributes: ServerNodeAttributes,
   ): Promise<boolean> {
-    if (!attributes.parentId || attributes.parentId !== node.parentId) {
-      return false;
-    }
-
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
+      return hasAdminAccess(role);
+    }
+
+    return hasEditorAccess(role);
   }
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
   ): Promise<boolean> {
-    if (!node.parentId) {
-      return false;
-    }
-
-    const parentId = node.parentId;
-    const role = await fetchNodeRole(parentId, workspaceUser.id);
+    const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 }

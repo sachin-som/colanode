@@ -28,10 +28,6 @@ export class MessageValidator implements Validator {
     node: ServerNode,
     attributes: ServerNodeAttributes,
   ): Promise<boolean> {
-    if (!attributes.parentId || attributes.parentId !== node.parentId) {
-      return false;
-    }
-
     if (
       !isEqual(attributes.content, node.attributes.content) &&
       node.createdBy !== workspaceUser.id

@@ -25,6 +25,16 @@ export const mapNode = (node: SelectNode): ServerNode => {
   };
 };
 
+export const fetchNode = async (nodeId: string): Promise<SelectNode | null> => {
+  const result = await database
+    .selectFrom('nodes')
+    .selectAll()
+    .where('id', '=', nodeId)
+    .executeTakeFirst();
+
+  return result ?? null;
+};
+
 export const fetchNodeAncestors = async (
   nodeId: string,
 ): Promise<SelectNode[]> => {
@@ -59,7 +69,10 @@ export const fetchNodeCollaborators = async (
   const collaboratorsMap = new Map<string, string>();
 
   for (const ancestor of ancestors) {
-    const collaborators = extractCollaborators(ancestor.attributes);
+    const collaborators = (ancestor.attributes.collaborators ?? {}) as Record<
+      string,
+      string
+    >;
     for (const [collaboratorId, role] of Object.entries(collaborators)) {
       collaboratorsMap.set(collaboratorId, role);
     }
@@ -83,16 +96,7 @@ export const fetchNodeRole = async (
     return null;
   }
 
-  let role: string | null = null;
-  for (const ancestor of ancestors) {
-    const collaborators = extractCollaborators(ancestor.attributes);
-    const collaboratorRole = collaborators[collaboratorId];
-    if (collaboratorRole) {
-      role = collaboratorRole;
-    }
-  }
-
-  return role;
+  return extractNodeRole(ancestors, collaboratorId);
 };
 
 export const fetchWorkspaceUsers = async (
@@ -107,8 +111,18 @@ export const fetchWorkspaceUsers = async (
   return result.map((row) => row.id);
 };
 
-export const extractCollaborators = (
-  attribues: ServerNodeAttributes,
-): Record<string, string> => {
-  return attribues.collaborators ?? {};
+export const extractNodeRole = (
+  ancestors: SelectNode[],
+  collaboratorId: string,
+): string | null => {
+  let role: string | null = null;
+  for (const ancestor of ancestors) {
+    const collaborators = ancestor.attributes.collaborators ?? {};
+    const collaboratorRole = collaborators[collaboratorId];
+    if (collaboratorRole) {
+      role = collaboratorRole;
+    }
+  }
+
+  return role;
 };

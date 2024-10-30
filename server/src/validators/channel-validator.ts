@@ -1,9 +1,9 @@
-import { database } from '@/data/database';
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasAdminAccess, NodeRoles, NodeTypes } from '@/lib/constants';
-import { extractCollaborators, fetchNodeRole } from '@/lib/nodes';
+import { hasAdminAccess, hasEditorAccess } from '@/lib/constants';
+import { fetchNodeRole } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
+import { isEqual } from 'lodash';
 
 export class ChannelValidator implements Validator {
   async canCreate(
@@ -14,27 +14,17 @@ export class ChannelValidator implements Validator {
       return false;
     }
 
-    const parent = await database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', attributes.parentId)
-      .executeTakeFirst();
-
-    if (!parent) {
+    const parentId = attributes.parentId;
+    const role = await fetchNodeRole(parentId, workspaceUser.id);
+    if (!role) {
       return false;
     }
 
-    if (parent.type !== NodeTypes.Space) {
-      return false;
+    if (attributes.collaborators) {
+      return hasAdminAccess(role);
     }
 
-    const collaborators = extractCollaborators(parent);
-    const role = collaborators[workspaceUser.id];
-    if (role !== NodeRoles.Owner && role !== NodeRoles.Admin) {
-      return false;
-    }
-
-    return true;
+    return hasEditorAccess(role);
   }
 
   async canUpdate(
@@ -42,16 +32,16 @@ export class ChannelValidator implements Validator {
     node: ServerNode,
     attributes: ServerNodeAttributes,
   ): Promise<boolean> {
-    if (!attributes.parentId || attributes.parentId !== node.parentId) {
-      return false;
-    }
-
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
+      return hasAdminAccess(role);
+    }
+
+    return hasEditorAccess(role);
   }
 
   async canDelete(
@@ -63,6 +53,6 @@ export class ChannelValidator implements Validator {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 }

@@ -10,6 +10,7 @@ import * as Y from 'yjs';
 import { fromUint8Array } from 'js-base64';
 import { NodeCreatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
+import { NodeRoles } from './constants';
 
 export const createDefaultWorkspace = async (account: SelectAccount) => {
   const createdAt = new Date();
@@ -117,7 +118,7 @@ const buildSpaceNodeCreate = (
       'collaborators',
     ) as Y.Map<string>;
 
-    collaboratorsMap.set(userId, WorkspaceRole.Owner);
+    collaboratorsMap.set(userId, NodeRoles.Admin);
   });
 
   const attributes = JSON.stringify(attributesMap.toJSON());

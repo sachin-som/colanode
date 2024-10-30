@@ -49,8 +49,8 @@ export const SortDirections = {
 };
 
 export const NodeRole = {
-  Owner: 'owner',
   Admin: 'admin',
+  Editor: 'editor',
   Collaborator: 'collaborator',
   Viewer: 'viewer',
 };

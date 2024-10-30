@@ -16,21 +16,27 @@ interface NodeCollaboratorRole {
 
 const roles: NodeCollaboratorRole[] = [
   {
-    name: 'Owner',
-    value: 'owner',
-    description: 'Owner',
-    enabled: false,
-  },
-  {
     name: 'Admin',
     value: 'admin',
     description: 'Administration access',
     enabled: true,
   },
   {
+    name: 'Editor',
+    value: 'editor',
+    description: 'Editing access',
+    enabled: true,
+  },
+  {
     name: 'Collaborator',
     value: 'collaborator',
     description: 'Can contribute in content',
+    enabled: true,
+  },
+  {
+    name: 'Viewer',
+    value: 'viewer',
+    description: 'Can view content',
     enabled: true,
   },
 ];

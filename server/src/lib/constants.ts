@@ -18,39 +18,32 @@ export const NodeTypes = {
 };
 
 export const NodeRoles = {
-  Owner: 'owner',
   Admin: 'admin',
+  Editor: 'editor',
   Collaborator: 'collaborator',
   Viewer: 'viewer',
 };
 
-export const nodeRoleHierarchy = [
-  NodeRoles.Owner,
-  NodeRoles.Admin,
-  NodeRoles.Collaborator,
-  NodeRoles.Viewer,
-];
-
-export const hasOwnerAccess = (role: string): boolean => {
-  return role === NodeRoles.Owner;
+export const hasAdminAccess = (role: string): boolean => {
+  return role === NodeRoles.Admin;
 };
 
-export const hasAdminAccess = (role: string): boolean => {
-  return role === NodeRoles.Owner || role === NodeRoles.Admin;
+export const hasEditorAccess = (role: string): boolean => {
+  return role === NodeRoles.Admin || role === NodeRoles.Editor;
 };
 
 export const hasCollaboratorAccess = (role: string): boolean => {
   return (
-    role === NodeRoles.Owner ||
     role === NodeRoles.Admin ||
+    role === NodeRoles.Editor ||
     role === NodeRoles.Collaborator
   );
 };
 
 export const hasViewerAccess = (role: string): boolean => {
   return (
-    role === NodeRoles.Owner ||
     role === NodeRoles.Admin ||
+    role === NodeRoles.Editor ||
     role === NodeRoles.Collaborator ||
     role === NodeRoles.Viewer
   );

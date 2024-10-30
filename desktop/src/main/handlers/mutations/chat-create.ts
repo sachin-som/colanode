@@ -26,8 +26,8 @@ export class ChatCreateMutationHandler
       SELECT id
       FROM nodes
       WHERE type = ${NodeTypes.Chat}
-      AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') = 'owner'
-      AND json_extract(attributes, '$.collaborators.${sql.raw(input.otherUserId)}') = 'owner'
+      AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') is not null
+      AND json_extract(attributes, '$.collaborators.${sql.raw(input.otherUserId)}') is not null
     `.compile(workspaceDatabase);
 
     const existingChats = await workspaceDatabase.executeQuery(query);
@@ -55,8 +55,8 @@ export class ChatCreateMutationHandler
       attributesMap.set('collaborators', new Y.Map());
 
       const collaboratorsMap = attributesMap.get('collaborators') as Y.Map<any>;
-      collaboratorsMap.set(input.userId, NodeRole.Owner);
-      collaboratorsMap.set(input.otherUserId, NodeRole.Owner);
+      collaboratorsMap.set(input.userId, NodeRole.Collaborator);
+      collaboratorsMap.set(input.otherUserId, NodeRole.Collaborator);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

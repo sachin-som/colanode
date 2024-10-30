@@ -1,6 +1,7 @@
 import { EventBus } from '@/lib/event-bus';
 import { MutationMap, MutationInput } from '@/operations/mutations';
 import { QueryMap, QueryInput } from '@/operations/queries';
+import { FileMetadata } from '@/types/files';
 
 interface NeuronApi {
   init: () => Promise<void>;
@@ -26,6 +27,7 @@ interface NeuronApi {
   ) => Promise<Electron.OpenDialogReturnValue>;
 
   openFile: (userId: string, id: string, extension: string) => Promise<void>;
+  getFileMetadata: (path: string) => Promise<FileMetadata | null>;
 }
 
 declare global {

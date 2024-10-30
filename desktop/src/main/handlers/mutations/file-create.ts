@@ -1,6 +1,3 @@
-import fs from 'fs';
-import mime from 'mime-types';
-import path from 'path';
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
@@ -20,22 +17,21 @@ export class FileCreateMutationHandler
       input.userId,
     );
 
-    const filePath = input.filePath;
-    const fileName = path.basename(filePath);
-    const extension = path.extname(filePath);
-    const stats = fs.statSync(filePath);
-
-    const size = stats.size;
-    const mimeType = mime.lookup(filePath);
-    if (mimeType === false) {
-      throw new Error('Invalid file type');
+    const metadata = fileManager.getFileMetadata(input.filePath);
+    if (!metadata) {
+      throw new Error('Invalid file');
     }
 
     const id = generateId(IdType.File);
     const versionId = generateId(IdType.Version);
     const createdAt = new Date().toISOString();
 
-    fileManager.copyFileToWorkspace(filePath, id, extension, input.userId);
+    fileManager.copyFileToWorkspace(
+      input.filePath,
+      id,
+      metadata.extension,
+      input.userId,
+    );
 
     const doc = new Y.Doc({
       guid: id,
@@ -45,11 +41,11 @@ export class FileCreateMutationHandler
     doc.transact(() => {
       attributesMap.set('type', NodeTypes.File);
       attributesMap.set('parentId', input.parentId);
-      attributesMap.set('name', fileName);
-      attributesMap.set('fileName', fileName);
-      attributesMap.set('extension', extension);
-      attributesMap.set('size', size);
-      attributesMap.set('mimeType', mimeType);
+      attributesMap.set('name', metadata.name);
+      attributesMap.set('fileName', metadata.name);
+      attributesMap.set('extension', metadata.extension);
+      attributesMap.set('size', metadata.size);
+      attributesMap.set('mimeType', metadata.mimeType);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

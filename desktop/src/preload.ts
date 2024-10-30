@@ -37,6 +37,10 @@ contextBridge.exposeInMainWorld('neuron', {
   openFile: (userId: string, id: string, extension: string) => {
     return ipcRenderer.invoke('open-file', userId, id, extension);
   },
+
+  getFileMetadata: (path: string) => {
+    return ipcRenderer.invoke('get-file-metadata', path);
+  },
 });
 
 contextBridge.exposeInMainWorld('eventBus', {

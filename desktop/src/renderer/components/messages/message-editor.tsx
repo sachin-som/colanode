@@ -28,9 +28,12 @@ import {
   LinkMark,
   IdExtension,
   DropcursorExtension,
+  FilePlaceholderNode,
+  FileNode,
 } from '@/renderer/editor/extensions';
 import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
 import { Plus, Search, Send, Upload } from 'lucide-react';
+import { toast } from '@/renderer/hooks/use-toast';
 
 interface MessageEditorProps {
   conversationId: string;
@@ -73,6 +76,8 @@ export const MessageEditor = React.forwardRef<
         HighlightMark,
         LinkMark,
         DropcursorExtension,
+        FilePlaceholderNode,
+        FileNode,
       ],
       editorProps: {
         attributes: {
@@ -115,6 +120,36 @@ export const MessageEditor = React.forwardRef<
     },
   }));
 
+  const handleUploadClick = React.useCallback(async () => {
+    if (editor == null) {
+      return;
+    }
+
+    const result = await window.neuron.openFileDialog({
+      properties: ['openFile'],
+      buttonLabel: 'Upload',
+      title: 'Upload files to message',
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    const filePath = result.filePaths[0];
+    const fileMetadata = await window.neuron.getFileMetadata(filePath);
+
+    if (fileMetadata === null) {
+      toast({
+        title: 'Failed to add file',
+        description:
+          'Something went wrong adding file to the message. Please try again!',
+        variant: 'destructive',
+      });
+    }
+
+    editor.chain().focus().addFilePlaceholder(fileMetadata).run();
+  }, [editor]);
+
   return (
     <div className="flex min-h-0 flex-row items-center rounded bg-gray-100 p-2 pl-0">
       <div className="flex w-10 items-center justify-center">
@@ -131,7 +166,7 @@ export const MessageEditor = React.forwardRef<
                 <span>Browse</span>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={true}>
+            <DropdownMenuItem onClick={handleUploadClick}>
               <div className="flex cursor-pointer flex-row items-center gap-2 text-sm">
                 <Upload className="size-4" />
                 <span>Upload</span>

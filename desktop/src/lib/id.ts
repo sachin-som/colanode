@@ -44,6 +44,7 @@ export enum IdType {
   Avatar = 'av',
   Icon = 'ic',
   File = 'fi',
+  FilePlaceholder = 'fp',
 }
 
 export const generateId = (type: IdType): string => {

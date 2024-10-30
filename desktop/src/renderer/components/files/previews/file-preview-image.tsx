@@ -1,21 +1,11 @@
 import React from 'react';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { getFileUrl } from '@/lib/files';
 
 interface FilePreviewImageProps {
-  id: string;
+  url: string;
   name: string;
-  extension: string;
 }
 
-export const FilePreviewImage = ({
-  id,
-  name,
-  extension,
-}: FilePreviewImageProps) => {
-  const workspace = useWorkspace();
-  const url = getFileUrl(workspace.userId, id, extension);
-
+export const FilePreviewImage = ({ url, name }: FilePreviewImageProps) => {
   return (
     <img
       src={url}

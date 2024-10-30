@@ -1,20 +1,9 @@
 import React from 'react';
-import { getFileUrl } from '@/lib/files';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface FilePreviewVideoProps {
-  id: string;
-  name: string;
-  extension: string;
+  url: string;
 }
 
-export const FilePreviewVideo = ({
-  id,
-  name,
-  extension,
-}: FilePreviewVideoProps) => {
-  const workspace = useWorkspace();
-  const url = getFileUrl(workspace.userId, id, extension);
-
+export const FilePreviewVideo = ({ url }: FilePreviewVideoProps) => {
   return <video controls src={url} className="h-full w-full object-contain" />;
 };

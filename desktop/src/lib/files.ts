@@ -32,6 +32,10 @@ export const getFileUrl = (
   return `local-file://${userId}/${fileId}${extension}`;
 };
 
+export const getFilePlaceholderUrl = (path: string) => {
+  return `local-file-preview://${path}`;
+};
+
 const friendlyNameMapping: Record<string, string> = {
   // Application types
   'application/msword': 'Word Document',

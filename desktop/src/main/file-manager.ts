@@ -2,7 +2,9 @@ import { net, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
+import mime from 'mime-types';
 import {
+  FileMetadata,
   ServerFileDownloadResponse,
   ServerFileUploadResponse,
 } from '@/types/files';
@@ -26,6 +28,11 @@ class FileManager {
     }
 
     return new Response(null, { status: 404 });
+  }
+
+  public async handleFilePreviewRequest(request: Request): Promise<Response> {
+    const url = request.url.replace('local-file-preview://', 'file://');
+    return net.fetch(url);
   }
 
   public copyFileToWorkspace(
@@ -57,6 +64,27 @@ class FileManager {
     const filesDir = getWorkspaceFilesDirectoryPath(userId);
     const filePath = path.join(filesDir, `${id}${extension}`);
     fs.rmSync(filePath, { force: true });
+  }
+
+  public getFileMetadata(filePath: string): FileMetadata | null {
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+
+    const mimeType = mime.lookup(filePath);
+    if (mimeType === false) {
+      return null;
+    }
+
+    const stats = fs.statSync(filePath);
+
+    return {
+      path: filePath,
+      mimeType,
+      extension: path.extname(filePath),
+      name: path.basename(filePath),
+      size: stats.size,
+    };
   }
 
   public async checkForUploads(

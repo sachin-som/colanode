@@ -34,3 +34,11 @@ export type FileDetails = {
 };
 
 export type FilePreviewType = 'image' | 'video' | 'other';
+
+export type FileMetadata = {
+  path: string;
+  mimeType: string;
+  extension: string;
+  name: string;
+  size: number;
+};

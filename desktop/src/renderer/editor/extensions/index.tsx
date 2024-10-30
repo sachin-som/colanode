@@ -33,6 +33,7 @@ import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
 import { PageNode } from '@/renderer/editor/extensions/page';
 import { FolderNode } from '@/renderer/editor/extensions/folder';
 import { FileNode } from '@/renderer/editor/extensions/file';
+import { FilePlaceholderNode } from '@/renderer/editor/extensions/file-placeholder';
 
 export {
   IdExtension,
@@ -69,4 +70,5 @@ export {
   PageNode,
   FolderNode,
   FileNode,
+  FilePlaceholderNode,
 };

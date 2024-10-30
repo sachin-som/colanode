@@ -1,46 +1,21 @@
 import React from 'react';
 import { match } from 'ts-pattern';
-import { FileDetails } from '@/types/files';
 import { getFilePreviewType } from '@/lib/files';
-import { FileDownload } from '@/renderer/components/files/file-download';
 import { FilePreviewImage } from '@/renderer/components/files/previews/file-preview-image';
 import { FilePreviewVideo } from '@/renderer/components/files/previews/file-preview-video';
 import { FilePreviewOther } from '@/renderer/components/files/previews/file-preview-other';
 
 interface FilePreviewProps {
-  file: FileDetails;
+  url: string;
+  name: string;
+  mimeType: string;
 }
 
-export const FilePreview = ({ file }: FilePreviewProps) => {
-  if (file.downloadProgress !== 100) {
-    return (
-      <FileDownload id={file.id} downloadProgress={file.downloadProgress} />
-    );
-  }
-
-  const previewType = getFilePreviewType(file.mimeType);
+export const FilePreview = ({ url, name, mimeType }: FilePreviewProps) => {
+  const previewType = getFilePreviewType(mimeType);
   return match(previewType)
-    .with('image', () => (
-      <FilePreviewImage
-        id={file.id}
-        name={file.name}
-        extension={file.extension}
-      />
-    ))
-    .with('video', () => (
-      <FilePreviewVideo
-        id={file.id}
-        name={file.name}
-        extension={file.extension}
-      />
-    ))
-    .with('other', () => (
-      <FilePreviewOther
-        id={file.id}
-        name={file.name}
-        extension={file.extension}
-        mimeType={file.mimeType}
-      />
-    ))
+    .with('image', () => <FilePreviewImage url={url} name={name} />)
+    .with('video', () => <FilePreviewVideo url={url} />)
+    .with('other', () => <FilePreviewOther mimeType={mimeType} />)
     .otherwise(() => null);
 };

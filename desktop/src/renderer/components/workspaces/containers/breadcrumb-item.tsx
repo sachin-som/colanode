@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { BreadcrumbNode } from '@/types/workspaces';
+import { NodeTypes } from '@/lib/constants';
 
 interface BreadcrumbNodeProps {
   node: BreadcrumbNode;
@@ -9,6 +10,11 @@ interface BreadcrumbNodeProps {
 }
 
 export const BreadcrumbItem = ({ node, className }: BreadcrumbNodeProps) => {
+  let name = node.name ?? 'Unnamed';
+  if (node.type === NodeTypes.Message) {
+    name = 'Message';
+  }
+
   return (
     <div className={cn('flex items-center space-x-2', className)}>
       {node.avatar && (
@@ -19,7 +25,7 @@ export const BreadcrumbItem = ({ node, className }: BreadcrumbNodeProps) => {
           avatar={node.avatar}
         />
       )}
-      <span>{node.name ?? 'Unnamed'}</span>
+      <span>{name}</span>
     </div>
   );
 };

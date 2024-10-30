@@ -5,6 +5,8 @@ import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
 import { SquareArrowOutUpRight } from 'lucide-react';
+import { FileDownload } from '@/renderer/components/files/file-download';
+import { getFileUrl } from '@/lib/files';
 
 interface FileContainerProps {
   nodeId: string;
@@ -22,6 +24,7 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
     return null;
   }
 
+  const url = getFileUrl(workspace.userId, data.id, data.extension);
   return (
     <div className="flex h-full max-h-full w-full flex-row items-center gap-2">
       <div className="flex h-full max-h-full w-full max-w-full flex-grow flex-col items-center justify-center overflow-hidden">
@@ -37,7 +40,14 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
           </Button>
         </div>
         <div className="flex w-full max-w-full flex-grow items-center justify-center overflow-hidden">
-          <FilePreview file={data} />
+          {data.downloadProgress !== 100 ? (
+            <FileDownload
+              id={data.id}
+              downloadProgress={data.downloadProgress}
+            />
+          ) : (
+            <FilePreview url={url} name={data.name} mimeType={data.mimeType} />
+          )}
         </div>
       </div>
       <div className="h-full w-72 min-w-72 overflow-hidden border-l border-gray-100 p-2 pl-3">

@@ -38,7 +38,8 @@ export const Breadcrumb = ({ nodeId }: BreadcrumbProps) => {
   const visibleNodes = showEllipsis ? [data[0], data[data.length - 1]] : data;
   const ellipsisNodes = showEllipsis ? data.slice(1, -1) : [];
 
-  const isClickable = (type: string) => type !== NodeTypes.Space;
+  const isClickable = (type: string) =>
+    type !== NodeTypes.Space && type !== NodeTypes.Message;
 
   return (
     <BreadcrumbWrapper>
@@ -85,6 +86,7 @@ export const Breadcrumb = ({ nodeId }: BreadcrumbProps) => {
                               workspace.navigateToNode(ellipsisNode.id);
                             }
                           }}
+                          disabled={!isClickable(ellipsisNode.type)}
                         >
                           <BreadcrumbItem
                             node={ellipsisNode}

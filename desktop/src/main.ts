@@ -9,6 +9,7 @@ import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
 import { avatarManager } from '@/main/avatar-manager';
 import { fileManager } from '@/main/file-manager';
+import { FileMetadata } from '@/types/files';
 
 let subscriptionId: string | null = null;
 
@@ -59,6 +60,12 @@ const createWindow = async () => {
   if (!protocol.isProtocolHandled('local-file')) {
     protocol.handle('local-file', (request) => {
       return fileManager.handleFileRequest(request);
+    });
+  }
+
+  if (!protocol.isProtocolHandled('local-file-preview')) {
+    protocol.handle('local-file-preview', (request) => {
+      return fileManager.handleFilePreviewRequest(request);
     });
   }
 
@@ -145,6 +152,13 @@ ipcMain.handle(
     options: Electron.OpenDialogOptions,
   ): Promise<Electron.OpenDialogReturnValue> => {
     return dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), options);
+  },
+);
+
+ipcMain.handle(
+  'get-file-metadata',
+  (_: unknown, path: string): FileMetadata | null => {
+    return fileManager.getFileMetadata(path);
   },
 );
 

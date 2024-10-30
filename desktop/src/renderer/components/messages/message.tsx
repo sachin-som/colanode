@@ -48,10 +48,6 @@ export const Message = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  if (!message.content || message.content.length === 0) {
-    return null;
-  }
-
   const canEdit = true;
   const canDelete = true;
   const canReplyInThread = false;

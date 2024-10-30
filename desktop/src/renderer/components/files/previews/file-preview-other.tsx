@@ -3,18 +3,10 @@ import { getFriendlyNameFromMimeType } from '@/lib/files';
 import { FileIcon } from '@/renderer/components/files/file-icon';
 
 interface FilePreviewOtherProps {
-  id: string;
-  name: string;
-  extension: string;
   mimeType: string;
 }
 
-export const FilePreviewOther = ({
-  id,
-  name,
-  extension,
-  mimeType,
-}: FilePreviewOtherProps) => {
+export const FilePreviewOther = ({ mimeType }: FilePreviewOtherProps) => {
   const friendlyName = getFriendlyNameFromMimeType(mimeType);
 
   return (

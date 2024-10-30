@@ -32,6 +32,9 @@ export const EditorNodeTypes = {
   TaskItem: 'taskItem',
   HorizontalRule: 'horizontalRule',
   Page: 'page',
+  File: 'file',
+  Folder: 'folder',
+  FilePlaceholder: 'filePlaceholder',
 };
 
 export const ViewNodeTypes: string[] = [

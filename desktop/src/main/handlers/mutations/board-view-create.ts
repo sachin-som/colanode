@@ -52,10 +52,6 @@ export class BoardViewCreateMutationHandler
       attributesMap.set('index', generateNodeIndex(maxIndex, null));
       attributesMap.set('name', input.name);
       attributesMap.set('groupBy', input.groupBy);
-
-      const collaboratorsMap = new Y.Map<string>();
-      collaboratorsMap.set(input.userId, NodeRole.Owner);
-      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

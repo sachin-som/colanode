@@ -1,6 +1,6 @@
 import React from 'react';
 import { NodeCollaboratorSearch } from '@/renderer/components/collaborators/node-collaborator-search';
-import { NodeCollaboratorNode } from '@/types/nodes';
+import { NodeCollaborator } from '@/types/nodes';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
@@ -20,9 +20,9 @@ export const NodeCollaboratorCreate = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  const [collaborators, setCollaborators] = React.useState<
-    NodeCollaboratorNode[]
-  >([]);
+  const [collaborators, setCollaborators] = React.useState<NodeCollaborator[]>(
+    [],
+  );
   const [role, setRole] = React.useState('collaborator');
 
   return (

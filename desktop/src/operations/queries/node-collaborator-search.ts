@@ -1,4 +1,4 @@
-import { NodeCollaboratorNode } from '@/types/nodes';
+import { NodeCollaborator } from '@/types/nodes';
 
 export type NodeCollaboratorSearchQueryInput = {
   type: 'node_collaborator_search';
@@ -11,7 +11,7 @@ declare module '@/operations/queries' {
   interface QueryMap {
     node_collaborator_search: {
       input: NodeCollaboratorSearchQueryInput;
-      output: NodeCollaboratorNode[];
+      output: NodeCollaborator[];
     };
   }
 }

@@ -51,10 +51,6 @@ export class TableViewCreateMutationHandler
       attributesMap.set('parentId', input.databaseId);
       attributesMap.set('index', generateNodeIndex(maxIndex, null));
       attributesMap.set('name', input.name);
-
-      const collaboratorsMap = new Y.Map<string>();
-      collaboratorsMap.set(input.userId, NodeRole.Owner);
-      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

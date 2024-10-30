@@ -46,10 +46,6 @@ export class ChannelCreateMutationHandler
       attributesMap.set('parentId', input.spaceId);
       attributesMap.set('index', generateNodeIndex(maxIndex, null));
       attributesMap.set('name', input.name);
-
-      const collaboratorsMap = new Y.Map<string>();
-      collaboratorsMap.set(input.userId, NodeRole.Owner);
-      attributesMap.set('collaborators', collaboratorsMap);
     });
 
     const attributes = JSON.stringify(attributesMap.toJSON());

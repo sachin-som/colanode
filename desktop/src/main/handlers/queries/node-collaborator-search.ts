@@ -8,7 +8,7 @@ import {
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
-import { NodeCollaboratorNode } from '@/types/nodes';
+import { NodeCollaborator } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
@@ -103,9 +103,7 @@ export class NodeCollaboratorSearchQueryHandler
     return result.rows;
   }
 
-  private buildCollaboratorNodes = (
-    rows: SelectNode[],
-  ): NodeCollaboratorNode[] => {
+  private buildCollaboratorNodes = (rows: SelectNode[]): NodeCollaborator[] => {
     return rows.map((row) => {
       const attributes = JSON.parse(row.attributes);
       return {

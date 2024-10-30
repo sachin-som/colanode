@@ -1,5 +1,5 @@
 import React from 'react';
-import { NodeCollaboratorNode } from '@/types/nodes';
+import { NodeCollaborator } from '@/types/nodes';
 import {
   Popover,
   PopoverContent,
@@ -22,8 +22,8 @@ import { X } from 'lucide-react';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];
-  value: NodeCollaboratorNode[];
-  onChange: (value: NodeCollaboratorNode[]) => void;
+  value: NodeCollaborator[];
+  onChange: (value: NodeCollaborator[]) => void;
 }
 
 export const NodeCollaboratorSearch = ({

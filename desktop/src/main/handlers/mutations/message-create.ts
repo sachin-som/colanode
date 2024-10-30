@@ -79,10 +79,6 @@ export class MessageCreateMutationHandler
           fileAttributesMap.set('extension', metadata.extension);
           fileAttributesMap.set('size', metadata.size);
           fileAttributesMap.set('mimeType', metadata.mimeType);
-
-          const collaboratorsMap = new Y.Map<string>();
-          collaboratorsMap.set(input.userId, NodeRole.Owner);
-          fileAttributesMap.set('collaborators', collaboratorsMap);
         });
 
         const fileAttributes = JSON.stringify(fileAttributesMap.toJSON());

@@ -21,6 +21,14 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
+interface NodePathTable {
+  ancestor_id: ColumnType<string, string, never>;
+  descendant_id: ColumnType<string, string, never>;
+  level: ColumnType<number, number, number>;
+}
+
+export type SelectNodePath = Selectable<NodePathTable>;
+
 interface UserNodeTable {
   user_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
@@ -74,6 +82,7 @@ export type UpdateDownload = Updateable<DownloadTable>;
 
 export interface WorkspaceDatabaseSchema {
   nodes: NodeTable;
+  node_paths: NodePathTable;
   user_nodes: UserNodeTable;
   changes: ChangeTable;
   uploads: UploadTable;

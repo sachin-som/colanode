@@ -30,7 +30,7 @@ export const Breadcrumb = ({ nodeId }: BreadcrumbProps) => {
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  if (isPending || !data) {
     return null;
   }
 

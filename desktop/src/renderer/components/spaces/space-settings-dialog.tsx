@@ -21,7 +21,7 @@ import { NodeCollaborators } from '@/renderer/components/collaborators/node-coll
 interface SpaceSettingsDialogProps {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: string;

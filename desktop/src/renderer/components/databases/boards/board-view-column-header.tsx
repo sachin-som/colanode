@@ -1,9 +1,9 @@
 import React from 'react';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { SelectOptionNode } from '@/types/databases';
+import { SelectOptionAttributes } from '@/registry';
 
 interface BoardViewColumnHeaderProps {
-  option: SelectOptionNode;
+  option: SelectOptionAttributes;
 }
 
 export const BoardViewColumnHeader = ({

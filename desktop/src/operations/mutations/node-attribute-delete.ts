@@ -2,7 +2,7 @@ export type NodeAttributeDeleteMutationInput = {
   type: 'node_attribute_delete';
   userId: string;
   nodeId: string;
-  attribute: string;
+  path: string;
 };
 
 export type NodeAttributeDeleteMutationOutput = {

@@ -1,47 +1,27 @@
 import React from 'react';
-import { RecordNode, DateFieldNode } from '@/types/databases';
-import { useMutation } from '@/renderer/hooks/use-mutation';
+import { DateFieldAttributes } from '@/registry';
 import { DatePicker } from '@/renderer/components/ui/date-picker';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewDateCellProps {
-  record: RecordNode;
-  field: DateFieldNode;
+  field: DateFieldAttributes;
 }
 
-export const TableViewDateCell = ({
-  record,
-  field,
-}: TableViewDateCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
-  const canEdit = true;
+export const TableViewDateCell = ({ field }: TableViewDateCellProps) => {
+  const record = useRecord();
 
   return (
     <DatePicker
-      value={record.attributes[field.id]}
+      value={record.getDateValue(field)}
       onChange={(newValue) => {
-        if (isPending) return;
-        if (!canEdit) return;
+        if (!record.canEdit) return;
 
         if (newValue === null || newValue === undefined) {
-          mutate({
-            input: {
-              type: 'node_attribute_delete',
-              nodeId: record.id,
-              attribute: field.id,
-              userId: workspace.userId,
-            },
-          });
+          record.removeFieldValue(field);
         } else {
-          mutate({
-            input: {
-              type: 'node_attribute_set',
-              nodeId: record.id,
-              attribute: field.id,
-              value: newValue.toISOString(),
-              userId: workspace.userId,
-            },
+          record.updateFieldValue(field, {
+            type: 'date',
+            value: newValue.toISOString(),
           });
         }
       }}

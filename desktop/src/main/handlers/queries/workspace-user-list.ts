@@ -8,7 +8,7 @@ import {
 import { NodeTypes } from '@/lib/constants';
 import { mapNode } from '@/lib/nodes';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { LocalNode } from '@/types/nodes';
+import { LocalNode, UserNode } from '@/types/nodes';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
@@ -83,7 +83,16 @@ export class WorkspaceUserListQueryHandler
     return rows;
   }
 
-  private buildWorkspaceUserNodes = (rows: SelectNode[]): LocalNode[] => {
-    return rows.map(mapNode);
+  private buildWorkspaceUserNodes = (rows: SelectNode[]): UserNode[] => {
+    const nodes = rows.map(mapNode);
+    const users: UserNode[] = [];
+
+    for (const node of nodes) {
+      if (node.type === NodeTypes.User) {
+        users.push(node as UserNode);
+      }
+    }
+
+    return users;
   };
 }

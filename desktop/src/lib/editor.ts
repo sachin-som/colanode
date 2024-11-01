@@ -2,11 +2,8 @@ import { EditorNodeTypes } from '@/lib/constants';
 import { generateId, getIdTypeFromNode } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
-import { NodeBlock, NodeBlockContent } from '@/types/nodes';
 import { JSONContent } from '@tiptap/core';
-import { isEqual } from 'lodash';
-import * as Y from 'yjs';
-import { diffChars } from 'diff';
+import { Block, BlockLeaf } from '@/registry';
 
 const leafBlockTypes = new Set([
   EditorNodeTypes.Paragraph,
@@ -20,9 +17,9 @@ const leafBlockTypes = new Set([
 export const mapContentsToBlocks = (
   parentId: string,
   contents: JSONContent[],
-  blocksMap: Map<string, NodeBlock>,
-): NodeBlock[] => {
-  const blocks: NodeBlock[] = [];
+  blocksMap: Map<string, Block>,
+): Block[] => {
+  const blocks: Block[] = [];
   mapAndPushContentsToBlocks(contents, parentId, blocks, blocksMap);
   validateBlocksIndexes(blocks);
   return blocks;
@@ -31,8 +28,8 @@ export const mapContentsToBlocks = (
 const mapAndPushContentsToBlocks = (
   contents: JSONContent[] | null | undefined,
   parentId: string,
-  blocks: NodeBlock[],
-  blocksMap: Map<string, NodeBlock>,
+  blocks: Block[],
+  blocksMap: Map<string, Block>,
 ): void => {
   if (!contents) {
     return;
@@ -45,9 +42,13 @@ const mapAndPushContentsToBlocks = (
 const mapAndPushContentToBlock = (
   content: JSONContent,
   parentId: string,
-  blocks: NodeBlock[],
-  blocksMap: Map<string, NodeBlock>,
+  blocks: Block[],
+  blocksMap: Map<string, Block>,
 ): void => {
+  if (!content.type) {
+    throw new Error('Invalid content type');
+  }
+
   const id = getIdFromContent(content);
   const index = blocksMap.get(id)?.index;
   const attrs =
@@ -57,16 +58,16 @@ const mapAndPushContentToBlock = (
 
   const isLeafBlock = leafBlockTypes.has(content.type);
   const blockContent = isLeafBlock
-    ? mapContentsToNodeBlockContents(content.type, content.content)
+    ? mapContentsToBlockLeafs(content.type, content.content)
     : null;
 
   blocks.push({
     id: id,
-    index: index,
+    index: index ?? generateNodeIndex(null, null),
     attrs: attrs.length > 0 ? Object.fromEntries(attrs) : null,
     parentId: parentId,
     type: content.type,
-    content: blockContent,
+    content: blockContent?.filter((leaf) => leaf !== null) ?? null,
   });
 
   if (!isLeafBlock && content.content) {
@@ -74,24 +75,28 @@ const mapAndPushContentToBlock = (
   }
 };
 
-const mapContentsToNodeBlockContents = (
+const mapContentsToBlockLeafs = (
   type: string,
   contents?: JSONContent[],
-): NodeBlockContent[] | null => {
-  if (!leafBlockTypes.has(type) || contents == null) {
+): BlockLeaf[] | null => {
+  if (!leafBlockTypes.has(type) || contents == null || contents.length === 0) {
     return null;
   }
 
-  const nodeBlocks: NodeBlockContent[] = [];
+  const nodeBlocks: BlockLeaf[] = [];
   for (const content of contents) {
+    if (!content.type) {
+      continue;
+    }
+
     nodeBlocks.push({
       type: content.type,
-      text: content.text,
+      text: content.text ?? '',
       marks:
         content.marks?.map((mark) => {
           return {
             type: mark.type,
-            attrs: mark.attrs,
+            attrs: mark.attrs ?? null,
           };
         }) ?? null,
     });
@@ -101,7 +106,7 @@ const mapContentsToNodeBlockContents = (
 
 export const mapBlocksToContents = (
   parentId: string,
-  blocks: NodeBlock[],
+  blocks: Block[],
 ): JSONContent[] => {
   const contents: JSONContent[] = [];
   const children = blocks
@@ -115,10 +120,7 @@ export const mapBlocksToContents = (
   return contents;
 };
 
-const mapBlockToContent = (
-  block: NodeBlock,
-  blocks: NodeBlock[],
-): JSONContent => {
+const mapBlockToContent = (block: Block, blocks: Block[]): JSONContent => {
   return {
     type: block.type,
     attrs: {
@@ -126,265 +128,72 @@ const mapBlockToContent = (
       ...block.attrs,
     },
     content: leafBlockTypes.has(block.type)
-      ? mapNodeBlockContentsToContents(block.content)
+      ? mapBlockLeafsToContents(block.content)
       : mapBlocksToContents(block.id, blocks),
   };
 };
 
-const mapNodeBlockContentsToContents = (
-  nodeBlocks: NodeBlockContent[] | null,
-): JSONContent[] | null => {
-  if (nodeBlocks == null) {
-    return null;
+const mapBlockLeafsToContents = (
+  leafs: BlockLeaf[] | null,
+): JSONContent[] | undefined => {
+  if (leafs == null) {
+    return undefined;
   }
   const contents: JSONContent[] = [];
-  for (const nodeBlock of nodeBlocks) {
+  for (const leaf of leafs) {
     contents.push({
-      type: nodeBlock.type,
-      text: nodeBlock.text,
+      type: leaf.type,
+      text: leaf.text,
       marks:
-        nodeBlock.marks?.map((mark) => {
+        leaf.marks?.map((mark) => {
           return {
             type: mark.type,
-            attrs: mark.attrs,
+            attrs: mark.attrs ?? undefined,
           };
-        }) ?? null,
+        }) ?? undefined,
     });
   }
   return contents;
 };
 
-const validateBlocksIndexes = (blocks: NodeBlock[]) => {
+const validateBlocksIndexes = (blocks: Block[]) => {
   //group by parentId
-  const groupedBlocks: { [key: string]: NodeBlock[] } = {};
+  const groupedBlocks: { [key: string]: Block[] } = {};
   for (const block of blocks) {
     if (!groupedBlocks[block.parentId]) {
       groupedBlocks[block.parentId] = [];
     }
     groupedBlocks[block.parentId].push(block);
   }
+
   for (const parentId in groupedBlocks) {
     const blocks = groupedBlocks[parentId];
-    for (let i = 0; i < blocks.length; i++) {
+    for (let i = 1; i < blocks.length; i++) {
       const currentIndex = blocks[i].index;
-      const beforeIndex = i === 0 ? null : blocks[i - 1].index;
-      // find the lowest index after the current node
-      // we do this because sometimes nodes can be ordered in such a way that
-      // the current node's index is higher than one of its siblings
-      // after the next sibling
-      // for example:  1, {current}, 4, 3
-      let afterIndex = i === blocks.length - 1 ? null : blocks[i + 1].index;
-      for (let j = i + 1; j < blocks.length; j++) {
-        if (blocks[j].index < afterIndex) {
-          afterIndex = blocks[j].index;
-          break;
+      const beforeIndex = blocks[i - 1].index;
+
+      if (currentIndex <= beforeIndex) {
+        let afterIndex = i < blocks.length - 1 ? blocks[i + 1].index : null;
+        if (
+          afterIndex &&
+          afterIndex > currentIndex &&
+          afterIndex > beforeIndex
+        ) {
+          blocks[i].index = generateNodeIndex(beforeIndex, afterIndex);
+        } else {
+          blocks[i].index = generateNodeIndex(beforeIndex, null);
         }
-      }
-      // extra check to make sure that the beforeIndex is less than the afterIndex
-      // because otherwise the fractional index library will throw an error
-      if (afterIndex < beforeIndex) {
-        afterIndex = generateNodeIndex(null, beforeIndex);
-      } else if (beforeIndex === afterIndex) {
-        afterIndex = generateNodeIndex(beforeIndex, null);
-      }
-      if (
-        !currentIndex ||
-        currentIndex <= beforeIndex ||
-        currentIndex > afterIndex
-      ) {
-        blocks[i].index = generateNodeIndex(beforeIndex, afterIndex);
       }
     }
   }
 };
 
 const getIdFromContent = (content: JSONContent): string => {
+  if (!content.type) {
+    throw new Error('Invalid content type');
+  }
+
   return content.attrs?.id ?? generateId(getIdTypeFromNode(content.type));
-};
-
-export const applyChangeToAttributesMap = (
-  attributesMap: Y.Map<any>,
-  blocks: NodeBlock[],
-) => {
-  if (!attributesMap.has('content')) {
-    attributesMap.set('content', new Y.Map());
-  }
-
-  const contentMap = attributesMap.get('content') as Y.Map<any>;
-  const blockIds = new Set<string>();
-  for (const block of blocks) {
-    blockIds.add(block.id);
-
-    if (!contentMap.has(block.id)) {
-      contentMap.set(block.id, new Y.Map());
-    }
-
-    const blockMap = contentMap.get(block.id) as Y.Map<any>;
-    applyBlockChangesToYDoc(blockMap, block);
-  }
-
-  const deletedBlockIds = Array.from(contentMap.keys()).filter(
-    (id) => !blockIds.has(id),
-  );
-
-  for (const id of deletedBlockIds) {
-    contentMap.delete(id);
-  }
-};
-
-const applyBlockChangesToYDoc = (blockMap: Y.Map<any>, block: NodeBlock) => {
-  if (blockMap.get('id') !== block.id) {
-    blockMap.set('id', block.id);
-  }
-
-  if (blockMap.get('type') !== block.type) {
-    blockMap.set('type', block.type);
-  }
-
-  if (blockMap.get('index') !== block.index) {
-    blockMap.set('index', block.index);
-  }
-
-  if (blockMap.get('parentId') !== block.parentId) {
-    blockMap.set('parentId', block.parentId);
-  }
-
-  applyBlockAttrsChangesToYDoc(blockMap, block);
-  applyBlockContentChangesToYDoc(blockMap, block);
-};
-
-const applyBlockAttrsChangesToYDoc = (
-  blockMap: Y.Map<any>,
-  block: NodeBlock,
-) => {
-  if (block.attrs === null) {
-    if (blockMap.has('attrs')) {
-      blockMap.delete('attrs');
-    }
-
-    return;
-  }
-
-  if (!blockMap.has('attrs')) {
-    blockMap.set('attrs', new Y.Map());
-  }
-
-  const attrsMap = blockMap.get('attrs') as Y.Map<any>;
-  for (const [key, value] of Object.entries(block.attrs)) {
-    const existingValue = attrsMap.get(key);
-    if (!isEqual(existingValue, value)) {
-      attrsMap.set(key, value);
-    }
-  }
-};
-
-const applyBlockContentChangesToYDoc = (
-  blockMap: Y.Map<any>,
-  block: NodeBlock,
-) => {
-  if (block.content === null || block.content.length === 0) {
-    if (blockMap.has('content')) {
-      blockMap.delete('content');
-    }
-
-    return;
-  }
-
-  if (!blockMap.has('content')) {
-    blockMap.set('content', new Y.Array());
-  }
-
-  const contentArray = blockMap.get('content') as Y.Array<any>;
-  for (let i = 0; i < block.content.length; i++) {
-    const blockContent = block.content[i];
-    if (contentArray.length > i) {
-      const blockContentMap = contentArray.get(i) as Y.Map<any>;
-      applyBlockContentItemChangesToYDoc(blockContentMap, blockContent);
-    } else {
-      const blockContentMap = new Y.Map<any>();
-      contentArray.insert(i, [blockContentMap]);
-      applyBlockContentItemChangesToYDoc(blockContentMap, blockContent);
-    }
-  }
-
-  // delete any extra content items
-  while (contentArray.length > block.content.length) {
-    contentArray.delete(contentArray.length - 1);
-  }
-};
-
-const applyBlockContentItemChangesToYDoc = (
-  blockContentMap: Y.Map<any>,
-  blockContent: NodeBlockContent,
-) => {
-  if (blockContentMap.get('type') !== blockContent.type) {
-    blockContentMap.set('type', blockContent.type);
-  }
-
-  applyBlockContentTextChangesToYDoc(blockContentMap, blockContent);
-  applyBlockContentMarksChangesToYDoc(blockContentMap, blockContent);
-};
-
-const applyBlockContentTextChangesToYDoc = (
-  blockContentMap: Y.Map<any>,
-  blockContent: NodeBlockContent,
-) => {
-  if (
-    blockContent.text === null ||
-    blockContent.text === undefined ||
-    blockContent.text === ''
-  ) {
-    if (blockContentMap.has('text')) {
-      blockContentMap.delete('text');
-    }
-
-    return;
-  }
-
-  if (!blockContentMap.has('text')) {
-    blockContentMap.set('text', new Y.Text(blockContent.text));
-    return;
-  }
-
-  const yText = blockContentMap.get('text') as Y.Text;
-  const currentText = yText.toString();
-  const newText = blockContent.text;
-
-  if (currentText === newText) {
-    return;
-  }
-
-  const diffs = diffChars(currentText, newText);
-  let index = 0;
-  for (const diff of diffs) {
-    if (diff.added) {
-      yText.insert(index, diff.value);
-      index += diff.value.length;
-    } else if (diff.removed) {
-      yText.delete(index, diff.value.length);
-      index -= diff.value.length;
-    } else {
-      index += diff.value.length;
-    }
-  }
-};
-
-const applyBlockContentMarksChangesToYDoc = (
-  blockContentMap: Y.Map<any>,
-  blockContent: NodeBlockContent,
-) => {
-  if (blockContent.marks === null || blockContent.marks.length === 0) {
-    if (blockContentMap.has('marks')) {
-      blockContentMap.delete('marks');
-    }
-
-    return;
-  }
-
-  const existingMarks = blockContentMap.get('marks');
-  if (!isEqual(existingMarks, blockContent.marks)) {
-    blockContentMap.set('marks', blockContent.marks);
-  }
 };
 
 export const editorHasContent = (block?: JSONContent) => {

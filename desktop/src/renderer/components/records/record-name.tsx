@@ -1,15 +1,12 @@
 import React from 'react';
-import { RecordNode } from '@/types/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRecord } from '@/renderer/contexts/record';
 
-interface RecordNameProps {
-  record: RecordNode;
-}
-
-export const RecordName = ({ record }: RecordNameProps) => {
+export const RecordName = () => {
   const workspace = useWorkspace();
+  const record = useRecord();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -28,7 +25,7 @@ export const RecordName = ({ record }: RecordNameProps) => {
           input: {
             type: 'node_attribute_set',
             nodeId: record.id,
-            attribute: 'name',
+            path: 'name',
             value: value,
             userId: workspace.userId,
           },

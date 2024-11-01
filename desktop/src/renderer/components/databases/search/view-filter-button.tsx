@@ -1,16 +1,16 @@
 import React from 'react';
 import { ViewFilterAddPopover } from '@/renderer/components/databases/search/view-filter-add-popover';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { Filter } from 'lucide-react';
 
 export const ViewFilterButton = () => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
-  if (viewSearch.filters.length > 0) {
+  if (view.filters.length > 0) {
     return (
       <button
         className="flex cursor-pointer items-center rounded-md p-1.5 hover:bg-gray-50"
-        onClick={() => viewSearch.openSearchBar()}
+        onClick={() => view.openSearchBar()}
       >
         <Filter className="size-4" />
       </button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecordNode, UrlFieldNode } from '@/types/databases';
+import { UrlFieldAttributes } from '@/registry';
 import { cn, isValidUrl } from '@/lib/utils';
 import {
   HoverCard,
@@ -7,55 +7,38 @@ import {
   HoverCardTrigger,
 } from '@/renderer/components/ui/hover-card';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ExternalLink } from 'lucide-react';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewUrlCellProps {
-  record: RecordNode;
-  field: UrlFieldNode;
+  field: UrlFieldAttributes;
 }
 
-export const TableViewUrlCell = ({ record, field }: TableViewUrlCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+export const TableViewUrlCell = ({ field }: TableViewUrlCellProps) => {
+  const record = useRecord();
 
-  const canEdit = true;
-  const text = record.attributes[field.id];
-  const isUrl = text.length > 0 && isValidUrl(text);
+  const text = record.getUrlValue(field);
+  const isUrl = text && isValidUrl(text);
 
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger>
         <SmartTextInput
           value={text}
-          readOnly={!canEdit || isPending}
+          readOnly={!record.canEdit}
           onChange={(newValue) => {
-            if (isPending) return;
-            if (!canEdit) return;
+            if (!record.canEdit) return;
 
             if (newValue === text) {
               return;
             }
 
             if (newValue === null || newValue === '') {
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
+              record.removeFieldValue(field);
             } else {
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: newValue,
-                  userId: workspace.userId,
-                },
+              record.updateFieldValue(field, {
+                type: 'url',
+                value: newValue,
               });
             }
           }}
@@ -70,7 +53,7 @@ export const TableViewUrlCell = ({ record, field }: TableViewUrlCellProps) => {
       >
         <a
           className="text-blue-500 underline hover:cursor-pointer hover:text-blue-600"
-          href={text}
+          href={text ?? ''}
           target="_blank"
           rel="noreferrer"
         >

@@ -20,7 +20,7 @@ class HttpClient {
   ): Promise<AxiosResponse<T>> {
     if (this.backoffs.has(config.serverDomain)) {
       const backoff = this.backoffs.get(config.serverDomain);
-      if (!backoff.canRetry()) {
+      if (!backoff?.canRetry()) {
         throw new Error(`Backoff in progress for key: ${config.serverDomain}`);
       }
     }
@@ -35,7 +35,7 @@ class HttpClient {
 
       // Reset backoff if successful
       if (this.backoffs.has(config.serverDomain)) {
-        this.backoffs.get(config.serverDomain).reset();
+        this.backoffs.get(config.serverDomain)?.reset();
       }
 
       return response;
@@ -47,7 +47,7 @@ class HttpClient {
         }
 
         const backoff = this.backoffs.get(config.serverDomain);
-        backoff.increaseError();
+        backoff?.increaseError();
       }
 
       throw error;

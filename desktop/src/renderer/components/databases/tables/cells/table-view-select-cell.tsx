@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecordNode, SelectFieldNode } from '@/types/databases';
+import { SelectFieldAttributes } from '@/registry';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
 import {
   Popover,
@@ -7,31 +7,25 @@ import {
   PopoverContent,
 } from '@/renderer/components/ui/popover';
 import { SelectFieldOptions } from '@/renderer/components/databases/fields/select-field-options';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewSelectCellProps {
-  record: RecordNode;
-  field: SelectFieldNode;
+  field: SelectFieldAttributes;
 }
 
-export const TableViewSelectCell = ({
-  record,
-  field,
-}: TableViewSelectCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
-
+export const TableViewSelectCell = ({ field }: TableViewSelectCellProps) => {
+  const record = useRecord();
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
-    record.attributes[field.id] ?? '',
+    record.getSelectValue(field),
   );
 
   React.useEffect(() => {
-    setSelectedValue(record.attributes[field.id] ?? '');
+    setSelectedValue(record.getSelectValue(field));
   }, [record.versionId]);
 
-  const selectedOption = field.options?.find(
+  const selectOptions = Object.values(field.options ?? {});
+  const selectedOption = selectOptions.find(
     (option) => option.id === selectedValue,
   );
 
@@ -52,36 +46,20 @@ export const TableViewSelectCell = ({
       <PopoverContent className="w-80 p-1">
         <SelectFieldOptions
           field={field}
-          values={[selectedValue]}
+          values={selectedValue ? [selectedValue] : []}
           allowAdd={true}
           onSelect={(id) => {
-            if (isPending) {
-              return;
-            }
+            if (!record.canEdit) return;
 
             if (selectedValue === id) {
               setSelectedValue('');
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
+              record.removeFieldValue(field);
             } else {
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: id,
-                  userId: workspace.userId,
-                },
-                onSuccess() {
-                  setOpen(false);
-                },
+              record.updateFieldValue(field, {
+                type: 'select',
+                value: id,
               });
+              setOpen(false);
             }
             setSelectedValue(id);
           }}

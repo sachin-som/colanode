@@ -1,7 +1,7 @@
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeCollaboratorCreateMutationInput } from '@/operations/mutations/node-collaborator-create';
-import * as Y from 'yjs';
-import { updateNodeAtomically } from '@/main/utils';
+import { nodeManager } from '@/main/node-manager';
+import { set } from 'lodash';
 
 export class NodeCollaboratorCreateMutationHandler
   implements MutationHandler<NodeCollaboratorCreateMutationInput>
@@ -9,30 +9,12 @@ export class NodeCollaboratorCreateMutationHandler
   async handleMutation(
     input: NodeCollaboratorCreateMutationInput,
   ): Promise<MutationResult<NodeCollaboratorCreateMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.nodeId,
-      (attributesMap) => {
-        if (!attributesMap.has('collaborators')) {
-          attributesMap.set('collaborators', new Y.Map());
-        }
-
-        const collaboratorsMap = attributesMap.get(
-          'collaborators',
-        ) as Y.Map<any>;
-        input.collaboratorIds.forEach((collaboratorId) => {
-          collaboratorsMap.set(collaboratorId, input.role);
-        });
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+      for (const collaboratorId of input.collaboratorIds) {
+        set(attributes, `collaborators.${collaboratorId}`, input.role);
+      }
+      return attributes;
+    });
 
     return {
       output: {

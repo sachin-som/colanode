@@ -11,17 +11,17 @@ import { ViewMultiSelectFieldFilter } from '@/renderer/components/databases/sear
 import { ViewDateFieldFilter } from '@/renderer/components/databases/search/view-date-field-filter';
 import { ViewCreatedAtFieldFilter } from '@/renderer/components/databases/search/view-created-at-field-fitler';
 import { ViewFilterAddPopover } from '@/renderer/components/databases/search/view-filter-add-popover';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { Plus } from 'lucide-react';
 
 export const ViewFilters = () => {
   const database = useDatabase();
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   return (
     <div className="flex flex-row items-center gap-2">
-      {viewSearch.filters &&
-        viewSearch.filters.map((filter) => {
+      {view.filters &&
+        view.filters.map((filter) => {
           if (filter.type === 'group') {
             return null;
           }
@@ -34,7 +34,7 @@ export const ViewFilters = () => {
             return null;
           }
 
-          switch (field.dataType) {
+          switch (field.type) {
             case 'boolean':
               return (
                 <ViewBooleanFieldFilter
@@ -45,7 +45,7 @@ export const ViewFilters = () => {
               );
             case 'collaborator':
               return null;
-            case 'created_at':
+            case 'createdAt':
               return (
                 <ViewCreatedAtFieldFilter
                   key={filter.id}
@@ -53,7 +53,7 @@ export const ViewFilters = () => {
                   filter={filter}
                 />
               );
-            case 'created_by':
+            case 'createdBy':
               return null;
             case 'date':
               return (
@@ -73,7 +73,7 @@ export const ViewFilters = () => {
               );
             case 'file':
               return null;
-            case 'multi_select':
+            case 'multiSelect':
               return (
                 <ViewMultiSelectFieldFilter
                   key={filter.id}

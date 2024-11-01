@@ -8,21 +8,21 @@ import { Button } from '@/renderer/components/ui/button';
 import { ViewSortRow } from '@/renderer/components/databases/search/view-sort-row';
 import { useDatabase } from '@/renderer/contexts/database';
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { Plus } from 'lucide-react';
 
 export const ViewSorts = () => {
   const database = useDatabase();
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   return (
     <Popover
-      open={viewSearch.isSortsOpened}
+      open={view.isSortsOpened}
       onOpenChange={(open) => {
         if (open) {
-          viewSearch.openSorts();
+          view.openSorts();
         } else {
-          viewSearch.closeSorts();
+          view.closeSorts();
         }
       }}
     >
@@ -33,11 +33,11 @@ export const ViewSorts = () => {
           size="sm"
           className="border-dashed text-xs text-muted-foreground"
         >
-          Sorts ({viewSearch.sorts.length})
+          Sorts ({view.sorts.length})
         </Button>
       </PopoverTrigger>
       <PopoverContent className="flex flex-col gap-2 p-2">
-        {viewSearch.sorts.map((sort) => {
+        {view.sorts.map((sort) => {
           const field = database.fields.find(
             (field) => field.id === sort.fieldId,
           );

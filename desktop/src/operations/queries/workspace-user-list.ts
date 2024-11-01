@@ -1,4 +1,4 @@
-import { LocalNode } from '@/types/nodes';
+import { UserNode } from '@/types/nodes';
 
 export type WorkspaceUserListQueryInput = {
   type: 'workspace_user_list';
@@ -11,7 +11,7 @@ declare module '@/operations/queries' {
   interface QueryMap {
     workspace_user_list: {
       input: WorkspaceUserListQueryInput;
-      output: LocalNode[];
+      output: UserNode[];
     };
   }
 }

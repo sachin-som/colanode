@@ -1,8 +1,8 @@
-import { ViewNode } from '@/types/databases';
+import { ViewAttributes } from '@/registry';
 import { createContext, useContext } from 'react';
 
 interface DatabaseViewsContext {
-  views: ViewNode[];
+  views: ViewAttributes[];
   activeViewId: string;
   setActiveViewId: (viewId: string) => void;
 }

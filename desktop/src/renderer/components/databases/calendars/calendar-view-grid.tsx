@@ -3,28 +3,33 @@ import { buttonVariants } from '@/renderer/components/ui/button';
 import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
-import { CalendarViewNode, FieldNode, ViewFilter } from '@/types/databases';
+import {
+  ViewAttributes,
+  FieldAttributes,
+  ViewFilterAttributes,
+} from '@/registry';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useDatabase } from '@/renderer/contexts/database';
 import { filterRecords } from '@/lib/databases';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useView } from '@/renderer/contexts/view';
 
 const RECORDS_PER_PAGE = 50;
 
 interface CalendarViewGridProps {
-  view: CalendarViewNode;
-  field: FieldNode;
+  field: FieldAttributes;
 }
 
-export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
+export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
+  const view = useView();
 
   const [month, setMonth] = React.useState(new Date());
   const { first, last } = getDisplayedDates(month);
 
-  const filters: ViewFilter[] = [
+  const filters: ViewFilterAttributes[] = [
     ...view.filters,
     {
       id: 'start_date',
@@ -67,7 +72,7 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
           type: 'record_list',
           databaseId: database.id,
           filters: filters,
-          sorts: view.sorts,
+          sorts: Object.values(view.sorts),
           page: page,
           count: RECORDS_PER_PAGE,
           userId: workspace.userId,
@@ -120,7 +125,7 @@ export const CalendarViewGrid = ({ view, field }: CalendarViewGridProps) => {
           <ChevronRight className="size-4" {...props} />
         ),
         Day: (props: DayProps) => {
-          const filter: ViewFilter = {
+          const filter: ViewFilterAttributes = {
             id: 'calendar_filter',
             type: 'field',
             fieldId: field.id,

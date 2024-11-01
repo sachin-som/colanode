@@ -19,7 +19,11 @@ export const FolderNodeView = ({ node }: NodeViewProps) => {
     return null;
   }
 
-  const name = data?.attributes.name ?? 'Unnamed';
+  if (data?.attributes.type !== 'folder') {
+    return null;
+  }
+
+  const name = data.attributes.name ?? 'Unnamed';
   const avatar = data?.attributes.avatar;
 
   return (

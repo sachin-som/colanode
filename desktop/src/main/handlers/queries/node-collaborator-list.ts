@@ -139,6 +139,17 @@ export class NodeCollaboratorListQueryHandler
 
     for (const node of nodes) {
       const attributes = JSON.parse(node.attributes) as LocalNodeAttributes;
+
+      if (
+        attributes.type !== 'space' &&
+        attributes.type !== 'channel' &&
+        attributes.type !== 'chat' &&
+        attributes.type !== 'database' &&
+        attributes.type !== 'page'
+      ) {
+        continue;
+      }
+
       const collaborators = attributes.collaborators;
       if (!collaborators) {
         continue;
@@ -216,7 +227,7 @@ export class NodeCollaboratorListQueryHandler
 
         inheritCollaboratorMap
           .get(extractedCollaborator.nodeId)
-          .push(collaborator);
+          ?.push(collaborator);
       }
     }
 
@@ -230,7 +241,7 @@ export class NodeCollaboratorListQueryHandler
         id: ancestor.id,
         name: ancestorAttributes.name,
         avatar: ancestorAttributes.avatar || null,
-        collaborators: inheritCollaboratorMap.get(ancestor.id),
+        collaborators: inheritCollaboratorMap.get(ancestor.id) ?? [],
       };
 
       inherit.push(group);

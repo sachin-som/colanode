@@ -2,31 +2,30 @@ import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import {
-  BoardViewNode,
-  SelectFieldNode,
-  SelectOptionNode,
-  ViewFilter,
-} from '@/types/databases';
+  SelectFieldAttributes,
+  SelectOptionAttributes,
+  ViewFilterAttributes,
+} from '@/registry';
 import { BoardViewCard } from '@/renderer/components/databases/boards/board-view-card';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useView } from '@/renderer/contexts/view';
 
 const RECORDS_PER_PAGE = 50;
 
 interface BoardViewColumnRecordsProps {
-  view: BoardViewNode;
-  field: SelectFieldNode;
-  option: SelectOptionNode;
+  field: SelectFieldAttributes;
+  option: SelectOptionAttributes;
 }
 
 export const BoardViewColumnRecords = ({
-  view,
   field,
   option,
 }: BoardViewColumnRecordsProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
+  const view = useView();
 
-  const filters: ViewFilter[] = [
+  const filters: ViewFilterAttributes[] = [
     ...view.filters,
     {
       id: '1',
@@ -61,7 +60,7 @@ export const BoardViewColumnRecords = ({
           type: 'record_list',
           databaseId: database.id,
           filters: filters,
-          sorts: view.sorts,
+          sorts: Object.values(view.sorts),
           page: page,
           count: RECORDS_PER_PAGE,
           userId: workspace.userId,

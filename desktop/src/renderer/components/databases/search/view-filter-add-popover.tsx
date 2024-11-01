@@ -13,7 +13,7 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 
 interface ViewFilterAddPopoverProps {
@@ -24,12 +24,12 @@ export const ViewFilterAddPopover = ({
   children,
 }: ViewFilterAddPopoverProps) => {
   const database = useDatabase();
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const [open, setOpen] = React.useState(false);
   const fieldsWithoutFilters = database.fields.filter(
     (field) =>
-      !viewSearch.filters.some(
+      !view.filters.some(
         (filter) => filter.type === 'field' && filter.fieldId === field.id,
       ),
   );
@@ -51,12 +51,12 @@ export const ViewFilterAddPopover = ({
                 <CommandItem
                   key={field.id}
                   onSelect={() => {
-                    viewSearch.initFieldFilter(field.id);
+                    view.initFieldFilter(field.id);
                     setOpen(false);
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <FieldIcon type={field.dataType} className="size-4" />
+                    <FieldIcon type={field.type} className="size-4" />
                     <p>{field.name}</p>
                   </div>
                 </CommandItem>

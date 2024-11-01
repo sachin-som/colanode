@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { RecordNode } from '@/types/databases';
+import { RecordNode } from '@/types/nodes';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewCardProps {
@@ -10,7 +10,7 @@ interface CalendarViewCardProps {
 export const CalendarViewCard = ({ record }: CalendarViewCardProps) => {
   const workspace = useWorkspace();
 
-  const name = record.name;
+  const name = record.attributes.name;
   const hasName = name !== null && name !== '';
 
   return (
@@ -23,7 +23,7 @@ export const CalendarViewCard = ({ record }: CalendarViewCardProps) => {
       )}
       onClick={() => workspace.openModal(record.id)}
     >
-      {record.name ?? 'Unnamed'}
+      {name ?? 'Unnamed'}
     </button>
   );
 };

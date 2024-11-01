@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldNode, ViewSort } from '@/types/databases';
+import { FieldAttributes, ViewSortAttributes } from '@/registry';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,22 +8,22 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
 import { SortDirections } from '@/lib/constants';
-import { useViewSearch } from '@/renderer/contexts/view-search';
-import { FieldIcon } from '../fields/field-icon';
+import { useView } from '@/renderer/contexts/view';
+import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewSortProps {
-  sort: ViewSort;
-  field: FieldNode;
+  sort: ViewSortAttributes;
+  field: FieldAttributes;
 }
 
 export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   return (
     <div className="flex flex-row items-center gap-3 text-sm">
       <div className="flex flex-row items-center gap-0.5 p-1">
-        <FieldIcon type={field.dataType} className="size-4" />
+        <FieldIcon type={field.type} className="size-4" />
         <p>{field.name}</p>
       </div>
       <DropdownMenu>
@@ -40,7 +40,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={() => {
-              viewSearch.updateSort(sort.id, {
+              view.updateSort(sort.id, {
                 ...sort,
                 direction: 'asc',
               });
@@ -50,7 +50,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              viewSearch.updateSort(sort.id, {
+              view.updateSort(sort.id, {
                 ...sort,
                 direction: 'desc',
               });
@@ -64,7 +64,7 @@ export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
         variant="ghost"
         size="icon"
         onClick={() => {
-          viewSearch.removeSort(sort.id);
+          view.removeSort(sort.id);
         }}
       >
         <Trash2 className="size-4" />

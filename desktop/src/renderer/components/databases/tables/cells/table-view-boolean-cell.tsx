@@ -1,62 +1,37 @@
 import React from 'react';
 import { Checkbox } from '@/renderer/components/ui/checkbox';
-import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { BooleanFieldAttributes } from '@/registry';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewBooleanCellProps {
-  record: RecordNode;
-  field: BooleanFieldNode;
+  field: BooleanFieldAttributes;
 }
 
-export const TableViewBooleanCell = ({
-  record,
-  field,
-}: TableViewBooleanCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
-  const canEdit = true;
+export const TableViewBooleanCell = ({ field }: TableViewBooleanCellProps) => {
+  const record = useRecord();
 
   const [input, setInput] = React.useState<boolean>(
-    (record.attributes[field.id] as boolean) ?? false,
+    record.getBooleanValue(field),
   );
 
   React.useEffect(() => {
-    setInput((record.attributes[field.id] as boolean) ?? false);
+    setInput(record.getBooleanValue(field));
   }, [record.versionId]);
 
   return (
     <div className="flex h-full w-full flex-row items-center justify-center p-1">
       <Checkbox
         checked={input}
-        disabled={isPending || !canEdit}
+        disabled={!record.canEdit}
         onCheckedChange={(e) => {
-          if (isPending) return;
-          if (!canEdit) return;
+          if (!record.canEdit) return;
 
           if (typeof e === 'boolean') {
             setInput(e.valueOf());
-            const checked = e.valueOf();
-            if (checked) {
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: checked,
-                  userId: workspace.userId,
-                },
-              });
-            } else {
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
-            }
+            record.updateFieldValue(field, {
+              type: 'boolean',
+              value: e.valueOf(),
+            });
           }
         }}
       />

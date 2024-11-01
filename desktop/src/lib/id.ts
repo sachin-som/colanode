@@ -32,9 +32,7 @@ export enum IdType {
   DatabaseReplica = 'dr',
   Record = 'rc',
   Folder = 'fl',
-  TableView = 'tv',
-  BoardView = 'bv',
-  CalendarView = 'cv',
+  View = 'vw',
   Field = 'fi',
   SelectOption = 'so',
   ViewFilter = 'vf',
@@ -71,8 +69,6 @@ export const getIdTypeFromNode = (nodeType: string): IdType => {
       return IdType.Channel;
     case NodeTypes.Message:
       return IdType.Message;
-    case NodeTypes.HorizontalRule:
-      return IdType.HorizontalRule;
     case NodeTypes.Database:
       return IdType.Database;
     case NodeTypes.DatabaseReplica:
@@ -81,16 +77,6 @@ export const getIdTypeFromNode = (nodeType: string): IdType => {
       return IdType.Record;
     case NodeTypes.Folder:
       return IdType.Folder;
-    case NodeTypes.TableView:
-      return IdType.TableView;
-    case NodeTypes.BoardView:
-      return IdType.BoardView;
-    case NodeTypes.CalendarView:
-      return IdType.CalendarView;
-    case NodeTypes.Field:
-      return IdType.Field;
-    case NodeTypes.SelectOption:
-      return IdType.SelectOption;
     default:
       return IdType.Node;
   }

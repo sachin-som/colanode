@@ -2,6 +2,7 @@ export type RecordCreateMutationInput = {
   type: 'record_create';
   userId: string;
   databaseId: string;
+  name?: string;
 };
 
 export type RecordCreateMutationOutput = {

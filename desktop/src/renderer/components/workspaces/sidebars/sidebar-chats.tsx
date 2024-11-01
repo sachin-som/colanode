@@ -16,7 +16,7 @@ import { useParams } from 'react-router-dom';
 
 export const SidebarChats = () => {
   const workspace = useWorkspace();
-  const { nodeId } = useParams<{ nodeId?: string | null }>();
+  const { nodeId } = useParams<{ nodeId?: string }>();
 
   const { data } = useQuery({
     type: 'sidebar_chat_list',

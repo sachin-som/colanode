@@ -42,6 +42,7 @@ export class MarkNodeAsSeenMutationHandler
         .values({
           data: JSON.stringify(changeData),
           created_at: new Date().toISOString(),
+          retry_count: 0,
         })
         .execute();
     });

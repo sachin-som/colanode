@@ -44,6 +44,7 @@ export const ChatCreateCommand = () => {
                     type: 'chat_create',
                     userId: workspace.userId,
                     otherUserId: user.id,
+                    workspaceId: workspace.id,
                   },
                   onSuccess(output) {
                     workspace.navigateToNode(output.id);

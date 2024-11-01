@@ -1,26 +1,17 @@
 import React from 'react';
 import { getSelectOptionLightColorClass } from '@/lib/databases';
 import { cn } from '@/lib/utils';
-import {
-  BoardViewNode,
-  SelectFieldNode,
-  SelectOptionNode,
-} from '@/types/databases';
 import { useDrop } from 'react-dnd';
+import { SelectFieldAttributes, SelectOptionAttributes } from '@/registry';
 import { BoardViewColumnHeader } from '@/renderer/components/databases/boards/board-view-column-header';
 import { BoardViewColumnRecords } from '@/renderer/components/databases/boards/board-view-column-records';
 
 interface BoardViewColumnProps {
-  view: BoardViewNode;
-  field: SelectFieldNode;
-  option: SelectOptionNode;
+  field: SelectFieldAttributes;
+  option: SelectOptionAttributes;
 }
 
-export const BoardViewColumn = ({
-  view,
-  field,
-  option,
-}: BoardViewColumnProps) => {
+export const BoardViewColumn = ({ field, option }: BoardViewColumnProps) => {
   const [{ isDragging }, drop] = useDrop({
     accept: 'board-record',
     drop: () => ({
@@ -47,7 +38,7 @@ export const BoardViewColumn = ({
       }}
     >
       <BoardViewColumnHeader option={option} />
-      <BoardViewColumnRecords view={view} field={field} option={option} />
+      <BoardViewColumnRecords field={field} option={option} />
     </div>
   );
 };

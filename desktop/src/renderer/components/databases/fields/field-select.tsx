@@ -13,13 +13,13 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { FieldDataType, FieldNode } from '@/types/databases';
+import { FieldType, FieldAttributes } from '@/registry';
 import { cn } from '@/lib/utils';
 import { FieldIcon } from './field-icon';
 import { Check, ChevronDown } from 'lucide-react';
 
 interface FieldSelectProps {
-  fields: FieldNode[];
+  fields: FieldAttributes[];
   value: string | null;
   onChange: (field: string) => void;
 }
@@ -40,7 +40,7 @@ export const FieldSelect = ({ fields, value, onChange }: FieldSelectProps) => {
         >
           <span className="flex flex-row items-center gap-1">
             <FieldIcon
-              type={selectedField?.dataType as FieldDataType}
+              type={selectedField?.type as FieldType}
               className="size-4"
             />
             {value ? selectedField?.name : 'Select field...'}
@@ -63,7 +63,7 @@ export const FieldSelect = ({ fields, value, onChange }: FieldSelectProps) => {
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <FieldIcon type={field.dataType} className="size-4" />
+                    <FieldIcon type={field.type} className="size-4" />
                     <p>{field.name}</p>
                     <Check
                       className={cn(

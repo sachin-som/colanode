@@ -67,6 +67,7 @@ export class NodeDeleteMutationHandler
         .values({
           data: JSON.stringify(changeData),
           created_at: new Date().toISOString(),
+          retry_count: 0,
         })
         .execute();
     });

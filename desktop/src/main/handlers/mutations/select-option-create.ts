@@ -1,12 +1,9 @@
-import * as Y from 'yjs';
-import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { SelectOptionCreateMutationInput } from '@/operations/mutations/select-option-create';
-import { fromUint8Array } from 'js-base64';
-import { LocalCreateNodeChangeData } from '@/types/sync';
+import { compareString } from '@/lib/utils';
+import { nodeManager } from '@/main/node-manager';
 
 export class SelectOptionCreateMutationHandler
   implements MutationHandler<SelectOptionCreateMutationInput>
@@ -14,74 +11,45 @@ export class SelectOptionCreateMutationHandler
   async handleMutation(
     input: SelectOptionCreateMutationInput,
   ): Promise<MutationResult<SelectOptionCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
-    );
-
-    const lastChild = await workspaceDatabase
-      .selectFrom('nodes')
-      .selectAll()
-      .where((eb) =>
-        eb.and([
-          eb('parent_id', '=', input.fieldId),
-          eb('type', '=', NodeTypes.SelectOption),
-        ]),
-      )
-      .orderBy('index', 'desc')
-      .limit(1)
-      .executeTakeFirst();
-
-    const maxIndex = lastChild?.index ? lastChild.index : null;
     const id = generateId(IdType.SelectOption);
-    const versionId = generateId(IdType.Version);
-    const createdAt = new Date().toISOString();
+    await nodeManager.updateNode(
+      input.userId,
+      input.databaseId,
+      (attributes) => {
+        if (attributes.type !== 'database') {
+          throw new Error('Node is not a database');
+        }
 
-    const doc = new Y.Doc({
-      guid: id,
-    });
+        const fields = attributes.fields;
+        if (!fields[input.fieldId]) {
+          throw new Error('Field not found');
+        }
 
-    const attributesMap = doc.getMap('attributes');
-    doc.transact(() => {
-      attributesMap.set('type', NodeTypes.SelectOption);
-      attributesMap.set('parentId', input.fieldId);
-      attributesMap.set('index', generateNodeIndex(maxIndex, null));
-      attributesMap.set('name', input.name);
-      attributesMap.set('color', input.color);
-    });
+        const field = fields[input.fieldId];
+        if (field.type !== 'select' && field.type !== 'multiSelect') {
+          throw new Error('Field is not a select');
+        }
 
-    const attributes = JSON.stringify(attributesMap.toJSON());
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+        if (!field.options) {
+          field.options = {};
+        }
 
-    const changeData: LocalCreateNodeChangeData = {
-      type: 'node_create',
-      id: id,
-      state: encodedState,
-      createdAt: createdAt,
-      createdBy: input.userId,
-      versionId: versionId,
-    };
+        const maxIndex = Object.values(field.options)
+          .map((selectOption) => selectOption.index)
+          .sort((a, b) => -compareString(a, b))[0];
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
-        .insertInto('nodes')
-        .values({
+        const index = generateNodeIndex(maxIndex, null);
+
+        field.options[id] = {
+          name: input.name,
           id: id,
-          attributes: attributes,
-          state: encodedState,
-          created_at: createdAt,
-          created_by: input.userId,
-          version_id: versionId,
-        })
-        .execute();
+          color: input.color,
+          index: index,
+        };
 
-      await trx
-        .insertInto('changes')
-        .values({
-          data: JSON.stringify(changeData),
-          created_at: createdAt,
-        })
-        .execute();
-    });
+        return attributes;
+      },
+    );
 
     return {
       output: {
@@ -91,11 +59,6 @@ export class SelectOptionCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
           userId: input.userId,
         },
       ],

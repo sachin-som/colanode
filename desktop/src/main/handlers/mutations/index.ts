@@ -1,11 +1,9 @@
 import { MutationHandler, MutationMap } from '@/operations/mutations';
 import { EmailLoginMutationHandler } from '@/main/handlers/mutations/email-login';
 import { EmailRegisterMutationHandler } from '@/main/handlers/mutations/email-register';
-import { BoardViewCreateMutationHandler } from '@/main/handlers/mutations/board-view-create';
-import { CalendarViewCreateMutationHandler } from '@/main/handlers/mutations/calendar-view-create';
+import { ViewCreateMutationHandler } from '@/main/handlers/mutations/view-create';
 import { ChannelCreateMutationHandler } from '@/main/handlers/mutations/channel-create';
 import { ChatCreateMutationHandler } from '@/main/handlers/mutations/chat-create';
-import { TableViewCreateMutationHandler } from '@/main/handlers/mutations/table-view-create';
 import { DatabaseCreateMutationHandler } from '@/main/handlers/mutations/database-create';
 import { FieldCreateMutationHandler } from '@/main/handlers/mutations/field-create';
 import { MessageCreateMutationHandler } from '@/main/handlers/mutations/message-create';
@@ -38,6 +36,8 @@ import { SpaceUpdateMutationHandler } from '@/main/handlers/mutations/space-upda
 import { AccountUpdateMutationHandler } from '@/main/handlers/mutations/account-update';
 import { ServerUserNodeSyncMutationHandler } from '@/main/handlers/mutations/server-user-node-sync';
 import { MarkNodeAsSeenMutationHandler } from '@/main/handlers/mutations/mark-node-as-seen';
+import { ViewUpdateMutationHandler } from '@/main/handlers/mutations/view-update';
+import { ViewDeleteMutationHandler } from '@/main/handlers/mutations/view-delete';
 
 type MutationHandlerMap = {
   [K in keyof MutationMap]: MutationHandler<MutationMap[K]['input']>;
@@ -46,11 +46,9 @@ type MutationHandlerMap = {
 export const mutationHandlerMap: MutationHandlerMap = {
   email_login: new EmailLoginMutationHandler(),
   email_register: new EmailRegisterMutationHandler(),
-  board_view_create: new BoardViewCreateMutationHandler(),
-  calendar_view_create: new CalendarViewCreateMutationHandler(),
+  view_create: new ViewCreateMutationHandler(),
   channel_create: new ChannelCreateMutationHandler(),
   chat_create: new ChatCreateMutationHandler(),
-  table_view_create: new TableViewCreateMutationHandler(),
   database_create: new DatabaseCreateMutationHandler(),
   field_create: new FieldCreateMutationHandler(),
   message_create: new MessageCreateMutationHandler(),
@@ -83,4 +81,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   account_update: new AccountUpdateMutationHandler(),
   server_user_node_sync: new ServerUserNodeSyncMutationHandler(),
   mark_node_as_seen: new MarkNodeAsSeenMutationHandler(),
+  view_update: new ViewUpdateMutationHandler(),
+  view_delete: new ViewDeleteMutationHandler(),
 };

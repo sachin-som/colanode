@@ -31,31 +31,31 @@ import { Calendar, Columns, Table } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
-  type: z.enum(['TABLE', 'BOARD', 'CALENDAR']),
+  type: z.enum(['table', 'board', 'calendar']),
   groupBy: z.string().optional(),
 });
 
 interface ViewTypeOption {
   name: string;
   icon: React.FC;
-  type: 'TABLE' | 'BOARD' | 'CALENDAR';
+  type: 'table' | 'board' | 'calendar';
 }
 
 const viewTypes: ViewTypeOption[] = [
   {
     name: 'Table',
     icon: Table,
-    type: 'TABLE',
+    type: 'table',
   },
   {
     name: 'Board',
     icon: Columns,
-    type: 'BOARD',
+    type: 'board',
   },
   {
     name: 'Calendar',
     icon: Calendar,
-    type: 'CALENDAR',
+    type: 'calendar',
   },
 ];
 
@@ -76,7 +76,7 @@ export const ViewCreateDialog = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      type: 'TABLE',
+      type: 'table',
     },
   });
   const type = form.watch('type');
@@ -91,20 +91,7 @@ export const ViewCreateDialog = ({
       return;
     }
 
-    if (values.type === 'TABLE') {
-      mutate({
-        input: {
-          type: 'table_view_create',
-          databaseId: database.id,
-          name: values.name,
-          userId: workspace.userId,
-        },
-        onSuccess() {
-          form.reset();
-          onOpenChange(false);
-        },
-      });
-    } else if (values.type === 'BOARD') {
+    if (values.type === 'board') {
       if (!values.groupBy) {
         toast({
           title: 'Failed to create board view',
@@ -114,21 +101,7 @@ export const ViewCreateDialog = ({
         });
         return;
       }
-
-      mutate({
-        input: {
-          type: 'board_view_create',
-          databaseId: database.id,
-          name: values.name,
-          groupBy: values.groupBy,
-          userId: workspace.userId,
-        },
-        onSuccess() {
-          form.reset();
-          onOpenChange(false);
-        },
-      });
-    } else if (values.type === 'CALENDAR') {
+    } else if (values.type === 'calendar') {
       if (!values.groupBy) {
         toast({
           title: 'Failed to create calendar view',
@@ -138,21 +111,22 @@ export const ViewCreateDialog = ({
         });
         return;
       }
-
-      mutate({
-        input: {
-          type: 'calendar_view_create',
-          databaseId: database.id,
-          name: values.name,
-          groupBy: values.groupBy,
-          userId: workspace.userId,
-        },
-        onSuccess() {
-          form.reset();
-          onOpenChange(false);
-        },
-      });
     }
+
+    mutate({
+      input: {
+        type: 'view_create',
+        viewType: values.type,
+        databaseId: database.id,
+        name: values.name,
+        userId: workspace.userId,
+        groupBy: values.groupBy ?? null,
+      },
+      onSuccess() {
+        form.reset();
+        onOpenChange(false);
+      },
+    });
   };
 
   return (
@@ -208,7 +182,7 @@ export const ViewCreateDialog = ({
                   </div>
                 )}
               />
-              {type === 'BOARD' && (
+              {type === 'board' && (
                 <FormField
                   control={form.control}
                   name="groupBy"
@@ -218,9 +192,9 @@ export const ViewCreateDialog = ({
                       <FormControl>
                         <FieldSelect
                           fields={database.fields.filter(
-                            (field) => field.dataType === 'select',
+                            (field) => field.type === 'select',
                           )}
-                          value={field.value}
+                          value={field.value ?? null}
                           onChange={field.onChange}
                         />
                       </FormControl>
@@ -229,7 +203,7 @@ export const ViewCreateDialog = ({
                   )}
                 />
               )}
-              {type === 'CALENDAR' && (
+              {type === 'calendar' && (
                 <FormField
                   control={form.control}
                   name="groupBy"
@@ -240,10 +214,10 @@ export const ViewCreateDialog = ({
                         <FieldSelect
                           fields={database.fields.filter(
                             (field) =>
-                              field.dataType === 'date' ||
-                              field.dataType === 'created_at',
+                              field.type === 'date' ||
+                              field.type === 'createdAt',
                           )}
-                          value={field.value}
+                          value={field.value ?? null}
                           onChange={field.onChange}
                         />
                       </FormControl>

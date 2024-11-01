@@ -36,7 +36,7 @@ export const BreadcrumbItemPopover = ({
                 input: {
                   type: 'node_attribute_set',
                   nodeId: node.id,
-                  attribute: 'avatar',
+                  path: 'avatar',
                   value: avatar,
                   userId: workspace.userId,
                 },
@@ -63,7 +63,7 @@ export const BreadcrumbItemPopover = ({
                 input: {
                   type: 'node_attribute_set',
                   nodeId: node.id,
-                  attribute: 'name',
+                  path: 'name',
                   value: newName,
                   userId: workspace.userId,
                 },

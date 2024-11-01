@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldNode } from '@/types/databases';
+import { FieldAttributes } from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -12,7 +12,7 @@ import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { Trash2 } from 'lucide-react';
 
 interface RecordFieldProps {
-  field: FieldNode;
+  field: FieldAttributes;
 }
 
 export const RecordField = ({ field }: RecordFieldProps) => {
@@ -24,7 +24,7 @@ export const RecordField = ({ field }: RecordFieldProps) => {
       <Popover modal={true}>
         <PopoverTrigger asChild>
           <div className="flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
         </PopoverTrigger>

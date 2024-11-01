@@ -12,8 +12,8 @@ export const WorkspaceUpdate = () => {
     <WorkspaceForm
       values={{
         name: workspace.name,
-        description: workspace.description,
-        avatar: workspace.avatar,
+        description: workspace.description ?? '',
+        avatar: workspace.avatar ?? null,
       }}
       onSubmit={(values) => {
         mutate({
@@ -23,7 +23,7 @@ export const WorkspaceUpdate = () => {
             accountId: workspace.accountId,
             name: values.name,
             description: values.description,
-            avatar: values.avatar,
+            avatar: values.avatar ?? null,
           },
           onSuccess() {
             toast({

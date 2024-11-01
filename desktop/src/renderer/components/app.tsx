@@ -33,26 +33,26 @@ export const App = () => {
     );
   }
 
-  if (accounts.length == 0) {
+  if (!accounts || accounts.length === 0) {
     return <Login />;
   }
 
   const account = accounts[0];
-  const server = servers.find((server) => server.domain === account.server);
+  const server = servers?.find((server) => server.domain === account?.server);
 
   if (!server) {
     return <p>Server not found.</p>;
   }
 
-  const accountWorkspaces = workspaces.filter(
-    (workspace) => workspace.accountId === account.id,
+  const accountWorkspaces = workspaces?.filter(
+    (workspace) => workspace.accountId === account?.id,
   );
 
   return (
     <AccountContext.Provider
       value={{
         ...account,
-        workspaces: accountWorkspaces,
+        workspaces: accountWorkspaces ?? [],
         logout: () => {
           setShowLogout(true);
         },
@@ -64,7 +64,7 @@ export const App = () => {
       <Outlet />
       {showLogout && (
         <AccountLogout
-          id={account.id}
+          id={account?.id ?? ''}
           onCancel={() => {
             setShowLogout(false);
           }}
@@ -75,7 +75,7 @@ export const App = () => {
       )}
       {showAccountSettings && (
         <AccountSettingsDialog
-          id={account.id}
+          id={account?.id ?? ''}
           open={showAccountSettings}
           onOpenChange={setShowAccountSettings}
         />

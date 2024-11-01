@@ -6,7 +6,7 @@ import { Download } from 'lucide-react';
 
 interface FileDownloadProps {
   id: string;
-  downloadProgress: number | null;
+  downloadProgress: number | null | undefined;
 }
 
 export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {

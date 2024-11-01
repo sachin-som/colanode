@@ -10,7 +10,7 @@ declare module '@/operations/queries' {
   interface QueryMap {
     chat_get: {
       input: ChatGetQueryInput;
-      output: ChatNode;
+      output: ChatNode | null;
     };
   }
 }

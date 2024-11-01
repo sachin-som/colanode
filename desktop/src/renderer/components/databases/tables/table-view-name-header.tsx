@@ -7,13 +7,13 @@ import {
 } from '@/renderer/components/ui/popover';
 import { Separator } from '@/renderer/components/ui/separator';
 import { Input } from '@/renderer/components/ui/input';
-import { useTableView } from '@/renderer/contexts/table-view';
+import { useView } from '@/renderer/contexts/view';
 import { useDrop } from 'react-dnd';
 import { cn } from '@/lib/utils';
 import { ArrowDownAz, ArrowDownZa, Filter, Type } from 'lucide-react';
 
 export const TableViewNameHeader = () => {
-  const tableView = useTableView();
+  const view = useView();
 
   const canEditView = true;
 
@@ -31,12 +31,12 @@ export const TableViewNameHeader = () => {
   return (
     <Resizable
       defaultSize={{
-        width: `${tableView.getNameWidth()}px`,
+        width: `${view.nameWidth}px`,
         height: '2rem',
       }}
       minWidth={100}
       maxWidth={500}
-      size={{ width: `${tableView.getNameWidth()}px`, height: '2rem' }}
+      size={{ width: `${view.nameWidth}px`, height: '2rem' }}
       enable={{
         bottom: false,
         bottomLeft: false,
@@ -58,7 +58,7 @@ export const TableViewNameHeader = () => {
       }}
       onResizeStop={(e, direction, ref) => {
         const newWidth = ref.offsetWidth;
-        tableView.resizeName(newWidth);
+        view.resizeName(newWidth);
       }}
     >
       <Popover modal={true}>

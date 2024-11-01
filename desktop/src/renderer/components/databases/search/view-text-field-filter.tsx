@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextFieldNode, ViewFieldFilter } from '@/types/databases';
+import { TextFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -14,20 +14,20 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { textFieldFilterOperators } from '@/lib/databases';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { Trash2, ChevronDown } from 'lucide-react';
 
 interface ViewTextFieldFilterProps {
-  field: TextFieldNode;
-  filter: ViewFieldFilter;
+  field: TextFieldAttributes;
+  filter: ViewFieldFilterAttributes;
 }
 
 export const ViewTextFieldFilter = ({
   field,
   filter,
 }: ViewTextFieldFilterProps) => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const operator =
     textFieldFilterOperators.find(
@@ -41,12 +41,12 @@ export const ViewTextFieldFilter = ({
 
   return (
     <Popover
-      open={viewSearch.isFieldFilterOpened(filter.id)}
+      open={view.isFieldFilterOpened(filter.id)}
       onOpenChange={(open) => {
         if (open) {
-          viewSearch.openFieldFilter(filter.id);
+          view.openFieldFilter(filter.id);
         } else {
-          viewSearch.closeFieldFilter(filter.id);
+          view.closeFieldFilter(filter.id);
         }
       }}
     >
@@ -63,7 +63,7 @@ export const ViewTextFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -84,7 +84,7 @@ export const ViewTextFieldFilter = ({
                         ? null
                         : textValue;
 
-                    viewSearch.updateFilter(filter.id, {
+                    view.updateFilter(filter.id, {
                       ...filter,
                       operator: operator.value,
                       value: value,
@@ -100,7 +100,7 @@ export const ViewTextFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              viewSearch.removeFilter(filter.id);
+              view.removeFilter(filter.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -110,7 +110,7 @@ export const ViewTextFieldFilter = ({
           <SmartTextInput
             value={textValue}
             onChange={(value) => {
-              viewSearch.updateFilter(filter.id, {
+              view.updateFilter(filter.id, {
                 ...filter,
                 value: value,
               });

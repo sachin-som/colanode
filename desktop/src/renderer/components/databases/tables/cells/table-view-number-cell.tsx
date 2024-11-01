@@ -1,54 +1,32 @@
 import React from 'react';
-import { RecordNode } from '@/types/databases';
-import { NumberFieldNode } from '@/types/databases';
+import { NumberFieldAttributes } from '@/registry';
 import { SmartNumberInput } from '@/renderer/components/ui/smart-number-input';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewNumberCellProps {
-  record: RecordNode;
-  field: NumberFieldNode;
+  field: NumberFieldAttributes;
 }
 
-export const TableViewNumberCell = ({
-  record,
-  field,
-}: TableViewNumberCellProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
-
-  const canEdit = true;
+export const TableViewNumberCell = ({ field }: TableViewNumberCellProps) => {
+  const record = useRecord();
 
   return (
     <SmartNumberInput
-      value={record.attributes[field.id]}
-      readOnly={!canEdit || isPending}
+      value={record.getNumberValue(field)}
+      readOnly={!record.canEdit}
       onChange={(newValue) => {
-        if (isPending) return;
-        if (!canEdit) return;
+        if (!record.canEdit) return;
 
-        if (newValue === record.attributes[field.id]) {
+        if (newValue === record.getNumberValue(field)) {
           return;
         }
 
         if (newValue === null) {
-          mutate({
-            input: {
-              type: 'node_attribute_delete',
-              nodeId: record.id,
-              attribute: field.id,
-              userId: workspace.userId,
-            },
-          });
+          record.removeFieldValue(field);
         } else {
-          mutate({
-            input: {
-              type: 'node_attribute_set',
-              nodeId: record.id,
-              attribute: field.id,
-              value: newValue,
-              userId: workspace.userId,
-            },
+          record.updateFieldValue(field, {
+            type: 'number',
+            value: newValue,
           });
         }
       }}

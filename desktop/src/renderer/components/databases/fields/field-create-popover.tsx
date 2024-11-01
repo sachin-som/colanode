@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { useDatabase } from '@/renderer/contexts/database';
-import { FieldDataTypeSelect } from '@/renderer/components/databases/fields/field-type-select';
+import { FieldTypeSelect } from '@/renderer/components/databases/fields/field-type-select';
 import { FieldAttrs } from '@/renderer/components/databases/fields/field-attrs';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
@@ -28,23 +28,21 @@ import { Plus } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string(),
-  dataType: z.union([
-    z.literal('autonumber'),
+  type: z.union([
     z.literal('boolean'),
-    z.literal('button'),
     z.literal('collaborator'),
-    z.literal('created_at'),
-    z.literal('created_by'),
+    z.literal('createdAt'),
+    z.literal('createdBy'),
     z.literal('date'),
     z.literal('email'),
     z.literal('file'),
-    z.literal('multi_select'),
+    z.literal('multiSelect'),
     z.literal('number'),
     z.literal('phone'),
     z.literal('select'),
     z.literal('text'),
-    z.literal('updated_at'),
-    z.literal('updated_by'),
+    z.literal('updatedAt'),
+    z.literal('updatedBy'),
     z.literal('url'),
   ]),
 });
@@ -60,7 +58,7 @@ export const FieldCreatePopover = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      dataType: 'text',
+      type: 'text',
     },
   });
 
@@ -75,7 +73,7 @@ export const FieldCreatePopover = () => {
         type: 'field_create',
         databaseId: database.id,
         name: values.name,
-        dataType: values.dataType,
+        fieldType: values.type,
         userId: workspace.userId,
       },
       onSuccess: () => {
@@ -112,13 +110,13 @@ export const FieldCreatePopover = () => {
               />
               <FormField
                 control={form.control}
-                name="dataType"
+                name="type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Field type</FormLabel>
                     <FormControl>
-                      <FieldDataTypeSelect
-                        dataType={field.value}
+                      <FieldTypeSelect
+                        type={field.value}
                         onChange={field.onChange}
                       />
                     </FormControl>

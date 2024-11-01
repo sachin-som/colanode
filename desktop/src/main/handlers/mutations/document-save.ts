@@ -1,8 +1,8 @@
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { DocumentSaveMutationInput } from '@/operations/mutations/document-save';
-import { applyChangeToAttributesMap, mapContentsToBlocks } from '@/lib/editor';
-import { NodeBlock } from '@/types/nodes';
-import { updateNodeAtomically } from '@/main/utils';
+import { mapContentsToBlocks } from '@/lib/editor';
+import { Block } from '@/registry';
+import { nodeManager } from '@/main/node-manager';
 
 export class DocumentSaveMutationHandler
   implements MutationHandler<DocumentSaveMutationInput>
@@ -10,11 +10,15 @@ export class DocumentSaveMutationHandler
   async handleMutation(
     input: DocumentSaveMutationInput,
   ): Promise<MutationResult<DocumentSaveMutationInput>> {
-    const result = await updateNodeAtomically(
+    await nodeManager.updateNode(
       input.userId,
       input.documentId,
-      (attributesMap, attributes) => {
-        const blocksMap = new Map<string, NodeBlock>();
+      (attributes) => {
+        if (attributes.type !== 'page' && attributes.type !== 'record') {
+          throw new Error('Invalid node type');
+        }
+
+        const blocksMap = new Map<string, Block>();
         if (attributes.content) {
           for (const [key, value] of Object.entries(attributes.content)) {
             blocksMap.set(key, value);
@@ -23,21 +27,21 @@ export class DocumentSaveMutationHandler
 
         const blocks = mapContentsToBlocks(
           input.documentId,
-          input.content.content,
+          input.content.content ?? [],
           blocksMap,
         );
 
-        applyChangeToAttributesMap(attributesMap, blocks);
+        attributes.content = blocks.reduce(
+          (acc, block) => {
+            acc[block.id] = block;
+            return acc;
+          },
+          {} as Record<string, Block>,
+        );
+
+        return attributes;
       },
     );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
 
     return {
       output: {

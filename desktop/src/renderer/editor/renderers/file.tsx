@@ -8,7 +8,7 @@ interface FileRendererProps {
 }
 
 export const FileRenderer = ({ node }: FileRendererProps) => {
-  const id = node.attrs.id;
+  const id = node.attrs?.id;
   if (!id) {
     return null;
   }

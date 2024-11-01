@@ -95,8 +95,11 @@ app.on('ready', createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  eventBus.unsubscribe(subscriptionId);
-  subscriptionId = null;
+  if (subscriptionId) {
+    eventBus.unsubscribe(subscriptionId);
+    subscriptionId = null;
+  }
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -151,7 +154,12 @@ ipcMain.handle(
     _: unknown,
     options: Electron.OpenDialogOptions,
   ): Promise<Electron.OpenDialogReturnValue> => {
-    return dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), options);
+    const window = BrowserWindow.getFocusedWindow();
+    if (!window) {
+      throw new Error('No focused window');
+    }
+
+    return dialog.showOpenDialog(window, options);
   },
 );
 

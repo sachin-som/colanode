@@ -1,7 +1,6 @@
-import { updateNodeAtomically } from '@/main/utils';
+import { nodeManager } from '@/main/node-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeReactionCreateMutationInput } from '@/operations/mutations/node-reaction-create';
-import * as Y from 'yjs';
 
 export class NodeReactionCreateMutationHandler
   implements MutationHandler<NodeReactionCreateMutationInput>
@@ -9,37 +8,23 @@ export class NodeReactionCreateMutationHandler
   async handleMutation(
     input: NodeReactionCreateMutationInput,
   ): Promise<MutationResult<NodeReactionCreateMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.nodeId,
-      (attributesMap) => {
-        if (!attributesMap.has('reactions')) {
-          attributesMap.set('reactions', new Y.Map());
-        }
+    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+      if (attributes.type !== 'message') {
+        throw new Error('Node is not a message');
+      }
 
-        const reactionsMap = attributesMap.get('reactions') as Y.Map<any>;
-        if (!reactionsMap.has(input.reaction)) {
-          reactionsMap.set(input.reaction, new Y.Array());
-        }
+      const reactions = attributes.reactions;
+      if (!reactions[input.reaction]) {
+        reactions[input.reaction] = [];
+      }
 
-        const reactionArray = reactionsMap.get(
-          input.reaction,
-        ) as Y.Array<string>;
-        if (reactionArray.toArray().includes(input.userId)) {
-          return;
-        }
+      if (reactions[input.reaction].includes(input.userId)) {
+        return attributes;
+      }
 
-        reactionArray.push([input.userId]);
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+      reactions[input.reaction].push(input.userId);
+      return attributes;
+    });
 
     return {
       output: {

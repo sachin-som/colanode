@@ -4,9 +4,8 @@ import { generateId, IdType } from '@/lib/id';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
 import { sql } from 'kysely';
-import * as Y from 'yjs';
-import { fromUint8Array } from 'js-base64';
-import { LocalCreateNodeChangeData } from '@/types/sync';
+import { ChatAttributes } from '@/registry';
+import { nodeManager } from '@/main/node-manager';
 
 interface ChatRow {
   id: string;
@@ -41,56 +40,17 @@ export class ChatCreateMutationHandler
     }
 
     const id = generateId(IdType.Chat);
-    const versionId = generateId(IdType.Version);
-    const createdAt = new Date().toISOString();
-
-    const doc = new Y.Doc({
-      guid: id,
-    });
-
-    const attributesMap = doc.getMap('attributes');
-
-    doc.transact(() => {
-      attributesMap.set('type', NodeTypes.Chat);
-      attributesMap.set('collaborators', new Y.Map());
-
-      const collaboratorsMap = attributesMap.get('collaborators') as Y.Map<any>;
-      collaboratorsMap.set(input.userId, NodeRole.Collaborator);
-      collaboratorsMap.set(input.otherUserId, NodeRole.Collaborator);
-    });
-
-    const attributes = JSON.stringify(attributesMap.toJSON());
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
-
-    const changeData: LocalCreateNodeChangeData = {
-      type: 'node_create',
-      id: id,
-      state: encodedState,
-      createdAt: new Date().toISOString(),
-      createdBy: input.userId,
-      versionId: versionId,
+    const attributes: ChatAttributes = {
+      type: 'chat',
+      parentId: input.workspaceId,
+      collaborators: {
+        [input.userId]: NodeRole.Collaborator,
+        [input.otherUserId]: NodeRole.Collaborator,
+      },
     };
 
     await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
-        .insertInto('nodes')
-        .values({
-          id: id,
-          attributes: attributes,
-          state: encodedState,
-          created_at: createdAt,
-          created_by: input.userId,
-          version_id: versionId,
-        })
-        .execute();
-
-      await trx
-        .insertInto('changes')
-        .values({
-          data: JSON.stringify(changeData),
-          created_at: createdAt,
-        })
-        .execute();
+      await nodeManager.createNode(trx, input.userId, id, attributes);
     });
 
     return {
@@ -101,6 +61,11 @@ export class ChatCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
+          userId: input.userId,
+        },
+        {
+          type: 'workspace',
+          table: 'changes',
           userId: input.userId,
         },
       ],

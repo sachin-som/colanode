@@ -163,7 +163,7 @@ export class SidebarChatListQueryHandler
       .where('n.type', '=', NodeTypes.Message)
       .where('n.parent_id', 'in', chatIds)
       .where('un.last_seen_version_id', 'is', null)
-      .select(['n.parent_id as node_id'])
+      .select(['un.node_id'])
       .select((eb) => [
         eb.fn.count<number>('un.node_id').as('unread_count'),
         eb.fn.sum<number>('un.mentions_count').as('mentions_count'),
@@ -184,6 +184,10 @@ export class SidebarChatListQueryHandler
 
     for (const chat of chats) {
       const chatNode = mapNode(chat);
+      if (chatNode.type !== 'chat') {
+        continue;
+      }
+
       if (!chatNode.attributes || !chatNode.attributes.collaborators) {
         continue;
       }
@@ -208,6 +212,10 @@ export class SidebarChatListQueryHandler
       }
 
       const collaboratorNode = mapNode(collaboratorRow);
+      if (collaboratorNode.type !== 'user') {
+        continue;
+      }
+
       const unreadCountRow = unreadCounts.find((r) => r.node_id === chat.id);
 
       sidebarChatNodes.push({

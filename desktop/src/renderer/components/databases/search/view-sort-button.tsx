@@ -1,16 +1,16 @@
 import React from 'react';
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { ArrowDownAz } from 'lucide-react';
 
 export const ViewSortButton = () => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
-  if (viewSearch.sorts.length > 0) {
+  if (view.sorts.length > 0) {
     return (
       <button
         className="flex cursor-pointer items-center rounded-md p-1.5 hover:bg-gray-50"
-        onClick={() => viewSearch.openSearchBar()}
+        onClick={() => view.openSearchBar()}
       >
         <ArrowDownAz className="size-4" />
       </button>

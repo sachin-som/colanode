@@ -45,7 +45,7 @@ export type WorkspaceUserRoleUpdateOutput = {
 export type SidebarNode = {
   id: string;
   type: string;
-  name: string | null;
+  name: string;
   avatar: string | null;
   unreadCount: number;
   mentionsCount: number;

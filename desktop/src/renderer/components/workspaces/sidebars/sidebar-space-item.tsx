@@ -52,7 +52,7 @@ interface SidebarSpaceNodeProps {
 
 export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
   const workspace = useWorkspace();
-  const { nodeId } = useParams<{ nodeId?: string | null }>();
+  const { nodeId } = useParams<{ nodeId?: string }>();
 
   const [openCreatePage, setOpenCreatePage] = React.useState(false);
   const [openCreateChannel, setOpenCreateChannel] = React.useState(false);
@@ -75,7 +75,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
-              tooltip={node.name}
+              tooltip={node.name ?? ''}
               className="group/space-button"
             >
               <Avatar

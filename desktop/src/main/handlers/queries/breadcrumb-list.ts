@@ -94,10 +94,10 @@ export class BreadcrumbListQueryHandler
   ): BreadcrumbNode[] => {
     const breadcrumbNodes: BreadcrumbNode[] = [];
 
-    let currentId = nodeId;
+    let currentId: string | null = nodeId;
     while (currentId !== null && currentId !== undefined) {
       const row = rows.find((row) => row.id === currentId);
-      if (row) {
+      if (row && row.parent_id) {
         breadcrumbNodes.push(this.buildBreadcrumbNode(row));
         currentId = row.parent_id;
       } else {
@@ -110,8 +110,9 @@ export class BreadcrumbListQueryHandler
   private buildBreadcrumbNode = (row: SelectNode): BreadcrumbNode => {
     const node = mapNode(row);
 
-    const name = node.attributes.name;
-    const avatar = node.attributes.avatar;
+    const attributes = node.attributes as any;
+    const name = attributes.name;
+    const avatar = attributes.avatar;
 
     return {
       id: node.id,

@@ -70,6 +70,7 @@ export const SpaceCreateDialog = ({
         name: values.name,
         description: values.description,
         userId: workspace.userId,
+        workspaceId: workspace.id,
       },
       onSuccess() {
         onOpenChange(false);

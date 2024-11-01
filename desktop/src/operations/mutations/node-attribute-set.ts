@@ -2,7 +2,7 @@ export type NodeAttributeSetMutationInput = {
   type: 'node_attribute_set';
   userId: string;
   nodeId: string;
-  attribute: string;
+  path: string;
   value: any;
 };
 

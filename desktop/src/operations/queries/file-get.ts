@@ -10,7 +10,7 @@ declare module '@/operations/queries' {
   interface QueryMap {
     file_get: {
       input: FileGetQueryInput;
-      output: FileDetails;
+      output: FileDetails | null;
     };
   }
 }

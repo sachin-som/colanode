@@ -5,16 +5,10 @@ export const NodeTypes = {
   Channel: 'channel',
   Chat: 'chat',
   Message: 'message',
-  HorizontalRule: 'horizontal_rule',
   Database: 'database',
-  DatabaseReplica: 'database_replica',
+  DatabaseReplica: 'databaseReplica',
   Record: 'record',
   Folder: 'folder',
-  TableView: 'table_view',
-  BoardView: 'board_view',
-  CalendarView: 'calendar_view',
-  Field: 'field',
-  SelectOption: 'select_option',
   File: 'file',
 };
 
@@ -36,12 +30,6 @@ export const EditorNodeTypes = {
   Folder: 'folder',
   FilePlaceholder: 'filePlaceholder',
 };
-
-export const ViewNodeTypes: string[] = [
-  NodeTypes.TableView,
-  NodeTypes.BoardView,
-  NodeTypes.CalendarView,
-];
 
 export const SortDirections = {
   Ascending: 'asc',

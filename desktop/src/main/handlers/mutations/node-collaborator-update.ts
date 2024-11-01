@@ -1,7 +1,7 @@
+import { nodeManager } from '@/main/node-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeCollaboratorUpdateMutationInput } from '@/operations/mutations/node-collaborator-update';
-import * as Y from 'yjs';
-import { updateNodeAtomically } from '@/main/utils';
+import { set } from 'lodash';
 
 export class NodeCollaboratorUpdateMutationHandler
   implements MutationHandler<NodeCollaboratorUpdateMutationInput>
@@ -9,28 +9,10 @@ export class NodeCollaboratorUpdateMutationHandler
   async handleMutation(
     input: NodeCollaboratorUpdateMutationInput,
   ): Promise<MutationResult<NodeCollaboratorUpdateMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.nodeId,
-      (attributesMap) => {
-        if (!attributesMap.has('collaborators')) {
-          attributesMap.set('collaborators', new Y.Map());
-        }
-
-        const collaboratorsMap = attributesMap.get(
-          'collaborators',
-        ) as Y.Map<any>;
-        collaboratorsMap.set(input.collaboratorId, input.role);
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+      set(attributes, `collaborators.${input.collaboratorId}`, input.role);
+      return attributes;
+    });
 
     return {
       output: {

@@ -11,9 +11,9 @@ import {
 import { WorkspaceCredentials } from '@/types/workspaces';
 import { databaseManager } from './data/database-manager';
 import { httpClient } from '@/lib/http-client';
-import { LocalNodeAttributes } from '@/types/nodes';
 import { mediator } from '@/main/mediator';
 import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
+import { FileAttributes } from '@/registry';
 
 class FileManager {
   public async handleFileRequest(request: Request): Promise<Response> {
@@ -130,7 +130,7 @@ class FileManager {
         continue;
       }
 
-      const attributes: LocalNodeAttributes = JSON.parse(file.attributes);
+      const attributes: FileAttributes = JSON.parse(file.attributes);
       const filePath = path.join(
         filesDir,
         `${upload.node_id}${attributes.extension}`,
@@ -226,8 +226,7 @@ class FileManager {
         continue;
       }
 
-      const attributes: LocalNodeAttributes = JSON.parse(file.attributes);
-
+      const attributes: FileAttributes = JSON.parse(file.attributes);
       const filePath = path.join(
         filesDir,
         `${download.node_id}${attributes.extension}`,

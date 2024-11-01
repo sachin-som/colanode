@@ -19,8 +19,12 @@ export const PageNodeView = ({ node }: NodeViewProps) => {
     return null;
   }
 
-  const name = data?.attributes.name ?? 'Unnamed';
-  const avatar = data?.attributes.avatar;
+  if (data?.attributes.type !== 'page') {
+    return null;
+  }
+
+  const name = data.attributes.name ?? 'Unnamed';
+  const avatar = data.attributes.avatar;
 
   return (
     <NodeViewWrapper

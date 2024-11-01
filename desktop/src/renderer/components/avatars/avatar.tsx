@@ -13,8 +13,8 @@ import { useAccount } from '@/renderer/contexts/account';
 
 interface AvatarProps {
   id: string;
-  name: string;
-  avatar?: string;
+  name?: string | null;
+  avatar?: string | null;
   size?: 'small' | 'medium' | 'large' | 'extra-large';
   className?: string;
 }
@@ -70,6 +70,10 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
 };
 
 const EmojiAvatar = ({ avatar, size, className }: AvatarProps) => {
+  if (!avatar) {
+    return null;
+  }
+
   const url = getEmojiUrl(avatar);
   return (
     <img
@@ -81,6 +85,10 @@ const EmojiAvatar = ({ avatar, size, className }: AvatarProps) => {
 };
 
 const IconAvatar = ({ avatar, size, className }: AvatarProps) => {
+  if (!avatar) {
+    return null;
+  }
+
   const url = getIconUrl(avatar);
   return (
     <img
@@ -93,8 +101,12 @@ const IconAvatar = ({ avatar, size, className }: AvatarProps) => {
 
 const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
   const server = useAccount();
-  const url = getAvatarUrl(server.id, avatar);
 
+  if (!avatar) {
+    return null;
+  }
+
+  const url = getAvatarUrl(server.id, avatar);
   return (
     <img
       src={url}

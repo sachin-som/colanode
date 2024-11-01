@@ -13,80 +13,77 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { FieldDataType } from '@/types/databases';
+import { FieldType } from '@/registry';
 import { cn } from '@/lib/utils';
 import { FieldIcon } from './field-icon';
 import { Check, ChevronsUpDown } from 'lucide-react';
 
 interface FieldTypeOption {
   name: string;
-  dataType: FieldDataType;
+  type: FieldType;
 }
 
 const fieldTypes: FieldTypeOption[] = [
   {
     name: 'Boolean',
-    dataType: 'boolean',
+    type: 'boolean',
   },
   {
     name: 'Collaborator',
-    dataType: 'collaborator',
+    type: 'collaborator',
   },
   {
     name: 'Created Date & Time',
-    dataType: 'created_at',
+    type: 'createdAt',
   },
   {
     name: 'Created by user',
-    dataType: 'created_by',
+    type: 'createdBy',
   },
   {
     name: 'Date',
-    dataType: 'date',
+    type: 'date',
   },
   {
     name: 'Email',
-    dataType: 'email',
+    type: 'email',
   },
   {
     name: 'File',
-    dataType: 'file',
+    type: 'file',
   },
   {
     name: 'Multi Select',
-    dataType: 'multi_select',
+    type: 'multiSelect',
   },
   {
     name: 'Number',
-    dataType: 'number',
+    type: 'number',
   },
   {
     name: 'Phone',
-    dataType: 'phone',
+    type: 'phone',
   },
   {
     name: 'Select',
-    dataType: 'select',
+    type: 'select',
   },
   {
     name: 'Text',
-    dataType: 'text',
+    type: 'text',
   },
   {
     name: 'Url',
-    dataType: 'url',
+    type: 'url',
   },
 ];
 
-interface FieldDataTypeSelectProps {
-  dataType: string | null;
-  onChange: (type: FieldDataType) => void;
+interface FieldTypeSelectProps {
+  type: string | null;
+  onChange: (type: FieldType) => void;
 }
 
-export const FieldDataTypeSelect = ({
-  dataType,
-  onChange,
-}: FieldDataTypeSelectProps) => {
+export const FieldTypeSelect = ({ type, onChange }: FieldTypeSelectProps) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -100,10 +97,9 @@ export const FieldDataTypeSelect = ({
           className="w-full justify-between p-2"
         >
           <span className="flex flex-row items-center gap-1">
-            <FieldIcon type={dataType as FieldDataType} className="size-4" />
-            {dataType
-              ? fieldTypes.find((fieldType) => fieldType.dataType === dataType)
-                  ?.name
+            <FieldIcon type={type as FieldType} className="size-4" />
+            {type
+              ? fieldTypes.find((fieldType) => fieldType.type === type)?.name
               : 'Select field type...'}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -117,21 +113,19 @@ export const FieldDataTypeSelect = ({
             <CommandGroup className="h-min max-h-96">
               {fieldTypes.map((fieldType) => (
                 <CommandItem
-                  key={fieldType.dataType}
+                  key={fieldType.type}
                   onSelect={() => {
-                    onChange(fieldType.dataType);
+                    onChange(fieldType.type);
                     setOpen(false);
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <FieldIcon type={fieldType.dataType} className="size-4" />
+                    <FieldIcon type={fieldType.type} className="size-4" />
                     <p>{fieldType.name}</p>
                     <Check
                       className={cn(
                         'ml-auto size-4',
-                        dataType === fieldType.dataType
-                          ? 'opacity-100'
-                          : 'opacity-0',
+                        type === fieldType.type ? 'opacity-100' : 'opacity-0',
                       )}
                     />
                   </div>

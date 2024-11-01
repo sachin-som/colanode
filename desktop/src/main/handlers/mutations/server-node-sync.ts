@@ -23,10 +23,6 @@ export class ServerNodeSyncMutationHandler
       )
       .executeTakeFirst();
 
-    const userId = workspace.user_id;
-    const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
-
     if (!workspace) {
       return {
         output: {
@@ -34,6 +30,10 @@ export class ServerNodeSyncMutationHandler
         },
       };
     }
+
+    const userId = workspace.user_id;
+    const workspaceDatabase =
+      await databaseManager.getWorkspaceDatabase(userId);
 
     let count = 0;
     while (count++ < 10) {

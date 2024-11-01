@@ -4,7 +4,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { useTableView } from '@/renderer/contexts/table-view';
+import { useView } from '@/renderer/contexts/view';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useDatabase } from '@/renderer/contexts/database';
 import { cn } from '@/lib/utils';
@@ -26,8 +26,9 @@ import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 
 export const TableViewSettingsPopover = () => {
   const workspace = useWorkspace();
-  const tableView = useTableView();
   const database = useDatabase();
+  const view = useView();
+
   const { mutate, isPending } = useMutation();
 
   const [open, setOpen] = React.useState(false);
@@ -51,13 +52,13 @@ export const TableViewSettingsPopover = () => {
             <AvatarPopover
               onPick={(avatar) => {
                 if (isPending) return;
-                if (avatar === tableView.avatar) return;
+                if (avatar === view.avatar) return;
 
                 mutate({
                   input: {
                     type: 'node_attribute_set',
-                    nodeId: tableView.id,
-                    attribute: 'avatar',
+                    nodeId: view.id,
+                    path: 'avatar',
                     value: avatar,
                     userId: workspace.userId,
                   },
@@ -66,24 +67,24 @@ export const TableViewSettingsPopover = () => {
             >
               <Button type="button" variant="outline" size="icon">
                 <Avatar
-                  id={tableView.id}
-                  name={tableView.name}
-                  avatar={tableView.avatar}
+                  id={view.id}
+                  name={view.name}
+                  avatar={view.avatar}
                   className="h-6 w-6"
                 />
               </Button>
             </AvatarPopover>
             <SmartTextInput
-              value={tableView.name}
+              value={view.name}
               onChange={(newName) => {
                 if (isPending) return;
-                if (newName === tableView.name) return;
+                if (newName === view.name) return;
 
                 mutate({
                   input: {
                     type: 'node_attribute_set',
-                    nodeId: tableView.id,
-                    attribute: 'name',
+                    nodeId: view.id,
+                    path: 'name',
                     value: newName,
                     userId: workspace.userId,
                   },
@@ -95,7 +96,9 @@ export const TableViewSettingsPopover = () => {
           <div className="flex flex-col gap-2 text-sm">
             <p className="my-1 font-semibold">Fields</p>
             {database.fields.map((field) => {
-              const isHidden = tableView.isHiddenField(field.id);
+              const isHidden = !!view.fields.find(
+                (f) => f.field.id === field.id,
+              );
 
               return (
                 <div
@@ -106,7 +109,7 @@ export const TableViewSettingsPopover = () => {
                   )}
                 >
                   <div className="flex flex-row items-center gap-2">
-                    <FieldIcon type={field.dataType} className="size-4" />
+                    <FieldIcon type={field.type} className="size-4" />
                     <div>{field.name}</div>
                   </div>
                   <div className="flex flex-row items-center gap-2">
@@ -119,11 +122,7 @@ export const TableViewSettingsPopover = () => {
                           onClick={() => {
                             if (!canEditView) return;
 
-                            if (isHidden) {
-                              tableView.showField(field.id);
-                            } else {
-                              tableView.hideField(field.id);
-                            }
+                            view.setFieldDisplay(field.id, !isHidden);
                           }}
                         >
                           {isHidden ? (
@@ -196,7 +195,7 @@ export const TableViewSettingsPopover = () => {
       )}
       {openDelete && (
         <ViewDeleteDialog
-          id={tableView.id}
+          id={view.id}
           open={openDelete}
           onOpenChange={setOpenDelete}
         />

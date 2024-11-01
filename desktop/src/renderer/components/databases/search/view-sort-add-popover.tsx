@@ -14,7 +14,7 @@ import {
 } from '@/renderer/components/ui/command';
 import { useDatabase } from '@/renderer/contexts/database';
 import { isSortableField } from '@/lib/databases';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 
 interface ViewSortAddPopoverProps {
@@ -23,13 +23,13 @@ interface ViewSortAddPopoverProps {
 
 export const ViewSortAddPopover = ({ children }: ViewSortAddPopoverProps) => {
   const database = useDatabase();
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const [open, setOpen] = React.useState(false);
   const sortableFields = database.fields.filter(
     (field) =>
       isSortableField(field) &&
-      !viewSearch.sorts.some((sort) => sort.fieldId === field.id),
+      !view.sorts.some((sort) => sort.fieldId === field.id),
   );
 
   if (sortableFields.length === 0) {
@@ -49,12 +49,12 @@ export const ViewSortAddPopover = ({ children }: ViewSortAddPopoverProps) => {
                 <CommandItem
                   key={field.id}
                   onSelect={() => {
-                    viewSearch.initFieldSort(field.id);
+                    view.initFieldSort(field.id);
                     setOpen(false);
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
-                    <FieldIcon type={field.dataType} className="size-4" />
+                    <FieldIcon type={field.type} className="size-4" />
                     <p>{field.name}</p>
                   </div>
                 </CommandItem>

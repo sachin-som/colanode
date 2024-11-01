@@ -22,7 +22,7 @@ export const Login = () => {
               Use one of the following methods to login
             </p>
           </div>
-          {isPending ? null : <LoginForm servers={data} />}
+          {isPending ? null : <LoginForm servers={data ?? []} />}
         </div>
       </div>
     </div>

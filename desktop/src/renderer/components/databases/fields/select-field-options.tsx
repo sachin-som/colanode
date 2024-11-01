@@ -8,15 +8,16 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { MultiSelectFieldNode, SelectFieldNode } from '@/types/databases';
+import { MultiSelectFieldAttributes, SelectFieldAttributes } from '@/registry';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/renderer/components/databases/fields/select-option-settings-popover';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Check, Plus, X } from 'lucide-react';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface SelectFieldOptionsProps {
-  field: SelectFieldNode | MultiSelectFieldNode;
+  field: SelectFieldAttributes | MultiSelectFieldAttributes;
   values: string[];
   onSelect: (id: string) => void;
   allowAdd: boolean;
@@ -29,13 +30,16 @@ export const SelectFieldOptions = ({
   allowAdd,
 }: SelectFieldOptionsProps) => {
   const workspace = useWorkspace();
+  const database = useDatabase();
   const { mutate, isPending } = useMutation();
+
+  const selectOptions = Object.values(field.options ?? {});
 
   const [inputValue, setInputValue] = React.useState('');
   const [color, setColor] = React.useState(getRandomSelectOptionColor());
   const showNewOption =
     allowAdd &&
-    !field.options?.some((option) => option.name === inputValue.trim());
+    !selectOptions.some((option) => option.name === inputValue.trim());
 
   return (
     <Command className="min-h-min">
@@ -48,7 +52,7 @@ export const SelectFieldOptions = ({
       <CommandEmpty>No options found.</CommandEmpty>
       <CommandList>
         <CommandGroup className="h-min max-h-96">
-          {field.options?.map((option) => {
+          {selectOptions.map((option) => {
             const isSelected = values.includes(option.id);
             return (
               <CommandItem
@@ -79,7 +83,10 @@ export const SelectFieldOptions = ({
                     e.preventDefault();
                   }}
                 >
-                  <SelectOptionSettingsPopover option={option} />
+                  <SelectOptionSettingsPopover
+                    option={option}
+                    fieldId={field.id}
+                  />
                 </div>
               </CommandItem>
             );
@@ -102,6 +109,7 @@ export const SelectFieldOptions = ({
                 mutate({
                   input: {
                     type: 'select_option_create',
+                    databaseId: database.id,
                     fieldId: field.id,
                     name: inputValue.trim(),
                     color,

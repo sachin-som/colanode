@@ -1,37 +1,34 @@
 import React from 'react';
-import { MultiSelectFieldNode, RecordNode } from '@/types/databases';
-import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
+import { MultiSelectFieldAttributes } from '@/registry';
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@/renderer/components/ui/popover';
 import { SelectFieldOptions } from '@/renderer/components/databases/fields/select-field-options';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordMultiSelectValueProps {
-  record: RecordNode;
-  field: MultiSelectFieldNode;
+  field: MultiSelectFieldAttributes;
 }
 
 export const RecordMultiSelectValue = ({
-  record,
   field,
 }: RecordMultiSelectValueProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+  const record = useRecord();
 
   const [open, setOpen] = React.useState(false);
   const [selectedValues, setSelectedValues] = React.useState(
-    (record.attributes[field.id] as string[]) ?? [],
+    record.getMultiSelectValue(field),
   );
 
   React.useEffect(() => {
-    setSelectedValues((record.attributes[field.id] as string[]) ?? []);
+    setSelectedValues(record.getMultiSelectValue(field));
   }, [record.versionId]);
 
-  const selectedOptions = field.options?.filter((option) =>
+  const selectOptions = Object.values(field.options ?? {});
+  const selectedOptions = selectOptions.filter((option) =>
     selectedValues.includes(option.id),
   );
 
@@ -54,30 +51,20 @@ export const RecordMultiSelectValue = ({
           field={field}
           values={selectedValues}
           onSelect={(id) => {
-            if (isPending) return;
+            if (!record.canEdit) return;
 
-            if (selectedValues.includes(id)) {
-              const values = selectedValues.filter((v) => v !== id);
-              setSelectedValues(values);
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
+            const newValues = selectedValues.includes(id)
+              ? selectedValues.filter((v) => v !== id)
+              : [...selectedValues, id];
+
+            setSelectedValues(newValues);
+
+            if (newValues.length === 0) {
+              record.removeFieldValue(field);
             } else {
-              const values = [...selectedValues, id];
-              setSelectedValues(values);
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: values,
-                  userId: workspace.userId,
-                },
+              record.updateFieldValue(field, {
+                type: 'multiSelect',
+                value: newValues,
               });
             }
           }}

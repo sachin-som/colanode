@@ -12,12 +12,12 @@ import { FileDetails } from '@/types/files';
 interface FileRow {
   id: string;
   attributes: string;
-  parent_id: string;
+  parent_id: string | null;
   type: string;
   download_progress?: number | null;
   created_at: string;
   created_by: string;
-  created_by_attributes: string;
+  created_by_attributes: string | null;
 }
 
 export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
@@ -70,7 +70,9 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
     };
   }
 
-  private async fetchFile(input: FileGetQueryInput): Promise<FileRow> {
+  private async fetchFile(
+    input: FileGetQueryInput,
+  ): Promise<FileRow | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
@@ -90,7 +92,7 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
         'file.attributes',
         'file_downloads.progress as download_progress',
         'file.created_at',
-        'created_by.id as created_by',
+        'file.created_by',
         'created_by.attributes as created_by_attributes',
       ])
       .where('file.id', '=', input.fileId)
@@ -101,7 +103,9 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
   private buildFile(row: FileRow): FileDetails {
     const attributes = JSON.parse(row.attributes);
-    const createdByAttributes = JSON.parse(row.created_by_attributes);
+    const createdByAttributes = row.created_by_attributes
+      ? JSON.parse(row.created_by_attributes)
+      : null;
 
     return {
       id: row.id,

@@ -4,7 +4,7 @@ import { TableViewRow } from '@/renderer/components/databases/tables/table-view-
 import { TableViewEmptyPlaceholder } from '@/renderer/components/databases/tables/table-view-empty-placeholder';
 import { TableViewLoadMoreRow } from '@/renderer/components/databases/tables/table-view-load-more-row';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const RECORDS_PER_PAGE = 50;
@@ -12,15 +12,15 @@ const RECORDS_PER_PAGE = 50;
 export const TableViewBody = () => {
   const workspace = useWorkspace();
   const database = useDatabase();
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
       initialPageInput: {
         type: 'record_list',
         databaseId: database.id,
-        filters: viewSearch.filters,
-        sorts: viewSearch.sorts,
+        filters: view.filters,
+        sorts: view.sorts,
         page: 0,
         count: RECORDS_PER_PAGE,
         userId: workspace.userId,
@@ -38,8 +38,8 @@ export const TableViewBody = () => {
         return {
           type: 'record_list',
           databaseId: database.id,
-          filters: viewSearch.filters,
-          sorts: viewSearch.sorts,
+          filters: view.filters,
+          sorts: view.sorts,
           page: page,
           count: RECORDS_PER_PAGE,
           userId: workspace.userId,

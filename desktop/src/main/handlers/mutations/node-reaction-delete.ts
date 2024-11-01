@@ -1,7 +1,6 @@
+import { nodeManager } from '@/main/node-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeReactionDeleteMutationInput } from '@/operations/mutations/node-reaction-delete';
-import * as Y from 'yjs';
-import { updateNodeAtomically } from '@/main/utils';
 
 export class NodeReactionDeleteMutationHandler
   implements MutationHandler<NodeReactionDeleteMutationInput>
@@ -9,39 +8,26 @@ export class NodeReactionDeleteMutationHandler
   async handleMutation(
     input: NodeReactionDeleteMutationInput,
   ): Promise<MutationResult<NodeReactionDeleteMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.nodeId,
-      (attributesMap) => {
-        if (!attributesMap.has('reactions')) {
-          attributesMap.set('reactions', new Y.Map());
-        }
+    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+      if (attributes.type !== 'message') {
+        throw new Error('Node is not a message');
+      }
 
-        const reactionsMap = attributesMap.get('reactions') as Y.Map<any>;
-        if (!reactionsMap.has(input.reaction)) {
-          reactionsMap.set(input.reaction, new Y.Array());
-        }
+      const reactions = attributes.reactions;
+      if (!reactions[input.reaction]) {
+        return attributes;
+      }
 
-        const reactionArray = reactionsMap.get(
-          input.reaction,
-        ) as Y.Array<string>;
+      const reactionArray = reactions[input.reaction];
 
-        const index = reactionArray.toArray().indexOf(input.userId);
-        if (index === -1) {
-          return;
-        }
+      const index = reactionArray.indexOf(input.userId);
+      if (index === -1) {
+        return attributes;
+      }
 
-        reactionArray.delete(index);
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+      reactionArray.splice(index, 1);
+      return attributes;
+    });
 
     return {
       output: {

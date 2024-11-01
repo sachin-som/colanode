@@ -1,11 +1,8 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import {
-  RecordNode,
-  SelectFieldNode,
-  SelectOptionNode,
-} from '@/types/databases';
+import { RecordNode } from '@/types/nodes';
+import { SelectFieldAttributes, SelectOptionAttributes } from '@/registry';
 import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';
 
@@ -14,8 +11,8 @@ interface BoardViewCardProps {
 }
 
 interface DragResult {
-  option: SelectOptionNode;
-  field: SelectFieldNode;
+  option: SelectOptionAttributes;
+  field: SelectFieldAttributes;
 }
 
 export const BoardViewCard = ({ record }: BoardViewCardProps) => {
@@ -32,9 +29,11 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
         const optionId = dropResult.option.id;
         const fieldId = dropResult.field.id;
 
-        const currentOptionId = record.attributes[fieldId] as
-          | string
-          | undefined;
+        const currentFieldValue = record.attributes.fields[fieldId];
+        const currentOptionId =
+          currentFieldValue?.type === 'select'
+            ? currentFieldValue.value
+            : undefined;
 
         if (currentOptionId === optionId) {
           return;
@@ -44,7 +43,7 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
           input: {
             type: 'node_attribute_set',
             nodeId: record.id,
-            attribute: fieldId,
+            path: fieldId,
             value: optionId,
             userId: workspace.userId,
           },
@@ -55,7 +54,7 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
 
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const dragRef = drag(buttonRef);
-  const name = record.name;
+  const name = record.attributes.name;
   const hasName = name !== null && name !== '';
 
   return (
@@ -69,7 +68,7 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
       )}
       onClick={() => workspace.openModal(record.id)}
     >
-      {record.name ?? 'Unnamed'}
+      {name ?? 'Unnamed'}
     </button>
   );
 };

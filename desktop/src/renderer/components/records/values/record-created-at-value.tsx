@@ -1,20 +1,19 @@
 import React from 'react';
-import { CreatedAtFieldNode, RecordNode } from '@/types/databases';
+import { CreatedAtFieldAttributes } from '@/registry';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordCreatedAtValueProps {
-  record: RecordNode;
-  field: CreatedAtFieldNode;
+  field: CreatedAtFieldAttributes;
 }
 
-export const RecordCreatedAtValue = ({
-  record,
-  field,
-}: RecordCreatedAtValueProps) => {
+export const RecordCreatedAtValue = ({ field }: RecordCreatedAtValueProps) => {
+  const record = useRecord();
+  const createdAt = new Date(record.createdAt);
+
   return (
     <div className="h-full w-full p-1 text-sm" data-field={field.id}>
       <p>
-        {record.createdAt.toLocaleDateString()}{' '}
-        {record.createdAt.toLocaleTimeString()}
+        {createdAt.toLocaleDateString()} {createdAt.toLocaleTimeString()}
       </p>
     </div>
   );

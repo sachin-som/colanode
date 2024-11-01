@@ -1,8 +1,10 @@
+import { FieldType } from '@/registry';
+
 export type FieldCreateMutationInput = {
   type: 'field_create';
   databaseId: string;
   name: string;
-  dataType: string;
+  fieldType: FieldType;
   userId: string;
 };
 

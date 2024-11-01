@@ -1,21 +1,7 @@
 import { SelectNode } from '@/main/data/workspace/schema';
-import { LocalNode, LocalNodeWithChildren } from '@/types/nodes';
+import { LocalNode } from '@/types/nodes';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
-
-export const buildNodeWithChildren = (
-  node: LocalNode,
-  allNodes: LocalNode[],
-): LocalNodeWithChildren => {
-  const children: LocalNodeWithChildren[] = allNodes
-    .filter((n) => n.parentId === node.id)
-    .map((n) => buildNodeWithChildren(n, allNodes));
-
-  return {
-    ...node,
-    children: children,
-  };
-};
 
 export const generateNodeIndex = (
   previous?: string | null,
@@ -30,7 +16,7 @@ export const generateNodeIndex = (
 export const mapNode = (row: SelectNode): LocalNode => {
   return {
     id: row.id,
-    type: row.type,
+    type: row.type as any,
     index: row.index,
     parentId: row.parent_id,
     attributes: JSON.parse(row.attributes),

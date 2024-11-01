@@ -1,5 +1,5 @@
 import React from 'react';
-import { NumberFieldNode, ViewFieldFilter } from '@/types/databases';
+import { NumberFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -13,21 +13,21 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
 import { SmartNumberInput } from '@/renderer/components/ui/smart-number-input';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { numberFieldFilterOperators } from '@/lib/databases';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewNumberFieldFilterProps {
-  field: NumberFieldNode;
-  filter: ViewFieldFilter;
+  field: NumberFieldAttributes;
+  filter: ViewFieldFilterAttributes;
 }
 
 export const ViewNumberFieldFilter = ({
   field,
   filter,
 }: ViewNumberFieldFilterProps) => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const operator =
     numberFieldFilterOperators.find(
@@ -41,12 +41,12 @@ export const ViewNumberFieldFilter = ({
 
   return (
     <Popover
-      open={viewSearch.isFieldFilterOpened(filter.id)}
+      open={view.isFieldFilterOpened(filter.id)}
       onOpenChange={() => {
-        if (viewSearch.isFieldFilterOpened(filter.id)) {
-          viewSearch.closeFieldFilter(filter.id);
+        if (view.isFieldFilterOpened(filter.id)) {
+          view.closeFieldFilter(filter.id);
         } else {
-          viewSearch.openFieldFilter(filter.id);
+          view.openFieldFilter(filter.id);
         }
       }}
     >
@@ -63,7 +63,7 @@ export const ViewNumberFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -84,7 +84,7 @@ export const ViewNumberFieldFilter = ({
                         ? null
                         : numberValue;
 
-                    viewSearch.updateFilter(filter.id, {
+                    view.updateFilter(filter.id, {
                       ...filter,
                       operator: operator.value,
                       value: value,
@@ -100,7 +100,7 @@ export const ViewNumberFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              viewSearch.removeFilter(filter.id);
+              view.removeFilter(filter.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -110,7 +110,7 @@ export const ViewNumberFieldFilter = ({
           <SmartNumberInput
             value={numberValue ?? null}
             onChange={(value) => {
-              viewSearch.updateFilter(filter.id, {
+              view.updateFilter(filter.id, {
                 ...filter,
                 value: value,
               });

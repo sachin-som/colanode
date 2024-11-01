@@ -1,10 +1,10 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { ViewNode } from '@/types/databases';
+import { ViewAttributes } from '@/registry/database';
 
 interface ViewTabProps {
-  view: ViewNode;
+  view: ViewAttributes;
   isActive: boolean;
   onClick: () => void;
 }

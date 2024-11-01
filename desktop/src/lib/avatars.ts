@@ -40,7 +40,7 @@ export const getAvatarUrl = (accountId: string, avatar: string): string => {
   return `avatar://${accountId}/${avatar}`;
 };
 
-export const getDefaultNodeAvatar = (type: IdType): string => {
+export const getDefaultNodeAvatar = (type: IdType): string | null => {
   if (type === IdType.Channel) {
     return '01h37jbxq11hpcnw1mdfgmm70cem';
   }

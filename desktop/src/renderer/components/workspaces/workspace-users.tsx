@@ -62,9 +62,8 @@ export const WorkspaceUsers = () => {
           const email: string = user.attributes.email ?? ' ';
           const avatar: string | null | undefined = user.attributes.avatar;
           const role: WorkspaceRole = user.attributes.role;
-          const accountId: string = user.attributes.accountId;
 
-          if (!accountId || !role) {
+          if (!role) {
             return null;
           }
 
@@ -72,7 +71,9 @@ export const WorkspaceUsers = () => {
             <div key={user.id} className="flex items-center space-x-3">
               <Avatar id={user.id} name={name} avatar={avatar} />
               <div className="flex-grow">
-                <p className="text-sm font-medium leading-none">{name}</p>
+                <p className="text-sm font-medium leading-none">
+                  {user.attributes.name}
+                </p>
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
               <WorkspaceUserRoleDropdown userId={user.id} value={role} />

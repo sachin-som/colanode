@@ -14,7 +14,7 @@ import { FileNode } from '@/types/files';
 interface FileRow {
   id: string;
   attributes: string;
-  parent_id: string;
+  parent_id: string | null;
   type: string;
   download_progress?: number | null;
   created_at: string;

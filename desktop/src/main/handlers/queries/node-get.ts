@@ -60,7 +60,9 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
     };
   }
 
-  private async fetchNode(input: NodeGetQueryInput): Promise<SelectNode> {
+  private async fetchNode(
+    input: NodeGetQueryInput,
+  ): Promise<SelectNode | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );

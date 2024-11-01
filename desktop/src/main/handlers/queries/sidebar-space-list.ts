@@ -125,7 +125,7 @@ export class SidebarSpaceListQueryHandler
       .where('n.type', '=', NodeTypes.Message)
       .where('n.parent_id', 'in', channelIds)
       .where('un.last_seen_version_id', 'is', null)
-      .select(['n.parent_id as node_id'])
+      .select(['un.node_id'])
       .select((eb) => [
         eb.fn.count<number>('un.node_id').as('unread_count'),
         eb.fn.sum<number>('un.mentions_count').as('mentions_count'),
@@ -152,7 +152,10 @@ export class SidebarSpaceListQueryHandler
         .filter((n) => n.parentId === node.id)
         .sort((a, b) => compareString(a.index, b.index));
 
-      spaces.push(this.buildSpaceNode(node, children, unreadCounts));
+      const spaceNode = this.buildSpaceNode(node, children, unreadCounts);
+      if (spaceNode) {
+        spaces.push(spaceNode);
+      }
     }
 
     return spaces;
@@ -162,15 +165,25 @@ export class SidebarSpaceListQueryHandler
     node: LocalNode,
     children: LocalNode[],
     unreadCounts: UnreadCountRow[],
-  ): SidebarSpaceNode => {
+  ): SidebarSpaceNode | null => {
+    if (node.type !== 'space') {
+      return null;
+    }
+
+    const childrenNodes: SidebarNode[] = [];
+    for (const child of children) {
+      const childNode = this.buildSidearNode(child, unreadCounts);
+      if (childNode) {
+        childrenNodes.push(childNode);
+      }
+    }
+
     return {
       id: node.id,
       type: node.type,
-      name: node.attributes?.name ?? null,
-      avatar: node.attributes?.avatar ?? null,
-      children: children.map((child) =>
-        this.buildSidearNode(child, unreadCounts),
-      ),
+      name: node.attributes.name ?? null,
+      avatar: node.attributes.avatar ?? null,
+      children: childrenNodes,
       unreadCount: 0,
       mentionsCount: 0,
     };
@@ -179,8 +192,17 @@ export class SidebarSpaceListQueryHandler
   private buildSidearNode = (
     node: LocalNode,
     unreadCounts: UnreadCountRow[],
-  ): SidebarNode => {
+  ): SidebarNode | null => {
     const unreadCountRow = unreadCounts.find((r) => r.node_id === node.id);
+
+    if (
+      node.type !== 'channel' &&
+      node.type !== 'page' &&
+      node.type !== 'folder' &&
+      node.type !== 'database'
+    ) {
+      return null;
+    }
 
     return {
       id: node.id,

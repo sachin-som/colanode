@@ -11,6 +11,7 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface ViewDeleteDialogProps {
   id: string;
@@ -24,6 +25,7 @@ export const ViewDeleteDialog = ({
   onOpenChange,
 }: ViewDeleteDialogProps) => {
   const workspace = useWorkspace();
+  const database = useDatabase();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -46,8 +48,9 @@ export const ViewDeleteDialog = ({
             onClick={() => {
               mutate({
                 input: {
-                  type: 'node_delete',
-                  nodeId: id,
+                  type: 'view_delete',
+                  viewId: id,
+                  databaseId: database.id,
                   userId: workspace.userId,
                 },
                 onSuccess() {

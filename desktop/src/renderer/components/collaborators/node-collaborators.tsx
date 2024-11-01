@@ -17,7 +17,7 @@ export const NodeCollaborators = ({ nodeId }: NodeCollaboratorsProps) => {
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  if (isPending || !data) {
     return null;
   }
 

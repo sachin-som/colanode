@@ -52,6 +52,16 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
     }
 
     const chat = await this.fetchChat(input);
+    if (!chat) {
+      return {
+        hasChanges: true,
+        result: {
+          output: null,
+          state: {},
+        },
+      };
+    }
+
     const collaborators = await this.fetchCollaborators(input, chat);
 
     if (
@@ -88,7 +98,7 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
       .selectAll()
       .executeTakeFirst();
 
-    return chat;
+    return chat ?? null;
   }
 
   private async fetchCollaborators(
@@ -137,6 +147,10 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
     collaborators: SelectNode[],
   ): ChatNode | null => {
     const collaborator = mapNode(collaborators[0]);
+    if (collaborator.attributes.type !== 'user') {
+      return null;
+    }
+
     return {
       id: chat.id,
       name: collaborator.attributes.name ?? 'Unknown',

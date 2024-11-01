@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldDataType } from '@/types/databases';
+import { FieldType } from '@/registry';
 import {
   SquareCheck,
   User,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 interface FieldIconProps {
-  type?: FieldDataType;
+  type?: FieldType;
   className?: string;
 }
 
@@ -27,9 +27,9 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <SquareCheck className={className} />;
     case 'collaborator':
       return <User className={className} />;
-    case 'created_at':
+    case 'createdAt':
       return <Calendar className={className} />;
-    case 'created_by':
+    case 'createdBy':
       return <User className={className} />;
     case 'date':
       return <Calendar className={className} />;
@@ -37,7 +37,7 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <Mail className={className} />;
     case 'file':
       return <File className={className} />;
-    case 'multi_select':
+    case 'multiSelect':
       return <ListChecks className={className} />;
     case 'number':
       return <Hash className={className} />;

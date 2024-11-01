@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecordNode, SelectFieldNode } from '@/types/databases';
+import { SelectFieldAttributes } from '@/registry';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
 import {
   Popover,
@@ -7,33 +7,25 @@ import {
   PopoverContent,
 } from '@/renderer/components/ui/popover';
 import { SelectFieldOptions } from '@/renderer/components/databases/fields/select-field-options';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordSelectValueProps {
-  record: RecordNode;
-  field: SelectFieldNode;
+  field: SelectFieldAttributes;
 }
 
-export const RecordSelectValue = ({
-  record,
-  field,
-}: RecordSelectValueProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+export const RecordSelectValue = ({ field }: RecordSelectValueProps) => {
+  const record = useRecord();
 
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
-    record.attributes[field.id] ?? '',
+    record.getSelectValue(field),
   );
 
   React.useEffect(() => {
-    setSelectedValue(record.attributes[field.id] ?? '');
+    setSelectedValue(record.getSelectValue(field));
   }, [record.versionId]);
 
-  const selectedOption = field.options?.find(
-    (option) => option.id === selectedValue,
-  );
+  const selectedOption = field.options?.[selectedValue ?? ''];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -52,37 +44,21 @@ export const RecordSelectValue = ({
       <PopoverContent className="w-80 p-1">
         <SelectFieldOptions
           field={field}
-          values={[selectedValue]}
+          values={[selectedValue ?? '']}
           onSelect={(id) => {
-            if (isPending) {
-              return;
-            }
+            if (!record.canEdit) return;
+
+            setSelectedValue(id);
+            setOpen(false);
 
             if (selectedValue === id) {
-              setSelectedValue('');
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
+              record.removeFieldValue(field);
             } else {
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: id,
-                  userId: workspace.userId,
-                },
-                onSuccess() {
-                  setOpen(false);
-                },
+              record.updateFieldValue(field, {
+                type: 'select',
+                value: id,
               });
             }
-            setSelectedValue(id);
           }}
           allowAdd={true}
         />

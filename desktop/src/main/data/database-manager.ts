@@ -34,11 +34,11 @@ class DatabaseManager {
 
   public async getWorkspaceDatabase(
     userId: string,
-  ): Promise<Kysely<WorkspaceDatabaseSchema> | null> {
+  ): Promise<Kysely<WorkspaceDatabaseSchema>> {
     this.waitForInit();
 
     if (this.workspaceDatabases.has(userId)) {
-      return this.workspaceDatabases.get(userId);
+      return this.workspaceDatabases.get(userId)!;
     }
 
     //try and check if it's in database but hasn't been loaded yet
@@ -49,7 +49,7 @@ class DatabaseManager {
       .executeTakeFirst();
 
     if (!workspace) {
-      return null;
+      throw new Error('Workspace database not found');
     }
 
     const workspaceDatabase = await this.initWorkspaceDatabase(userId);

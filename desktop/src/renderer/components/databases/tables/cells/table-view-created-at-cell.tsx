@@ -1,20 +1,21 @@
-import { CreatedAtFieldNode, RecordNode } from '@/types/databases';
 import React from 'react';
+import { CreatedAtFieldAttributes } from '@/registry';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface TableViewCreatedAtCellProps {
-  record: RecordNode;
-  field: CreatedAtFieldNode;
+  field: CreatedAtFieldAttributes;
 }
 
 export const TableViewCreatedAtCell = ({
-  record,
   field,
 }: TableViewCreatedAtCellProps) => {
+  const record = useRecord();
+
+  const createdAt = new Date(record.createdAt);
   return (
     <div className="h-full w-full p-1 text-sm" data-field={field.id}>
       <p>
-        {record.createdAt.toLocaleDateString()}{' '}
-        {record.createdAt.toLocaleTimeString()}
+        {createdAt.toLocaleDateString()} {createdAt.toLocaleTimeString()}
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
-import { FieldNode, RecordNode } from '@/types/databases';
+import { RecordNode } from '@/types/nodes';
+import { FieldAttributes } from '@/registry';
 import { TableViewTextCell } from '@/renderer/components/databases/tables/cells/table-view-text-cell';
 import { TableViewNumberCell } from '@/renderer/components/databases/tables/cells/table-view-number-cell';
 import { TableViewBooleanCell } from '@/renderer/components/databases/tables/cells/table-view-boolean-cell';
@@ -14,38 +15,38 @@ import { TableViewDateCell } from '@/renderer/components/databases/tables/cells/
 
 interface TableViewFieldCellProps {
   record: RecordNode;
-  field: FieldNode;
+  field: FieldAttributes;
 }
 
 export const TableViewFieldCell = ({
   record,
   field,
 }: TableViewFieldCellProps) => {
-  switch (field.dataType) {
+  switch (field.type) {
     case 'text':
-      return <TableViewTextCell record={record} field={field} />;
+      return <TableViewTextCell field={field} />;
     case 'number':
-      return <TableViewNumberCell record={record} field={field} />;
+      return <TableViewNumberCell field={field} />;
     case 'boolean':
-      return <TableViewBooleanCell record={record} field={field} />;
-    case 'created_at':
-      return <TableViewCreatedAtCell record={record} field={field} />;
-    case 'created_by':
-      return <TableViewCreatedByCell record={record} field={field} />;
+      return <TableViewBooleanCell field={field} />;
+    case 'createdAt':
+      return <TableViewCreatedAtCell field={field} />;
+    case 'createdBy':
+      return <TableViewCreatedByCell field={field} />;
     case 'select':
-      return <TableViewSelectCell record={record} field={field} />;
+      return <TableViewSelectCell field={field} />;
     case 'phone':
-      return <TableViewPhoneCell record={record} field={field} />;
+      return <TableViewPhoneCell field={field} />;
     case 'email':
-      return <TableViewEmailCell record={record} field={field} />;
+      return <TableViewEmailCell field={field} />;
     case 'url':
-      return <TableViewUrlCell record={record} field={field} />;
-    case 'multi_select':
-      return <TableViewMultiSelectCell record={record} field={field} />;
+      return <TableViewUrlCell field={field} />;
+    case 'multiSelect':
+      return <TableViewMultiSelectCell field={field} />;
     case 'collaborator':
       return null;
     case 'date':
-      return <TableViewDateCell record={record} field={field} />;
+      return <TableViewDateCell field={field} />;
     case 'file':
       return null;
     default:

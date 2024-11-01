@@ -30,7 +30,7 @@ export const WorkspaceCreate = () => {
                 name: values.name,
                 description: values.description,
                 accountId: account.id,
-                avatar: values.avatar,
+                avatar: values.avatar ?? null,
               },
               onSuccess(output) {
                 navigate(`/${output.id}`);

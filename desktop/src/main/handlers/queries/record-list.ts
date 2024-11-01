@@ -9,29 +9,26 @@ import { MutationChange } from '@/operations/mutations';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { sql } from 'kysely';
 import {
-  BooleanFieldNode,
-  CreatedAtFieldNode,
-  DatabaseNode,
-  DateFieldNode,
-  EmailFieldNode,
-  FieldNode,
-  MultiSelectFieldNode,
-  NumberFieldNode,
-  PhoneFieldNode,
-  RecordNode,
-  SelectFieldNode,
-  TextFieldNode,
-  UrlFieldNode,
-  ViewFieldFilter,
-  ViewFilter,
-  ViewSort,
-} from '@/types/databases';
+  BooleanFieldAttributes,
+  CreatedAtFieldAttributes,
+  DateFieldAttributes,
+  EmailFieldAttributes,
+  FieldAttributes,
+  MultiSelectFieldAttributes,
+  NumberFieldAttributes,
+  PhoneFieldAttributes,
+  SelectFieldAttributes,
+  TextFieldAttributes,
+  UrlFieldAttributes,
+  ViewFieldFilterAttributes,
+  ViewFilterAttributes,
+  ViewSortAttributes,
+} from '@/registry';
 import { isStringArray } from '@/lib/utils';
-import { UserNode } from '@/types/users';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
-import { DatabaseGetQueryHandler } from '@/main/handlers/queries/database-get';
 import { isEqual } from 'lodash';
+import { DatabaseNode, RecordNode } from '@/types/nodes';
 
 export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>
@@ -93,8 +90,12 @@ export class RecordListQueryHandler
     );
 
     const database = await this.fetchDatabase(input.userId, input.databaseId);
-    const filterQuery = this.buildFiltersQuery(input.filters, database.fields);
-    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.fields) : 'n."index" ASC'}`;
+    const filterQuery = this.buildFiltersQuery(
+      input.filters,
+      database.attributes.fields,
+    );
+
+    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."index" ASC'}`;
     const offset = input.page * input.count;
     const query = sql<SelectNode>`
         WITH record_nodes AS (
@@ -126,66 +127,43 @@ export class RecordListQueryHandler
 
   private buildRecords = (rows: SelectNode[]): RecordNode[] => {
     const nodes = rows.map(mapNode);
-    const recordNodes = nodes.filter((node) => node.type === NodeTypes.Record);
+    const recordNodes: RecordNode[] = [];
 
-    const authorNodes = nodes.filter((node) => node.type === NodeTypes.User);
-    const records: RecordNode[] = [];
-    const authorMap = new Map<string, UserNode>();
+    for (const node of nodes) {
+      if (node.type !== 'record') {
+        continue;
+      }
 
-    for (const author of authorNodes) {
-      const name = author.attributes.name;
-      const avatar = author.attributes.avatar;
-      const email = author.attributes.email;
-
-      authorMap.set(author.id, {
-        id: author.id,
-        name: name ?? 'Unknown User',
-        email,
-        avatar,
-      });
+      recordNodes.push(node);
     }
 
-    for (const node of recordNodes) {
-      const name = node.attributes.name;
-      const author = authorMap.get(node.createdBy);
-      const record: RecordNode = {
-        id: node.id,
-        parentId: node.parentId,
-        name: name ?? null,
-        index: node.index,
-        attributes: node.attributes,
-        createdAt: new Date(node.createdAt),
-        createdBy: author ?? {
-          id: node.createdBy,
-          name: 'Unknown User',
-          email: 'unknown@neuron.com',
-          avatar: null,
-        },
-        versionId: node.versionId,
-      };
-
-      records.push(record);
-    }
-
-    return records;
+    return recordNodes;
   };
 
   private async fetchDatabase(
     userId: string,
     databaseId: string,
   ): Promise<DatabaseNode> {
-    const handler = new DatabaseGetQueryHandler();
-    const result = await handler.handleQuery({
-      type: 'database_get',
-      databaseId: databaseId,
-      userId: userId,
-    });
-    return result.output;
+    const workspaceDatabase =
+      await databaseManager.getWorkspaceDatabase(userId);
+
+    const row = await workspaceDatabase
+      .selectFrom('nodes')
+      .where('id', '=', databaseId)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!row) {
+      throw new Error('Database not found');
+    }
+
+    const database = mapNode(row) as DatabaseNode;
+    return database;
   }
 
   private buildFiltersQuery = (
-    filters: ViewFilter[],
-    fields: FieldNode[],
+    filters: ViewFilterAttributes[],
+    fields: Record<string, FieldAttributes>,
   ): string => {
     if (filters.length === 0) {
       return '';
@@ -203,26 +181,26 @@ export class RecordListQueryHandler
   };
 
   private buildFilterQuery = (
-    filter: ViewFilter,
-    fields: FieldNode[],
+    filter: ViewFilterAttributes,
+    fields: Record<string, FieldAttributes>,
   ): string | null => {
     if (filter.type === 'group') {
       return null;
     }
 
-    const field = fields.find((field) => field.id === filter.fieldId);
+    const field = fields[filter.fieldId];
     if (!field) {
       return null;
     }
 
-    switch (field.dataType) {
+    switch (field.type) {
       case 'boolean':
         return this.buildBooleanFilterQuery(filter, field);
       case 'collaborator':
         return null;
-      case 'created_at':
+      case 'createdAt':
         return this.buildCreatedAtFilterQuery(filter, field);
-      case 'created_by':
+      case 'createdBy':
         return null;
       case 'date':
         return this.buildDateFilterQuery(filter, field);
@@ -230,7 +208,7 @@ export class RecordListQueryHandler
         return this.buildEmailFilterQuery(filter, field);
       case 'file':
         return null;
-      case 'multi_select':
+      case 'multiSelect':
         return this.buildMultiSelectFilterQuery(filter, field);
       case 'number':
         return this.buildNumberFilterQuery(filter, field);
@@ -248,23 +226,23 @@ export class RecordListQueryHandler
   };
 
   buildBooleanFilterQuery = (
-    filter: ViewFieldFilter,
-    field: BooleanFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: BooleanFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_true') {
-      return `json_extract(n.attributes, '$.${field.id}') = true`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') = true`;
     }
 
     if (filter.operator === 'is_false') {
-      return `(json_extract(n.attributes, '$.${field.id}') = false OR json_extract(n.attributes, '$.${field.id}') IS NULL)`;
+      return `(json_extract(n.attributes, '$.fields.${field.id}.value') = false OR json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL)`;
     }
 
     return null;
   };
 
   private buildNumberFilterQuery = (
-    filter: ViewFieldFilter,
-    field: NumberFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: NumberFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -312,12 +290,12 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${operator} ${value}`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} ${value}`;
   };
 
   private buildTextFilterQuery = (
-    filter: ViewFieldFilter,
-    field: TextFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: TextFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -370,17 +348,13 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildEmailFilterQuery = (
-    filter: ViewFilter,
-    field: EmailFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: EmailFieldAttributes,
   ): string | null => {
-    if (filter.type === 'group') {
-      return null;
-    }
-
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
     }
@@ -432,12 +406,12 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildPhoneFilterQuery = (
-    filter: ViewFieldFilter,
-    field: PhoneFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: PhoneFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -490,12 +464,12 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildUrlFilterQuery = (
-    filter: ViewFieldFilter,
-    field: UrlFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: UrlFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -548,12 +522,12 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildSelectFilterQuery = (
-    filter: ViewFieldFilter,
-    field: SelectFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: SelectFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -574,24 +548,24 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `json_extract(n.attributes, '$.${field.id}') IN (${values})`;
+        return `json_extract(n.attributes, '$.fields.${field.id}.value') IN (${values})`;
       case 'is_not_in':
-        return `json_extract(n.attributes, '$.${field.id}') NOT IN (${values})`;
+        return `json_extract(n.attributes, '$.fields.${field.id}.value') NOT IN (${values})`;
       default:
         return null;
     }
   };
 
   private buildMultiSelectFilterQuery = (
-    filter: ViewFieldFilter,
-    field: MultiSelectFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: MultiSelectFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
-      return `json_extract(n.attributes, '$.${field.id}') IS NULL OR json_array_length(json_extract(n.attributes, '$.${field.id}')) = 0`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) = 0`;
     }
 
     if (filter.operator === 'is_not_empty') {
-      return `json_extract(n.attributes, '$.${field.id}') IS NOT NULL AND json_array_length(json_extract(n.attributes, '$.${field.id}')) > 0`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NOT NULL AND json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) > 0`;
     }
 
     if (!isStringArray(filter.value)) {
@@ -605,17 +579,17 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.${field.id}')) WHERE json_each.value IN (${values}))`;
+        return `EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       case 'is_not_in':
-        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.${field.id}')) WHERE json_each.value IN (${values}))`;
+        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       default:
         return null;
     }
   };
 
   private buildDateFilterQuery = (
-    filter: ViewFieldFilter,
-    field: DateFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: DateFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -668,12 +642,12 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `DATE(json_extract(n.attributes, '$.${field.id}')) ${operator} '${dateString}'`;
+    return `DATE(json_extract(n.attributes, '$.fields.${field.id}.value')) ${operator} '${dateString}'`;
   };
 
   private buildCreatedAtFilterQuery = (
-    filter: ViewFieldFilter,
-    field: CreatedAtFieldNode,
+    filter: ViewFieldFilterAttributes,
+    field: CreatedAtFieldAttributes,
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return `n.created_at IS NULL`;
@@ -730,11 +704,11 @@ export class RecordListQueryHandler
   };
 
   private buildIsEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(n.attributes, '$.${fieldId}') IS NULL`;
+    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NULL`;
   };
 
   private buildIsNotEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(n.attributes, '$.${fieldId}') IS NOT NULL`;
+    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NOT NULL`;
   };
 
   private joinIds = (ids: string[]): string => {
@@ -742,8 +716,8 @@ export class RecordListQueryHandler
   };
 
   private buildSortOrdersQuery = (
-    sorts: ViewSort[],
-    fields: FieldNode[],
+    sorts: ViewSortAttributes[],
+    fields: Record<string, FieldAttributes>,
   ): string => {
     return sorts
       .map((sort) => this.buildSortOrderQuery(sort, fields))
@@ -752,22 +726,22 @@ export class RecordListQueryHandler
   };
 
   private buildSortOrderQuery = (
-    sort: ViewSort,
-    fields: FieldNode[],
+    sort: ViewSortAttributes,
+    fields: Record<string, FieldAttributes>,
   ): string | null => {
-    const field = fields.find((field) => field.id === sort.fieldId);
+    const field = fields[sort.fieldId];
     if (!field) {
       return null;
     }
 
-    if (field.dataType === 'created_at') {
+    if (field.type === 'createdAt') {
       return `n.created_at ${sort.direction}`;
     }
 
-    if (field.dataType === 'created_by') {
+    if (field.type === 'createdBy') {
       return `n.created_by_id ${sort.direction}`;
     }
 
-    return `json_extract(n.attributes, '$.${field.id}') ${sort.direction}`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${sort.direction}`;
   };
 }

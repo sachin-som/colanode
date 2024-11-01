@@ -28,7 +28,7 @@ interface SpaceUpdateFormProps {
 const formSchema = z.object({
   name: z.string(),
   description: z.string(),
-  avatar: z.string(),
+  avatar: z.string().nullable().optional(),
 });
 
 export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
@@ -52,11 +52,11 @@ export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
   });
 
   React.useEffect(() => {
-    if (data) {
+    if (data && data.attributes.type === 'space') {
       form.reset({
         name: data.attributes.name,
-        description: data.attributes.description,
-        avatar: data.attributes.avatar,
+        description: data.attributes.description ?? '',
+        avatar: data.attributes.avatar ?? null,
       });
     }
   }, [isLoadingSpace, data]);

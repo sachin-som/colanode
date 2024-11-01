@@ -17,7 +17,7 @@ export const AvatarUpload = ({ onUpload }: AvatarUploadProps) => {
   const [url, setUrl] = React.useState<string | undefined>(undefined);
 
   const handleSubmit = async (url: string) => {
-    console.log(url);
+    // TODO
   };
 
   return (

@@ -145,6 +145,8 @@ export const MessageEditor = React.forwardRef<
           'Something went wrong adding file to the message. Please try again!',
         variant: 'destructive',
       });
+
+      return;
     }
 
     editor.chain().focus().addFilePlaceholder(fileMetadata).run();

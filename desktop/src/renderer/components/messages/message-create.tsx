@@ -68,8 +68,12 @@ export const MessageCreate = React.forwardRef<
             }
 
             const messageContent = content;
+            if (!messageContent) {
+              return;
+            }
+
             if (replyTo) {
-              messageContent.content.unshift({
+              messageContent.unshift({
                 type: 'messageReference',
                 attrs: {
                   id: replyTo.id,

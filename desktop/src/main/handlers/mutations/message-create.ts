@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { EditorNodeTypes, NodeRole, NodeTypes } from '@/lib/constants';
+import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import {
   MutationChange,
@@ -8,16 +8,12 @@ import {
   MutationResult,
 } from '@/operations/mutations';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
-import { fromUint8Array } from 'js-base64';
-import { LocalCreateNodeChangeData } from '@/types/sync';
-import { applyChangeToAttributesMap, mapContentsToBlocks } from '@/lib/editor';
+import { mapContentsToBlocks } from '@/lib/editor';
 import { fileManager } from '@/main/file-manager';
-import {
-  CreateChange,
-  CreateDownload,
-  CreateNode,
-  CreateUpload,
-} from '@/main/data/workspace/schema';
+import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
+import { LocalNodeAttributes } from '@/types/nodes';
+import { Block, FileAttributes, MessageAttributes } from '@/registry';
+import { nodeManager } from '@/main/node-manager';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -29,31 +25,28 @@ export class MessageCreateMutationHandler
       input.userId,
     );
 
-    const nodesToCreate: CreateNode[] = [];
+    const nodeAttributes: LocalNodeAttributes[] = [];
     const downloadsToCreate: CreateDownload[] = [];
     const uploadsToCreate: CreateUpload[] = [];
-    const changesToCreate: CreateChange[] = [];
 
     const messageId = generateId(IdType.Message);
-    const messageVersionId = generateId(IdType.Version);
     const createdAt = new Date().toISOString();
     const blocks = mapContentsToBlocks(
       messageId,
-      input.content.content,
+      input.content.content ?? [],
       new Map(),
     );
 
     // check if there are nested nodes (files, pages, folders etc.)
     for (const block of blocks) {
       if (block.type === EditorNodeTypes.FilePlaceholder) {
-        const path = block.attrs.path;
+        const path = block.attrs?.path;
         const metadata = fileManager.getFileMetadata(path);
         if (!metadata) {
           throw new Error('Invalid file');
         }
 
         const fileId = generateId(IdType.File);
-        const fileVersionId = generateId(IdType.Version);
 
         block.id = fileId;
         block.type = NodeTypes.File;
@@ -81,17 +74,17 @@ export class MessageCreateMutationHandler
           fileAttributesMap.set('mimeType', metadata.mimeType);
         });
 
-        const fileAttributes = JSON.stringify(fileAttributesMap.toJSON());
-        const encodedFileState = fromUint8Array(Y.encodeStateAsUpdate(fileDoc));
+        const fileAttributes: FileAttributes = {
+          type: 'file',
+          parentId: messageId,
+          name: metadata.name,
+          fileName: metadata.name,
+          mimeType: metadata.mimeType,
+          size: metadata.size,
+          extension: metadata.extension,
+        };
 
-        nodesToCreate.push({
-          id: fileId,
-          attributes: fileAttributes,
-          state: encodedFileState,
-          created_at: createdAt,
-          created_by: input.userId,
-          version_id: fileVersionId,
-        });
+        nodeAttributes.push(fileAttributes);
 
         downloadsToCreate.push({
           node_id: fileId,
@@ -109,50 +102,30 @@ export class MessageCreateMutationHandler
       }
     }
 
-    const messageDoc = new Y.Doc({
-      guid: messageId,
-    });
+    const messageAttributes: MessageAttributes = {
+      type: 'message',
+      parentId: input.conversationId,
+      content: blocks.reduce(
+        (acc, block) => {
+          acc[block.id] = block;
+          return acc;
+        },
+        {} as Record<string, Block>,
+      ),
+      reactions: {},
+    };
 
-    const messageAttributesMap = messageDoc.getMap('attributes');
-    messageDoc.transact(() => {
-      messageAttributesMap.set('type', NodeTypes.Message);
-      messageAttributesMap.set('parentId', input.conversationId);
-      applyChangeToAttributesMap(messageAttributesMap, blocks);
-    });
-
-    const messageAttributes = JSON.stringify(messageAttributesMap.toJSON());
-    const encodedMessageState = fromUint8Array(
-      Y.encodeStateAsUpdate(messageDoc),
-    );
-
-    nodesToCreate.unshift({
-      id: messageId,
-      attributes: messageAttributes,
-      state: encodedMessageState,
-      created_at: createdAt,
-      created_by: input.userId,
-      version_id: messageVersionId,
-    });
-
-    for (const nodeToCreate of nodesToCreate) {
-      const changeData: LocalCreateNodeChangeData = {
-        type: 'node_create',
-        id: nodeToCreate.id,
-        state: nodeToCreate.state,
-        createdAt: nodeToCreate.created_at,
-        createdBy: nodeToCreate.created_by,
-        versionId: nodeToCreate.version_id,
-      };
-
-      changesToCreate.push({
-        data: JSON.stringify(changeData),
-        created_at: createdAt,
-      });
-    }
+    nodeAttributes.unshift(messageAttributes);
 
     await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx.insertInto('nodes').values(nodesToCreate).execute();
-      await trx.insertInto('changes').values(changesToCreate).execute();
+      for (const nodeAttribute of nodeAttributes) {
+        await nodeManager.createNode(
+          trx,
+          input.userId,
+          messageId,
+          nodeAttribute,
+        );
+      }
 
       if (uploadsToCreate.length > 0) {
         await trx.insertInto('uploads').values(uploadsToCreate).execute();

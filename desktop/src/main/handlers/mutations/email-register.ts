@@ -53,6 +53,7 @@ export class EmailRegisterMutationHandler
           email: data.account.email,
           token: data.account.token,
           server: server.domain,
+          status: 'active',
         })
         .execute();
 

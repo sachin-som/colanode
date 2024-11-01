@@ -1,9 +1,20 @@
-export type LocalNode = {
+import {
+  ChannelAttributes,
+  ChatAttributes,
+  DatabaseAttributes,
+  FileAttributes,
+  FolderAttributes,
+  MessageAttributes,
+  PageAttributes,
+  RecordAttributes,
+  SpaceAttributes,
+  UserAttributes,
+} from '@/registry';
+
+type LocalNodeBase = {
   id: string;
   parentId: string | null;
-  type: string;
   index: string | null;
-  attributes: LocalNodeAttributes;
   state: string;
   createdAt: string;
   createdBy: string;
@@ -15,44 +26,86 @@ export type LocalNode = {
   serverVersionId: string | null;
 };
 
-export type LocalNodeAttributes = {
-  type: string;
-  parentId?: string | null;
-  index?: string | null;
-  content?: Record<string, NodeBlock> | null;
-  [key: string]: any;
+export type ChannelNode = LocalNodeBase & {
+  type: 'channel';
+  attributes: ChannelAttributes;
 };
 
-export type NodeBlock = {
-  id: string;
-  type: string;
-  index: string;
-  parentId: string;
-  content: NodeBlockContent[] | null;
-  attrs: Record<string, any> | null;
+export type ChatNode = LocalNodeBase & {
+  type: 'chat';
+  attributes: ChatAttributes;
 };
 
-export type NodeBlockContent = {
-  type: string;
-  text?: string | null;
-  marks?: NodeBlocContentkMark[];
+export type DatabaseNode = LocalNodeBase & {
+  type: 'database';
+  attributes: DatabaseAttributes;
 };
 
-export type NodeBlocContentkMark = {
-  type: string;
-  attrs: Record<string, any>;
+export type FileNode = LocalNodeBase & {
+  type: 'file';
+  attributes: FileAttributes;
 };
 
-export type LocalNodeWithChildren = LocalNode & {
-  children: LocalNodeWithChildren[];
+export type FolderNode = LocalNodeBase & {
+  type: 'folder';
+  attributes: FolderAttributes;
 };
+
+export type MessageNode = LocalNodeBase & {
+  type: 'message';
+  attributes: MessageAttributes;
+};
+
+export type PageNode = LocalNodeBase & {
+  type: 'page';
+  attributes: PageAttributes;
+};
+
+export type RecordNode = LocalNodeBase & {
+  type: 'record';
+  attributes: RecordAttributes;
+};
+
+export type SpaceNode = LocalNodeBase & {
+  type: 'space';
+  attributes: SpaceAttributes;
+};
+
+export type UserNode = LocalNodeBase & {
+  type: 'user';
+  attributes: UserAttributes;
+};
+
+export type LocalNode =
+  | ChannelNode
+  | ChatNode
+  | DatabaseNode
+  | FileNode
+  | FolderNode
+  | MessageNode
+  | PageNode
+  | RecordNode
+  | SpaceNode
+  | UserNode;
+
+export type LocalNodeAttributes =
+  | UserAttributes
+  | SpaceAttributes
+  | DatabaseAttributes
+  | ChannelAttributes
+  | ChatAttributes
+  | FileAttributes
+  | FolderAttributes
+  | MessageAttributes
+  | PageAttributes
+  | RecordAttributes;
 
 export type ServerNode = {
   id: string;
   parentId: string | null;
   type: string;
   index: string | null;
-  attributes: ServerNodeAttributes;
+  attributes: LocalNodeAttributes;
   state: string;
   createdAt: string;
   createdBy: string;
@@ -61,19 +114,6 @@ export type ServerNode = {
   versionId: string;
   serverCreatedAt: string | null;
   serverUpdatedAt: string | null;
-};
-
-export type ServerNodeAttributes = {
-  type: string;
-  parentId?: string | null;
-  index?: string | null;
-  content?: NodeBlockContent[] | null;
-  [key: string]: any;
-};
-
-export type NodeInsertInput = {
-  id: string;
-  attributes: LocalNodeAttributes;
 };
 
 export type NodeCollaboratorsWrapper = {

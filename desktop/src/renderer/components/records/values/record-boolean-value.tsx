@@ -1,62 +1,41 @@
 import React from 'react';
 import { Checkbox } from '@/renderer/components/ui/checkbox';
-import { BooleanFieldNode, RecordNode } from '@/types/databases';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { BooleanFieldAttributes } from '@/registry';
+import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordBooleanValueProps {
-  record: RecordNode;
-  field: BooleanFieldNode;
+  field: BooleanFieldAttributes;
 }
 
-export const RecordBooleanValue = ({
-  record,
-  field,
-}: RecordBooleanValueProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
-
-  const canEdit = true;
+export const RecordBooleanValue = ({ field }: RecordBooleanValueProps) => {
+  const record = useRecord();
 
   const [input, setInput] = React.useState<boolean>(
-    (record.attributes[field.id] as boolean) ?? false,
+    record.getBooleanValue(field),
   );
 
   React.useEffect(() => {
-    setInput((record.attributes[field.id] as boolean) ?? false);
+    setInput(record.getBooleanValue(field));
   }, [record.versionId]);
 
   return (
     <div className="flex h-full w-full flex-row items-center justify-start p-1">
       <Checkbox
         checked={input}
-        disabled={isPending || !canEdit}
+        disabled={!record.canEdit}
         onCheckedChange={(e) => {
-          if (isPending) return;
-          if (!canEdit) return;
+          if (!record.canEdit) return;
 
           if (typeof e === 'boolean') {
             setInput(e.valueOf());
             const checked = e.valueOf();
             if (checked) {
-              mutate({
-                input: {
-                  type: 'node_attribute_set',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  value: checked,
-                  userId: workspace.userId,
-                },
+              record.updateFieldValue(field, {
+                type: 'boolean',
+                value: checked,
               });
             } else {
-              mutate({
-                input: {
-                  type: 'node_attribute_delete',
-                  nodeId: record.id,
-                  attribute: field.id,
-                  userId: workspace.userId,
-                },
-              });
+              record.removeFieldValue(field);
             }
           }
         }}

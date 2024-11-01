@@ -2,7 +2,7 @@ import React from 'react';
 import isHotkey from 'is-hotkey';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { RecordNode } from '@/types/databases';
+import { RecordNode } from '@/types/nodes';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Maximize2 } from 'lucide-react';
 
@@ -56,14 +56,14 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
 
   const { mutate, isPending } = useMutation();
   const canEdit = true;
-  const hasName = record.name && record.name.length > 0;
+  const hasName = record.attributes.name && record.attributes.name.length > 0;
 
   const handleSave = (newName: string) => {
     mutate({
       input: {
         type: 'node_attribute_set',
         nodeId: record.id,
-        attribute: 'name',
+        path: 'name',
         value: newName,
         userId: workspace.userId,
       },
@@ -77,7 +77,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
     <div className="group relative flex h-full w-full items-center">
       {isEditing ? (
         <NameEditor
-          initialValue={record.name ?? ''}
+          initialValue={record.attributes.name ?? ''}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />
@@ -88,7 +88,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
             className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm"
           >
             {hasName ? (
-              record.name
+              record.attributes.name
             ) : (
               <span className="text-muted-foreground">Unnamed</span>
             )}

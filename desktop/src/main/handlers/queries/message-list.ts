@@ -128,6 +128,10 @@ export class MessageListQueryHandler
     const authorMap = new Map<string, UserNode>();
     for (const authorRow of authorRows) {
       const authorNode = mapNode(authorRow);
+      if (authorNode.type !== 'user') {
+        continue;
+      }
+
       const name = authorNode.attributes.name;
       const email = authorNode.attributes.email;
       const avatar = authorNode.attributes.avatar;
@@ -142,6 +146,10 @@ export class MessageListQueryHandler
 
     for (const messageRow of messageRows) {
       const messageNode = mapNode(messageRow);
+      if (messageNode.type !== 'message') {
+        continue;
+      }
+
       const author = authorMap.get(messageNode.createdBy);
       const reactions =
         (messageNode.attributes.reactions as Record<string, string[]>) ?? {};

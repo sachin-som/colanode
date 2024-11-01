@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhoneFieldNode, ViewFieldFilter } from '@/types/databases';
+import { PhoneFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -14,20 +14,20 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { phoneFieldFilterOperators } from '@/lib/databases';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewPhoneFieldFilterProps {
-  field: PhoneFieldNode;
-  filter: ViewFieldFilter;
+  field: PhoneFieldAttributes;
+  filter: ViewFieldFilterAttributes;
 }
 
 export const ViewPhoneFieldFilter = ({
   field,
   filter,
 }: ViewPhoneFieldFilterProps) => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const operator =
     phoneFieldFilterOperators.find(
@@ -41,12 +41,12 @@ export const ViewPhoneFieldFilter = ({
 
   return (
     <Popover
-      open={viewSearch.isFieldFilterOpened(filter.id)}
+      open={view.isFieldFilterOpened(filter.id)}
       onOpenChange={() => {
-        if (viewSearch.isFieldFilterOpened(filter.id)) {
-          viewSearch.closeFieldFilter(filter.id);
+        if (view.isFieldFilterOpened(filter.id)) {
+          view.closeFieldFilter(filter.id);
         } else {
-          viewSearch.openFieldFilter(filter.id);
+          view.openFieldFilter(filter.id);
         }
       }}
     >
@@ -63,7 +63,7 @@ export const ViewPhoneFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -84,7 +84,7 @@ export const ViewPhoneFieldFilter = ({
                         ? null
                         : phoneValue;
 
-                    viewSearch.updateFilter(filter.id, {
+                    view.updateFilter(filter.id, {
                       ...filter,
                       operator: operator.value,
                       value: value,
@@ -100,7 +100,7 @@ export const ViewPhoneFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              viewSearch.removeFilter(filter.id);
+              view.removeFilter(filter.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -110,7 +110,7 @@ export const ViewPhoneFieldFilter = ({
           <SmartTextInput
             value={phoneValue}
             onChange={(value) => {
-              viewSearch.updateFilter(filter.id, {
+              view.updateFilter(filter.id, {
                 ...filter,
                 value: value,
               });

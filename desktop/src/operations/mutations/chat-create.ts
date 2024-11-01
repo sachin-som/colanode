@@ -1,5 +1,6 @@
 export type ChatCreateMutationInput = {
   type: 'chat_create';
+  workspaceId: string;
   userId: string;
   otherUserId: string;
 };

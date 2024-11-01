@@ -69,7 +69,7 @@ export class DocumentGetQueryHandler
 
   private async fetchDocument(
     input: DocumentGetQueryInput,
-  ): Promise<SelectNode | null> {
+  ): Promise<SelectNode | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId,
     );
@@ -81,7 +81,9 @@ export class DocumentGetQueryHandler
       .executeTakeFirst();
   }
 
-  private buildOutput(document: SelectNode | null): DocumentGetQueryOutput {
+  private buildOutput(
+    document: SelectNode | null | undefined,
+  ): DocumentGetQueryOutput {
     if (!document) {
       return {
         content: null,
@@ -90,7 +92,14 @@ export class DocumentGetQueryHandler
     }
 
     const attributes = JSON.parse(document.attributes) as LocalNodeAttributes;
-    const nodeBlocks = Object.values(attributes?.content ?? {});
+    if (attributes.type !== 'page' && attributes.type !== 'record') {
+      return {
+        content: null,
+        hash: null,
+      };
+    }
+
+    const nodeBlocks = Object.values(attributes.content ?? {});
     const contents = mapBlocksToContents(document.id, nodeBlocks);
 
     if (!contents.length) {

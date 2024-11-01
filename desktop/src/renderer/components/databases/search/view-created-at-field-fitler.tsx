@@ -1,5 +1,8 @@
 import React from 'react';
-import { CreatedAtFieldNode, ViewFieldFilter } from '@/types/databases';
+import {
+  CreatedAtFieldAttributes,
+  ViewFieldFilterAttributes,
+} from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -14,20 +17,20 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { dateFieldFilterOperators } from '@/lib/databases';
 import { DatePicker } from '@/renderer/components/ui/date-picker';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '../fields/field-icon';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewCreatedAtFieldFilterProps {
-  field: CreatedAtFieldNode;
-  filter: ViewFieldFilter;
+  field: CreatedAtFieldAttributes;
+  filter: ViewFieldFilterAttributes;
 }
 
 export const ViewCreatedAtFieldFilter = ({
   field,
   filter,
 }: ViewCreatedAtFieldFilterProps) => {
-  const viewSearch = useViewSearch();
+  const view = useView();
 
   const operator =
     dateFieldFilterOperators.find(
@@ -39,12 +42,12 @@ export const ViewCreatedAtFieldFilter = ({
 
   return (
     <Popover
-      open={viewSearch.isFieldFilterOpened(filter.id)}
+      open={view.isFieldFilterOpened(filter.id)}
       onOpenChange={() => {
-        if (viewSearch.isFieldFilterOpened(filter.id)) {
-          viewSearch.closeFieldFilter(filter.id);
+        if (view.isFieldFilterOpened(filter.id)) {
+          view.closeFieldFilter(filter.id);
         } else {
-          viewSearch.openFieldFilter(filter.id);
+          view.openFieldFilter(filter.id);
         }
       }}
     >
@@ -61,7 +64,7 @@ export const ViewCreatedAtFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -82,10 +85,10 @@ export const ViewCreatedAtFieldFilter = ({
                         ? null
                         : dateValue?.toISOString();
 
-                    viewSearch.updateFilter(filter.id, {
+                    view.updateFilter(filter.id, {
                       ...filter,
                       operator: operator.value,
-                      value: value,
+                      value: value ?? null,
                     });
                   }}
                 >
@@ -98,7 +101,7 @@ export const ViewCreatedAtFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              viewSearch.removeFilter(filter.id);
+              view.removeFilter(filter.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -108,12 +111,12 @@ export const ViewCreatedAtFieldFilter = ({
           value={dateValue}
           onChange={(newValue) => {
             if (newValue === null || newValue === undefined) {
-              viewSearch.updateFilter(filter.id, {
+              view.updateFilter(filter.id, {
                 ...filter,
                 value: null,
               });
             } else {
-              viewSearch.updateFilter(filter.id, {
+              view.updateFilter(filter.id, {
                 ...filter,
                 value: newValue.toISOString(),
               });

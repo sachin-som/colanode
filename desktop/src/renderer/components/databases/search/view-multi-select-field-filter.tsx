@@ -1,5 +1,8 @@
 import React from 'react';
-import { MultiSelectFieldNode, ViewFieldFilter } from '@/types/databases';
+import {
+  MultiSelectFieldAttributes,
+  ViewFieldFilterAttributes,
+} from '@/registry';
 import {
   Popover,
   PopoverContent,
@@ -15,28 +18,28 @@ import { Button } from '@/renderer/components/ui/button';
 import { selectFieldFilterOperators } from '@/lib/databases';
 import { SelectFieldOptions } from '@/renderer/components/databases/fields/select-field-options';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { useViewSearch } from '@/renderer/contexts/view-search';
+import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewMultiSelectFieldFilterProps {
-  field: MultiSelectFieldNode;
-  filter: ViewFieldFilter;
+  field: MultiSelectFieldAttributes;
+  filter: ViewFieldFilterAttributes;
 }
 
 export const ViewMultiSelectFieldFilter = ({
   field,
   filter,
 }: ViewMultiSelectFieldFilterProps) => {
-  const viewSearch = useViewSearch();
-
+  const view = useView();
+  const selectOptions = Object.values(field.options ?? {});
   const operator =
     selectFieldFilterOperators.find(
       (operator) => operator.value === filter.operator,
     ) ?? selectFieldFilterOperators[0];
 
   const selectOptionIds = (filter.value as string[]) ?? [];
-  const selectedOptions = field.options.filter((option) =>
+  const selectedOptions = selectOptions.filter((option) =>
     selectOptionIds.includes(option.id),
   );
 
@@ -45,12 +48,12 @@ export const ViewMultiSelectFieldFilter = ({
 
   return (
     <Popover
-      open={viewSearch.isFieldFilterOpened(filter.id)}
+      open={view.isFieldFilterOpened(filter.id)}
       onOpenChange={() => {
-        if (viewSearch.isFieldFilterOpened(filter.id)) {
-          viewSearch.closeFieldFilter(filter.id);
+        if (view.isFieldFilterOpened(filter.id)) {
+          view.closeFieldFilter(filter.id);
         } else {
-          viewSearch.openFieldFilter(filter.id);
+          view.openFieldFilter(filter.id);
         }
       }}
     >
@@ -67,7 +70,7 @@ export const ViewMultiSelectFieldFilter = ({
       <PopoverContent className="flex w-96 flex-col gap-2 p-2">
         <div className="flex flex-row items-center gap-3 text-sm">
           <div className="flex flex-row items-center gap-0.5 p-1">
-            <FieldIcon type={field.dataType} className="size-4" />
+            <FieldIcon type={field.type} className="size-4" />
             <p>{field.name}</p>
           </div>
           <DropdownMenu>
@@ -88,7 +91,7 @@ export const ViewMultiSelectFieldFilter = ({
                         ? []
                         : selectOptionIds;
 
-                    viewSearch.updateFilter(filter.id, {
+                    view.updateFilter(filter.id, {
                       ...filter,
                       operator: operator.value,
                       value: value,
@@ -104,7 +107,7 @@ export const ViewMultiSelectFieldFilter = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              viewSearch.removeFilter(filter.id);
+              view.removeFilter(filter.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -137,7 +140,7 @@ export const ViewMultiSelectFieldFilter = ({
                     ? selectOptionIds.filter((value) => value !== id)
                     : [...selectOptionIds, id];
 
-                  viewSearch.updateFilter(filter.id, {
+                  view.updateFilter(filter.id, {
                     ...filter,
                     value: values,
                   });

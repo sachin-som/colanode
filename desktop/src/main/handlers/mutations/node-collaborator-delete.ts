@@ -1,7 +1,7 @@
-import { updateNodeAtomically } from '@/main/utils';
+import { nodeManager } from '@/main/node-manager';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { NodeCollaboratorDeleteMutationInput } from '@/operations/mutations/node-collaborator-delete';
-import * as Y from 'yjs';
+import { unset } from 'lodash';
 
 export class NodeCollaboratorDeleteMutationHandler
   implements MutationHandler<NodeCollaboratorDeleteMutationInput>
@@ -9,24 +9,10 @@ export class NodeCollaboratorDeleteMutationHandler
   async handleMutation(
     input: NodeCollaboratorDeleteMutationInput,
   ): Promise<MutationResult<NodeCollaboratorDeleteMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.nodeId,
-      (attributesMap) => {
-        const collaboratorsMap = attributesMap.get(
-          'collaborators',
-        ) as Y.Map<any>;
-        collaboratorsMap.delete(input.collaboratorId);
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+      unset(attributes, `collaborators.${input.collaboratorId}`);
+      return attributes;
+    });
 
     return {
       output: {

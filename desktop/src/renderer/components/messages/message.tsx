@@ -18,13 +18,13 @@ import { MessagesSquare, Reply } from 'lucide-react';
 
 interface MessageProps {
   message: MessageNode;
-  previousMessage?: MessageNode;
+  previousMessage?: MessageNode | null;
   onReply: (replyTo: MessageNode | null) => void;
 }
 
 const shouldDisplayUserInfo = (
   message: MessageNode,
-  previousMessage?: MessageNode,
+  previousMessage?: MessageNode | null,
 ) => {
   if (!previousMessage) {
     return true;

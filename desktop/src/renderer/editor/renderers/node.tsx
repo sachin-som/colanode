@@ -75,7 +75,7 @@ export const NodeRenderer = ({
           <MessageReferenceRenderer node={node} keyPrefix={keyPrefix} />
         ))
         .with('file', () => <FileRenderer node={node} keyPrefix={keyPrefix} />)
-        .otherwise(null)}
+        .otherwise(() => null)}
     </MarkRenderer>
   );
 };

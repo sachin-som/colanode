@@ -9,8 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
-import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface FieldDeleteDialogProps {
   id: string;
@@ -23,8 +22,7 @@ export const FieldDeleteDialog = ({
   open,
   onOpenChange,
 }: FieldDeleteDialogProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+  const database = useDatabase();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -42,18 +40,9 @@ export const FieldDeleteDialog = ({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={isPending}
             onClick={async () => {
-              mutate({
-                input: {
-                  type: 'node_delete',
-                  nodeId: id,
-                  userId: workspace.userId,
-                },
-                onSuccess() {
-                  onOpenChange(false);
-                },
-              });
+              database.deleteField(id);
+              onOpenChange(false);
             }}
           >
             Delete

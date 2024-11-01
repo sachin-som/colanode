@@ -1,13 +1,9 @@
-import * as Y from 'yjs';
-import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { FieldCreateMutationInput } from '@/operations/mutations/field-create';
-import { fromUint8Array } from 'js-base64';
-import { LocalCreateNodeChangeData } from '@/types/sync';
+import { nodeManager } from '@/main/node-manager';
 
 export class FieldCreateMutationHandler
   implements MutationHandler<FieldCreateMutationInput>
@@ -15,82 +11,35 @@ export class FieldCreateMutationHandler
   async handleMutation(
     input: FieldCreateMutationInput,
   ): Promise<MutationResult<FieldCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const fieldId = generateId(IdType.Field);
+    await nodeManager.updateNode(
       input.userId,
+      input.databaseId,
+      (attributes) => {
+        if (attributes.type !== 'database') {
+          throw new Error('Invalid node type');
+        }
+
+        const maxIndex = Object.values(attributes.fields)
+          .map((field) => field.index)
+          .sort((a, b) => -compareString(a, b))[0];
+
+        const index = generateNodeIndex(maxIndex, null);
+
+        attributes.fields[fieldId] = {
+          id: fieldId,
+          type: input.fieldType,
+          name: input.name,
+          index,
+        };
+
+        return attributes;
+      },
     );
-
-    const siblings = await workspaceDatabase
-      .selectFrom('nodes')
-      .where((eb) =>
-        eb.and({
-          parent_id: input.databaseId,
-          type: NodeTypes.Field,
-        }),
-      )
-      .selectAll()
-      .execute();
-
-    const maxIndex =
-      siblings.length > 0
-        ? siblings.sort((a, b) => compareString(a.index, b.index))[
-            siblings.length - 1
-          ].index
-        : null;
-
-    const id = generateId(IdType.Field);
-    const versionId = generateId(IdType.Version);
-    const createdAt = new Date().toISOString();
-
-    const doc = new Y.Doc({
-      guid: id,
-    });
-
-    const attributesMap = doc.getMap('attributes');
-    doc.transact(() => {
-      attributesMap.set('type', NodeTypes.Field);
-      attributesMap.set('parentId', input.databaseId);
-      attributesMap.set('index', generateNodeIndex(maxIndex, null));
-      attributesMap.set('name', input.name);
-      attributesMap.set('dataType', input.dataType);
-    });
-
-    const attributes = JSON.stringify(attributesMap.toJSON());
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
-
-    const changeData: LocalCreateNodeChangeData = {
-      type: 'node_create',
-      id: id,
-      state: encodedState,
-      createdAt: createdAt,
-      createdBy: input.userId,
-      versionId: versionId,
-    };
-
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
-        .insertInto('nodes')
-        .values({
-          id: id,
-          attributes: attributes,
-          state: encodedState,
-          created_at: createdAt,
-          created_by: input.userId,
-          version_id: versionId,
-        })
-        .execute();
-
-      await trx
-        .insertInto('changes')
-        .values({
-          data: JSON.stringify(changeData),
-          created_at: createdAt,
-        })
-        .execute();
-    });
 
     return {
       output: {
-        id: id,
+        id: fieldId,
       },
       changes: [
         {

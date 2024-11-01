@@ -1,5 +1,3 @@
-import { JSONContent } from '@tiptap/core';
-
 export type MarkNodeAsSeenMutationInput = {
   type: 'mark_node_as_seen';
   userId: string;

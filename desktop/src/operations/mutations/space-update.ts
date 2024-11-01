@@ -4,7 +4,7 @@ export type SpaceUpdateMutationInput = {
   id: string;
   name: string;
   description: string;
-  avatar: string;
+  avatar?: string | null;
 };
 
 export type SpaceUpdateMutationOutput = {

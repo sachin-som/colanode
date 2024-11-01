@@ -1,10 +1,11 @@
-import { RecordNode, ViewFilter, ViewSort } from '@/types/databases';
+import { RecordNode } from '@/types/nodes';
+import { ViewFilterAttributes, ViewSortAttributes } from '@/registry';
 
 export type RecordListQueryInput = {
   type: 'record_list';
   databaseId: string;
-  filters: ViewFilter[];
-  sorts: ViewSort[];
+  filters: ViewFilterAttributes[];
+  sorts: ViewSortAttributes[];
   page: number;
   count: number;
   userId: string;

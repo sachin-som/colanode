@@ -1,18 +1,18 @@
 import React from 'react';
-import { useTableView } from '@/renderer/contexts/table-view';
+import { useView } from '@/renderer/contexts/view';
 import { TableViewNameHeader } from '@/renderer/components/databases/tables/table-view-name-header';
 import { TableViewFieldHeader } from '@/renderer/components/databases/tables/table-view-field-header';
 import { FieldCreatePopover } from '@/renderer/components/databases/fields/field-create-popover';
 
 export const TableViewHeader = () => {
-  const tableView = useTableView();
+  const view = useView();
 
   return (
     <div className="flex flex-row items-center gap-0.5">
       <div style={{ width: '30px', minWidth: '30px' }} />
       <TableViewNameHeader />
-      {tableView.fields.map((field) => {
-        return <TableViewFieldHeader field={field} key={field.id} />;
+      {view.fields.map((field) => {
+        return <TableViewFieldHeader viewField={field} key={field.field.id} />;
       })}
       <FieldCreatePopover />
     </div>

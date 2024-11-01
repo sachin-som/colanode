@@ -8,22 +8,22 @@ import {
 import { Separator } from '@/renderer/components/ui/separator';
 import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
-import { SelectOptionNode } from '@/types/databases';
+import { SelectOptionAttributes } from '@/registry';
 import { SelectOptionDeleteDialog } from '@/renderer/components/databases/fields/select-option-delete-dialog';
-import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Ellipsis, Trash2 } from 'lucide-react';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface SelectOptionSettingsPopoverProps {
-  option: SelectOptionNode;
+  fieldId: string;
+  option: SelectOptionAttributes;
 }
 
 export const SelectOptionSettingsPopover = ({
+  fieldId,
   option,
 }: SelectOptionSettingsPopoverProps) => {
-  const workspace = useWorkspace();
-  const { mutate, isPending } = useMutation();
+  const database = useDatabase();
 
   const [openSetttingsPopover, setOpenSetttingsPopover] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
@@ -43,17 +43,11 @@ export const SelectOptionSettingsPopover = ({
             <SmartTextInput
               value={option.name}
               onChange={(newName) => {
-                if (isPending) return;
                 if (newName === option.name) return;
 
-                mutate({
-                  input: {
-                    type: 'node_attribute_set',
-                    nodeId: option.id,
-                    attribute: 'name',
-                    value: newName,
-                    userId: workspace.userId,
-                  },
+                database.updateSelectOption(fieldId, {
+                  ...option,
+                  name: newName,
                 });
               }}
             />
@@ -66,16 +60,9 @@ export const SelectOptionSettingsPopover = ({
                 key={color.value}
                 className="flex cursor-pointer flex-row items-center gap-2 rounded-md p-1 hover:bg-gray-100"
                 onClick={() => {
-                  if (isPending) return;
-
-                  mutate({
-                    input: {
-                      type: 'node_attribute_set',
-                      nodeId: option.id,
-                      attribute: 'color',
-                      value: color.value,
-                      userId: workspace.userId,
-                    },
+                  database.updateSelectOption(fieldId, {
+                    ...option,
+                    color: color.value,
                   });
                 }}
               >

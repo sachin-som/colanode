@@ -1,6 +1,6 @@
 import { MutationHandler, MutationResult } from '@/operations/mutations';
 import { SpaceUpdateMutationInput } from '@/operations/mutations/space-update';
-import { updateNodeAtomically } from '@/main/utils';
+import { nodeManager } from '@/main/node-manager';
 
 export class SpaceUpdateMutationHandler
   implements MutationHandler<SpaceUpdateMutationInput>
@@ -8,31 +8,17 @@ export class SpaceUpdateMutationHandler
   async handleMutation(
     input: SpaceUpdateMutationInput,
   ): Promise<MutationResult<SpaceUpdateMutationInput>> {
-    const result = await updateNodeAtomically(
-      input.userId,
-      input.id,
-      (attributesMap) => {
-        if (input.name !== attributesMap.get('name')) {
-          attributesMap.set('name', input.name);
-        }
+    await nodeManager.updateNode(input.userId, input.id, (attributes) => {
+      if (attributes.type !== 'space') {
+        throw new Error('Node is not a space');
+      }
 
-        if (input.description !== attributesMap.get('description')) {
-          attributesMap.set('description', input.description);
-        }
+      attributes.name = input.name;
+      attributes.description = input.description;
+      attributes.avatar = input.avatar;
 
-        if (input.avatar !== attributesMap.get('avatar')) {
-          attributesMap.set('avatar', input.avatar);
-        }
-      },
-    );
-
-    if (!result) {
-      return {
-        output: {
-          success: false,
-        },
-      };
-    }
+      return attributes;
+    });
 
     return {
       output: {

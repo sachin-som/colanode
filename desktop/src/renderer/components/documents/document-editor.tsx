@@ -168,6 +168,10 @@ export const DocumentEditor = ({
   );
 
   React.useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
     if (hasPendingChanges.current) {
       return;
     }

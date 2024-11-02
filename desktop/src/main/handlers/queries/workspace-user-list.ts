@@ -8,7 +8,7 @@ import {
 import { NodeTypes } from '@/lib/constants';
 import { mapNode } from '@/lib/nodes';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { LocalNode, UserNode } from '@/types/nodes';
+import { UserNode } from '@/registry';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 

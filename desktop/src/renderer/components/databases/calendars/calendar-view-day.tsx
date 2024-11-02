@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn, isSameDay } from '@/lib/utils';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { CalendarViewCard } from '@/renderer/components/databases/calendars/calendar-view-card';
 import { Plus } from 'lucide-react';
 

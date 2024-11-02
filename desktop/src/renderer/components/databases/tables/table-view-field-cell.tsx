@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { FieldAttributes } from '@/registry';
 import { TableViewTextCell } from '@/renderer/components/databases/tables/cells/table-view-text-cell';
 import { TableViewNumberCell } from '@/renderer/components/databases/tables/cells/table-view-number-cell';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { RecordContext } from '@/renderer/contexts/record';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';

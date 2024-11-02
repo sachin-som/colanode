@@ -1,4 +1,4 @@
-import { UserNode } from '@/types/nodes';
+import { UserNode } from '@/registry';
 
 export type WorkspaceUserListQueryInput = {
   type: 'workspace_user_list';

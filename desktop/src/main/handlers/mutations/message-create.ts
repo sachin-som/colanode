@@ -11,7 +11,7 @@ import { MessageCreateMutationInput } from '@/operations/mutations/message-creat
 import { mapContentsToBlocks } from '@/lib/editor';
 import { fileManager } from '@/main/file-manager';
 import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
-import { LocalNodeAttributes } from '@/types/nodes';
+import { NodeAttributes } from '@/registry';
 import { Block, FileAttributes, MessageAttributes } from '@/registry';
 import { nodeManager } from '@/main/node-manager';
 
@@ -25,7 +25,7 @@ export class MessageCreateMutationHandler
       input.userId,
     );
 
-    const nodeAttributes: LocalNodeAttributes[] = [];
+    const nodeAttributes: NodeAttributes[] = [];
     const downloadsToCreate: CreateDownload[] = [];
     const uploadsToCreate: CreateUpload[] = [];
 

@@ -4,8 +4,8 @@ import {
   ViewFieldFilterAttributes,
   ViewFilterAttributes,
   ViewFieldAttributes,
+  RecordNode,
 } from '@/registry';
-import { RecordNode } from '@/types/nodes';
 import { compareString, isStringArray } from '@/lib/utils';
 import { generateNodeIndex } from './nodes';
 

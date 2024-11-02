@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { SelectFieldAttributes, SelectOptionAttributes } from '@/registry';
 import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';

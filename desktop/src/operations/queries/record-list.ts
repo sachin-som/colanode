@@ -1,4 +1,4 @@
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { ViewFilterAttributes, ViewSortAttributes } from '@/registry';
 
 export type RecordListQueryInput = {

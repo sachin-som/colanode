@@ -10,7 +10,7 @@ import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { SidebarNode, SidebarSpaceNode } from '@/types/workspaces';
 import { mapNode } from '@/lib/nodes';
-import { LocalNode } from '@/types/nodes';
+import { Node } from '@/registry';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 import { compareString } from '@/lib/utils';
@@ -140,7 +140,7 @@ export class SidebarSpaceListQueryHandler
     rows: SelectNode[],
     unreadCounts: UnreadCountRow[],
   ): SidebarSpaceNode[] => {
-    const nodes: LocalNode[] = rows.map(mapNode);
+    const nodes: Node[] = rows.map(mapNode);
     const spaces: SidebarSpaceNode[] = [];
 
     for (const node of nodes) {
@@ -162,8 +162,8 @@ export class SidebarSpaceListQueryHandler
   };
 
   private buildSpaceNode = (
-    node: LocalNode,
-    children: LocalNode[],
+    node: Node,
+    children: Node[],
     unreadCounts: UnreadCountRow[],
   ): SidebarSpaceNode | null => {
     if (node.type !== 'space') {
@@ -190,7 +190,7 @@ export class SidebarSpaceListQueryHandler
   };
 
   private buildSidearNode = (
-    node: LocalNode,
+    node: Node,
     unreadCounts: UnreadCountRow[],
   ): SidebarNode | null => {
     const unreadCountRow = unreadCounts.find((r) => r.node_id === node.id);

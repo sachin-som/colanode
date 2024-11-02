@@ -1,12 +1,6 @@
 import { app } from 'electron';
 import { DeleteResult, InsertResult, UpdateResult } from 'kysely';
 import path from 'path';
-import * as Y from 'yjs';
-import { databaseManager } from '@/main/data/database-manager';
-import { LocalNodeAttributes } from '@/types/nodes';
-import { generateId, IdType } from '@/lib/id';
-import { fromUint8Array, toUint8Array } from 'js-base64';
-import { LocalUpdateNodeChangeData } from '@/types/sync';
 
 export const appPath = app.getPath('userData');
 

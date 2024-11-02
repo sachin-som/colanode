@@ -1,5 +1,5 @@
 import { SelectNode } from '@/main/data/workspace/schema';
-import { LocalNode } from '@/types/nodes';
+import { Node } from '@/registry';
 import { generateKeyBetween } from 'fractional-indexing-jittered';
 import { NodeTypes } from '@/lib/constants';
 
@@ -13,14 +13,13 @@ export const generateNodeIndex = (
   return generateKeyBetween(lower, upper);
 };
 
-export const mapNode = (row: SelectNode): LocalNode => {
+export const mapNode = (row: SelectNode): Node => {
   return {
     id: row.id,
     type: row.type as any,
     index: row.index,
     parentId: row.parent_id,
     attributes: JSON.parse(row.attributes),
-    state: row.state,
     createdAt: row.created_at,
     createdBy: row.created_by,
     updatedAt: row.updated_at,

@@ -7,10 +7,10 @@ import {
 } from '@/operations/queries';
 import {
   InheritNodeCollaboratorsGroup,
-  LocalNodeAttributes,
   NodeCollaboratorsWrapper,
   NodeCollaborator,
 } from '@/types/nodes';
+import { NodeAttributes } from '@/registry';
 import { MutationChange } from '@/operations/mutations';
 import { isEqual } from 'lodash';
 
@@ -138,7 +138,7 @@ export class NodeCollaboratorListQueryHandler
     const map: Map<string, ExtractedNodeCollaborator> = new Map();
 
     for (const node of nodes) {
-      const attributes = JSON.parse(node.attributes) as LocalNodeAttributes;
+      const attributes = JSON.parse(node.attributes) as NodeAttributes;
 
       if (
         attributes.type !== 'space' &&

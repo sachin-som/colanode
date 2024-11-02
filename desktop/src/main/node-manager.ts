@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import { LocalNodeAttributes } from '@/types/nodes';
+import { NodeAttributes } from '@/registry';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import { applyCrdt } from '@/main/crdt';
 import {
@@ -19,7 +19,7 @@ class NodeManager {
     transaction: Transaction<WorkspaceDatabaseSchema>,
     userId: string,
     id: string,
-    attributes: LocalNodeAttributes,
+    attributes: NodeAttributes,
   ) {
     const doc = new Y.Doc({
       guid: id,
@@ -71,7 +71,7 @@ class NodeManager {
   async updateNode(
     userId: string,
     id: string,
-    updater: (attributes: LocalNodeAttributes) => LocalNodeAttributes,
+    updater: (attributes: NodeAttributes) => NodeAttributes,
   ) {
     const workspaceDatabase =
       await databaseManager.getWorkspaceDatabase(userId);
@@ -101,7 +101,7 @@ class NodeManager {
         updates.push(fromUint8Array(update));
       });
 
-      const attributes = JSON.parse(node.attributes) as LocalNodeAttributes;
+      const attributes = JSON.parse(node.attributes) as NodeAttributes;
       const updatedAttributes = updater(attributes);
 
       const attributesMap = doc.getMap('attributes');

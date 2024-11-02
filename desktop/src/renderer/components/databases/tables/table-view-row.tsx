@@ -1,9 +1,9 @@
 import React from 'react';
 import { TableViewNameCell } from '@/renderer/components/databases/tables/table-view-name-cell';
 import { TableViewFieldCell } from '@/renderer/components/databases/tables/table-view-field-cell';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { useView } from '@/renderer/contexts/view';
-import { RecordProvider } from '../../records/record-provider';
+import { RecordProvider } from '@/renderer/components/records/record-provider';
 
 interface TableViewRowProps {
   index: number;

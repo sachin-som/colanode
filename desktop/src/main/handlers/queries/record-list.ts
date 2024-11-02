@@ -23,12 +23,13 @@ import {
   ViewFieldFilterAttributes,
   ViewFilterAttributes,
   ViewSortAttributes,
+  DatabaseNode,
+  RecordNode,
 } from '@/registry';
 import { isStringArray } from '@/lib/utils';
 import { mapNode } from '@/lib/nodes';
 import { NodeTypes } from '@/lib/constants';
 import { isEqual } from 'lodash';
-import { DatabaseNode, RecordNode } from '@/types/nodes';
 
 export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>

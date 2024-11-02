@@ -13,7 +13,7 @@ import {
 
 import { SelectNode } from '@/main/data/workspace/schema';
 import { MutationChange } from '@/operations/mutations';
-import { LocalNodeAttributes } from '@/types/nodes';
+import { NodeAttributes } from '@/registry';
 import { mapBlocksToContents } from '@/lib/editor';
 
 export class DocumentGetQueryHandler
@@ -91,7 +91,7 @@ export class DocumentGetQueryHandler
       };
     }
 
-    const attributes = JSON.parse(document.attributes) as LocalNodeAttributes;
+    const attributes = JSON.parse(document.attributes) as NodeAttributes;
     if (attributes.type !== 'page' && attributes.type !== 'record') {
       return {
         content: null,

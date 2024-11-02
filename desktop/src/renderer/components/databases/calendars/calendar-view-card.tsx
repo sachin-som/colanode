@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { RecordNode } from '@/types/nodes';
+import { RecordNode } from '@/registry';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewCardProps {

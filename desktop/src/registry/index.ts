@@ -1,14 +1,14 @@
-import { ChannelAttributes, ChannelRegistry } from '@/registry/channel';
-import { NodeRegistry } from '@/registry/core';
-import { PageAttributes, PageRegistry } from '@/registry/page';
-import { ChatAttributes, ChatRegistry } from '@/registry/chat';
-import { SpaceAttributes, SpaceRegistry } from '@/registry/space';
-import { UserAttributes, UserRegistry } from '@/registry/user';
-import { MessageAttributes, MessageRegistry } from '@/registry/message';
-import { DatabaseAttributes, DatabaseRegistry } from '@/registry/database';
-import { FileAttributes, FileRegistry } from '@/registry/file';
-import { FolderAttributes, FolderRegistry } from '@/registry/folder';
-import { RecordAttributes, RecordRegistry } from '@/registry/record';
+import { ChannelAttributes, channelModel } from '@/registry/channel';
+import { NodeModel } from '@/registry/core';
+import { PageAttributes, pageModel } from '@/registry/page';
+import { ChatAttributes, chatModel } from '@/registry/chat';
+import { SpaceAttributes, spaceModel } from '@/registry/space';
+import { UserAttributes, userModel } from '@/registry/user';
+import { MessageAttributes, messageModel } from '@/registry/message';
+import { DatabaseAttributes, databaseModel } from '@/registry/database';
+import { FileAttributes, fileModel } from '@/registry/file';
+import { FolderAttributes, folderModel } from '@/registry/folder';
+import { RecordAttributes, recordModel } from '@/registry/record';
 
 export * from '@/registry/channel';
 export * from '@/registry/core';
@@ -24,17 +24,17 @@ export * from '@/registry/record';
 export * from '@/registry/block';
 export * from '@/registry/fields';
 
-export const registryMap: Record<string, NodeRegistry> = {
-  channel: ChannelRegistry,
-  chat: ChatRegistry,
-  database: DatabaseRegistry,
-  file: FileRegistry,
-  folder: FolderRegistry,
-  message: MessageRegistry,
-  page: PageRegistry,
-  record: RecordRegistry,
-  space: SpaceRegistry,
-  user: UserRegistry,
+export const registry: Record<string, NodeModel> = {
+  channel: channelModel,
+  chat: chatModel,
+  database: databaseModel,
+  file: fileModel,
+  folder: folderModel,
+  message: messageModel,
+  page: pageModel,
+  record: recordModel,
+  space: spaceModel,
+  user: userModel,
 };
 
 type NodeBase = {

@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { NodeRegistry } from '@/registry/core';
+import { NodeModel } from '@/registry/core';
 import { fieldValueSchema } from '@/registry/fields';
 import { blockSchema } from '@/registry/block';
+
 export const recordAttributesSchema = z.object({
   type: z.literal('record'),
   parentId: z.string(),
@@ -14,7 +15,24 @@ export const recordAttributesSchema = z.object({
 
 export type RecordAttributes = z.infer<typeof recordAttributesSchema>;
 
-export const RecordRegistry: NodeRegistry = {
+export const recordModel: NodeModel = {
   type: 'record',
   schema: recordAttributesSchema,
+  canCreate: async (context, attributes) => {
+    if (attributes.type !== 'record') {
+      return false;
+    }
+
+    return context.hasCollaboratorAccess();
+  },
+  canUpdate: async (context, node, attributes) => {
+    if (attributes.type !== 'record' || node.type !== 'record') {
+      return false;
+    }
+
+    return context.hasCollaboratorAccess();
+  },
+  canDelete: async (context, node) => {
+    return context.hasCollaboratorAccess();
+  },
 };

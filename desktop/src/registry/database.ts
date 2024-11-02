@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { NodeRegistry } from '@/registry/core';
+import { NodeModel } from '@/registry/core';
 import { fieldAttributesSchema } from '@/registry/fields';
+import { isEqual } from 'lodash';
 
 export const viewFieldAttributesSchema = z.object({
   id: z.string(),
@@ -78,7 +79,33 @@ export const databaseAttributesSchema = z.object({
 
 export type DatabaseAttributes = z.infer<typeof databaseAttributesSchema>;
 
-export const DatabaseRegistry: NodeRegistry = {
+export const databaseModel: NodeModel = {
   type: 'database',
   schema: databaseAttributesSchema,
+  canCreate: async (context, attributes) => {
+    if (attributes.type !== 'database') {
+      return false;
+    }
+
+    const collaboratorIds = Object.keys(attributes.collaborators ?? {});
+    if (collaboratorIds.length > 0 && !context.hasAdminAccess()) {
+      return false;
+    }
+
+    return context.hasEditorAccess();
+  },
+  canUpdate: async (context, node, attributes) => {
+    if (attributes.type !== 'database' || node.type !== 'database') {
+      return false;
+    }
+
+    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
+      return context.hasAdminAccess();
+    }
+
+    return context.hasEditorAccess();
+  },
+  canDelete: async (context, node) => {
+    return context.hasEditorAccess();
+  },
 };

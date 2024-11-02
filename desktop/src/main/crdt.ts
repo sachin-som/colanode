@@ -9,13 +9,11 @@ export const applyCrdt = (
   attributes: z.infer<typeof schema>,
   attributesMap: Y.Map<any>,
 ) => {
-  const parsedAttributes = schema.parse(attributes);
-
   if (!(schema instanceof z.ZodObject)) {
     throw new Error('Schema must be a ZodObject');
   }
 
-  applyObjectChanges(schema, parsedAttributes, attributesMap);
+  applyObjectChanges(schema, attributes, attributesMap);
 
   const parseResult = schema.safeParse(attributesMap.toJSON());
   if (!parseResult.success) {

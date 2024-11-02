@@ -6,7 +6,7 @@ import {
   LocalCreateNodeChangeData,
   LocalUpdateNodeChangeData,
 } from '@/types/sync';
-import { registryMap } from '@/registry';
+import { registry } from '@/registry';
 import { generateId } from '@/lib/id';
 import { IdType } from '@/lib/id';
 import { databaseManager } from '@/main/data/database-manager';
@@ -26,12 +26,16 @@ class NodeManager {
     });
     const attributesMap = doc.getMap('attributes');
 
-    const registry = registryMap[attributes.type];
-    if (!registry) {
+    const model = registry[attributes.type];
+    if (!model) {
       throw new Error('Invalid node type');
     }
 
-    applyCrdt(registry.schema, attributes, attributesMap);
+    if (!model.schema.safeParse(attributes).success) {
+      throw new Error('Invalid attributes');
+    }
+
+    applyCrdt(model.schema, attributes, attributesMap);
     const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
 
     const createdAt = new Date().toISOString();
@@ -107,7 +111,7 @@ class NodeManager {
       const attributesMap = doc.getMap('attributes');
       doc.transact(() => {
         applyCrdt(
-          registryMap[updatedAttributes.type].schema,
+          registry[updatedAttributes.type].schema,
           updatedAttributes,
           attributesMap,
         );

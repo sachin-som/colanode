@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NodeRegistry } from '@/registry/core';
+import { NodeModel } from '@/registry/core';
 import { WorkspaceRole } from '@/types/workspaces';
 
 export const userAttributesSchema = z.object({
@@ -14,7 +14,16 @@ export const userAttributesSchema = z.object({
 
 export type UserAttributes = z.infer<typeof userAttributesSchema>;
 
-export const UserRegistry: NodeRegistry = {
+export const userModel: NodeModel = {
   type: 'user',
   schema: userAttributesSchema,
+  canCreate: async (context, attributes) => {
+    return true;
+  },
+  canUpdate: async (context, node, attributes) => {
+    return true;
+  },
+  canDelete: async (context, node) => {
+    return true;
+  },
 };

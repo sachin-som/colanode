@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NodeRegistry } from '@/registry/core';
+import { NodeModel } from '@/registry/core';
 
 export const spaceAttributesSchema = z.object({
   type: z.literal('space'),
@@ -12,7 +12,16 @@ export const spaceAttributesSchema = z.object({
 
 export type SpaceAttributes = z.infer<typeof spaceAttributesSchema>;
 
-export const SpaceRegistry: NodeRegistry = {
+export const spaceModel: NodeModel = {
   type: 'space',
   schema: spaceAttributesSchema,
+  canCreate: async (context, attributes) => {
+    return true;
+  },
+  canUpdate: async (context, node, attributes) => {
+    return true;
+  },
+  canDelete: async (context, node) => {
+    return true;
+  },
 };

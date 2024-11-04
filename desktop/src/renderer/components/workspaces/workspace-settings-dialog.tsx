@@ -5,17 +5,23 @@ import {
   DialogTitle,
 } from '@/renderer/components/ui/dialog';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/renderer/components/ui/tabs';
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarHeader,
+} from '@/renderer/components/ui/sidebar';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceUpdate } from '@/renderer/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Info, Trash2, Users } from 'lucide-react';
+import { match } from 'ts-pattern';
 
 interface WorkspaceSettingsDialogProps {
   open: boolean;
@@ -27,81 +33,82 @@ export const WorkspaceSettingsDialog = ({
   onOpenChange,
 }: WorkspaceSettingsDialogProps) => {
   const workspace = useWorkspace();
+  const [tab, setTab] = React.useState<'info' | 'users' | 'delete'>('info');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="md:min-h-3/4 md:max-h-3/4 p-3 md:h-3/4 md:w-3/4 md:max-w-full"
+        className="md:min-h-3/4 md:max-h-3/4 overflow-hidden p-0 md:h-3/4 md:w-3/4 md:max-w-full"
         aria-describedby={undefined}
       >
         <VisuallyHidden>
           <DialogTitle>Workspace Settings</DialogTitle>
         </VisuallyHidden>
-        <Tabs
-          defaultValue="info"
-          className="grid h-full max-h-full grid-cols-[240px_minmax(0,1fr)] overflow-hidden"
-        >
-          <TabsList className="flex h-full max-h-full flex-col items-start justify-start gap-1 rounded-none border-r border-r-gray-100 bg-white pr-3">
-            <div className="mb-1 flex h-10 w-full items-center justify-between bg-gray-50 p-1 text-foreground/80">
-              <div className="flex items-center gap-2">
-                <Avatar
-                  id={workspace.id}
-                  name={workspace.name}
-                  avatar={workspace.avatar}
-                  size="small"
-                />
-                <span>{workspace.name}</span>
-              </div>
-            </div>
-            <TabsTrigger
-              key={`tab-trigger-info`}
-              className="w-full justify-start p-2 hover:bg-gray-50"
-              value="info"
-            >
-              <Info className="mr-2 size-4" />
-              Info
-            </TabsTrigger>
-            <TabsTrigger
-              key={`tab-trigger-collaborators`}
-              className="w-full justify-start p-2 hover:bg-gray-50"
-              value="users"
-            >
-              <Users className="mr-2 size-4" />
-              Users
-            </TabsTrigger>
-            <TabsTrigger
-              key={`tab-trigger-delete`}
-              className="w-full justify-start p-2 hover:bg-gray-50"
-              value="delete"
-            >
-              <Trash2 className="mr-2 size-4" />
-              Delete
-            </TabsTrigger>
-          </TabsList>
-          <div className="overflow-auto p-4">
-            <TabsContent
-              key="tab-content-info"
-              className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="info"
-            >
-              <WorkspaceUpdate />
-            </TabsContent>
-            <TabsContent
-              key="tab-content-collaborators"
-              className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="users"
-            >
-              <WorkspaceUsers />
-            </TabsContent>
-            <TabsContent
-              key="tab-content-delete"
-              className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="delete"
-            >
-              <p>Coming soon.</p>
-            </TabsContent>
+        <SidebarProvider>
+          <Sidebar collapsible="none">
+            <SidebarHeader>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <div className="flex flex-row items-center gap-2">
+                      <Avatar
+                        id={workspace.id}
+                        avatar={workspace.avatar}
+                        name={workspace.name}
+                        className="size-6"
+                      />
+                      <span className="truncate font-semibold">
+                        {workspace.name}
+                      </span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={tab === 'info'}
+                        onClick={() => setTab('info')}
+                      >
+                        <Info className="mr-2 size-4" />
+                        <span>Info</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={tab === 'users'}
+                        onClick={() => setTab('users')}
+                      >
+                        <Users className="mr-2 size-4" />
+                        <span>Users</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={tab === 'delete'}
+                        onClick={() => setTab('delete')}
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        <span>Delete</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+          <div className="flex-1 overflow-auto p-7">
+            {match(tab)
+              .with('info', () => <WorkspaceUpdate />)
+              .with('users', () => <WorkspaceUsers />)
+              .with('delete', () => <p>Coming soon.</p>)
+              .exhaustive()}
           </div>
-        </Tabs>
+        </SidebarProvider>
       </DialogContent>
     </Dialog>
   );

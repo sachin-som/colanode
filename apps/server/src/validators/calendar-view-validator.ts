@@ -1,14 +1,14 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasAdminAccess, hasCollaboratorAccess } from '@/lib/constants';
+import { hasAdminAccess, hasEditorAccess } from '@/lib/constants';
 import { fetchNodeRole } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
-export class MessageValidator implements Validator {
+export class CalendarViewValidator implements Validator {
   async canCreate(
     workspaceUser: SelectWorkspaceUser,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     if (!attributes.parentId) {
       return false;
@@ -20,42 +20,39 @@ export class MessageValidator implements Validator {
       return false;
     }
 
-    return hasCollaboratorAccess(role);
+    if (attributes.collaborators) {
+      return hasAdminAccess(role);
+    }
+
+    return hasEditorAccess(role);
   }
 
   async canUpdate(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
-    if (
-      !isEqual(attributes.content, node.attributes.content) &&
-      node.createdBy !== workspaceUser.id
-    ) {
-      return false;
-    }
-
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasCollaboratorAccess(role);
+    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
+      return hasAdminAccess(role);
+    }
+
+    return hasEditorAccess(role);
   }
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
-    node: ServerNode,
+    node: ServerNode
   ): Promise<boolean> {
-    if (node.createdBy === workspaceUser.id) {
-      return true;
-    }
-
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
       return false;
     }
 
-    return hasAdminAccess(role);
+    return hasEditorAccess(role);
   }
 }

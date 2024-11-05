@@ -21,6 +21,9 @@ export const compareString = (a?: string | null, b?: string | null): number => {
 export const getNameFromEmail = (email: string): string => {
   // Extract the part before the @ symbol
   const namePart = email.split('@')[0];
+  if (!namePart) {
+    return '';
+  }
 
   // Split by dots, underscores, and dashes, then capitalize each part
   const displayName = namePart

@@ -1,3 +1,4 @@
 dist
 out
 /tsconfig.base.json
+pnpm-lock.yaml

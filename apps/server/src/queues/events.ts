@@ -16,7 +16,7 @@ import {
 import { ServerNodeAttributes } from '@/types/nodes';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Job, Queue, Worker } from 'bullmq';
-import { difference } from 'lodash';
+import { difference } from 'lodash-es';
 
 const eventQueue = new Queue('events', {
   connection: {
@@ -59,7 +59,7 @@ const handleEventJob = async (job: Job) => {
 };
 
 const handleNodeCreatedEvent = async (
-  event: NodeCreatedEvent,
+  event: NodeCreatedEvent
 ): Promise<void> => {
   await createUserNodes(event);
   await synapse.sendSynapseMessage({
@@ -70,7 +70,7 @@ const handleNodeCreatedEvent = async (
 };
 
 const handleNodeUpdatedEvent = async (
-  event: NodeUpdatedEvent,
+  event: NodeUpdatedEvent
 ): Promise<void> => {
   await checkForCollaboratorsChange(event);
   await synapse.sendSynapseMessage({
@@ -81,7 +81,7 @@ const handleNodeUpdatedEvent = async (
 };
 
 const handleNodeDeletedEvent = async (
-  event: NodeDeletedEvent,
+  event: NodeDeletedEvent
 ): Promise<void> => {
   if (event.attributes.type === NodeTypes.File) {
     const command = new DeleteObjectCommand({
@@ -167,19 +167,19 @@ const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
 };
 
 const checkForCollaboratorsChange = async (
-  event: NodeUpdatedEvent,
+  event: NodeUpdatedEvent
 ): Promise<void> => {
   const beforeCollaborators = extractCollaboratorIds(event.beforeAttributes);
   const afterCollaborators = extractCollaboratorIds(event.afterAttributes);
 
   const addedCollaborators = difference(
     afterCollaborators,
-    beforeCollaborators,
+    beforeCollaborators
   );
 
   const removedCollaborators = difference(
     beforeCollaborators,
-    afterCollaborators,
+    afterCollaborators
   );
 
   if (addedCollaborators.length === 0 && removedCollaborators.length === 0) {
@@ -198,7 +198,7 @@ const checkForCollaboratorsChange = async (
 
     const actualAddedCollaborators = difference(
       addedCollaborators,
-      existingCollaboratorIds,
+      existingCollaboratorIds
     );
 
     if (actualAddedCollaborators.length > 0) {
@@ -241,7 +241,7 @@ const checkForCollaboratorsChange = async (
     const nodeCollaboratorIds = nodeCollaborators.map((c) => c.collaboratorId);
     const actualRemovedCollaborators = difference(
       removedCollaborators,
-      nodeCollaboratorIds,
+      nodeCollaboratorIds
     );
 
     if (actualRemovedCollaborators.length > 0) {

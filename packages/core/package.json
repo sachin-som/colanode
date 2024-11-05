@@ -1,0 +1,26 @@
+{
+  "name": "@colanode/core",
+  "version": "1.0.0",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "compile": "tsc --noEmit",
+    "test": "vitest",
+    "lint": "eslint . --max-warnings 0",
+    "build?": "No build step required. This package links directly to its source files",
+    "coverage": "vitest run --coverage "
+  },
+  "author": "Hakan Shehu",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.0"
+  }
+}

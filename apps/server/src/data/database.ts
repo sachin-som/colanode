@@ -7,12 +7,12 @@ import {
   PostgresDialect,
   UpdateResult,
 } from 'kysely';
-import { Pool } from 'pg';
+import pg from 'pg';
 import { DatabaseSchema } from '@/data/schema';
 import { databaseMigrations } from '@/data/migrations';
 
 const dialect = new PostgresDialect({
-  pool: new Pool({
+  pool: new pg.Pool({
     connectionString: process.env.DATABASE_URL,
   }),
 });
@@ -40,7 +40,7 @@ export const hasInsertChanges = (result: InsertResult[]): boolean => {
   }
 
   return result.some(
-    (r) => r.numInsertedOrUpdatedRows && r.numInsertedOrUpdatedRows > 0n,
+    (r) => r.numInsertedOrUpdatedRows && r.numInsertedOrUpdatedRows > 0n
   );
 };
 

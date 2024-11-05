@@ -3,18 +3,19 @@ import { hasAdminAccess, hasEditorAccess } from '@/lib/constants';
 import { fetchNodeRole } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
-export class BoardViewValidator implements Validator {
+export class SelectOptionValidator implements Validator {
   async canCreate(
     workspaceUser: SelectWorkspaceUser,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     if (!attributes.parentId) {
       return false;
     }
 
-    const role = await fetchNodeRole(attributes.parentId, workspaceUser.id);
+    const parentId = attributes.parentId;
+    const role = await fetchNodeRole(parentId, workspaceUser.id);
     if (!role) {
       return false;
     }
@@ -29,7 +30,7 @@ export class BoardViewValidator implements Validator {
   async canUpdate(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {
@@ -45,7 +46,7 @@ export class BoardViewValidator implements Validator {
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
-    node: ServerNode,
+    node: ServerNode
   ): Promise<boolean> {
     const role = await fetchNodeRole(node.id, workspaceUser.id);
     if (!role) {

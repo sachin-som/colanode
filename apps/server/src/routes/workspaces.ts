@@ -170,7 +170,7 @@ workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
 workspacesRouter.put(
   '/:id',
   async (req: NeuronRequest, res: NeuronResponse) => {
-    const id = req.params.id;
+    const id = req.params.id as string;
     const input: WorkspaceInput = req.body;
 
     if (!req.account) {
@@ -276,13 +276,13 @@ workspacesRouter.put(
     };
 
     return res.status(200).json(output);
-  },
+  }
 );
 
 workspacesRouter.delete(
   '/:id',
   async (req: NeuronRequest, res: NeuronResponse) => {
-    const id = req.params.id;
+    const id = req.params.id as string;
 
     if (!req.account) {
       return res.status(401).json({
@@ -330,13 +330,13 @@ workspacesRouter.delete(
     return res.status(200).json({
       id: workspace.id,
     });
-  },
+  }
 );
 
 workspacesRouter.get(
   '/:id',
   async (req: NeuronRequest, res: NeuronResponse) => {
-    const id = req.params.id;
+    const id = req.params.id as string;
 
     if (!req.account) {
       return res.status(401).json({
@@ -400,7 +400,7 @@ workspacesRouter.get(
     };
 
     return res.status(200).json(output);
-  },
+  }
 );
 
 workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
@@ -430,7 +430,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
     .where(
       'id',
       'in',
-      workspaceUsers.map((wa) => wa.id),
+      workspaceUsers.map((wa) => wa.id)
     )
     .execute();
 
@@ -438,7 +438,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
 
   for (const workspace of workspaces) {
     const workspaceUser = workspaceUsers.find(
-      (wa) => wa.workspace_id === workspace.id,
+      (wa) => wa.workspace_id === workspace.id
     );
 
     if (!workspaceUser) {
@@ -474,7 +474,7 @@ workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
 workspacesRouter.post(
   '/:id/users',
   async (req: NeuronRequest, res: NeuronResponse) => {
-    const id = req.params.id;
+    const id = req.params.id as string;
     const input: WorkspaceAccountsInviteInput = req.body;
 
     if (!input.emails || input.emails.length === 0) {
@@ -545,14 +545,14 @@ workspacesRouter.post(
           eb.and([
             eb('account_id', 'in', existingAccountIds),
             eb('workspace_id', '=', workspace.id),
-          ]),
+          ])
         )
         .execute();
     }
 
     if (existingWorkspaceUsers.length > 0) {
       const existingUserIds = existingWorkspaceUsers.map(
-        (workspaceAccount) => workspaceAccount.id,
+        (workspaceAccount) => workspaceAccount.id
       );
       existingUsers = await database
         .selectFrom('nodes')
@@ -592,12 +592,12 @@ workspacesRouter.post(
       }
 
       const existingWorkspaceUser = existingWorkspaceUsers.find(
-        (workspaceUser) => workspaceUser.account_id === account!.id,
+        (workspaceUser) => workspaceUser.account_id === account!.id
       );
 
       if (existingWorkspaceUser) {
         const existingUser = existingUsers.find(
-          (user) => user.id === existingWorkspaceUser.id,
+          (user) => user.id === existingWorkspaceUser.id
         );
         if (!existingUser) {
           return res.status(500).json({
@@ -708,14 +708,14 @@ workspacesRouter.post(
     return res.status(200).json({
       users: users,
     });
-  },
+  }
 );
 
 workspacesRouter.put(
   '/:id/users/:userId',
   async (req: NeuronRequest, res: NeuronResponse) => {
-    const id = req.params.id;
-    const userId = req.params.userId;
+    const id = req.params.id as string;
+    const userId = req.params.userId as string;
     const input: WorkspaceAccountRoleUpdateInput = req.body;
 
     if (!req.account) {
@@ -852,5 +852,5 @@ workspacesRouter.put(
     return res.status(200).json({
       user: userNode,
     });
-  },
+  }
 );

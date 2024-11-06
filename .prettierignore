@@ -1,4 +1,7 @@
 dist
 out
-/tsconfig.base.json
+tsconfig.base.json
+tsconfig.json
 pnpm-lock.yaml
+.env
+LICENSE.md

@@ -9,7 +9,6 @@ import {
 } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
 import { eventBus } from '@/lib/event-bus';
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
@@ -22,6 +21,7 @@ import { MutationInput, MutationMap } from '@/operations/mutations';
 import { QueryInput, QueryMap } from '@/operations/queries';
 
 let subscriptionId: string | null = null;
+const icon = join(__dirname, '../assets/icon.png');
 
 const createWindow = async (): Promise<void> => {
   await databaseManager.init();
@@ -85,15 +85,8 @@ const createWindow = async (): Promise<void> => {
   if (!protocol.isProtocolHandled('asset')) {
     protocol.handle('asset', (request) => {
       const url = request.url.replace('asset://', '');
-      if (electronRendererUrl) {
-        return net.fetch(`${electronRendererUrl}/assets/${url}`);
-      }
-
-      const localFileUrl = `file://${join(
-        process.resourcesPath,
-        'assets',
-        url
-      )}`;
+      const filePath = join(__dirname, 'assets', url);
+      const localFileUrl = `file://${filePath}`;
       return net.fetch(localFileUrl);
     });
   }

@@ -1,4 +1,3 @@
-import React from 'react';
 import { match } from 'ts-pattern';
 import { getFilePreviewType } from '@/lib/files';
 import { FilePreviewImage } from '@/renderer/components/files/previews/file-preview-image';

@@ -13,7 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/renderer/components/ui/command';
-import { FieldType } from '@/registry';
+import { FieldType } from '@colanode/core';
 import { cn } from '@/lib/utils';
 import { FieldIcon } from './field-icon';
 import { Check, ChevronsUpDown } from 'lucide-react';
@@ -125,7 +125,7 @@ export const FieldTypeSelect = ({ type, onChange }: FieldTypeSelectProps) => {
                     <Check
                       className={cn(
                         'ml-auto size-4',
-                        type === fieldType.type ? 'opacity-100' : 'opacity-0',
+                        type === fieldType.type ? 'opacity-100' : 'opacity-0'
                       )}
                     />
                   </div>

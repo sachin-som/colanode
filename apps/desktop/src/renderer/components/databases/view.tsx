@@ -5,7 +5,7 @@ import {
   ViewFieldFilterAttributes,
   ViewFilterAttributes,
   ViewSortAttributes,
-} from '@/registry/database';
+} from '@colanode/core';
 import { TableView } from '@/renderer/components/databases/tables/table-view';
 import { BoardView } from '@/renderer/components/databases/boards/board-view';
 import { CalendarView } from '@/renderer/components/databases/calendars/calendar-view';
@@ -29,7 +29,7 @@ interface ViewProps {
 export const View = ({ view }: ViewProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
-  const { mutate, isPending } = useMutation();
+  const { mutate } = useMutation();
 
   const fields: ViewField[] = React.useMemo(() => {
     return database.fields
@@ -50,7 +50,7 @@ export const View = ({ view }: ViewProps) => {
   const [isSearchBarOpened, setIsSearchBarOpened] = React.useState(false);
   const [isSortsOpened, setIsSortsOpened] = React.useState(false);
   const [openedFieldFilters, setOpenedFieldFilters] = React.useState<string[]>(
-    [],
+    []
   );
 
   return (
@@ -138,7 +138,7 @@ export const View = ({ view }: ViewProps) => {
             database.fields,
             Object.values(view.fields),
             id,
-            after,
+            after
           );
           if (newIndex === null) {
             return;

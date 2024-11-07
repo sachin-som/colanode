@@ -1,4 +1,3 @@
-import React from 'react';
 import { match } from 'ts-pattern';
 import { FolderContext } from '@/renderer/contexts/folder';
 import { FolderLayoutType } from '@/types/folders';

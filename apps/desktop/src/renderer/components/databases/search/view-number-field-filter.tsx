@@ -1,5 +1,7 @@
-import React from 'react';
-import { NumberFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import {
+  NumberFieldAttributes,
+  ViewFieldFilterAttributes,
+} from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -31,7 +33,7 @@ export const ViewNumberFieldFilter = ({
 
   const operator =
     numberFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? numberFieldFilterOperators[0];
 
   const numberValue = filter.value as number | null;

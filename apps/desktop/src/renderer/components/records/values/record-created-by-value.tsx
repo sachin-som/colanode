@@ -1,6 +1,5 @@
-import React from 'react';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { CreatedByFieldAttributes } from '@/registry';
+import { CreatedByFieldAttributes } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useRecord } from '@/renderer/contexts/record';

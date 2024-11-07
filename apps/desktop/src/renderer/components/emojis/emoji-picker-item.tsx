@@ -1,4 +1,3 @@
-import React from 'react';
 import { Emoji } from '@/lib/emojis';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';

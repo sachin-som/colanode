@@ -1,4 +1,3 @@
-import React from 'react';
 import { getFriendlyNameFromMimeType } from '@/lib/files';
 import { FileIcon } from '@/renderer/components/files/file-icon';
 

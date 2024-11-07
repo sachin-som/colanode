@@ -1,4 +1,4 @@
-import { ViewFilterAttributes, ViewSortAttributes } from '@/registry';
+import { ViewFilterAttributes, ViewSortAttributes } from '@colanode/core';
 import { ViewField } from '@/types/databases';
 import { createContext, useContext } from 'react';
 

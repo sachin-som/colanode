@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Sidebar as SidebarWrapper,
   SidebarContent as SidebarContentWrapper,

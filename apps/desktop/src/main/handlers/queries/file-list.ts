@@ -1,11 +1,11 @@
 import { FileListQueryInput } from '@/operations/queries/file-list';
 import { databaseManager } from '@/main/data/database-manager';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { NodeTypes } from '@/lib/constants';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash';
@@ -23,7 +23,7 @@ interface FileRow {
 
 export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
   public async handleQuery(
-    input: FileListQueryInput,
+    input: FileListQueryInput
   ): Promise<QueryResult<FileListQueryInput>> {
     const files = await this.fetchFiles(input);
 
@@ -38,14 +38,14 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
   public async checkForChanges(
     changes: MutationChange[],
     input: FileListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<FileListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           (change.table === 'nodes' || change.table === 'downloads') &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -73,14 +73,14 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
 
   private async fetchFiles(input: FileListQueryInput): Promise<FileRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const offset = input.page * input.count;
     const files = await workspaceDatabase
       .selectFrom('nodes')
       .leftJoin('downloads', (join) =>
-        join.onRef('nodes.id', '=', 'downloads.node_id'),
+        join.onRef('nodes.id', '=', 'downloads.node_id')
       )
       .select([
         'nodes.id',
@@ -95,7 +95,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
         eb.and([
           eb('parent_id', '=', input.parentId),
           eb('type', '=', NodeTypes.File),
-        ]),
+        ])
       )
       .orderBy('id', 'asc')
       .limit(input.count)

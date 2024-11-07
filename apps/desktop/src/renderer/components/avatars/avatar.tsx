@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 import {
   getAvatarSizeClasses,
@@ -57,7 +56,7 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
         className={cn(
           'inline-flex items-center justify-center overflow-hidden rounded text-white shadow',
           getAvatarSizeClasses(size),
-          className,
+          className
         )}
         style={{ backgroundColor: color }}
       >

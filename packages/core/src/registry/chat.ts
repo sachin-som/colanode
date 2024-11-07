@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
+import { NodeModel } from './core';
 
 export const chatAttributesSchema = z.object({
   type: z.literal('chat'),

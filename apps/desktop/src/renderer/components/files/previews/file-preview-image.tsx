@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface FilePreviewImageProps {
   url: string;
   name: string;

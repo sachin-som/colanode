@@ -1,5 +1,4 @@
-import React from 'react';
-import { DateFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import { DateFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -31,7 +30,7 @@ export const ViewDateFieldFilter = ({
 
   const operator =
     dateFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? dateFieldFilterOperators[0];
 
   const dateTextValue = filter.value as string | null;

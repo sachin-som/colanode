@@ -2,17 +2,13 @@ import { LoginOutput } from '@/types/accounts';
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { EmailRegisterMutationInput } from '@/operations/mutations/email-register';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 
 export class EmailRegisterMutationHandler
   implements MutationHandler<EmailRegisterMutationInput>
 {
   handleMutation = async (
-    input: EmailRegisterMutationInput,
+    input: EmailRegisterMutationInput
   ): Promise<MutationResult<EmailRegisterMutationInput>> => {
     const server = await databaseManager.appDatabase
       .selectFrom('servers')
@@ -38,7 +34,7 @@ export class EmailRegisterMutationHandler
       {
         serverDomain: server.domain,
         serverAttributes: server.attributes,
-      },
+      }
     );
 
     const changedTables: MutationChange[] = [];
@@ -78,7 +74,7 @@ export class EmailRegisterMutationHandler
             description: workspace.description,
             user_id: workspace.user.id,
             version_id: workspace.versionId,
-          })),
+          }))
         )
         .execute();
 
@@ -90,7 +86,7 @@ export class EmailRegisterMutationHandler
 
     for (const workspace of data.workspaces) {
       const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-        workspace.user.id,
+        workspace.user.id
       );
 
       const user = workspace.user.node;

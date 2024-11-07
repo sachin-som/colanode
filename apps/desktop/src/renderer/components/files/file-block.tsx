@@ -1,4 +1,3 @@
-import React from 'react';
 import { getFileUrl } from '@/lib/files';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';

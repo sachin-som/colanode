@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { BlockquoteRenderer } from '@/renderer/editor/renderers/blockquote';
 import { BulletListRenderer } from '@/renderer/editor/renderers/bullet-list';
 import { CodeBlockRenderer } from '@/renderer/editor/renderers/code-block';

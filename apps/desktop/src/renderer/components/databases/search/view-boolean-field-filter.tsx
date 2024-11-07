@@ -1,5 +1,7 @@
-import React from 'react';
-import { BooleanFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import {
+  BooleanFieldAttributes,
+  ViewFieldFilterAttributes,
+} from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -30,7 +32,7 @@ export const ViewBooleanFieldFilter = ({
 
   const operator =
     booleanFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? booleanFieldFilterOperators[0];
 
   return (

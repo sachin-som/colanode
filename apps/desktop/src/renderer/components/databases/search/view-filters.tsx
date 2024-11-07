@@ -1,4 +1,3 @@
-import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { ViewTextFieldFilter } from '@/renderer/components/databases/search/view-text-field-filter';
 import { ViewNumberFieldFilter } from '@/renderer/components/databases/search/view-number-field-filter';
@@ -27,7 +26,7 @@ export const ViewFilters = () => {
           }
 
           const field = database.fields.find(
-            (field) => field.id === filter.fieldId,
+            (field) => field.id === filter.fieldId
           );
 
           if (!field) {

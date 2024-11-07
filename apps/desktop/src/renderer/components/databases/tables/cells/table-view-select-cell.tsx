@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectFieldAttributes } from '@/registry';
+import { SelectFieldAttributes } from '@colanode/core';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
 import {
   Popover,
@@ -17,7 +17,7 @@ export const TableViewSelectCell = ({ field }: TableViewSelectCellProps) => {
   const record = useRecord();
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
-    record.getSelectValue(field),
+    record.getSelectValue(field)
   );
 
   React.useEffect(() => {
@@ -26,7 +26,7 @@ export const TableViewSelectCell = ({ field }: TableViewSelectCellProps) => {
 
   const selectOptions = Object.values(field.options ?? {});
   const selectedOption = selectOptions.find(
-    (option) => option.id === selectedValue,
+    (option) => option.id === selectedValue
   );
 
   return (

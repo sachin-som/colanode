@@ -1,4 +1,4 @@
-import { UserNode } from '@/registry';
+import { UserNode } from '@colanode/core';
 
 export type WorkspaceUserListQueryInput = {
   type: 'workspace_user_list';

@@ -1,5 +1,4 @@
-import React from 'react';
-import { CreatedAtFieldAttributes } from '@/registry';
+import { CreatedAtFieldAttributes } from '@colanode/core';
 import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordCreatedAtValueProps {

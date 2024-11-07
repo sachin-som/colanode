@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
-import { fieldValueSchema } from '@/registry/fields';
-import { blockSchema } from '@/registry/block';
+import { NodeModel } from './core';
+import { fieldValueSchema } from './fields';
+import { blockSchema } from './block';
 
 export const recordAttributesSchema = z.object({
   type: z.literal('record'),
@@ -32,7 +32,7 @@ export const recordModel: NodeModel = {
 
     return context.hasCollaboratorAccess();
   },
-  canDelete: async (context, node) => {
+  canDelete: async (context, _) => {
     return context.hasCollaboratorAccess();
   },
 };

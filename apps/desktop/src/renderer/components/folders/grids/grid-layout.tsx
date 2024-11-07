@@ -1,4 +1,3 @@
-import React from 'react';
 import { useFolder } from '@/renderer/contexts/folder';
 import { GridFile } from '@/renderer/components/folders/grids/grid-file';
 

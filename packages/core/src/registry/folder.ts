@@ -1,24 +1,22 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
-import { blockSchema } from '@/registry/block';
+import { NodeModel } from './core';
 import { isEqual } from 'lodash';
 
-export const pageAttributesSchema = z.object({
-  type: z.literal('page'),
+export const folderAttributesSchema = z.object({
+  type: z.literal('folder'),
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  content: z.record(blockSchema),
   collaborators: z.record(z.string()).nullable().optional(),
 });
 
-export type PageAttributes = z.infer<typeof pageAttributesSchema>;
+export type FolderAttributes = z.infer<typeof folderAttributesSchema>;
 
-export const pageModel: NodeModel = {
-  type: 'page',
-  schema: pageAttributesSchema,
+export const folderModel: NodeModel = {
+  type: 'folder',
+  schema: folderAttributesSchema,
   canCreate: async (context, attributes) => {
-    if (attributes.type !== 'page') {
+    if (attributes.type !== 'folder') {
       return false;
     }
 
@@ -30,17 +28,17 @@ export const pageModel: NodeModel = {
     return context.hasEditorAccess();
   },
   canUpdate: async (context, node, attributes) => {
-    if (attributes.type !== 'page' || node.type !== 'page') {
+    if (attributes.type !== 'folder' || node.type !== 'folder') {
       return false;
     }
 
-    if (!isEqual(attributes.collaborators, node.attributes.collaborators)) {
+    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
       return context.hasAdminAccess();
     }
 
     return context.hasEditorAccess();
   },
-  canDelete: async (context, node) => {
+  canDelete: async (context, _) => {
     return context.hasEditorAccess();
   },
 };

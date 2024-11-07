@@ -1,4 +1,3 @@
-import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { TableViewRow } from '@/renderer/components/databases/tables/table-view-row';
 import { TableViewEmptyPlaceholder } from '@/renderer/components/databases/tables/table-view-empty-placeholder';

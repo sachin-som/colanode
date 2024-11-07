@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerCreateMutationInput } from '@/operations/mutations/server-create';
 import { ServerConfig } from '@/types/servers';
 
@@ -8,10 +8,10 @@ export class ServerCreateMutationHandler
   implements MutationHandler<ServerCreateMutationInput>
 {
   async handleMutation(
-    input: ServerCreateMutationInput,
+    input: ServerCreateMutationInput
   ): Promise<MutationResult<ServerCreateMutationInput>> {
     const { data } = await axios.get<ServerConfig>(
-      `http://${input.domain}/v1/config`,
+      `http://${input.domain}/v1/config`
     );
 
     await databaseManager.appDatabase

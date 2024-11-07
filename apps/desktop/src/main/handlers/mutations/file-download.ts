@@ -1,15 +1,15 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { FileDownloadMutationInput } from '@/operations/mutations/file-download';
 
 export class FileDownloadMutationHandler
   implements MutationHandler<FileDownloadMutationInput>
 {
   async handleMutation(
-    input: FileDownloadMutationInput,
+    input: FileDownloadMutationInput
   ): Promise<MutationResult<FileDownloadMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const node = await workspaceDatabase

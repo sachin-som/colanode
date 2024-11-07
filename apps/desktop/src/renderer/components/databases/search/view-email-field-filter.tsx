@@ -1,5 +1,7 @@
-import React from 'react';
-import { EmailFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import {
+  EmailFieldAttributes,
+  ViewFieldFilterAttributes,
+} from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -31,7 +33,7 @@ export const ViewEmailFieldFilter = ({
 
   const operator =
     emailFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? emailFieldFilterOperators[0];
 
   const textValue = filter.value as string | null;

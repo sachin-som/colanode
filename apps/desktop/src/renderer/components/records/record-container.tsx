@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { Database } from '@/renderer/components/databases/database';
 import { RecordAttributes } from '@/renderer/components/records/record-attributes';

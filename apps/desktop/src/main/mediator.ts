@@ -1,16 +1,8 @@
-import {
-  MutationChange,
-  MutationHandler,
-  MutationInput,
-  MutationMap,
-} from '@/operations/mutations';
+import { MutationInput, MutationMap } from '@/operations/mutations';
+import { MutationChange, MutationHandler } from '@/main/types';
 import { mutationHandlerMap } from '@/main/handlers/mutations';
-import {
-  QueryHandler,
-  QueryInput,
-  QueryMap,
-  SubscribedQuery,
-} from '@/operations/queries';
+import { QueryInput, QueryMap } from '@/operations/queries';
+import { QueryHandler, SubscribedQuery } from '@/main/types';
 import { queryHandlerMap } from '@/main/handlers/queries';
 import { eventBus } from '@/lib/event-bus';
 import {
@@ -25,7 +17,7 @@ class Mediator {
     new Map();
 
   public async executeMutation<T extends MutationInput>(
-    input: T,
+    input: T
   ): Promise<MutationMap[T['type']]['output']> {
     const handler = mutationHandlerMap[
       input.type
@@ -40,7 +32,7 @@ class Mediator {
   }
 
   public async executeQuery<T extends QueryInput>(
-    input: T,
+    input: T
   ): Promise<QueryMap[T['type']]['output']> {
     const handler = queryHandlerMap[input.type] as unknown as QueryHandler<T>;
     const result = await handler.handleQuery(input);
@@ -49,7 +41,7 @@ class Mediator {
 
   public async executeQueryAndSubscribe<T extends QueryInput>(
     id: string,
-    input: T,
+    input: T
   ): Promise<QueryMap[T['type']]['output']> {
     const handler = queryHandlerMap[input.type] as unknown as QueryHandler<T>;
     const result = await handler.handleQuery(input);
@@ -62,7 +54,7 @@ class Mediator {
 
   public async executeMessage<T extends MessageInput>(
     context: MessageContext,
-    input: T,
+    input: T
   ): Promise<void> {
     const handler = messageHandlerMap[input.type] as MessageHandler<T>;
     await handler.handleMessage(context, input);
@@ -85,7 +77,7 @@ class Mediator {
       const changeCheckResult = await handler.checkForChanges(
         changes,
         query.input,
-        query.result.state,
+        query.result.state
       );
       if (changeCheckResult.hasChanges && changeCheckResult.result) {
         const newResult = changeCheckResult.result;

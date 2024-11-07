@@ -3,7 +3,7 @@ import { generateId, getIdTypeFromNode } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { JSONContent } from '@tiptap/core';
-import { Block, BlockLeaf } from '@/registry';
+import { Block, BlockLeaf } from '@colanode/core';
 
 const leafBlockTypes = new Set([
   EditorNodeTypes.Paragraph,
@@ -17,7 +17,7 @@ const leafBlockTypes = new Set([
 export const mapContentsToBlocks = (
   parentId: string,
   contents: JSONContent[],
-  blocksMap: Map<string, Block>,
+  blocksMap: Map<string, Block>
 ): Block[] => {
   const blocks: Block[] = [];
   mapAndPushContentsToBlocks(contents, parentId, blocks, blocksMap);
@@ -29,7 +29,7 @@ const mapAndPushContentsToBlocks = (
   contents: JSONContent[] | null | undefined,
   parentId: string,
   blocks: Block[],
-  blocksMap: Map<string, Block>,
+  blocksMap: Map<string, Block>
 ): void => {
   if (!contents) {
     return;
@@ -43,7 +43,7 @@ const mapAndPushContentToBlock = (
   content: JSONContent,
   parentId: string,
   blocks: Block[],
-  blocksMap: Map<string, Block>,
+  blocksMap: Map<string, Block>
 ): void => {
   if (!content.type) {
     throw new Error('Invalid content type');
@@ -77,7 +77,7 @@ const mapAndPushContentToBlock = (
 
 const mapContentsToBlockLeafs = (
   type: string,
-  contents?: JSONContent[],
+  contents?: JSONContent[]
 ): BlockLeaf[] | null => {
   if (!leafBlockTypes.has(type) || contents == null || contents.length === 0) {
     return null;
@@ -106,7 +106,7 @@ const mapContentsToBlockLeafs = (
 
 export const mapBlocksToContents = (
   parentId: string,
-  blocks: Block[],
+  blocks: Block[]
 ): JSONContent[] => {
   const contents: JSONContent[] = [];
   const children = blocks
@@ -134,7 +134,7 @@ const mapBlockToContent = (block: Block, blocks: Block[]): JSONContent => {
 };
 
 const mapBlockLeafsToContents = (
-  leafs: BlockLeaf[] | null,
+  leafs: BlockLeaf[] | null
 ): JSONContent[] | undefined => {
   if (leafs == null) {
     return undefined;

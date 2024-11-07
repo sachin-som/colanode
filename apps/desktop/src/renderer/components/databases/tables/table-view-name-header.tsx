@@ -1,4 +1,3 @@
-import React from 'react';
 import { Resizable } from 're-resizable';
 import {
   Popover,
@@ -56,7 +55,7 @@ export const TableViewNameHeader = () => {
           right: '-3px',
         },
       }}
-      onResizeStop={(e, direction, ref) => {
+      onResizeStop={(_, __, ref) => {
         const newWidth = ref.offsetWidth;
         view.resizeName(newWidth);
       }}
@@ -68,7 +67,7 @@ export const TableViewNameHeader = () => {
               'flex h-8 w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm hover:bg-gray-50',
               dropMonitor.isOver && dropMonitor.canDrop
                 ? 'border-r-2 border-blue-300'
-                : 'border-r',
+                : 'border-r'
             )}
             ref={dropRef}
           >
@@ -80,7 +79,7 @@ export const TableViewNameHeader = () => {
           <div className="p-1">
             <Input
               value={'Name'}
-              onChange={(e) => {
+              onChange={(_) => {
                 // setName(e.target.value);
                 // updateName(e.target.value);
               }}

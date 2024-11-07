@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BubbleMenu,
   type BubbleMenuProps,
@@ -58,7 +57,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         type="button"
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-          props.editor?.isActive('bold') === true ? 'bg-gray-100' : 'bg-white',
+          props.editor?.isActive('bold') === true ? 'bg-gray-100' : 'bg-white'
         )}
         onClick={() => props.editor?.chain().focus().toggleBold().run()}
       >
@@ -68,9 +67,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         type="button"
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-          props.editor?.isActive('italic') === true
-            ? 'bg-gray-100'
-            : 'bg-white',
+          props.editor?.isActive('italic') === true ? 'bg-gray-100' : 'bg-white'
         )}
         onClick={() => props.editor?.chain().focus().toggleItalic().run()}
       >
@@ -82,7 +79,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
           'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
           props.editor?.isActive('underline') === true
             ? 'bg-gray-100'
-            : 'bg-white',
+            : 'bg-white'
         )}
         onClick={() => props.editor?.chain().focus().toggleUnderline().run()}
       >
@@ -92,9 +89,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         type="button"
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-          props.editor?.isActive('strike') === true
-            ? 'bg-gray-100'
-            : 'bg-white',
+          props.editor?.isActive('strike') === true ? 'bg-gray-100' : 'bg-white'
         )}
         onClick={() => props.editor?.chain().focus().toggleStrike().run()}
       >
@@ -104,7 +99,7 @@ export const EditorBubbleMenu = (props: EditorBubbleMenuProps) => {
         type="button"
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-          props.editor?.isActive('code') === true ? 'bg-gray-100' : 'bg-white',
+          props.editor?.isActive('code') === true ? 'bg-gray-100' : 'bg-white'
         )}
         onClick={() => props.editor?.chain().focus().toggleCode().run()}
       >

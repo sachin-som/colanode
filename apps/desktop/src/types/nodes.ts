@@ -1,4 +1,4 @@
-import { NodeAttributes } from '@/registry';
+import { NodeAttributes } from '@colanode/core';
 
 export type ServerNode = {
   id: string;

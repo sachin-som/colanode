@@ -1,5 +1,4 @@
-import React from 'react';
-import { FieldAttributes, ViewSortAttributes } from '@/registry';
+import { FieldAttributes, ViewSortAttributes } from '@colanode/core';
 import {
   DropdownMenu,
   DropdownMenuContent,

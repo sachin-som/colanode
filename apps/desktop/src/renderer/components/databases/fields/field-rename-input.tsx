@@ -1,5 +1,4 @@
-import React from 'react';
-import { FieldAttributes } from '@/registry';
+import { FieldAttributes } from '@colanode/core';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useDatabase } from '@/renderer/contexts/database';
 

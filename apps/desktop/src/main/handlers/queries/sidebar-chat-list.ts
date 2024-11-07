@@ -1,15 +1,15 @@
 import { SidebarChatListQueryInput } from '@/operations/queries/sidebar-chat-list';
 import { databaseManager } from '@/main/data/database-manager';
-import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { SidebarChatNode } from '@/types/workspaces';
-import { mapNode } from '@/lib/nodes';
-import { MutationChange } from '@/operations/mutations';
+import { mapNode } from '@/main/utils';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 interface UnreadCountRow {
@@ -22,7 +22,7 @@ export class SidebarChatListQueryHandler
   implements QueryHandler<SidebarChatListQueryInput>
 {
   public async handleQuery(
-    input: SidebarChatListQueryInput,
+    input: SidebarChatListQueryInput
   ): Promise<QueryResult<SidebarChatListQueryInput>> {
     const chats = await this.fetchChats(input);
     const collaborators = await this.fetchChatCollaborators(input, chats);
@@ -33,7 +33,7 @@ export class SidebarChatListQueryHandler
         input.userId,
         chats,
         collaborators,
-        unreadCounts,
+        unreadCounts
       ),
       state: {
         chats,
@@ -46,14 +46,14 @@ export class SidebarChatListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: SidebarChatListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<SidebarChatListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           (change.table === 'nodes' || change.table === 'user_nodes') &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -82,7 +82,7 @@ export class SidebarChatListQueryHandler
           input.userId,
           chats,
           collaborators,
-          unreadCounts,
+          unreadCounts
         ),
         state: {
           chats,
@@ -94,10 +94,10 @@ export class SidebarChatListQueryHandler
   }
 
   private async fetchChats(
-    input: SidebarChatListQueryInput,
+    input: SidebarChatListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const chats = await workspaceDatabase
@@ -111,10 +111,10 @@ export class SidebarChatListQueryHandler
 
   private async fetchChatCollaborators(
     input: SidebarChatListQueryInput,
-    chats: SelectNode[],
+    chats: SelectNode[]
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const collaboratorIds: string[] = [];
@@ -149,10 +149,10 @@ export class SidebarChatListQueryHandler
 
   private async fetchUnreadCounts(
     input: SidebarChatListQueryInput,
-    chats: SelectNode[],
+    chats: SelectNode[]
   ): Promise<UnreadCountRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const chatIds = chats.map((chat) => chat.id);
@@ -178,7 +178,7 @@ export class SidebarChatListQueryHandler
     userId: string,
     chats: SelectNode[],
     collaborators: SelectNode[],
-    unreadCounts: UnreadCountRow[],
+    unreadCounts: UnreadCountRow[]
   ): SidebarChatNode[] => {
     const sidebarChatNodes: SidebarChatNode[] = [];
 
@@ -204,7 +204,7 @@ export class SidebarChatListQueryHandler
       }
 
       const collaboratorRow = collaborators.find(
-        (r) => r.id === collaboratorId,
+        (r) => r.id === collaboratorId
       );
 
       if (!collaboratorRow) {

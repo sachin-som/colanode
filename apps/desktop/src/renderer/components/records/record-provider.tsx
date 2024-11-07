@@ -1,7 +1,6 @@
 import React from 'react';
 import { RecordContext } from '@/renderer/contexts/record';
-import { RecordNode } from '@/registry';
-import { useDatabase } from '@/renderer/contexts/database';
+import { RecordNode } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 
@@ -13,7 +12,6 @@ export const RecordProvider = ({
   children: React.ReactNode;
 }) => {
   const workspace = useWorkspace();
-  const database = useDatabase();
 
   const { mutate } = useMutation();
 

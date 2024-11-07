@@ -13,7 +13,7 @@ import { databaseManager } from './data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { mediator } from '@/main/mediator';
 import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
-import { FileAttributes } from '@/registry';
+import { FileAttributes } from '@colanode/core';
 
 class FileManager {
   public async handleFileRequest(request: Request): Promise<Response> {
@@ -39,7 +39,7 @@ class FileManager {
     filePath: string,
     fileId: string,
     fileExtension: string,
-    userId: string,
+    userId: string
   ): void {
     const filesDir = getWorkspaceFilesDirectoryPath(userId);
 
@@ -49,7 +49,7 @@ class FileManager {
 
     const destinationFilePath = path.join(
       filesDir,
-      `${fileId}${fileExtension}`,
+      `${fileId}${fileExtension}`
     );
     fs.copyFileSync(filePath, destinationFilePath);
   }
@@ -88,10 +88,10 @@ class FileManager {
   }
 
   public async checkForUploads(
-    credentials: WorkspaceCredentials,
+    credentials: WorkspaceCredentials
   ): Promise<void> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      credentials.userId,
+      credentials.userId
     );
 
     const uploads = await workspaceDatabase
@@ -133,7 +133,7 @@ class FileManager {
       const attributes: FileAttributes = JSON.parse(file.attributes);
       const filePath = path.join(
         filesDir,
-        `${upload.node_id}${attributes.extension}`,
+        `${upload.node_id}${attributes.extension}`
       );
 
       if (!fs.existsSync(filePath)) {
@@ -153,7 +153,7 @@ class FileManager {
             serverDomain: credentials.serverDomain,
             serverAttributes: credentials.serverAttributes,
             token: credentials.token,
-          },
+          }
         );
 
         const presignedUrl = data.url;
@@ -189,10 +189,10 @@ class FileManager {
   }
 
   public async checkForDownloads(
-    credentials: WorkspaceCredentials,
+    credentials: WorkspaceCredentials
   ): Promise<void> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      credentials.userId,
+      credentials.userId
     );
 
     const downloads = await workspaceDatabase
@@ -229,7 +229,7 @@ class FileManager {
       const attributes: FileAttributes = JSON.parse(file.attributes);
       const filePath = path.join(
         filesDir,
-        `${download.node_id}${attributes.extension}`,
+        `${download.node_id}${attributes.extension}`
       );
 
       if (fs.existsSync(filePath)) {
@@ -251,7 +251,7 @@ class FileManager {
             serverDomain: credentials.serverDomain,
             serverAttributes: credentials.serverAttributes,
             token: credentials.token,
-          },
+          }
         );
 
         const presignedUrl = data.url;

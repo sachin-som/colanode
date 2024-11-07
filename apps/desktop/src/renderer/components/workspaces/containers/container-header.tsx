@@ -1,4 +1,3 @@
-import React from 'react';
 import { getIdType, IdType } from '@/lib/id';
 import { Breadcrumb } from '@/renderer/components/workspaces/containers/breadcrumb';
 import { ChatBreadcrumb } from '@/renderer/components/workspaces/containers/chat-breadcrumb';

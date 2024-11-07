@@ -1,8 +1,8 @@
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { DatabaseCreateMutationInput } from '@/operations/mutations/database-create';
-import { DatabaseAttributes } from '@/registry';
+import { DatabaseAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 import { databaseManager } from '@/main/data/database-manager';
 
@@ -10,10 +10,10 @@ export class DatabaseCreateMutationHandler
   implements MutationHandler<DatabaseCreateMutationInput>
 {
   async handleMutation(
-    input: DatabaseCreateMutationInput,
+    input: DatabaseCreateMutationInput
   ): Promise<MutationResult<DatabaseCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const databaseId = generateId(IdType.Database);

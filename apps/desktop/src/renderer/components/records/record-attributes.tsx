@@ -1,4 +1,3 @@
-import React from 'react';
 import { RecordName } from '@/renderer/components/records/record-name';
 import { useDatabase } from '@/renderer/contexts/database';
 import { RecordField } from '@/renderer/components/records/record-field';

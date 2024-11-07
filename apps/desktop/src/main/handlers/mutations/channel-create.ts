@@ -1,19 +1,19 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { ChannelCreateMutationInput } from '@/operations/mutations/channel-create';
-import { ChannelAttributes } from '@/registry';
+import { ChannelAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class ChannelCreateMutationHandler
   implements MutationHandler<ChannelCreateMutationInput>
 {
   async handleMutation(
-    input: ChannelCreateMutationInput,
+    input: ChannelCreateMutationInput
   ): Promise<MutationResult<ChannelCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const maxIndexResult = await workspaceDatabase

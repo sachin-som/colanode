@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
+import { NodeModel } from './core';
 
 export const fileAttributesSchema = z.object({
   type: z.literal('file'),
@@ -16,13 +16,13 @@ export type FileAttributes = z.infer<typeof fileAttributesSchema>;
 export const fileModel: NodeModel = {
   type: 'file',
   schema: fileAttributesSchema,
-  canCreate: async (context, attributes) => {
+  canCreate: async (_, __) => {
     return true;
   },
-  canUpdate: async (context, node, attributes) => {
+  canUpdate: async (_, __, ___) => {
     return true;
   },
-  canDelete: async (context, node) => {
+  canDelete: async (_, __) => {
     return true;
   },
 };

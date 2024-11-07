@@ -1,14 +1,14 @@
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { DocumentSaveMutationInput } from '@/operations/mutations/document-save';
 import { mapContentsToBlocks } from '@/lib/editor';
-import { Block } from '@/registry';
+import { Block } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class DocumentSaveMutationHandler
   implements MutationHandler<DocumentSaveMutationInput>
 {
   async handleMutation(
-    input: DocumentSaveMutationInput,
+    input: DocumentSaveMutationInput
   ): Promise<MutationResult<DocumentSaveMutationInput>> {
     await nodeManager.updateNode(
       input.userId,
@@ -28,7 +28,7 @@ export class DocumentSaveMutationHandler
         const blocks = mapContentsToBlocks(
           input.documentId,
           input.content.content ?? [],
-          blocksMap,
+          blocksMap
         );
 
         attributes.content = blocks.reduce(
@@ -36,11 +36,11 @@ export class DocumentSaveMutationHandler
             acc[block.id] = block;
             return acc;
           },
-          {} as Record<string, Block>,
+          {} as Record<string, Block>
         );
 
         return attributes;
-      },
+      }
     );
 
     return {

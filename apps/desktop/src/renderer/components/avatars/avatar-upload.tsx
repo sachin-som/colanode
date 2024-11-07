@@ -16,7 +16,7 @@ export const AvatarUpload = ({ onUpload }: AvatarUploadProps) => {
   const [isFileDialogOpen, setIsFileDialogOpen] = React.useState(false);
   const [url, setUrl] = React.useState<string | undefined>(undefined);
 
-  const handleSubmit = async (url: string) => {
+  const handleSubmit = async (_: string) => {
     // TODO
   };
 

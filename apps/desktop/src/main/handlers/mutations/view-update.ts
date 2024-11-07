@@ -1,4 +1,4 @@
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { nodeManager } from '@/main/node-manager';
 import { ViewUpdateMutationInput } from '@/operations/mutations/view-update';
 
@@ -6,7 +6,7 @@ export class ViewUpdateMutationHandler
   implements MutationHandler<ViewUpdateMutationInput>
 {
   async handleMutation(
-    input: ViewUpdateMutationInput,
+    input: ViewUpdateMutationInput
   ): Promise<MutationResult<ViewUpdateMutationInput>> {
     await nodeManager.updateNode(
       input.userId,
@@ -18,7 +18,7 @@ export class ViewUpdateMutationHandler
 
         attributes.views[input.view.id] = input.view;
         return attributes;
-      },
+      }
     );
 
     return {

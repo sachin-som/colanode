@@ -1,13 +1,13 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerUserNodeSyncMutationInput } from '@/operations/mutations/server-user-node-sync';
 
 export class ServerUserNodeSyncMutationHandler
   implements MutationHandler<ServerUserNodeSyncMutationInput>
 {
   public async handleMutation(
-    input: ServerUserNodeSyncMutationInput,
+    input: ServerUserNodeSyncMutationInput
   ): Promise<MutationResult<ServerUserNodeSyncMutationInput>> {
     const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
@@ -16,7 +16,7 @@ export class ServerUserNodeSyncMutationHandler
         eb.and([
           eb('account_id', '=', input.accountId),
           eb('workspace_id', '=', input.workspaceId),
-        ]),
+        ])
       )
       .executeTakeFirst();
 
@@ -51,7 +51,7 @@ export class ServerUserNodeSyncMutationHandler
           mentions_count: input.mentionsCount,
           updated_at: input.updatedAt,
           version_id: input.versionId,
-        }),
+        })
       )
       .execute();
 

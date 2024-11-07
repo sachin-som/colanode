@@ -1,7 +1,7 @@
 import fs from 'fs';
 import FormData from 'form-data';
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { AvatarUploadMutationInput } from '@/operations/mutations/avatar-upload';
 import { httpClient } from '@/lib/http-client';
 
@@ -13,7 +13,7 @@ export class AvatarUploadMutationHandler
   implements MutationHandler<AvatarUploadMutationInput>
 {
   async handleMutation(
-    input: AvatarUploadMutationInput,
+    input: AvatarUploadMutationInput
   ): Promise<MutationResult<AvatarUploadMutationInput>> {
     const credentials = await databaseManager.appDatabase
       .selectFrom('accounts')
@@ -45,7 +45,7 @@ export class AvatarUploadMutationHandler
         serverAttributes: credentials.attributes,
         token: credentials.token,
         headers: formData.getHeaders(),
-      },
+      }
     );
 
     return {

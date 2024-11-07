@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileImage, File, FileVideo, FileAudio, FileText } from 'lucide-react';
 
 interface FileIconProps {

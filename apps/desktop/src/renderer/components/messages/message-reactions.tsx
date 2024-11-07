@@ -1,4 +1,3 @@
-import React from 'react';
 import { MessageNode } from '@/types/messages';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,7 @@ export const MessageReactions = ({
             className={cn(
               'rouded flex flex-row items-center gap-2 px-1 py-0.5 shadow',
               'cursor-pointer text-sm text-muted-foreground hover:text-foreground',
-              hasReacted ? 'bg-blue-100' : 'bg-gray-50',
+              hasReacted ? 'bg-blue-100' : 'bg-gray-50'
             )}
             onClick={() => onReactionClick(reaction.reaction)}
           >

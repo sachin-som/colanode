@@ -6,8 +6,7 @@
     "src/preload/*.d.ts",
     "src/operations/**/*",
     "src/types/**/*",
-    "src/lib/**/*",
-    "src/registry/**/*"
+    "src/lib/**/*"
   ],
   "compilerOptions": {
     "composite": true,
@@ -16,8 +15,7 @@
       "@/renderer/*": ["./src/renderer/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/operations/*": ["./src/operations/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/registry/*": ["./src/registry/*"]
+      "@/types/*": ["./src/types/*"]
     }
   }
 }

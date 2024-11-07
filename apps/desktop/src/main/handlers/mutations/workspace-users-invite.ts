@@ -1,11 +1,7 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceUsersInviteOutput } from '@/types/workspaces';
 import { CreateNode } from '@/main/data/workspace/schema';
 
@@ -13,7 +9,7 @@ export class WorkspaceUsersInviteMutationHandler
   implements MutationHandler<WorkspaceUsersInviteMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUsersInviteMutationInput,
+    input: WorkspaceUsersInviteMutationInput
   ): Promise<MutationResult<WorkspaceUsersInviteMutationInput>> {
     const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
@@ -66,11 +62,11 @@ export class WorkspaceUsersInviteMutationHandler
         serverDomain: server.domain,
         serverAttributes: server.attributes,
         token: account.token,
-      },
+      }
     );
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const usersToCreate: CreateNode[] = data.users.map((user) => {

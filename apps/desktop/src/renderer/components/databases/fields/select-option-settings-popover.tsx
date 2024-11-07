@@ -8,7 +8,7 @@ import {
 import { Separator } from '@/renderer/components/ui/separator';
 import { selectOptionColors } from '@/lib/databases';
 import { cn } from '@/lib/utils';
-import { SelectOptionAttributes } from '@/registry';
+import { SelectOptionAttributes } from '@colanode/core';
 import { SelectOptionDeleteDialog } from '@/renderer/components/databases/fields/select-option-delete-dialog';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { Ellipsis, Trash2 } from 'lucide-react';

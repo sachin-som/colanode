@@ -1,18 +1,18 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { generateId, IdType } from '@/lib/id';
 import { FileCreateMutationInput } from '@/operations/mutations/file-create';
 import { fileManager } from '@/main/file-manager';
-import { FileAttributes } from '@/registry';
+import { FileAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
 {
   async handleMutation(
-    input: FileCreateMutationInput,
+    input: FileCreateMutationInput
   ): Promise<MutationResult<FileCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const metadata = fileManager.getFileMetadata(input.filePath);
@@ -25,7 +25,7 @@ export class FileCreateMutationHandler
       input.filePath,
       id,
       metadata.extension,
-      input.userId,
+      input.userId
     );
 
     const attributes: FileAttributes = {

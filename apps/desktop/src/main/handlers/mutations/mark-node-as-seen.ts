@@ -1,6 +1,6 @@
 import { generateId, IdType } from '@/lib/id';
 import { databaseManager } from '@/main/data/database-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { MarkNodeAsSeenMutationInput } from '@/operations/mutations/mark-node-as-seen';
 import { LocalUserNodeChangeData } from '@/types/sync';
 
@@ -8,10 +8,10 @@ export class MarkNodeAsSeenMutationHandler
   implements MutationHandler<MarkNodeAsSeenMutationInput>
 {
   async handleMutation(
-    input: MarkNodeAsSeenMutationInput,
+    input: MarkNodeAsSeenMutationInput
   ): Promise<MutationResult<MarkNodeAsSeenMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const changeData: LocalUserNodeChangeData = {

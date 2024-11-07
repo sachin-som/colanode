@@ -1,4 +1,4 @@
-import { ViewAttributes } from '@/registry';
+import { ViewAttributes } from '@colanode/core';
 import { createContext, useContext } from 'react';
 
 interface DatabaseViewsContext {
@@ -8,7 +8,7 @@ interface DatabaseViewsContext {
 }
 
 export const DatabaseViewsContext = createContext<DatabaseViewsContext>(
-  {} as DatabaseViewsContext,
+  {} as DatabaseViewsContext
 );
 
 export const useDatabaseViews = () => useContext(DatabaseViewsContext);

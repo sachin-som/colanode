@@ -1,6 +1,4 @@
-import React from 'react';
-import { RecordNode } from '@/registry';
-import { FieldAttributes } from '@/registry';
+import { RecordNode, FieldAttributes } from '@colanode/core';
 import { TableViewTextCell } from '@/renderer/components/databases/tables/cells/table-view-text-cell';
 import { TableViewNumberCell } from '@/renderer/components/databases/tables/cells/table-view-number-cell';
 import { TableViewBooleanCell } from '@/renderer/components/databases/tables/cells/table-view-boolean-cell';
@@ -18,10 +16,7 @@ interface TableViewFieldCellProps {
   field: FieldAttributes;
 }
 
-export const TableViewFieldCell = ({
-  record,
-  field,
-}: TableViewFieldCellProps) => {
+export const TableViewFieldCell = ({ field }: TableViewFieldCellProps) => {
   switch (field.type) {
     case 'text':
       return <TableViewTextCell field={field} />;

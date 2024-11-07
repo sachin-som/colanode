@@ -1,4 +1,3 @@
-import React from 'react';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { Separator } from '@/renderer/components/ui/separator';
 import { WorkspaceUserInvite } from '@/renderer/components/workspaces/workspace-user-invite';

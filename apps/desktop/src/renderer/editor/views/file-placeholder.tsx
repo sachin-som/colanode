@@ -1,4 +1,3 @@
-import React from 'react';
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/react';
 import { FilePreview } from '@/renderer/components/files/file-preview';

@@ -4,7 +4,7 @@ import {
   FieldAttributes,
   FieldType,
   SelectOptionAttributes,
-} from '@/registry';
+} from '@colanode/core';
 
 interface DatabaseContext {
   id: string;
@@ -17,13 +17,13 @@ interface DatabaseContext {
   createSelectOption: (fieldId: string, name: string, color: string) => void;
   updateSelectOption: (
     fieldId: string,
-    attributes: SelectOptionAttributes,
+    attributes: SelectOptionAttributes
   ) => void;
   deleteSelectOption: (fieldId: string, optionId: string) => void;
 }
 
 export const DatabaseContext = createContext<DatabaseContext>(
-  {} as DatabaseContext,
+  {} as DatabaseContext
 );
 
 export const useDatabase = () => useContext(DatabaseContext);

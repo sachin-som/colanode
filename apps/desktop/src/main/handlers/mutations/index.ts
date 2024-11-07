@@ -1,4 +1,5 @@
-import { MutationHandler, MutationMap } from '@/operations/mutations';
+import { MutationMap } from '@/operations/mutations';
+import { MutationHandler } from '@/main/types';
 import { EmailLoginMutationHandler } from '@/main/handlers/mutations/email-login';
 import { EmailRegisterMutationHandler } from '@/main/handlers/mutations/email-register';
 import { ViewCreateMutationHandler } from '@/main/handlers/mutations/view-create';

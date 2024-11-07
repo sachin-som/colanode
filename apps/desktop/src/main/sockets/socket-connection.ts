@@ -1,9 +1,15 @@
 import { WebSocket } from 'ws';
-import { buildSynapseUrl } from '@/lib/servers';
 import { BackoffCalculator } from '@/lib/backoff-calculator';
 import { MessageContext, MessageInput } from '@/operations/messages';
 import { mediator } from '@/main/mediator';
 import { SelectAccount, SelectServer } from '@/main/data/app/schema';
+import { ServerAttributes } from '@/types/servers';
+
+const buildSynapseUrl = (server: SelectServer, deviceId: string) => {
+  const attributes = JSON.parse(server.attributes) as ServerAttributes;
+  const protocol = attributes?.insecure ? 'ws' : 'wss';
+  return `${protocol}://${server.domain}/v1/synapse?device_id=${deviceId}`;
+};
 
 export class SocketConnection {
   private readonly server: SelectServer;
@@ -35,7 +41,7 @@ export class SocketConnection {
         headers: {
           authorization: this.account.token,
         },
-      },
+      }
     );
 
     this.socket.onmessage = async (event) => {

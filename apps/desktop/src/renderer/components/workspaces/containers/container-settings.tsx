@@ -1,4 +1,3 @@
-import React from 'react';
 import { IdType } from '@/lib/id';
 import { getIdType } from '@/lib/id';
 import { match } from 'ts-pattern';

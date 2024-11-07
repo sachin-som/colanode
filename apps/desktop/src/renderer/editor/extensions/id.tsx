@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/react';
 import { Plugin, PluginKey } from 'prosemirror-state';
-import { generateId, getIdTypeFromNode, IdType } from '@/lib/id';
+import { generateId, getIdTypeFromNode } from '@/lib/id';
 import { EditorNodeTypes } from '@/lib/constants';
 
 const types = [

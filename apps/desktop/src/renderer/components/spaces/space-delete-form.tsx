@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -10,7 +9,7 @@ interface SpaceDeleteFormProps {
   onDeleted: () => void;
 }
 
-export const SpaceDeleteForm = ({ id, onDeleted }: SpaceDeleteFormProps) => {
+export const SpaceDeleteForm = ({ id }: SpaceDeleteFormProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 

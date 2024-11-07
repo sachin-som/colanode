@@ -1,5 +1,4 @@
-import React from 'react';
-import { FieldAttributes } from '@/registry';
+import { FieldAttributes } from '@colanode/core';
 import { RecordTextValue } from '@/renderer/components/records/values/record-text-value';
 import { RecordNumberValue } from '@/renderer/components/records/values/record-number-value';
 import { RecordBooleanValue } from '@/renderer/components/records/values/record-boolean-value';
@@ -37,5 +36,7 @@ export const RecordFieldValue = ({ field }: RecordFieldValueProps) => {
       return <RecordUrlValue field={field} />;
     case 'multiSelect':
       return <RecordMultiSelectValue field={field} />;
+    default:
+      return null;
   }
 };

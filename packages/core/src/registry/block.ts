@@ -1,4 +1,4 @@
-import { ZodText } from '@/registry/zod';
+import { ZodText } from './zod';
 import { z } from 'zod';
 
 export const blockLeafSchema = z.object({
@@ -9,7 +9,7 @@ export const blockLeafSchema = z.object({
       z.object({
         type: z.string(),
         attrs: z.record(z.any()).nullable(),
-      }),
+      })
     )
     .nullable(),
 });

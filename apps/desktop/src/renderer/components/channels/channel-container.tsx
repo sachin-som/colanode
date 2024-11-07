@@ -1,4 +1,3 @@
-import React from 'react';
 import { Conversation } from '@/renderer/components/messages/conversation';
 
 interface ChannelContainerProps {

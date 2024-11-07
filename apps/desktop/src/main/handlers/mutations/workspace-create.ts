@@ -1,14 +1,14 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceOutput } from '@/types/workspaces';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>
 {
   async handleMutation(
-    input: WorkspaceCreateMutationInput,
+    input: WorkspaceCreateMutationInput
   ): Promise<MutationResult<WorkspaceCreateMutationInput>> {
     const account = await databaseManager.appDatabase
       .selectFrom('accounts')
@@ -41,7 +41,7 @@ export class WorkspaceCreateMutationHandler
         serverDomain: server.domain,
         serverAttributes: server.attributes,
         token: account.token,
-      },
+      }
     );
 
     await databaseManager.appDatabase
@@ -60,7 +60,7 @@ export class WorkspaceCreateMutationHandler
       .execute();
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      data.user.id,
+      data.user.id
     );
 
     const user = data.user.node;

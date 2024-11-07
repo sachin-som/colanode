@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,21 +20,27 @@ interface WorkspaceRoleItem {
 
 const roles: WorkspaceRoleItem[] = [
   {
-    name: 'Owner',
-    value: WorkspaceRole.Owner,
-    description: 'Owner',
-    enabled: false,
-  },
-  {
     name: 'Admin',
-    value: WorkspaceRole.Admin,
+    value: 'admin',
     description: 'Administration access',
     enabled: true,
   },
   {
+    name: 'Editor',
+    value: 'editor',
+    description: 'Can edit content',
+    enabled: true,
+  },
+  {
     name: 'Collaborator',
-    value: WorkspaceRole.Collaborator,
+    value: 'collaborator',
     description: 'Can contribute in content',
+    enabled: true,
+  },
+  {
+    name: 'Viewer',
+    value: 'viewer',
+    description: 'Can view content',
     enabled: true,
   },
 ];

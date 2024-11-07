@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
-import { blockSchema } from '@/registry/block';
+import { NodeModel } from './core';
+import { blockSchema } from './block';
 import { isEqual } from 'lodash';
 
 export const messageAttributesSchema = z.object({

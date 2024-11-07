@@ -1,4 +1,3 @@
-import React from 'react';
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
 import { useView } from '@/renderer/contexts/view';
 import { ArrowDownAz } from 'lucide-react';

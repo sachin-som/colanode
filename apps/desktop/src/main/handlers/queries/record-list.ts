@@ -1,11 +1,11 @@
 import { RecordListQueryInput } from '@/operations/queries/record-list';
 import { databaseManager } from '@/main/data/database-manager';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { sql } from 'kysely';
 import {
@@ -25,9 +25,9 @@ import {
   ViewSortAttributes,
   DatabaseNode,
   RecordNode,
-} from '@/registry';
+} from '@colanode/core';
 import { isStringArray } from '@/lib/utils';
-import { mapNode } from '@/lib/nodes';
+import { mapNode } from '@/main/utils';
 import { NodeTypes } from '@/lib/constants';
 import { isEqual } from 'lodash';
 
@@ -35,7 +35,7 @@ export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>
 {
   public async handleQuery(
-    input: RecordListQueryInput,
+    input: RecordListQueryInput
   ): Promise<QueryResult<RecordListQueryInput>> {
     const rows = await this.fetchRecords(input);
 
@@ -50,14 +50,14 @@ export class RecordListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: RecordListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<RecordListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -84,16 +84,16 @@ export class RecordListQueryHandler
   }
 
   private async fetchRecords(
-    input: RecordListQueryInput,
+    input: RecordListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const database = await this.fetchDatabase(input.userId, input.databaseId);
     const filterQuery = this.buildFiltersQuery(
       input.filters,
-      database.attributes.fields,
+      database.attributes.fields
     );
 
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."index" ASC'}`;
@@ -143,7 +143,7 @@ export class RecordListQueryHandler
 
   private async fetchDatabase(
     userId: string,
-    databaseId: string,
+    databaseId: string
   ): Promise<DatabaseNode> {
     const workspaceDatabase =
       await databaseManager.getWorkspaceDatabase(userId);
@@ -164,7 +164,7 @@ export class RecordListQueryHandler
 
   private buildFiltersQuery = (
     filters: ViewFilterAttributes[],
-    fields: Record<string, FieldAttributes>,
+    fields: Record<string, FieldAttributes>
   ): string => {
     if (filters.length === 0) {
       return '';
@@ -183,7 +183,7 @@ export class RecordListQueryHandler
 
   private buildFilterQuery = (
     filter: ViewFilterAttributes,
-    fields: Record<string, FieldAttributes>,
+    fields: Record<string, FieldAttributes>
   ): string | null => {
     if (filter.type === 'group') {
       return null;
@@ -228,7 +228,7 @@ export class RecordListQueryHandler
 
   buildBooleanFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: BooleanFieldAttributes,
+    field: BooleanFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_true') {
       return `json_extract(n.attributes, '$.fields.${field.id}.value') = true`;
@@ -243,7 +243,7 @@ export class RecordListQueryHandler
 
   private buildNumberFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: NumberFieldAttributes,
+    field: NumberFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -296,7 +296,7 @@ export class RecordListQueryHandler
 
   private buildTextFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: TextFieldAttributes,
+    field: TextFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -354,7 +354,7 @@ export class RecordListQueryHandler
 
   private buildEmailFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: EmailFieldAttributes,
+    field: EmailFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -412,7 +412,7 @@ export class RecordListQueryHandler
 
   private buildPhoneFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: PhoneFieldAttributes,
+    field: PhoneFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -470,7 +470,7 @@ export class RecordListQueryHandler
 
   private buildUrlFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: UrlFieldAttributes,
+    field: UrlFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -528,7 +528,7 @@ export class RecordListQueryHandler
 
   private buildSelectFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: SelectFieldAttributes,
+    field: SelectFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -559,7 +559,7 @@ export class RecordListQueryHandler
 
   private buildMultiSelectFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: MultiSelectFieldAttributes,
+    field: MultiSelectFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) = 0`;
@@ -590,7 +590,7 @@ export class RecordListQueryHandler
 
   private buildDateFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: DateFieldAttributes,
+    field: DateFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return this.buildIsEmptyFilterQuery(field.id);
@@ -648,7 +648,7 @@ export class RecordListQueryHandler
 
   private buildCreatedAtFilterQuery = (
     filter: ViewFieldFilterAttributes,
-    field: CreatedAtFieldAttributes,
+    _: CreatedAtFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
       return `n.created_at IS NULL`;
@@ -718,7 +718,7 @@ export class RecordListQueryHandler
 
   private buildSortOrdersQuery = (
     sorts: ViewSortAttributes[],
-    fields: Record<string, FieldAttributes>,
+    fields: Record<string, FieldAttributes>
   ): string => {
     return sorts
       .map((sort) => this.buildSortOrderQuery(sort, fields))
@@ -728,7 +728,7 @@ export class RecordListQueryHandler
 
   private buildSortOrderQuery = (
     sort: ViewSortAttributes,
-    fields: Record<string, FieldAttributes>,
+    fields: Record<string, FieldAttributes>
   ): string | null => {
     const field = fields[sort.fieldId];
     if (!field) {

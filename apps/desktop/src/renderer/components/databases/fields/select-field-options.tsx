@@ -8,7 +8,10 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { MultiSelectFieldAttributes, SelectFieldAttributes } from '@/registry';
+import {
+  MultiSelectFieldAttributes,
+  SelectFieldAttributes,
+} from '@colanode/core';
 import { getRandomSelectOptionColor } from '@/lib/databases';
 import { SelectOptionSettingsPopover } from '@/renderer/components/databases/fields/select-option-settings-popover';
 import { useWorkspace } from '@/renderer/contexts/workspace';

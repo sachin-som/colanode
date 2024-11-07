@@ -1,12 +1,10 @@
 import * as Y from 'yjs';
-import { NodeAttributes } from '@/registry';
+import { NodeAttributes, registry, applyCrdt } from '@colanode/core';
 import { fromUint8Array, toUint8Array } from 'js-base64';
-import { applyCrdt } from '@/main/crdt';
 import {
   LocalCreateNodeChangeData,
   LocalUpdateNodeChangeData,
 } from '@/types/sync';
-import { registry } from '@/registry';
 import { generateId } from '@/lib/id';
 import { IdType } from '@/lib/id';
 import { databaseManager } from '@/main/data/database-manager';
@@ -19,7 +17,7 @@ class NodeManager {
     transaction: Transaction<WorkspaceDatabaseSchema>,
     userId: string,
     id: string,
-    attributes: NodeAttributes,
+    attributes: NodeAttributes
   ) {
     const doc = new Y.Doc({
       guid: id,
@@ -75,7 +73,7 @@ class NodeManager {
   async updateNode(
     userId: string,
     id: string,
-    updater: (attributes: NodeAttributes) => NodeAttributes,
+    updater: (attributes: NodeAttributes) => NodeAttributes
   ) {
     const workspaceDatabase =
       await databaseManager.getWorkspaceDatabase(userId);
@@ -113,7 +111,7 @@ class NodeManager {
         applyCrdt(
           registry[updatedAttributes.type].schema,
           updatedAttributes,
-          attributesMap,
+          attributesMap
         );
       });
 
@@ -165,10 +163,10 @@ class NodeManager {
           return hasChanges;
         });
 
-      if (result) {
-        return true;
-      }
+      return result;
     }
+
+    throw new Error('Failed to update node');
   }
 }
 

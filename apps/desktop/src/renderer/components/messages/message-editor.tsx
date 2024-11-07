@@ -84,7 +84,7 @@ export const MessageEditor = React.forwardRef<
           class:
             'prose-lg prose-stone dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full',
         },
-        handleKeyDown: (view, event) => {
+        handleKeyDown: (_, event) => {
           return isHotkey('enter', event);
         },
       },
@@ -94,7 +94,7 @@ export const MessageEditor = React.forwardRef<
       autofocus: 'end',
       editable: props.canEdit,
     },
-    [props.conversationId],
+    [props.conversationId]
   );
 
   const handleSubmit = React.useCallback(() => {
@@ -196,6 +196,8 @@ export const MessageEditor = React.forwardRef<
               handleSubmit();
               return true;
             }
+
+            return false;
           }}
         />
       </div>

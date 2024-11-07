@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectFieldAttributes } from '@/registry';
+import { SelectFieldAttributes } from '@colanode/core';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
 import {
   Popover,
@@ -18,7 +18,7 @@ export const RecordSelectValue = ({ field }: RecordSelectValueProps) => {
 
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(
-    record.getSelectValue(field),
+    record.getSelectValue(field)
   );
 
   React.useEffect(() => {

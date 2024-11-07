@@ -1,5 +1,4 @@
-import React from 'react';
-import { FieldType } from '@/registry';
+import { FieldType } from '@colanode/core';
 import {
   SquareCheck,
   User,
@@ -12,7 +11,6 @@ import {
   ListCheck,
   Text,
   Link,
-  X,
   ShieldQuestion,
 } from 'lucide-react';
 

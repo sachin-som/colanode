@@ -5,7 +5,7 @@ import {
   ViewFilterAttributes,
   ViewFieldAttributes,
   RecordNode,
-} from '@/registry';
+} from '@colanode/core';
 import { compareString, isStringArray } from '@/lib/utils';
 import { generateNodeIndex } from './nodes';
 
@@ -576,9 +576,9 @@ const recordMatchesBooleanFilter = (
 };
 
 const recordMatchesCollaboratorFilter = (
-  record: RecordNode,
-  filter: ViewFieldFilterAttributes,
-  field: FieldAttributes
+  _: RecordNode,
+  __: ViewFieldFilterAttributes,
+  ___: FieldAttributes
 ) => {
   return false;
 };
@@ -739,9 +739,9 @@ const recordMatchesEmailFilter = (
 };
 
 const recordMatchesFileFilter = (
-  record: RecordNode,
-  filter: ViewFieldFilterAttributes,
-  field: FieldAttributes
+  _: RecordNode,
+  __: ViewFieldFilterAttributes,
+  ___: FieldAttributes
 ) => {
   return false;
 };

@@ -1,22 +1,22 @@
 import { BreadcrumbListQueryInput } from '@/operations/queries/breadcrumb-list';
 import { databaseManager } from '@/main/data/database-manager';
-import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { BreadcrumbNode } from '@/types/workspaces';
-import { mapNode } from '@/lib/nodes';
+import { mapNode } from '@/main/utils';
 import { isEqual } from 'lodash';
-import { MutationChange } from '@/operations/mutations';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 
 export class BreadcrumbListQueryHandler
   implements QueryHandler<BreadcrumbListQueryInput>
 {
   public async handleQuery(
-    input: BreadcrumbListQueryInput,
+    input: BreadcrumbListQueryInput
   ): Promise<QueryResult<BreadcrumbListQueryInput>> {
     const rows = await this.fetchNodes(input);
     return {
@@ -30,14 +30,14 @@ export class BreadcrumbListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: BreadcrumbListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<BreadcrumbListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -64,10 +64,10 @@ export class BreadcrumbListQueryHandler
   }
 
   private async fetchNodes(
-    input: BreadcrumbListQueryInput,
+    input: BreadcrumbListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const query = sql<SelectNode>`
@@ -90,7 +90,7 @@ export class BreadcrumbListQueryHandler
 
   private buildBreadcrumbNodes = (
     nodeId: string,
-    rows: SelectNode[],
+    rows: SelectNode[]
   ): BreadcrumbNode[] => {
     const breadcrumbNodes: BreadcrumbNode[] = [];
 

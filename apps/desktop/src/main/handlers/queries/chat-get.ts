@@ -1,19 +1,19 @@
 import { ChatGetQueryInput } from '@/operations/queries/chat-get';
 import { databaseManager } from '@/main/data/database-manager';
+import { mapNode } from '@/main/utils';
+import { SelectNode } from '@/main/data/workspace/schema';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { mapNode } from '@/lib/nodes';
-import { SelectNode } from '@/main/data/workspace/schema';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 import { ChatNode } from '@/types/chats';
 
 export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
   async handleQuery(
-    input: ChatGetQueryInput,
+    input: ChatGetQueryInput
   ): Promise<QueryResult<ChatGetQueryInput>> {
     const chat = await this.fetchChat(input);
     if (!chat) {
@@ -36,14 +36,14 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
   async checkForChanges(
     changes: MutationChange[],
     input: ChatGetQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<ChatGetQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -86,10 +86,10 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
   }
 
   private async fetchChat(
-    input: ChatGetQueryInput,
+    input: ChatGetQueryInput
   ): Promise<SelectNode | null> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const chat = await workspaceDatabase
@@ -103,10 +103,10 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
 
   private async fetchCollaborators(
     input: ChatGetQueryInput,
-    chat: SelectNode,
+    chat: SelectNode
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     if (!chat.attributes) {
@@ -144,7 +144,7 @@ export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {
 
   private buildChat = (
     chat: SelectNode,
-    collaborators: SelectNode[],
+    collaborators: SelectNode[]
   ): ChatNode | null => {
     const collaborator = mapNode(collaborators[0]);
     if (collaborator.attributes.type !== 'user') {

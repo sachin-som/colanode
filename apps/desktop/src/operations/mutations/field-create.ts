@@ -1,4 +1,4 @@
-import { FieldType } from '@/registry';
+import { FieldType } from '@colanode/core';
 
 export type FieldCreateMutationInput = {
   type: 'field_create';

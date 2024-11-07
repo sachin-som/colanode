@@ -1,4 +1,3 @@
-import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import {
   Dialog,

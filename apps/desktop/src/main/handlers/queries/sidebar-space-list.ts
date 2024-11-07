@@ -1,17 +1,17 @@
 import { SidebarSpaceListQueryInput } from '@/operations/queries/sidebar-space-list';
 import { databaseManager } from '@/main/data/database-manager';
-import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { SidebarNode, SidebarSpaceNode } from '@/types/workspaces';
-import { mapNode } from '@/lib/nodes';
-import { Node } from '@/registry';
-import { MutationChange } from '@/operations/mutations';
+import { mapNode } from '@/main/utils';
+import { Node } from '@colanode/core';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 import { isEqual } from 'lodash';
 import { compareString } from '@/lib/utils';
 
@@ -25,7 +25,7 @@ export class SidebarSpaceListQueryHandler
   implements QueryHandler<SidebarSpaceListQueryInput>
 {
   public async handleQuery(
-    input: SidebarSpaceListQueryInput,
+    input: SidebarSpaceListQueryInput
   ): Promise<QueryResult<SidebarSpaceListQueryInput>> {
     const rows = await this.fetchNodes(input);
     const unreadCounts = await this.fetchUnreadCounts(input, rows);
@@ -42,14 +42,14 @@ export class SidebarSpaceListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: SidebarSpaceListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<SidebarSpaceListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           (change.table === 'nodes' || change.table === 'user_nodes') &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -80,10 +80,10 @@ export class SidebarSpaceListQueryHandler
   }
 
   private async fetchNodes(
-    input: SidebarSpaceListQueryInput,
+    input: SidebarSpaceListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const query = sql<SelectNode>`
@@ -108,10 +108,10 @@ export class SidebarSpaceListQueryHandler
 
   private async fetchUnreadCounts(
     input: SidebarSpaceListQueryInput,
-    rows: SelectNode[],
+    rows: SelectNode[]
   ): Promise<UnreadCountRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const channelIds = rows
@@ -138,7 +138,7 @@ export class SidebarSpaceListQueryHandler
 
   private buildSidebarSpaceNodes = (
     rows: SelectNode[],
-    unreadCounts: UnreadCountRow[],
+    unreadCounts: UnreadCountRow[]
   ): SidebarSpaceNode[] => {
     const nodes: Node[] = rows.map(mapNode);
     const spaces: SidebarSpaceNode[] = [];
@@ -164,7 +164,7 @@ export class SidebarSpaceListQueryHandler
   private buildSpaceNode = (
     node: Node,
     children: Node[],
-    unreadCounts: UnreadCountRow[],
+    unreadCounts: UnreadCountRow[]
   ): SidebarSpaceNode | null => {
     if (node.type !== 'space') {
       return null;
@@ -191,7 +191,7 @@ export class SidebarSpaceListQueryHandler
 
   private buildSidearNode = (
     node: Node,
-    unreadCounts: UnreadCountRow[],
+    unreadCounts: UnreadCountRow[]
   ): SidebarNode | null => {
     const unreadCountRow = unreadCounts.find((r) => r.node_id === node.id);
 

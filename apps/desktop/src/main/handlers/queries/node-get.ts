@@ -1,18 +1,18 @@
 import { NodeGetQueryInput } from '@/operations/queries/node-get';
 import { databaseManager } from '@/main/data/database-manager';
+import { mapNode } from '@/main/utils';
+import { SelectNode } from '@/main/data/workspace/schema';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { mapNode } from '@/lib/nodes';
-import { SelectNode } from '@/main/data/workspace/schema';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
   public async handleQuery(
-    input: NodeGetQueryInput,
+    input: NodeGetQueryInput
   ): Promise<QueryResult<NodeGetQueryInput>> {
     const row = await this.fetchNode(input);
 
@@ -27,14 +27,14 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
   public async checkForChanges(
     changes: MutationChange[],
     input: NodeGetQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<NodeGetQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -61,10 +61,10 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
   }
 
   private async fetchNode(
-    input: NodeGetQueryInput,
+    input: NodeGetQueryInput
   ): Promise<SelectNode | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const row = await workspaceDatabase

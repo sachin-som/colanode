@@ -1,5 +1,4 @@
-import React from 'react';
-import { UrlFieldAttributes } from '@/registry';
+import { UrlFieldAttributes } from '@colanode/core';
 import { cn, isValidUrl } from '@/lib/utils';
 import {
   HoverCard,
@@ -48,7 +47,7 @@ export const RecordUrlValue = ({ field }: RecordUrlValueProps) => {
       <HoverCardContent
         className={cn(
           'flex w-full min-w-80 max-w-128 flex-row items-center justify-between gap-2 text-ellipsis',
-          !isUrl && 'hidden',
+          !isUrl && 'hidden'
         )}
       >
         <a

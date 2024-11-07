@@ -1,6 +1,6 @@
 import React from 'react';
 import { Checkbox } from '@/renderer/components/ui/checkbox';
-import { BooleanFieldAttributes } from '@/registry';
+import { BooleanFieldAttributes } from '@colanode/core';
 import { useRecord } from '@/renderer/contexts/record';
 
 interface RecordBooleanValueProps {
@@ -11,7 +11,7 @@ export const RecordBooleanValue = ({ field }: RecordBooleanValueProps) => {
   const record = useRecord();
 
   const [input, setInput] = React.useState<boolean>(
-    record.getBooleanValue(field),
+    record.getBooleanValue(field)
   );
 
   React.useEffect(() => {

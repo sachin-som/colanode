@@ -1,5 +1,4 @@
-import React from 'react';
-import { UrlFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import { UrlFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -31,7 +30,7 @@ export const ViewUrlFieldFilter = ({
 
   const operator =
     urlFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? urlFieldFilterOperators[0];
 
   const urlValue = filter.value as string | null;

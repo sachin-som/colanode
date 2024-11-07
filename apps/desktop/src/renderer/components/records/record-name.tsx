@@ -1,4 +1,3 @@
-import React from 'react';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useWorkspace } from '@/renderer/contexts/workspace';

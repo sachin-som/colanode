@@ -1,4 +1,3 @@
-import React from 'react';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { Document } from '@/renderer/components/documents/document';
 

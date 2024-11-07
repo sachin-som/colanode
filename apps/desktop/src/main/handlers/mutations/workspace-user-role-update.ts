@@ -1,18 +1,14 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceUserRoleUpdateOutput } from '@/types/workspaces';
 
 export class WorkspaceUserRoleUpdateMutationHandler
   implements MutationHandler<WorkspaceUserRoleUpdateMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUserRoleUpdateMutationInput,
+    input: WorkspaceUserRoleUpdateMutationInput
   ): Promise<MutationResult<WorkspaceUserRoleUpdateMutationInput>> {
     const workspace = await databaseManager.appDatabase
       .selectFrom('workspaces')
@@ -65,11 +61,11 @@ export class WorkspaceUserRoleUpdateMutationHandler
         serverDomain: server.domain,
         serverAttributes: server.attributes,
         token: account.token,
-      },
+      }
     );
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     await workspaceDatabase

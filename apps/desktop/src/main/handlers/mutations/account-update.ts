@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { AccountUpdateOutput } from '@/types/accounts';
 import { AccountUpdateMutationInput } from '@/operations/mutations/account-update';
 
@@ -8,7 +8,7 @@ export class AccountUpdateMutationHandler
   implements MutationHandler<AccountUpdateMutationInput>
 {
   async handleMutation(
-    input: AccountUpdateMutationInput,
+    input: AccountUpdateMutationInput
   ): Promise<MutationResult<AccountUpdateMutationInput>> {
     const account = await databaseManager.appDatabase
       .selectFrom('accounts')
@@ -40,7 +40,7 @@ export class AccountUpdateMutationHandler
         serverDomain: server.domain,
         serverAttributes: server.attributes,
         token: account.token,
-      },
+      }
     );
 
     await databaseManager.appDatabase

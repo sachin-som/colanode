@@ -1,6 +1,5 @@
-import React from 'react';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
-import { SelectOptionAttributes } from '@/registry';
+import { SelectOptionAttributes } from '@colanode/core';
 
 interface BoardViewColumnHeaderProps {
   option: SelectOptionAttributes;

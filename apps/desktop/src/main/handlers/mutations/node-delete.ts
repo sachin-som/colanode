@@ -1,11 +1,7 @@
 import { NodeTypes } from '@/lib/constants';
 import { databaseManager } from '@/main/data/database-manager';
 import { fileManager } from '@/main/file-manager';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { NodeDeleteMutationInput } from '@/operations/mutations/node-delete';
 import { LocalDeleteNodeChangeData } from '@/types/sync';
 
@@ -13,10 +9,10 @@ export class NodeDeleteMutationHandler
   implements MutationHandler<NodeDeleteMutationInput>
 {
   async handleMutation(
-    input: NodeDeleteMutationInput,
+    input: NodeDeleteMutationInput
   ): Promise<MutationResult<NodeDeleteMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const node = await workspaceDatabase

@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
-import { WorkspaceRole } from '@/types/workspaces';
+import { NodeModel } from './core';
 
 export const userAttributesSchema = z.object({
   type: z.literal('user'),
@@ -9,7 +8,7 @@ export const userAttributesSchema = z.object({
   email: z.string().email(),
   avatar: z.string().nullable(),
   accountId: z.string(),
-  role: z.nativeEnum(WorkspaceRole),
+  role: z.enum(['admin', 'editor', 'collaborator', 'viewer']),
 });
 
 export type UserAttributes = z.infer<typeof userAttributesSchema>;
@@ -17,13 +16,13 @@ export type UserAttributes = z.infer<typeof userAttributesSchema>;
 export const userModel: NodeModel = {
   type: 'user',
   schema: userAttributesSchema,
-  canCreate: async (context, attributes) => {
+  canCreate: async (_, __) => {
     return true;
   },
-  canUpdate: async (context, node, attributes) => {
+  canUpdate: async (_, __, ___) => {
     return true;
   },
-  canDelete: async (context, node) => {
+  canDelete: async (_, __) => {
     return true;
   },
 };

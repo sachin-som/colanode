@@ -1,4 +1,3 @@
-import React from 'react';
 import { match } from 'ts-pattern';
 import { useParams } from 'react-router-dom';
 import { PageContainer } from '@/renderer/components/pages/page-container';

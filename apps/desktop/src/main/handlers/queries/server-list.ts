@@ -1,12 +1,12 @@
 import { ServerListQueryInput } from '@/operations/queries/server-list';
 import { databaseManager } from '@/main/data/database-manager';
+import { SelectServer } from '@/main/data/app/schema';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { SelectServer } from '@/main/data/app/schema';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 import { Server } from '@/types/servers';
 
@@ -14,7 +14,7 @@ export class ServerListQueryHandler
   implements QueryHandler<ServerListQueryInput>
 {
   async handleQuery(
-    _: ServerListQueryInput,
+    _: ServerListQueryInput
   ): Promise<QueryResult<ServerListQueryInput>> {
     const rows = await this.fetchServers();
     return {
@@ -28,11 +28,11 @@ export class ServerListQueryHandler
   async checkForChanges(
     changes: MutationChange[],
     _: ServerListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<ServerListQueryInput>> {
     if (
       !changes.some(
-        (change) => change.type === 'app' && change.table === 'servers',
+        (change) => change.type === 'app' && change.table === 'servers'
       )
     ) {
       return {

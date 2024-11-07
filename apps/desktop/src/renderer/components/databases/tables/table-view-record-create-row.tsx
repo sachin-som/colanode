@@ -1,4 +1,3 @@
-import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';

@@ -1,11 +1,11 @@
 import { FileGetQueryInput } from '@/operations/queries/file-get';
 import { databaseManager } from '@/main/data/database-manager';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 import { FileDetails } from '@/types/files';
 
@@ -22,7 +22,7 @@ interface FileRow {
 
 export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   public async handleQuery(
-    input: FileGetQueryInput,
+    input: FileGetQueryInput
   ): Promise<QueryResult<FileGetQueryInput>> {
     const row = await this.fetchFile(input);
 
@@ -37,14 +37,14 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   public async checkForChanges(
     changes: MutationChange[],
     input: FileGetQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<FileGetQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           (change.table === 'nodes' || change.table === 'downloads') &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -71,19 +71,19 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   }
 
   private async fetchFile(
-    input: FileGetQueryInput,
+    input: FileGetQueryInput
   ): Promise<FileRow | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const row = await workspaceDatabase
       .selectFrom('nodes as file')
       .leftJoin('downloads as file_downloads', (join) =>
-        join.onRef('file.id', '=', 'file_downloads.node_id'),
+        join.onRef('file.id', '=', 'file_downloads.node_id')
       )
       .leftJoin('nodes as created_by', (join) =>
-        join.onRef('file.created_by', '=', 'created_by.id'),
+        join.onRef('file.created_by', '=', 'created_by.id')
       )
       .select([
         'file.id',

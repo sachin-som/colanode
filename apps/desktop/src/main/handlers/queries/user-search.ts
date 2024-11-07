@@ -1,22 +1,22 @@
 import { UserSearchQueryInput } from '@/operations/queries/user-search';
 import { databaseManager } from '@/main/data/database-manager';
-import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { UserNode } from '@/types/users';
-import { MutationChange } from '@/operations/mutations';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 export class UserSearchQueryHandler
   implements QueryHandler<UserSearchQueryInput>
 {
   public async handleQuery(
-    input: UserSearchQueryInput,
+    input: UserSearchQueryInput
   ): Promise<QueryResult<UserSearchQueryInput>> {
     const rows =
       input.searchQuery.length > 0
@@ -33,14 +33,14 @@ export class UserSearchQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: UserSearchQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<UserSearchQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -71,10 +71,10 @@ export class UserSearchQueryHandler
   }
 
   private async searchUsers(
-    input: UserSearchQueryInput,
+    input: UserSearchQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const query = sql<SelectNode>`
@@ -92,7 +92,7 @@ export class UserSearchQueryHandler
 
   private async fetchUsers(input: UserSearchQueryInput): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     return workspaceDatabase

@@ -1,18 +1,14 @@
 import { LoginOutput } from '@/types/accounts';
 import { databaseManager } from '@/main/data/database-manager';
 import { EmailLoginMutationInput } from '@/operations/mutations/email-login';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { httpClient } from '@/lib/http-client';
 
 export class EmailLoginMutationHandler
   implements MutationHandler<EmailLoginMutationInput>
 {
   async handleMutation(
-    input: EmailLoginMutationInput,
+    input: EmailLoginMutationInput
   ): Promise<MutationResult<EmailLoginMutationInput>> {
     const server = await databaseManager.appDatabase
       .selectFrom('servers')
@@ -37,7 +33,7 @@ export class EmailLoginMutationHandler
       {
         serverDomain: server.domain,
         serverAttributes: server.attributes,
-      },
+      }
     );
 
     const changedTables: MutationChange[] = [];
@@ -77,7 +73,7 @@ export class EmailLoginMutationHandler
             description: workspace.description,
             user_id: workspace.user.id,
             version_id: workspace.versionId,
-          })),
+          }))
         )
         .execute();
 
@@ -89,7 +85,7 @@ export class EmailLoginMutationHandler
 
     for (const workspace of data.workspaces) {
       const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-        workspace.user.id,
+        workspace.user.id
       );
 
       const user = workspace.user.node;

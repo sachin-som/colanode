@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import * as Y from 'yjs';
-import { ZodText } from '@/registry/zod';
+import { ZodText } from './registry/zod';
 import { isEqual } from 'lodash';
 import { diffChars } from 'diff';
 
 export const applyCrdt = (
   schema: z.ZodSchema,
   attributes: z.infer<typeof schema>,
-  attributesMap: Y.Map<any>,
+  attributesMap: Y.Map<any>
 ) => {
   if (!(schema instanceof z.ZodObject)) {
     throw new Error('Schema must be a ZodObject');
@@ -24,7 +24,7 @@ export const applyCrdt = (
 const applyObjectChanges = (
   schema: z.ZodObject<any, any, any, any>,
   attributes: any,
-  yMap: Y.Map<any>,
+  yMap: Y.Map<any>
 ) => {
   for (const [key, value] of Object.entries(attributes)) {
     if (value === null) {
@@ -91,7 +91,7 @@ const applyObjectChanges = (
   }
 
   const deletedKeys = Array.from(yMap.keys()).filter(
-    (key) => !attributes.hasOwnProperty(key),
+    (key) => !attributes.hasOwnProperty(key)
   );
 
   for (const key of deletedKeys) {
@@ -102,7 +102,7 @@ const applyObjectChanges = (
 const applyArrayChanges = (
   schemaField: z.ZodArray<any>,
   value: Array<any>,
-  yArray: Y.Array<any>,
+  yArray: Y.Array<any>
 ) => {
   const itemSchema = extractType(schemaField.element, value);
   const length = value.length;
@@ -193,7 +193,7 @@ const applyArrayChanges = (
 const applyRecordChanges = (
   schemaField: z.ZodRecord<any, any>,
   record: Record<any, any>,
-  yMap: Y.Map<any>,
+  yMap: Y.Map<any>
 ) => {
   const valueSchema = extractType(schemaField.valueSchema, record);
   for (const [key, value] of Object.entries(record)) {
@@ -259,7 +259,7 @@ const applyRecordChanges = (
   }
 
   const deletedKeys = Array.from(yMap.keys()).filter(
-    (key) => !record.hasOwnProperty(key),
+    (key) => !record.hasOwnProperty(key)
   );
 
   for (const key of deletedKeys) {
@@ -291,7 +291,7 @@ const applyTextChanges = (value: string, yText: Y.Text) => {
 
 const extractType = (
   schema: z.ZodType<any, any, any>,
-  value: any,
+  value: any
 ): z.ZodType<any, any, any> => {
   if (schema instanceof z.ZodOptional) {
     return extractType(schema.unwrap(), value);

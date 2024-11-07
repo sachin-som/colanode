@@ -1,6 +1,5 @@
-import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { RecordNode } from '@/registry';
+import { RecordNode } from '@colanode/core';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewCardProps {
@@ -19,7 +18,7 @@ export const CalendarViewCard = ({ record }: CalendarViewCardProps) => {
       key={record.id}
       className={cn(
         'animate-fade-in flex cursor-pointer flex-col gap-1 rounded-md border p-2 hover:bg-gray-50',
-        hasName ? '' : 'text-muted-foreground',
+        hasName ? '' : 'text-muted-foreground'
       )}
       onClick={() => workspace.openModal(record.id)}
     >

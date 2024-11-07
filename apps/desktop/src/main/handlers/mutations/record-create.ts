@@ -1,18 +1,18 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType } from '@/lib/id';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { RecordCreateMutationInput } from '@/operations/mutations/record-create';
-import { RecordAttributes } from '@/registry';
+import { RecordAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class RecordCreateMutationHandler
   implements MutationHandler<RecordCreateMutationInput>
 {
   async handleMutation(
-    input: RecordCreateMutationInput,
+    input: RecordCreateMutationInput
   ): Promise<MutationResult<RecordCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const id = generateId(IdType.Record);

@@ -1,4 +1,3 @@
-import React from 'react';
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 

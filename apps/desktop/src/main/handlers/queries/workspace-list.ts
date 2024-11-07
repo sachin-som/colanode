@@ -1,20 +1,20 @@
 import { WorkspaceListQueryInput } from '@/operations/queries/workspace-list';
 import { databaseManager } from '@/main/data/database-manager';
+import { Workspace, WorkspaceRole } from '@/types/workspaces';
+import { SelectWorkspace } from '@/main/data/app/schema';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { Workspace, WorkspaceRole } from '@/types/workspaces';
-import { SelectWorkspace } from '@/main/data/app/schema';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 export class WorkspaceListQueryHandler
   implements QueryHandler<WorkspaceListQueryInput>
 {
   public async handleQuery(
-    input: WorkspaceListQueryInput,
+    _: WorkspaceListQueryInput
   ): Promise<QueryResult<WorkspaceListQueryInput>> {
     const rows = await this.fetchWorkspaces();
 
@@ -28,12 +28,12 @@ export class WorkspaceListQueryHandler
 
   public async checkForChanges(
     changes: MutationChange[],
-    input: WorkspaceListQueryInput,
-    state: Record<string, any>,
+    _: WorkspaceListQueryInput,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<WorkspaceListQueryInput>> {
     if (
       !changes.some(
-        (change) => change.type === 'app' && change.table === 'workspaces',
+        (change) => change.type === 'app' && change.table === 'workspaces'
       )
     ) {
       return {
@@ -69,7 +69,7 @@ export class WorkspaceListQueryHandler
         databaseManager.appDatabase
           .selectFrom('accounts')
           .where('status', '=', 'active')
-          .select('id'),
+          .select('id')
       )
       .execute();
   }

@@ -1,5 +1,4 @@
-import React from 'react';
-import { NumberFieldAttributes } from '@/registry';
+import { NumberFieldAttributes } from '@colanode/core';
 import { SmartNumberInput } from '@/renderer/components/ui/smart-number-input';
 import { useRecord } from '@/renderer/contexts/record';
 

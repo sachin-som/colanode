@@ -1,4 +1,4 @@
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { SpaceUpdateMutationInput } from '@/operations/mutations/space-update';
 import { nodeManager } from '@/main/node-manager';
 
@@ -6,7 +6,7 @@ export class SpaceUpdateMutationHandler
   implements MutationHandler<SpaceUpdateMutationInput>
 {
   async handleMutation(
-    input: SpaceUpdateMutationInput,
+    input: SpaceUpdateMutationInput
   ): Promise<MutationResult<SpaceUpdateMutationInput>> {
     await nodeManager.updateNode(input.userId, input.id, (attributes) => {
       if (attributes.type !== 'space') {

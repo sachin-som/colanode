@@ -1,22 +1,32 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
+import { NodeModel } from './core';
 import { isEqual } from 'lodash';
 
-export const folderAttributesSchema = z.object({
-  type: z.literal('folder'),
+export const channelAttributesSchema = z.object({
+  type: z.literal('channel'),
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
+  index: z.string(),
   collaborators: z.record(z.string()).nullable().optional(),
 });
 
-export type FolderAttributes = z.infer<typeof folderAttributesSchema>;
+export type ChannelAttributes = z.infer<typeof channelAttributesSchema>;
 
-export const folderModel: NodeModel = {
-  type: 'folder',
-  schema: folderAttributesSchema,
+export const channelModel: NodeModel = {
+  type: 'channel',
+  schema: channelAttributesSchema,
   canCreate: async (context, attributes) => {
-    if (attributes.type !== 'folder') {
+    if (attributes.type !== 'channel') {
+      return false;
+    }
+
+    if (context.ancestors.length !== 1) {
+      return false;
+    }
+
+    const parent = context.ancestors[0];
+    if (!parent || parent.type !== 'space') {
       return false;
     }
 
@@ -28,7 +38,7 @@ export const folderModel: NodeModel = {
     return context.hasEditorAccess();
   },
   canUpdate: async (context, node, attributes) => {
-    if (attributes.type !== 'folder' || node.type !== 'folder') {
+    if (attributes.type !== 'channel' || node.type !== 'channel') {
       return false;
     }
 
@@ -38,7 +48,7 @@ export const folderModel: NodeModel = {
 
     return context.hasEditorAccess();
   },
-  canDelete: async (context, node) => {
+  canDelete: async (context, _) => {
     return context.hasEditorAccess();
   },
 };

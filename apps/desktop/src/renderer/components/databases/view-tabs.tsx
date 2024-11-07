@@ -1,4 +1,3 @@
-import React from 'react';
 import { ViewTab } from '@/renderer/components/databases/view-tab';
 import { ViewCreateButton } from '@/renderer/components/databases/view-create-button';
 import { useDatabaseViews } from '@/renderer/contexts/database-views';

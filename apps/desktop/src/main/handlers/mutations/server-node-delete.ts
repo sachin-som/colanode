@@ -1,17 +1,13 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { socketManager } from '@/main/sockets/socket-manager';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { ServerNodeDeleteMutationInput } from '@/operations/mutations/server-node-delete';
 
 export class ServerNodeDeleteMutationHandler
   implements MutationHandler<ServerNodeDeleteMutationInput>
 {
   public async handleMutation(
-    input: ServerNodeDeleteMutationInput,
+    input: ServerNodeDeleteMutationInput
   ): Promise<MutationResult<ServerNodeDeleteMutationInput>> {
     const changes: MutationChange[] = [];
 
@@ -22,7 +18,7 @@ export class ServerNodeDeleteMutationHandler
         eb.and([
           eb('account_id', '=', input.accountId),
           eb('workspace_id', '=', input.workspaceId),
-        ]),
+        ])
       )
       .executeTakeFirst();
 

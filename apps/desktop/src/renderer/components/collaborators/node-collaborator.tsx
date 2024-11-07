@@ -1,4 +1,3 @@
-import React from 'react';
 import { NodeCollaborator as NodeCollaboratorType } from '@/types/nodes';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';

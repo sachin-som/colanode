@@ -1,18 +1,18 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType } from '@/lib/id';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { PageCreateMutationInput } from '@/operations/mutations/page-create';
-import { PageAttributes } from '@/registry';
+import { PageAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class PageCreateMutationHandler
   implements MutationHandler<PageCreateMutationInput>
 {
   async handleMutation(
-    input: PageCreateMutationInput,
+    input: PageCreateMutationInput
   ): Promise<MutationResult<PageCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const id = generateId(IdType.Page);

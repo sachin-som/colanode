@@ -1,4 +1,3 @@
-import React from 'react';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import {
   Tooltip,
@@ -24,7 +23,7 @@ interface MessageProps {
 
 const shouldDisplayUserInfo = (
   message: MessageNode,
-  previousMessage?: MessageNode | null,
+  previousMessage?: MessageNode | null
 ) => {
   if (!previousMessage) {
     return true;
@@ -48,7 +47,6 @@ export const Message = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  const canEdit = true;
   const canDelete = true;
   const canReplyInThread = false;
   const displayUserInfo = shouldDisplayUserInfo(message, previousMessage);
@@ -158,7 +156,7 @@ export const Message = ({
                   message.reactionCounts.some(
                     (reactionCount) =>
                       reactionCount.reaction === reaction &&
-                      reactionCount.isReactedTo,
+                      reactionCount.isReactedTo
                   )
                 ) {
                   mutate({

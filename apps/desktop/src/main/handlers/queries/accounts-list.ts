@@ -1,20 +1,20 @@
 import { AccountListQueryInput } from '@/operations/queries/account-list';
 import { databaseManager } from '@/main/data/database-manager';
 import { Account } from '@/types/accounts';
+import { SelectAccount } from '@/main/data/app/schema';
+import { isEqual } from 'lodash';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { SelectAccount } from '@/main/data/app/schema';
-import { isEqual } from 'lodash';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 
 export class AccountListQueryHandler
   implements QueryHandler<AccountListQueryInput>
 {
   public async handleQuery(
-    _: AccountListQueryInput,
+    _: AccountListQueryInput
   ): Promise<QueryResult<AccountListQueryInput>> {
     const rows = await this.fetchAccounts();
     return {
@@ -28,11 +28,11 @@ export class AccountListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     _: AccountListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<AccountListQueryInput>> {
     if (
       !changes.some(
-        (change) => change.type === 'app' && change.table === 'accounts',
+        (change) => change.type === 'app' && change.table === 'accounts'
       )
     ) {
       return {

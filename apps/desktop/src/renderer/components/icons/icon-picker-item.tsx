@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icon } from '@/lib/icons';
 import { useIconPicker } from '@/renderer/contexts/icon-picker';
 import { IconElement } from '@/renderer/components/icons/icon-element';

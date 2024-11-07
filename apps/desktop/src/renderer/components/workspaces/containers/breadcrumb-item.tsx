@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { BreadcrumbNode } from '@/types/workspaces';

@@ -1,10 +1,10 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { NodeRole, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
 import { sql } from 'kysely';
-import { ChatAttributes } from '@/registry';
+import { ChatAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 interface ChatRow {
@@ -15,10 +15,10 @@ export class ChatCreateMutationHandler
   implements MutationHandler<ChatCreateMutationInput>
 {
   public async handleMutation(
-    input: ChatCreateMutationInput,
+    input: ChatCreateMutationInput
   ): Promise<MutationResult<ChatCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const query = sql<ChatRow>`

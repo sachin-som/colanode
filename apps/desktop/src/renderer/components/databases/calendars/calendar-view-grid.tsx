@@ -3,11 +3,7 @@ import { buttonVariants } from '@/renderer/components/ui/button';
 import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
-import {
-  ViewAttributes,
-  FieldAttributes,
-  ViewFilterAttributes,
-} from '@/registry';
+import { FieldAttributes, ViewFilterAttributes } from '@colanode/core';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useDatabase } from '@/renderer/contexts/database';
 import { filterRecords } from '@/lib/databases';
@@ -47,38 +43,37 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
     },
   ];
 
-  const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      initialPageInput: {
+  const { data, isPending } = useInfiniteQuery({
+    initialPageInput: {
+      type: 'record_list',
+      databaseId: database.id,
+      filters: filters,
+      sorts: view.sorts,
+      page: 0,
+      count: RECORDS_PER_PAGE,
+      userId: workspace.userId,
+    },
+    getNextPageInput(page, pages) {
+      if (page > pages.length) {
+        return undefined;
+      }
+
+      const lastPage = pages[page - 1];
+      if (lastPage.length < RECORDS_PER_PAGE) {
+        return undefined;
+      }
+
+      return {
         type: 'record_list',
         databaseId: database.id,
         filters: filters,
-        sorts: view.sorts,
-        page: 0,
+        sorts: Object.values(view.sorts),
+        page: page,
         count: RECORDS_PER_PAGE,
         userId: workspace.userId,
-      },
-      getNextPageInput(page, pages) {
-        if (page > pages.length) {
-          return undefined;
-        }
-
-        const lastPage = pages[page - 1];
-        if (lastPage.length < RECORDS_PER_PAGE) {
-          return undefined;
-        }
-
-        return {
-          type: 'record_list',
-          databaseId: database.id,
-          filters: filters,
-          sorts: Object.values(view.sorts),
-          page: page,
-          count: RECORDS_PER_PAGE,
-          userId: workspace.userId,
-        };
-      },
-    });
+      };
+    },
+  });
 
   if (isPending) {
     return null;
@@ -102,7 +97,7 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
         nav: 'space-x-1 flex items-center',
         nav_button: cn(
           buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100'
         ),
         nav_button_previous: 'absolute left-1',
         nav_button_next: 'absolute right-1',
@@ -114,7 +109,7 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
         cell: cn(
           'relative flex-1 h-40 p-2 text-right text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent',
           '[&:has([aria-selected])]:rounded-md',
-          'border-r first:border-l border-gray-100 overflow-auto',
+          'border-r first:border-l border-gray-100 overflow-auto'
         ),
       }}
       components={{
@@ -137,7 +132,7 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
             records,
             filter,
             field,
-            workspace.userId,
+            workspace.userId
           );
 
           return (

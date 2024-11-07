@@ -1,4 +1,4 @@
-import { ViewAttributes } from '@/registry';
+import { ViewAttributes } from '@colanode/core';
 
 export type ViewUpdateMutationInput = {
   type: 'view_update';

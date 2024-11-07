@@ -62,8 +62,6 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
     open: false,
   });
 
-  const isActive = false;
-
   return (
     <React.Fragment>
       <Collapsible
@@ -75,6 +73,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
+              isActive={nodeId === node.id}
               tooltip={node.name ?? ''}
               className="group/space-button"
             >

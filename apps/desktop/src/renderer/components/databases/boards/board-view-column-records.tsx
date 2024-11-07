@@ -1,11 +1,10 @@
-import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import {
   SelectFieldAttributes,
   SelectOptionAttributes,
   ViewFilterAttributes,
-} from '@/registry';
+} from '@colanode/core';
 import { BoardViewCard } from '@/renderer/components/databases/boards/board-view-card';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useView } from '@/renderer/contexts/view';
@@ -35,38 +34,37 @@ export const BoardViewColumnRecords = ({
       value: [option.id],
     },
   ];
-  const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      initialPageInput: {
+  const { data } = useInfiniteQuery({
+    initialPageInput: {
+      type: 'record_list',
+      databaseId: database.id,
+      filters: filters,
+      sorts: view.sorts,
+      page: 0,
+      count: RECORDS_PER_PAGE,
+      userId: workspace.userId,
+    },
+    getNextPageInput(page, pages) {
+      if (page > pages.length) {
+        return undefined;
+      }
+
+      const lastPage = pages[page - 1];
+      if (lastPage.length < RECORDS_PER_PAGE) {
+        return undefined;
+      }
+
+      return {
         type: 'record_list',
         databaseId: database.id,
         filters: filters,
-        sorts: view.sorts,
-        page: 0,
+        sorts: Object.values(view.sorts),
+        page: page,
         count: RECORDS_PER_PAGE,
         userId: workspace.userId,
-      },
-      getNextPageInput(page, pages) {
-        if (page > pages.length) {
-          return undefined;
-        }
-
-        const lastPage = pages[page - 1];
-        if (lastPage.length < RECORDS_PER_PAGE) {
-          return undefined;
-        }
-
-        return {
-          type: 'record_list',
-          databaseId: database.id,
-          filters: filters,
-          sorts: Object.values(view.sorts),
-          page: page,
-          count: RECORDS_PER_PAGE,
-          userId: workspace.userId,
-        };
-      },
-    });
+      };
+    },
+  });
 
   const records = data?.flatMap((page) => page) ?? [];
   return (

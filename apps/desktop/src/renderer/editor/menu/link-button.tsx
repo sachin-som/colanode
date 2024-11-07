@@ -1,4 +1,3 @@
-import React from 'react';
 import { Editor } from '@tiptap/core';
 
 import { Input } from '@/renderer/components/ui/input';
@@ -45,7 +44,7 @@ export const LinkButton = ({ editor, isOpen, setIsOpen }: LinkButtonProps) => {
         <span
           className={cn(
             'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-            editor.isActive('link') ? 'bg-gray-100' : 'bg-white',
+            editor.isActive('link') ? 'bg-gray-100' : 'bg-white'
           )}
         >
           <Link className="size-4" />

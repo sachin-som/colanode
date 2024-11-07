@@ -1,5 +1,5 @@
 import React from 'react';
-import { MultiSelectFieldAttributes } from '@/registry';
+import { MultiSelectFieldAttributes } from '@colanode/core';
 import {
   Popover,
   PopoverTrigger,
@@ -20,7 +20,7 @@ export const RecordMultiSelectValue = ({
 
   const [open, setOpen] = React.useState(false);
   const [selectedValues, setSelectedValues] = React.useState(
-    record.getMultiSelectValue(field),
+    record.getMultiSelectValue(field)
   );
 
   React.useEffect(() => {
@@ -29,7 +29,7 @@ export const RecordMultiSelectValue = ({
 
   const selectOptions = Object.values(field.options ?? {});
   const selectedOptions = selectOptions.filter((option) =>
-    selectedValues.includes(option.id),
+    selectedValues.includes(option.id)
   );
 
   return (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Editor } from '@tiptap/core';
 import {
   Popover,
@@ -82,11 +81,11 @@ export const ColorButton = ({
   setIsOpen: (isOpen: boolean) => void;
 }) => {
   const activeColor = colors.find((color) =>
-    editor.isActive('color', { color: color.color }),
+    editor.isActive('color', { color: color.color })
   );
 
   const activeHighlight = colors.find((color) =>
-    editor.isActive('highlight', { highlight: color.color }),
+    editor.isActive('highlight', { highlight: color.color })
   );
 
   return (
@@ -95,7 +94,7 @@ export const ColorButton = ({
         <span
           className={cn(
             'flex h-8 w-8 items-center justify-center rounded-md hover:cursor-pointer hover:bg-gray-100',
-            activeHighlight?.bgClass ?? 'bg-white',
+            activeHighlight?.bgClass ?? 'bg-white'
           )}
         >
           <Baseline className={cn('size-4', activeColor?.textClass ?? '')} />
@@ -143,7 +142,7 @@ export const ColorButton = ({
                 <div
                   className={cn(
                     'relative inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded shadow',
-                    color.bgClass,
+                    color.bgClass
                   )}
                 >
                   <span className="font-medium">A</span>

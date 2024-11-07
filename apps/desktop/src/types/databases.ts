@@ -1,4 +1,4 @@
-import { FieldAttributes } from '@/registry';
+import { FieldAttributes } from '@colanode/core';
 
 export type ViewField = {
   field: FieldAttributes;

@@ -1,32 +1,24 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
+import { NodeModel } from './core';
+import { blockSchema } from './block';
 import { isEqual } from 'lodash';
 
-export const channelAttributesSchema = z.object({
-  type: z.literal('channel'),
+export const pageAttributesSchema = z.object({
+  type: z.literal('page'),
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  index: z.string(),
+  content: z.record(blockSchema),
   collaborators: z.record(z.string()).nullable().optional(),
 });
 
-export type ChannelAttributes = z.infer<typeof channelAttributesSchema>;
+export type PageAttributes = z.infer<typeof pageAttributesSchema>;
 
-export const channelModel: NodeModel = {
-  type: 'channel',
-  schema: channelAttributesSchema,
+export const pageModel: NodeModel = {
+  type: 'page',
+  schema: pageAttributesSchema,
   canCreate: async (context, attributes) => {
-    if (attributes.type !== 'channel') {
-      return false;
-    }
-
-    if (context.ancestors.length !== 1) {
-      return false;
-    }
-
-    const parent = context.ancestors[0];
-    if (parent.type !== 'space') {
+    if (attributes.type !== 'page') {
       return false;
     }
 
@@ -38,17 +30,17 @@ export const channelModel: NodeModel = {
     return context.hasEditorAccess();
   },
   canUpdate: async (context, node, attributes) => {
-    if (attributes.type !== 'channel' || node.type !== 'channel') {
+    if (attributes.type !== 'page' || node.type !== 'page') {
       return false;
     }
 
-    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
+    if (!isEqual(attributes.collaborators, node.attributes.collaborators)) {
       return context.hasAdminAccess();
     }
 
     return context.hasEditorAccess();
   },
-  canDelete: async (context, node) => {
+  canDelete: async (context, _) => {
     return context.hasEditorAccess();
   },
 };

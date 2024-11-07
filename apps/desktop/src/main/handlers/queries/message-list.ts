@@ -1,15 +1,15 @@
 import { MessageListQueryInput } from '@/operations/queries/message-list';
 import { databaseManager } from '@/main/data/database-manager';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
-import { mapNode } from '@/lib/nodes';
+import { mapNode } from '@/main/utils';
 import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash';
@@ -19,7 +19,7 @@ export class MessageListQueryHandler
   implements QueryHandler<MessageListQueryInput>
 {
   public async handleQuery(
-    input: MessageListQueryInput,
+    input: MessageListQueryInput
   ): Promise<QueryResult<MessageListQueryInput>> {
     const messages = await this.fetchMesssages(input);
     const authors = await this.fetchAuthors(input, messages);
@@ -36,14 +36,14 @@ export class MessageListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: MessageListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<MessageListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -73,10 +73,10 @@ export class MessageListQueryHandler
   }
 
   private async fetchMesssages(
-    input: MessageListQueryInput,
+    input: MessageListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const offset = input.page * input.count;
@@ -87,7 +87,7 @@ export class MessageListQueryHandler
         eb.and([
           eb('parent_id', '=', input.conversationId),
           eb('type', '=', NodeTypes.Message),
-        ]),
+        ])
       )
       .orderBy('id', 'desc')
       .limit(input.count)
@@ -99,14 +99,14 @@ export class MessageListQueryHandler
 
   private async fetchAuthors(
     input: MessageListQueryInput,
-    messages: SelectNode[],
+    messages: SelectNode[]
   ): Promise<SelectNode[]> {
     if (messages.length === 0) {
       return [];
     }
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const authorIds = messages.map((message) => message.created_by);
@@ -122,7 +122,7 @@ export class MessageListQueryHandler
   private buildMessages = (
     userId: string,
     messageRows: SelectNode[],
-    authorRows: SelectNode[],
+    authorRows: SelectNode[]
   ): MessageNode[] => {
     const messages: MessageNode[] = [];
     const authorMap = new Map<string, UserNode>();
@@ -174,7 +174,7 @@ export class MessageListQueryHandler
         },
         content: mapBlocksToContents(
           messageNode.id,
-          Object.values(messageNode.attributes.content ?? {}),
+          Object.values(messageNode.attributes.content ?? {})
         ),
         reactionCounts,
       };

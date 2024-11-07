@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +22,6 @@ interface AccountSettingsDialogProps {
 }
 
 export const AccountSettingsDialog = ({
-  id,
   open,
   onOpenChange,
 }: AccountSettingsDialogProps) => {

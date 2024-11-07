@@ -1,18 +1,14 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUpdateMutationInput } from '@/operations/mutations/workspace-update';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { Workspace } from '@/types/workspaces';
 
 export class WorkspaceUpdateMutationHandler
   implements MutationHandler<WorkspaceUpdateMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUpdateMutationInput,
+    input: WorkspaceUpdateMutationInput
   ): Promise<MutationResult<WorkspaceUpdateMutationInput>> {
     const account = await databaseManager.appDatabase
       .selectFrom('accounts')
@@ -45,7 +41,7 @@ export class WorkspaceUpdateMutationHandler
         serverDomain: server.domain,
         serverAttributes: server.attributes,
         token: account.token,
-      },
+      }
     );
 
     await databaseManager.appDatabase
@@ -61,7 +57,7 @@ export class WorkspaceUpdateMutationHandler
         eb.and([
           eb('account_id', '=', input.accountId),
           eb('workspace_id', '=', input.id),
-        ]),
+        ])
       )
       .execute();
 

@@ -1,4 +1,4 @@
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeAttributeSetMutationInput } from '@/operations/mutations/node-attribute-set';
 import { nodeManager } from '@/main/node-manager';
 import { set } from 'lodash';
@@ -7,7 +7,7 @@ export class NodeAttributeSetMutationHandler
   implements MutationHandler<NodeAttributeSetMutationInput>
 {
   async handleMutation(
-    input: NodeAttributeSetMutationInput,
+    input: NodeAttributeSetMutationInput
   ): Promise<MutationResult<NodeAttributeSetMutationInput>> {
     await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
       set(attributes, input.path, input.value);

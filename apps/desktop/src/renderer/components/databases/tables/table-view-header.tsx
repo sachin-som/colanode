@@ -1,4 +1,3 @@
-import React from 'react';
 import { useView } from '@/renderer/contexts/view';
 import { TableViewNameHeader } from '@/renderer/components/databases/tables/table-view-name-header';
 import { TableViewFieldHeader } from '@/renderer/components/databases/tables/table-view-field-header';

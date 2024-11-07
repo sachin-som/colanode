@@ -5,22 +5,21 @@ import {
   DocumentGetQueryOutput,
 } from '@/operations/queries/document-get';
 import { databaseManager } from '@/main/data/database-manager';
+import { SelectNode } from '@/main/data/workspace/schema';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-
-import { SelectNode } from '@/main/data/workspace/schema';
-import { MutationChange } from '@/operations/mutations';
-import { NodeAttributes } from '@/registry';
+} from '@/main/types';
+import { NodeAttributes } from '@colanode/core';
 import { mapBlocksToContents } from '@/lib/editor';
 
 export class DocumentGetQueryHandler
   implements QueryHandler<DocumentGetQueryInput>
 {
   public async handleQuery(
-    input: DocumentGetQueryInput,
+    input: DocumentGetQueryInput
   ): Promise<QueryResult<DocumentGetQueryInput>> {
     const document = await this.fetchDocument(input);
     return {
@@ -34,14 +33,14 @@ export class DocumentGetQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: DocumentGetQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<DocumentGetQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -68,10 +67,10 @@ export class DocumentGetQueryHandler
   }
 
   private async fetchDocument(
-    input: DocumentGetQueryInput,
+    input: DocumentGetQueryInput
   ): Promise<SelectNode | undefined> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     return workspaceDatabase
@@ -82,7 +81,7 @@ export class DocumentGetQueryHandler
   }
 
   private buildOutput(
-    document: SelectNode | null | undefined,
+    document: SelectNode | null | undefined
   ): DocumentGetQueryOutput {
     if (!document) {
       return {

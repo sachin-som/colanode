@@ -6,8 +6,7 @@
     "src/preload/**/*",
     "src/lib/**/*",
     "src/operations/**/*",
-    "src/types/**/*",
-    "src/registry/**/*"
+    "src/types/**/*"
   ],
   "compilerOptions": {
     "composite": true,
@@ -16,7 +15,6 @@
       "@/lib/*": ["./src/lib/*"],
       "@/operations/*": ["./src/operations/*"],
       "@/types/*": ["./src/types/*"],
-      "@/registry/*": ["./src/registry/*"],
       "@/main/*": ["./src/main/*"]
     }
   }

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Popover,
   PopoverContent,
@@ -39,7 +38,7 @@ export const ViewSorts = () => {
       <PopoverContent className="flex flex-col gap-2 p-2">
         {view.sorts.map((sort) => {
           const field = database.fields.find(
-            (field) => field.id === sort.fieldId,
+            (field) => field.id === sort.fieldId
           );
 
           if (!field) return null;

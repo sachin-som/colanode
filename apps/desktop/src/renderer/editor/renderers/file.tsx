@@ -1,4 +1,3 @@
-import React from 'react';
 import { JSONContent } from '@tiptap/core';
 import { FileBlock } from '@/renderer/components/files/file-block';
 

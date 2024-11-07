@@ -1,4 +1,3 @@
-import React from 'react';
 import { ViewFilterAddPopover } from '@/renderer/components/databases/search/view-filter-add-popover';
 import { useView } from '@/renderer/contexts/view';
 import { Filter } from 'lucide-react';

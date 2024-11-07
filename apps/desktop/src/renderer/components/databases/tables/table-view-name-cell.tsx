@@ -2,7 +2,7 @@ import React from 'react';
 import isHotkey from 'is-hotkey';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Spinner } from '@/renderer/components/ui/spinner';
-import { RecordNode } from '@/registry';
+import { RecordNode } from '@colanode/core';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Maximize2 } from 'lucide-react';
 

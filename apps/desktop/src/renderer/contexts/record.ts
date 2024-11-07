@@ -14,7 +14,7 @@ import {
   SelectFieldAttributes,
   TextFieldAttributes,
   UrlFieldAttributes,
-} from '@/registry';
+} from '@colanode/core';
 import { createContext, useContext } from 'react';
 
 interface RecordContext {

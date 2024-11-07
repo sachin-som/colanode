@@ -1,5 +1,5 @@
 import { ZodSchema } from 'zod';
-import { Node, NodeAttributes } from '@/registry';
+import { Node, NodeAttributes } from './';
 
 export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
 
@@ -20,12 +20,12 @@ export interface NodeModel {
   schema: ZodSchema;
   canCreate: (
     context: NodeMutationContext,
-    attributes: NodeAttributes,
+    attributes: NodeAttributes
   ) => Promise<boolean>;
   canUpdate: (
     context: NodeMutationContext,
     node: Node,
-    attributes: NodeAttributes,
+    attributes: NodeAttributes
   ) => Promise<boolean>;
   canDelete: (context: NodeMutationContext, node: Node) => Promise<boolean>;
 }

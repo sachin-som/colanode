@@ -29,15 +29,13 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
     if (containerRef.current && viewportRef.current) {
       // observe resize of container when new messages are appended or internal elements are loaded (e.g. images)
       observerRef.current = new ResizeObserver(() => {
-        if (!viewportRef.current) {
-          return;
-        }
-
-        if (shouldScrollToBottomRef.current) {
-          bottomRef.current?.scrollIntoView();
-        } else {
-          viewportRef.current.scrollTop =
-            viewportRef.current.scrollHeight - scrollPositionRef.current;
+        if (viewportRef.current) {
+          if (shouldScrollToBottomRef.current) {
+            bottomRef.current?.scrollIntoView();
+          } else {
+            viewportRef.current.scrollTop =
+              viewportRef.current.scrollHeight - scrollPositionRef.current;
+          }
         }
       });
 
@@ -49,6 +47,8 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
         }
       };
     }
+
+    return () => {};
   }, [conversationId]);
 
   const handleScroll = () => {

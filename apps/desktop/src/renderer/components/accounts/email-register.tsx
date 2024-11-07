@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input } from '@/renderer/components/ui/input';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';

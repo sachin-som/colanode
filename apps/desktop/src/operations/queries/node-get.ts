@@ -1,4 +1,4 @@
-import { Node } from '@/registry';
+import { Node } from '@colanode/core';
 
 export type NodeGetQueryInput = {
   type: 'node_get';

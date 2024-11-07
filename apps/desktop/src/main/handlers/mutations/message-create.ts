@@ -2,27 +2,27 @@ import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
 import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
 import { generateId, IdType } from '@/lib/id';
-import {
-  MutationChange,
-  MutationHandler,
-  MutationResult,
-} from '@/operations/mutations';
+import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
 import { mapContentsToBlocks } from '@/lib/editor';
 import { fileManager } from '@/main/file-manager';
 import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
-import { NodeAttributes } from '@/registry';
-import { Block, FileAttributes, MessageAttributes } from '@/registry';
+import {
+  NodeAttributes,
+  Block,
+  FileAttributes,
+  MessageAttributes,
+} from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
 {
   async handleMutation(
-    input: MessageCreateMutationInput,
+    input: MessageCreateMutationInput
   ): Promise<MutationResult<MessageCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const nodeAttributes: NodeAttributes[] = [];
@@ -34,7 +34,7 @@ export class MessageCreateMutationHandler
     const blocks = mapContentsToBlocks(
       messageId,
       input.content.content ?? [],
-      new Map(),
+      new Map()
     );
 
     // check if there are nested nodes (files, pages, folders etc.)
@@ -56,7 +56,7 @@ export class MessageCreateMutationHandler
           path,
           fileId,
           metadata.extension,
-          input.userId,
+          input.userId
         );
 
         const fileDoc = new Y.Doc({
@@ -110,7 +110,7 @@ export class MessageCreateMutationHandler
           acc[block.id] = block;
           return acc;
         },
-        {} as Record<string, Block>,
+        {} as Record<string, Block>
       ),
       reactions: {},
     };
@@ -123,7 +123,7 @@ export class MessageCreateMutationHandler
           trx,
           input.userId,
           messageId,
-          nodeAttribute,
+          nodeAttribute
         );
       }
 

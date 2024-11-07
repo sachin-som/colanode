@@ -1,5 +1,5 @@
 import { generateId, IdType } from '@/lib/id';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { ViewCreateMutationInput } from '@/operations/mutations/view-create';
 import { compareString } from '@/lib/utils';
 import { generateNodeIndex } from '@/lib/nodes';
@@ -9,7 +9,7 @@ export class ViewCreateMutationHandler
   implements MutationHandler<ViewCreateMutationInput>
 {
   async handleMutation(
-    input: ViewCreateMutationInput,
+    input: ViewCreateMutationInput
   ): Promise<MutationResult<ViewCreateMutationInput>> {
     const id = generateId(IdType.View);
     await nodeManager.updateNode(
@@ -37,7 +37,7 @@ export class ViewCreateMutationHandler
         };
 
         return attributes;
-      },
+      }
     );
 
     return {

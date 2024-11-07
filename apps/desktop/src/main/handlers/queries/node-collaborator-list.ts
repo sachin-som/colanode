@@ -1,17 +1,17 @@
 import { NodeCollaboratorListQueryInput } from '@/operations/queries/node-collaborator-list';
 import { databaseManager } from '@/main/data/database-manager';
 import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
-import {
   InheritNodeCollaboratorsGroup,
   NodeCollaboratorsWrapper,
   NodeCollaborator,
 } from '@/types/nodes';
-import { NodeAttributes } from '@/registry';
-import { MutationChange } from '@/operations/mutations';
+import { NodeAttributes } from '@colanode/core';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 type ExtractedNodeCollaborator = {
@@ -29,17 +29,17 @@ export class NodeCollaboratorListQueryHandler
   implements QueryHandler<NodeCollaboratorListQueryInput>
 {
   public async handleQuery(
-    input: NodeCollaboratorListQueryInput,
+    input: NodeCollaboratorListQueryInput
   ): Promise<QueryResult<NodeCollaboratorListQueryInput>> {
     const ancestors = await this.fetchAncestors(input);
     const extractedCollaborators = this.extractCollaborators(ancestors);
     const collaboratorIds = extractedCollaborators.map(
-      (collaborator) => collaborator.collaboratorId,
+      (collaborator) => collaborator.collaboratorId
     );
 
     const collaboratorNodes = await this.fetchCollaborators(
       input,
-      collaboratorIds,
+      collaboratorIds
     );
 
     return {
@@ -47,7 +47,7 @@ export class NodeCollaboratorListQueryHandler
         input.nodeId,
         ancestors,
         collaboratorNodes,
-        extractedCollaborators,
+        extractedCollaborators
       ),
       state: {
         ancestors,
@@ -60,14 +60,14 @@ export class NodeCollaboratorListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: NodeCollaboratorListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<NodeCollaboratorListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -78,12 +78,12 @@ export class NodeCollaboratorListQueryHandler
     const ancestors = await this.fetchAncestors(input);
     const extractedCollaborators = this.extractCollaborators(ancestors);
     const collaboratorIds = extractedCollaborators.map(
-      (collaborator) => collaborator.collaboratorId,
+      (collaborator) => collaborator.collaboratorId
     );
 
     const collaboratorNodes = await this.fetchCollaborators(
       input,
-      collaboratorIds,
+      collaboratorIds
     );
 
     if (
@@ -103,7 +103,7 @@ export class NodeCollaboratorListQueryHandler
           input.nodeId,
           ancestors,
           collaboratorNodes,
-          extractedCollaborators,
+          extractedCollaborators
         ),
         state: {
           ancestors,
@@ -115,10 +115,10 @@ export class NodeCollaboratorListQueryHandler
   }
 
   private async fetchAncestors(
-    input: NodeCollaboratorListQueryInput,
+    input: NodeCollaboratorListQueryInput
   ): Promise<NodeWithAttributesRow[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const result = await workspaceDatabase
@@ -133,7 +133,7 @@ export class NodeCollaboratorListQueryHandler
   }
 
   private extractCollaborators(
-    nodes: NodeWithAttributesRow[],
+    nodes: NodeWithAttributesRow[]
   ): ExtractedNodeCollaborator[] {
     const map: Map<string, ExtractedNodeCollaborator> = new Map();
 
@@ -170,14 +170,14 @@ export class NodeCollaboratorListQueryHandler
 
   private async fetchCollaborators(
     input: NodeCollaboratorListQueryInput,
-    collaboratorIds: string[],
+    collaboratorIds: string[]
   ): Promise<NodeWithAttributesRow[]> {
     if (collaboratorIds.length === 0) {
       return [];
     }
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const result = await workspaceDatabase
@@ -193,7 +193,7 @@ export class NodeCollaboratorListQueryHandler
     nodeId: string,
     ancestors: NodeWithAttributesRow[],
     collaboratorNodes: NodeWithAttributesRow[],
-    extractedCollaborators: ExtractedNodeCollaborator[],
+    extractedCollaborators: ExtractedNodeCollaborator[]
   ): NodeCollaboratorsWrapper => {
     const direct: NodeCollaborator[] = [];
     const inherit: InheritNodeCollaboratorsGroup[] = [];
@@ -202,7 +202,7 @@ export class NodeCollaboratorListQueryHandler
 
     for (const extractedCollaborator of extractedCollaborators) {
       const collaboratorNode = collaboratorNodes.find(
-        (row) => row.id === extractedCollaborator.collaboratorId,
+        (row) => row.id === extractedCollaborator.collaboratorId
       );
 
       if (!collaboratorNode) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldAttributes } from '@/registry';
+import { FieldAttributes } from '@colanode/core';
 import {
   Popover,
   PopoverContent,

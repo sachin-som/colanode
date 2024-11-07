@@ -1,6 +1,5 @@
-import React from 'react';
 import { cn, isSameDay } from '@/lib/utils';
-import { RecordNode } from '@/registry';
+import { RecordNode } from '@colanode/core';
 import { CalendarViewCard } from '@/renderer/components/databases/calendars/calendar-view-card';
 import { Plus } from 'lucide-react';
 
@@ -27,13 +26,13 @@ export const CalendarViewDay = ({
       <div
         className={cn(
           'flex justify-between text-sm',
-          isOutside ? 'text-muted-foreground' : '',
+          isOutside ? 'text-muted-foreground' : ''
         )}
       >
         <Plus
           className={cn(
             'size-4 cursor-pointer opacity-0',
-            canCreateRecord ? 'group-hover:opacity-100' : '',
+            canCreateRecord ? 'group-hover:opacity-100' : ''
           )}
           onClick={() => {}}
         />

@@ -1,22 +1,22 @@
 import { NodeCollaboratorSearchQueryInput } from '@/operations/queries/node-collaborator-search';
 import { databaseManager } from '@/main/data/database-manager';
-import {
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/operations/queries';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@/lib/constants';
 import { NodeCollaborator } from '@/types/nodes';
-import { MutationChange } from '@/operations/mutations';
+import {
+  MutationChange,
+  ChangeCheckResult,
+  QueryHandler,
+  QueryResult,
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 export class NodeCollaboratorSearchQueryHandler
   implements QueryHandler<NodeCollaboratorSearchQueryInput>
 {
   public async handleQuery(
-    input: NodeCollaboratorSearchQueryInput,
+    input: NodeCollaboratorSearchQueryInput
   ): Promise<QueryResult<NodeCollaboratorSearchQueryInput>> {
     if (input.searchQuery.length === 0) {
       return {
@@ -39,14 +39,14 @@ export class NodeCollaboratorSearchQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: NodeCollaboratorSearchQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<NodeCollaboratorSearchQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -73,14 +73,14 @@ export class NodeCollaboratorSearchQueryHandler
   }
 
   private async fetchNodes(
-    input: NodeCollaboratorSearchQueryInput,
+    input: NodeCollaboratorSearchQueryInput
   ): Promise<SelectNode[]> {
     if (input.searchQuery.length === 0) {
       return [];
     }
 
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const query = sql<SelectNode>`
@@ -93,7 +93,7 @@ export class NodeCollaboratorSearchQueryHandler
           input.excluded.length > 0
             ? sql`AND n.id NOT IN (${sql.join(
                 input.excluded.map((id) => sql`${id}`),
-                sql`, `,
+                sql`, `
               )})`
             : sql``
         }

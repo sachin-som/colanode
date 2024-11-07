@@ -1,4 +1,3 @@
-import React from 'react';
 import { DocumentEditor } from '@/renderer/components/documents/document-editor';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';

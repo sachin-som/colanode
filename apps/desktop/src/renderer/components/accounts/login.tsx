@@ -1,4 +1,3 @@
-import React from 'react';
 import { LoginForm } from '@/renderer/components/accounts/login-form';
 import { useQuery } from '@/renderer/hooks/use-query';
 

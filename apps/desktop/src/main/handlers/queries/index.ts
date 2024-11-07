@@ -1,4 +1,5 @@
-import { QueryHandler, QueryMap } from '@/operations/queries';
+import { QueryMap } from '@/operations/queries';
+import { QueryHandler } from '@/main/types';
 import { AccountListQueryHandler } from '@/main/handlers/queries/accounts-list';
 import { BreadcrumbListQueryHandler } from '@/main/handlers/queries/breadcrumb-list';
 import { MessageListQueryHandler } from '@/main/handlers/queries/message-list';

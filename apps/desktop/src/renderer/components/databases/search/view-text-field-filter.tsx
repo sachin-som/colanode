@@ -1,5 +1,4 @@
-import React from 'react';
-import { TextFieldAttributes, ViewFieldFilterAttributes } from '@/registry';
+import { TextFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -31,7 +30,7 @@ export const ViewTextFieldFilter = ({
 
   const operator =
     textFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? textFieldFilterOperators[0];
 
   const textValue = filter.value as string | null;

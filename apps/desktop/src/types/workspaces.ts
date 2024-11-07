@@ -1,11 +1,6 @@
 import { ServerNode } from '@/types/nodes';
 
-export enum WorkspaceRole {
-  Owner = 'owner',
-  Admin = 'admin',
-  Collaborator = 'collaborator',
-  Viewer = 'viewer',
-}
+export type WorkspaceRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
 
 export type Workspace = {
   id: string;

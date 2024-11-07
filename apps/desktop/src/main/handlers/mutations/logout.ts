@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { databaseManager } from '@/main/data/database-manager';
 import { LogoutMutationInput } from '@/operations/mutations/logout';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import {
   getAccountAvatarsDirectoryPath,
   getWorkspaceDirectoryPath,
@@ -11,7 +11,7 @@ export class LogoutMutationHandler
   implements MutationHandler<LogoutMutationInput>
 {
   async handleMutation(
-    input: LogoutMutationInput,
+    input: LogoutMutationInput
   ): Promise<MutationResult<LogoutMutationInput>> {
     const account = await databaseManager.appDatabase
       .selectFrom('accounts')

@@ -1,8 +1,7 @@
-import React from 'react';
 import {
   MultiSelectFieldAttributes,
   ViewFieldFilterAttributes,
-} from '@/registry';
+} from '@colanode/core';
 import {
   Popover,
   PopoverContent,
@@ -35,12 +34,12 @@ export const ViewMultiSelectFieldFilter = ({
   const selectOptions = Object.values(field.options ?? {});
   const operator =
     selectFieldFilterOperators.find(
-      (operator) => operator.value === filter.operator,
+      (operator) => operator.value === filter.operator
     ) ?? selectFieldFilterOperators[0];
 
   const selectOptionIds = (filter.value as string[]) ?? [];
   const selectedOptions = selectOptions.filter((option) =>
-    selectOptionIds.includes(option.id),
+    selectOptionIds.includes(option.id)
   );
 
   const hideInput =

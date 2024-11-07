@@ -1,22 +1,22 @@
 import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
 import { databaseManager } from '@/main/data/database-manager';
+import { NodeTypes } from '@/lib/constants';
+import { mapNode } from '@/main/utils';
+import { SelectNode } from '@/main/data/workspace/schema';
+import { UserNode } from '@colanode/core';
 import {
+  MutationChange,
   ChangeCheckResult,
   QueryHandler,
   QueryResult,
-} from '@/operations/queries';
-import { NodeTypes } from '@/lib/constants';
-import { mapNode } from '@/lib/nodes';
-import { SelectNode } from '@/main/data/workspace/schema';
-import { UserNode } from '@/registry';
-import { MutationChange } from '@/operations/mutations';
+} from '@/main/types';
 import { isEqual } from 'lodash';
 
 export class WorkspaceUserListQueryHandler
   implements QueryHandler<WorkspaceUserListQueryInput>
 {
   public async handleQuery(
-    input: WorkspaceUserListQueryInput,
+    input: WorkspaceUserListQueryInput
   ): Promise<QueryResult<WorkspaceUserListQueryInput>> {
     const rows = await this.fetchNodes(input);
     return {
@@ -30,14 +30,14 @@ export class WorkspaceUserListQueryHandler
   public async checkForChanges(
     changes: MutationChange[],
     input: WorkspaceUserListQueryInput,
-    state: Record<string, any>,
+    state: Record<string, any>
   ): Promise<ChangeCheckResult<WorkspaceUserListQueryInput>> {
     if (
       !changes.some(
         (change) =>
           change.type === 'workspace' &&
           change.table === 'nodes' &&
-          change.userId === input.userId,
+          change.userId === input.userId
       )
     ) {
       return {
@@ -64,10 +64,10 @@ export class WorkspaceUserListQueryHandler
   }
 
   private async fetchNodes(
-    input: WorkspaceUserListQueryInput,
+    input: WorkspaceUserListQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const offset = input.page * input.count;

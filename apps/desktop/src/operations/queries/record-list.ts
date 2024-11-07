@@ -1,5 +1,8 @@
-import { RecordNode } from '@/registry';
-import { ViewFilterAttributes, ViewSortAttributes } from '@/registry';
+import {
+  RecordNode,
+  ViewFilterAttributes,
+  ViewSortAttributes,
+} from '@colanode/core';
 
 export type RecordListQueryInput = {
   type: 'record_list';

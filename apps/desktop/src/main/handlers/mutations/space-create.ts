@@ -1,20 +1,24 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType } from '@/lib/id';
 import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { SpaceCreateMutationInput } from '@/operations/mutations/space-create';
 import { NodeRole } from '@/lib/constants';
-import { ChannelAttributes, PageAttributes, SpaceAttributes } from '@/registry';
+import {
+  ChannelAttributes,
+  PageAttributes,
+  SpaceAttributes,
+} from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
 
 export class SpaceCreateMutationHandler
   implements MutationHandler<SpaceCreateMutationInput>
 {
   async handleMutation(
-    input: SpaceCreateMutationInput,
+    input: SpaceCreateMutationInput
   ): Promise<MutationResult<SpaceCreateMutationInput>> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId,
+      input.userId
     );
 
     const spaceId = generateId(IdType.Space);
@@ -53,7 +57,7 @@ export class SpaceCreateMutationHandler
         trx,
         input.userId,
         channelId,
-        channelAttributes,
+        channelAttributes
       );
     });
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileNode } from '@/types/files';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { SidebarSpaceItem } from '@/renderer/components/workspaces/sidebars/sidebar-space-item';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';

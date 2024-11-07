@@ -1,4 +1,3 @@
-import React from 'react';
 import { match } from 'ts-pattern';
 import { ChannelContainer } from '@/renderer/components/channels/channel-container';
 import { PageContainer } from '@/renderer/components/pages/page-container';

@@ -1,12 +1,12 @@
 import { nodeManager } from '@/main/node-manager';
-import { MutationHandler, MutationResult } from '@/operations/mutations';
+import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeReactionDeleteMutationInput } from '@/operations/mutations/node-reaction-delete';
 
 export class NodeReactionDeleteMutationHandler
   implements MutationHandler<NodeReactionDeleteMutationInput>
 {
   async handleMutation(
-    input: NodeReactionDeleteMutationInput,
+    input: NodeReactionDeleteMutationInput
   ): Promise<MutationResult<NodeReactionDeleteMutationInput>> {
     await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
       if (attributes.type !== 'message') {

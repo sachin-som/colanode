@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { NodeModel } from '@/registry/core';
-import { fieldAttributesSchema } from '@/registry/fields';
+import { NodeModel } from './core';
+import { fieldAttributesSchema } from './fields';
 import { isEqual } from 'lodash';
 
 export const viewFieldAttributesSchema = z.object({
@@ -105,7 +105,7 @@ export const databaseModel: NodeModel = {
 
     return context.hasEditorAccess();
   },
-  canDelete: async (context, node) => {
+  canDelete: async (context, _) => {
     return context.hasEditorAccess();
   },
 };

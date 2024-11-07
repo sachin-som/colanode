@@ -1,8 +1,11 @@
 import React from 'react';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { RecordNode } from '@/registry';
-import { SelectFieldAttributes, SelectOptionAttributes } from '@/registry';
+import {
+  RecordNode,
+  SelectFieldAttributes,
+  SelectOptionAttributes,
+} from '@colanode/core';
 import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +25,7 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
   const [, drag] = useDrag({
     type: 'board-record',
     item: { id: record.id },
-    end: (item, monitor) => {
+    end: (_, monitor) => {
       const dropResult = monitor.getDropResult<DragResult>();
       if (dropResult != null) {
         if (isPending) return;
@@ -64,7 +67,7 @@ export const BoardViewCard = ({ record }: BoardViewCardProps) => {
       key={record.id}
       className={cn(
         'animate-fade-in flex cursor-pointer flex-col gap-1 rounded-md border p-2 text-left hover:bg-gray-50',
-        hasName ? '' : 'text-muted-foreground',
+        hasName ? '' : 'text-muted-foreground'
       )}
       onClick={() => workspace.openModal(record.id)}
     >

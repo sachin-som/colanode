@@ -6,7 +6,7 @@ export default defineConfig({
   main: {
     plugins: [
       externalizeDepsPlugin({
-        exclude: ['@colanode/core'],
+        exclude: ['@colanode/core', '@colanode/crdt'],
       }),
     ],
     resolve: {
@@ -20,7 +20,11 @@ export default defineConfig({
     },
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [
+      externalizeDepsPlugin({
+        exclude: ['@colanode/core', '@colanode/crdt'],
+      }),
+    ],
     resolve: {
       alias: {
         '@/lib': resolve('src/lib'),

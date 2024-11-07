@@ -1,6 +1,3 @@
-import * as yjs from 'yjs';
-import { z as zod } from 'zod';
-import { applyCrdt } from './crdt';
 import {
   ChannelAttributes,
   channelAttributesSchema,
@@ -160,10 +157,10 @@ import {
   UserNode,
   Node,
 } from './registry';
+import { ZodText } from './registry/zod';
 
 export {
-  yjs,
-  zod,
+  ZodText,
   registry,
   type ChannelAttributes,
   channelAttributesSchema,
@@ -299,5 +296,4 @@ export {
   type BlockLeaf,
   type Block,
   type Node,
-  applyCrdt,
 };

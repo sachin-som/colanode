@@ -1,5 +1,6 @@
 import * as Y from 'yjs';
-import { NodeAttributes, registry, applyCrdt } from '@colanode/core';
+import { NodeAttributes, registry } from '@colanode/core';
+import { applyCrdt } from '@colanode/crdt';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
   LocalCreateNodeChangeData,

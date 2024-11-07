@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import * as Y from 'yjs';
-import { ZodText } from './registry/zod';
+import { ZodText } from '@colanode/core';
 import { isEqual } from 'lodash';
 import { diffChars } from 'diff';
 

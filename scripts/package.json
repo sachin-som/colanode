@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate:emojis": "node --loader ts-node/esm src/generate-emojis.ts"
+    "generate:emojis": "node --loader ts-node/esm src/emojis/index.ts"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.3",

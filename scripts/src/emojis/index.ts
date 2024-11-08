@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import archiver from 'archiver';
 import { EmojiMartData } from '@emoji-mart/data';
 import { monotonicFactory } from 'ulid';
-import archiver from 'archiver';
 
 const ulid = monotonicFactory();
 
@@ -20,9 +20,9 @@ const i18nData = JSON.parse(
   fs.readFileSync(i18nPath, 'utf-8')
 ) as EmojiMartI18n;
 
-const EMOJIS_DIR_PATH = 'emojis';
-const EMOJIS_METADATA_FILE_PATH = 'emojis/emojis.json';
-const ZIP_FILE_PATH = 'emojis.zip';
+const EMOJIS_DIR_PATH = 'src/emojis/out';
+const EMOJIS_METADATA_FILE_PATH = `${EMOJIS_DIR_PATH}/emojis.json`;
+const ZIP_FILE_PATH = `${EMOJIS_DIR_PATH}/emojis.zip`;
 
 type EmojiMetadata = {
   categories: EmojiCategory[];

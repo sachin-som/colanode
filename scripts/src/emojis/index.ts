@@ -22,7 +22,7 @@ const i18nData = JSON.parse(
 
 const EMOJIS_DIR_PATH = 'src/emojis/out';
 const EMOJIS_METADATA_FILE_PATH = `${EMOJIS_DIR_PATH}/emojis.json`;
-const ZIP_FILE_PATH = `${EMOJIS_DIR_PATH}/emojis.zip`;
+const ZIP_FILE_PATH = `src/emojis/emojis.zip`;
 
 type EmojiMetadata = {
   categories: EmojiCategory[];
@@ -51,10 +51,6 @@ type EmojiSkin = {
 
 const generateEmojiId = () => {
   return ulid().toLowerCase() + 'em';
-};
-
-const generateEmojiSkinId = () => {
-  return ulid().toLowerCase() + 'es';
 };
 
 const getEmojiUrl = (unified: string) => {
@@ -113,7 +109,7 @@ const generateMetadata = () => {
       skins: emojiMartItem.skins.map((skin) => ({
         id:
           existingEmoji?.skins.find((s) => s.unified === skin.unified)?.id ??
-          generateEmojiSkinId(),
+          generateEmojiId(),
         unified: skin.unified,
       })),
     };
@@ -205,6 +201,10 @@ const zipEmojis = async () => {
 };
 
 const generateEmojis = async () => {
+  if (!fs.existsSync(EMOJIS_DIR_PATH)) {
+    fs.mkdirSync(EMOJIS_DIR_PATH);
+  }
+
   generateMetadata();
   await generateImages();
   await zipEmojis();

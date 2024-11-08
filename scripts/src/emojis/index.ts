@@ -80,12 +80,18 @@ const getEmojiUrl = (unified: string) => {
   return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${file}.svg`;
 };
 
+const readMetadata = (): EmojiMetadata => {
+  if (!fs.existsSync(EMOJIS_METADATA_FILE_PATH)) {
+    return { emojis: {}, categories: [] };
+  }
+
+  return JSON.parse(
+    fs.readFileSync(EMOJIS_METADATA_FILE_PATH, 'utf-8')
+  ) as EmojiMetadata;
+};
+
 const generateMetadata = () => {
-  const existingEmojis: EmojiMetadata = fs.existsSync(EMOJIS_METADATA_FILE_PATH)
-    ? (JSON.parse(
-        fs.readFileSync(EMOJIS_METADATA_FILE_PATH, 'utf-8')
-      ) as EmojiMetadata)
-    : { emojis: {}, categories: [] };
+  const existingMetadata: EmojiMetadata = readMetadata();
 
   const result: EmojiMetadata = {
     categories: [],
@@ -95,7 +101,7 @@ const generateMetadata = () => {
   const idMap: Record<string, string> = {};
 
   for (const emojiMartItem of Object.values(emojiMartData.emojis)) {
-    const existingEmoji = Object.values(existingEmojis.emojis).find(
+    const existingEmoji = Object.values(existingMetadata.emojis).find(
       (emoji) => emoji.code === emojiMartItem.id
     );
 
@@ -149,10 +155,6 @@ const generateMetadata = () => {
 };
 
 const generateImages = async () => {
-  if (!fs.existsSync(EMOJIS_DIR_PATH)) {
-    fs.mkdirSync(EMOJIS_DIR_PATH);
-  }
-
   const emojis = JSON.parse(
     fs.readFileSync(EMOJIS_METADATA_FILE_PATH, 'utf-8')
   ) as EmojiMetadata;

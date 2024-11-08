@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Scripts",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true
+  }
+}

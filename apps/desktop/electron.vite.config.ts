@@ -14,6 +14,7 @@ export default defineConfig({
           {
             src: 'assets/**/*',
             dest: 'assets',
+            overwrite: false,
           },
         ],
       }),

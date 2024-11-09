@@ -1,7 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 import archiver from 'archiver';
-import { EmojiMartData } from '@emoji-mart/data';
+import unzipper from 'unzipper';
+import fetch from 'node-fetch';
 import { monotonicFactory } from 'ulid';
 
 const ulid = monotonicFactory();
@@ -10,19 +10,47 @@ type EmojiMartI18n = {
   categories: Record<string, string>;
 };
 
-const emojiMartDataPath = 'node_modules/@emoji-mart/data/sets/15/twitter.json';
-const emojiMartData = JSON.parse(
-  fs.readFileSync(emojiMartDataPath, 'utf-8')
-) as EmojiMartData;
+type EmojiMartEmoji = {
+  id: string;
+  name: string;
+  keywords: string[];
+  skins: EmojiMartSkin[];
+  version: number;
+  emoticons?: string[];
+};
 
-const i18nPath = 'node_modules/@emoji-mart/data/i18n/en.json';
-const i18nData = JSON.parse(
-  fs.readFileSync(i18nPath, 'utf-8')
-) as EmojiMartI18n;
+type EmojiMartSkin = {
+  unified: string;
+  native: string;
+};
 
-const EMOJIS_DIR_PATH = 'src/emojis/out';
+type EmojiMartCategory = {
+  id: string;
+  emojis: string[];
+};
+
+type EmojiMartData = {
+  emojis: Record<string, EmojiMartEmoji>;
+  categories: Record<string, EmojiMartCategory>;
+};
+
+const WORK_DIR_PATH = 'src/emojis/temp';
+const EMOJIS_DIR_PATH = `${WORK_DIR_PATH}/emojis`;
 const EMOJIS_METADATA_FILE_PATH = `${EMOJIS_DIR_PATH}/emojis.json`;
-const ZIP_FILE_PATH = `src/emojis/emojis.zip`;
+const EMOJIS_ZIP_FILE_PATH = 'src/emojis/emojis.zip';
+
+const GITHUB_DOMAIN = 'https://github.com';
+
+const EMOJI_MART_REPO = 'missive/emoji-mart';
+const EMOJI_MART_TAG = '5.6.0';
+const EMOJI_MART_DIR_PATH = `${WORK_DIR_PATH}/emoji-mart-${EMOJI_MART_TAG}`;
+const EMOJI_MART_I18N_FILE_PATH = `${EMOJI_MART_DIR_PATH}/packages/emoji-mart-data/i18n/en.json`;
+const EMOJI_MART_DATA_FILE_PATH = `${EMOJI_MART_DIR_PATH}/packages/emoji-mart-data/sets/15/twitter.json`;
+
+const TWEEMOJI_REPO = 'jdecked/twemoji';
+const TWEEMOJI_TAG = '15.1.0';
+const TWEEMOJI_DIR_PATH = `${WORK_DIR_PATH}/twemoji-${TWEEMOJI_TAG}`;
+const TWEEMOJI_SVG_DIR_PATH = `${TWEEMOJI_DIR_PATH}/assets/svg`;
 
 type EmojiMetadata = {
   categories: EmojiCategory[];
@@ -53,10 +81,61 @@ const generateEmojiId = () => {
   return ulid().toLowerCase() + 'em';
 };
 
-const getEmojiUrl = (unified: string) => {
+const downloadEmojiMartRepo = async () => {
+  console.log(`Downloading emoji-mart repo`);
+  const url = `${GITHUB_DOMAIN}/${EMOJI_MART_REPO}/archive/refs/tags/v${EMOJI_MART_TAG}.zip`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}`);
+  }
+
+  if (fs.existsSync(EMOJI_MART_DIR_PATH)) {
+    fs.rmSync(EMOJI_MART_DIR_PATH, { recursive: true });
+  }
+
+  await new Promise((resolve, reject) => {
+    if (response.body == null) {
+      reject(new Error(`Failed to download ${url}`));
+      return;
+    }
+
+    response.body
+      .pipe(unzipper.Extract({ path: WORK_DIR_PATH }))
+      .on('close', resolve)
+      .on('error', reject);
+  });
+  console.log(`Downloaded emoji-mart repo`);
+};
+
+const downloadTweemojiRepo = async () => {
+  console.log(`Downloading twemoji repo`);
+  const url = `${GITHUB_DOMAIN}/${TWEEMOJI_REPO}/archive/refs/tags/v${TWEEMOJI_TAG}.zip`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}`);
+  }
+
+  if (fs.existsSync(TWEEMOJI_DIR_PATH)) {
+    fs.rmSync(TWEEMOJI_DIR_PATH, { recursive: true });
+  }
+
+  await new Promise((resolve, reject) => {
+    if (response.body == null) {
+      reject(new Error(`Failed to download ${url}`));
+      return;
+    }
+
+    response.body
+      .pipe(unzipper.Extract({ path: WORK_DIR_PATH }))
+      .on('close', resolve)
+      .on('error', reject);
+  });
+  console.log(`Downloaded twemoji repo`);
+};
+
+const getEmojiSkinFileName = (unified: string) => {
   let file = unified;
 
-  // Fix for "copyright" and "trademark" emojis
   if (file.substring(0, 2) == '00') {
     file = file.substring(2);
 
@@ -77,7 +156,7 @@ const getEmojiUrl = (unified: string) => {
     }
   }
 
-  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${file}.svg`;
+  return `${file}.svg`;
 };
 
 const readMetadata = (): EmojiMetadata => {
@@ -90,7 +169,8 @@ const readMetadata = (): EmojiMetadata => {
   ) as EmojiMetadata;
 };
 
-const generateMetadata = () => {
+const generateEmojisDir = () => {
+  console.log(`Generating emojis dir`);
   const existingMetadata: EmojiMetadata = readMetadata();
 
   const result: EmojiMetadata = {
@@ -100,6 +180,15 @@ const generateMetadata = () => {
 
   const idMap: Record<string, string> = {};
 
+  const emojiMartData = JSON.parse(
+    fs.readFileSync(EMOJI_MART_DATA_FILE_PATH, 'utf-8')
+  ) as EmojiMartData;
+
+  const i18nData = JSON.parse(
+    fs.readFileSync(EMOJI_MART_I18N_FILE_PATH, 'utf-8')
+  ) as EmojiMartI18n;
+
+  console.log(`Processing emojis`);
   for (const emojiMartItem of Object.values(emojiMartData.emojis)) {
     const existingEmoji = Object.values(existingMetadata.emojis).find(
       (emoji) => emoji.code === emojiMartItem.id
@@ -112,18 +201,33 @@ const generateMetadata = () => {
       name: emojiMartItem.name,
       tags: emojiMartItem.keywords,
       emoticons: emojiMartItem.emoticons,
-      skins: emojiMartItem.skins.map((skin) => ({
-        id:
-          existingEmoji?.skins.find((s) => s.unified === skin.unified)?.id ??
-          generateEmojiId(),
-        unified: skin.unified,
-      })),
+      skins: [],
     };
+
+    for (const skin of emojiMartItem.skins) {
+      const existingSkin = existingEmoji?.skins.find(
+        (s) => s.unified === skin.unified
+      );
+
+      const skinId = existingSkin?.id ?? generateEmojiId();
+      emoji.skins.push({
+        id: skinId,
+        unified: skin.unified,
+      });
+
+      const fileName = getEmojiSkinFileName(skin.unified);
+      const sourceFilePath = `${TWEEMOJI_SVG_DIR_PATH}/${fileName}`;
+      const targetFilePath = `${EMOJIS_DIR_PATH}/${fileName}`;
+      if (!fs.existsSync(targetFilePath)) {
+        fs.copyFileSync(sourceFilePath, targetFilePath);
+      }
+    }
 
     idMap[emoji.code] = emoji.id;
     result.emojis[emojiId] = emoji;
   }
 
+  console.log(`Processing categories`);
   for (const emojiMartCategory of Object.values(emojiMartData.categories)) {
     const i18nCategory = i18nData.categories[emojiMartCategory.id];
 
@@ -152,41 +256,17 @@ const generateMetadata = () => {
   }
 
   fs.writeFileSync(EMOJIS_METADATA_FILE_PATH, JSON.stringify(result, null, 2));
-};
-
-const generateImages = async () => {
-  const emojis = JSON.parse(
-    fs.readFileSync(EMOJIS_METADATA_FILE_PATH, 'utf-8')
-  ) as EmojiMetadata;
-
-  for (const emoji of Object.values(emojis.emojis)) {
-    for (const skin of emoji.skins) {
-      const fileName = `${skin.id}.svg`;
-      const filePath = path.join(EMOJIS_DIR_PATH, fileName);
-      if (fs.existsSync(filePath)) {
-        continue;
-      }
-
-      const url = getEmojiUrl(skin.unified);
-      console.log(`Downloading ${url} to ${filePath}`);
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to download ${url}`);
-      }
-
-      const svg = await response.text();
-      fs.writeFileSync(filePath, svg);
-
-      // Rate limit
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-  }
+  console.log(`Generated emojis dir`);
 };
 
 const zipEmojis = async () => {
+  console.log(`Zipping emojis`);
+  if (fs.existsSync(EMOJIS_ZIP_FILE_PATH)) {
+    fs.rmSync(EMOJIS_ZIP_FILE_PATH);
+  }
+
   await new Promise((resolve, reject) => {
-    const output = fs.createWriteStream(ZIP_FILE_PATH);
+    const output = fs.createWriteStream(EMOJIS_ZIP_FILE_PATH);
     const archive = archiver('zip', { zlib: { level: 9 } });
 
     output.on('close', () => {
@@ -200,16 +280,26 @@ const zipEmojis = async () => {
     archive.directory(EMOJIS_DIR_PATH, false);
     archive.finalize();
   });
+  console.log(`Zipped emojis`);
 };
 
 const generateEmojis = async () => {
-  if (!fs.existsSync(EMOJIS_DIR_PATH)) {
-    fs.mkdirSync(EMOJIS_DIR_PATH);
+  if (!fs.existsSync(WORK_DIR_PATH)) {
+    fs.mkdirSync(WORK_DIR_PATH);
   }
 
-  generateMetadata();
-  await generateImages();
+  if (!fs.existsSync(EMOJIS_DIR_PATH)) {
+    fs.mkdirSync(EMOJIS_DIR_PATH);
+
+  await downloadEmojiMartRepo();
+  await downloadTweemojiRepo();
+
+  generateEmojisDir();
   await zipEmojis();
+
+  console.log(`Cleaning up`);
+  fs.rmSync(WORK_DIR_PATH, { recursive: true });
+  console.log(`All done`);
 };
 
 generateEmojis();

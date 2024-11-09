@@ -8,12 +8,12 @@ import {
 } from '@/renderer/components/ui/popover';
 
 const skins: string[] = [
-  '01h37jbxq11hpcnw1mdfgmm70vem',
-  '01h37jbxq11hpcnw1mdfgmm70wem',
-  '01h37jbxq11hpcnw1mdfgmm70xem',
-  '01h37jbxq11hpcnw1mdfgmm70yem',
-  '01h37jbxq11hpcnw1mdfgmm70zem',
-  '01h37jbxq11hpcnw1mdfgmm710em',
+  '01jc5vxx32ez8g5394y7mzt2vnem',
+  '01jc5vxx32ez8g5394y7mzt2vpem',
+  '01jc5vxx32ez8g5394y7mzt2vqem',
+  '01jc5vxx32ez8g5394y7mzt2vrem',
+  '01jc5vxx32ez8g5394y7mzt2vsem',
+  '01jc5vxx32ez8g5394y7mzt2vtem',
 ];
 
 interface EmojiSkinToneSelectorProps {
@@ -46,7 +46,7 @@ export const EmojiSkinToneSelector = ({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="p-2">
+      <PopoverContent className="p-2 w-50">
         {skins.map((skin, idx) => (
           <button
             key={`skin-selector-${skin}`}

@@ -25,16 +25,16 @@ const createServersTable: Migration = {
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'server-eu.neuronapp.io',
-          name: 'Neuron Cloud (EU)',
+          domain: 'eu.colanode.com',
+          name: 'Colanode Cloud (EU)',
           avatar: '',
           attributes: '{}',
           version: '0.1.0',
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'server-us.neuronapp.io',
-          name: 'Neuron Cloud (US)',
+          domain: 'us.colanode.com',
+          name: 'Colanode Cloud (US)',
           avatar: '',
           attributes: '{}',
           version: '0.1.0',
@@ -74,7 +74,7 @@ const createWorkspacesTable: Migration = {
       .addColumn('user_id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'text', (col) => col.notNull())
       .addColumn('account_id', 'text', (col) =>
-        col.notNull().references('accounts.id').onDelete('cascade'),
+        col.notNull().references('accounts.id').onDelete('cascade')
       )
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('description', 'text')

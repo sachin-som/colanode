@@ -94,7 +94,7 @@ export const AccountUpdate = () => {
                 }
 
                 setIsFileDialogOpen(true);
-                const result = await window.neuron.openFileDialog({
+                const result = await window.colanode.openFileDialog({
                   properties: ['openFile'],
                   filters: [
                     { name: 'Images', extensions: ['jpg', 'png', 'jpeg'] },
@@ -140,7 +140,7 @@ export const AccountUpdate = () => {
               <div
                 className={cn(
                   `absolute left-0 top-0 hidden h-32 w-32 items-center justify-center overflow-hidden bg-gray-50 group-hover:inline-flex`,
-                  isUploadingAvatar ? 'inline-flex' : 'hidden',
+                  isUploadingAvatar ? 'inline-flex' : 'hidden'
                 )}
               >
                 {isUploadingAvatar ? (

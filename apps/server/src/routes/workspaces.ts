@@ -7,7 +7,7 @@ import {
   WorkspaceRole,
   WorkspaceStatus,
 } from '@/types/workspaces';
-import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
+import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import { Router } from 'express';
@@ -29,147 +29,150 @@ import { enqueueEvent } from '@/queues/events';
 
 export const workspacesRouter = Router();
 
-workspacesRouter.post('/', async (req: NeuronRequest, res: NeuronResponse) => {
-  const input: WorkspaceInput = req.body;
+workspacesRouter.post(
+  '/',
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
+    const input: WorkspaceInput = req.body;
 
-  if (!req.account) {
-    return res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
+    if (!req.account) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    if (!input.name) {
+      return res.status(400).json({
+        code: ApiError.MissingRequiredFields,
+        message: 'Missing required fields.',
+      });
+    }
+
+    const account = await database
+      .selectFrom('accounts')
+      .selectAll()
+      .where('id', '=', req.account.id)
+      .executeTakeFirst();
+
+    if (!account) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Account not found.',
+      });
+    }
+
+    const createdAt = new Date();
+    const workspaceId = generateId(IdType.Workspace);
+    const workspaceVersionId = generateId(IdType.Version);
+
+    const userId = generateId(IdType.User);
+    const userVersionId = generateId(IdType.Version);
+    const userDoc = new Y.Doc({
+      guid: userId,
     });
-  }
 
-  if (!input.name) {
-    return res.status(400).json({
-      code: ApiError.MissingRequiredFields,
-      message: 'Missing required fields.',
+    const userAttributesMap = userDoc.getMap('attributes');
+    userDoc.transact(() => {
+      userAttributesMap.set('type', 'user');
+      userAttributesMap.set('name', account.name);
+      userAttributesMap.set('avatar', account.avatar);
+      userAttributesMap.set('email', account.email);
+      userAttributesMap.set('role', WorkspaceRole.Owner);
+      userAttributesMap.set('accountId', account.id);
     });
-  }
 
-  const account = await database
-    .selectFrom('accounts')
-    .selectAll()
-    .where('id', '=', req.account.id)
-    .executeTakeFirst();
+    const userAttributes = JSON.stringify(userAttributesMap.toJSON());
+    const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
 
-  if (!account) {
-    return res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Account not found.',
+    await database.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('workspaces')
+        .values({
+          id: workspaceId,
+          name: input.name,
+          description: input.description,
+          avatar: input.avatar,
+          created_at: createdAt,
+          created_by: account.id,
+          status: WorkspaceStatus.Active,
+          version_id: workspaceVersionId,
+        })
+        .execute();
+
+      await trx
+        .insertInto('workspace_users')
+        .values({
+          id: userId,
+          account_id: account.id,
+          workspace_id: workspaceId,
+          role: WorkspaceRole.Owner,
+          created_at: createdAt,
+          created_by: account.id,
+          status: WorkspaceUserStatus.Active,
+          version_id: generateId(IdType.Version),
+        })
+        .execute();
+
+      await trx
+        .insertInto('nodes')
+        .values({
+          id: userId,
+          workspace_id: workspaceId,
+          attributes: userAttributes,
+          state: userState,
+          created_at: createdAt,
+          created_by: account.id,
+          version_id: userVersionId,
+          server_created_at: createdAt,
+        })
+        .execute();
     });
-  }
 
-  const createdAt = new Date();
-  const workspaceId = generateId(IdType.Workspace);
-  const workspaceVersionId = generateId(IdType.Version);
-
-  const userId = generateId(IdType.User);
-  const userVersionId = generateId(IdType.Version);
-  const userDoc = new Y.Doc({
-    guid: userId,
-  });
-
-  const userAttributesMap = userDoc.getMap('attributes');
-  userDoc.transact(() => {
-    userAttributesMap.set('type', 'user');
-    userAttributesMap.set('name', account.name);
-    userAttributesMap.set('avatar', account.avatar);
-    userAttributesMap.set('email', account.email);
-    userAttributesMap.set('role', WorkspaceRole.Owner);
-    userAttributesMap.set('accountId', account.id);
-  });
-
-  const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-  const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
-
-  await database.transaction().execute(async (trx) => {
-    await trx
-      .insertInto('workspaces')
-      .values({
-        id: workspaceId,
-        name: input.name,
-        description: input.description,
-        avatar: input.avatar,
-        created_at: createdAt,
-        created_by: account.id,
-        status: WorkspaceStatus.Active,
-        version_id: workspaceVersionId,
-      })
-      .execute();
-
-    await trx
-      .insertInto('workspace_users')
-      .values({
-        id: userId,
-        account_id: account.id,
-        workspace_id: workspaceId,
-        role: WorkspaceRole.Owner,
-        created_at: createdAt,
-        created_by: account.id,
-        status: WorkspaceUserStatus.Active,
-        version_id: generateId(IdType.Version),
-      })
-      .execute();
-
-    await trx
-      .insertInto('nodes')
-      .values({
-        id: userId,
-        workspace_id: workspaceId,
-        attributes: userAttributes,
-        state: userState,
-        created_at: createdAt,
-        created_by: account.id,
-        version_id: userVersionId,
-        server_created_at: createdAt,
-      })
-      .execute();
-  });
-
-  const userEvent: NodeCreatedEvent = {
-    type: 'node_created',
-    id: userId,
-    workspaceId: workspaceId,
-    attributes: JSON.parse(userAttributes),
-    createdBy: account.id,
-    createdAt: createdAt.toISOString(),
-    versionId: userVersionId,
-    serverCreatedAt: createdAt.toISOString(),
-  };
-
-  await enqueueEvent(userEvent);
-
-  const output: WorkspaceOutput = {
-    id: workspaceId,
-    name: input.name,
-    description: input.description,
-    avatar: input.avatar,
-    versionId: workspaceVersionId,
-    user: {
+    const userEvent: NodeCreatedEvent = {
+      type: 'node_created',
       id: userId,
-      accountId: account.id,
-      role: WorkspaceRole.Owner,
-      node: {
-        id: userId,
-        workspaceId: workspaceId,
-        type: 'user',
-        attributes: JSON.parse(userAttributes),
-        state: userState,
-        createdAt: new Date(),
-        createdBy: account.id,
-        versionId: userVersionId,
-        serverCreatedAt: new Date(),
-        index: null,
-      },
-    },
-  };
+      workspaceId: workspaceId,
+      attributes: JSON.parse(userAttributes),
+      createdBy: account.id,
+      createdAt: createdAt.toISOString(),
+      versionId: userVersionId,
+      serverCreatedAt: createdAt.toISOString(),
+    };
 
-  return res.status(200).json(output);
-});
+    await enqueueEvent(userEvent);
+
+    const output: WorkspaceOutput = {
+      id: workspaceId,
+      name: input.name,
+      description: input.description,
+      avatar: input.avatar,
+      versionId: workspaceVersionId,
+      user: {
+        id: userId,
+        accountId: account.id,
+        role: WorkspaceRole.Owner,
+        node: {
+          id: userId,
+          workspaceId: workspaceId,
+          type: 'user',
+          attributes: JSON.parse(userAttributes),
+          state: userState,
+          createdAt: new Date(),
+          createdBy: account.id,
+          versionId: userVersionId,
+          serverCreatedAt: new Date(),
+          index: null,
+        },
+      },
+    };
+
+    return res.status(200).json(output);
+  }
+);
 
 workspacesRouter.put(
   '/:id',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
     const input: WorkspaceInput = req.body;
 
@@ -281,7 +284,7 @@ workspacesRouter.put(
 
 workspacesRouter.delete(
   '/:id',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
 
     if (!req.account) {
@@ -335,7 +338,7 @@ workspacesRouter.delete(
 
 workspacesRouter.get(
   '/:id',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
 
     if (!req.account) {
@@ -403,77 +406,80 @@ workspacesRouter.get(
   }
 );
 
-workspacesRouter.get('/', async (req: NeuronRequest, res: NeuronResponse) => {
-  if (!req.account) {
-    return res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
-    });
-  }
-
-  const workspaceUsers = await database
-    .selectFrom('workspace_users')
-    .selectAll()
-    .where('account_id', '=', req.account.id)
-    .execute();
-
-  const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
-  const workspaces = await database
-    .selectFrom('workspaces')
-    .selectAll()
-    .where('id', 'in', workspaceIds)
-    .execute();
-
-  const userNodes = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where(
-      'id',
-      'in',
-      workspaceUsers.map((wa) => wa.id)
-    )
-    .execute();
-
-  const outputs: WorkspaceOutput[] = [];
-
-  for (const workspace of workspaces) {
-    const workspaceUser = workspaceUsers.find(
-      (wa) => wa.workspace_id === workspace.id
-    );
-
-    if (!workspaceUser) {
-      continue;
+workspacesRouter.get(
+  '/',
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
+    if (!req.account) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
     }
 
-    const userNode = userNodes.find((un) => un.id === workspaceUser.id);
+    const workspaceUsers = await database
+      .selectFrom('workspace_users')
+      .selectAll()
+      .where('account_id', '=', req.account.id)
+      .execute();
 
-    if (!userNode) {
-      continue;
+    const workspaceIds = workspaceUsers.map((wa) => wa.workspace_id);
+    const workspaces = await database
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('id', 'in', workspaceIds)
+      .execute();
+
+    const userNodes = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where(
+        'id',
+        'in',
+        workspaceUsers.map((wa) => wa.id)
+      )
+      .execute();
+
+    const outputs: WorkspaceOutput[] = [];
+
+    for (const workspace of workspaces) {
+      const workspaceUser = workspaceUsers.find(
+        (wa) => wa.workspace_id === workspace.id
+      );
+
+      if (!workspaceUser) {
+        continue;
+      }
+
+      const userNode = userNodes.find((un) => un.id === workspaceUser.id);
+
+      if (!userNode) {
+        continue;
+      }
+
+      const output: WorkspaceOutput = {
+        id: workspace.id,
+        name: workspace.name,
+        description: workspace.description,
+        avatar: workspace.avatar,
+        versionId: workspace.version_id,
+        user: {
+          id: workspaceUser.id,
+          accountId: workspaceUser.account_id,
+          role: workspaceUser.role as WorkspaceRole,
+          node: mapNode(userNode),
+        },
+      };
+
+      outputs.push(output);
     }
 
-    const output: WorkspaceOutput = {
-      id: workspace.id,
-      name: workspace.name,
-      description: workspace.description,
-      avatar: workspace.avatar,
-      versionId: workspace.version_id,
-      user: {
-        id: workspaceUser.id,
-        accountId: workspaceUser.account_id,
-        role: workspaceUser.role as WorkspaceRole,
-        node: mapNode(userNode),
-      },
-    };
-
-    outputs.push(output);
+    return res.status(200).json(outputs);
   }
-
-  return res.status(200).json(outputs);
-});
+);
 
 workspacesRouter.post(
   '/:id/users',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
     const input: WorkspaceAccountsInviteInput = req.body;
 
@@ -713,7 +719,7 @@ workspacesRouter.post(
 
 workspacesRouter.put(
   '/:id/users/:userId',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
     const userId = req.params.userId as string;
     const input: WorkspaceAccountRoleUpdateInput = req.body;

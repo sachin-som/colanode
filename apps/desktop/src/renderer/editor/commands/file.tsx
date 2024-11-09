@@ -14,7 +14,7 @@ export const FileCommand: EditorCommand = {
       return;
     }
 
-    const result = await window.neuron.openFileDialog({
+    const result = await window.colanode.openFileDialog({
       properties: ['openFile'],
       buttonLabel: 'Upload',
       title: 'Upload files to page',
@@ -25,7 +25,7 @@ export const FileCommand: EditorCommand = {
     }
 
     const { userId, documentId } = context;
-    const output = await window.neuron.executeMutation({
+    const output = await window.colanode.executeMutation({
       type: 'file_create',
       filePath: result.filePaths[0],
       userId,

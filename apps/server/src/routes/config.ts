@@ -2,9 +2,9 @@ import { Router, Request, Response } from 'express';
 
 export const configRouter = Router();
 
-configRouter.get('/', async (req: Request, res: Response) => {
+configRouter.get('/', async (_: Request, res: Response) => {
   res.status(200).json({
-    name: 'Neuron Cloud',
+    name: 'Colanode Cloud',
     avatar: '',
     version: '0.1.0',
     attributes: {

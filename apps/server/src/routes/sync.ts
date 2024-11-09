@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
+import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { database, hasUpdateChanges } from '@/data/database';
 import { Router } from 'express';
 import {
@@ -30,7 +30,7 @@ export const syncRouter = Router();
 
 syncRouter.post(
   '/:workspaceId',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const workspaceId = req.params.workspaceId as string;
     const input = req.body as SyncLocalChangesInput;
     if (!req.account) {
@@ -73,12 +73,12 @@ syncRouter.post(
 
     console.log('executed mutations', results);
     res.status(200).json({ results });
-  },
+  }
 );
 
 const handleLocalChange = async (
   workspaceUser: SelectWorkspaceUser,
-  change: LocalChange,
+  change: LocalChange
 ): Promise<SyncLocalChangeResult> => {
   const changeData = JSON.parse(change.data) as LocalNodeChangeData;
   switch (changeData.type) {
@@ -104,7 +104,7 @@ const handleLocalChange = async (
 
 const handleCreateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  changeData: LocalCreateNodeChangeData,
+  changeData: LocalCreateNodeChangeData
 ): Promise<SyncLocalChangeResult> => {
   const existingNode = await database
     .selectFrom('nodes')
@@ -173,7 +173,7 @@ const handleCreateNodeChange = async (
 
 const handleUpdateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  changeData: LocalUpdateNodeChangeData,
+  changeData: LocalUpdateNodeChangeData
 ): Promise<SyncLocalChangeResult> => {
   let count = 0;
   while (count++ < 10) {
@@ -218,7 +218,7 @@ const handleUpdateNodeChange = async (
       !(await validator.canUpdate(
         workspaceUser,
         mapNode(existingNode),
-        attributes,
+        attributes
       ))
     ) {
       return {
@@ -268,7 +268,7 @@ const handleUpdateNodeChange = async (
 
 const handleDeleteNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
-  changeData: LocalDeleteNodeChangeData,
+  changeData: LocalDeleteNodeChangeData
 ): Promise<SyncLocalChangeResult> => {
   const existingNode = await database
     .selectFrom('nodes')
@@ -319,7 +319,7 @@ const handleDeleteNodeChange = async (
 
 const handleUserNodeStateChange = async (
   workspaceUser: SelectWorkspaceUser,
-  changeData: LocalUserNodeChangeData,
+  changeData: LocalUserNodeChangeData
 ): Promise<SyncLocalChangeResult> => {
   if (workspaceUser.id !== changeData.userId) {
     return {

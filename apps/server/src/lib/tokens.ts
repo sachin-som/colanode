@@ -1,6 +1,6 @@
 import { database } from '@/data/database';
 import { uuid } from '@/lib/utils';
-import { NeuronRequestAccount } from '@/types/api';
+import { ColanodeRequestAccount } from '@/types/api';
 import { sha256 } from 'js-sha256';
 
 interface GenerateTokenResult {
@@ -15,7 +15,7 @@ type VerifyTokenResult =
     }
   | {
       authenticated: true;
-      account: NeuronRequestAccount;
+      account: ColanodeRequestAccount;
     };
 
 export const generateToken = (id: string): GenerateTokenResult => {
@@ -32,7 +32,7 @@ export const generateToken = (id: string): GenerateTokenResult => {
 };
 
 export const verifyToken = async (
-  token: string,
+  token: string
 ): Promise<VerifyTokenResult> => {
   const id = token.slice(0, 28);
   const secret = token.slice(28);

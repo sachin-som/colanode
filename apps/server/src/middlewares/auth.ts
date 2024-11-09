@@ -1,15 +1,15 @@
 import {
   ApiError,
-  NeuronNextFunction,
-  NeuronRequest,
-  NeuronResponse,
+  ColanodeNextFunction,
+  ColanodeRequest,
+  ColanodeResponse,
 } from '@/types/api';
 import { verifyToken } from '@/lib/tokens';
 
 export const authMiddleware = async (
-  req: NeuronRequest,
-  res: NeuronResponse,
-  next: NeuronNextFunction,
+  req: ColanodeRequest,
+  res: ColanodeResponse,
+  next: ColanodeNextFunction
 ) => {
   const token = req.header('Authorization')?.split(' ')[1];
 

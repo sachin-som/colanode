@@ -21,7 +21,7 @@ export const useQuery = <T extends QueryInput>(input: T) => {
     const queryId = generateId(IdType.Query);
     const fetchData = async () => {
       try {
-        const result = await window.neuron.executeQueryAndSubscribe(
+        const result = await window.colanode.executeQueryAndSubscribe(
           queryId,
           input
         );
@@ -46,7 +46,7 @@ export const useQuery = <T extends QueryInput>(input: T) => {
     });
 
     return () => {
-      window.neuron.unsubscribeQuery(queryId);
+      window.colanode.unsubscribeQuery(queryId);
       eventBus.unsubscribe(subscriberId);
     };
   }, [hash]);

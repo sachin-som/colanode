@@ -48,7 +48,7 @@ export const Workspace = () => {
           setOpenSettings(true);
         },
         markAsSeen(nodeId, versionId) {
-          window.neuron.executeMutation({
+          window.colanode.executeMutation({
             type: 'mark_node_as_seen',
             nodeId: nodeId,
             versionId: versionId,

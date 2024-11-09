@@ -32,7 +32,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
   // Function to clean up existing subscriptions
   const cleanupSubscriptions = React.useCallback(() => {
     subscriberIdsRef.current.forEach(({ queryId, subscriberId }) => {
-      window.neuron.unsubscribeQuery(queryId);
+      window.colanode.unsubscribeQuery(queryId);
       eventBus.unsubscribe(subscriberId);
     });
     subscriberIdsRef.current = [];
@@ -65,7 +65,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
       const queryId = generateId(IdType.Query);
 
       try {
-        const result = await window.neuron.executeQueryAndSubscribe(
+        const result = await window.colanode.executeQueryAndSubscribe(
           queryId,
           input
         );

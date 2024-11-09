@@ -4,7 +4,7 @@ import { MutationMap, MutationInput } from '@/operations/mutations';
 import { QueryMap, QueryInput } from '@/operations/queries';
 import { FileMetadata } from '@/types/files';
 
-interface NeuronApi {
+interface ColanodeApi {
   init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
 
@@ -34,7 +34,7 @@ interface NeuronApi {
 declare global {
   interface Window {
     electron: ElectronAPI;
-    neuron: NeuronApi;
+    colanode: ColanodeApi;
     eventBus: EventBus;
   }
 }

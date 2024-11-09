@@ -10,7 +10,7 @@ import {
   LoginOutput,
 } from '@/types/accounts';
 import axios from 'axios';
-import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
+import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
@@ -210,7 +210,7 @@ accountsRouter.post('/login/google', async (req: Request, res: Response) => {
 accountsRouter.delete(
   '/logout',
   authMiddleware,
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
@@ -235,7 +235,7 @@ accountsRouter.delete(
 accountsRouter.put(
   '/:id',
   authMiddleware,
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id;
     const input: AccountUpdateInput = req.body;
 

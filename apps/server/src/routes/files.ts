@@ -2,7 +2,7 @@ import { database } from '@/data/database';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
 import { hasCollaboratorAccess, hasViewerAccess } from '@/lib/constants';
 import { fetchNodeRole } from '@/lib/nodes';
-import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
+import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Router } from 'express';
@@ -11,7 +11,7 @@ export const filesRouter = Router();
 
 filesRouter.get(
   '/:workspaceId/:fileId',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const workspaceId = req.params.workspaceId as string;
     const fileId = req.params.fileId as string;
 
@@ -81,12 +81,12 @@ filesRouter.get(
     });
 
     res.status(200).json({ url: presignedUrl });
-  },
+  }
 );
 
 filesRouter.post(
   '/:workspaceId/:fileId',
-  async (req: NeuronRequest, res: NeuronResponse) => {
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
     const workspaceId = req.params.workspaceId as string;
     const fileId = req.params.fileId as string;
 
@@ -158,5 +158,5 @@ filesRouter.post(
     });
 
     res.status(200).json({ url: presignedUrl });
-  },
+  }
 );

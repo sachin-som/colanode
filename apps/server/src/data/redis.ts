@@ -31,5 +31,5 @@ export const initRedis = async () => {
 };
 
 export const CHANNEL_NAMES = {
-  SYNAPSE: process.env.REDIS_SYNAPSE_CHANNEL_NAME || 'neuron_synapse',
+  SYNAPSE: process.env.REDIS_SYNAPSE_CHANNEL_NAME || 'colanode_synapse',
 };

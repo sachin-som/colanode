@@ -15,7 +15,7 @@ export const FolderCommand: EditorCommand = {
     }
 
     const { userId, documentId } = context;
-    const output = await window.neuron.executeMutation({
+    const output = await window.colanode.executeMutation({
       type: 'folder_create',
       name: 'Untitled',
       userId,

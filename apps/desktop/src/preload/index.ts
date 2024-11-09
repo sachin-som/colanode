@@ -10,7 +10,7 @@ import { QueryInput, QueryMap } from '@/operations/queries';
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI);
-    contextBridge.exposeInMainWorld('neuron', {
+    contextBridge.exposeInMainWorld('colanode', {
       init: () => ipcRenderer.invoke('init'),
       logout: (accountId: string) => ipcRenderer.invoke('logout', accountId),
 

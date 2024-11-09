@@ -71,7 +71,7 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
     }
 
     isDialogOpenedRef.current = true;
-    const result = await window.neuron.openFileDialog({
+    const result = await window.colanode.openFileDialog({
       properties: ['openFile'],
       buttonLabel: 'Upload',
       title: 'Upload files to folder',

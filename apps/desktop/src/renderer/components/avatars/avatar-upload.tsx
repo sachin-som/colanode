@@ -60,7 +60,7 @@ export const AvatarUpload = ({ onUpload }: AvatarUploadProps) => {
           }
 
           setIsFileDialogOpen(true);
-          const result = await window.neuron.openFileDialog({
+          const result = await window.colanode.openFileDialog({
             properties: ['openFile'],
             filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }],
           });

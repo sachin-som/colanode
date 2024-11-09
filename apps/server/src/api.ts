@@ -18,12 +18,12 @@ export const initApi = async () => {
   app.use(
     express.json({
       limit: '50mb',
-    }),
+    })
   );
   app.use(cors());
 
   app.get('/', (_: Request, res: Response) => {
-    res.send('Neuron');
+    res.send('Colanode');
   });
 
   app.use('/v1/accounts', accountsRouter);

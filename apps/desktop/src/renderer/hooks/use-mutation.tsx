@@ -14,7 +14,7 @@ export const useMutation = () => {
     async <T extends MutationInput>(options: MutationOptions<T>) => {
       setIsPending(true);
       try {
-        const output = await window.neuron.executeMutation(options.input);
+        const output = await window.colanode.executeMutation(options.input);
         options.onSuccess?.(output);
         return output;
       } catch (error) {
@@ -24,7 +24,7 @@ export const useMutation = () => {
         setIsPending(false);
       }
     },
-    [],
+    []
   );
 
   return {

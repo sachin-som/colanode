@@ -32,7 +32,11 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
             variant="outline"
             size="sm"
             onClick={() =>
-              window.neuron.openFile(workspace.userId, data.id, data.extension)
+              window.colanode.openFile(
+                workspace.userId,
+                data.id,
+                data.extension
+              )
             }
           >
             <SquareArrowOutUpRight className="mr-1 size-4" /> Open

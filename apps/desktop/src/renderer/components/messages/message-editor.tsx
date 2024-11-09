@@ -125,7 +125,7 @@ export const MessageEditor = React.forwardRef<
       return;
     }
 
-    const result = await window.neuron.openFileDialog({
+    const result = await window.colanode.openFileDialog({
       properties: ['openFile'],
       buttonLabel: 'Upload',
       title: 'Upload files to message',
@@ -136,7 +136,7 @@ export const MessageEditor = React.forwardRef<
     }
 
     const filePath = result.filePaths[0];
-    const fileMetadata = await window.neuron.getFileMetadata(filePath);
+    const fileMetadata = await window.colanode.getFileMetadata(filePath);
 
     if (fileMetadata === null) {
       toast({

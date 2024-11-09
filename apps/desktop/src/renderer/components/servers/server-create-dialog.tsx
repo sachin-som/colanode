@@ -36,7 +36,7 @@ export const ServerCreateDialog = ({
         <div className="flex-grow space-y-2 py-2 pb-4">
           <Label>Server Domain</Label>
           <Input
-            placeholder="us.neuronapp.io"
+            placeholder="us.colanode.com"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
           />

@@ -13,15 +13,15 @@ export enum ApiError {
   BadRequest = 'BadRequest',
 }
 
-export type NeuronRequestAccount = {
+export type ColanodeRequestAccount = {
   id: string;
   deviceId: string;
 };
 
-export type NeuronRequest = Request & {
-  account?: NeuronRequestAccount;
+export type ColanodeRequest = Request & {
+  account?: ColanodeRequestAccount;
 };
 
-export type NeuronResponse = Response;
+export type ColanodeResponse = Response;
 
-export type NeuronNextFunction = NextFunction;
+export type ColanodeNextFunction = NextFunction;

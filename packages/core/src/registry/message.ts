@@ -7,7 +7,7 @@ export const messageAttributesSchema = z.object({
   type: z.literal('message'),
   parentId: z.string().nullable(),
   content: z.record(z.string(), blockSchema),
-  reactions: z.record(z.array(z.string())),
+  reactions: z.record(z.string(), z.array(z.string())),
 });
 
 export type MessageAttributes = z.infer<typeof messageAttributesSchema>;

@@ -144,20 +144,6 @@ const applyArrayChanges = (
       }
 
       applyRecordChanges(itemSchema, item, nestedMap);
-    } else if (itemSchema instanceof z.ZodRecord) {
-      if (yArray.length <= i) {
-        const nestedMap = new Y.Map();
-        yArray.insert(i, [nestedMap]);
-      }
-
-      let nestedMap = yArray.get(i);
-      if (!(nestedMap instanceof Y.Map)) {
-        nestedMap = new Y.Map();
-        yArray.delete(i, 1);
-        yArray.insert(i, [nestedMap]);
-      }
-
-      applyRecordChanges(itemSchema, item, nestedMap);
     } else if (itemSchema instanceof ZodText) {
       if (yArray.length <= i) {
         const yText = new Y.Text();
@@ -186,7 +172,7 @@ const applyArrayChanges = (
   }
 
   if (yArray.length > length) {
-    yArray.delete(yArray.length, yArray.length - length);
+    yArray.delete(yArray.length - 1, yArray.length - length);
   }
 };
 

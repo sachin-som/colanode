@@ -1,6 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeRole, NodeTypes } from '@/lib/constants';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType, NodeTypes, NodeRoles } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
 import { sql } from 'kysely';
@@ -44,8 +43,8 @@ export class ChatCreateMutationHandler
       type: 'chat',
       parentId: input.workspaceId,
       collaborators: {
-        [input.userId]: NodeRole.Collaborator,
-        [input.otherUserId]: NodeRole.Collaborator,
+        [input.userId]: NodeRoles.Collaborator,
+        [input.otherUserId]: NodeRoles.Collaborator,
       },
     };
 

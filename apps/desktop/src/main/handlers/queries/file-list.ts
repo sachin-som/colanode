@@ -6,9 +6,9 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { compareString } from '@/lib/utils';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { FileNode } from '@/types/files';
 
 interface FileRow {

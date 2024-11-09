@@ -282,9 +282,6 @@ importers:
       ts-pattern:
         specifier: ^5.5.0
         version: 5.5.0
-      ulid:
-        specifier: ^2.3.0
-        version: 2.3.0
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -436,9 +433,6 @@ importers:
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
-      ulid:
-        specifier: ^2.3.0
-        version: 2.3.0
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -476,6 +470,9 @@ importers:
 
   packages/core:
     dependencies:
+      ulid:
+        specifier: ^2.3.0
+        version: 2.3.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8

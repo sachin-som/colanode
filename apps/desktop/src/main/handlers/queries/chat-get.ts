@@ -8,7 +8,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { ChatNode } from '@/types/chats';
 
 export class ChatGetQueryHandler implements QueryHandler<ChatGetQueryInput> {

@@ -1,4 +1,4 @@
-import { getIdType, IdType } from '@/lib/id';
+import { getIdType, IdType } from '@colanode/core';
 import { Breadcrumb } from '@/renderer/components/workspaces/containers/breadcrumb';
 import { ChatBreadcrumb } from '@/renderer/components/workspaces/containers/chat-breadcrumb';
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';

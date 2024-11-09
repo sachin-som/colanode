@@ -8,7 +8,7 @@ import { RecordContainer } from '@/renderer/components/records/record-container'
 import { ChatContainer } from '@/renderer/components/chats/chat-container';
 import { FolderContainer } from '@/renderer/components/folders/folder-container';
 import { FileContainer } from '@/renderer/components/files/file-container';
-import { getIdType, IdType } from '@/lib/id';
+import { getIdType, IdType } from '@colanode/core';
 
 export const Container = () => {
   const { nodeId } = useParams<{ nodeId: string }>();

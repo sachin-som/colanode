@@ -2,7 +2,7 @@ import { mergeAttributes, Node, CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { FilePlaceholderNodeView } from '@/renderer/editor/views';
 import { FileMetadata } from '@/types/files';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

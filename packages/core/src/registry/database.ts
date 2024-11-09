@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NodeModel } from './core';
 import { fieldAttributesSchema } from './fields';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export const viewFieldAttributesSchema = z.object({
   id: z.string(),

@@ -1,4 +1,4 @@
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { databaseManager } from '@/main/data/database-manager';
 import { fileManager } from '@/main/file-manager';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';

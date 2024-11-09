@@ -6,7 +6,7 @@ import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { GridLayout } from '@/renderer/components/folders/grids/grid-layout';
 import { ListLayout } from '@/renderer/components/folders/lists/list-layout';
 import { GalleryLayout } from '@/renderer/components/folders/galleries/gallery-layout';
-import { getIdType, IdType } from '@/lib/id';
+import { getIdType, IdType } from '@colanode/core';
 
 const FILES_PER_PAGE = 100;
 

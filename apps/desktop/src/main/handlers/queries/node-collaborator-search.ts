@@ -2,7 +2,7 @@ import { NodeCollaboratorSearchQueryInput } from '@/operations/queries/node-coll
 import { databaseManager } from '@/main/data/database-manager';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { NodeCollaborator } from '@/types/nodes';
 import {
   MutationChange,
@@ -10,7 +10,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export class NodeCollaboratorSearchQueryHandler
   implements QueryHandler<NodeCollaboratorSearchQueryInput>

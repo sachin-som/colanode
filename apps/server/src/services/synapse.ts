@@ -9,7 +9,7 @@ import {
   SynapseNodeChangeMessage,
   SynapseUserNodeChangeMessage,
 } from '@/types/synapse';
-import { getIdType, IdType } from '@/lib/id';
+import { getIdType, IdType } from '@colanode/core';
 import { MessageInput } from '@/types/messages';
 
 interface SynapseConnection {
@@ -91,20 +91,20 @@ class SynapseService {
     const subscriber = redis.duplicate();
     await subscriber.connect();
     await subscriber.subscribe(CHANNEL_NAMES.SYNAPSE, (message) =>
-      this.handleSynapseMessage(message.toString()),
+      this.handleSynapseMessage(message.toString())
     );
   }
 
   private sendSocketMessage(
     connection: SynapseConnection,
-    message: MessageInput,
+    message: MessageInput
   ) {
     connection.socket.send(JSON.stringify(message));
   }
 
   private async handleSocketMessage(
     connection: SynapseConnection,
-    message: MessageInput,
+    message: MessageInput
   ) {
     if (message.type === 'local_node_sync') {
       await database
@@ -123,7 +123,7 @@ class SynapseService {
             workspace_id: message.workspaceId,
             node_version_id: message.versionId,
             node_synced_at: new Date(),
-          }),
+          })
         )
         .execute();
     } else if (message.type === 'local_user_node_sync') {
@@ -143,7 +143,7 @@ class SynapseService {
             workspace_id: message.workspaceId,
             user_node_version_id: message.versionId,
             user_node_synced_at: new Date(),
-          }),
+          })
         )
         .execute();
     } else if (message.type === 'local_node_delete') {
@@ -154,7 +154,7 @@ class SynapseService {
         .execute();
 
       const userId = connection.workspaceUsers.find(
-        (wu) => wu.workspaceId === message.workspaceId,
+        (wu) => wu.workspaceId === message.workspaceId
       )?.userId;
 
       if (userId) {
@@ -167,7 +167,7 @@ class SynapseService {
             database
               .selectFrom('workspace_users')
               .select('account_id')
-              .where('id', '=', userId),
+              .where('id', '=', userId)
           )
           .execute();
 
@@ -231,7 +231,7 @@ class SynapseService {
       .selectFrom('user_nodes')
       .selectAll()
       .where((eb) =>
-        eb.and([eb('user_id', 'in', userIds), eb('node_id', '=', data.nodeId)]),
+        eb.and([eb('user_id', 'in', userIds), eb('node_id', '=', data.nodeId)])
       )
       .execute();
 
@@ -317,7 +317,7 @@ class SynapseService {
   }
 
   private async handleUserNodeUpdateMessage(
-    data: SynapseUserNodeChangeMessage,
+    data: SynapseUserNodeChangeMessage
   ) {
     const userDevices = this.getWorkspaceUserDevices(data.workspaceId);
     if (!userDevices.has(data.userId)) {
@@ -369,7 +369,7 @@ class SynapseService {
 
   private async sendPendingChanges(connection: SynapseConnection) {
     const userIds = connection.workspaceUsers.map(
-      (workspaceUser) => workspaceUser.userId,
+      (workspaceUser) => workspaceUser.userId
     );
 
     console.log('sendPendingChanges', userIds);
@@ -384,7 +384,7 @@ class SynapseService {
       .leftJoin('device_nodes as nds', (join) =>
         join
           .onRef('nds.node_id', '=', 'nus.node_id')
-          .on('nds.device_id', '=', connection.deviceId),
+          .on('nds.device_id', '=', connection.deviceId)
       )
       .select([
         'n.id',
@@ -420,7 +420,7 @@ class SynapseService {
             eb('nds.user_node_version_id', 'is', null),
             eb('nds.user_node_version_id', '!=', eb.ref('nus.version_id')),
           ]),
-        ]),
+        ])
       )
       .orderBy('n.id', 'asc')
       .limit(100)
@@ -509,7 +509,7 @@ class SynapseService {
   }
 
   private async fetchWorkspaceUsers(
-    connection: SynapseConnection,
+    connection: SynapseConnection
   ): Promise<void> {
     const workspaceUsers = await database
       .selectFrom('workspace_users')

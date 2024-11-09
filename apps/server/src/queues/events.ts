@@ -3,8 +3,7 @@ import { redisConfig } from '@/data/redis';
 import { CreateUserNode } from '@/data/schema';
 import { filesStorage } from '@/data/storage';
 import { BUCKET_NAMES } from '@/data/storage';
-import { NodeTypes } from '@/lib/constants';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType, NodeTypes } from '@colanode/core';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
 import { synapse } from '@/services/synapse';
 import {

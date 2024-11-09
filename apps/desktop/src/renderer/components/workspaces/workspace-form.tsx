@@ -18,7 +18,7 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useAccount } from '@/renderer/contexts/account';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { cn } from '@/lib/utils';
 import { Upload } from 'lucide-react';
 
@@ -122,7 +122,7 @@ export const WorkspaceForm = ({
               <div
                 className={cn(
                   `absolute left-0 top-0 hidden h-32 w-32 items-center justify-center overflow-hidden bg-gray-50 group-hover:inline-flex`,
-                  isPending ? 'inline-flex' : 'hidden',
+                  isPending ? 'inline-flex' : 'hidden'
                 )}
               >
                 {isPending ? (

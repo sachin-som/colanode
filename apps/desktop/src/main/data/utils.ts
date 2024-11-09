@@ -1,6 +1,6 @@
 import SQLite from 'better-sqlite3';
 import { QueryResult } from 'kysely';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export const buildSqlite = (filename: string): SQLite.Database => {
   const database = new SQLite(filename);
@@ -17,7 +17,7 @@ export const extractTablesFromSql = (sql: string): string[] => {
 
 export const resultHasChanged = <R>(
   oldResult: QueryResult<R>,
-  newResult: QueryResult<R>,
+  newResult: QueryResult<R>
 ): boolean => {
   if (oldResult.rows.length !== newResult.rows.length) {
     return true;

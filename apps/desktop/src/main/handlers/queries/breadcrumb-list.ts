@@ -4,7 +4,7 @@ import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { BreadcrumbNode } from '@/types/workspaces';
 import { mapNode } from '@/main/utils';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
   MutationChange,
   ChangeCheckResult,

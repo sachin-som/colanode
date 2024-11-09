@@ -1,7 +1,7 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeAttributeSetMutationInput } from '@/operations/mutations/node-attribute-set';
 import { nodeManager } from '@/main/node-manager';
-import { set } from 'lodash';
+import { set } from 'lodash-es';
 
 export class NodeAttributeSetMutationHandler
   implements MutationHandler<NodeAttributeSetMutationInput>

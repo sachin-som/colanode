@@ -1,7 +1,6 @@
 import * as Y from 'yjs';
 import { databaseManager } from '@/main/data/database-manager';
-import { EditorNodeTypes, NodeTypes } from '@/lib/constants';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType, EditorNodeTypes, NodeTypes } from '@colanode/core';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
 import { mapContentsToBlocks } from '@/lib/editor';

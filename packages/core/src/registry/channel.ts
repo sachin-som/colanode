@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { NodeModel } from './core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export const channelAttributesSchema = z.object({
   type: z.literal('channel'),

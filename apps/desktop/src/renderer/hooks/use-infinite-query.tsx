@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryInput, QueryMap } from '@/operations/queries';
 import { sha256 } from 'js-sha256';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 
 export const useInfiniteQuery = <T extends QueryInput>({
   initialPageInput,
@@ -11,7 +11,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
   initialPageInput: T;
   getNextPageInput: (
     page: number,
-    pages: Array<QueryMap[T['type']]['output']>,
+    pages: Array<QueryMap[T['type']]['output']>
   ) => T | undefined;
 }) => {
   const eventBus = useEventBus();
@@ -56,7 +56,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
       });
       subscriberIdsRef.current.push({ queryId, subscriberId });
     },
-    [eventBus],
+    [eventBus]
   );
 
   // Function to fetch a page
@@ -67,7 +67,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
       try {
         const result = await window.neuron.executeQueryAndSubscribe(
           queryId,
-          input,
+          input
         );
 
         // Update pages state
@@ -90,7 +90,7 @@ export const useInfiniteQuery = <T extends QueryInput>({
         console.error('Error executing query:', error);
       }
     },
-    [pages, getNextPageInput, subscribeToQueryResult],
+    [pages, getNextPageInput, subscribeToQueryResult]
   );
 
   // Fetch the initial page

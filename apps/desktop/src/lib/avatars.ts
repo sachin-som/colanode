@@ -1,5 +1,5 @@
 import { hashCode } from '@/lib/utils';
-import { IdType } from '@/lib/id';
+import { IdType } from '@colanode/core';
 
 export const getAvatarSizeClasses = (size?: string) => {
   if (size === 'small') {

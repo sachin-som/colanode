@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ChannelCreateMutationInput } from '@/operations/mutations/channel-create';

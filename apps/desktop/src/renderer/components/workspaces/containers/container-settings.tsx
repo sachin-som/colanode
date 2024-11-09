@@ -1,5 +1,4 @@
-import { IdType } from '@/lib/id';
-import { getIdType } from '@/lib/id';
+import { IdType, getIdType } from '@colanode/core';
 import { match } from 'ts-pattern';
 import { ChannelSettings } from '@/renderer/components/channels/channel-settings';
 import { PageSettings } from '@/renderer/components/pages/page-settings';

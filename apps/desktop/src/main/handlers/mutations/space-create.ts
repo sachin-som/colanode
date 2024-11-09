@@ -1,9 +1,8 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType, NodeRoles } from '@colanode/core';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { SpaceCreateMutationInput } from '@/operations/mutations/space-create';
-import { NodeRole } from '@/lib/constants';
 import {
   ChannelAttributes,
   PageAttributes,
@@ -26,7 +25,7 @@ export class SpaceCreateMutationHandler
       type: 'space',
       name: input.name,
       collaborators: {
-        [input.userId]: NodeRole.Admin,
+        [input.userId]: NodeRoles.Admin,
       },
       parentId: input.workspaceId,
       description: input.description,

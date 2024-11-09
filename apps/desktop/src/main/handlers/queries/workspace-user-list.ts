@@ -1,6 +1,6 @@
 import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
 import { databaseManager } from '@/main/data/database-manager';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { UserNode } from '@colanode/core';
@@ -10,7 +10,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export class WorkspaceUserListQueryHandler
   implements QueryHandler<WorkspaceUserListQueryInput>

@@ -1,5 +1,5 @@
 import { avatarStorage, BUCKET_NAMES } from '@/data/storage';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Router } from 'express';
 import multer from 'multer';
@@ -16,7 +16,7 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|webp/;
     const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
+      path.extname(file.originalname).toLowerCase()
     );
     const mimetype = filetypes.test(file.mimetype);
 

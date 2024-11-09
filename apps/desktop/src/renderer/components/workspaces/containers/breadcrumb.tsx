@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { BreadcrumbItem } from '@/renderer/components/workspaces/containers/breadcrumb-item';
 import { BreadcrumbItemPopover } from '@/renderer/components/workspaces/containers/breadcrumb-item-popover';

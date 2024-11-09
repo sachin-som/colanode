@@ -1,5 +1,5 @@
 import { databaseManager } from '@/main/data/database-manager';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { RecordCreateMutationInput } from '@/operations/mutations/record-create';
 import { RecordAttributes } from '@colanode/core';

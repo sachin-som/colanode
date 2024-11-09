@@ -1,7 +1,7 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeCollaboratorCreateMutationInput } from '@/operations/mutations/node-collaborator-create';
 import { nodeManager } from '@/main/node-manager';
-import { set } from 'lodash';
+import { set } from 'lodash-es';
 
 export class NodeCollaboratorCreateMutationHandler
   implements MutationHandler<NodeCollaboratorCreateMutationInput>

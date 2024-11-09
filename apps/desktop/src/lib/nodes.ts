@@ -1,5 +1,5 @@
 import { generateKeyBetween } from 'fractional-indexing-jittered';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 
 export const generateNodeIndex = (
   previous?: string | null,

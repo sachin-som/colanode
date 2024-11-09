@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
-import { SortDirections } from '@/lib/constants';
+import { SortDirections } from '@colanode/core';
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ChevronDown, Trash2 } from 'lucide-react';

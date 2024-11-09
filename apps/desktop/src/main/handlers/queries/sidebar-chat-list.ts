@@ -1,7 +1,7 @@
 import { SidebarChatListQueryInput } from '@/operations/queries/sidebar-chat-list';
 import { databaseManager } from '@/main/data/database-manager';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { SidebarChatNode } from '@/types/workspaces';
 import { mapNode } from '@/main/utils';
 import {
@@ -10,7 +10,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 interface UnreadCountRow {
   node_id: string;

@@ -36,7 +36,7 @@ export const SortDirections = {
   Descending: 'desc',
 };
 
-export const NodeRole = {
+export const NodeRoles = {
   Admin: 'admin',
   Editor: 'editor',
   Collaborator: 'collaborator',

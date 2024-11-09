@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NodeModel } from './core';
 import { blockSchema } from './block';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export const messageAttributesSchema = z.object({
   type: z.literal('message'),

@@ -8,7 +8,7 @@ import {
   WorkspaceStatus,
 } from '@/types/workspaces';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import { Router } from 'express';
 import * as Y from 'yjs';

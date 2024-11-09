@@ -1,4 +1,4 @@
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { FolderCreateMutationInput } from '@/operations/mutations/folder-create';
 import { FolderAttributes } from '@colanode/core';

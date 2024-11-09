@@ -7,12 +7,12 @@ import {
   QueryResult,
 } from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { MessageNode, MessageReactionCount } from '@/types/messages';
 import { mapNode } from '@/main/utils';
 import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { mapBlocksToContents } from '@/lib/editor';
 
 export class MessageListQueryHandler

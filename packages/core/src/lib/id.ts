@@ -1,5 +1,5 @@
 import { monotonicFactory } from 'ulid';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from './constants';
 
 const ulid = monotonicFactory();
 
@@ -43,6 +43,7 @@ export enum IdType {
   Icon = 'ic',
   File = 'fi',
   FilePlaceholder = 'fp',
+  Device = 'dv',
 }
 
 export const generateId = (type: IdType): string => {

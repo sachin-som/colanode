@@ -5,12 +5,12 @@ import {
   WorkspaceStatus,
   WorkspaceUserStatus,
 } from '@/types/workspaces';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType, NodeRoles } from '@colanode/core';
 import * as Y from 'yjs';
 import { fromUint8Array } from 'js-base64';
 import { NodeCreatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
-import { NodeRoles } from './constants';
+import {} from './constants';
 
 export const createDefaultWorkspace = async (account: SelectAccount) => {
   const createdAt = new Date();
@@ -64,7 +64,7 @@ export const createDefaultWorkspace = async (account: SelectAccount) => {
 
 const buildUserNodeCreate = (
   workspaceId: string,
-  account: SelectAccount,
+  account: SelectAccount
 ): CreateNode => {
   const id = generateId(IdType.User);
   const versionId = generateId(IdType.Version);
@@ -99,7 +99,7 @@ const buildUserNodeCreate = (
 
 const buildSpaceNodeCreate = (
   workspaceId: string,
-  userId: string,
+  userId: string
 ): CreateNode => {
   const id = generateId(IdType.Space);
   const versionId = generateId(IdType.Version);
@@ -115,7 +115,7 @@ const buildSpaceNodeCreate = (
 
     attributesMap.set('collaborators', new Y.Map());
     const collaboratorsMap = attributesMap.get(
-      'collaborators',
+      'collaborators'
     ) as Y.Map<string>;
 
     collaboratorsMap.set(userId, NodeRoles.Admin);
@@ -139,7 +139,7 @@ const buildSpaceNodeCreate = (
 const buildPageNodeCreate = (
   workspaceId: string,
   spaceId: string,
-  userId: string,
+  userId: string
 ): CreateNode => {
   const id = generateId(IdType.Page);
   const versionId = generateId(IdType.Version);
@@ -172,7 +172,7 @@ const buildPageNodeCreate = (
 const buildChannelNodeCreate = (
   workspaceId: string,
   spaceId: string,
-  userId: string,
+  userId: string
 ): CreateNode => {
   const id = generateId(IdType.Channel);
   const versionId = generateId(IdType.Version);

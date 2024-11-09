@@ -6,8 +6,7 @@ import {
   LocalCreateNodeChangeData,
   LocalUpdateNodeChangeData,
 } from '@/types/sync';
-import { generateId } from '@/lib/id';
-import { IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { databaseManager } from '@/main/data/database-manager';
 import { hasUpdateChanges } from '@/main/utils';
 import { Transaction } from 'kysely';

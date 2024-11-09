@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { BreadcrumbNode } from '@/types/workspaces';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 
 interface BreadcrumbNodeProps {
   node: BreadcrumbNode;

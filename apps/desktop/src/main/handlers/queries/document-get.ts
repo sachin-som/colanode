@@ -1,5 +1,5 @@
 import { sha256 } from 'js-sha256';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
   DocumentGetQueryInput,
   DocumentGetQueryOutput,

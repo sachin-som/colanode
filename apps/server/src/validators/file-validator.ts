@@ -1,5 +1,6 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasEditorAccess, NodeTypes } from '@/lib/constants';
+import { hasEditorAccess } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { extractNodeRole, fetchNodeAncestors } from '@/lib/nodes';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
@@ -7,7 +8,7 @@ import { Validator } from '@/types/validators';
 export class FileValidator implements Validator {
   async canCreate(
     workspaceUser: SelectWorkspaceUser,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     if (!attributes.parentId) {
       return false;
@@ -19,7 +20,7 @@ export class FileValidator implements Validator {
     }
 
     const parent = ancestors.find(
-      (ancestor) => ancestor.id === attributes.parentId,
+      (ancestor) => ancestor.id === attributes.parentId
     );
 
     if (!parent) {
@@ -41,7 +42,7 @@ export class FileValidator implements Validator {
   async canUpdate(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     if (!attributes.parentId) {
       return false;
@@ -53,7 +54,7 @@ export class FileValidator implements Validator {
     }
 
     const parent = ancestors.find(
-      (ancestor) => ancestor.id === attributes.parentId,
+      (ancestor) => ancestor.id === attributes.parentId
     );
 
     if (!parent) {
@@ -74,7 +75,7 @@ export class FileValidator implements Validator {
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
-    node: ServerNode,
+    node: ServerNode
   ): Promise<boolean> {
     if (!node.parentId) {
       return false;

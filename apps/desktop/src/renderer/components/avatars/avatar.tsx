@@ -5,7 +5,7 @@ import {
   getColorForId,
   getDefaultNodeAvatar,
 } from '@/lib/avatars';
-import { getIdType, IdType } from '@/lib/id';
+import { getIdType, IdType } from '@colanode/core';
 import { getEmojiUrl } from '@/lib/emojis';
 import { getIconUrl } from '@/lib/icons';
 import { useAccount } from '@/renderer/contexts/account';

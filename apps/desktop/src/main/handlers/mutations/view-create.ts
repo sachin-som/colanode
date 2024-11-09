@@ -1,4 +1,4 @@
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ViewCreateMutationInput } from '@/operations/mutations/view-create';
 import { compareString } from '@/lib/utils';

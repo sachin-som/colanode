@@ -8,7 +8,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
   public async handleQuery(

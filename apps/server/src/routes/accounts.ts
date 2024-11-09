@@ -11,7 +11,7 @@ import {
 } from '@/types/accounts';
 import axios from 'axios';
 import { ApiError, NeuronRequest, NeuronResponse } from '@/types/api';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
@@ -229,7 +229,7 @@ accountsRouter.delete(
     });
 
     return res.status(200).end();
-  },
+  }
 );
 
 accountsRouter.put(
@@ -285,7 +285,7 @@ accountsRouter.put(
         database
           .selectFrom('workspace_users')
           .select('id')
-          .where('account_id', '=', req.account.id),
+          .where('account_id', '=', req.account.id)
       )
       .execute();
 
@@ -301,7 +301,7 @@ accountsRouter.put(
           updated_at: new Date(),
         })
         .where('id', '=', req.account.id)
-        .compile(),
+        .compile()
     );
 
     for (const user of users) {
@@ -345,7 +345,7 @@ accountsRouter.put(
             server_updated_at: updatedAt,
           })
           .where('id', '=', user.id)
-          .compile(),
+          .compile()
       );
 
       const event: NodeUpdatedEvent = {
@@ -380,11 +380,11 @@ accountsRouter.put(
     };
 
     return res.status(200).json(output);
-  },
+  }
 );
 
 const buildLoginOutput = async (
-  account: SelectAccount,
+  account: SelectAccount
 ): Promise<LoginOutput> => {
   let workspaceUsers = await database
     .selectFrom('workspace_users')
@@ -420,7 +420,7 @@ const buildLoginOutput = async (
 
     for (const workspaceUser of workspaceUsers) {
       const workspace = workspaces.find(
-        (w) => w.id === workspaceUser.workspace_id,
+        (w) => w.id === workspaceUser.workspace_id
       );
 
       if (!workspace) {

@@ -1,6 +1,6 @@
 import { databaseManager } from '@/main/data/database-manager';
 import { MutationHandler, MutationResult } from '@/main/types';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 import { FileCreateMutationInput } from '@/operations/mutations/file-create';
 import { fileManager } from '@/main/file-manager';
 import { FileAttributes } from '@colanode/core';

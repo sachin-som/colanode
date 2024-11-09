@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryInput, QueryMap } from '@/operations/queries';
 import { sha256 } from 'js-sha256';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
-import { generateId, IdType } from '@/lib/id';
+import { generateId, IdType } from '@colanode/core';
 
 export const useQuery = <T extends QueryInput>(input: T) => {
   const eventBus = useEventBus();

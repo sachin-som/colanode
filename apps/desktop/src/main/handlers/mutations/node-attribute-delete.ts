@@ -1,7 +1,7 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeAttributeDeleteMutationInput } from '@/operations/mutations/node-attribute-delete';
 import { nodeManager } from '@/main/node-manager';
-import { unset } from 'lodash';
+import { unset } from 'lodash-es';
 
 export class NodeAttributeDeleteMutationHandler
   implements MutationHandler<NodeAttributeDeleteMutationInput>

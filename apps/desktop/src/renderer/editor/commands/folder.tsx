@@ -1,5 +1,5 @@
 import { EditorCommand } from '@/types/editor';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { Folder } from 'lucide-react';
 
 export const FolderCommand: EditorCommand = {

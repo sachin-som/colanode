@@ -28,8 +28,8 @@ import {
 } from '@colanode/core';
 import { isStringArray } from '@/lib/utils';
 import { mapNode } from '@/main/utils';
-import { NodeTypes } from '@/lib/constants';
-import { isEqual } from 'lodash';
+import { NodeTypes } from '@colanode/core';
+import { isEqual } from 'lodash-es';
 
 export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>

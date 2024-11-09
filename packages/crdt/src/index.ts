@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import * as Y from 'yjs';
 import { ZodText } from '@colanode/core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { diffChars } from 'diff';
 
 export const applyCrdt = (

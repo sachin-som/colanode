@@ -1,7 +1,7 @@
 import { nodeManager } from '@/main/node-manager';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeCollaboratorDeleteMutationInput } from '@/operations/mutations/node-collaborator-delete';
-import { unset } from 'lodash';
+import { unset } from 'lodash-es';
 
 export class NodeCollaboratorDeleteMutationHandler
   implements MutationHandler<NodeCollaboratorDeleteMutationInput>

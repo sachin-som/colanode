@@ -2,7 +2,7 @@ import { SidebarSpaceListQueryInput } from '@/operations/queries/sidebar-space-l
 import { databaseManager } from '@/main/data/database-manager';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { NodeTypes } from '@/lib/constants';
+import { NodeTypes } from '@colanode/core';
 import { SidebarNode, SidebarSpaceNode } from '@/types/workspaces';
 import { mapNode } from '@/main/utils';
 import { Node } from '@colanode/core';
@@ -12,7 +12,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { compareString } from '@/lib/utils';
 
 interface UnreadCountRow {

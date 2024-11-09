@@ -12,7 +12,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 type ExtractedNodeCollaborator = {
   nodeId: string;

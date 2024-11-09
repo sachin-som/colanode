@@ -1,5 +1,4 @@
-import { EditorNodeTypes } from '@/lib/constants';
-import { generateId, getIdTypeFromNode } from '@/lib/id';
+import { EditorNodeTypes, generateId, getIdTypeFromNode } from '@colanode/core';
 import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { JSONContent } from '@tiptap/core';

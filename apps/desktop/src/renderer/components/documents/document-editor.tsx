@@ -1,6 +1,6 @@
 import React from 'react';
 import '@/renderer/styles/editor.css';
-import { debounce } from 'lodash';
+import { debounce } from 'lodash-es';
 import { useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import {
   ParagraphCommand,
@@ -85,7 +85,7 @@ export const DocumentEditor = ({
           },
         });
       }, 500),
-    [mutate, documentId, workspace.userId],
+    [mutate, documentId, workspace.userId]
   );
 
   const editor = useEditor(
@@ -164,7 +164,7 @@ export const DocumentEditor = ({
         }
       },
     },
-    [documentId],
+    [documentId]
   );
 
   React.useEffect(() => {

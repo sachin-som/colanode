@@ -64,7 +64,7 @@ class AssetManager {
   }
 
   private async updateEmojis(): Promise<void> {
-    const emojisZipPath = path.join(this.assetsDir, 'emojis.zip');
+    const emojisZipPath = path.join(__dirname, 'assets', 'emojis.zip');
     const emojisDir = path.join(this.assetsDir, 'emojis');
     if (fs.existsSync(emojisDir)) {
       fs.rmSync(emojisDir, { recursive: true });
@@ -78,7 +78,7 @@ class AssetManager {
   }
 
   private async updateIcons(): Promise<void> {
-    const iconsZipPath = path.join(this.assetsDir, 'icons.zip');
+    const iconsZipPath = path.join(__dirname, 'assets', 'icons.zip');
     const iconsDir = path.join(this.assetsDir, 'icons');
     if (fs.existsSync(iconsDir)) {
       fs.rmSync(iconsDir, { recursive: true });

@@ -17,6 +17,8 @@ import { ChatGetQueryHandler } from '@/main/handlers/queries/chat-get';
 import { FileListQueryHandler } from '@/main/handlers/queries/file-list';
 import { FileGetQueryHandler } from '@/main/handlers/queries/file-get';
 import { DocumentGetQueryHandler } from '@/main/handlers/queries/document-get';
+import { EmojisGetQueryHandler } from '@/main/handlers/queries/emojis-get';
+import { IconsGetQueryHandler } from '@/main/handlers/queries/icons-get';
 
 type QueryHandlerMap = {
   [K in keyof QueryMap]: QueryHandler<QueryMap[K]['input']>;
@@ -40,4 +42,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_list: new FileListQueryHandler(),
   file_get: new FileGetQueryHandler(),
   document_get: new DocumentGetQueryHandler(),
+  emojis_get: new EmojisGetQueryHandler(),
+  icons_get: new IconsGetQueryHandler(),
 };

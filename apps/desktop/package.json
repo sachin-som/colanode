@@ -104,6 +104,7 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "ts-pattern": "^5.5.0",
+    "unzipper": "^0.12.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -120,6 +121,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/react-window": "^1.8.8",
+    "@types/unzipper": "^0.10.10",
     "@types/ws": "^8.5.12",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",

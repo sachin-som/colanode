@@ -1,20 +1,28 @@
 import React from 'react';
 import { EmojiSkinToneSelector } from '@/renderer/components/emojis/emoji-skin-tone-selector';
-import { Emoji } from '@/lib/emojis';
+import { Emoji } from '@/types/emojis';
 import { EmojiPickerContext } from '@/renderer/contexts/emoji-picker';
 import { EmojiPickerBrowser } from '@/renderer/components/emojis/emoji-picker-browser';
 import { EmojiPickerSearch } from '@/renderer/components/emojis/emoji-picker-search';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface EmojiPickerProps {
-  onPick: (emoji: Emoji) => void;
+  onPick: (emoji: Emoji, skinTone: number) => void;
 }
 
 export const EmojiPicker = ({ onPick }: EmojiPickerProps) => {
   const [query, setQuery] = React.useState('');
   const [skinTone, setSkinTone] = React.useState(0);
+  const { data, isPending } = useQuery({ type: 'emojis_get' });
+
+  if (isPending || !data) {
+    return null;
+  }
 
   return (
-    <EmojiPickerContext.Provider value={{ skinTone, onPick }}>
+    <EmojiPickerContext.Provider
+      value={{ data, skinTone, onPick: (emoji) => onPick(emoji, skinTone) }}
+    >
       <div className="flex flex-col gap-1 p-1">
         <div className="flex flex-row items-center gap-1">
           <input

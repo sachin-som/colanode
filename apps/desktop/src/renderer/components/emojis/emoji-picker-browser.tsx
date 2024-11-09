@@ -1,29 +1,34 @@
-import { EmojiPickerRowData, categories, emojis } from '@/lib/emojis';
+import { EmojiPickerRowData } from '@/types/emojis';
 import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { EmojiPickerBrowserRow } from '@/renderer/components/emojis/emoji-picker-browser-row';
+import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';
 
 const emojisPerRow = 10;
 
 export const EmojiPickerBrowser = () => {
+  const { data } = useEmojiPicker();
+
   const rowDataArray = React.useMemo<EmojiPickerRowData[]>(() => {
     const rows: EmojiPickerRowData[] = [];
 
-    for (let i = 0; i < categories.length; i++) {
+    for (let i = 0; i < data.categories.length; i++) {
+      const category = data.categories[i];
       // Add the category label
       rows.push({
         type: 'label',
-        category: categories[i],
+        category: category.name,
       });
 
-      const numEmojis = emojis[i].length;
+      const numEmojis = category.emojis.length;
       const numRowsInCategory = Math.ceil(numEmojis / emojisPerRow);
 
       for (let rowIndex = 0; rowIndex < numRowsInCategory; rowIndex++) {
         const start = rowIndex * emojisPerRow;
         const end = start + emojisPerRow;
-        const emojisInRow = emojis[i].slice(start, end);
+        const emojisIds = category.emojis.slice(start, end);
+        const emojisInRow = emojisIds.map((id) => data.emojis[id]);
 
         rows.push({
           type: 'emoji',

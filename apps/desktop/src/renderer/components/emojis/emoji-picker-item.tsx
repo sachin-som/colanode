@@ -1,4 +1,4 @@
-import { Emoji } from '@/lib/emojis';
+import { Emoji } from '@/types/emojis';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';
 
@@ -9,14 +9,9 @@ interface EmojiPickerItemProps {
 export const EmojiPickerItem = ({ emoji }: EmojiPickerItemProps) => {
   const { skinTone, onPick: onEmojiClick } = useEmojiPicker();
 
-  let id = emoji.id;
-  if (
-    emoji.skins &&
-    emoji.skins.length > 0 &&
-    skinTone !== 0 &&
-    skinTone < emoji.skins.length
-  ) {
-    id = emoji.skins[skinTone];
+  let id = emoji.skins[0].id;
+  if (skinTone !== 0 && skinTone < emoji.skins.length) {
+    id = emoji.skins[skinTone].id;
   }
 
   return (

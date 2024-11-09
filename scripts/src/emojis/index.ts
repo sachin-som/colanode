@@ -290,6 +290,7 @@ const generateEmojis = async () => {
 
   if (!fs.existsSync(EMOJIS_DIR_PATH)) {
     fs.mkdirSync(EMOJIS_DIR_PATH);
+  }
 
   await downloadEmojiMartRepo();
   await downloadTweemojiRepo();

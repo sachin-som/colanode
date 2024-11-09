@@ -1,12 +1,4 @@
-import {
-  app,
-  shell,
-  BrowserWindow,
-  ipcMain,
-  protocol,
-  net,
-  dialog,
-} from 'electron';
+import { app, shell, BrowserWindow, ipcMain, protocol, dialog } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { eventBus } from '@/lib/event-bus';
@@ -19,12 +11,14 @@ import { mediator } from '@/main/mediator';
 import { FileMetadata } from '@/types/files';
 import { MutationInput, MutationMap } from '@/operations/mutations';
 import { QueryInput, QueryMap } from '@/operations/queries';
+import { assetManager } from '@/main/asset-manager';
 
 let subscriptionId: string | null = null;
 const icon = join(__dirname, '../assets/icon.png');
 
 const createWindow = async (): Promise<void> => {
   await databaseManager.init();
+  assetManager.checkAssets();
   socketManager.init();
   synchronizer.init();
 
@@ -84,10 +78,7 @@ const createWindow = async (): Promise<void> => {
 
   if (!protocol.isProtocolHandled('asset')) {
     protocol.handle('asset', (request) => {
-      const url = request.url.replace('asset://', '');
-      const filePath = join(__dirname, 'assets', url);
-      const localFileUrl = `file://${filePath}`;
-      return net.fetch(localFileUrl);
+      return assetManager.handleAssetRequest(request);
     });
   }
 };

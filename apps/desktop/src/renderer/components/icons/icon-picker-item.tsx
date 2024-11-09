@@ -1,4 +1,4 @@
-import { Icon } from '@/lib/icons';
+import { Icon } from '@/types/icons';
 import { useIconPicker } from '@/renderer/contexts/icon-picker';
 import { IconElement } from '@/renderer/components/icons/icon-element';
 

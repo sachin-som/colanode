@@ -1,29 +1,33 @@
 import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { IconPickerRowData, iconCategories, icons } from '@/lib/icons';
+import { IconPickerRowData } from '@/types/icons';
 import { IconPickerBrowserRow } from '@/renderer/components/icons/icon-picker-browser-row';
+import { useIconPicker } from '@/renderer/contexts/icon-picker';
 
 const iconsPerRow = 10;
 
 export const IconPickerBrowser = () => {
+  const { data } = useIconPicker();
   const rowDataArray = React.useMemo<IconPickerRowData[]>(() => {
     const rows: IconPickerRowData[] = [];
 
-    for (let i = 0; i < iconCategories.length; i++) {
+    for (let i = 0; i < data.categories.length; i++) {
+      const category = data.categories[i];
       // Add the category label
       rows.push({
         type: 'label',
-        category: iconCategories[i],
+        category: category.name,
       });
 
-      const numIcons = icons[i].length;
+      const numIcons = category.icons.length;
       const numRowsInCategory = Math.ceil(numIcons / iconsPerRow);
 
       for (let rowIndex = 0; rowIndex < numRowsInCategory; rowIndex++) {
         const start = rowIndex * iconsPerRow;
         const end = start + iconsPerRow;
-        const iconsInRow = icons[i].slice(start, end);
+        const iconIds = category.icons.slice(start, end);
+        const iconsInRow = iconIds.map((id) => data.icons[id]);
 
         rows.push({
           type: 'icon',

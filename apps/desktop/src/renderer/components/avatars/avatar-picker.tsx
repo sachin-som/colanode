@@ -22,8 +22,8 @@ export const AvatarPicker = ({ onPick }: AvatarPickerProps) => {
       </TabsList>
       <TabsContent value="emojis">
         <EmojiPicker
-          onPick={(emoji) => {
-            onPick(emoji.id);
+          onPick={(emoji, skinTone) => {
+            onPick(emoji.skins[skinTone].id);
           }}
         />
       </TabsContent>

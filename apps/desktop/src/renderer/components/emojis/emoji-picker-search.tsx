@@ -1,14 +1,17 @@
 import React from 'react';
 import { searchEmojis } from '@/lib/emojis';
 import { EmojiPickerItem } from '@/renderer/components/emojis/emoji-picker-item';
+import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';
 
 interface EmojiPickerSearchProps {
   query: string;
 }
 
 export const EmojiPickerSearch = ({ query }: EmojiPickerSearchProps) => {
+  const { data } = useEmojiPicker();
+
   const filteredEmojis = React.useMemo(() => {
-    return searchEmojis(query);
+    return searchEmojis(query, data);
   }, [query]);
 
   return (

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Icon } from '@/lib/icons';
+import { Icon } from '@/types/icons';
 import { IconPickerContext } from '@/renderer/contexts/icon-picker';
 import { IconPickerSearch } from '@/renderer/components/icons/icon-picker-search';
 import { IconPickerBrowser } from '@/renderer/components/icons/icon-picker-browser';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface IconPickerProps {
   onPick: (icon: Icon) => void;
@@ -10,9 +11,14 @@ interface IconPickerProps {
 
 export const IconPicker = ({ onPick }: IconPickerProps) => {
   const [query, setQuery] = React.useState('');
+  const { data, isPending } = useQuery({ type: 'icons_get' });
+
+  if (isPending || !data) {
+    return null;
+  }
 
   return (
-    <IconPickerContext.Provider value={{ onPick }}>
+    <IconPickerContext.Provider value={{ data, onPick }}>
       <div className="flex flex-col gap-1 p-1">
         <input
           type="text"

@@ -1,14 +1,17 @@
 import React from 'react';
 import { IconPickerItem } from '@/renderer/components/icons/icon-picker-item';
 import { searchIcons } from '@/lib/icons';
+import { useIconPicker } from '@/renderer/contexts/icon-picker';
 
 interface IconPickerSearchProps {
   query: string;
 }
 
 export const IconPickerSearch = ({ query }: IconPickerSearchProps) => {
+  const { data } = useIconPicker();
+
   const filteredIcons = React.useMemo(() => {
-    return searchIcons(query);
+    return searchIcons(query, data);
   }, [query]);
 
   return (

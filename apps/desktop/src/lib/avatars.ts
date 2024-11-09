@@ -42,27 +42,27 @@ export const getAvatarUrl = (accountId: string, avatar: string): string => {
 
 export const getDefaultNodeAvatar = (type: IdType): string | null => {
   if (type === IdType.Channel) {
-    return '01h37jbxq11hpcnw1mdfgmm70cem';
+    return '01jc86rkg8cp6mgmrra20ed31aic';
   }
 
   if (type === IdType.Page) {
-    return '01h37jbxqc5srhy96v34dxaa2aem';
+    return '01jc86rkh54xdkrqrwvpzab63kic';
   }
 
   if (type === IdType.Database) {
-    return '01h37jbxqc5srhy96v34dxaa25em';
+    return '01jc86rkgy4710n5wpatc0jnh0ic';
   }
 
   if (type === IdType.Record) {
-    return '01h37jbxqc5srhy96v34dxaa2dem';
+    return '01jc86rkh6j2b38w8rranjd14ric';
   }
 
   if (type === IdType.Folder) {
-    return '01h37jbxqc5srhy96v34dxaa36em';
+    return '01jc86rkhdwdf47de5j64p7ktkic';
   }
 
   if (type === IdType.Space) {
-    return '01h37jbxq7628n8m2bwdandtbxem';
+    return '01jc86rkm2gfd3nkn0yahxtg26ic';
   }
 
   return null;

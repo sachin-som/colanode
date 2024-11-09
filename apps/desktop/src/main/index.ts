@@ -16,6 +16,8 @@ import { assetManager } from '@/main/asset-manager';
 let subscriptionId: string | null = null;
 const icon = join(__dirname, '../assets/icon.png');
 
+app.setName('Colanode');
+
 const createWindow = async (): Promise<void> => {
   await databaseManager.init();
   assetManager.checkAssets();

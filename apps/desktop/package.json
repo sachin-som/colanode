@@ -1,5 +1,6 @@
 {
   "name": "@colanode/desktop",
+  "productName": "Colanode",
   "version": "1.0.0",
   "description": "Colanode desktop application",
   "main": "./out/main/index.js",

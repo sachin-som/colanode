@@ -1,7 +1,8 @@
 import { database } from '@/data/database';
 import { redisConfig } from '@/data/redis';
-import { CleanDeviceDataTask, Task } from '@/types/tasks';
+import { CleanDeviceDataTask, SendEmailTask, Task } from '@/types/tasks';
 import { Job, Queue, Worker } from 'bullmq';
+import { sendEmail } from '@/services/email';
 
 const taskQueue = new Queue('tasks', {
   connection: {
@@ -36,6 +37,8 @@ const handleTaskJob = async (job: Job) => {
   switch (task.type) {
     case 'clean_device_data':
       return handleCleanDeviceDataTask(task);
+    case 'send_email':
+      return handleSendEmailTask(task);
   }
 };
 
@@ -58,3 +61,9 @@ const handleCleanDeviceDataTask = async (
     .where('device_id', '=', task.deviceId)
     .execute();
 };
+
+const handleSendEmailTask = async (
+  task: SendEmailTask
+): Promise<void> => {
+  await sendEmail(task.message);
+}

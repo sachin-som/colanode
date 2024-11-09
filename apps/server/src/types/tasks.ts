@@ -1,4 +1,4 @@
-import { EmailMessage } from './email';
+import { EmailMessage } from '@/types/email';
 
 export type Task = CleanDeviceDataTask | SendEmailTask;
 

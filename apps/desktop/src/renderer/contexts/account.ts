@@ -9,7 +9,7 @@ interface AccountContext extends Account {
 }
 
 export const AccountContext = createContext<AccountContext>(
-  {} as AccountContext,
+  {} as AccountContext
 );
 
 export const useAccount = () => useContext(AccountContext);

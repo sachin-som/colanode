@@ -15,7 +15,7 @@ export const DividerNode = HorizontalRule.extend({
 
           tr.insert(start - 1, this.type.create(attributes)).delete(
             tr.mapping.map(start),
-            tr.mapping.map(end),
+            tr.mapping.map(end)
           );
         },
       }),
@@ -27,4 +27,3 @@ export const DividerNode = HorizontalRule.extend({
       'h-0.5 my-2 cursor-pointer rounded-sm border-none bg-muted bg-clip-content',
   },
 });
-

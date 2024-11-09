@@ -214,7 +214,7 @@ export const languages: CodeLanguage[] = [
 
 const parseNodes = (
   nodes: any[],
-  className: string[] = [],
+  className: string[] = []
 ): CodeHighlightNode[] => {
   return nodes
     .map((node) => {
@@ -237,7 +237,7 @@ const parseNodes = (
 
 export const highlightCode = (
   code: string,
-  language?: string,
+  language?: string
 ): CodeHighlight | null => {
   try {
     const result =

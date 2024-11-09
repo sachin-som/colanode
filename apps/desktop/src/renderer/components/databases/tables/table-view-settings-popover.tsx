@@ -97,7 +97,7 @@ export const TableViewSettingsPopover = () => {
             <p className="my-1 font-semibold">Fields</p>
             {database.fields.map((field) => {
               const isHidden = !!view.fields.find(
-                (f) => f.field.id === field.id,
+                (f) => f.field.id === field.id
               );
 
               return (
@@ -105,7 +105,7 @@ export const TableViewSettingsPopover = () => {
                   key={field.id}
                   className={cn(
                     'flex flex-row items-center justify-between gap-2 p-0.5',
-                    'cursor-pointer rounded-md hover:bg-gray-50',
+                    'cursor-pointer rounded-md hover:bg-gray-50'
                   )}
                 >
                   <div className="flex flex-row items-center gap-2">
@@ -117,7 +117,7 @@ export const TableViewSettingsPopover = () => {
                       <TooltipTrigger>
                         <span
                           className={cn(
-                            canEditView ? 'cursor-pointer' : 'opacity-50',
+                            canEditView ? 'cursor-pointer' : 'opacity-50'
                           )}
                           onClick={() => {
                             if (!canEditView) return;
@@ -144,7 +144,7 @@ export const TableViewSettingsPopover = () => {
                           <Trash2
                             className={cn(
                               'size-4',
-                              canEditView ? 'cursor-pointer' : 'opacity-50',
+                              canEditView ? 'cursor-pointer' : 'opacity-50'
                             )}
                             onClick={() => {
                               setDeleteFieldId(field.id);

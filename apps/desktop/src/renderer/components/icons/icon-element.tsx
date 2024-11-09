@@ -15,7 +15,7 @@ export const IconElement = React.forwardRef<HTMLImageElement, Props>(
       ref={ref}
       loading="lazy"
     />
-  ),
+  )
 );
 
 IconElement.displayName = 'IconElement';

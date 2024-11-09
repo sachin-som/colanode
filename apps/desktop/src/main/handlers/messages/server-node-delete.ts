@@ -7,7 +7,7 @@ export class ServerNodeDeleteMessageHandler
 {
   public async handleMessage(
     context: MessageContext,
-    input: ServerNodeDeleteMessageInput,
+    input: ServerNodeDeleteMessageInput
   ): Promise<void> {
     await mediator.executeMutation({
       type: 'server_node_delete',

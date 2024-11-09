@@ -21,7 +21,7 @@ export const NodeCollaboratorCreate = ({
   const { mutate, isPending } = useMutation();
 
   const [collaborators, setCollaborators] = React.useState<NodeCollaborator[]>(
-    [],
+    []
   );
   const [role, setRole] = React.useState('collaborator');
 
@@ -49,7 +49,7 @@ export const NodeCollaboratorCreate = ({
                 type: 'node_collaborator_create',
                 nodeId,
                 collaboratorIds: collaborators.map(
-                  (collaborator) => collaborator.id,
+                  (collaborator) => collaborator.id
                 ),
                 role: role,
                 userId: workspace.userId,

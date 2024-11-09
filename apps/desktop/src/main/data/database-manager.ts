@@ -33,7 +33,7 @@ class DatabaseManager {
   }
 
   public async getWorkspaceDatabase(
-    userId: string,
+    userId: string
   ): Promise<Kysely<WorkspaceDatabaseSchema>> {
     this.waitForInit();
 
@@ -83,7 +83,7 @@ class DatabaseManager {
 
     for (const workspace of workspaces) {
       const workspaceDatabase = await this.initWorkspaceDatabase(
-        workspace.user_id,
+        workspace.user_id
       );
 
       this.workspaceDatabases.set(workspace.user_id, workspaceDatabase);
@@ -91,7 +91,7 @@ class DatabaseManager {
   }
 
   private async initWorkspaceDatabase(
-    userId: string,
+    userId: string
   ): Promise<Kysely<WorkspaceDatabaseSchema>> {
     const workspaceDir = getWorkspaceDirectoryPath(userId);
 
@@ -127,7 +127,7 @@ class DatabaseManager {
   }
 
   private async migrateWorkspaceDatabase(
-    database: Kysely<WorkspaceDatabaseSchema>,
+    database: Kysely<WorkspaceDatabaseSchema>
   ): Promise<void> {
     const migrator = new Migrator({
       db: database,

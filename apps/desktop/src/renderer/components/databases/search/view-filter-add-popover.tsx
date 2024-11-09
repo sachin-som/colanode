@@ -30,8 +30,8 @@ export const ViewFilterAddPopover = ({
   const fieldsWithoutFilters = database.fields.filter(
     (field) =>
       !view.filters.some(
-        (filter) => filter.type === 'field' && filter.fieldId === field.id,
-      ),
+        (filter) => filter.type === 'field' && filter.fieldId === field.id
+      )
   );
 
   if (fieldsWithoutFilters.length === 0) {

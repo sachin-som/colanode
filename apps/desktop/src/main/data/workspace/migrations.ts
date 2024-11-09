@@ -9,19 +9,17 @@ const createNodesTable: Migration = {
         col
           .notNull()
           .generatedAlwaysAs(sql`json_extract(attributes, '$.type')`)
-          .stored(),
+          .stored()
       )
       .addColumn('parent_id', 'text', (col) =>
         col
           .generatedAlwaysAs(sql`json_extract(attributes, '$.parentId')`)
           .stored()
           .references('nodes.id')
-          .onDelete('cascade'),
+          .onDelete('cascade')
       )
       .addColumn('index', 'text', (col) =>
-        col
-          .generatedAlwaysAs(sql`json_extract(attributes, '$.index')`)
-          .stored(),
+        col.generatedAlwaysAs(sql`json_extract(attributes, '$.index')`).stored()
       )
       .addColumn('attributes', 'text', (col) => col.notNull())
       .addColumn('state', 'text', (col) => col.notNull())
@@ -50,12 +48,12 @@ const createUserNodesTable: Migration = {
       .createTable('user_nodes')
       .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('node_id', 'text', (col) =>
-        col.notNull().references('nodes.id'),
+        col.notNull().references('nodes.id')
       )
       .addColumn('last_seen_version_id', 'text')
       .addColumn('last_seen_at', 'text')
       .addColumn('mentions_count', 'integer', (col) =>
-        col.notNull().defaultTo(0),
+        col.notNull().defaultTo(0)
       )
       .addColumn('attributes', 'text')
       .addColumn('version_id', 'text', (col) => col.notNull())
@@ -89,7 +87,7 @@ const createDownloadsTable: Migration = {
     await db.schema
       .createTable('downloads')
       .addColumn('node_id', 'text', (col) =>
-        col.notNull().primaryKey().references('nodes.id'),
+        col.notNull().primaryKey().references('nodes.id')
       )
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
@@ -107,7 +105,7 @@ const createUploadsTable: Migration = {
     await db.schema
       .createTable('uploads')
       .addColumn('node_id', 'text', (col) =>
-        col.notNull().primaryKey().references('nodes.id'),
+        col.notNull().primaryKey().references('nodes.id')
       )
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
@@ -125,10 +123,10 @@ const createNodePathsTable: Migration = {
     await db.schema
       .createTable('node_paths')
       .addColumn('ancestor_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade')
       )
       .addColumn('descendant_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade')
       )
       .addColumn('level', 'integer', (col) => col.notNull())
       .addPrimaryKeyConstraint('node_paths_pkey', [

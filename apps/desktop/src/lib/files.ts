@@ -27,7 +27,7 @@ export const getFilePreviewType = (mimeType: string): FilePreviewType => {
 export const getFileUrl = (
   userId: string,
   fileId: string,
-  extension: string,
+  extension: string
 ) => {
   return `local-file://${userId}/${fileId}${extension}`;
 };

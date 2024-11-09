@@ -7,7 +7,7 @@ export class ServerUserNodeSyncMessageHandler
 {
   public async handleMessage(
     context: MessageContext,
-    input: ServerUserNodeSyncMessageInput,
+    input: ServerUserNodeSyncMessageInput
   ): Promise<void> {
     await mediator.executeMutation({
       type: 'server_user_node_sync',

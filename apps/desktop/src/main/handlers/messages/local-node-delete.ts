@@ -7,7 +7,7 @@ export class LocalNodeDeleteMessageHandler
 {
   public async handleMessage(
     context: MessageContext,
-    input: LocalNodeDeleteMessageInput,
+    input: LocalNodeDeleteMessageInput
   ): Promise<void> {
     socketManager.sendMessage(context.accountId, input);
   }

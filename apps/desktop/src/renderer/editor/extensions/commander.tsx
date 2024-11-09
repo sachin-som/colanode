@@ -55,7 +55,7 @@ const CommandList = ({
         command(item, range);
       }
     },
-    [command, items, range],
+    [command, items, range]
   );
 
   React.useEffect(() => {

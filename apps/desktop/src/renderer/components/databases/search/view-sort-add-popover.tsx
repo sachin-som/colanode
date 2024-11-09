@@ -29,7 +29,7 @@ export const ViewSortAddPopover = ({ children }: ViewSortAddPopoverProps) => {
   const sortableFields = database.fields.filter(
     (field) =>
       isSortableField(field) &&
-      !view.sorts.some((sort) => sort.fieldId === field.id),
+      !view.sorts.some((sort) => sort.fieldId === field.id)
   );
 
   if (sortableFields.length === 0) {

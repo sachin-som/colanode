@@ -21,7 +21,7 @@ export const TabKeymapExtension = Extension.create<TabKeymapExtensionOptions>({
         }
 
         return false;
-      }
+      },
     };
   },
 });

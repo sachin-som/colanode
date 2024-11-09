@@ -12,7 +12,7 @@ export const CalendarView = () => {
   const view = useView();
 
   const groupByField = database.fields.find(
-    (field) => field.id === view.groupBy,
+    (field) => field.id === view.groupBy
   );
 
   if (!groupByField) {

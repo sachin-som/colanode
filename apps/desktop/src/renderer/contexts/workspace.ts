@@ -9,7 +9,7 @@ interface WorkspaceContext extends Workspace {
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(
-  {} as WorkspaceContext,
+  {} as WorkspaceContext
 );
 
 export const useWorkspace = () => useContext(WorkspaceContext);

@@ -20,14 +20,14 @@ export const SidebarChatItem = ({
       key={node.id}
       className={cn(
         'flex w-full items-center',
-        isActive && 'bg-sidebar-accent',
+        isActive && 'bg-sidebar-accent'
       )}
     >
       <Avatar id={node.id} avatar={node.avatar} name={node.name} size="small" />
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
-          isUnread && 'font-bold',
+          isUnread && 'font-bold'
         )}
       >
         {node.name ?? 'Unnamed'}

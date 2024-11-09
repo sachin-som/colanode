@@ -15,7 +15,7 @@ export const EmojiElement = React.forwardRef<HTMLImageElement, Props>(
       ref={ref}
       loading="lazy"
     />
-  ),
+  )
 );
 
 EmojiElement.displayName = 'EmojiElement';

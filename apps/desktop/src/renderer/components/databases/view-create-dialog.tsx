@@ -171,7 +171,7 @@ export const ViewCreateDialog = ({
                           'hover:border-gray-500 hover:bg-gray-50',
                           viewType.type === field.value
                             ? 'border-gray-500 text-primary'
-                            : '',
+                            : ''
                         )}
                         onClick={() => field.onChange(viewType.type)}
                       >
@@ -192,7 +192,7 @@ export const ViewCreateDialog = ({
                       <FormControl>
                         <FieldSelect
                           fields={database.fields.filter(
-                            (field) => field.type === 'select',
+                            (field) => field.type === 'select'
                           )}
                           value={field.value ?? null}
                           onChange={field.onChange}
@@ -215,7 +215,7 @@ export const ViewCreateDialog = ({
                           fields={database.fields.filter(
                             (field) =>
                               field.type === 'date' ||
-                              field.type === 'createdAt',
+                              field.type === 'createdAt'
                           )}
                           value={field.value ?? null}
                           onChange={field.onChange}

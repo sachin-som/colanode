@@ -17,11 +17,10 @@ export const DeleteControlExtension = Extension.create({
             if (specialBlocks.includes(node.type.name)) {
               result = true;
             }
-          },
+          }
         );
         return result;
       },
     };
   },
 });
-

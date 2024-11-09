@@ -159,7 +159,7 @@ export const isValidEmail = (email: string) => {
 };
 
 export const getDisplayedDates = (
-  month: Date,
+  month: Date
 ): {
   first: Date;
   last: Date;
@@ -172,7 +172,7 @@ export const getDisplayedDates = (
   const firstDayDisplayed = new Date(
     firstDayOfMonth.getFullYear(),
     firstDayOfMonth.getMonth(),
-    firstDayOfMonth.getDate() - firstDayOfWeek,
+    firstDayOfMonth.getDate() - firstDayOfWeek
   );
 
   // Find the last day of the visible grid (Saturday of the week containing the last day of the month)
@@ -180,7 +180,7 @@ export const getDisplayedDates = (
   const lastDayDisplayed = new Date(
     lastDayOfMonth.getFullYear(),
     lastDayOfMonth.getMonth(),
-    lastDayOfMonth.getDate() + (6 - lastDayOfWeek),
+    lastDayOfMonth.getDate() + (6 - lastDayOfWeek)
   );
 
   return { first: firstDayDisplayed, last: lastDayDisplayed };
@@ -188,7 +188,7 @@ export const getDisplayedDates = (
 
 export const isSameDay = (
   date1: Date | string | null,
-  date2: Date | string | null,
+  date2: Date | string | null
 ) => {
   if (date1 == null) {
     return false;
@@ -207,12 +207,12 @@ export const isSameDay = (
 export const toUTCDate = (dateParam: Date | string): Date => {
   const date = typeof dateParam === 'string' ? new Date(dateParam) : dateParam;
   return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
   );
 };
 
 export const isStringArray = (
-  value: unknown | null | undefined,
+  value: unknown | null | undefined
 ): value is string[] => {
   if (value == null) {
     return false;

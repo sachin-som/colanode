@@ -15,7 +15,7 @@ const Spinner = React.forwardRef<SVGSVGElement, SpinnerProps>(
       ref={ref}
       {...props}
     />
-  ),
+  )
 );
 Spinner.displayName = 'Spinner';
 

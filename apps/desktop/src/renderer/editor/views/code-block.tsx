@@ -66,7 +66,7 @@ export const CodeBlockNodeView = ({
                           'ml-auto mr-2 size-4',
                           language === languageItem.code
                             ? 'opacity-100'
-                            : 'opacity-0',
+                            : 'opacity-0'
                         )}
                       />
                     </CommandItem>

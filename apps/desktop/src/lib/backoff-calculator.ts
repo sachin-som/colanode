@@ -26,7 +26,7 @@ export class BackoffCalculator {
   private getDelay(): number {
     const delay = Math.min(
       this.baseDelay * Math.pow(2, this.attempt - 1),
-      this.maxDelay,
+      this.maxDelay
     );
     return delay;
   }

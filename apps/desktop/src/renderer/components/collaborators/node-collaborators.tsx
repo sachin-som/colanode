@@ -26,7 +26,7 @@ export const NodeCollaborators = ({ nodeId }: NodeCollaboratorsProps) => {
       <NodeCollaboratorCreate
         nodeId={nodeId}
         existingCollaborators={data.direct.map(
-          (collaborator) => collaborator.id,
+          (collaborator) => collaborator.id
         )}
       />
       <Separator />

@@ -18,7 +18,7 @@ const SmartTextInput = React.forwardRef<HTMLInputElement, SmartTextInputProps>(
     // Create a debounced version of onChange
     const debouncedOnChange = React.useMemo(
       () => debounce((value: string) => onChange(value), 500),
-      [onChange],
+      [onChange]
     );
 
     // Update localValue when value prop changes
@@ -64,7 +64,7 @@ const SmartTextInput = React.forwardRef<HTMLInputElement, SmartTextInputProps>(
         type="text"
         className={cn(
           'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-          className,
+          className
         )}
         ref={ref}
         value={localValue}
@@ -76,7 +76,7 @@ const SmartTextInput = React.forwardRef<HTMLInputElement, SmartTextInputProps>(
         {...props}
       />
     );
-  },
+  }
 );
 
 SmartTextInput.displayName = 'SmartTextInput';

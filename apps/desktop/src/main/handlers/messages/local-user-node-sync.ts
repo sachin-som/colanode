@@ -7,7 +7,7 @@ export class LocalUserNodeSyncMessageHandler
 {
   public async handleMessage(
     context: MessageContext,
-    input: LocalUserNodeSyncMessageInput,
+    input: LocalUserNodeSyncMessageInput
   ): Promise<void> {
     socketManager.sendMessage(context.accountId, input);
   }

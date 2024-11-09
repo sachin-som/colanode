@@ -52,7 +52,7 @@ export const MessageList = ({
     });
 
   const messages = (data?.flatMap((page) => page) ?? []).sort((a, b) =>
-    compareString(a.id, b.id),
+    compareString(a.id, b.id)
   );
 
   React.useEffect(() => {

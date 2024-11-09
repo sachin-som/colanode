@@ -16,7 +16,7 @@ class HttpClient {
   private async request<T>(
     method: 'get' | 'post' | 'put' | 'delete',
     path: string,
-    config: HttpClientRequestConfig,
+    config: HttpClientRequestConfig
   ): Promise<AxiosResponse<T>> {
     if (this.backoffs.has(config.serverDomain)) {
       const backoff = this.backoffs.get(config.serverDomain);
@@ -81,7 +81,7 @@ class HttpClient {
 
   public async get<T>(
     path: string,
-    config: HttpClientRequestConfig,
+    config: HttpClientRequestConfig
   ): Promise<AxiosResponse<T, any>> {
     return this.request<T>('get', path, config);
   }
@@ -89,7 +89,7 @@ class HttpClient {
   public async post<T>(
     path: string,
     data: any,
-    config: HttpClientRequestConfig,
+    config: HttpClientRequestConfig
   ): Promise<AxiosResponse<T, any>> {
     return this.request<T>('post', path, {
       ...config,
@@ -100,7 +100,7 @@ class HttpClient {
   public async put<T>(
     path: string,
     data: any,
-    config: HttpClientRequestConfig,
+    config: HttpClientRequestConfig
   ): Promise<AxiosResponse<T, any>> {
     return this.request<T>('put', path, {
       ...config,
@@ -110,7 +110,7 @@ class HttpClient {
 
   public async delete<T>(
     path: string,
-    config: HttpClientRequestConfig,
+    config: HttpClientRequestConfig
   ): Promise<AxiosResponse<T, any>> {
     return this.request<T>('delete', path, config);
   }

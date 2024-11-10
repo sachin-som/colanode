@@ -1,10 +1,7 @@
 import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
-import {
-  NodeCollaborator,
-  ServerNode,
-  ServerNodeAttributes,
-} from '@/types/nodes';
+import { NodeCollaborator, ServerNode } from '@/types/nodes';
+import { fromUint8Array } from 'js-base64';
 
 export const mapNode = (node: SelectNode): ServerNode => {
   return {
@@ -14,7 +11,7 @@ export const mapNode = (node: SelectNode): ServerNode => {
     type: node.type,
     index: node.index,
     attributes: node.attributes,
-    state: node.state,
+    state: fromUint8Array(node.state),
     createdAt: node.created_at,
     createdBy: node.created_by,
     versionId: node.version_id,
@@ -36,7 +33,7 @@ export const fetchNode = async (nodeId: string): Promise<SelectNode | null> => {
 };
 
 export const fetchNodeAncestors = async (
-  nodeId: string,
+  nodeId: string
 ): Promise<SelectNode[]> => {
   const result = await database
     .selectFrom('nodes')
@@ -50,7 +47,7 @@ export const fetchNodeAncestors = async (
 };
 
 export const fetchNodeDescendants = async (
-  nodeId: string,
+  nodeId: string
 ): Promise<string[]> => {
   const result = await database
     .selectFrom('node_paths')
@@ -63,7 +60,7 @@ export const fetchNodeDescendants = async (
 };
 
 export const fetchNodeCollaborators = async (
-  nodeId: string,
+  nodeId: string
 ): Promise<NodeCollaborator[]> => {
   const ancestors = await fetchNodeAncestors(nodeId);
   const collaboratorsMap = new Map<string, string>();
@@ -83,13 +80,13 @@ export const fetchNodeCollaborators = async (
       nodeId: nodeId,
       collaboratorId: collaboratorId,
       role: role,
-    }),
+    })
   );
 };
 
 export const fetchNodeRole = async (
   nodeId: string,
-  collaboratorId: string,
+  collaboratorId: string
 ): Promise<string | null> => {
   const ancestors = await fetchNodeAncestors(nodeId);
   if (ancestors.length === 0) {
@@ -100,7 +97,7 @@ export const fetchNodeRole = async (
 };
 
 export const fetchWorkspaceUsers = async (
-  workspaceId: string,
+  workspaceId: string
 ): Promise<string[]> => {
   const result = await database
     .selectFrom('workspace_users')
@@ -113,7 +110,7 @@ export const fetchWorkspaceUsers = async (
 
 export const extractNodeRole = (
   ancestors: SelectNode[],
-  collaboratorId: string,
+  collaboratorId: string
 ): string | null => {
   let role: string | null = null;
   for (const ancestor of ancestors) {

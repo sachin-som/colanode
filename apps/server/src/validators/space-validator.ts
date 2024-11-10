@@ -1,5 +1,5 @@
 import { SelectWorkspaceUser } from '@/data/schema';
-import { hasAdminAccess, hasEditorAccess, NodeRoles } from '@/lib/constants';
+import { hasAdminAccess, hasEditorAccess } from '@/lib/constants';
 import { ServerNode, ServerNodeAttributes } from '@/types/nodes';
 import { Validator } from '@/types/validators';
 import { WorkspaceRole } from '@/types/workspaces';
@@ -7,7 +7,7 @@ import { WorkspaceRole } from '@/types/workspaces';
 export class SpaceValidator implements Validator {
   async canCreate(
     workspaceUser: SelectWorkspaceUser,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     if (workspaceUser.role === WorkspaceRole.Viewer) {
       return false;
@@ -22,7 +22,7 @@ export class SpaceValidator implements Validator {
   async canUpdate(
     workspaceUser: SelectWorkspaceUser,
     node: ServerNode,
-    attributes: ServerNodeAttributes,
+    attributes: ServerNodeAttributes
   ): Promise<boolean> {
     const collaborators = attributes.collaborators ?? {};
     const role = collaborators[workspaceUser.id];
@@ -35,7 +35,7 @@ export class SpaceValidator implements Validator {
 
   async canDelete(
     workspaceUser: SelectWorkspaceUser,
-    node: ServerNode,
+    node: ServerNode
   ): Promise<boolean> {
     const collaborators = node.attributes.collaborators ?? {};
     const role = collaborators[workspaceUser.id];

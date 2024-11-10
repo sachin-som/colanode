@@ -11,6 +11,7 @@ import {
 } from '@/types/synapse';
 import { getIdType, IdType } from '@colanode/core';
 import { MessageInput } from '@/types/messages';
+import { fromUint8Array } from 'js-base64';
 
 interface SynapseConnection {
   accountId: string;
@@ -302,7 +303,7 @@ class SynapseService {
             type: 'server_node_sync',
             id: node.id,
             workspaceId: data.workspaceId,
-            state: node.state!,
+            state: fromUint8Array(node.state),
             createdAt: node.created_at.toISOString(),
             createdBy: node.created_by,
             updatedAt: node.updated_at?.toISOString() ?? null,
@@ -446,7 +447,7 @@ class SynapseService {
           type: 'server_node_sync',
           id: row.id,
           workspaceId: row.workspace_id,
-          state: row.state!,
+          state: fromUint8Array(row.state!),
           createdAt: row.created_at!.toISOString(),
           createdBy: row.created_by!,
           updatedAt: row.updated_at?.toISOString() ?? null,

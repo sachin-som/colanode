@@ -92,7 +92,7 @@ interface NodeTable {
     string | null,
     string | null
   >;
-  state: ColumnType<string, string, string>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   created_by: ColumnType<string, string, never>;

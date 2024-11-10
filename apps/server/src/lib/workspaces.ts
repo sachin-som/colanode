@@ -81,7 +81,7 @@ const buildUserNodeCreate = (
   });
 
   const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = fromUint8Array(Y.encodeStateAsUpdate(doc));
+  const state = Y.encodeStateAsUpdate(doc);
 
   return {
     id,
@@ -118,7 +118,7 @@ const buildSpaceNodeCreate = (
   });
 
   const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = fromUint8Array(Y.encodeStateAsUpdate(doc));
+  const state = Y.encodeStateAsUpdate(doc);
 
   return {
     id,
@@ -149,7 +149,7 @@ const buildPageNodeCreate = (
   });
 
   const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = fromUint8Array(Y.encodeStateAsUpdate(doc));
+  const state = Y.encodeStateAsUpdate(doc);
 
   return {
     id,
@@ -180,7 +180,7 @@ const buildChannelNodeCreate = (
   });
 
   const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = fromUint8Array(Y.encodeStateAsUpdate(doc));
+  const state = Y.encodeStateAsUpdate(doc);
 
   return {
     id,

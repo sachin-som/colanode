@@ -101,22 +101,20 @@ const createNodesTable: Migration = {
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('type', 'varchar(30)', (col) =>
-        col.generatedAlwaysAs(sql`(attributes->>'type')::VARCHAR(30)`).stored(),
+        col.generatedAlwaysAs(sql`(attributes->>'type')::VARCHAR(30)`).stored()
       )
       .addColumn('parent_id', 'varchar(30)', (col) =>
         col
           .generatedAlwaysAs(sql`(attributes->>'parentId')::VARCHAR(30)`)
           .stored()
           .references('nodes.id')
-          .onDelete('cascade'),
+          .onDelete('cascade')
       )
       .addColumn('index', 'varchar(30)', (col) =>
-        col
-          .generatedAlwaysAs(sql`(attributes->>'index')::VARCHAR(30)`)
-          .stored(),
+        col.generatedAlwaysAs(sql`(attributes->>'index')::VARCHAR(30)`).stored()
       )
       .addColumn('attributes', 'jsonb', (col) => col.notNull())
-      .addColumn('state', 'text', (col) => col.notNull())
+      .addColumn('state', 'bytea', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
@@ -136,10 +134,10 @@ const createNodePathsTable: Migration = {
     await db.schema
       .createTable('node_paths')
       .addColumn('ancestor_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade')
       )
       .addColumn('descendant_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade'),
+        col.notNull().references('nodes.id').onDelete('cascade')
       )
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('level', 'integer', (col) => col.notNull())
@@ -215,7 +213,7 @@ const createUserNodesTable: Migration = {
       .addColumn('last_seen_version_id', 'varchar(30)')
       .addColumn('last_seen_at', 'timestamptz')
       .addColumn('mentions_count', 'integer', (col) =>
-        col.notNull().defaultTo(0),
+        col.notNull().defaultTo(0)
       )
       .addColumn('attributes', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())

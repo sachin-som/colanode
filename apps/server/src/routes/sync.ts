@@ -142,7 +142,7 @@ const handleCreateNodeChange = async (
       id: changeData.id,
       attributes: JSON.stringify(attributes),
       workspace_id: workspaceUser.workspace_id,
-      state: changeData.state,
+      state: toUint8Array(changeData.state),
       created_at: new Date(changeData.createdAt),
       created_by: changeData.createdBy,
       version_id: changeData.versionId,
@@ -190,7 +190,7 @@ const handleUpdateNodeChange = async (
     }
 
     const doc = new Y.Doc({ guid: changeData.id });
-    Y.applyUpdate(doc, toUint8Array(existingNode.state));
+    Y.applyUpdate(doc, existingNode.state);
 
     for (const update of changeData.updates) {
       Y.applyUpdate(doc, toUint8Array(update));
@@ -199,7 +199,7 @@ const handleUpdateNodeChange = async (
     const attributesMap = doc.getMap('attributes');
     const attributes = attributesMap.toJSON() as ServerNodeAttributes;
     const attributesJson = JSON.stringify(attributes);
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+    const state = Y.encodeStateAsUpdate(doc);
 
     const validator = getValidator(existingNode.type);
     if (!validator) {
@@ -224,7 +224,7 @@ const handleUpdateNodeChange = async (
       .updateTable('nodes')
       .set({
         attributes: attributesJson,
-        state: encodedState,
+        state: state,
         updated_at: new Date(changeData.updatedAt),
         updated_by: changeData.updatedBy,
         version_id: changeData.versionId,

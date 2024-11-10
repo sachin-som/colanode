@@ -20,7 +20,6 @@ import { generateToken } from '@/lib/tokens';
 import { mapNode } from '@/lib/nodes';
 import { enqueueTask } from '@/queues/tasks';
 import * as Y from 'yjs';
-import { fromUint8Array, toUint8Array } from 'js-base64';
 import { CompiledQuery } from 'kysely';
 import { ServerNodeAttributes } from '@/types/nodes';
 import { NodeUpdatedEvent } from '@/types/events';
@@ -320,7 +319,7 @@ accountsRouter.put(
       }
 
       const doc = new Y.Doc({ guid: user.id });
-      Y.applyUpdate(doc, toUint8Array(user.state));
+      Y.applyUpdate(doc, user.state);
 
       const attributesMap = doc.getMap('attributes');
       if (name != input.name) {
@@ -333,7 +332,7 @@ accountsRouter.put(
 
       const attributes = attributesMap.toJSON() as ServerNodeAttributes;
       const attributesJson = JSON.stringify(attributes);
-      const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+      const state = Y.encodeStateAsUpdate(doc);
 
       const updatedAt = new Date();
       const versionId = generateId(IdType.Version);
@@ -343,7 +342,7 @@ accountsRouter.put(
           .updateTable('nodes')
           .set({
             attributes: attributesJson,
-            state: encodedState,
+            state: state,
             updated_at: updatedAt,
             updated_by: user.id,
             version_id: versionId,

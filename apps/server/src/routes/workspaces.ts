@@ -80,7 +80,7 @@ workspacesRouter.post(
     });
 
     const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-    const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
+    const userState = Y.encodeStateAsUpdate(userDoc);
 
     await database.transaction().execute(async (trx) => {
       await trx
@@ -154,7 +154,7 @@ workspacesRouter.post(
           workspaceId: workspaceId,
           type: 'user',
           attributes: JSON.parse(userAttributes),
-          state: userState,
+          state: fromUint8Array(userState),
           createdAt: new Date(),
           createdBy: account.id,
           versionId: userVersionId,
@@ -629,7 +629,7 @@ workspacesRouter.post(
       });
 
       const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-      const userState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
+      const userState = Y.encodeStateAsUpdate(userDoc);
 
       workspaceUsersToCreate.push({
         id: userId,
@@ -646,7 +646,7 @@ workspacesRouter.post(
         id: userId,
         type: 'user',
         attributes: JSON.parse(userAttributes),
-        state: userState,
+        state: fromUint8Array(userState),
         createdAt: new Date(),
         createdBy: workspaceUser.id,
         serverCreatedAt: new Date(),
@@ -791,7 +791,7 @@ workspacesRouter.put(
     }
 
     const userDoc = new Y.Doc({ guid: user.id });
-    Y.applyUpdate(userDoc, toUint8Array(user.state));
+    Y.applyUpdate(userDoc, user.state);
 
     const userUpdates: string[] = [];
     userDoc.on('update', (update) => {
@@ -802,7 +802,7 @@ workspacesRouter.put(
     userAttributesMap.set('role', input.role);
 
     const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(userDoc));
+    const state = Y.encodeStateAsUpdate(userDoc);
     const updatedAt = new Date();
 
     const userNode: ServerNode = {
@@ -812,7 +812,7 @@ workspacesRouter.put(
       index: null,
       parentId: null,
       attributes: JSON.parse(userAttributes),
-      state: encodedState,
+      state: fromUint8Array(state),
       createdAt: user.created_at,
       createdBy: user.created_by,
       serverCreatedAt: user.server_created_at,
@@ -838,7 +838,7 @@ workspacesRouter.put(
         .updateTable('nodes')
         .set({
           attributes: userAttributes,
-          state: encodedState,
+          state: state,
           server_updated_at: updatedAt,
           updated_at: updatedAt,
           updated_by: currentWorkspaceUser.id,

@@ -3,7 +3,7 @@ import { redisConfig } from '@/data/redis';
 import { CreateUserNode } from '@/data/schema';
 import { filesStorage } from '@/data/storage';
 import { BUCKET_NAMES } from '@/data/storage';
-import { generateId, IdType, NodeTypes } from '@colanode/core';
+import { generateId, IdType, NodeAttributes, NodeTypes } from '@colanode/core';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
 import { synapse } from '@/services/synapse';
 import {
@@ -12,7 +12,6 @@ import {
   NodeEvent,
   NodeUpdatedEvent,
 } from '@/types/events';
-import { ServerNodeAttributes } from '@/types/nodes';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Job, Queue, Worker } from 'bullmq';
 import { difference } from 'lodash-es';
@@ -82,7 +81,7 @@ const handleNodeUpdatedEvent = async (
 const handleNodeDeletedEvent = async (
   event: NodeDeletedEvent
 ): Promise<void> => {
-  if (event.attributes.type === NodeTypes.File) {
+  if (event.attributes.type === 'file') {
     const command = new DeleteObjectCommand({
       Bucket: BUCKET_NAMES.FILES,
       Key: `files/${event.id}${event.attributes.extension}`,
@@ -263,10 +262,10 @@ const checkForCollaboratorsChange = async (
   }
 };
 
-const extractCollaboratorIds = (collaborators: ServerNodeAttributes) => {
-  if (!collaborators.collaborators) {
-    return [];
+const extractCollaboratorIds = (collaborators: NodeAttributes) => {
+  if ('collaborators' in collaborators && collaborators.collaborators) {
+    return Object.keys(collaborators.collaborators).sort();
   }
 
-  return Object.keys(collaborators.collaborators).sort();
+  return [];
 };

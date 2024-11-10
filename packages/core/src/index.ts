@@ -1,5 +1,6 @@
 export * from './lib/constants';
 export * from './lib/id';
+export * from './lib/nodes';
 export * from './registry/block';
 export * from './registry/channel';
 export * from './registry/chat';

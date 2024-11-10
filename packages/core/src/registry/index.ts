@@ -87,6 +87,18 @@ export type UserNode = NodeBase & {
   attributes: UserAttributes;
 };
 
+export type NodeType =
+  | 'channel'
+  | 'chat'
+  | 'database'
+  | 'file'
+  | 'folder'
+  | 'message'
+  | 'page'
+  | 'record'
+  | 'space'
+  | 'user';
+
 export type Node =
   | ChannelNode
   | ChatNode

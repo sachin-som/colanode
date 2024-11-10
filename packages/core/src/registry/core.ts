@@ -1,5 +1,6 @@
 import { ZodSchema } from 'zod';
 import { Node, NodeAttributes } from './';
+import { extractNodeRole } from '../lib/nodes';
 
 export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
 
@@ -8,7 +9,7 @@ export class NodeMutationContext {
   public workspaceId: string;
   public userId: string;
   public ancestors: Node[];
-  public role: NodeRole = 'viewer';
+  public role: NodeRole | null;
 
   constructor(
     accountId: string,
@@ -20,6 +21,7 @@ export class NodeMutationContext {
     this.workspaceId = workspaceId;
     this.userId = userId;
     this.ancestors = ancestors;
+    this.role = extractNodeRole(ancestors, userId);
   }
 
   public hasAdminAccess = () => {

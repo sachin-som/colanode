@@ -2,8 +2,14 @@ import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
 import { NodeCollaborator, ServerNode } from '@/types/nodes';
 import { fromUint8Array } from 'js-base64';
+import {
+  extractNodeCollaborators,
+  extractNodeRole,
+  Node,
+  NodeType,
+} from '@colanode/core';
 
-export const mapNode = (node: SelectNode): ServerNode => {
+export const mapServerNode = (node: SelectNode): ServerNode => {
   return {
     id: node.id,
     parentId: node.parent_id,
@@ -20,6 +26,24 @@ export const mapNode = (node: SelectNode): ServerNode => {
     serverCreatedAt: node.server_created_at,
     serverUpdatedAt: node.server_updated_at,
   };
+};
+
+export const mapNode = (node: SelectNode): Node => {
+  return {
+    id: node.id,
+    parentId: node.parent_id,
+    type: node.type as NodeType,
+    index: node.index,
+    attributes: node.attributes,
+    createdAt: node.created_at.toISOString(),
+    createdBy: node.created_by,
+    updatedAt: node.updated_at?.toISOString() ?? null,
+    updatedBy: node.updated_by ?? null,
+    versionId: node.version_id,
+    serverCreatedAt: node.server_created_at.toISOString(),
+    serverUpdatedAt: node.server_updated_at?.toISOString() ?? null,
+    serverVersionId: node.version_id,
+  } as Node;
 };
 
 export const fetchNode = async (nodeId: string): Promise<SelectNode | null> => {
@@ -66,10 +90,7 @@ export const fetchNodeCollaborators = async (
   const collaboratorsMap = new Map<string, string>();
 
   for (const ancestor of ancestors) {
-    const collaborators = (ancestor.attributes.collaborators ?? {}) as Record<
-      string,
-      string
-    >;
+    const collaborators = extractNodeCollaborators(ancestor.attributes);
     for (const [collaboratorId, role] of Object.entries(collaborators)) {
       collaboratorsMap.set(collaboratorId, role);
     }
@@ -93,7 +114,7 @@ export const fetchNodeRole = async (
     return null;
   }
 
-  return extractNodeRole(ancestors, collaboratorId);
+  return extractNodeRole(ancestors.map(mapNode), collaboratorId);
 };
 
 export const fetchWorkspaceUsers = async (
@@ -106,20 +127,4 @@ export const fetchWorkspaceUsers = async (
     .execute();
 
   return result.map((row) => row.id);
-};
-
-export const extractNodeRole = (
-  ancestors: SelectNode[],
-  collaboratorId: string
-): string | null => {
-  let role: string | null = null;
-  for (const ancestor of ancestors) {
-    const collaborators = ancestor.attributes.collaborators ?? {};
-    const collaboratorRole = collaborators[collaboratorId];
-    if (collaboratorRole) {
-      role = collaboratorRole;
-    }
-  }
-
-  return role;
 };

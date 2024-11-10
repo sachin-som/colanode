@@ -1,4 +1,4 @@
-import { ServerNodeAttributes } from '@/types/nodes';
+import { NodeAttributes } from '@colanode/core';
 import {
   ColumnType,
   Insertable,
@@ -87,11 +87,7 @@ interface NodeTable {
   parent_id: ColumnType<string | null, never, never>;
   type: ColumnType<string, never, never>;
   index: ColumnType<string | null, never, never>;
-  attributes: JSONColumnType<
-    ServerNodeAttributes,
-    string | null,
-    string | null
-  >;
+  attributes: JSONColumnType<NodeAttributes, string | null, string | null>;
   state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;

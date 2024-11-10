@@ -70,6 +70,13 @@ filesRouter.get(
       });
     }
 
+    if (node.attributes.type !== 'file') {
+      return res.status(400).json({
+        code: ApiError.BadRequest,
+        message: 'File not found.',
+      });
+    }
+
     //generate presigned url for download
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAMES.FILES,
@@ -141,6 +148,13 @@ filesRouter.post(
     if (!node) {
       return res.status(404).json({
         code: ApiError.ResourceNotFound,
+        message: 'File not found.',
+      });
+    }
+
+    if (node.attributes.type !== 'file') {
+      return res.status(400).json({
+        code: ApiError.BadRequest,
         message: 'File not found.',
       });
     }

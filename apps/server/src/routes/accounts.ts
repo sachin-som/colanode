@@ -11,17 +11,16 @@ import {
 } from '@/types/accounts';
 import axios from 'axios';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
-import { generateId, IdType } from '@colanode/core';
+import { generateId, IdType, NodeAttributes } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
-import { mapNode } from '@/lib/nodes';
+import { mapServerNode } from '@/lib/nodes';
 import { enqueueTask } from '@/queues/tasks';
 import * as Y from 'yjs';
 import { CompiledQuery } from 'kysely';
-import { ServerNodeAttributes } from '@/types/nodes';
 import { NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { SelectAccount } from '@/data/schema';
@@ -311,6 +310,10 @@ accountsRouter.put(
     );
 
     for (const user of users) {
+      if (user.attributes.type !== 'user') {
+        throw new Error('User node not found.');
+      }
+
       const name = user.attributes.name;
       const avatar = user.attributes.avatar;
 
@@ -330,7 +333,7 @@ accountsRouter.put(
         attributesMap.set('avatar', input.avatar);
       }
 
-      const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+      const attributes = attributesMap.toJSON() as NodeAttributes;
       const attributesJson = JSON.stringify(attributes);
       const state = Y.encodeStateAsUpdate(doc);
 
@@ -446,7 +449,7 @@ const buildLoginOutput = async (
           id: workspaceUser.id,
           accountId: workspaceUser.account_id,
           role: workspaceUser.role as WorkspaceRole,
-          node: mapNode(userNode),
+          node: mapServerNode(userNode),
         },
       });
     }

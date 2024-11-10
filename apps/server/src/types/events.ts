@@ -1,4 +1,4 @@
-import { ServerNodeAttributes } from '@/types/nodes';
+import { NodeAttributes } from '@colanode/core';
 
 export type NodeEvent = NodeCreatedEvent | NodeUpdatedEvent | NodeDeletedEvent;
 
@@ -6,7 +6,7 @@ export type NodeCreatedEvent = {
   type: 'node_created';
   id: string;
   workspaceId: string;
-  attributes: ServerNodeAttributes;
+  attributes: NodeAttributes;
   createdBy: string;
   createdAt: string;
   serverCreatedAt: string;
@@ -17,8 +17,8 @@ export type NodeUpdatedEvent = {
   type: 'node_updated';
   id: string;
   workspaceId: string;
-  beforeAttributes: ServerNodeAttributes;
-  afterAttributes: ServerNodeAttributes;
+  beforeAttributes: NodeAttributes;
+  afterAttributes: NodeAttributes;
   updatedBy: string;
   updatedAt: string;
   serverUpdatedAt: string;
@@ -29,6 +29,6 @@ export type NodeDeletedEvent = {
   type: 'node_deleted';
   id: string;
   workspaceId: string;
-  attributes: ServerNodeAttributes;
+  attributes: NodeAttributes;
   deletedAt: string;
 };

@@ -14,8 +14,7 @@ import {
   SyncLocalChangesInput,
 } from '@/types/sync';
 import { SelectWorkspaceUser } from '@/data/schema';
-import { ServerNodeAttributes } from '@/types/nodes';
-import { fromUint8Array, toUint8Array } from 'js-base64';
+import { toUint8Array } from 'js-base64';
 import {
   NodeCreatedEvent,
   NodeDeletedEvent,
@@ -23,8 +22,13 @@ import {
 } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { synapse } from '@/services/synapse';
-import { getValidator } from '@/validators';
-import { mapNode } from '@/lib/nodes';
+import { fetchNodeAncestors, mapNode, mapServerNode } from '@/lib/nodes';
+import {
+  Node,
+  NodeAttributes,
+  NodeMutationContext,
+  registry,
+} from '@colanode/core';
 
 export const syncRouter = Router();
 
@@ -121,16 +125,34 @@ const handleCreateNodeChange = async (
   Y.applyUpdate(doc, toUint8Array(changeData.state));
 
   const attributesMap = doc.getMap('attributes');
-  const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+  const attributes = attributesMap.toJSON() as NodeAttributes;
 
-  const validator = getValidator(attributes.type);
-  if (!validator) {
+  const model = registry[attributes.type];
+  if (!model) {
     return {
       status: 'error',
     };
   }
 
-  if (!(await validator.canCreate(workspaceUser, attributes))) {
+  if (!model.schema.safeParse(attributes).success) {
+    return {
+      status: 'error',
+    };
+  }
+
+  const ancestorRows = attributes.parentId
+    ? await fetchNodeAncestors(attributes.parentId)
+    : [];
+
+  const ancestors = ancestorRows.map(mapNode);
+  const context = new NodeMutationContext(
+    workspaceUser.account_id,
+    workspaceUser.workspace_id,
+    changeData.createdBy,
+    ancestors
+  );
+
+  if (!model.canCreate(context, attributes)) {
     return {
       status: 'error',
     };
@@ -197,24 +219,40 @@ const handleUpdateNodeChange = async (
     }
 
     const attributesMap = doc.getMap('attributes');
-    const attributes = attributesMap.toJSON() as ServerNodeAttributes;
+    const attributes = attributesMap.toJSON() as NodeAttributes;
     const attributesJson = JSON.stringify(attributes);
     const state = Y.encodeStateAsUpdate(doc);
 
-    const validator = getValidator(existingNode.type);
-    if (!validator) {
+    const model = registry[attributes.type];
+    if (!model) {
       return {
         status: 'error',
       };
     }
 
-    if (
-      !(await validator.canUpdate(
-        workspaceUser,
-        mapNode(existingNode),
-        attributes
-      ))
-    ) {
+    if (!model.schema.safeParse(attributes).success) {
+      return {
+        status: 'error',
+      };
+    }
+
+    const ancestorRows = await fetchNodeAncestors(existingNode.id);
+    const ancestors = ancestorRows.map(mapNode);
+    const node = ancestors.find((ancestor) => ancestor.id === existingNode.id);
+    if (!node) {
+      return {
+        status: 'error',
+      };
+    }
+
+    const context = new NodeMutationContext(
+      workspaceUser.account_id,
+      workspaceUser.workspace_id,
+      changeData.updatedBy,
+      ancestors
+    );
+
+    if (!model.canUpdate(context, node, attributes)) {
       return {
         status: 'error',
       };
@@ -282,14 +320,30 @@ const handleDeleteNodeChange = async (
     };
   }
 
-  const validator = getValidator(existingNode.type);
-  if (!validator) {
+  const model = registry[existingNode.type];
+  if (!model) {
     return {
       status: 'error',
     };
   }
 
-  if (!(await validator.canDelete(workspaceUser, mapNode(existingNode)))) {
+  const ancestorRows = await fetchNodeAncestors(existingNode.id);
+  const ancestors = ancestorRows.map(mapNode);
+  const node = ancestors.find((ancestor) => ancestor.id === existingNode.id);
+  if (!node) {
+    return {
+      status: 'error',
+    };
+  }
+
+  const context = new NodeMutationContext(
+    workspaceUser.account_id,
+    workspaceUser.workspace_id,
+    changeData.deletedBy,
+    ancestors
+  );
+
+  if (!model.canDelete(context, node)) {
     return {
       status: 'error',
     };

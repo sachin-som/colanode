@@ -23,7 +23,7 @@ import {
 import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
 import { ServerNode } from '@/types/nodes';
-import { mapNode } from '@/lib/nodes';
+import { mapServerNode } from '@/lib/nodes';
 import { NodeCreatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 
@@ -272,7 +272,7 @@ workspacesRouter.put(
         id: workspaceUser.id,
         accountId: workspaceUser.account_id,
         role: workspaceUser.role,
-        node: mapNode(userNode),
+        node: mapServerNode(userNode),
       },
     };
 
@@ -396,7 +396,7 @@ workspacesRouter.get(
         id: workspaceUser.id,
         accountId: workspaceUser.account_id,
         role: workspaceUser.role as WorkspaceRole,
-        node: mapNode(userNode),
+        node: mapServerNode(userNode),
       },
     };
 
@@ -464,7 +464,7 @@ workspacesRouter.get(
           id: workspaceUser.id,
           accountId: workspaceUser.account_id,
           role: workspaceUser.role as WorkspaceRole,
-          node: mapNode(userNode),
+          node: mapServerNode(userNode),
         },
       };
 
@@ -610,7 +610,7 @@ workspacesRouter.post(
           });
         }
 
-        users.push(mapNode(existingUser));
+        users.push(mapServerNode(existingUser));
         continue;
       }
 

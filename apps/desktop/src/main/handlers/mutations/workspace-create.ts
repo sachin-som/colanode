@@ -62,6 +62,7 @@ export class WorkspaceCreateMutationHandler
     return {
       output: {
         id: data.id,
+        userId: data.user.id,
       },
       changes: [
         {

@@ -16,13 +16,13 @@ import {
 } from '@/renderer/components/ui/sidebar';
 
 export const Workspace = () => {
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { userId } = useParams<{ userId: string }>();
 
   const account = useAccount();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [openSettings, setOpenSettings] = React.useState(false);
-  const workspace = account.workspaces.find((w) => w.id === workspaceId);
+  const workspace = account.workspaces.find((w) => w.userId === userId);
 
   if (!workspace) {
     return <p>Workspace not found</p>;
@@ -34,7 +34,7 @@ export const Workspace = () => {
       value={{
         ...workspace,
         navigateToNode(nodeId) {
-          navigate(`/${workspaceId}/${nodeId}`);
+          navigate(`/${userId}/${nodeId}`);
         },
         openModal(modal) {
           setSearchParams((prev) => {

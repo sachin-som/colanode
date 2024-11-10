@@ -51,7 +51,7 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
       onSuccess(output) {
         if (output.success) {
           if (output.workspaces.length > 0) {
-            navigate(`/${output.workspaces[0].id}`);
+            navigate(`/${output.workspaces[0].user.id}`);
           } else {
             navigate('/create');
           }

@@ -71,7 +71,7 @@ export const SidebarHeader = () => {
               <DropdownMenuItem
                 key={workspace.id}
                 onClick={() => {
-                  navigate(`/${workspace.id}`);
+                  navigate(`/${workspace.userId}`);
                 }}
                 className="gap-2 p-2"
               >

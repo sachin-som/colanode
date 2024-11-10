@@ -32,7 +32,7 @@ export const WorkspaceCreate = () => {
                 avatar: values.avatar ?? null,
               },
               onSuccess(output) {
-                navigate(`/${output.id}`);
+                navigate(`/${output.userId}`);
               },
               onError() {
                 toast({

@@ -8,6 +8,7 @@ export type WorkspaceCreateMutationInput = {
 
 export type WorkspaceCreateMutationOutput = {
   id: string;
+  userId: string;
 };
 
 declare module '@/operations/mutations' {

@@ -25,7 +25,7 @@ const router = createHashRouter([
         element: <WorkspaceCreate />,
       },
       {
-        path: ':workspaceId',
+        path: ':userId',
         element: <Workspace />,
         children: [
           {

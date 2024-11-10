@@ -12,7 +12,7 @@ export const WorkspaceRedirect = (): React.ReactNode => {
       return;
     }
 
-    navigate(`/${account.workspaces[0].id}`);
+    navigate(`/${account.workspaces[0].userId}`);
   }, [account.workspaces, navigate]);
 
   return null;

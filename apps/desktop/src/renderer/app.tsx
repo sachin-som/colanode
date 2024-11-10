@@ -2,7 +2,7 @@ import React from 'react';
 import { Login } from '@/renderer/components/accounts/login';
 import { AppLoading } from '@/renderer/app-loading';
 import { AccountContext } from '@/renderer/contexts/account';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useParams } from 'react-router-dom';
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { DelayedComponent } from '@/renderer/components/ui/delayed-component';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -11,6 +11,7 @@ import { AccountSettingsDialog } from '@/renderer/components/accounts/account-se
 export const App = () => {
   const [showLogout, setShowLogout] = React.useState(false);
   const [showAccountSettings, setShowAccountSettings] = React.useState(false);
+  const { userId } = useParams<{ userId: string }>();
 
   const { data: servers, isPending: isPendingServers } = useQuery({
     type: 'server_list',
@@ -37,7 +38,21 @@ export const App = () => {
     return <Login />;
   }
 
-  const account = accounts[0];
+  const workspace = workspaces?.find(
+    (workspace) => workspace.userId === userId
+  );
+
+  let account = accounts[0];
+  if (workspace) {
+    const workspaceAccount = accounts.find(
+      (account) => account.id === workspace.accountId
+    );
+
+    if (workspaceAccount) {
+      account = workspaceAccount;
+    }
+  }
+
   const server = servers?.find((server) => server.domain === account?.server);
 
   if (!server) {

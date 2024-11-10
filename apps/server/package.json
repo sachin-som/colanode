@@ -9,8 +9,8 @@
     ".env"
   ],
   "scripts": {
-    "compile": "tsc --noEmit",
-    "build": "tsup-node",
+    "compile": "tsc --noEmit -p tsconfig.json",
+    "build": "pnpm run compile && tsup-node",
     "clean": "del-cli dist isolate tsconfig.tsbuildinfo",
     "lint": "eslint . --max-warnings 0",
     "dev": "nodemon --env-file .env dist/index.js"

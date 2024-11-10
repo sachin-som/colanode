@@ -13,7 +13,7 @@
     "compile": "tsc --noEmit",
     "test": "vitest",
     "lint": "eslint . --max-warnings 0",
-    "build?": "No build step required. This package links directly to its source files",
+    "build": "tsc",
     "coverage": "vitest run --coverage "
   },
   "author": "Hakan Shehu",

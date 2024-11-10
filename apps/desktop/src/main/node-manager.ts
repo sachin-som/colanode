@@ -1,12 +1,10 @@
-import * as Y from 'yjs';
 import {
   Node,
   NodeAttributes,
   NodeMutationContext,
   registry,
 } from '@colanode/core';
-import { applyCrdt } from '@colanode/crdt';
-import { fromUint8Array } from 'js-base64';
+import { YDoc } from '@colanode/crdt';
 import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
@@ -49,9 +47,6 @@ class NodeManager {
 
     await workspaceDatabase.transaction().execute(async (transaction) => {
       for (const input of inputs) {
-        const doc = new Y.Doc({ guid: input.id });
-        const attributesMap = doc.getMap('attributes');
-
         const model = registry[input.attributes.type];
         if (!model) {
           throw new Error('Invalid node type');
@@ -81,8 +76,8 @@ class NodeManager {
           throw new Error('Insufficient permissions');
         }
 
-        applyCrdt(model.schema, input.attributes, attributesMap);
-        const state = Y.encodeStateAsUpdate(doc);
+        const ydoc = new YDoc(input.id);
+        ydoc.updateAttributes(model.schema, input.attributes);
 
         const createdAt = new Date().toISOString();
         const versionId = generateId(IdType.Version);
@@ -90,7 +85,7 @@ class NodeManager {
         const changeData: LocalCreateNodeChangeData = {
           type: 'node_create',
           id: input.id,
-          state: fromUint8Array(state),
+          state: ydoc.getEncodedState(),
           createdAt: createdAt,
           createdBy: context.userId,
           versionId: versionId,
@@ -101,7 +96,7 @@ class NodeManager {
           .values({
             id: input.id,
             attributes: JSON.stringify(input.attributes),
-            state: state,
+            state: ydoc.getState(),
             created_at: createdAt,
             created_by: context.userId,
             version_id: versionId,
@@ -191,17 +186,8 @@ class NodeManager {
       ancestors
     );
 
-    const doc = new Y.Doc({ guid: nodeId });
-    Y.applyUpdate(doc, nodeRow.state);
-
     const versionId = generateId(IdType.Version);
     const updatedAt = new Date().toISOString();
-    const updates: string[] = [];
-
-    doc.on('update', (update) => {
-      updates.push(fromUint8Array(update));
-    });
-
     const updatedAttributes = updater(node.attributes);
 
     const model = registry[node.type];
@@ -217,21 +203,16 @@ class NodeManager {
       throw new Error('Insufficient permissions');
     }
 
-    const attributesMap = doc.getMap('attributes');
-    doc.transact(() => {
-      applyCrdt(
-        registry[updatedAttributes.type].schema,
-        updatedAttributes,
-        attributesMap
-      );
-    });
+    const ydoc = new YDoc(nodeRow.id, nodeRow.state);
+    ydoc.updateAttributes(
+      registry[updatedAttributes.type].schema,
+      updatedAttributes
+    );
 
+    const updates = ydoc.getEncodedUpdates();
     if (updates.length === 0) {
       return true;
     }
-
-    const attributesJson = JSON.stringify(attributesMap.toJSON());
-    const state = Y.encodeStateAsUpdate(doc);
 
     const changeData: LocalUpdateNodeChangeData = {
       type: 'node_update',
@@ -248,8 +229,8 @@ class NodeManager {
         const result = await trx
           .updateTable('nodes')
           .set({
-            attributes: attributesJson,
-            state: state,
+            attributes: JSON.stringify(ydoc.getAttributes()),
+            state: ydoc.getState(),
             updated_at: updatedAt,
             updated_by: context.userId,
             version_id: versionId,

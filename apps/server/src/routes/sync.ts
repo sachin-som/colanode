@@ -1,4 +1,3 @@
-import * as Y from 'yjs';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { database, hasUpdateChanges } from '@/data/database';
 import { Router } from 'express';
@@ -14,7 +13,6 @@ import {
   SyncLocalChangesInput,
 } from '@/types/sync';
 import { SelectWorkspaceUser } from '@/data/schema';
-import { toUint8Array } from 'js-base64';
 import {
   NodeCreatedEvent,
   NodeDeletedEvent,
@@ -22,13 +20,9 @@ import {
 } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { synapse } from '@/services/synapse';
-import { fetchNodeAncestors, mapNode, mapServerNode } from '@/lib/nodes';
-import {
-  Node,
-  NodeAttributes,
-  NodeMutationContext,
-  registry,
-} from '@colanode/core';
+import { fetchNodeAncestors, mapNode } from '@/lib/nodes';
+import { NodeMutationContext, registry } from '@colanode/core';
+import { YDoc } from '@colanode/crdt';
 
 export const syncRouter = Router();
 
@@ -121,11 +115,8 @@ const handleCreateNodeChange = async (
     };
   }
 
-  const doc = new Y.Doc({ guid: changeData.id });
-  Y.applyUpdate(doc, toUint8Array(changeData.state));
-
-  const attributesMap = doc.getMap('attributes');
-  const attributes = attributesMap.toJSON() as NodeAttributes;
+  const ydoc = new YDoc(changeData.id, changeData.state);
+  const attributes = ydoc.getAttributes();
 
   const model = registry[attributes.type];
   if (!model) {
@@ -164,7 +155,7 @@ const handleCreateNodeChange = async (
       id: changeData.id,
       attributes: JSON.stringify(attributes),
       workspace_id: workspaceUser.workspace_id,
-      state: toUint8Array(changeData.state),
+      state: ydoc.getState(),
       created_at: new Date(changeData.createdAt),
       created_by: changeData.createdBy,
       version_id: changeData.versionId,
@@ -211,17 +202,15 @@ const handleUpdateNodeChange = async (
       };
     }
 
-    const doc = new Y.Doc({ guid: changeData.id });
-    Y.applyUpdate(doc, existingNode.state);
+    const ydoc = new YDoc(changeData.id, existingNode.state);
 
     for (const update of changeData.updates) {
-      Y.applyUpdate(doc, toUint8Array(update));
+      ydoc.applyUpdate(update);
     }
 
-    const attributesMap = doc.getMap('attributes');
-    const attributes = attributesMap.toJSON() as NodeAttributes;
+    const attributes = ydoc.getAttributes();
     const attributesJson = JSON.stringify(attributes);
-    const state = Y.encodeStateAsUpdate(doc);
+    const state = ydoc.getState();
 
     const model = registry[attributes.type];
     if (!model) {

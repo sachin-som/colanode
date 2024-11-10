@@ -1,20 +1,20 @@
 import React from 'react';
-import { Server } from '@/types/servers';
 import { EmailRegister } from '@/renderer/components/accounts/email-register';
 import { EmailLogin } from '@/renderer/components/accounts/email-login';
 import { ServerDropdown } from '@/renderer/components/servers/server-dropdown';
+import { useApp } from '@/renderer/contexts/app';
+import { useNavigate } from 'react-router-dom';
 
-interface LoginFormProps {
-  servers: Server[];
-}
+export const LoginForm = () => {
+  const app = useApp();
+  const navigate = useNavigate();
 
-export const LoginForm = ({ servers }: LoginFormProps) => {
   const [showRegister, setShowRegister] = React.useState(false);
-  const [server, setServer] = React.useState(servers[0]);
+  const [server, setServer] = React.useState(app.servers[0]);
 
   return (
     <div className="flex flex-col gap-4">
-      <ServerDropdown servers={servers} value={server} onChange={setServer} />
+      <ServerDropdown value={server} onChange={setServer} />
       {showRegister ? (
         <EmailRegister server={server} />
       ) : (
@@ -30,6 +30,16 @@ export const LoginForm = ({ servers }: LoginFormProps) => {
           ? 'Already have an account? Login'
           : 'No account yet? Register'}
       </p>
+      {app.accounts.length > 0 && (
+        <p
+          className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
+          onClick={() => {
+            navigate(-1);
+          }}
+        >
+          Cancel
+        </p>
+      )}
     </div>
   );
 };

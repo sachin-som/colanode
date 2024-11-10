@@ -1,24 +1,26 @@
 import React from 'react';
-import { Login } from '@/renderer/components/accounts/login';
 import { AppLoading } from '@/renderer/app-loading';
-import { AccountContext } from '@/renderer/contexts/account';
-import { Outlet, useParams } from 'react-router-dom';
-import { AccountLogout } from '@/renderer/components/accounts/account-logout';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { DelayedComponent } from '@/renderer/components/ui/delayed-component';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { AppContext } from '@/renderer/contexts/app';
+import { AccountProvider } from '@/renderer/components/accounts/account-provider';
+import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
 
 export const App = () => {
-  const [showLogout, setShowLogout] = React.useState(false);
-  const [showAccountSettings, setShowAccountSettings] = React.useState(false);
-  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const [logoutId, setLogoutId] = React.useState<string | null>(null);
+  const [settingsId, setSettingsId] = React.useState<string | null>(null);
 
   const { data: servers, isPending: isPendingServers } = useQuery({
     type: 'server_list',
   });
+
   const { data: accounts, isPending: isPendingAccounts } = useQuery({
     type: 'account_list',
   });
+
   const { data: workspaces, isPending: isPendingWorkspaces } = useQuery({
     type: 'workspace_list',
   });
@@ -34,67 +36,72 @@ export const App = () => {
     );
   }
 
-  if (!accounts || accounts.length === 0) {
-    return <Login />;
-  }
-
-  const workspace = workspaces?.find(
-    (workspace) => workspace.userId === userId
-  );
-
-  let account = accounts[0];
-  if (workspace) {
-    const workspaceAccount = accounts.find(
-      (account) => account.id === workspace.accountId
-    );
-
-    if (workspaceAccount) {
-      account = workspaceAccount;
-    }
-  }
-
-  const server = servers?.find((server) => server.domain === account?.server);
-
-  if (!server) {
-    return <p>Server not found.</p>;
-  }
-
-  const accountWorkspaces = workspaces?.filter(
-    (workspace) => workspace.accountId === account?.id
-  );
-
   return (
-    <AccountContext.Provider
+    <AppContext.Provider
       value={{
-        ...account,
-        workspaces: accountWorkspaces ?? [],
-        logout: () => {
-          setShowLogout(true);
+        accounts: accounts ?? [],
+        workspaces: workspaces ?? [],
+        servers: servers ?? [],
+        showAccountLogin: () => {
+          navigate('/login');
         },
-        openSettings: () => {
-          setShowAccountSettings(true);
+        showAccountLogout: (id) => {
+          setLogoutId(id);
+        },
+        showAccountSettings: (id) => {
+          setSettingsId(id);
+        },
+        setAccount: (id) => {
+          const account = accounts?.find((a) => a.id === id);
+          if (!account) {
+            return;
+          }
+
+          const accountWorkspaces =
+            workspaces?.filter((w) => w.accountId === id) ?? [];
+
+          if (accountWorkspaces.length === 0) {
+            return;
+          }
+
+          navigate(`/${accountWorkspaces[0].userId}`);
         },
       }}
     >
-      <Outlet />
-      {showLogout && (
+      <AccountProvider>
+        <Outlet />
+      </AccountProvider>
+      {logoutId && (
         <AccountLogout
-          id={account?.id ?? ''}
-          onCancel={() => {
-            setShowLogout(false);
-          }}
+          id={logoutId}
+          onCancel={() => setLogoutId(null)}
           onLogout={() => {
-            setShowLogout(false);
+            setLogoutId(null);
+            const activeAccounts =
+              accounts?.filter((a) => a.id !== logoutId) ?? [];
+            if (activeAccounts.length > 0) {
+              const activeWorkspaces =
+                workspaces?.filter((w) =>
+                  activeAccounts.some((a) => a.id === w.accountId)
+                ) ?? [];
+
+              if (activeWorkspaces.length > 0) {
+                navigate(`/${activeWorkspaces[0].userId}`);
+                return;
+              }
+            }
+
+            navigate('/login');
           }}
         />
       )}
-      {showAccountSettings && (
+      {settingsId && (
         <AccountSettingsDialog
-          id={account?.id ?? ''}
-          open={showAccountSettings}
-          onOpenChange={setShowAccountSettings}
+          id={settingsId}
+          open={true}
+          onOpenChange={() => setSettingsId(null)}
         />
       )}
-    </AccountContext.Provider>
+    </AppContext.Provider>
   );
 };

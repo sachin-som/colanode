@@ -10,6 +10,7 @@ import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { Container } from '@/renderer/components/workspaces/containers/container';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Login } from '@/renderer/components/accounts/login';
 
 const router = createHashRouter([
   {
@@ -23,6 +24,10 @@ const router = createHashRouter([
       {
         path: '/create',
         element: <WorkspaceCreate />,
+      },
+      {
+        path: '/login',
+        element: <Login />,
       },
       {
         path: ':userId',

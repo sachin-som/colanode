@@ -76,6 +76,10 @@ export class LogoutMutationHandler
           type: 'app',
           table: 'accounts',
         },
+        {
+          type: 'app',
+          table: 'workspaces',
+        },
       ],
     };
   }

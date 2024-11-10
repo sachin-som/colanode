@@ -10,10 +10,10 @@ import {
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { Avatar } from '../avatars/avatar';
-import { useAccount } from '@/renderer/contexts/account';
+import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Info, Trash2 } from 'lucide-react';
 import { AccountUpdate } from '@/renderer/components/accounts/account-update';
+import { useApp } from '@/renderer/contexts/app';
 
 interface AccountSettingsDialogProps {
   id: string;
@@ -22,10 +22,16 @@ interface AccountSettingsDialogProps {
 }
 
 export const AccountSettingsDialog = ({
+  id,
   open,
   onOpenChange,
 }: AccountSettingsDialogProps) => {
-  const account = useAccount();
+  const app = useApp();
+  const account = app.accounts.find((a) => a.id === id);
+
+  if (!account) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +81,7 @@ export const AccountSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="info"
             >
-              <AccountUpdate />
+              <AccountUpdate account={account} />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"

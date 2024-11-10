@@ -4,8 +4,6 @@ import { Workspace } from '@/types/workspaces';
 
 interface AccountContext extends Account {
   workspaces: Workspace[];
-  logout: () => void;
-  openSettings: () => void;
 }
 
 export const AccountContext = createContext<AccountContext>(

@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,16 +15,20 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
-import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
+import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
+import { useApp } from '@/renderer/contexts/app';
 
 export function SidebarFooter() {
+  const [open, setOpen] = React.useState(false);
+
+  const app = useApp();
   const account = useAccount();
   const sidebar = useSidebar();
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -43,43 +48,63 @@ export function SidebarFooter() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-80 rounded-lg"
             side={sidebar.isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar
-                  className="h-8 w-8 rounded-lg"
-                  id={account.id}
-                  name={account.name}
-                  avatar={account.avatar}
-                />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{account.name}</span>
-                  <span className="truncate text-xs">{account.email}</span>
+            <DropdownMenuLabel className="mb-1">Accounts</DropdownMenuLabel>
+            {app.accounts.map((account) => (
+              <DropdownMenuItem
+                key={account.id}
+                className="p-0"
+                onClick={() => {
+                  app.setAccount(account.id);
+                }}
+              >
+                <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar
+                    className="h-8 w-8 rounded-lg"
+                    id={account.id}
+                    name={account.name}
+                    avatar={account.avatar}
+                  />
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">
+                      {account.name}
+                    </span>
+                    <span className="truncate text-xs">{account.email}</span>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 text-muted-foreground mr-1">
+                    <LogOut
+                      className="size-4 hover:cursor-pointer hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        app.showAccountLogout(account.id);
+                        setOpen(false);
+                      }}
+                    />
+                    <Settings
+                      className="size-4 hover:cursor-pointer hover:text-sidebar-accent-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        app.showAccountSettings(account.id);
+                        setOpen(false);
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
               className="flex items-center gap-2"
               onClick={() => {
-                account.openSettings();
+                app.showAccountLogin();
               }}
             >
-              <Settings className="size-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="flex items-center gap-2"
-              onClick={() => {
-                account.logout();
-              }}
-            >
-              <LogOut className="size-4" />
-              Log out
+              <Plus className="size-4" />
+              Add account
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

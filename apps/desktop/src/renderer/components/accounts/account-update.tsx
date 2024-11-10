@@ -10,7 +10,6 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAccount } from '@/renderer/contexts/account';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -19,6 +18,7 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { Upload } from 'lucide-react';
 import { Input } from '@/renderer/components/ui/input';
 import { Button } from '@/renderer/components/ui/button';
+import { Account } from '@/types/accounts';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
@@ -28,8 +28,7 @@ const formSchema = z.object({
 
 type formSchemaType = z.infer<typeof formSchema>;
 
-export const AccountUpdate = () => {
-  const account = useAccount();
+export const AccountUpdate = ({ account }: { account: Account }) => {
   const { mutate: uploadAvatar, isPending: isUploadingAvatar } = useMutation();
   const { mutate: updateAccount, isPending: isUpdatingAccount } = useMutation();
 

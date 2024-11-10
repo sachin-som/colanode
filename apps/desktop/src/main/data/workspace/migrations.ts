@@ -141,6 +141,10 @@ const createNodePathsTable: Migration = {
       AFTER INSERT ON nodes
       FOR EACH ROW
       BEGIN
+        -- Insert direct path from the new node to itself
+        INSERT INTO node_paths (ancestor_id, descendant_id, level)
+        VALUES (NEW.id, NEW.id, 0);
+
         -- Insert paths from ancestors to the new node
         INSERT INTO node_paths (ancestor_id, descendant_id, level)
         SELECT ancestor_id, NEW.id, level + 1
@@ -153,7 +157,7 @@ const createNodePathsTable: Migration = {
       CREATE TRIGGER trg_update_node_path
       AFTER UPDATE ON nodes
       FOR EACH ROW
-      WHEN OLD.parent_id IS DISTINCT FROM NEW.parent_id
+      WHEN OLD.parent_id <> NEW.parent_id
       BEGIN
         -- Delete old paths involving the updated node
         DELETE FROM node_paths

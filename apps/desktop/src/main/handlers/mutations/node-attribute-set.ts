@@ -9,7 +9,7 @@ export class NodeAttributeSetMutationHandler
   async handleMutation(
     input: NodeAttributeSetMutationInput
   ): Promise<MutationResult<NodeAttributeSetMutationInput>> {
-    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
       set(attributes, input.path, input.value);
       return attributes;
     });

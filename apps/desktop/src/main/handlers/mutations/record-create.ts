@@ -1,4 +1,3 @@
-import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { RecordCreateMutationInput } from '@/operations/mutations/record-create';
@@ -11,10 +10,6 @@ export class RecordCreateMutationHandler
   async handleMutation(
     input: RecordCreateMutationInput
   ): Promise<MutationResult<RecordCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId
-    );
-
     const id = generateId(IdType.Record);
     const attributes: RecordAttributes = {
       type: 'record',
@@ -25,9 +20,7 @@ export class RecordCreateMutationHandler
       content: {},
     };
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await nodeManager.createNode(trx, input.userId, id, attributes);
-    });
+    await nodeManager.createNode(input.userId, { id, attributes });
 
     return {
       output: {

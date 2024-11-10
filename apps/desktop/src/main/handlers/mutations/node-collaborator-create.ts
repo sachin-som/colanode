@@ -9,7 +9,7 @@ export class NodeCollaboratorCreateMutationHandler
   async handleMutation(
     input: NodeCollaboratorCreateMutationInput
   ): Promise<MutationResult<NodeCollaboratorCreateMutationInput>> {
-    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
       for (const collaboratorId of input.collaboratorIds) {
         set(attributes, `collaborators.${collaboratorId}`, input.role);
       }

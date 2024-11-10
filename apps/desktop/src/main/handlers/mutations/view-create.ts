@@ -13,8 +13,8 @@ export class ViewCreateMutationHandler
   ): Promise<MutationResult<ViewCreateMutationInput>> {
     const id = generateId(IdType.View);
     await nodeManager.updateNode(
-      input.userId,
       input.databaseId,
+      input.userId,
       (attributes) => {
         if (attributes.type !== 'database') {
           throw new Error('Node is not a database');

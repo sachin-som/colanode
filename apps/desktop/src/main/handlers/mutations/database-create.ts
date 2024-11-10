@@ -4,7 +4,6 @@ import { MutationHandler, MutationResult } from '@/main/types';
 import { DatabaseCreateMutationInput } from '@/operations/mutations/database-create';
 import { DatabaseAttributes } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
-import { databaseManager } from '@/main/data/database-manager';
 
 export class DatabaseCreateMutationHandler
   implements MutationHandler<DatabaseCreateMutationInput>
@@ -12,10 +11,6 @@ export class DatabaseCreateMutationHandler
   async handleMutation(
     input: DatabaseCreateMutationInput
   ): Promise<MutationResult<DatabaseCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId
-    );
-
     const databaseId = generateId(IdType.Database);
     const viewId = generateId(IdType.View);
     const fieldId = generateId(IdType.Field);
@@ -47,8 +42,9 @@ export class DatabaseCreateMutationHandler
       },
     };
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await nodeManager.createNode(trx, input.userId, databaseId, attributes);
+    await nodeManager.createNode(input.userId, {
+      id: databaseId,
+      attributes,
     });
 
     return {

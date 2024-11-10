@@ -1,4 +1,3 @@
-import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType, NodeRoles } from '@colanode/core';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
@@ -16,10 +15,6 @@ export class SpaceCreateMutationHandler
   async handleMutation(
     input: SpaceCreateMutationInput
   ): Promise<MutationResult<SpaceCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId
-    );
-
     const spaceId = generateId(IdType.Space);
     const spaceAttributes: SpaceAttributes = {
       type: 'space',
@@ -49,16 +44,20 @@ export class SpaceCreateMutationHandler
       index: generateNodeIndex(null, null),
     };
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await nodeManager.createNode(trx, input.userId, spaceId, spaceAttributes);
-      await nodeManager.createNode(trx, input.userId, pageId, pageAttributes);
-      await nodeManager.createNode(
-        trx,
-        input.userId,
-        channelId,
-        channelAttributes
-      );
-    });
+    await nodeManager.createNode(input.userId, [
+      {
+        id: spaceId,
+        attributes: spaceAttributes,
+      },
+      {
+        id: pageId,
+        attributes: pageAttributes,
+      },
+      {
+        id: channelId,
+        attributes: channelAttributes,
+      },
+    ]);
 
     return {
       output: {

@@ -9,8 +9,8 @@ export class ViewUpdateMutationHandler
     input: ViewUpdateMutationInput
   ): Promise<MutationResult<ViewUpdateMutationInput>> {
     await nodeManager.updateNode(
-      input.userId,
       input.databaseId,
+      input.userId,
       (attributes) => {
         if (attributes.type !== 'database') {
           throw new Error('Node is not a database');

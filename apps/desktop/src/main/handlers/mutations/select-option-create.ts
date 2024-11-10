@@ -13,8 +13,8 @@ export class SelectOptionCreateMutationHandler
   ): Promise<MutationResult<SelectOptionCreateMutationInput>> {
     const id = generateId(IdType.SelectOption);
     await nodeManager.updateNode(
-      input.userId,
       input.databaseId,
+      input.userId,
       (attributes) => {
         if (attributes.type !== 'database') {
           throw new Error('Node is not a database');

@@ -48,9 +48,7 @@ export class ChatCreateMutationHandler
       },
     };
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await nodeManager.createNode(trx, input.userId, id, attributes);
-    });
+    await nodeManager.createNode(input.userId, { id, attributes });
 
     return {
       output: {

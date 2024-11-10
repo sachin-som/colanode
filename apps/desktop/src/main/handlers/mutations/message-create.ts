@@ -1,18 +1,10 @@
-import * as Y from 'yjs';
-import { databaseManager } from '@/main/data/database-manager';
 import { generateId, IdType, EditorNodeTypes, NodeTypes } from '@colanode/core';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
 import { mapContentsToBlocks } from '@/lib/editor';
 import { fileManager } from '@/main/file-manager';
-import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
-import {
-  NodeAttributes,
-  Block,
-  FileAttributes,
-  MessageAttributes,
-} from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { Block, FileAttributes, MessageAttributes } from '@colanode/core';
+import { CreateNodeInput, nodeManager } from '@/main/node-manager';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -20,13 +12,8 @@ export class MessageCreateMutationHandler
   async handleMutation(
     input: MessageCreateMutationInput
   ): Promise<MutationResult<MessageCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      input.userId
-    );
-
-    const nodeAttributes: NodeAttributes[] = [];
-    const downloadsToCreate: CreateDownload[] = [];
-    const uploadsToCreate: CreateUpload[] = [];
+    const inputs: CreateNodeInput[] = [];
+    let hasFiles = false;
 
     const messageId = generateId(IdType.Message);
     const createdAt = new Date().toISOString();
@@ -58,21 +45,6 @@ export class MessageCreateMutationHandler
           input.userId
         );
 
-        const fileDoc = new Y.Doc({
-          guid: fileId,
-        });
-
-        const fileAttributesMap = fileDoc.getMap('attributes');
-        fileDoc.transact(() => {
-          fileAttributesMap.set('type', NodeTypes.File);
-          fileAttributesMap.set('parentId', messageId);
-          fileAttributesMap.set('name', metadata.name);
-          fileAttributesMap.set('fileName', metadata.name);
-          fileAttributesMap.set('extension', metadata.extension);
-          fileAttributesMap.set('size', metadata.size);
-          fileAttributesMap.set('mimeType', metadata.mimeType);
-        });
-
         const fileAttributes: FileAttributes = {
           type: 'file',
           parentId: messageId,
@@ -83,21 +55,24 @@ export class MessageCreateMutationHandler
           extension: metadata.extension,
         };
 
-        nodeAttributes.push(fileAttributes);
-
-        downloadsToCreate.push({
-          node_id: fileId,
-          created_at: createdAt,
-          progress: 100,
-          retry_count: 0,
+        inputs.push({
+          id: fileId,
+          attributes: fileAttributes,
+          download: {
+            node_id: fileId,
+            created_at: createdAt,
+            progress: 100,
+            retry_count: 0,
+          },
+          upload: {
+            node_id: fileId,
+            created_at: createdAt,
+            progress: 0,
+            retry_count: 0,
+          },
         });
 
-        uploadsToCreate.push({
-          node_id: fileId,
-          created_at: createdAt,
-          progress: 0,
-          retry_count: 0,
-        });
+        hasFiles = true;
       }
     }
 
@@ -114,26 +89,8 @@ export class MessageCreateMutationHandler
       reactions: {},
     };
 
-    nodeAttributes.unshift(messageAttributes);
-
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      for (const nodeAttribute of nodeAttributes) {
-        await nodeManager.createNode(
-          trx,
-          input.userId,
-          messageId,
-          nodeAttribute
-        );
-      }
-
-      if (uploadsToCreate.length > 0) {
-        await trx.insertInto('uploads').values(uploadsToCreate).execute();
-      }
-
-      if (downloadsToCreate.length > 0) {
-        await trx.insertInto('downloads').values(downloadsToCreate).execute();
-      }
-    });
+    inputs.unshift({ id: messageId, attributes: messageAttributes });
+    await nodeManager.createNode(input.userId, inputs);
 
     const mutationChanges: MutationChange[] = [
       {
@@ -148,15 +105,13 @@ export class MessageCreateMutationHandler
       },
     ];
 
-    if (downloadsToCreate.length > 0) {
+    if (hasFiles) {
       mutationChanges.push({
         type: 'workspace',
         table: 'downloads',
         userId: input.userId,
       });
-    }
 
-    if (uploadsToCreate.length > 0) {
       mutationChanges.push({
         type: 'workspace',
         table: 'uploads',

@@ -11,8 +11,8 @@ export class DocumentSaveMutationHandler
     input: DocumentSaveMutationInput
   ): Promise<MutationResult<DocumentSaveMutationInput>> {
     await nodeManager.updateNode(
-      input.userId,
       input.documentId,
+      input.userId,
       (attributes) => {
         if (attributes.type !== 'page' && attributes.type !== 'record') {
           throw new Error('Invalid node type');

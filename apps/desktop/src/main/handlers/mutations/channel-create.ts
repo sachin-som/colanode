@@ -16,6 +16,16 @@ export class ChannelCreateMutationHandler
       input.userId
     );
 
+    const space = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', input.spaceId)
+      .executeTakeFirst();
+
+    if (!space) {
+      throw new Error('Space not found');
+    }
+
     const maxIndexResult = await workspaceDatabase
       .selectFrom('nodes')
       .select(['index'])
@@ -35,9 +45,7 @@ export class ChannelCreateMutationHandler
       collaborators: null,
     };
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await nodeManager.createNode(trx, input.userId, id, attributes);
-    });
+    await nodeManager.createNode(input.userId, { id, attributes });
 
     return {
       output: {

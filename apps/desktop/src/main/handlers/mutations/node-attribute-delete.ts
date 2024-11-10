@@ -9,7 +9,7 @@ export class NodeAttributeDeleteMutationHandler
   async handleMutation(
     input: NodeAttributeDeleteMutationInput
   ): Promise<MutationResult<NodeAttributeDeleteMutationInput>> {
-    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
       unset(attributes, input.path);
       return attributes;
     });

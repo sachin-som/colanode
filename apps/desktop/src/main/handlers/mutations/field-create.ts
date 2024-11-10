@@ -13,8 +13,8 @@ export class FieldCreateMutationHandler
   ): Promise<MutationResult<FieldCreateMutationInput>> {
     const fieldId = generateId(IdType.Field);
     await nodeManager.updateNode(
-      input.userId,
       input.databaseId,
+      input.userId,
       (attributes) => {
         if (attributes.type !== 'database') {
           throw new Error('Invalid node type');

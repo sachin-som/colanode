@@ -8,7 +8,7 @@ export class SpaceUpdateMutationHandler
   async handleMutation(
     input: SpaceUpdateMutationInput
   ): Promise<MutationResult<SpaceUpdateMutationInput>> {
-    await nodeManager.updateNode(input.userId, input.id, (attributes) => {
+    await nodeManager.updateNode(input.id, input.userId, (attributes) => {
       if (attributes.type !== 'space') {
         throw new Error('Node is not a space');
       }

@@ -8,7 +8,7 @@ export class NodeReactionDeleteMutationHandler
   async handleMutation(
     input: NodeReactionDeleteMutationInput
   ): Promise<MutationResult<NodeReactionDeleteMutationInput>> {
-    await nodeManager.updateNode(input.userId, input.nodeId, (attributes) => {
+    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
       if (attributes.type !== 'message') {
         throw new Error('Node is not a message');
       }

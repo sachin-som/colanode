@@ -1,6 +1,11 @@
 import { ServerNode } from '@/types/nodes';
 
-export type WorkspaceRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
+export type WorkspaceRole =
+  | 'owner'
+  | 'admin'
+  | 'editor'
+  | 'collaborator'
+  | 'viewer';
 
 export type Workspace = {
   id: string;
@@ -26,7 +31,6 @@ export type WorkspaceUserOutput = {
   id: string;
   accountId: string;
   role: WorkspaceRole;
-  node: ServerNode;
 };
 
 export type WorkspaceUsersInviteOutput = {

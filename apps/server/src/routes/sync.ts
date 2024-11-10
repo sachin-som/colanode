@@ -118,13 +118,7 @@ const handleCreateNodeChange = async (
   const ydoc = new YDoc(changeData.id, changeData.state);
   const attributes = ydoc.getAttributes();
 
-  const model = registry[attributes.type];
-  if (!model) {
-    return {
-      status: 'error',
-    };
-  }
-
+  const model = registry.getModel(attributes.type);
   if (!model.schema.safeParse(attributes).success) {
     return {
       status: 'error',
@@ -212,13 +206,7 @@ const handleUpdateNodeChange = async (
     const attributesJson = JSON.stringify(attributes);
     const state = ydoc.getState();
 
-    const model = registry[attributes.type];
-    if (!model) {
-      return {
-        status: 'error',
-      };
-    }
-
+    const model = registry.getModel(attributes.type);
     if (!model.schema.safeParse(attributes).success) {
       return {
         status: 'error',
@@ -309,13 +297,7 @@ const handleDeleteNodeChange = async (
     };
   }
 
-  const model = registry[existingNode.type];
-  if (!model) {
-    return {
-      status: 'error',
-    };
-  }
-
+  const model = registry.getModel(existingNode.type);
   const ancestorRows = await fetchNodeAncestors(existingNode.id);
   const ancestors = ancestorRows.map(mapNode);
   const node = ancestors.find((ancestor) => ancestor.id === existingNode.id);

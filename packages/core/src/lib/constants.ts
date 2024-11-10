@@ -1,6 +1,7 @@
 export const NodeTypes = {
   User: 'user',
   Space: 'space',
+  Workspace: 'workspace',
   Page: 'page',
   Channel: 'channel',
   Chat: 'chat',

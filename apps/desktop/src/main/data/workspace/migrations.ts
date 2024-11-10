@@ -17,6 +17,7 @@ const createNodesTable: Migration = {
           .stored()
           .references('nodes.id')
           .onDelete('cascade')
+          .notNull()
       )
       .addColumn('index', 'text', (col) =>
         col.generatedAlwaysAs(sql`json_extract(attributes, '$.index')`).stored()
@@ -140,15 +141,11 @@ const createNodePathsTable: Migration = {
       AFTER INSERT ON nodes
       FOR EACH ROW
       BEGIN
-        -- Insert direct path from the new node to itself
-        INSERT INTO node_paths (ancestor_id, descendant_id, level)
-        VALUES (NEW.id, NEW.id, 0);
-
         -- Insert paths from ancestors to the new node
         INSERT INTO node_paths (ancestor_id, descendant_id, level)
         SELECT ancestor_id, NEW.id, level + 1
         FROM node_paths
-        WHERE descendant_id = NEW.parent_id;
+        WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
       END;
     `.execute(db);
 
@@ -166,7 +163,7 @@ const createNodePathsTable: Migration = {
         INSERT INTO node_paths (ancestor_id, descendant_id, level)
         SELECT ancestor_id, NEW.id, level + 1
         FROM node_paths
-        WHERE descendant_id = NEW.parent_id;
+        WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
       END;
     `.execute(db);
   },

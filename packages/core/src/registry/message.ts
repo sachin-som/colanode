@@ -5,7 +5,7 @@ import { isEqual } from 'lodash-es';
 
 export const messageAttributesSchema = z.object({
   type: z.literal('message'),
-  parentId: z.string().nullable(),
+  parentId: z.string(),
   content: z.record(z.string(), blockSchema),
   reactions: z.record(z.string(), z.array(z.string())),
 });

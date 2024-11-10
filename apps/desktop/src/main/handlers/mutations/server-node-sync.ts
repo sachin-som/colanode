@@ -3,8 +3,7 @@ import { socketManager } from '@/main/sockets/socket-manager';
 import { hasInsertChanges, hasUpdateChanges } from '@/main/utils';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerNodeSyncMutationInput } from '@/operations/mutations/server-node-sync';
-import { toUint8Array } from 'js-base64';
-import * as Y from 'yjs';
+import { YDoc } from '@colanode/crdt';
 
 export class ServerNodeSyncMutationHandler
   implements MutationHandler<ServerNodeSyncMutationInput>
@@ -44,18 +43,15 @@ export class ServerNodeSyncMutationHandler
         .executeTakeFirst();
 
       if (!existingNode) {
-        const doc = new Y.Doc({ guid: input.id });
-        const state = toUint8Array(input.state);
-        Y.applyUpdate(doc, state);
-
-        const attributesMap = doc.getMap('attributes');
-        const attributes = JSON.stringify(attributesMap.toJSON());
+        const ydoc = new YDoc(input.id, input.state);
+        const attributes = ydoc.getAttributes();
+        const state = ydoc.getState();
 
         const result = await workspaceDatabase
           .insertInto('nodes')
           .values({
             id: input.id,
-            attributes: attributes,
+            attributes: JSON.stringify(attributes),
             state: state,
             created_at: input.createdAt,
             created_by: input.createdBy,
@@ -89,19 +85,17 @@ export class ServerNodeSyncMutationHandler
           };
         }
       } else {
-        const doc = new Y.Doc({ guid: input.id });
-        Y.applyUpdate(doc, existingNode.state);
-        Y.applyUpdate(doc, toUint8Array(input.state));
+        const ydoc = new YDoc(input.id, existingNode.state);
+        ydoc.applyUpdate(input.state);
 
-        const attributesMap = doc.getMap('attributes');
-        const attributes = JSON.stringify(attributesMap.toJSON());
-        const state = Y.encodeStateAsUpdate(doc);
+        const attributes = ydoc.getAttributes();
+        const state = ydoc.getState();
 
         const result = await workspaceDatabase
           .updateTable('nodes')
           .set({
             state: state,
-            attributes: attributes,
+            attributes: JSON.stringify(attributes),
             server_created_at: input.serverCreatedAt,
             server_updated_at: input.serverUpdatedAt,
             server_version_id: input.versionId,

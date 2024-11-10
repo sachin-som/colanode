@@ -5,24 +5,38 @@ import {
   WorkspaceStatus,
   WorkspaceUserStatus,
 } from '@/types/workspaces';
-import { generateId, IdType, NodeRoles } from '@colanode/core';
-import * as Y from 'yjs';
-import { fromUint8Array } from 'js-base64';
+import {
+  ChannelAttributes,
+  generateId,
+  IdType,
+  NodeRoles,
+  PageAttributes,
+  SpaceAttributes,
+  UserAttributes,
+  WorkspaceAttributes,
+} from '@colanode/core';
 import { NodeCreatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
-import {} from './constants';
+import { YDoc } from '@colanode/crdt';
 
 export const createDefaultWorkspace = async (account: SelectAccount) => {
   const createdAt = new Date();
   const workspaceId = generateId(IdType.Workspace);
   const workspaceName = `${account.name}'s Workspace`;
+  const workspaceVersionId = generateId(IdType.Version);
 
   const user = buildUserNodeCreate(workspaceId, account);
+  const workspace = buildWorkspaceNodeCreate(
+    workspaceId,
+    workspaceName,
+    workspaceVersionId,
+    user.id
+  );
   const space = buildSpaceNodeCreate(workspaceId, user.id);
   const page = buildPageNodeCreate(workspaceId, space.id, user.id);
   const channel = buildChannelNodeCreate(workspaceId, space.id, user.id);
 
-  const nodesToCreate = [user, space, page, channel];
+  const nodesToCreate = [workspace, user, space, page, channel];
 
   await database.transaction().execute(async (trx) => {
     await trx
@@ -62,26 +76,54 @@ export const createDefaultWorkspace = async (account: SelectAccount) => {
   }
 };
 
+const buildWorkspaceNodeCreate = (
+  workspaceId: string,
+  workspaceName: string,
+  workspaceVersionId: string,
+  userId: string
+): CreateNode => {
+  const attributes: WorkspaceAttributes = {
+    type: 'workspace',
+    name: workspaceName,
+    parentId: workspaceId,
+  };
+
+  const ydoc = new YDoc(workspaceId);
+  ydoc.updateAttributes(attributes);
+  const state = ydoc.getState();
+
+  return {
+    id: workspaceId,
+    workspace_id: workspaceId,
+    created_at: new Date(),
+    created_by: userId,
+    version_id: workspaceVersionId,
+    server_created_at: new Date(),
+    attributes: JSON.stringify(attributes),
+    state,
+  };
+};
+
 const buildUserNodeCreate = (
   workspaceId: string,
   account: SelectAccount
 ): CreateNode => {
   const id = generateId(IdType.User);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({ guid: id });
 
-  const attributesMap = doc.getMap('attributes');
-  doc.transact(() => {
-    attributesMap.set('type', 'user');
-    attributesMap.set('name', account.name);
-    attributesMap.set('avatar', account.avatar);
-    attributesMap.set('email', account.email);
-    attributesMap.set('role', WorkspaceRole.Owner);
-    attributesMap.set('accountId', account.id);
-  });
+  const attributes: UserAttributes = {
+    type: 'user',
+    name: account.name,
+    avatar: account.avatar,
+    email: account.email,
+    role: 'owner',
+    accountId: account.id,
+    parentId: workspaceId,
+  };
 
-  const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = Y.encodeStateAsUpdate(doc);
+  const ydoc = new YDoc(id);
+  ydoc.updateAttributes(attributes);
+  const state = ydoc.getState();
 
   return {
     id,
@@ -90,7 +132,7 @@ const buildUserNodeCreate = (
     created_by: account.id,
     version_id: versionId,
     server_created_at: new Date(),
-    attributes,
+    attributes: JSON.stringify(attributes),
     state,
   };
 };
@@ -101,24 +143,20 @@ const buildSpaceNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Space);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({ guid: id });
 
-  const attributesMap = doc.getMap('attributes');
-  doc.transact(() => {
-    attributesMap.set('type', 'space');
-    attributesMap.set('name', 'Home');
-    attributesMap.set('description', 'Home space');
+  const attributes: SpaceAttributes = {
+    type: 'space',
+    name: 'Home',
+    description: 'Home space',
+    parentId: workspaceId,
+    collaborators: {
+      [userId]: NodeRoles.Admin,
+    },
+  };
 
-    attributesMap.set('collaborators', new Y.Map());
-    const collaboratorsMap = attributesMap.get(
-      'collaborators'
-    ) as Y.Map<string>;
-
-    collaboratorsMap.set(userId, NodeRoles.Admin);
-  });
-
-  const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = Y.encodeStateAsUpdate(doc);
+  const ydoc = new YDoc(id);
+  ydoc.updateAttributes(attributes);
+  const state = ydoc.getState();
 
   return {
     id,
@@ -127,7 +165,7 @@ const buildSpaceNodeCreate = (
     created_by: userId,
     version_id: versionId,
     server_created_at: new Date(),
-    attributes,
+    attributes: JSON.stringify(attributes),
     state,
   };
 };
@@ -139,17 +177,17 @@ const buildPageNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Page);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({ guid: id });
 
-  const attributesMap = doc.getMap('attributes');
-  doc.transact(() => {
-    attributesMap.set('type', 'page');
-    attributesMap.set('name', 'Notes');
-    attributesMap.set('parentId', spaceId);
-  });
+  const attributes: PageAttributes = {
+    type: 'page',
+    name: 'Notes',
+    parentId: spaceId,
+    content: {},
+  };
 
-  const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = Y.encodeStateAsUpdate(doc);
+  const ydoc = new YDoc(id);
+  ydoc.updateAttributes(attributes);
+  const state = ydoc.getState();
 
   return {
     id,
@@ -158,7 +196,7 @@ const buildPageNodeCreate = (
     created_by: userId,
     version_id: versionId,
     server_created_at: new Date(),
-    attributes,
+    attributes: JSON.stringify(attributes),
     state,
   };
 };
@@ -170,17 +208,17 @@ const buildChannelNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Channel);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({ guid: id });
 
-  const attributesMap = doc.getMap('attributes');
-  doc.transact(() => {
-    attributesMap.set('type', 'channel');
-    attributesMap.set('parentId', spaceId);
-    attributesMap.set('name', 'Discussions');
-  });
+  const attributes: ChannelAttributes = {
+    type: 'channel',
+    name: 'Discussions',
+    parentId: spaceId,
+    index: '0',
+  };
 
-  const attributes = JSON.stringify(attributesMap.toJSON());
-  const state = Y.encodeStateAsUpdate(doc);
+  const ydoc = new YDoc(id);
+  ydoc.updateAttributes(attributes);
+  const state = ydoc.getState();
 
   return {
     id,
@@ -189,7 +227,7 @@ const buildChannelNodeCreate = (
     created_by: userId,
     version_id: versionId,
     server_created_at: new Date(),
-    attributes,
+    attributes: JSON.stringify(attributes),
     state,
   };
 };

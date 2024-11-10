@@ -16,3 +16,4 @@ export * from './registry/record';
 export * from './registry/space';
 export * from './registry/user';
 export * from './registry/zod';
+export * from './registry/workspace';

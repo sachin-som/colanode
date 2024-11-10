@@ -47,11 +47,7 @@ class NodeManager {
 
     await workspaceDatabase.transaction().execute(async (transaction) => {
       for (const input of inputs) {
-        const model = registry[input.attributes.type];
-        if (!model) {
-          throw new Error('Invalid node type');
-        }
-
+        const model = registry.getModel(input.attributes.type);
         if (!model.schema.safeParse(input.attributes).success) {
           throw new Error('Invalid attributes');
         }
@@ -77,7 +73,7 @@ class NodeManager {
         }
 
         const ydoc = new YDoc(input.id);
-        ydoc.updateAttributes(model.schema, input.attributes);
+        ydoc.updateAttributes(input.attributes);
 
         const createdAt = new Date().toISOString();
         const versionId = generateId(IdType.Version);
@@ -190,11 +186,7 @@ class NodeManager {
     const updatedAt = new Date().toISOString();
     const updatedAttributes = updater(node.attributes);
 
-    const model = registry[node.type];
-    if (!model) {
-      throw new Error('Invalid node type');
-    }
-
+    const model = registry.getModel(node.type);
     if (!model.schema.safeParse(updatedAttributes).success) {
       throw new Error('Invalid attributes');
     }
@@ -204,10 +196,7 @@ class NodeManager {
     }
 
     const ydoc = new YDoc(nodeRow.id, nodeRow.state);
-    ydoc.updateAttributes(
-      registry[updatedAttributes.type].schema,
-      updatedAttributes
-    );
+    ydoc.updateAttributes(updatedAttributes);
 
     const updates = ydoc.getEncodedUpdates();
     if (updates.length === 0) {
@@ -283,11 +272,7 @@ class NodeManager {
       throw new Error('Node not found');
     }
 
-    const model = registry[node.type];
-    if (!model) {
-      throw new Error('Invalid node type');
-    }
-
+    const model = registry.getModel(node.type);
     const context = new NodeMutationContext(
       workspace.account_id,
       workspace.workspace_id,

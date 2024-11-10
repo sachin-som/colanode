@@ -3,7 +3,6 @@ import { databaseManager } from '@/main/data/database-manager';
 import { EmailLoginMutationInput } from '@/operations/mutations/email-login';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { httpClient } from '@/lib/http-client';
-import { toUint8Array } from 'js-base64';
 
 export class EmailLoginMutationHandler
   implements MutationHandler<EmailLoginMutationInput>
@@ -83,37 +82,6 @@ export class EmailLoginMutationHandler
         table: 'workspaces',
       });
     });
-
-    for (const workspace of data.workspaces) {
-      const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-        workspace.user.id
-      );
-
-      const user = workspace.user.node;
-      await workspaceDatabase
-        .insertInto('nodes')
-        .values({
-          id: user.id,
-          attributes: JSON.stringify(user.attributes),
-          state: toUint8Array(user.state),
-          created_at: user.createdAt,
-          created_by: user.createdBy,
-          updated_at: user.updatedAt,
-          updated_by: user.updatedBy,
-          server_created_at: user.serverCreatedAt,
-          server_updated_at: user.serverUpdatedAt,
-          version_id: user.versionId,
-          server_version_id: user.versionId,
-        })
-        .onConflict((cb) => cb.doNothing())
-        .execute();
-
-      changedTables.push({
-        type: 'workspace',
-        table: 'nodes',
-        userId: workspace.user.id,
-      });
-    }
 
     return {
       output: {

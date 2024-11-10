@@ -90,7 +90,7 @@ export class SidebarSpaceListQueryHandler
         WITH space_nodes AS (
           SELECT *
           FROM nodes
-          WHERE parent_id IS NULL AND type = ${NodeTypes.Space}
+          WHERE type = ${NodeTypes.Space}
         ),
         space_children_nodes AS (
           SELECT *

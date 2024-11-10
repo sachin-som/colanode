@@ -99,7 +99,12 @@ const handleNodeDeletedEvent = async (
 
 const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
   const userNodesToCreate: CreateUserNode[] = [];
-  if (event.attributes.type === NodeTypes.User) {
+
+  const isForEveryone =
+    event.attributes.type === NodeTypes.User ||
+    event.attributes.type === NodeTypes.Workspace;
+
+  if (isForEveryone) {
     const userIds = await fetchWorkspaceUsers(event.workspaceId);
 
     for (const userId of userIds) {

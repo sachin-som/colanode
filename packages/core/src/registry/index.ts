@@ -9,23 +9,11 @@ import { DatabaseAttributes, databaseModel } from './database';
 import { FileAttributes, fileModel } from './file';
 import { FolderAttributes, folderModel } from './folder';
 import { RecordAttributes, recordModel } from './record';
-
-export const registry: Record<string, NodeModel> = {
-  channel: channelModel,
-  chat: chatModel,
-  database: databaseModel,
-  file: fileModel,
-  folder: folderModel,
-  message: messageModel,
-  page: pageModel,
-  record: recordModel,
-  space: spaceModel,
-  user: userModel,
-};
+import { WorkspaceAttributes, workspaceModel } from './workspace';
 
 type NodeBase = {
   id: string;
-  parentId: string | null;
+  parentId: string;
   index: string | null;
   createdAt: string;
   createdBy: string;
@@ -87,6 +75,11 @@ export type UserNode = NodeBase & {
   attributes: UserAttributes;
 };
 
+export type WorkspaceNode = NodeBase & {
+  type: 'workspace';
+  attributes: WorkspaceAttributes;
+};
+
 export type NodeType =
   | 'channel'
   | 'chat'
@@ -97,7 +90,8 @@ export type NodeType =
   | 'page'
   | 'record'
   | 'space'
-  | 'user';
+  | 'user'
+  | 'workspace';
 
 export type Node =
   | ChannelNode
@@ -109,7 +103,8 @@ export type Node =
   | PageNode
   | RecordNode
   | SpaceNode
-  | UserNode;
+  | UserNode
+  | WorkspaceNode;
 
 export type NodeAttributes =
   | UserAttributes
@@ -121,4 +116,34 @@ export type NodeAttributes =
   | FolderAttributes
   | MessageAttributes
   | PageAttributes
-  | RecordAttributes;
+  | RecordAttributes
+  | WorkspaceAttributes;
+
+class Registry {
+  private models: Map<string, NodeModel> = new Map();
+
+  constructor() {
+    this.models.set('channel', channelModel);
+    this.models.set('chat', chatModel);
+    this.models.set('database', databaseModel);
+    this.models.set('file', fileModel);
+    this.models.set('folder', folderModel);
+    this.models.set('message', messageModel);
+    this.models.set('page', pageModel);
+    this.models.set('record', recordModel);
+    this.models.set('space', spaceModel);
+    this.models.set('user', userModel);
+    this.models.set('workspace', workspaceModel);
+  }
+
+  getModel(type: string): NodeModel {
+    const model = this.models.get(type);
+    if (!model) {
+      throw new Error(`Model for type ${type} not found`);
+    }
+
+    return model;
+  }
+}
+
+export const registry = new Registry();

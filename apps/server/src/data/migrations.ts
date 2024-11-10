@@ -109,6 +109,7 @@ const createNodesTable: Migration = {
           .stored()
           .references('nodes.id')
           .onDelete('cascade')
+          .notNull()
       )
       .addColumn('index', 'varchar(30)', (col) =>
         col.generatedAlwaysAs(sql`(attributes->>'index')::VARCHAR(30)`).stored()
@@ -158,7 +159,7 @@ const createNodePathsTable: Migration = {
         INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
         SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
         FROM node_paths
-        WHERE descendant_id = NEW.parent_id;
+        WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
 
         RETURN NEW;
       END;
@@ -179,7 +180,7 @@ const createNodePathsTable: Migration = {
           INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
           SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
           FROM node_paths
-          WHERE descendant_id = NEW.parent_id;
+          WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
         END IF;
 
         RETURN NEW;

@@ -11,6 +11,7 @@ import {
   QueryHandler,
   QueryResult,
 } from '@/main/types';
+import { NodeTypes } from '@colanode/core';
 
 export class BreadcrumbListQueryHandler
   implements QueryHandler<BreadcrumbListQueryInput>
@@ -79,6 +80,7 @@ export class BreadcrumbListQueryHandler
           SELECT n.*
           FROM nodes n
           INNER JOIN breadcrumb_nodes b ON n.id = b.parent_id
+          WHERE n.type <> ${NodeTypes.Workspace}
         )
         SELECT n.*
         FROM breadcrumb_nodes n;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import * as Y from 'yjs';
-import { NodeAttributes, ZodText } from '@colanode/core';
+import { NodeAttributes, registry, ZodText } from '@colanode/core';
 import { isEqual } from 'lodash-es';
 import { diffChars } from 'diff';
 import { fromUint8Array, toUint8Array } from 'js-base64';
@@ -23,10 +23,10 @@ export class YDoc {
     });
   }
 
-  public updateAttributes(
-    schema: z.ZodSchema,
-    attributes: z.infer<typeof schema>
-  ) {
+  public updateAttributes(attributes: NodeAttributes) {
+    const model = registry.getModel(attributes.type);
+
+    const schema = model.schema;
     if (!(schema instanceof z.ZodObject)) {
       throw new Error('Schema must be a ZodObject');
     }

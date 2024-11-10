@@ -3,7 +3,6 @@ import { httpClient } from '@/lib/http-client';
 import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceOutput } from '@/types/workspaces';
-import { toUint8Array } from 'js-base64';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>
@@ -60,29 +59,6 @@ export class WorkspaceCreateMutationHandler
       .onConflict((cb) => cb.doNothing())
       .execute();
 
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
-      data.user.id
-    );
-
-    const user = data.user.node;
-    await workspaceDatabase
-      .insertInto('nodes')
-      .values({
-        id: user.id,
-        attributes: JSON.stringify(user.attributes),
-        state: toUint8Array(user.state),
-        created_at: user.createdAt,
-        created_by: user.createdBy,
-        updated_at: user.updatedAt,
-        updated_by: user.updatedBy,
-        server_created_at: user.serverCreatedAt,
-        server_updated_at: user.serverUpdatedAt,
-        version_id: user.versionId,
-        server_version_id: user.versionId,
-      })
-      .onConflict((cb) => cb.doNothing())
-      .execute();
-
     return {
       output: {
         id: data.id,
@@ -95,7 +71,7 @@ export class WorkspaceCreateMutationHandler
         {
           type: 'workspace',
           table: 'nodes',
-          userId: user.id,
+          userId: data.user.id,
         },
       ],
     };

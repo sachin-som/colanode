@@ -8,11 +8,14 @@ import {
   WorkspaceStatus,
 } from '@/types/workspaces';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
-import { generateId, IdType } from '@colanode/core';
+import {
+  generateId,
+  IdType,
+  UserAttributes,
+  WorkspaceAttributes,
+} from '@colanode/core';
 import { database } from '@/data/database';
 import { Router } from 'express';
-import * as Y from 'yjs';
-import { fromUint8Array, toUint8Array } from 'js-base64';
 import {
   CreateAccount,
   CreateNode,
@@ -26,6 +29,7 @@ import { ServerNode } from '@/types/nodes';
 import { mapServerNode } from '@/lib/nodes';
 import { NodeCreatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
+import { YDoc } from '@colanode/crdt';
 
 export const workspacesRouter = Router();
 
@@ -62,25 +66,36 @@ workspacesRouter.post(
     }
 
     const createdAt = new Date();
+
     const workspaceId = generateId(IdType.Workspace);
     const workspaceVersionId = generateId(IdType.Version);
+    const workspaceDoc = new YDoc(workspaceId);
+
+    const workspaceAttributes: WorkspaceAttributes = {
+      type: 'workspace',
+      name: input.name,
+      description: input.description,
+      avatar: input.avatar,
+      parentId: workspaceId,
+    };
+
+    workspaceDoc.updateAttributes(workspaceAttributes);
 
     const userId = generateId(IdType.User);
     const userVersionId = generateId(IdType.Version);
-    const userDoc = new Y.Doc({ guid: userId });
+    const userDoc = new YDoc(userId);
 
-    const userAttributesMap = userDoc.getMap('attributes');
-    userDoc.transact(() => {
-      userAttributesMap.set('type', 'user');
-      userAttributesMap.set('name', account.name);
-      userAttributesMap.set('avatar', account.avatar);
-      userAttributesMap.set('email', account.email);
-      userAttributesMap.set('role', WorkspaceRole.Owner);
-      userAttributesMap.set('accountId', account.id);
-    });
+    const userAttributes: UserAttributes = {
+      type: 'user',
+      name: account.name,
+      avatar: account.avatar,
+      email: account.email,
+      accountId: account.id,
+      role: WorkspaceRole.Owner,
+      parentId: workspaceId,
+    };
 
-    const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-    const userState = Y.encodeStateAsUpdate(userDoc);
+    userDoc.updateAttributes(userAttributes);
 
     await database.transaction().execute(async (trx) => {
       await trx
@@ -114,10 +129,24 @@ workspacesRouter.post(
       await trx
         .insertInto('nodes')
         .values({
+          id: workspaceId,
+          workspace_id: workspaceId,
+          attributes: JSON.stringify(workspaceAttributes),
+          state: workspaceDoc.getState(),
+          created_at: createdAt,
+          created_by: account.id,
+          version_id: workspaceVersionId,
+          server_created_at: createdAt,
+        })
+        .execute();
+
+      await trx
+        .insertInto('nodes')
+        .values({
           id: userId,
           workspace_id: workspaceId,
-          attributes: userAttributes,
-          state: userState,
+          attributes: JSON.stringify(userAttributes),
+          state: userDoc.getState(),
           created_at: createdAt,
           created_by: account.id,
           version_id: userVersionId,
@@ -126,11 +155,24 @@ workspacesRouter.post(
         .execute();
     });
 
+    const workspaceEvent: NodeCreatedEvent = {
+      type: 'node_created',
+      id: workspaceId,
+      workspaceId: workspaceId,
+      attributes: workspaceAttributes,
+      createdBy: account.id,
+      createdAt: createdAt.toISOString(),
+      versionId: workspaceVersionId,
+      serverCreatedAt: createdAt.toISOString(),
+    };
+
+    await enqueueEvent(workspaceEvent);
+
     const userEvent: NodeCreatedEvent = {
       type: 'node_created',
       id: userId,
       workspaceId: workspaceId,
-      attributes: JSON.parse(userAttributes),
+      attributes: userAttributes,
       createdBy: account.id,
       createdAt: createdAt.toISOString(),
       versionId: userVersionId,
@@ -149,18 +191,6 @@ workspacesRouter.post(
         id: userId,
         accountId: account.id,
         role: WorkspaceRole.Owner,
-        node: {
-          id: userId,
-          workspaceId: workspaceId,
-          type: 'user',
-          attributes: JSON.parse(userAttributes),
-          state: fromUint8Array(userState),
-          createdAt: new Date(),
-          createdBy: account.id,
-          versionId: userVersionId,
-          serverCreatedAt: new Date(),
-          index: null,
-        },
       },
     };
 
@@ -215,33 +245,6 @@ workspacesRouter.put(
       });
     }
 
-    if (!workspaceUser) {
-      return res.status(403).json({
-        code: ApiError.Forbidden,
-        message: 'Forbidden.',
-      });
-    }
-
-    if (workspaceUser.role !== WorkspaceRole.Owner) {
-      return res.status(403).json({
-        code: ApiError.Forbidden,
-        message: 'Forbidden.',
-      });
-    }
-
-    const userNode = await database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', workspaceUser.id)
-      .executeTakeFirst();
-
-    if (!userNode) {
-      return res.status(500).json({
-        code: ApiError.InternalServerError,
-        message: 'Internal server error.',
-      });
-    }
-
     const updatedWorkspace = await database
       .updateTable('workspaces')
       .set({
@@ -272,7 +275,6 @@ workspacesRouter.put(
         id: workspaceUser.id,
         accountId: workspaceUser.account_id,
         role: workspaceUser.role,
-        node: mapServerNode(userNode),
       },
     };
 
@@ -373,19 +375,6 @@ workspacesRouter.get(
       });
     }
 
-    const userNode = await database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', workspaceUser.id)
-      .executeTakeFirst();
-
-    if (!userNode) {
-      return res.status(500).json({
-        code: ApiError.InternalServerError,
-        message: 'Internal server error.',
-      });
-    }
-
     const output: WorkspaceOutput = {
       id: workspace.id,
       name: workspace.name,
@@ -396,7 +385,6 @@ workspacesRouter.get(
         id: workspaceUser.id,
         accountId: workspaceUser.account_id,
         role: workspaceUser.role as WorkspaceRole,
-        node: mapServerNode(userNode),
       },
     };
 
@@ -427,30 +415,13 @@ workspacesRouter.get(
       .where('id', 'in', workspaceIds)
       .execute();
 
-    const userNodes = await database
-      .selectFrom('nodes')
-      .selectAll()
-      .where(
-        'id',
-        'in',
-        workspaceUsers.map((wa) => wa.id)
-      )
-      .execute();
-
     const outputs: WorkspaceOutput[] = [];
-
     for (const workspace of workspaces) {
       const workspaceUser = workspaceUsers.find(
         (wa) => wa.workspace_id === workspace.id
       );
 
       if (!workspaceUser) {
-        continue;
-      }
-
-      const userNode = userNodes.find((un) => un.id === workspaceUser.id);
-
-      if (!userNode) {
         continue;
       }
 
@@ -464,7 +435,6 @@ workspacesRouter.get(
           id: workspaceUser.id,
           accountId: workspaceUser.account_id,
           role: workspaceUser.role as WorkspaceRole,
-          node: mapServerNode(userNode),
         },
       };
 
@@ -616,20 +586,19 @@ workspacesRouter.post(
 
       const userId = generateId(IdType.User);
       const userVersionId = generateId(IdType.Version);
-      const userDoc = new Y.Doc({ guid: userId });
+      const userDoc = new YDoc(userId);
 
-      const userAttributesMap = userDoc.getMap('attributes');
-      userDoc.transact(() => {
-        userAttributesMap.set('type', 'user');
-        userAttributesMap.set('name', account!.name);
-        userAttributesMap.set('avatar', account!.avatar);
-        userAttributesMap.set('email', account!.email);
-        userAttributesMap.set('role', WorkspaceRole.Collaborator);
-        userAttributesMap.set('accountId', account!.id);
-      });
+      const userAttributes: UserAttributes = {
+        type: 'user',
+        name: account!.name,
+        avatar: account!.avatar,
+        email: account!.email,
+        role: WorkspaceRole.Collaborator,
+        accountId: account!.id,
+        parentId: workspace.id,
+      };
 
-      const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-      const userState = Y.encodeStateAsUpdate(userDoc);
+      userDoc.updateAttributes(userAttributes);
 
       workspaceUsersToCreate.push({
         id: userId,
@@ -639,14 +608,14 @@ workspacesRouter.post(
         created_at: new Date(),
         created_by: req.account.id,
         status: WorkspaceUserStatus.Active,
-        version_id: generateId(IdType.Version),
+        version_id: userVersionId,
       });
 
       const user: ServerNode = {
         id: userId,
         type: 'user',
-        attributes: JSON.parse(userAttributes),
-        state: fromUint8Array(userState),
+        attributes: userAttributes,
+        state: userDoc.getEncodedState(),
         createdAt: new Date(),
         createdBy: workspaceUser.id,
         serverCreatedAt: new Date(),
@@ -657,8 +626,8 @@ workspacesRouter.post(
 
       usersToCreate.push({
         id: user.id,
-        attributes: userAttributes,
-        state: userState,
+        attributes: JSON.stringify(userAttributes),
+        state: userDoc.getState(),
         created_at: user.createdAt,
         created_by: user.createdBy,
         server_created_at: user.serverCreatedAt,
@@ -790,20 +759,20 @@ workspacesRouter.put(
       });
     }
 
-    const userDoc = new Y.Doc({ guid: user.id });
-    Y.applyUpdate(userDoc, user.state);
+    const attributes = user.attributes;
+    if (attributes.type !== 'user') {
+      return res.status(400).json({
+        code: ApiError.BadRequest,
+        message: 'BadRequest.',
+      });
+    }
 
-    const userUpdates: string[] = [];
-    userDoc.on('update', (update) => {
-      userUpdates.push(fromUint8Array(update));
-    });
-
-    const userAttributesMap = userDoc.getMap('attributes');
-    userAttributesMap.set('role', input.role);
-
-    const userAttributes = JSON.stringify(userAttributesMap.toJSON());
-    const state = Y.encodeStateAsUpdate(userDoc);
     const updatedAt = new Date();
+    const userDoc = new YDoc(user.id, user.state);
+    userDoc.updateAttributes({
+      ...attributes,
+      role: input.role,
+    });
 
     const userNode: ServerNode = {
       id: user.id,
@@ -811,8 +780,8 @@ workspacesRouter.put(
       workspaceId: user.workspace_id,
       index: null,
       parentId: null,
-      attributes: JSON.parse(userAttributes),
-      state: fromUint8Array(state),
+      attributes: userDoc.getAttributes(),
+      state: userDoc.getEncodedState(),
       createdAt: user.created_at,
       createdBy: user.created_by,
       serverCreatedAt: user.server_created_at,
@@ -837,8 +806,8 @@ workspacesRouter.put(
       await trx
         .updateTable('nodes')
         .set({
-          attributes: userAttributes,
-          state: state,
+          attributes: JSON.stringify(userDoc.getAttributes()),
+          state: userDoc.getState(),
           server_updated_at: updatedAt,
           updated_at: updatedAt,
           updated_by: currentWorkspaceUser.id,

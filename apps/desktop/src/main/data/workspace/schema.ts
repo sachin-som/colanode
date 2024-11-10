@@ -2,7 +2,7 @@ import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
 interface NodeTable {
   id: ColumnType<string, string, never>;
-  parent_id: ColumnType<string | null, never, never>;
+  parent_id: ColumnType<string, never, never>;
   type: ColumnType<string, never, never>;
   index: ColumnType<string | null, never, never>;
   attributes: ColumnType<string, string, string>;

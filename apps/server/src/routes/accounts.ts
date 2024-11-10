@@ -11,21 +11,20 @@ import {
 } from '@/types/accounts';
 import axios from 'axios';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
-import { generateId, IdType, NodeAttributes } from '@colanode/core';
+import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
 import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
-import { mapServerNode } from '@/lib/nodes';
 import { enqueueTask } from '@/queues/tasks';
-import * as Y from 'yjs';
 import { CompiledQuery } from 'kysely';
 import { NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { SelectAccount } from '@/data/schema';
 import { createDefaultWorkspace } from '@/lib/workspaces';
 import { sha256 } from 'js-sha256';
+import { YDoc } from '@colanode/crdt';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -321,21 +320,15 @@ accountsRouter.put(
         continue;
       }
 
-      const doc = new Y.Doc({ guid: user.id });
-      Y.applyUpdate(doc, user.state);
+      const ydoc = new YDoc(user.id, user.state);
+      ydoc.updateAttributes({
+        ...user.attributes,
+        name: input.name,
+        avatar: input.avatar ?? null,
+      });
 
-      const attributesMap = doc.getMap('attributes');
-      if (name != input.name) {
-        attributesMap.set('name', input.name);
-      }
-
-      if (avatar != input.avatar) {
-        attributesMap.set('avatar', input.avatar);
-      }
-
-      const attributes = attributesMap.toJSON() as NodeAttributes;
-      const attributesJson = JSON.stringify(attributes);
-      const state = Y.encodeStateAsUpdate(doc);
+      const attributes = ydoc.getAttributes();
+      const state = ydoc.getState();
 
       const updatedAt = new Date();
       const versionId = generateId(IdType.Version);
@@ -344,7 +337,7 @@ accountsRouter.put(
         database
           .updateTable('nodes')
           .set({
-            attributes: attributesJson,
+            attributes: JSON.stringify(attributes),
             state: state,
             updated_at: updatedAt,
             updated_by: user.id,
@@ -418,24 +411,12 @@ const buildLoginOutput = async (
       .selectAll()
       .execute();
 
-    const userIds = workspaceUsers.map((wu) => wu.id);
-    const userNodes = await database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', 'in', userIds)
-      .execute();
-
     for (const workspaceUser of workspaceUsers) {
       const workspace = workspaces.find(
         (w) => w.id === workspaceUser.workspace_id
       );
 
       if (!workspace) {
-        continue;
-      }
-
-      const userNode = userNodes.find((n) => n.id === workspaceUser.id);
-      if (!userNode) {
         continue;
       }
 
@@ -449,7 +430,6 @@ const buildLoginOutput = async (
           id: workspaceUser.id,
           accountId: workspaceUser.account_id,
           role: workspaceUser.role as WorkspaceRole,
-          node: mapServerNode(userNode),
         },
       });
     }

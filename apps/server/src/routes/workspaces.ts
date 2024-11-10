@@ -67,9 +67,7 @@ workspacesRouter.post(
 
     const userId = generateId(IdType.User);
     const userVersionId = generateId(IdType.Version);
-    const userDoc = new Y.Doc({
-      guid: userId,
-    });
+    const userDoc = new Y.Doc({ guid: userId });
 
     const userAttributesMap = userDoc.getMap('attributes');
     userDoc.transact(() => {
@@ -618,9 +616,7 @@ workspacesRouter.post(
 
       const userId = generateId(IdType.User);
       const userVersionId = generateId(IdType.Version);
-      const userDoc = new Y.Doc({
-        guid: userId,
-      });
+      const userDoc = new Y.Doc({ guid: userId });
 
       const userAttributesMap = userDoc.getMap('attributes');
       userDoc.transact(() => {
@@ -794,10 +790,7 @@ workspacesRouter.put(
       });
     }
 
-    const userDoc = new Y.Doc({
-      guid: user.id,
-    });
-
+    const userDoc = new Y.Doc({ guid: user.id });
     Y.applyUpdate(userDoc, toUint8Array(user.state));
 
     const userUpdates: string[] = [];

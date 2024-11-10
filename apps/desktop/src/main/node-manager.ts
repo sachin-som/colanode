@@ -6,7 +6,7 @@ import {
   registry,
 } from '@colanode/core';
 import { applyCrdt } from '@colanode/crdt';
-import { fromUint8Array, toUint8Array } from 'js-base64';
+import { fromUint8Array } from 'js-base64';
 import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
@@ -82,7 +82,7 @@ class NodeManager {
         }
 
         applyCrdt(model.schema, input.attributes, attributesMap);
-        const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+        const state = Y.encodeStateAsUpdate(doc);
 
         const createdAt = new Date().toISOString();
         const versionId = generateId(IdType.Version);
@@ -90,7 +90,7 @@ class NodeManager {
         const changeData: LocalCreateNodeChangeData = {
           type: 'node_create',
           id: input.id,
-          state: encodedState,
+          state: fromUint8Array(state),
           createdAt: createdAt,
           createdBy: context.userId,
           versionId: versionId,
@@ -101,7 +101,7 @@ class NodeManager {
           .values({
             id: input.id,
             attributes: JSON.stringify(input.attributes),
-            state: encodedState,
+            state: state,
             created_at: createdAt,
             created_by: context.userId,
             version_id: versionId,
@@ -192,7 +192,7 @@ class NodeManager {
     );
 
     const doc = new Y.Doc({ guid: nodeId });
-    Y.applyUpdate(doc, toUint8Array(nodeRow.state));
+    Y.applyUpdate(doc, nodeRow.state);
 
     const versionId = generateId(IdType.Version);
     const updatedAt = new Date().toISOString();
@@ -231,7 +231,7 @@ class NodeManager {
     }
 
     const attributesJson = JSON.stringify(attributesMap.toJSON());
-    const encodedState = fromUint8Array(Y.encodeStateAsUpdate(doc));
+    const state = Y.encodeStateAsUpdate(doc);
 
     const changeData: LocalUpdateNodeChangeData = {
       type: 'node_update',
@@ -249,7 +249,7 @@ class NodeManager {
           .updateTable('nodes')
           .set({
             attributes: attributesJson,
-            state: encodedState,
+            state: state,
             updated_at: updatedAt,
             updated_by: context.userId,
             version_id: versionId,

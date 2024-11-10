@@ -3,6 +3,7 @@ import { httpClient } from '@/lib/http-client';
 import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceUserRoleUpdateOutput } from '@/types/workspaces';
+import { toUint8Array } from 'js-base64';
 
 export class WorkspaceUserRoleUpdateMutationHandler
   implements MutationHandler<WorkspaceUserRoleUpdateMutationInput>
@@ -72,7 +73,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       .updateTable('nodes')
       .set({
         attributes: JSON.stringify(data.user.attributes),
-        state: data.user.state,
+        state: toUint8Array(data.user.state),
         updated_at: data.user.updatedAt,
         updated_by: data.user.updatedBy,
         version_id: data.user.versionId,

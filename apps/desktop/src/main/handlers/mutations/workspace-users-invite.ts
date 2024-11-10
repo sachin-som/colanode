@@ -4,6 +4,7 @@ import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/worksp
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { WorkspaceUsersInviteOutput } from '@/types/workspaces';
 import { CreateNode } from '@/main/data/workspace/schema';
+import { toUint8Array } from 'js-base64';
 
 export class WorkspaceUsersInviteMutationHandler
   implements MutationHandler<WorkspaceUsersInviteMutationInput>
@@ -73,7 +74,7 @@ export class WorkspaceUsersInviteMutationHandler
       return {
         id: user.id,
         attributes: JSON.stringify(user.attributes),
-        state: user.state,
+        state: toUint8Array(user.state),
         created_at: user.createdAt,
         created_by: user.createdBy,
         updated_at: user.updatedAt,

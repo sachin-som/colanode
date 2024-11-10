@@ -6,7 +6,7 @@ interface NodeTable {
   type: ColumnType<string, never, never>;
   index: ColumnType<string | null, never, never>;
   attributes: ColumnType<string, string, string>;
-  state: ColumnType<string, string, string>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   created_by: ColumnType<string, string, never>;

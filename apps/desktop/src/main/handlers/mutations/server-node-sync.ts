@@ -44,11 +44,9 @@ export class ServerNodeSyncMutationHandler
         .executeTakeFirst();
 
       if (!existingNode) {
-        const doc = new Y.Doc({
-          guid: input.id,
-        });
-
-        Y.applyUpdate(doc, toUint8Array(input.state));
+        const doc = new Y.Doc({ guid: input.id });
+        const state = toUint8Array(input.state);
+        Y.applyUpdate(doc, state);
 
         const attributesMap = doc.getMap('attributes');
         const attributes = JSON.stringify(attributesMap.toJSON());
@@ -58,7 +56,7 @@ export class ServerNodeSyncMutationHandler
           .values({
             id: input.id,
             attributes: attributes,
-            state: input.state,
+            state: state,
             created_at: input.createdAt,
             created_by: input.createdBy,
             version_id: input.versionId,
@@ -91,20 +89,18 @@ export class ServerNodeSyncMutationHandler
           };
         }
       } else {
-        const doc = new Y.Doc({
-          guid: input.id,
-        });
-
-        Y.applyUpdate(doc, toUint8Array(existingNode.state));
+        const doc = new Y.Doc({ guid: input.id });
+        Y.applyUpdate(doc, existingNode.state);
         Y.applyUpdate(doc, toUint8Array(input.state));
 
         const attributesMap = doc.getMap('attributes');
         const attributes = JSON.stringify(attributesMap.toJSON());
+        const state = Y.encodeStateAsUpdate(doc);
 
         const result = await workspaceDatabase
           .updateTable('nodes')
           .set({
-            state: input.state,
+            state: state,
             attributes: attributes,
             server_created_at: input.serverCreatedAt,
             server_updated_at: input.serverUpdatedAt,

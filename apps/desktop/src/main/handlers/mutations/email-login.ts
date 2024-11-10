@@ -3,6 +3,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { EmailLoginMutationInput } from '@/operations/mutations/email-login';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { httpClient } from '@/lib/http-client';
+import { toUint8Array } from 'js-base64';
 
 export class EmailLoginMutationHandler
   implements MutationHandler<EmailLoginMutationInput>
@@ -94,7 +95,7 @@ export class EmailLoginMutationHandler
         .values({
           id: user.id,
           attributes: JSON.stringify(user.attributes),
-          state: user.state,
+          state: toUint8Array(user.state),
           created_at: user.createdAt,
           created_by: user.createdBy,
           updated_at: user.updatedAt,

@@ -117,10 +117,7 @@ const handleCreateNodeChange = async (
     };
   }
 
-  const doc = new Y.Doc({
-    guid: changeData.id,
-  });
-
+  const doc = new Y.Doc({ guid: changeData.id });
   Y.applyUpdate(doc, toUint8Array(changeData.state));
 
   const attributesMap = doc.getMap('attributes');
@@ -192,10 +189,7 @@ const handleUpdateNodeChange = async (
       };
     }
 
-    const doc = new Y.Doc({
-      guid: changeData.id,
-    });
-
+    const doc = new Y.Doc({ guid: changeData.id });
     Y.applyUpdate(doc, toUint8Array(existingNode.state));
 
     for (const update of changeData.updates) {

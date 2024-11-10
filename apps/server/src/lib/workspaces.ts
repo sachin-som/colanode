@@ -68,9 +68,7 @@ const buildUserNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.User);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({
-    guid: id,
-  });
+  const doc = new Y.Doc({ guid: id });
 
   const attributesMap = doc.getMap('attributes');
   doc.transact(() => {
@@ -103,9 +101,7 @@ const buildSpaceNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Space);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({
-    guid: id,
-  });
+  const doc = new Y.Doc({ guid: id });
 
   const attributesMap = doc.getMap('attributes');
   doc.transact(() => {
@@ -143,9 +139,7 @@ const buildPageNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Page);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({
-    guid: id,
-  });
+  const doc = new Y.Doc({ guid: id });
 
   const attributesMap = doc.getMap('attributes');
   doc.transact(() => {
@@ -176,9 +170,7 @@ const buildChannelNodeCreate = (
 ): CreateNode => {
   const id = generateId(IdType.Channel);
   const versionId = generateId(IdType.Version);
-  const doc = new Y.Doc({
-    guid: id,
-  });
+  const doc = new Y.Doc({ guid: id });
 
   const attributesMap = doc.getMap('attributes');
   doc.transact(() => {

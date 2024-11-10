@@ -22,7 +22,7 @@ const createNodesTable: Migration = {
         col.generatedAlwaysAs(sql`json_extract(attributes, '$.index')`).stored()
       )
       .addColumn('attributes', 'text', (col) => col.notNull())
-      .addColumn('state', 'text', (col) => col.notNull())
+      .addColumn('state', 'blob', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('created_by', 'text', (col) => col.notNull())

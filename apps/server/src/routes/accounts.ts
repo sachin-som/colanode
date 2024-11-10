@@ -319,9 +319,7 @@ accountsRouter.put(
         continue;
       }
 
-      const doc = new Y.Doc({
-        guid: user.id,
-      });
+      const doc = new Y.Doc({ guid: user.id });
       Y.applyUpdate(doc, toUint8Array(user.state));
 
       const attributesMap = doc.getMap('attributes');

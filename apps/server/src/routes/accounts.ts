@@ -27,6 +27,7 @@ import { NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { SelectAccount } from '@/data/schema';
 import { createDefaultWorkspace } from '@/lib/workspaces';
+import { sha256 } from 'js-sha256';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 const SaltRounds = 10;
@@ -44,7 +45,8 @@ accountsRouter.post('/register/email', async (req: Request, res: Response) => {
     .executeTakeFirst();
 
   const salt = await bcrypt.genSalt(SaltRounds);
-  const password = await bcrypt.hash(input.password, salt);
+  const preHashedPassword = sha256(input.password);
+  const password = await bcrypt.hash(preHashedPassword, salt);
 
   let account: SelectAccount | null | undefined = null;
   if (existingAccount) {
@@ -123,7 +125,12 @@ accountsRouter.post('/login/email', async (req: Request, res: Response) => {
     });
   }
 
-  const passwordMatch = await bcrypt.compare(input.password, account.password);
+  const preHashedPassword = sha256(input.password);
+  const passwordMatch = await bcrypt.compare(
+    preHashedPassword,
+    account.password
+  );
+
   if (!passwordMatch) {
     return res.status(400).json({
       code: ApiError.EmailOrPasswordIncorrect,

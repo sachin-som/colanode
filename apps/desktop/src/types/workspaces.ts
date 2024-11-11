@@ -3,9 +3,9 @@ import { ServerNode } from '@/types/nodes';
 export type WorkspaceRole =
   | 'owner'
   | 'admin'
-  | 'editor'
   | 'collaborator'
-  | 'viewer';
+  | 'guest'
+  | 'none';
 
 export type Workspace = {
   id: string;
@@ -38,6 +38,10 @@ export type WorkspaceUsersInviteOutput = {
 };
 
 export type WorkspaceUserRoleUpdateOutput = {
+  user: ServerNode;
+};
+
+export type WorkspaceUserRemoveOutput = {
   user: ServerNode;
 };
 

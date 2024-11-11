@@ -36,6 +36,7 @@ interface WorkspaceFormProps {
   isSaving: boolean;
   onCancel?: () => void;
   saveText: string;
+  readOnly?: boolean;
 }
 
 export const WorkspaceForm = ({
@@ -44,6 +45,7 @@ export const WorkspaceForm = ({
   isSaving,
   onCancel,
   saveText,
+  readOnly = false,
 }: WorkspaceFormProps) => {
   const account = useAccount();
 
@@ -71,7 +73,7 @@ export const WorkspaceForm = ({
             <div
               className="group relative cursor-pointer"
               onClick={async () => {
-                if (isPending || isFileDialogOpen) {
+                if (isPending || isFileDialogOpen || readOnly) {
                   return;
                 }
 
@@ -122,7 +124,8 @@ export const WorkspaceForm = ({
               <div
                 className={cn(
                   `absolute left-0 top-0 hidden h-32 w-32 items-center justify-center overflow-hidden bg-gray-50 group-hover:inline-flex`,
-                  isPending ? 'inline-flex' : 'hidden'
+                  isPending ? 'inline-flex' : 'hidden',
+                  readOnly && 'hidden group-hover:hidden'
                 )}
               >
                 {isPending ? (
@@ -141,7 +144,7 @@ export const WorkspaceForm = ({
                 <FormItem className="flex-1">
                   <FormLabel>Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Name" {...field} />
+                    <Input readOnly={readOnly} placeholder="Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,6 +158,7 @@ export const WorkspaceForm = ({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
+                      readOnly={readOnly}
                       placeholder="Write a short description about the workspace"
                       {...field}
                     />
@@ -165,26 +169,27 @@ export const WorkspaceForm = ({
             />
           </div>
         </div>
+        {!readOnly && (
+          <div className="flex flex-row justify-end gap-2">
+            {onCancel && (
+              <Button
+                type="button"
+                disabled={isPending || isSaving}
+                variant="outline"
+                onClick={() => {
+                  onCancel();
+                }}
+              >
+                Cancel
+              </Button>
+            )}
 
-        <div className="flex flex-row justify-end gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              disabled={isPending || isSaving}
-              variant="outline"
-              onClick={() => {
-                onCancel();
-              }}
-            >
-              Cancel
+            <Button type="submit" disabled={isPending || isSaving}>
+              {isSaving && <Spinner className="mr-1" />}
+              {saveText}
             </Button>
-          )}
-
-          <Button type="submit" disabled={isPending || isSaving}>
-            {isSaving && <Spinner className="mr-1" />}
-            {saveText}
-          </Button>
-        </div>
+          </div>
+        )}
       </form>
     </Form>
   );

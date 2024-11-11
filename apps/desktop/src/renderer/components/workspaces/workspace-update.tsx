@@ -6,9 +6,11 @@ import { WorkspaceForm } from './workspace-form';
 export const WorkspaceUpdate = () => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
+  const canEdit = workspace.role === 'owner';
 
   return (
     <WorkspaceForm
+      readOnly={!canEdit}
       values={{
         name: workspace.name,
         description: workspace.description ?? '',

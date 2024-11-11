@@ -1,6 +1,11 @@
 import { database } from '@/data/database';
 import { redisConfig } from '@/data/redis';
-import { CleanDeviceDataTask, SendEmailTask, Task } from '@/types/tasks';
+import {
+  CleanDeviceDataTask,
+  CleanUserDeviceNodesTask,
+  SendEmailTask,
+  Task,
+} from '@/types/tasks';
 import { Job, Queue, Worker } from 'bullmq';
 import { sendEmail } from '@/services/email';
 
@@ -39,11 +44,13 @@ const handleTaskJob = async (job: Job) => {
       return handleCleanDeviceDataTask(task);
     case 'send_email':
       return handleSendEmailTask(task);
+    case 'clean_user_device_nodes':
+      return handleCleanUserDeviceNodesTask(task);
   }
 };
 
 const handleCleanDeviceDataTask = async (
-  task: CleanDeviceDataTask,
+  task: CleanDeviceDataTask
 ): Promise<void> => {
   const device = await database
     .selectFrom('devices')
@@ -62,8 +69,39 @@ const handleCleanDeviceDataTask = async (
     .execute();
 };
 
-const handleSendEmailTask = async (
-  task: SendEmailTask
-): Promise<void> => {
+const handleSendEmailTask = async (task: SendEmailTask): Promise<void> => {
   await sendEmail(task.message);
-}
+};
+
+const handleCleanUserDeviceNodesTask = async (
+  task: CleanUserDeviceNodesTask
+): Promise<void> => {
+  const workspaceUser = await database
+    .selectFrom('workspace_users')
+    .where('id', '=', task.userId)
+    .where('workspace_id', '=', task.workspaceId)
+    .selectAll()
+    .executeTakeFirst();
+
+  if (!workspaceUser) {
+    return;
+  }
+
+  const devices = await database
+    .selectFrom('devices')
+    .select('id')
+    .where('account_id', '=', task.userId)
+    .execute();
+
+  if (devices.length === 0) {
+    return;
+  }
+
+  const deviceIds = devices.map((d) => d.id);
+
+  await database
+    .deleteFrom('device_nodes')
+    .where('device_id', 'in', deviceIds)
+    .where('user_id', '=', task.userId)
+    .execute();
+};

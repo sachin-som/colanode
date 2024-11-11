@@ -67,6 +67,7 @@ export class ServerNodeSyncMutationHandler
           socketManager.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
+            userId: userId,
             versionId: input.versionId,
             workspaceId: input.workspaceId,
           });
@@ -112,6 +113,7 @@ export class ServerNodeSyncMutationHandler
           socketManager.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
+            userId: userId,
             versionId: input.versionId,
             workspaceId: input.workspaceId,
           });

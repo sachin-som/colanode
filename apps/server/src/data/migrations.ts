@@ -234,13 +234,18 @@ const createDeviceNodesTable: Migration = {
     await db.schema
       .createTable('device_nodes')
       .addColumn('device_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('node_version_id', 'varchar(30)')
       .addColumn('user_node_version_id', 'varchar(30)')
       .addColumn('node_synced_at', 'timestamptz')
       .addColumn('user_node_synced_at', 'timestamptz')
-      .addPrimaryKeyConstraint('device_nodes_pkey', ['device_id', 'node_id'])
+      .addPrimaryKeyConstraint('device_nodes_pkey', [
+        'device_id',
+        'user_id',
+        'node_id',
+      ])
       .execute();
   },
   down: async (db) => {

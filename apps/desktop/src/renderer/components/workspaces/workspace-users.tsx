@@ -1,3 +1,4 @@
+import React from 'react';
 import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { Separator } from '@/renderer/components/ui/separator';
 import { WorkspaceUserInvite } from '@/renderer/components/workspaces/workspace-user-invite';
@@ -12,6 +13,7 @@ const USERS_PER_PAGE = 50;
 
 export const WorkspaceUsers = () => {
   const workspace = useWorkspace();
+  const canEditUsers = workspace.role === 'owner' || workspace.role === 'admin';
 
   const { data, isPending, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfiniteQuery({
@@ -47,8 +49,12 @@ export const WorkspaceUsers = () => {
   const users = data?.flatMap((page) => page) ?? [];
   return (
     <div className="flex flex-col space-y-4">
-      <WorkspaceUserInvite />
-      <Separator />
+      {canEditUsers && (
+        <React.Fragment>
+          <WorkspaceUserInvite />
+          <Separator />
+        </React.Fragment>
+      )}
       <div>
         <p>Users</p>
         <p className="text-sm text-muted-foreground">
@@ -75,7 +81,11 @@ export const WorkspaceUsers = () => {
                 </p>
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
-              <WorkspaceUserRoleDropdown userId={user.id} value={role} />
+              <WorkspaceUserRoleDropdown
+                userId={user.id}
+                value={role}
+                canEdit={canEditUsers}
+              />
             </div>
           );
         })}

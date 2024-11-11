@@ -20,15 +20,15 @@ interface WorkspaceRoleItem {
 
 const roles: WorkspaceRoleItem[] = [
   {
-    name: 'Admin',
-    value: 'admin',
-    description: 'Administration access',
+    name: 'Owner',
+    value: 'owner',
+    description: 'Full access',
     enabled: true,
   },
   {
-    name: 'Editor',
-    value: 'editor',
-    description: 'Can edit content',
+    name: 'Admin',
+    value: 'admin',
+    description: 'Administration access',
     enabled: true,
   },
   {
@@ -38,9 +38,15 @@ const roles: WorkspaceRoleItem[] = [
     enabled: true,
   },
   {
-    name: 'Viewer',
-    value: 'viewer',
+    name: 'Guest',
+    value: 'guest',
     description: 'Can view content',
+    enabled: true,
+  },
+  {
+    name: 'No access',
+    value: 'none',
+    description: 'No access to workspace',
     enabled: true,
   },
 ];
@@ -48,15 +54,25 @@ const roles: WorkspaceRoleItem[] = [
 interface WorkspaceUserRoleDropdownProps {
   userId: string;
   value: WorkspaceRole;
+  canEdit: boolean;
 }
 
 export const WorkspaceUserRoleDropdown = ({
   userId,
   value,
+  canEdit,
 }: WorkspaceUserRoleDropdownProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
+  console.log('canEdit', canEdit);
+
   const currentRole = roles.find((role) => role.value === value);
+
+  if (!canEdit) {
+    return (
+      <p className="p-1 text-sm text-muted-foreground">{currentRole?.name}</p>
+    );
+  }
 
   return (
     <DropdownMenu>
@@ -70,46 +86,52 @@ export const WorkspaceUserRoleDropdown = ({
           )}
         </p>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {roles.map((role) => (
-          <DropdownMenuItem
-            key={role.value}
-            onSelect={() => {
-              if (isPending) {
-                return;
-              }
+      <DropdownMenuContent className="w-56">
+        {roles
+          .filter((role) => role.enabled)
+          .map((role) => (
+            <DropdownMenuItem
+              key={role.value}
+              onSelect={() => {
+                if (isPending) {
+                  return;
+                }
 
-              mutate({
-                input: {
-                  type: 'workspace_user_role_update',
-                  userToUpdateId: userId,
-                  role: role.value,
-                  userId: workspace.userId,
-                },
-                onError() {
-                  toast({
-                    title: 'Failed to update role',
-                    description:
-                      'Something went wrong updating user role. Please try again!',
-                    variant: 'destructive',
-                  });
-                },
-              });
-            }}
-          >
-            <div className="flex w-full flex-row items-center justify-between">
-              <div className="flex w-full flex-col">
-                <p className="mb-1 text-sm font-medium leading-none">
-                  {role.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {role.description}
-                </p>
+                if (role.value === value) {
+                  return;
+                }
+
+                mutate({
+                  input: {
+                    type: 'workspace_user_role_update',
+                    userToUpdateId: userId,
+                    role: role.value,
+                    userId: workspace.userId,
+                  },
+                  onError() {
+                    toast({
+                      title: 'Failed to update role',
+                      description:
+                        'Something went wrong updating user role. Please try again!',
+                      variant: 'destructive',
+                    });
+                  },
+                });
+              }}
+            >
+              <div className="flex w-full flex-row items-center justify-between">
+                <div className="flex flex-1 w-full flex-col">
+                  <p className="mb-1 text-sm font-medium leading-none">
+                    {role.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {role.description}
+                  </p>
+                </div>
+                {value === role.value && <Check className="size-4" />}
               </div>
-              {value === role.value && <Check className="mr-2 size-4" />}
-            </div>
-          </DropdownMenuItem>
-        ))}
+            </DropdownMenuItem>
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -27,7 +27,7 @@ import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
 import { ServerNode } from '@/types/nodes';
 import { mapServerNode } from '@/lib/nodes';
-import { NodeCreatedEvent } from '@/types/events';
+import { NodeCreatedEvent, NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { YDoc } from '@colanode/crdt';
 
@@ -91,7 +91,7 @@ workspacesRouter.post(
       avatar: account.avatar,
       email: account.email,
       accountId: account.id,
-      role: WorkspaceRole.Owner,
+      role: 'owner',
       parentId: workspaceId,
     };
 
@@ -118,7 +118,7 @@ workspacesRouter.post(
           id: userId,
           account_id: account.id,
           workspace_id: workspaceId,
-          role: WorkspaceRole.Owner,
+          role: 'owner',
           created_at: createdAt,
           created_by: account.id,
           status: WorkspaceUserStatus.Active,
@@ -190,7 +190,7 @@ workspacesRouter.post(
       user: {
         id: userId,
         accountId: account.id,
-        role: WorkspaceRole.Owner,
+        role: 'owner',
       },
     };
 
@@ -238,7 +238,7 @@ workspacesRouter.put(
       });
     }
 
-    if (workspaceUser.role !== WorkspaceRole.Owner) {
+    if (workspaceUser.role !== 'owner') {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -321,7 +321,7 @@ workspacesRouter.delete(
       });
     }
 
-    if (workspaceUser.role !== WorkspaceRole.Owner) {
+    if (workspaceUser.role !== 'owner') {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -492,10 +492,7 @@ workspacesRouter.post(
       });
     }
 
-    if (
-      workspaceUser.role !== WorkspaceRole.Owner &&
-      workspaceUser.role !== WorkspaceRole.Admin
-    ) {
+    if (workspaceUser.role !== 'owner' && workspaceUser.role !== 'admin') {
       return res.status(403).json({
         code: ApiError.Forbidden,
         message: 'Forbidden.',
@@ -593,7 +590,7 @@ workspacesRouter.post(
         name: account!.name,
         avatar: account!.avatar,
         email: account!.email,
-        role: WorkspaceRole.Collaborator,
+        role: 'collaborator',
         accountId: account!.id,
         parentId: workspace.id,
       };
@@ -604,7 +601,7 @@ workspacesRouter.post(
         id: userId,
         account_id: account!.id,
         workspace_id: workspace.id,
-        role: WorkspaceRole.Collaborator,
+        role: 'collaborator',
         created_at: new Date(),
         created_by: req.account.id,
         status: WorkspaceUserStatus.Active,
@@ -724,8 +721,8 @@ workspacesRouter.put(
     }
 
     if (
-      currentWorkspaceUser.role !== WorkspaceRole.Owner &&
-      currentWorkspaceUser.role !== WorkspaceRole.Admin
+      currentWorkspaceUser.role !== 'owner' &&
+      currentWorkspaceUser.role !== 'admin'
     ) {
       return res.status(403).json({
         code: ApiError.Forbidden,
@@ -816,6 +813,20 @@ workspacesRouter.put(
         .where('id', '=', userNode.id)
         .execute();
     });
+
+    const event: NodeUpdatedEvent = {
+      type: 'node_updated',
+      id: userNode.id,
+      workspaceId: userNode.workspaceId,
+      beforeAttributes: attributes,
+      afterAttributes: userDoc.getAttributes(),
+      updatedBy: currentWorkspaceUser.id,
+      updatedAt: updatedAt.toISOString(),
+      serverUpdatedAt: updatedAt.toISOString(),
+      versionId: userNode.versionId,
+    };
+
+    await enqueueEvent(event);
 
     return res.status(200).json({
       user: userNode,

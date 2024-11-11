@@ -35,6 +35,8 @@ export const WorkspaceSettingsDialog = ({
   const workspace = useWorkspace();
   const [tab, setTab] = React.useState<'info' | 'users' | 'delete'>('info');
 
+  const canDelete = workspace.role === 'owner';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -87,15 +89,17 @@ export const WorkspaceSettingsDialog = ({
                         <span>Users</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        isActive={tab === 'delete'}
-                        onClick={() => setTab('delete')}
-                      >
-                        <Trash2 className="mr-2 size-4" />
-                        <span>Delete</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {canDelete && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={tab === 'delete'}
+                          onClick={() => setTab('delete')}
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          <span>Delete</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

@@ -3,12 +3,12 @@ export enum WorkspaceStatus {
   Inactive = 2,
 }
 
-export enum WorkspaceRole {
-  Owner = 'owner',
-  Admin = 'admin',
-  Collaborator = 'collaborator',
-  Viewer = 'viewer',
-}
+export type WorkspaceRole =
+  | 'owner'
+  | 'admin'
+  | 'collaborator'
+  | 'guest'
+  | 'none';
 
 export enum WorkspaceUserStatus {
   Active = 1,

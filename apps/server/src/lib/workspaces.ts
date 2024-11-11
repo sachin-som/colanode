@@ -59,7 +59,7 @@ export const createDefaultWorkspace = async (account: SelectAccount) => {
         id: user.id,
         account_id: account.id,
         workspace_id: workspaceId,
-        role: WorkspaceRole.Owner,
+        role: 'owner',
         created_at: createdAt,
         created_by: account.id,
         status: WorkspaceUserStatus.Active,

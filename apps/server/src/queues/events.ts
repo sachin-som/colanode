@@ -3,7 +3,12 @@ import { redisConfig } from '@/data/redis';
 import { CreateUserNode } from '@/data/schema';
 import { filesStorage } from '@/data/storage';
 import { BUCKET_NAMES } from '@/data/storage';
-import { generateId, IdType, NodeAttributes, NodeTypes } from '@colanode/core';
+import {
+  extractNodeCollaborators,
+  generateId,
+  IdType,
+  NodeTypes,
+} from '@colanode/core';
 import { fetchNodeCollaborators, fetchWorkspaceUsers } from '@/lib/nodes';
 import { synapse } from '@/services/synapse';
 import {
@@ -15,6 +20,7 @@ import {
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Job, Queue, Worker } from 'bullmq';
 import { difference } from 'lodash-es';
+import { enqueueTask } from './tasks';
 
 const eventQueue = new Queue('events', {
   connection: {
@@ -71,6 +77,8 @@ const handleNodeUpdatedEvent = async (
   event: NodeUpdatedEvent
 ): Promise<void> => {
   await checkForCollaboratorsChange(event);
+  await checkForUserRoleChange(event);
+
   await synapse.sendSynapseMessage({
     type: 'node_update',
     nodeId: event.id,
@@ -194,8 +202,16 @@ const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
 const checkForCollaboratorsChange = async (
   event: NodeUpdatedEvent
 ): Promise<void> => {
-  const beforeCollaborators = extractCollaboratorIds(event.beforeAttributes);
-  const afterCollaborators = extractCollaboratorIds(event.afterAttributes);
+  const beforeCollaborators = Object.keys(
+    extractNodeCollaborators(event.beforeAttributes)
+  );
+  const afterCollaborators = Object.keys(
+    extractNodeCollaborators(event.afterAttributes)
+  );
+
+  if (beforeCollaborators.length === 0 && afterCollaborators.length === 0) {
+    return;
+  }
 
   const addedCollaborators = difference(
     afterCollaborators,
@@ -289,10 +305,28 @@ const checkForCollaboratorsChange = async (
   }
 };
 
-const extractCollaboratorIds = (collaborators: NodeAttributes) => {
-  if ('collaborators' in collaborators && collaborators.collaborators) {
-    return Object.keys(collaborators.collaborators).sort();
+const checkForUserRoleChange = async (
+  event: NodeUpdatedEvent
+): Promise<void> => {
+  if (
+    event.beforeAttributes.type !== 'user' ||
+    event.afterAttributes.type !== 'user'
+  ) {
+    return;
   }
 
-  return [];
+  const beforeRole = event.beforeAttributes.role;
+  const afterRole = event.afterAttributes.role;
+
+  if (beforeRole === afterRole) {
+    return;
+  }
+
+  if (afterRole === 'none') {
+    await enqueueTask({
+      type: 'clean_user_device_nodes',
+      userId: event.id,
+      workspaceId: event.workspaceId,
+    });
+  }
 };

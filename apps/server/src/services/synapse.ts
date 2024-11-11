@@ -112,6 +112,7 @@ class SynapseService {
         .insertInto('device_nodes')
         .values({
           node_id: message.nodeId,
+          user_id: message.userId,
           device_id: connection.deviceId,
           node_version_id: message.versionId,
           user_node_version_id: null,
@@ -120,7 +121,7 @@ class SynapseService {
           node_synced_at: new Date(),
         })
         .onConflict((cb) =>
-          cb.columns(['node_id', 'device_id']).doUpdateSet({
+          cb.columns(['node_id', 'user_id', 'device_id']).doUpdateSet({
             workspace_id: message.workspaceId,
             node_version_id: message.versionId,
             node_synced_at: new Date(),
@@ -132,6 +133,7 @@ class SynapseService {
         .insertInto('device_nodes')
         .values({
           node_id: message.nodeId,
+          user_id: message.userId,
           device_id: connection.deviceId,
           node_version_id: null,
           user_node_version_id: message.versionId,
@@ -140,7 +142,7 @@ class SynapseService {
           node_synced_at: new Date(),
         })
         .onConflict((cb) =>
-          cb.columns(['node_id', 'device_id']).doUpdateSet({
+          cb.columns(['node_id', 'user_id', 'device_id']).doUpdateSet({
             workspace_id: message.workspaceId,
             user_node_version_id: message.versionId,
             user_node_synced_at: new Date(),

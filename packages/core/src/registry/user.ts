@@ -8,7 +8,7 @@ export const userAttributesSchema = z.object({
   email: z.string().email(),
   avatar: z.string().nullable(),
   accountId: z.string(),
-  role: z.enum(['owner', 'admin', 'editor', 'collaborator', 'viewer']),
+  role: z.enum(['owner', 'admin', 'collaborator', 'guest', 'none']),
 });
 
 export type UserAttributes = z.infer<typeof userAttributesSchema>;

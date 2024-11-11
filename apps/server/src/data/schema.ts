@@ -132,8 +132,9 @@ export type CreateUserNode = Insertable<UserNodeTable>;
 export type UpdateUserNode = Updateable<UserNodeTable>;
 
 interface DeviceNodeTable {
-  node_id: ColumnType<string, string, never>;
   device_id: ColumnType<string, string, never>;
+  user_id: ColumnType<string, string, never>;
+  node_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, string>;
   node_version_id: ColumnType<string | null, string | null, string | null>;
   user_node_version_id: ColumnType<string | null, string | null, string | null>;

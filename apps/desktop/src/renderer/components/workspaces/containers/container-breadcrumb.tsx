@@ -38,55 +38,70 @@ export const ContainerBreadcrumb = ({ nodes }: ContainerBreadcrumbProps) => {
   return (
     <Breadcrumb className="flex-grow">
       <BreadcrumbList>
-        {visibleNodes.map((node, index) => (
-          <React.Fragment key={node.id}>
-            {index > 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem
-              onClick={() => {
-                if (isClickable(node.type)) {
-                  workspace.navigateToNode(node.id);
+        {visibleNodes.map((node, index) => {
+          const isFirst = index === 0;
+          const isClickableNode = isClickable(node.type);
+
+          return (
+            <React.Fragment key={node.id}>
+              {!isFirst && <BreadcrumbSeparator />}
+              <BreadcrumbItem
+                className={
+                  isClickableNode
+                    ? 'hover:cursor-pointer hover:text-foreground'
+                    : ''
                 }
-              }}
-            >
-              <ContainerBreadcrumbItem node={node} />
-            </BreadcrumbItem>
-            {showEllipsis && index === 0 && (
-              <React.Fragment>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1">
-                      <BreadcrumbEllipsis className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      {ellipsisNodes.map((ellipsisNode) => (
-                        <DropdownMenuItem
-                          key={ellipsisNode.id}
-                          onClick={() => {
-                            if (isClickable(ellipsisNode.type)) {
-                              workspace.navigateToNode(ellipsisNode.id);
-                            }
-                          }}
-                          disabled={!isClickable(ellipsisNode.type)}
-                        >
-                          <BreadcrumbItem
-                            className={
-                              isClickable(ellipsisNode.type)
-                                ? 'hover:cursor-pointer hover:text-foreground'
-                                : ''
-                            }
-                          >
-                            <ContainerBreadcrumbItem node={ellipsisNode} />
-                          </BreadcrumbItem>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </BreadcrumbItem>
-              </React.Fragment>
-            )}
-          </React.Fragment>
-        ))}
+                onClick={() => {
+                  if (isClickableNode) {
+                    workspace.navigateToNode(node.id);
+                  }
+                }}
+              >
+                <ContainerBreadcrumbItem node={node} />
+              </BreadcrumbItem>
+              {showEllipsis && isFirst && (
+                <React.Fragment>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="flex items-center gap-1">
+                        <BreadcrumbEllipsis className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {ellipsisNodes.map((ellipsisNode) => {
+                          const isClickableEllipsisNode = isClickable(
+                            ellipsisNode.type
+                          );
+                          return (
+                            <DropdownMenuItem
+                              key={ellipsisNode.id}
+                              disabled={!isClickableEllipsisNode}
+                              onClick={() => {
+                                if (isClickableEllipsisNode) {
+                                  workspace.navigateToNode(ellipsisNode.id);
+                                }
+                              }}
+                            >
+                              <BreadcrumbItem
+                                className={
+                                  isClickableEllipsisNode
+                                    ? 'hover:cursor-pointer hover:text-foreground'
+                                    : ''
+                                }
+                              >
+                                <ContainerBreadcrumbItem node={ellipsisNode} />
+                              </BreadcrumbItem>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </BreadcrumbItem>
+                </React.Fragment>
+              )}
+            </React.Fragment>
+          );
+        })}
       </BreadcrumbList>
     </Breadcrumb>
   );

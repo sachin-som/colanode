@@ -125,7 +125,7 @@ export class SidebarSpaceListQueryHandler
       .where('n.type', '=', NodeTypes.Message)
       .where('n.parent_id', 'in', channelIds)
       .where('un.last_seen_version_id', 'is', null)
-      .select(['un.node_id'])
+      .select(['n.parent_id as node_id'])
       .select((eb) => [
         eb.fn.count<number>('un.node_id').as('unread_count'),
         eb.fn.sum<number>('un.mentions_count').as('mentions_count'),

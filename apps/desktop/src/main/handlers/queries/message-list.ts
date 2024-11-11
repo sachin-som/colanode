@@ -8,9 +8,12 @@ import {
 } from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@colanode/core';
-import { MessageNode, MessageReactionCount } from '@/types/messages';
+import {
+  MessageNode,
+  MessageReactionCount,
+  MessageAuthor,
+} from '@/types/messages';
 import { mapNode } from '@/main/utils';
-import { UserNode } from '@/types/users';
 import { compareString } from '@/lib/utils';
 import { isEqual } from 'lodash-es';
 import { mapBlocksToContents } from '@/lib/editor';
@@ -125,7 +128,7 @@ export class MessageListQueryHandler
     authorRows: SelectNode[]
   ): MessageNode[] => {
     const messages: MessageNode[] = [];
-    const authorMap = new Map<string, UserNode>();
+    const authorMap = new Map<string, MessageAuthor>();
     for (const authorRow of authorRows) {
       const authorNode = mapNode(authorRow);
       if (authorNode.type !== 'user') {

@@ -1,9 +1,10 @@
-import { UserNode } from '@/types/users';
+import { UserNode } from '@colanode/core';
 
 export type UserSearchQueryInput = {
   type: 'user_search';
   searchQuery: string;
   userId: string;
+  exclude?: string[];
 };
 
 declare module '@/operations/queries' {

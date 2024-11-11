@@ -1,5 +1,4 @@
 import React from 'react';
-import { NodeCollaborator } from '@/types/nodes';
 import {
   Popover,
   PopoverContent,
@@ -19,11 +18,12 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { X } from 'lucide-react';
+import { UserNode } from '@colanode/core';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];
-  value: NodeCollaborator[];
-  onChange: (value: NodeCollaborator[]) => void;
+  value: UserNode[];
+  onChange: (value: UserNode[]) => void;
 }
 
 export const NodeCollaboratorSearch = ({
@@ -37,11 +37,13 @@ export const NodeCollaboratorSearch = ({
   const [open, setOpen] = React.useState(false);
 
   const { data } = useQuery({
-    type: 'node_collaborator_search',
+    type: 'user_search',
     searchQuery: query,
-    excluded: excluded,
+    exclude: excluded,
     userId: workspace.userId,
   });
+
+  const users = data ?? [];
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -52,15 +54,15 @@ export const NodeCollaboratorSearch = ({
           aria-expanded={open}
           className="w-full justify-start p-2"
         >
-          {value.map((collaborator) => (
-            <Badge key={collaborator.id} variant="outline">
-              {collaborator.name}
+          {value.map((user) => (
+            <Badge key={user.id} variant="outline">
+              {user.attributes.name}
               <span
                 className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onChange(value.filter((v) => v.id !== collaborator.id));
+                  onChange(value.filter((v) => v.id !== user.id));
                 }}
               >
                 <X className="size-3 text-muted-foreground hover:text-foreground" />
@@ -85,25 +87,25 @@ export const NodeCollaboratorSearch = ({
           <CommandEmpty>No collaborator found.</CommandEmpty>
           <CommandList>
             <CommandGroup className="h-min max-h-96">
-              {data?.map((collaborator) => (
+              {users.map((user) => (
                 <CommandItem
-                  key={collaborator.id}
+                  key={user.id}
                   onSelect={() => {
-                    onChange([...value, collaborator]);
+                    onChange([...value, user]);
                     setQuery('');
                   }}
                 >
                   <div className="flex w-full flex-row items-center gap-2">
                     <Avatar
-                      id={collaborator.id}
-                      name={collaborator.name}
-                      avatar={collaborator.avatar}
+                      id={user.id}
+                      name={user.attributes.name}
+                      avatar={user.attributes.avatar}
                       className="h-7 w-7"
                     />
                     <div className="flex flex-grow flex-col">
-                      <p className="text-sm">{collaborator.name}</p>
+                      <p className="text-sm">{user.attributes.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {collaborator.email}
+                        {user.attributes.email}
                       </p>
                     </div>
                   </div>

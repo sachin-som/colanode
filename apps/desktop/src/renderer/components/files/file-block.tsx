@@ -12,16 +12,17 @@ export const FileBlock = ({ id }: FileBlockProps) => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({
-    type: 'file_get',
-    fileId: id,
+    type: 'node_get',
+    nodeId: id,
     userId: workspace.userId,
   });
 
-  if (!data) {
+  if (!data || data.type !== 'file') {
     return null;
   }
 
-  const url = getFileUrl(workspace.userId, data.id, data.extension);
+  const downloadProgress: number = 0;
+  const url = getFileUrl(workspace.userId, data.id, data.attributes.extension);
   return (
     <div
       className="flex h-72 max-h-72 w-full cursor-pointer overflow-hidden rounded-md p-2 hover:bg-gray-100"
@@ -29,10 +30,14 @@ export const FileBlock = ({ id }: FileBlockProps) => {
         workspace.openModal(id);
       }}
     >
-      {data.downloadProgress !== 100 ? (
-        <FileDownload id={data.id} downloadProgress={data.downloadProgress} />
+      {downloadProgress !== 100 ? (
+        <FileDownload id={data.id} downloadProgress={downloadProgress} />
       ) : (
-        <FilePreview url={url} name={data.name} mimeType={data.mimeType} />
+        <FilePreview
+          url={url}
+          name={data.attributes.name}
+          mimeType={data.attributes.mimeType}
+        />
       )}
     </div>
   );

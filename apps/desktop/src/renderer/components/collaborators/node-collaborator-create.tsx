@@ -1,12 +1,12 @@
 import React from 'react';
 import { NodeCollaboratorSearch } from '@/renderer/components/collaborators/node-collaborator-search';
-import { NodeCollaborator } from '@/types/nodes';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { UserNode } from '@colanode/core';
 
 interface NodeCollaboratorCreate {
   nodeId: string;
@@ -20,16 +20,14 @@ export const NodeCollaboratorCreate = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  const [collaborators, setCollaborators] = React.useState<NodeCollaborator[]>(
-    []
-  );
+  const [users, setUsers] = React.useState<UserNode[]>([]);
   const [role, setRole] = React.useState('collaborator');
 
   return (
     <div className="flex flex-col gap-2">
       <NodeCollaboratorSearch
-        value={collaborators}
-        onChange={setCollaborators}
+        value={users}
+        onChange={setUsers}
         excluded={existingCollaborators}
       />
       <div className="flex justify-end space-x-2">
@@ -38,7 +36,7 @@ export const NodeCollaboratorCreate = ({
           variant="default"
           className="shrink-0"
           size="sm"
-          disabled={collaborators.length === 0 || isPending}
+          disabled={users.length === 0 || isPending}
           onClick={() => {
             if (isPending) {
               return;
@@ -48,14 +46,12 @@ export const NodeCollaboratorCreate = ({
               input: {
                 type: 'node_collaborator_create',
                 nodeId,
-                collaboratorIds: collaborators.map(
-                  (collaborator) => collaborator.id
-                ),
+                collaboratorIds: users.map((user) => user.id),
                 role: role,
                 userId: workspace.userId,
               },
               onSuccess() {
-                setCollaborators([]);
+                setUsers([]);
               },
               onError() {
                 toast({

@@ -3,7 +3,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@colanode/core';
-import { UserNode } from '@/types/users';
+import { UserNode } from '@colanode/core';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -11,6 +11,7 @@ import {
   QueryResult,
 } from '@/main/types';
 import { isEqual } from 'lodash-es';
+import { mapNode } from '@/main/utils';
 
 export class UserSearchQueryHandler
   implements QueryHandler<UserSearchQueryInput>
@@ -77,6 +78,7 @@ export class UserSearchQueryHandler
       input.userId
     );
 
+    const exclude = input.exclude ?? [];
     const query = sql<SelectNode>`
       SELECT n.*
       FROM nodes n
@@ -84,6 +86,14 @@ export class UserSearchQueryHandler
       WHERE n.type = ${NodeTypes.User}
         AND n.id != ${input.userId}
         AND nn.name MATCH ${input.searchQuery + '*'}
+        ${
+          exclude.length > 0
+            ? sql`AND n.id NOT IN (${sql.join(
+                exclude.map((id) => sql`${id}`),
+                sql`, `
+              )})`
+            : sql``
+        }
     `.compile(workspaceDatabase);
 
     const result = await workspaceDatabase.executeQuery(query);
@@ -95,23 +105,17 @@ export class UserSearchQueryHandler
       input.userId
     );
 
+    const exclude = input.exclude ?? [];
     return workspaceDatabase
       .selectFrom('nodes')
       .where('type', '=', NodeTypes.User)
       .where('id', '!=', input.userId)
+      .where('id', 'not in', exclude)
       .selectAll()
       .execute();
   }
 
   private buildUserNodes = (rows: SelectNode[]): UserNode[] => {
-    return rows.map((row) => {
-      const attributes = JSON.parse(row.attributes);
-      return {
-        id: row.id,
-        name: attributes.name,
-        email: attributes.email,
-        avatar: attributes.avatar,
-      };
-    });
+    return rows.map((row) => mapNode(row) as UserNode);
   };
 }

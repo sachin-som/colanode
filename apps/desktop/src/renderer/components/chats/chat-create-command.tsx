@@ -56,13 +56,15 @@ export const ChatCreateCommand = () => {
               <div className="flex w-full flex-row items-center gap-2">
                 <Avatar
                   id={user.id}
-                  name={user.name}
-                  avatar={user.avatar}
+                  name={user.attributes.name}
+                  avatar={user.attributes.avatar}
                   className="h-7 w-7"
                 />
                 <div className="flex flex-grow flex-col">
-                  <p className="text-sm">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm">{user.attributes.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user.attributes.email}
+                  </p>
                 </div>
               </div>
             </CommandItem>

@@ -2,44 +2,46 @@ import React from 'react';
 import { Separator } from '@/renderer/components/ui/separator';
 import { NodeCollaborator } from '@/renderer/components/collaborators/node-collaborator';
 import { NodeCollaboratorCreate } from '@/renderer/components/collaborators/node-collaborator-create';
-import { useQuery } from '@/renderer/hooks/use-query';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { extractNodeName, Node } from '@colanode/core';
+import { buildNodeCollaborators } from '@/lib/nodes';
 
 interface NodeCollaboratorsProps {
   nodeId: string;
+  nodes: Node[];
 }
 
-export const NodeCollaborators = ({ nodeId }: NodeCollaboratorsProps) => {
-  const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'node_collaborator_list',
-    nodeId,
-    userId: workspace.userId,
-  });
+export const NodeCollaborators = ({
+  nodeId,
+  nodes,
+}: NodeCollaboratorsProps) => {
+  const collaborators = buildNodeCollaborators(nodes);
+  const directCollaborators = collaborators.filter(
+    (collaborator) => collaborator.nodeId === nodeId
+  );
+  const directCollaboratorIds = directCollaborators.map(
+    (collaborator) => collaborator.collaboratorId
+  );
 
-  if (isPending || !data) {
-    return null;
-  }
+  const ancestors = nodes.reverse().filter((node) => node.id !== nodeId);
 
   return (
     <div className="flex flex-col gap-2">
       <NodeCollaboratorCreate
         nodeId={nodeId}
-        existingCollaborators={data.direct.map(
-          (collaborator) => collaborator.id
-        )}
+        existingCollaborators={directCollaboratorIds}
       />
       <Separator />
       <div className="space-y-3">
         <h4 className="text-sm font-medium">Direct access</h4>
         <div className="flex flex-col gap-3">
-          {data.direct && data.direct.length > 0 ? (
+          {directCollaborators.length > 0 ? (
             <React.Fragment>
-              {data.direct.map((collaborator) => (
+              {directCollaborators.map((collaborator) => (
                 <NodeCollaborator
-                  key={collaborator.id}
+                  key={collaborator.collaboratorId}
                   nodeId={nodeId}
-                  collaborator={collaborator}
+                  collaboratorId={collaborator.collaboratorId}
+                  role={collaborator.role}
                   removable={true}
                 />
               ))}
@@ -51,25 +53,36 @@ export const NodeCollaborators = ({ nodeId }: NodeCollaboratorsProps) => {
           )}
         </div>
       </div>
-      {data.inherit?.map((inheritGroup) => (
-        <div key={inheritGroup.id}>
-          <Separator className="my-3" />
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">
-              Inherit from {inheritGroup.name}
-            </h4>
-            <div className="flex flex-col gap-3">
-              {inheritGroup.collaborators?.map((collaborator) => (
-                <NodeCollaborator
-                  key={collaborator.id}
-                  nodeId={nodeId}
-                  collaborator={collaborator}
-                />
-              ))}
+      {ancestors.map((node) => {
+        const inheritCollaborators = collaborators.filter(
+          (collaborator) => collaborator.nodeId === node.id
+        );
+
+        if (inheritCollaborators.length === 0) {
+          return null;
+        }
+
+        const name = extractNodeName(node.attributes) ?? 'Unknown';
+        return (
+          <div key={node.id}>
+            <Separator className="my-3" />
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Inherit from {name}</h4>
+              <div className="flex flex-col gap-3">
+                {inheritCollaborators.map((collaborator) => (
+                  <NodeCollaborator
+                    key={collaborator.collaboratorId}
+                    nodeId={nodeId}
+                    collaboratorId={collaborator.collaboratorId}
+                    role={collaborator.role}
+                    removable={false}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

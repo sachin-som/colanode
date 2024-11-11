@@ -1,8 +1,6 @@
-import { match } from 'ts-pattern';
 import { useParams } from 'react-router-dom';
 import { PageContainer } from '@/renderer/components/pages/page-container';
 import { ChannelContainer } from '@/renderer/components/channels/channel-container';
-import { ContainerHeader } from '@/renderer/components/workspaces/containers/container-header';
 import { DatabaseContainer } from '@/renderer/components/databases/database-container';
 import { RecordContainer } from '@/renderer/components/records/record-container';
 import { ChatContainer } from '@/renderer/components/chats/chat-container';
@@ -17,18 +15,22 @@ export const Container = () => {
   }
 
   const idType = getIdType(nodeId);
-  return (
-    <div className="flex h-full w-full flex-col">
-      <ContainerHeader nodeId={nodeId} />
-      {match(idType)
-        .with(IdType.Channel, () => <ChannelContainer nodeId={nodeId} />)
-        .with(IdType.Page, () => <PageContainer nodeId={nodeId} />)
-        .with(IdType.Database, () => <DatabaseContainer nodeId={nodeId} />)
-        .with(IdType.Record, () => <RecordContainer nodeId={nodeId} />)
-        .with(IdType.Chat, () => <ChatContainer nodeId={nodeId} />)
-        .with(IdType.Folder, () => <FolderContainer nodeId={nodeId} />)
-        .with(IdType.File, () => <FileContainer nodeId={nodeId} />)
-        .otherwise(() => null)}
-    </div>
-  );
+  switch (idType) {
+    case IdType.Channel:
+      return <ChannelContainer nodeId={nodeId} />;
+    case IdType.Page:
+      return <PageContainer nodeId={nodeId} />;
+    case IdType.Database:
+      return <DatabaseContainer nodeId={nodeId} />;
+    case IdType.Record:
+      return <RecordContainer nodeId={nodeId} />;
+    case IdType.Chat:
+      return <ChatContainer nodeId={nodeId} />;
+    case IdType.Folder:
+      return <FolderContainer nodeId={nodeId} />;
+    case IdType.File:
+      return <FileContainer nodeId={nodeId} />;
+    default:
+      return null;
+  }
 };

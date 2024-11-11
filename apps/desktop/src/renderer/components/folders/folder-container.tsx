@@ -22,6 +22,9 @@ import {
   List,
   Upload,
 } from 'lucide-react';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { extractNodeRole } from '@colanode/core';
+import { FolderHeader } from '@/renderer/components/folders/folder-header';
 
 export type FolderLayout = {
   value: FolderLayoutType;
@@ -59,11 +62,29 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
+  const { data, isPending } = useQuery({
+    type: 'node_with_ancestors_get',
+    nodeId,
+    userId: workspace.userId,
+  });
+
   const [layout, setLayout] = React.useState<FolderLayoutType>('grid');
+  const isDialogOpenedRef = React.useRef(false);
+
+  if (isPending) {
+    return null;
+  }
+
+  const nodes = data ?? [];
+  const folder = nodes.find((node) => node.id === nodeId);
+  const role = extractNodeRole(nodes, workspace.userId);
+
+  if (!folder || folder.type !== 'folder' || !role) {
+    return null;
+  }
+
   const currentLayout =
     folderLayouts.find((l) => l.value === layout) ?? folderLayouts[0];
-
-  const isDialogOpenedRef = React.useRef(false);
 
   const openFileDialog = async () => {
     if (isDialogOpenedRef.current) {
@@ -97,58 +118,61 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
   };
 
   return (
-    <Dropzone
-      text="Drop files here to upload them in the folder"
-      onDrop={(files) => {
-        files.forEach((file) => console.log(file));
-      }}
-    >
-      <div className="flex h-full max-h-full flex-col gap-4 overflow-y-auto px-10 pt-4">
-        <div className="flex flex-row justify-between">
-          <div className="flex flex-row gap-2">
-            <Button type="button" variant="outline" onClick={openFileDialog}>
-              <Upload className="mr-2 size-4" /> Upload
-            </Button>
-          </div>
-          <div className="flex flex-row gap-2">
-            <Button type="button" variant="outline" size="icon" disabled>
-              <Filter className="size-4" />
-            </Button>
+    <div className="flex h-full w-full flex-col">
+      <FolderHeader nodes={nodes} folder={folder} role={role} />
+      <Dropzone
+        text="Drop files here to upload them in the folder"
+        onDrop={(files) => {
+          files.forEach((file) => console.log(file));
+        }}
+      >
+        <div className="flex h-full max-h-full flex-col gap-4 overflow-y-auto px-10 pt-4">
+          <div className="flex flex-row justify-between">
+            <div className="flex flex-row gap-2">
+              <Button type="button" variant="outline" onClick={openFileDialog}>
+                <Upload className="mr-2 size-4" /> Upload
+              </Button>
+            </div>
+            <div className="flex flex-row gap-2">
+              <Button type="button" variant="outline" size="icon" disabled>
+                <Filter className="size-4" />
+              </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="icon">
-                  {currentLayout && <currentLayout.icon className="size-4" />}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="mr-5 w-56">
-                <DropdownMenuLabel>Layout</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {folderLayouts.map((item) => (
-                  <DropdownMenuItem
-                    key={item.value}
-                    onClick={() => setLayout(item.value)}
-                  >
-                    <div className="flex w-full flex-row items-center gap-2">
-                      <item.icon className="size-4" />
-                      <p className="flex-grow">{item.name}</p>
-                      {layout === item.value && <Check className="size-4" />}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="icon">
+                    {currentLayout && <currentLayout.icon className="size-4" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="mr-5 w-56">
+                  <DropdownMenuLabel>Layout</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {folderLayouts.map((item) => (
+                    <DropdownMenuItem
+                      key={item.value}
+                      onClick={() => setLayout(item.value)}
+                    >
+                      <div className="flex w-full flex-row items-center gap-2">
+                        <item.icon className="size-4" />
+                        <p className="flex-grow">{item.name}</p>
+                        {layout === item.value && <Check className="size-4" />}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
+          <ScrollArea className="flex-grow">
+            <FolderFiles id={nodeId} name="Folder" layout={layout} />
+          </ScrollArea>
         </div>
-        <ScrollArea className="flex-grow">
-          <FolderFiles id={nodeId} name="Folder" layout={layout} />
-        </ScrollArea>
-      </div>
-      {/* <FolderUploads
+        {/* <FolderUploads
         uploads={Object.values(uploads)}
         open={openUploads}
         setOpen={setOpenUploads}
       /> */}
-    </Dropzone>
+      </Dropzone>
+    </div>
   );
 };

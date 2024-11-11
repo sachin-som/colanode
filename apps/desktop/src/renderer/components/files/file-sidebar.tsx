@@ -1,12 +1,15 @@
 import React from 'react';
-import { FileDetails } from '@/types/files';
 import { formatBytes } from '@/lib/files';
 import { formatDate } from '@/lib/utils';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { Avatar } from '@/renderer/components/avatars/avatar';
+import { FileNode } from '@colanode/core';
+import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface FileSidebarProps {
-  file: FileDetails;
+  file: FileNode;
+  downloadProgress: number;
 }
 
 const FileMeta = ({ title, value }: { title: string; value: string }) => {
@@ -18,43 +21,52 @@ const FileMeta = ({ title, value }: { title: string; value: string }) => {
   );
 };
 
-export const FileSidebar = ({ file }: FileSidebarProps) => {
+export const FileSidebar = ({ file, downloadProgress }: FileSidebarProps) => {
+  const workspace = useWorkspace();
+  const { data } = useQuery({
+    type: 'node_get',
+    nodeId: file.createdBy,
+    userId: workspace.userId,
+  });
+
+  const user = data?.type === 'user' ? data : null;
+
   return (
     <React.Fragment>
       <div className="flex items-center gap-x-4 p-2">
         <FileThumbnail
           id={file.id}
-          name={file.name}
-          mimeType={file.mimeType}
-          extension={file.extension}
-          downloadProgress={file.downloadProgress}
+          name={file.attributes.name}
+          mimeType={file.attributes.mimeType}
+          extension={file.attributes.extension}
+          downloadProgress={downloadProgress}
           className="h-12 w-9 min-w-[36px] overflow-hidden rounded object-contain"
         />
         <div
           className="line-clamp-3 break-words text-base font-medium"
-          title={file.name || file.fileName}
+          title={file.attributes.name}
         >
-          {file.name}
+          {file.attributes.name}
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <FileMeta title="Name" value={file.name} />
-        <FileMeta title="Type" value={file.mimeType} />
-        <FileMeta title="Size" value={formatBytes(file.size)} />
+        <FileMeta title="Name" value={file.attributes.name} />
+        <FileMeta title="Type" value={file.attributes.mimeType} />
+        <FileMeta title="Size" value={formatBytes(file.attributes.size)} />
         <FileMeta title="Created at" value={formatDate(file.createdAt)} />
 
-        {file.createdBy && (
+        {user && (
           <div>
             <p className="text-xs text-muted-foreground">Created by</p>
             <div className="mt-1 flex flex-row items-center gap-2">
               <Avatar
-                id={file.createdBy.id}
-                name={file.createdBy.name}
-                avatar={file.createdBy.avatar}
+                id={user.id}
+                name={user.attributes.name}
+                avatar={user.attributes.avatar}
                 className="h-8 w-8"
               />
-              <p className="text-foreground/80">{file.createdBy.name}</p>
+              <p className="text-foreground/80">{user.attributes.name}</p>
             </div>
           </div>
         )}

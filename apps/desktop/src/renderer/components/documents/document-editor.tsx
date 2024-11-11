@@ -59,19 +59,19 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 interface DocumentEditorProps {
   documentId: string;
   content: JSONContent;
-  hash: string;
+  versionId: string;
 }
 
 export const DocumentEditor = ({
   documentId,
   content,
-  hash,
+  versionId,
 }: DocumentEditorProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
   const hasPendingChanges = React.useRef(false);
-  const hashRef = React.useRef(hash);
+  const versionIdRef = React.useRef(versionId);
   const debouncedSave = React.useMemo(
     () =>
       debounce((content: JSONContent) => {
@@ -176,7 +176,7 @@ export const DocumentEditor = ({
       return;
     }
 
-    if (hashRef.current === hash) {
+    if (versionIdRef.current === versionId) {
       return;
     }
 
@@ -187,8 +187,8 @@ export const DocumentEditor = ({
       editor.chain().setContent(content).run();
     }
 
-    hashRef.current = hash;
-  }, [content, hash]);
+    versionIdRef.current = versionId;
+  }, [content, versionId]);
 
   return (
     <div className="min-h-[500px]">

@@ -1,48 +1,63 @@
-import { NodeCollaborator as NodeCollaboratorType } from '@/types/nodes';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { Trash2 } from 'lucide-react';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { NodeRole } from '@colanode/core';
 
 interface NodeCollaboratorProps {
   nodeId: string;
-  collaborator: NodeCollaboratorType;
+  collaboratorId: string;
+  role: NodeRole;
   removable?: boolean;
 }
 
 export const NodeCollaborator = ({
   nodeId,
-  collaborator,
+  collaboratorId,
+  role,
   removable,
 }: NodeCollaboratorProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
+  const { data } = useQuery({
+    type: 'node_get',
+    nodeId: collaboratorId,
+    userId: workspace.userId,
+  });
+
+  if (!data || data.type !== 'user') {
+    return null;
+  }
+
   return (
     <div className="flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
         <Avatar
-          id={collaborator.id}
-          name={collaborator.name}
-          avatar={collaborator.avatar}
+          id={data.id}
+          name={data.attributes.name}
+          avatar={data.attributes.avatar}
         />
         <div className="flex-grow">
           <p className="text-sm font-medium leading-none">
-            {collaborator.name}
+            {data.attributes.name}
           </p>
-          <p className="text-sm text-muted-foreground">{collaborator.email}</p>
+          <p className="text-sm text-muted-foreground">
+            {data.attributes.email}
+          </p>
         </div>
       </div>
       <div className="flex flex-row items-center gap-1">
         <NodeCollaboratorRoleDropdown
-          value={collaborator.role}
+          value={role}
           onChange={(newRole) => {
             mutate({
               input: {
                 type: 'node_collaborator_update',
                 nodeId: nodeId,
-                collaboratorId: collaborator.id,
+                collaboratorId: collaboratorId,
                 role: newRole,
                 userId: workspace.userId,
               },
@@ -57,7 +72,7 @@ export const NodeCollaborator = ({
                 input: {
                   type: 'node_collaborator_delete',
                   nodeId: nodeId,
-                  collaboratorId: collaborator.id,
+                  collaboratorId: collaboratorId,
                   userId: workspace.userId,
                 },
               });

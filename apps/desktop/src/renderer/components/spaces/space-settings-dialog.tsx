@@ -89,7 +89,7 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              <NodeCollaborators nodeId={id} />
+              <NodeCollaborators nodeId={id} nodes={[]} />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"

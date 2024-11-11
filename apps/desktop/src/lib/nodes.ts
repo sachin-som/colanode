@@ -1,5 +1,6 @@
 import { generateKeyBetween } from 'fractional-indexing-jittered';
-import { NodeTypes } from '@colanode/core';
+import { extractNodeCollaborators, Node, NodeTypes } from '@colanode/core';
+import { NodeCollaborator } from '@/types/nodes';
 
 export const generateNodeIndex = (
   previous?: string | null,
@@ -28,4 +29,22 @@ export const getDefaultNodeIcon = (type: string) => {
     default:
       return 'file-unknown-line';
   }
+};
+
+export const buildNodeCollaborators = (nodes: Node[]): NodeCollaborator[] => {
+  const collaborators: Record<string, NodeCollaborator> = {};
+
+  for (const node of nodes) {
+    const nodeCollaborators = extractNodeCollaborators(node.attributes);
+
+    for (const [collaboratorId, role] of Object.entries(nodeCollaborators)) {
+      collaborators[collaboratorId] = {
+        nodeId: node.id,
+        collaboratorId,
+        role,
+      };
+    }
+  }
+
+  return Object.values(collaborators);
 };

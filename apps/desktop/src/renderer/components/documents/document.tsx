@@ -1,29 +1,34 @@
+import { Block } from '@colanode/core';
 import { DocumentEditor } from '@/renderer/components/documents/document-editor';
-import { useQuery } from '@/renderer/hooks/use-query';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { mapBlocksToContents } from '@/lib/editor';
 
 interface DocumentProps {
   nodeId: string;
+  content?: Record<string, Block> | null;
+  versionId: string;
 }
 
-export const Document = ({ nodeId }: DocumentProps) => {
-  const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'document_get',
-    documentId: nodeId,
-    userId: workspace.userId,
-  });
+export const Document = ({ nodeId, content, versionId }: DocumentProps) => {
+  const nodeBlocks = Object.values(content ?? {});
+  const contents = mapBlocksToContents(nodeId, nodeBlocks);
 
-  if (isPending || !data || !data.hash || data.content === null) {
-    return null;
+  if (!contents.length) {
+    contents.push({
+      type: 'paragraph',
+    });
   }
+
+  const tiptapContent = {
+    type: 'doc',
+    content: contents,
+  };
 
   return (
     <DocumentEditor
       key={nodeId}
       documentId={nodeId}
-      content={data.content}
-      hash={data.hash}
+      content={tiptapContent}
+      versionId={versionId}
     />
   );
 };

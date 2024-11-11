@@ -12,14 +12,8 @@ import {
 } from '@/types/sync';
 import { generateId, IdType } from '@colanode/core';
 import { databaseManager } from '@/main/data/database-manager';
-import { hasUpdateChanges, mapNode } from '@/main/utils';
-import { Kysely, Transaction } from 'kysely';
-import {
-  CreateDownload,
-  CreateUpload,
-  SelectNode,
-  WorkspaceDatabaseSchema,
-} from '@/main/data/workspace/schema';
+import { fetchNodeAncestors, hasUpdateChanges, mapNode } from '@/main/utils';
+import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
 
 export type CreateNodeInput = {
   id: string;
@@ -54,7 +48,7 @@ class NodeManager {
 
         let ancestors: Node[] = [];
         if (input.attributes.parentId) {
-          const ancestorRows = await this.fetchNodeAncestors(
+          const ancestorRows = await fetchNodeAncestors(
             transaction,
             input.attributes.parentId
           );
@@ -160,10 +154,7 @@ class NodeManager {
     const workspaceDatabase =
       await databaseManager.getWorkspaceDatabase(userId);
 
-    const ancestorRows = await this.fetchNodeAncestors(
-      workspaceDatabase,
-      nodeId
-    );
+    const ancestorRows = await fetchNodeAncestors(workspaceDatabase, nodeId);
     const nodeRow = ancestorRows.find((ancestor) => ancestor.id === nodeId);
     if (!nodeRow) {
       throw new Error('Node not found');
@@ -263,10 +254,7 @@ class NodeManager {
     const workspaceDatabase =
       await databaseManager.getWorkspaceDatabase(userId);
 
-    const ancestorRows = await this.fetchNodeAncestors(
-      workspaceDatabase,
-      nodeId
-    );
+    const ancestorRows = await fetchNodeAncestors(workspaceDatabase, nodeId);
     const ancestors = ancestorRows.map(mapNode);
     const node = ancestors.find((ancestor) => ancestor.id === nodeId);
 
@@ -312,26 +300,6 @@ class NodeManager {
         })
         .execute();
     });
-  }
-
-  private async fetchNodeAncestors(
-    database:
-      | Kysely<WorkspaceDatabaseSchema>
-      | Transaction<WorkspaceDatabaseSchema>,
-    nodeId: string
-  ): Promise<SelectNode[]> {
-    return database
-      .selectFrom('nodes')
-      .selectAll()
-      .where(
-        'id',
-        'in',
-        database
-          .selectFrom('node_paths')
-          .select('ancestor_id')
-          .where('descendant_id', '=', nodeId)
-      )
-      .execute();
   }
 }
 

@@ -1,8 +1,17 @@
 import { app } from 'electron';
-import { DeleteResult, InsertResult, UpdateResult } from 'kysely';
+import {
+  DeleteResult,
+  InsertResult,
+  Kysely,
+  Transaction,
+  UpdateResult,
+} from 'kysely';
 import path from 'path';
-import { SelectNode } from '@/main/data/workspace/schema';
-import { Node } from '@colanode/core';
+import {
+  SelectNode,
+  WorkspaceDatabaseSchema,
+} from '@/main/data/workspace/schema';
+import { Node, NodeTypes } from '@colanode/core';
 
 export const appPath = app.getPath('userData');
 
@@ -40,6 +49,27 @@ export const hasUpdateChanges = (result: UpdateResult[]): boolean => {
 
 export const hasDeleteChanges = (result: DeleteResult[]): boolean => {
   return result.some((r) => r.numDeletedRows && r.numDeletedRows > 0n);
+};
+
+export const fetchNodeAncestors = (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  nodeId: string
+): Promise<SelectNode[]> => {
+  return database
+    .selectFrom('nodes')
+    .selectAll()
+    .where(
+      'id',
+      'in',
+      database
+        .selectFrom('node_paths')
+        .select('ancestor_id')
+        .where('descendant_id', '=', nodeId)
+    )
+    .where('type', '!=', NodeTypes.Workspace)
+    .execute();
 };
 
 export const mapNode = (row: SelectNode): Node => {

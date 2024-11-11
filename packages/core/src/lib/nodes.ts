@@ -10,6 +10,14 @@ export const extractNodeCollaborators = (
   return {};
 };
 
+export const extractNodeName = (attributes: NodeAttributes): string | null => {
+  if ('name' in attributes && attributes.name) {
+    return attributes.name as string;
+  }
+
+  return null;
+};
+
 export const extractNodeRole = (
   ancestors: Node[],
   collaboratorId: string

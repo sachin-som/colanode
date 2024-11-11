@@ -97,7 +97,7 @@ export class RecordListQueryHandler
     );
 
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."index" ASC'}`;
-    const offset = input.page * input.count;
+    const offset = (input.page - 1) * input.count;
     const query = sql<SelectNode>`
         WITH record_nodes AS (
           SELECT n.*, ROW_NUMBER() OVER (${sql.raw(orderByQuery)}) AS order_number

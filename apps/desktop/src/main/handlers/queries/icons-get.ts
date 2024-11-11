@@ -11,9 +11,7 @@ export class IconsGetQueryHandler implements QueryHandler<IconsGetQueryInput> {
   public async handleQuery(
     _: IconsGetQueryInput
   ): Promise<QueryResult<IconsGetQueryInput>> {
-    console.time('icons_get');
     const data = assetManager.getIconData();
-    console.timeEnd('icons_get');
 
     return {
       output: data,

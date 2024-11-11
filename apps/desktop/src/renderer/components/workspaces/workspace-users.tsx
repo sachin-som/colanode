@@ -1,5 +1,5 @@
 import React from 'react';
-import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
+import { useQueries } from '@/renderer/hooks/use-queries';
 import { Separator } from '@/renderer/components/ui/separator';
 import { WorkspaceUserInvite } from '@/renderer/components/workspaces/workspace-user-invite';
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -8,45 +8,29 @@ import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
 
 const USERS_PER_PAGE = 50;
 
 export const WorkspaceUsers = () => {
   const workspace = useWorkspace();
   const canEditUsers = workspace.role === 'owner' || workspace.role === 'admin';
+  const [lastPage, setLastPage] = React.useState<number>(1);
 
-  const { data, isPending, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      initialPageInput: {
-        type: 'workspace_user_list',
-        page: 0,
-        count: USERS_PER_PAGE,
-        userId: workspace.userId,
-      },
-      getNextPageInput(page, pages) {
-        if (page > pages.length) {
-          return undefined;
-        }
+  const inputs: WorkspaceUserListQueryInput[] = Array.from({
+    length: lastPage,
+  }).map((_, i) => ({
+    type: 'workspace_user_list',
+    page: i + 1,
+    count: USERS_PER_PAGE,
+    userId: workspace.userId,
+  }));
 
-        const lastPage = pages[page - 1];
-        if (lastPage.length < USERS_PER_PAGE) {
-          return undefined;
-        }
+  const result = useQueries(inputs);
+  const users = result.flatMap((data) => data.data ?? []);
+  const isPending = result.some((data) => data.isPending);
+  const hasMore = !isPending && users.length === lastPage * USERS_PER_PAGE;
 
-        return {
-          type: 'workspace_user_list',
-          page: page,
-          count: USERS_PER_PAGE,
-          userId: workspace.userId,
-        };
-      },
-    });
-
-  if (isPending) {
-    return null;
-  }
-
-  const users = data?.flatMap((page) => page) ?? [];
   return (
     <div className="flex flex-col space-y-4">
       {canEditUsers && (
@@ -90,13 +74,13 @@ export const WorkspaceUsers = () => {
           );
         })}
         <div className="flex items-center justify-center space-x-3">
-          {isFetchingNextPage && <Spinner />}
+          {isPending && <Spinner />}
         </div>
         <InView
           rootMargin="200px"
           onChange={(inView) => {
-            if (inView && hasNextPage && !isFetchingNextPage) {
-              fetchNextPage();
+            if (inView && hasMore && !isPending) {
+              setLastPage(lastPage + 1);
             }
           }}
         ></InView>

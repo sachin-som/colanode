@@ -79,7 +79,7 @@ export class MessageListQueryHandler
       input.userId
     );
 
-    const offset = input.page * input.count;
+    const offset = (input.page - 1) * input.count;
     const messages = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()

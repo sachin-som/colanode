@@ -1,12 +1,14 @@
+import React from 'react';
 import { match } from 'ts-pattern';
 import { FolderContext } from '@/renderer/contexts/folder';
 import { FolderLayoutType } from '@/types/folders';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
+import { useQueries } from '@/renderer/hooks/use-queries';
 import { GridLayout } from '@/renderer/components/folders/grids/grid-layout';
 import { ListLayout } from '@/renderer/components/folders/lists/list-layout';
 import { GalleryLayout } from '@/renderer/components/folders/galleries/gallery-layout';
 import { getIdType, IdType } from '@colanode/core';
+import { FileListQueryInput } from '@/operations/queries/file-list';
 
 const FILES_PER_PAGE = 100;
 
@@ -18,35 +20,19 @@ interface FolderFilesProps {
 
 export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
   const workspace = useWorkspace();
-  const { data } = useInfiniteQuery({
-    initialPageInput: {
-      type: 'file_list',
-      userId: workspace.userId,
-      parentId: id,
-      count: FILES_PER_PAGE,
-      page: 0,
-    },
-    getNextPageInput: (page, pages) => {
-      if (page > pages.length) {
-        return undefined;
-      }
+  const [lastPage] = React.useState<number>(1);
+  const inputs: FileListQueryInput[] = Array.from({
+    length: lastPage,
+  }).map((_, i) => ({
+    type: 'file_list',
+    userId: workspace.userId,
+    parentId: id,
+    count: FILES_PER_PAGE,
+    page: i + 1,
+  }));
 
-      const lastPage = pages[page - 1];
-      if (lastPage.length < FILES_PER_PAGE) {
-        return undefined;
-      }
-
-      return {
-        type: 'file_list',
-        userId: workspace.userId,
-        parentId: id,
-        count: FILES_PER_PAGE,
-        page: page + 1,
-      };
-    },
-  });
-
-  const files = data?.flatMap((page) => page) ?? [];
+  const result = useQueries(inputs);
+  const files = result.flatMap((data) => data.data ?? []);
 
   return (
     <FolderContext.Provider

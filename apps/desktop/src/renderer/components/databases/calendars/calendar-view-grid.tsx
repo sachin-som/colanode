@@ -4,14 +4,11 @@ import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
 import { FieldAttributes, ViewFilterAttributes } from '@colanode/core';
-import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
-import { useDatabase } from '@/renderer/contexts/database';
+import { useRecordsQuery } from '@/renderer/hooks/user-records-query';
 import { filterRecords } from '@/lib/databases';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useView } from '@/renderer/contexts/view';
-
-const RECORDS_PER_PAGE = 50;
 
 interface CalendarViewGridProps {
   field: FieldAttributes;
@@ -19,7 +16,6 @@ interface CalendarViewGridProps {
 
 export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
   const workspace = useWorkspace();
-  const database = useDatabase();
   const view = useView();
 
   const [month, setMonth] = React.useState(new Date());
@@ -43,43 +39,8 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
     },
   ];
 
-  const { data, isPending } = useInfiniteQuery({
-    initialPageInput: {
-      type: 'record_list',
-      databaseId: database.id,
-      filters: filters,
-      sorts: view.sorts,
-      page: 0,
-      count: RECORDS_PER_PAGE,
-      userId: workspace.userId,
-    },
-    getNextPageInput(page, pages) {
-      if (page > pages.length) {
-        return undefined;
-      }
+  const { records } = useRecordsQuery(filters, view.sorts);
 
-      const lastPage = pages[page - 1];
-      if (lastPage.length < RECORDS_PER_PAGE) {
-        return undefined;
-      }
-
-      return {
-        type: 'record_list',
-        databaseId: database.id,
-        filters: filters,
-        sorts: Object.values(view.sorts),
-        page: page,
-        count: RECORDS_PER_PAGE,
-        userId: workspace.userId,
-      };
-    },
-  });
-
-  if (isPending) {
-    return null;
-  }
-
-  const records = data?.flatMap((page) => page) ?? [];
   return (
     <DayPicker
       showOutsideDays

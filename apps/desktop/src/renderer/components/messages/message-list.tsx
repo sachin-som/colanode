@@ -1,10 +1,11 @@
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/renderer/components/messages/message';
-import { useInfiniteQuery } from '@/renderer/hooks/use-infinite-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { compareString } from '@/lib/utils';
 import { MessageNode } from '@/types/messages';
+import { useQueries } from '@/renderer/hooks/use-queries';
+import { MessageListQueryInput } from '@/operations/queries/message-list';
 
 interface MessageListProps {
   conversationId: string;
@@ -21,39 +22,27 @@ export const MessageList = ({
 }: MessageListProps) => {
   const workspace = useWorkspace();
   const lastMessageId = React.useRef<string | null>(null);
+  const [lastPage, setLastPage] = React.useState<number>(1);
 
-  const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      initialPageInput: {
-        type: 'message_list',
-        conversationId: conversationId,
-        userId: workspace.userId,
-        page: 0,
-        count: MESSAGES_PER_PAGE,
-      },
-      getNextPageInput: (page, pages) => {
-        if (page > pages.length) {
-          return undefined;
-        }
+  const inputs: MessageListQueryInput[] = Array.from({
+    length: lastPage,
+  }).map((_, i) => ({
+    type: 'message_list',
+    conversationId: conversationId,
+    userId: workspace.userId,
+    page: i + 1,
+    count: MESSAGES_PER_PAGE,
+  }));
 
-        const lastPage = pages[page - 1];
-        if (lastPage.length < MESSAGES_PER_PAGE) {
-          return undefined;
-        }
+  const result = useQueries(inputs);
+  const messages = result
+    .flatMap((data) => data.data ?? [])
+    .sort((a, b) => compareString(a.id, b.id));
 
-        return {
-          type: 'message_list',
-          conversationId: conversationId,
-          userId: workspace.userId,
-          page: page,
-          count: MESSAGES_PER_PAGE,
-        };
-      },
-    });
+  const isPending = result.some((data) => data.isPending);
 
-  const messages = (data?.flatMap((page) => page) ?? []).sort((a, b) =>
-    compareString(a.id, b.id)
-  );
+  const hasMore =
+    !isPending && messages.length === lastPage * MESSAGES_PER_PAGE;
 
   React.useEffect(() => {
     if (messages.length > 0) {
@@ -63,19 +52,15 @@ export const MessageList = ({
         onLastMessageIdChange(lastMessageId.current);
       }
     }
-  }, [data]);
-
-  if (isPending) {
-    return null;
-  }
+  }, [messages]);
 
   return (
     <React.Fragment>
       <InView
         rootMargin="200px"
         onChange={(inView) => {
-          if (inView && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
+          if (inView && hasMore && !isPending) {
+            setLastPage(lastPage + 1);
           }
         }}
       ></InView>

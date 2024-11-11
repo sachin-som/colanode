@@ -70,7 +70,7 @@ export class WorkspaceUserListQueryHandler
       input.userId
     );
 
-    const offset = input.page * input.count;
+    const offset = (input.page - 1) * input.count;
     const rows = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()

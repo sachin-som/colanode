@@ -100,11 +100,16 @@ const handleNodeDeletedEvent = async (
 const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
   const userNodesToCreate: CreateUserNode[] = [];
 
-  const isForEveryone =
-    event.attributes.type === NodeTypes.User ||
-    event.attributes.type === NodeTypes.Workspace;
+  if (event.attributes.type === NodeTypes.User) {
+    userNodesToCreate.push({
+      user_id: event.id,
+      node_id: event.workspaceId,
+      workspace_id: event.workspaceId,
+      mentions_count: 0,
+      created_at: new Date(),
+      version_id: generateId(IdType.Version),
+    });
 
-  if (isForEveryone) {
     const userIds = await fetchWorkspaceUsers(event.workspaceId);
 
     for (const userId of userIds) {
@@ -131,6 +136,23 @@ const createUserNodes = async (event: NodeCreatedEvent): Promise<void> => {
         workspace_id: event.workspaceId,
         last_seen_version_id: null,
         last_seen_at: null,
+        mentions_count: 0,
+        created_at: new Date(),
+        access_removed_at: null,
+        version_id: generateId(IdType.Version),
+        updated_at: null,
+      });
+    }
+  } else if (event.attributes.type === NodeTypes.Workspace) {
+    const userIds = await fetchWorkspaceUsers(event.workspaceId);
+
+    for (const userId of userIds) {
+      userNodesToCreate.push({
+        user_id: userId,
+        node_id: event.id,
+        workspace_id: event.workspaceId,
+        last_seen_at: null,
+        last_seen_version_id: null,
         mentions_count: 0,
         created_at: new Date(),
         access_removed_at: null,

@@ -4,6 +4,7 @@ import { EmailLogin } from '@/renderer/components/accounts/email-login';
 import { ServerDropdown } from '@/renderer/components/servers/server-dropdown';
 import { useApp } from '@/renderer/contexts/app';
 import { useNavigate } from 'react-router-dom';
+import { Separator } from '@/renderer/components/ui/separator';
 
 export const LoginForm = () => {
   const app = useApp();
@@ -31,14 +32,17 @@ export const LoginForm = () => {
           : 'No account yet? Register'}
       </p>
       {app.accounts.length > 0 && (
-        <p
-          className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
-          onClick={() => {
-            navigate(-1);
-          }}
-        >
-          Cancel
-        </p>
+        <React.Fragment>
+          <Separator className="w-full" />
+          <p
+            className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            Cancel
+          </p>
+        </React.Fragment>
       )}
     </div>
   );

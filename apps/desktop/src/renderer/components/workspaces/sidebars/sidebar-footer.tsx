@@ -13,6 +13,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/renderer/components/ui/sidebar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/renderer/components/ui/tooltip';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
 import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
@@ -76,22 +81,36 @@ export function SidebarFooter() {
                     <span className="truncate text-xs">{account.email}</span>
                   </div>
                   <div className="ml-auto flex items-center gap-2 text-muted-foreground mr-1">
-                    <LogOut
-                      className="size-4 hover:cursor-pointer hover:text-red-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        app.showAccountLogout(account.id);
-                        setOpen(false);
-                      }}
-                    />
-                    <Settings
-                      className="size-4 hover:cursor-pointer hover:text-sidebar-accent-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        app.showAccountSettings(account.id);
-                        setOpen(false);
-                      }}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <LogOut
+                          className="size-4 hover:cursor-pointer hover:text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            app.showAccountLogout(account.id);
+                            setOpen(false);
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="flex flex-row items-center gap-2">
+                        Log out
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Settings
+                          className="size-4 hover:cursor-pointer hover:text-sidebar-accent-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            app.showAccountSettings(account.id);
+                            setOpen(false);
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="flex flex-row items-center gap-2">
+                        Settings
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </DropdownMenuItem>

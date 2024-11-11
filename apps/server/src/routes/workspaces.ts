@@ -1,12 +1,14 @@
 import {
-  WorkspaceAccountRoleUpdateInput,
-  WorkspaceAccountsInviteInput,
-  WorkspaceUserStatus,
-  WorkspaceInput,
+  WorkspaceUsersInviteInput,
+  WorkspaceUserRoleUpdateInput,
+  WorkspaceCreateInput,
   WorkspaceOutput,
   WorkspaceRole,
   WorkspaceStatus,
-} from '@/types/workspaces';
+  WorkspaceUserStatus,
+  WorkspaceUpdateInput,
+  NodeOutput,
+} from '@colanode/core';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import {
   generateId,
@@ -25,8 +27,7 @@ import {
 } from '@/data/schema';
 import { getNameFromEmail } from '@/lib/utils';
 import { AccountStatus } from '@/types/accounts';
-import { ServerNode } from '@/types/nodes';
-import { mapServerNode } from '@/lib/nodes';
+import { mapNodeOutput } from '@/lib/nodes';
 import { NodeCreatedEvent, NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';
 import { YDoc } from '@colanode/crdt';
@@ -36,7 +37,7 @@ export const workspacesRouter = Router();
 workspacesRouter.post(
   '/',
   async (req: ColanodeRequest, res: ColanodeResponse) => {
-    const input: WorkspaceInput = req.body;
+    const input: WorkspaceCreateInput = req.body;
 
     if (!req.account) {
       return res.status(401).json({
@@ -202,7 +203,7 @@ workspacesRouter.put(
   '/:id',
   async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
-    const input: WorkspaceInput = req.body;
+    const input: WorkspaceUpdateInput = req.body;
 
     if (!req.account) {
       return res.status(401).json({
@@ -449,7 +450,7 @@ workspacesRouter.post(
   '/:id/users',
   async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
-    const input: WorkspaceAccountsInviteInput = req.body;
+    const input: WorkspaceUsersInviteInput = req.body;
 
     if (!input.emails || input.emails.length === 0) {
       return res.status(400).json({
@@ -536,7 +537,7 @@ workspacesRouter.post(
     const workspaceUsersToCreate: CreateWorkspaceUser[] = [];
     const usersToCreate: CreateNode[] = [];
 
-    const users: ServerNode[] = [];
+    const users: NodeOutput[] = [];
     for (const email of input.emails) {
       let account = existingAccounts.find((account) => account.email === email);
 
@@ -577,7 +578,7 @@ workspacesRouter.post(
           });
         }
 
-        users.push(mapServerNode(existingUser));
+        users.push(mapNodeOutput(existingUser));
         continue;
       }
 
@@ -590,7 +591,7 @@ workspacesRouter.post(
         name: account!.name,
         avatar: account!.avatar,
         email: account!.email,
-        role: 'collaborator',
+        role: input.role,
         accountId: account!.id,
         parentId: workspace.id,
       };
@@ -601,21 +602,22 @@ workspacesRouter.post(
         id: userId,
         account_id: account!.id,
         workspace_id: workspace.id,
-        role: 'collaborator',
+        role: input.role,
         created_at: new Date(),
         created_by: req.account.id,
         status: WorkspaceUserStatus.Active,
         version_id: userVersionId,
       });
 
-      const user: ServerNode = {
+      const user: NodeOutput = {
         id: userId,
         type: 'user',
+        parentId: workspace.id,
         attributes: userAttributes,
         state: userDoc.getEncodedState(),
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         createdBy: workspaceUser.id,
-        serverCreatedAt: new Date(),
+        serverCreatedAt: new Date().toISOString(),
         versionId: userVersionId,
         workspaceId: workspace.id,
         index: null,
@@ -625,9 +627,9 @@ workspacesRouter.post(
         id: user.id,
         attributes: JSON.stringify(userAttributes),
         state: userDoc.getState(),
-        created_at: user.createdAt,
+        created_at: new Date(user.createdAt),
         created_by: user.createdBy,
-        server_created_at: user.serverCreatedAt,
+        server_created_at: new Date(user.serverCreatedAt),
         version_id: user.versionId,
         workspace_id: user.workspaceId,
       });
@@ -684,7 +686,7 @@ workspacesRouter.put(
   async (req: ColanodeRequest, res: ColanodeResponse) => {
     const id = req.params.id as string;
     const userId = req.params.userId as string;
-    const input: WorkspaceAccountRoleUpdateInput = req.body;
+    const input: WorkspaceUserRoleUpdateInput = req.body;
 
     if (!req.account) {
       return res.status(401).json({
@@ -771,20 +773,20 @@ workspacesRouter.put(
       role: input.role,
     });
 
-    const userNode: ServerNode = {
+    const userNode: NodeOutput = {
       id: user.id,
       type: user.type,
       workspaceId: user.workspace_id,
       index: null,
-      parentId: null,
+      parentId: workspace.id,
       attributes: userDoc.getAttributes(),
       state: userDoc.getEncodedState(),
-      createdAt: user.created_at,
+      createdAt: user.created_at.toISOString(),
       createdBy: user.created_by,
-      serverCreatedAt: user.server_created_at,
-      serverUpdatedAt: updatedAt,
+      serverCreatedAt: user.server_created_at.toISOString(),
+      serverUpdatedAt: updatedAt.toISOString(),
       versionId: generateId(IdType.Version),
-      updatedAt: updatedAt,
+      updatedAt: updatedAt.toISOString(),
       updatedBy: currentWorkspaceUser.id,
     };
 

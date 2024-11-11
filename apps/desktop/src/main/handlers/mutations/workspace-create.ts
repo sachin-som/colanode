@@ -2,7 +2,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
 import { MutationHandler, MutationResult } from '@/main/types';
-import { WorkspaceOutput } from '@/types/workspaces';
+import { WorkspaceOutput } from '@colanode/core';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>

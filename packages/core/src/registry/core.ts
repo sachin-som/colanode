@@ -1,6 +1,7 @@
 import { ZodSchema } from 'zod';
 import { Node, NodeAttributes } from './';
 import { extractNodeRole } from '../lib/nodes';
+import { WorkspaceRole } from '../types/workspaces';
 
 export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
 
@@ -9,43 +10,46 @@ export class NodeMutationContext {
   public workspaceId: string;
   public userId: string;
   public ancestors: Node[];
-  public role: NodeRole | null;
+  public nodeRole: NodeRole | null;
+  public workspaceRole: WorkspaceRole | null;
 
   constructor(
     accountId: string,
     workspaceId: string,
     userId: string,
+    workspaceRole: WorkspaceRole | null,
     ancestors: Node[]
   ) {
     this.accountId = accountId;
     this.workspaceId = workspaceId;
     this.userId = userId;
+    this.workspaceRole = workspaceRole;
     this.ancestors = ancestors;
-    this.role = extractNodeRole(ancestors, userId);
+    this.nodeRole = extractNodeRole(ancestors, userId);
   }
 
   public hasAdminAccess = () => {
-    return this.role === 'admin';
+    return this.nodeRole === 'admin';
   };
 
   public hasEditorAccess = () => {
-    return this.role === 'admin' || this.role === 'editor';
+    return this.nodeRole === 'admin' || this.nodeRole === 'editor';
   };
 
   public hasCollaboratorAccess = () => {
     return (
-      this.role === 'admin' ||
-      this.role === 'editor' ||
-      this.role === 'collaborator'
+      this.nodeRole === 'admin' ||
+      this.nodeRole === 'editor' ||
+      this.nodeRole === 'collaborator'
     );
   };
 
   public hasViewerAccess = () => {
     return (
-      this.role === 'admin' ||
-      this.role === 'editor' ||
-      this.role === 'collaborator' ||
-      this.role === 'viewer'
+      this.nodeRole === 'admin' ||
+      this.nodeRole === 'editor' ||
+      this.nodeRole === 'collaborator' ||
+      this.nodeRole === 'viewer'
     );
   };
 }

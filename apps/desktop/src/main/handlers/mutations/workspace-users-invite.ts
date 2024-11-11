@@ -2,7 +2,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
-import { WorkspaceUsersInviteOutput } from '@/types/workspaces';
+import { WorkspaceUsersInviteOutput } from '@colanode/core';
 import { CreateNode } from '@/main/data/workspace/schema';
 import { toUint8Array } from 'js-base64';
 

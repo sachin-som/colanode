@@ -1,4 +1,4 @@
-import { NodeAttributes } from '@colanode/core';
+import { NodeAttributes, WorkspaceRole } from '@colanode/core';
 import {
   ColumnType,
   Insertable,
@@ -67,7 +67,7 @@ interface WorkspaceUserTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
-  role: ColumnType<string, string, string>;
+  role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
   attrs: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
@@ -84,7 +84,7 @@ export type UpdateWorkspaceUser = Updateable<WorkspaceUserTable>;
 interface NodeTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  parent_id: ColumnType<string | null, never, never>;
+  parent_id: ColumnType<string, never, never>;
   type: ColumnType<string, never, never>;
   index: ColumnType<string | null, never, never>;
   attributes: JSONColumnType<NodeAttributes, string | null, string | null>;

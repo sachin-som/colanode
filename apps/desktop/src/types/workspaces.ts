@@ -1,11 +1,4 @@
-import { ServerNode } from '@/types/nodes';
-
-export type WorkspaceRole =
-  | 'owner'
-  | 'admin'
-  | 'collaborator'
-  | 'guest'
-  | 'none';
+import { WorkspaceRole } from '@colanode/core';
 
 export type Workspace = {
   id: string;
@@ -16,33 +9,6 @@ export type Workspace = {
   accountId: string;
   role: WorkspaceRole;
   userId: string;
-};
-
-export type WorkspaceOutput = {
-  id: string;
-  name: string;
-  description?: string | null;
-  avatar?: string | null;
-  versionId: string;
-  user: WorkspaceUserOutput;
-};
-
-export type WorkspaceUserOutput = {
-  id: string;
-  accountId: string;
-  role: WorkspaceRole;
-};
-
-export type WorkspaceUsersInviteOutput = {
-  users: ServerNode[];
-};
-
-export type WorkspaceUserRoleUpdateOutput = {
-  user: ServerNode;
-};
-
-export type WorkspaceUserRemoveOutput = {
-  user: ServerNode;
 };
 
 export type SidebarNode = {

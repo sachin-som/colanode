@@ -6,7 +6,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
-import { WorkspaceRole } from '@/types/workspaces';
+import { WorkspaceRole } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const USERS_PER_PAGE = 50;

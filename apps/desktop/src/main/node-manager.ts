@@ -65,6 +65,7 @@ class NodeManager {
           workspace.account_id,
           workspace.workspace_id,
           userId,
+          workspace.role,
           ancestors
         );
 
@@ -179,6 +180,7 @@ class NodeManager {
       workspace.account_id,
       workspace.workspace_id,
       userId,
+      workspace.role,
       ancestors
     );
 
@@ -277,6 +279,7 @@ class NodeManager {
       workspace.account_id,
       workspace.workspace_id,
       userId,
+      workspace.role,
       ancestors
     );
 

@@ -4,7 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { WorkspaceRole } from '@/types/workspaces';
+import { WorkspaceRole } from '@colanode/core';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';

@@ -15,13 +15,17 @@ export type SpaceAttributes = z.infer<typeof spaceAttributesSchema>;
 export const spaceModel: NodeModel = {
   type: 'space',
   schema: spaceAttributesSchema,
-  canCreate: async (_, __) => {
+  canCreate: async (context, __) => {
+    if (context.workspaceRole === 'guest' || context.workspaceRole === 'none') {
+      return false;
+    }
+
     return true;
   },
-  canUpdate: async (_, __, ___) => {
-    return true;
+  canUpdate: async (context, _, __) => {
+    return context.hasAdminAccess();
   },
-  canDelete: async (_, __) => {
-    return true;
+  canDelete: async (context, _) => {
+    return context.hasAdminAccess();
   },
 };

@@ -1,5 +1,5 @@
 import { Account } from '@/types/accounts';
-import { WorkspaceOutput } from '@/types/workspaces';
+import { WorkspaceOutput } from '@colanode/core';
 
 export type EmailRegisterMutationInput = {
   type: 'email_register';

@@ -2,7 +2,7 @@ import { databaseManager } from '@/main/data/database-manager';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
-import { WorkspaceUserRoleUpdateOutput } from '@/types/workspaces';
+import { WorkspaceUserRoleUpdateOutput } from '@colanode/core';
 import { toUint8Array } from 'js-base64';
 
 export class WorkspaceUserRoleUpdateMutationHandler

@@ -1,6 +1,7 @@
 import { database } from '@/data/database';
 import { SelectNode } from '@/data/schema';
-import { NodeCollaborator, ServerNode } from '@/types/nodes';
+import { NodeCollaborator } from '@/types/nodes';
+import { NodeOutput } from '@colanode/core';
 import { fromUint8Array } from 'js-base64';
 import {
   extractNodeCollaborators,
@@ -9,7 +10,7 @@ import {
   NodeType,
 } from '@colanode/core';
 
-export const mapServerNode = (node: SelectNode): ServerNode => {
+export const mapNodeOutput = (node: SelectNode): NodeOutput => {
   return {
     id: node.id,
     parentId: node.parent_id,
@@ -18,13 +19,13 @@ export const mapServerNode = (node: SelectNode): ServerNode => {
     index: node.index,
     attributes: node.attributes,
     state: fromUint8Array(node.state),
-    createdAt: node.created_at,
+    createdAt: node.created_at.toISOString(),
     createdBy: node.created_by,
     versionId: node.version_id,
-    updatedAt: node.updated_at,
-    updatedBy: node.updated_by,
-    serverCreatedAt: node.server_created_at,
-    serverUpdatedAt: node.server_updated_at,
+    updatedAt: node.updated_at?.toISOString() ?? null,
+    updatedBy: node.updated_by ?? null,
+    serverCreatedAt: node.server_created_at.toISOString(),
+    serverUpdatedAt: node.server_updated_at?.toISOString() ?? null,
   };
 };
 

@@ -14,7 +14,7 @@ import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
-import { WorkspaceOutput, WorkspaceRole } from '@/types/workspaces';
+import { WorkspaceOutput, WorkspaceRole } from '@colanode/core';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
 import { enqueueTask } from '@/queues/tasks';

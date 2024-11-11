@@ -8,6 +8,7 @@ import {
   SpaceAttributes,
 } from '@colanode/core';
 import { nodeManager } from '@/main/node-manager';
+import { databaseManager } from '@/main/data/database-manager';
 
 export class SpaceCreateMutationHandler
   implements MutationHandler<SpaceCreateMutationInput>
@@ -15,6 +16,20 @@ export class SpaceCreateMutationHandler
   async handleMutation(
     input: SpaceCreateMutationInput
   ): Promise<MutationResult<SpaceCreateMutationInput>> {
+    const workspace = await databaseManager.appDatabase
+      .selectFrom('workspaces')
+      .where('user_id', '=', input.userId)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!workspace) {
+      throw new Error('Workspace not found');
+    }
+
+    if (workspace.role === 'guest' || workspace.role === 'none') {
+      throw new Error('You are not allowed to create spaces in this workspace');
+    }
+
     const spaceId = generateId(IdType.Space);
     const spaceAttributes: SpaceAttributes = {
       type: 'space',

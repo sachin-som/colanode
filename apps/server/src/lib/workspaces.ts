@@ -1,10 +1,6 @@
 import { database } from '@/data/database';
 import { CreateNode, SelectAccount } from '@/data/schema';
-import {
-  WorkspaceRole,
-  WorkspaceStatus,
-  WorkspaceUserStatus,
-} from '@/types/workspaces';
+import { WorkspaceStatus, WorkspaceUserStatus } from '@colanode/core';
 import {
   ChannelAttributes,
   generateId,

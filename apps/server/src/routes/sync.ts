@@ -134,6 +134,7 @@ const handleCreateNodeChange = async (
     workspaceUser.account_id,
     workspaceUser.workspace_id,
     changeData.createdBy,
+    workspaceUser.role,
     ancestors
   );
 
@@ -226,6 +227,7 @@ const handleUpdateNodeChange = async (
       workspaceUser.account_id,
       workspaceUser.workspace_id,
       changeData.updatedBy,
+      workspaceUser.role,
       ancestors
     );
 
@@ -311,6 +313,7 @@ const handleDeleteNodeChange = async (
     workspaceUser.account_id,
     workspaceUser.workspace_id,
     changeData.deletedBy,
+    workspaceUser.role,
     ancestors
   );
 

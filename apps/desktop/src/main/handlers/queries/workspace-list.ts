@@ -1,6 +1,7 @@
 import { WorkspaceListQueryInput } from '@/operations/queries/workspace-list';
 import { databaseManager } from '@/main/data/database-manager';
-import { Workspace, WorkspaceRole } from '@/types/workspaces';
+import { Workspace } from '@/types/workspaces';
+import { WorkspaceRole } from '@colanode/core';
 import { SelectWorkspace } from '@/main/data/app/schema';
 import {
   MutationChange,

@@ -1,4 +1,3 @@
-import React from 'react';
 import * as z from 'zod';
 import {
   Form,
@@ -12,7 +11,6 @@ import { Input } from '@/renderer/components/ui/input';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
@@ -20,9 +18,10 @@ import { AvatarPopover } from '@/renderer/components/avatars/avatar-popover';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Textarea } from '@/renderer/components/ui/textarea';
 import { Button } from '@/renderer/components/ui/button';
+import { SpaceNode } from '@colanode/core';
 
 interface SpaceUpdateFormProps {
-  id: string;
+  space: SpaceNode;
 }
 
 const formSchema = z.object({
@@ -31,44 +30,27 @@ const formSchema = z.object({
   avatar: z.string().nullable().optional(),
 });
 
-export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
+export const SpaceUpdateForm = ({ space }: SpaceUpdateFormProps) => {
   const workspace = useWorkspace();
   const canEdit = true;
-  const { data, isPending: isLoadingSpace } = useQuery({
-    type: 'node_get',
-    nodeId: id,
-    userId: workspace.userId,
-  });
 
   const { mutate: updateSpace, isPending: isUpdatingSpace } = useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      avatar: null,
+      name: space.attributes.name,
+      description: space.attributes.description ?? '',
+      avatar: space.attributes.avatar ?? null,
     },
   });
 
-  React.useEffect(() => {
-    if (data && data.attributes.type === 'space') {
-      form.reset({
-        name: data.attributes.name,
-        description: data.attributes.description ?? '',
-        avatar: data.attributes.avatar ?? null,
-      });
-    }
-  }, [isLoadingSpace, data]);
-
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    if (!data?.id) return;
-
     updateSpace({
       input: {
         type: 'space_update',
         userId: workspace.userId,
-        id: data.id,
+        id: space.id,
         name: values.name,
         description: values.description,
         avatar: values.avatar,
@@ -90,10 +72,6 @@ export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
     });
   };
 
-  if (isLoadingSpace) {
-    return <Spinner />;
-  }
-
   const name = form.watch('name');
   const avatar = form.watch('avatar');
 
@@ -108,7 +86,7 @@ export const SpaceUpdateForm = ({ id }: SpaceUpdateFormProps) => {
             <AvatarPopover onPick={(avatar) => form.setValue('avatar', avatar)}>
               <Button type="button" variant="outline" size="icon">
                 <Avatar
-                  id={id}
+                  id={space.id}
                   name={name}
                   avatar={avatar}
                   className="h-6 w-6"

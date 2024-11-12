@@ -6,12 +6,22 @@ import {
 } from '@/renderer/components/messages/message-create';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { InView } from 'react-intersection-observer';
+import {
+  hasAdminAccess,
+  hasCollaboratorAccess,
+  NodeRole,
+} from '@colanode/core';
+import { ConversationContext } from '@/renderer/contexts/conversation';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface ConversationProps {
   conversationId: string;
+  role: NodeRole;
 }
 
-export const Conversation = ({ conversationId }: ConversationProps) => {
+export const Conversation = ({ conversationId, role }: ConversationProps) => {
+  const workspace = useWorkspace();
+
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const observerRef = React.useRef<ResizeObserver | null>(null);
@@ -60,27 +70,37 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
     }
   };
 
+  const isAdmin = hasAdminAccess(role);
+  const isCollaborator = hasCollaboratorAccess(role);
+
   return (
-    <React.Fragment>
+    <ConversationContext.Provider
+      value={{
+        id: conversationId,
+        role,
+        canCreateMessage: isCollaborator,
+        onReply: (message) => {
+          if (messageCreateRef.current) {
+            messageCreateRef.current.setReplyTo(message);
+          }
+        },
+        onLastMessageIdChange: () => {
+          if (shouldScrollToBottomRef.current && bottomRef.current) {
+            bottomRef.current.scrollIntoView();
+          }
+        },
+        canDeleteMessage: (message) => {
+          return isAdmin || message.author.id === workspace.userId;
+        },
+      }}
+    >
       <ScrollArea
         ref={viewportRef}
         onScroll={handleScroll}
         className="flex-grow overflow-y-auto px-10"
       >
         <div className="container" ref={containerRef}>
-          <MessageList
-            conversationId={conversationId}
-            onLastMessageIdChange={() => {
-              if (shouldScrollToBottomRef.current && bottomRef.current) {
-                bottomRef.current.scrollIntoView();
-              }
-            }}
-            onReply={(message) => {
-              if (messageCreateRef.current) {
-                messageCreateRef.current.setReplyTo(message);
-              }
-            }}
-          />
+          <MessageList />
         </div>
         <InView
           className="h-4"
@@ -92,7 +112,7 @@ export const Conversation = ({ conversationId }: ConversationProps) => {
           <div ref={bottomRef} className="h-4"></div>
         </InView>
       </ScrollArea>
-      <MessageCreate ref={messageCreateRef} conversationId={conversationId} />
-    </React.Fragment>
+      <MessageCreate ref={messageCreateRef} />
+    </ConversationContext.Provider>
   );
 };

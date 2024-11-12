@@ -16,20 +16,17 @@ import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form'
 import { Info, Trash2, Users } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
+import { SpaceNode } from '@colanode/core';
 
 interface SpaceSettingsDialogProps {
-  id: string;
-  name: string;
-  avatar?: string | null;
+  space: SpaceNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: string;
 }
 
 export const SpaceSettingsDialog = ({
-  id,
-  name,
-  avatar,
+  space,
   open,
   onOpenChange,
   defaultTab,
@@ -47,8 +44,13 @@ export const SpaceSettingsDialog = ({
           <TabsList className="flex h-full max-h-full flex-col items-start justify-start gap-1 rounded-none border-r border-r-gray-100 bg-white pr-3">
             <div className="mb-1 flex h-10 w-full items-center justify-between bg-gray-50 p-1 text-foreground/80">
               <div className="flex items-center gap-2">
-                <Avatar id={id} avatar={avatar} size="small" name={name} />
-                <span>{name ?? 'Error'}</span>
+                <Avatar
+                  id={space.id}
+                  avatar={space.attributes.avatar}
+                  name={space.attributes.name}
+                  size="small"
+                />
+                <span>{space.attributes.name ?? 'Error'}</span>
               </div>
             </div>
             <TabsTrigger
@@ -82,14 +84,14 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="info"
             >
-              <SpaceUpdateForm id={id} />
+              <SpaceUpdateForm space={space} />
             </TabsContent>
             <TabsContent
               key="tab-content-collaborators"
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              <NodeCollaborators nodeId={id} nodes={[]} />
+              <NodeCollaborators nodeId={space.id} nodes={[space]} />
             </TabsContent>
             <TabsContent
               key="tab-content-delete"
@@ -97,7 +99,7 @@ export const SpaceSettingsDialog = ({
               value="delete"
             >
               <SpaceDeleteForm
-                id={id}
+                id={space.id}
                 onDeleted={() => {
                   onOpenChange(false);
                 }}

@@ -14,11 +14,11 @@ import { MessageReactions } from '@/renderer/components/messages/message-reactio
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessagesSquare, Reply } from 'lucide-react';
+import { useConversation } from '@/renderer/contexts/conversation';
 
 interface MessageProps {
   message: MessageNode;
   previousMessage?: MessageNode | null;
-  onReply: (replyTo: MessageNode | null) => void;
 }
 
 const shouldDisplayUserInfo = (
@@ -39,16 +39,14 @@ const shouldDisplayUserInfo = (
   return previousMessage.author.id !== message.author.id;
 };
 
-export const Message = ({
-  message,
-  previousMessage,
-  onReply,
-}: MessageProps) => {
+export const Message = ({ message, previousMessage }: MessageProps) => {
   const workspace = useWorkspace();
+  const conversation = useConversation();
+
   const { mutate, isPending } = useMutation();
 
-  const canDelete = true;
-  const canReplyInThread = false;
+  const canDelete = conversation.canDeleteMessage(message);
+  const canReplyInThread = conversation.canCreateMessage;
   const displayUserInfo = shouldDisplayUserInfo(message, previousMessage);
 
   return (
@@ -72,8 +70,8 @@ export const Message = ({
 
       <div className="relative w-full">
         {displayUserInfo && (
-          <p className="font-medium">
-            {message.author.name}
+          <div className="font-medium">
+            <span>{message.author.name}</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="ml-2 text-xs text-muted-foreground">
@@ -81,12 +79,12 @@ export const Message = ({
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <span className="border border-gray-100 bg-white p-2 text-sm text-muted-foreground shadow-md">
+                <span className="text-sm shadow-md">
                   {formatDate(message.createdAt)}
                 </span>
               </TooltipContent>
             </Tooltip>
-          </p>
+          </div>
         )}
 
         <InView
@@ -125,7 +123,7 @@ export const Message = ({
               <Reply
                 className="size-4 cursor-pointer"
                 onClick={() => {
-                  onReply(message);
+                  conversation.onReply(message);
                 }}
               />
             </li>

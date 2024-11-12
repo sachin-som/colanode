@@ -208,9 +208,7 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
       )}
       {settingsState.open && (
         <SpaceSettingsDialog
-          id={node.id}
-          name={node.attributes.name}
-          avatar={node.attributes.avatar}
+          space={node}
           open={settingsState.open}
           onOpenChange={(open) =>
             setSettingsState({ open, tab: settingsState.tab })

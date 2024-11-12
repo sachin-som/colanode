@@ -31,7 +31,7 @@ export const ChannelContainer = ({ nodeId }: ChannelContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <ChannelHeader nodes={nodes} channel={channel} role={role} />
-      <ChannelBody channel={channel} />
+      <ChannelBody channel={channel} role={role} />
     </div>
   );
 };

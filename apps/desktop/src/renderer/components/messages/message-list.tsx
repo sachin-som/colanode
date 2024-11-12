@@ -3,24 +3,16 @@ import { InView } from 'react-intersection-observer';
 import { Message } from '@/renderer/components/messages/message';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { compareString } from '@/lib/utils';
-import { MessageNode } from '@/types/messages';
 import { useQueries } from '@/renderer/hooks/use-queries';
 import { MessageListQueryInput } from '@/operations/queries/message-list';
-
-interface MessageListProps {
-  conversationId: string;
-  onLastMessageIdChange: (id: string) => void;
-  onReply: (replyTo: MessageNode | null) => void;
-}
+import { useConversation } from '@/renderer/contexts/conversation';
 
 const MESSAGES_PER_PAGE = 50;
 
-export const MessageList = ({
-  conversationId,
-  onLastMessageIdChange,
-  onReply,
-}: MessageListProps) => {
+export const MessageList = () => {
   const workspace = useWorkspace();
+  const conversation = useConversation();
+
   const lastMessageId = React.useRef<string | null>(null);
   const [lastPage, setLastPage] = React.useState<number>(1);
 
@@ -28,7 +20,7 @@ export const MessageList = ({
     length: lastPage,
   }).map((_, i) => ({
     type: 'message_list',
-    conversationId: conversationId,
+    conversationId: conversation.id,
     userId: workspace.userId,
     page: i + 1,
     count: MESSAGES_PER_PAGE,
@@ -49,7 +41,7 @@ export const MessageList = ({
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.id !== lastMessageId.current) {
         lastMessageId.current = lastMessage.id;
-        onLastMessageIdChange(lastMessageId.current);
+        conversation.onLastMessageIdChange(lastMessageId.current);
       }
     }
   }, [messages]);
@@ -86,11 +78,7 @@ export const MessageList = ({
                 <div className="flex-grow border-t border-gray-100" />
               </div>
             )}
-            <Message
-              message={message}
-              previousMessage={previousMessage}
-              onReply={onReply}
-            />
+            <Message message={message} previousMessage={previousMessage} />
           </React.Fragment>
         );
       })}

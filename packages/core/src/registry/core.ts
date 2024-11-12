@@ -1,6 +1,12 @@
 import { ZodSchema } from 'zod';
 import { Node, NodeAttributes } from './';
-import { extractNodeRole } from '../lib/nodes';
+import {
+  extractNodeRole,
+  hasAdminAccess,
+  hasCollaboratorAccess,
+  hasEditorAccess,
+  hasViewerAccess,
+} from '../lib/nodes';
 import { WorkspaceRole } from '../types/workspaces';
 
 export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
@@ -29,28 +35,19 @@ export class NodeMutationContext {
   }
 
   public hasAdminAccess = () => {
-    return this.nodeRole === 'admin';
+    return hasAdminAccess(this.nodeRole);
   };
 
   public hasEditorAccess = () => {
-    return this.nodeRole === 'admin' || this.nodeRole === 'editor';
+    return hasEditorAccess(this.nodeRole);
   };
 
   public hasCollaboratorAccess = () => {
-    return (
-      this.nodeRole === 'admin' ||
-      this.nodeRole === 'editor' ||
-      this.nodeRole === 'collaborator'
-    );
+    return hasCollaboratorAccess(this.nodeRole);
   };
 
   public hasViewerAccess = () => {
-    return (
-      this.nodeRole === 'admin' ||
-      this.nodeRole === 'editor' ||
-      this.nodeRole === 'collaborator' ||
-      this.nodeRole === 'viewer'
-    );
+    return hasViewerAccess(this.nodeRole);
   };
 }
 

@@ -33,3 +33,24 @@ export const extractNodeRole = (
 
   return role;
 };
+
+export const hasAdminAccess = (role: NodeRole | null): boolean => {
+  return role === 'admin';
+};
+
+export const hasEditorAccess = (role: NodeRole | null): boolean => {
+  return role === 'admin' || role === 'editor';
+};
+
+export const hasCollaboratorAccess = (role: NodeRole | null): boolean => {
+  return role === 'admin' || role === 'editor' || role === 'collaborator';
+};
+
+export const hasViewerAccess = (role: NodeRole | null): boolean => {
+  return (
+    role === 'admin' ||
+    role === 'editor' ||
+    role === 'collaborator' ||
+    role === 'viewer'
+  );
+};

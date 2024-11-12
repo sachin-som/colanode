@@ -31,7 +31,7 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
   const mentionsCount = 0;
 
   return (
-    <button
+    <div
       key={node.id}
       className={cn(
         'flex w-full items-center',
@@ -60,6 +60,6 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
       {mentionsCount == 0 && isUnread && (
         <span className="size-2 rounded-full bg-red-500" />
       )}
-    </button>
+    </div>
   );
 };

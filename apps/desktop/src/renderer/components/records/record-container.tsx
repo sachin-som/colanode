@@ -31,7 +31,7 @@ export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <RecordHeader nodes={nodes} record={record} role={role} />
-      <RecordBody record={record} />
+      <RecordBody record={record} role={role} />
     </div>
   );
 };

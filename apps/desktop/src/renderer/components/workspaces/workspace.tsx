@@ -52,7 +52,7 @@ export const Workspace = () => {
         openSettings() {
           setOpenSettings(true);
         },
-        markAsSeen(nodeId, versionId) {
+        markAsSeen() {
           // window.colanode.executeMutation({
           //   type: 'mark_node_as_seen',
           //   nodeId: nodeId,

@@ -60,12 +60,14 @@ interface DocumentEditorProps {
   documentId: string;
   content: JSONContent;
   versionId: string;
+  editable: boolean;
 }
 
 export const DocumentEditor = ({
   documentId,
   content,
   versionId,
+  editable,
 }: DocumentEditorProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
@@ -155,6 +157,7 @@ export const DocumentEditor = ({
         },
       },
       content: content,
+      editable,
       shouldRerenderOnTransaction: false,
       autofocus: 'start',
       onUpdate: async ({ editor, transaction }) => {
@@ -192,7 +195,7 @@ export const DocumentEditor = ({
 
   return (
     <div className="min-h-[500px]">
-      {editor && (
+      {editor && editable && (
         <React.Fragment>
           <EditorBubbleMenu editor={editor} />
         </React.Fragment>

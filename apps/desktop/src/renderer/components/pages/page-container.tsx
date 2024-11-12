@@ -31,7 +31,7 @@ export const PageContainer = ({ nodeId }: PageContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <PageHeader nodes={nodes} page={page} role={role} />
-      <PageBody page={page} />
+      <PageBody page={page} role={role} />
     </div>
   );
 };

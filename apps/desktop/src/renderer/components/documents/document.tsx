@@ -6,9 +6,15 @@ interface DocumentProps {
   nodeId: string;
   content?: Record<string, Block> | null;
   versionId: string;
+  editable: boolean;
 }
 
-export const Document = ({ nodeId, content, versionId }: DocumentProps) => {
+export const Document = ({
+  nodeId,
+  content,
+  versionId,
+  editable = false,
+}: DocumentProps) => {
   const nodeBlocks = Object.values(content ?? {});
   const contents = mapBlocksToContents(nodeId, nodeBlocks);
 
@@ -29,6 +35,7 @@ export const Document = ({ nodeId, content, versionId }: DocumentProps) => {
       documentId={nodeId}
       content={tiptapContent}
       versionId={versionId}
+      editable={editable}
     />
   );
 };

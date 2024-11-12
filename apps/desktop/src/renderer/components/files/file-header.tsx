@@ -12,7 +12,7 @@ interface FileHeaderProps {
   role: NodeRole;
 }
 
-export const FileHeader = ({ nodes, file }: FileHeaderProps) => {
+export const FileHeader = ({ nodes, file, role }: FileHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +25,11 @@ export const FileHeader = ({ nodes, file }: FileHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={file.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={file.id}
+            nodes={nodes}
+            role={role}
+          />
           <FileSettings nodeId={file.id} />
         </div>
       </div>

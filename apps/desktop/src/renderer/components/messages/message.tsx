@@ -119,14 +119,16 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
                 }}
               />
             </li>
-            <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
-              <Reply
-                className="size-4 cursor-pointer"
-                onClick={() => {
-                  conversation.onReply(message);
-                }}
-              />
-            </li>
+            {conversation.canCreateMessage && (
+              <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
+                <Reply
+                  className="size-4 cursor-pointer"
+                  onClick={() => {
+                    conversation.onReply(message);
+                  }}
+                />
+              </li>
+            )}
             {canDelete && (
               <li className="flex h-8 w-7 cursor-pointer items-center justify-center hover:bg-gray-200">
                 <MessageDeleteButton id={message.id} />

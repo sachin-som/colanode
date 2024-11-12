@@ -12,7 +12,7 @@ interface ChannelHeaderProps {
   role: NodeRole;
 }
 
-export const ChannelHeader = ({ nodes, channel }: ChannelHeaderProps) => {
+export const ChannelHeader = ({ nodes, channel, role }: ChannelHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +25,11 @@ export const ChannelHeader = ({ nodes, channel }: ChannelHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={channel.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={channel.id}
+            nodes={nodes}
+            role={role}
+          />
           <ChannelSettings nodeId={channel.id} />
         </div>
       </div>

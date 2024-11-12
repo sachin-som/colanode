@@ -64,7 +64,6 @@ export const WorkspaceUserRoleDropdown = ({
 }: WorkspaceUserRoleDropdownProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  console.log('canEdit', canEdit);
 
   const currentRole = roles.find((role) => role.value === value);
 

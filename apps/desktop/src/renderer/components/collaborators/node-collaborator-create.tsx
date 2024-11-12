@@ -31,7 +31,11 @@ export const NodeCollaboratorCreate = ({
         excluded={existingCollaborators}
       />
       <div className="flex justify-end space-x-2">
-        <NodeCollaboratorRoleDropdown value={role} onChange={setRole} />
+        <NodeCollaboratorRoleDropdown
+          value={role}
+          onChange={setRole}
+          editable={true}
+        />
         <Button
           variant="default"
           className="shrink-0"

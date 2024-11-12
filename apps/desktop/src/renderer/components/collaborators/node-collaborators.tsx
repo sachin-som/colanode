@@ -2,17 +2,24 @@ import React from 'react';
 import { Separator } from '@/renderer/components/ui/separator';
 import { NodeCollaborator } from '@/renderer/components/collaborators/node-collaborator';
 import { NodeCollaboratorCreate } from '@/renderer/components/collaborators/node-collaborator-create';
-import { extractNodeName, Node } from '@colanode/core';
+import {
+  extractNodeName,
+  hasEditorAccess,
+  Node,
+  NodeRole,
+} from '@colanode/core';
 import { buildNodeCollaborators } from '@/lib/nodes';
 
 interface NodeCollaboratorsProps {
   nodeId: string;
   nodes: Node[];
+  role: NodeRole;
 }
 
 export const NodeCollaborators = ({
   nodeId,
   nodes,
+  role,
 }: NodeCollaboratorsProps) => {
   const collaborators = buildNodeCollaborators(nodes);
   const directCollaborators = collaborators.filter(
@@ -22,15 +29,20 @@ export const NodeCollaborators = ({
     (collaborator) => collaborator.collaboratorId
   );
 
+  const canEdit = hasEditorAccess(role);
   const ancestors = nodes.reverse().filter((node) => node.id !== nodeId);
 
   return (
     <div className="flex flex-col gap-2">
-      <NodeCollaboratorCreate
-        nodeId={nodeId}
-        existingCollaborators={directCollaboratorIds}
-      />
-      <Separator />
+      {canEdit && (
+        <React.Fragment>
+          <NodeCollaboratorCreate
+            nodeId={nodeId}
+            existingCollaborators={directCollaboratorIds}
+          />
+          <Separator />
+        </React.Fragment>
+      )}
       <div className="space-y-3">
         <h4 className="text-sm font-medium">Direct access</h4>
         <div className="flex flex-col gap-3">
@@ -42,7 +54,8 @@ export const NodeCollaborators = ({
                   nodeId={nodeId}
                   collaboratorId={collaborator.collaboratorId}
                   role={collaborator.role}
-                  removable={true}
+                  editable={canEdit}
+                  removable={canEdit}
                 />
               ))}
             </React.Fragment>
@@ -75,6 +88,7 @@ export const NodeCollaborators = ({
                     nodeId={nodeId}
                     collaboratorId={collaborator.collaboratorId}
                     role={collaborator.role}
+                    editable={canEdit}
                     removable={false}
                   />
                 ))}

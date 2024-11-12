@@ -12,7 +12,7 @@ interface RecordHeaderProps {
   role: NodeRole;
 }
 
-export const RecordHeader = ({ nodes, record }: RecordHeaderProps) => {
+export const RecordHeader = ({ nodes, record, role }: RecordHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +25,11 @@ export const RecordHeader = ({ nodes, record }: RecordHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={record.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={record.id}
+            nodes={nodes}
+            role={role}
+          />
           <RecordSettings nodeId={record.id} />
         </div>
       </div>

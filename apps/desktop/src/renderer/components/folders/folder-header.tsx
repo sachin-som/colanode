@@ -12,7 +12,7 @@ interface FolderHeaderProps {
   role: NodeRole;
 }
 
-export const FolderHeader = ({ nodes, folder }: FolderHeaderProps) => {
+export const FolderHeader = ({ nodes, folder, role }: FolderHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +25,11 @@ export const FolderHeader = ({ nodes, folder }: FolderHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={folder.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={folder.id}
+            nodes={nodes}
+            role={role}
+          />
           <FolderSettings nodeId={folder.id} />
         </div>
       </div>

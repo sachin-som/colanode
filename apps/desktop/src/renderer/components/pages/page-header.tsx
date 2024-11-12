@@ -12,7 +12,7 @@ interface PageHeaderProps {
   role: NodeRole;
 }
 
-export const PageHeader = ({ nodes, page }: PageHeaderProps) => {
+export const PageHeader = ({ nodes, page, role }: PageHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +25,11 @@ export const PageHeader = ({ nodes, page }: PageHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={page.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={page.id}
+            nodes={nodes}
+            role={role}
+          />
           <PageSettings nodeId={page.id} />
         </div>
       </div>

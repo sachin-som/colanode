@@ -33,7 +33,7 @@ export const ChatContainer = ({ nodeId }: ChatContainerProps) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <ChatHeader chat={node} />
+      <ChatHeader chat={node} role={role} />
       <ChatBody chat={node} role={role} />
     </div>
   );

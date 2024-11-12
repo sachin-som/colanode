@@ -10,13 +10,15 @@ interface NodeCollaboratorProps {
   nodeId: string;
   collaboratorId: string;
   role: NodeRole;
-  removable?: boolean;
+  editable: boolean;
+  removable: boolean;
 }
 
 export const NodeCollaborator = ({
   nodeId,
   collaboratorId,
   role,
+  editable,
   removable,
 }: NodeCollaboratorProps) => {
   const workspace = useWorkspace();
@@ -52,6 +54,7 @@ export const NodeCollaborator = ({
       <div className="flex flex-row items-center gap-1">
         <NodeCollaboratorRoleDropdown
           value={role}
+          editable={editable}
           onChange={(newRole) => {
             mutate({
               input: {

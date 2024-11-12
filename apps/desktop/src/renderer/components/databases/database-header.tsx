@@ -12,7 +12,11 @@ interface DatabaseHeaderProps {
   role: NodeRole;
 }
 
-export const DatabaseHeader = ({ nodes, database }: DatabaseHeaderProps) => {
+export const DatabaseHeader = ({
+  nodes,
+  database,
+  role,
+}: DatabaseHeaderProps) => {
   const container = useContainer();
 
   return (
@@ -25,7 +29,11 @@ export const DatabaseHeader = ({ nodes, database }: DatabaseHeaderProps) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover nodeId={database.id} nodes={nodes} />
+          <NodeCollaboratorsPopover
+            nodeId={database.id}
+            nodes={nodes}
+            role={role}
+          />
           <DatabaseSettings nodeId={database.id} />
         </div>
       </div>

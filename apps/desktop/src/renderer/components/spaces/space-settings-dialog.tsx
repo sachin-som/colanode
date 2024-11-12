@@ -3,7 +3,6 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/renderer/components/ui/dialog';
-
 import {
   Tabs,
   TabsContent,
@@ -16,7 +15,8 @@ import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form'
 import { Info, Trash2, Users } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
-import { SpaceNode } from '@colanode/core';
+import { extractNodeRole, hasAdminAccess, SpaceNode } from '@colanode/core';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface SpaceSettingsDialogProps {
   space: SpaceNode;
@@ -31,6 +31,14 @@ export const SpaceSettingsDialog = ({
   onOpenChange,
   defaultTab,
 }: SpaceSettingsDialogProps) => {
+  const workspace = useWorkspace();
+  const role = extractNodeRole([space], workspace.userId);
+  if (!role) {
+    return null;
+  }
+
+  const canDelete = hasAdminAccess(role);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="md:min-h-3/4 md:max-h-3/4 p-3 md:h-3/4 md:w-3/4 md:max-w-full">
@@ -69,14 +77,16 @@ export const SpaceSettingsDialog = ({
               <Users className="mr-2 size-4" />
               Collaborators
             </TabsTrigger>
-            <TabsTrigger
-              key={`tab-trigger-delete`}
-              className="w-full justify-start p-2 hover:bg-gray-50"
-              value="delete"
-            >
-              <Trash2 className="mr-2 size-4" />
-              Delete
-            </TabsTrigger>
+            {canDelete && (
+              <TabsTrigger
+                key={`tab-trigger-delete`}
+                className="w-full justify-start p-2 hover:bg-gray-50"
+                value="delete"
+              >
+                <Trash2 className="mr-2 size-4" />
+                Delete
+              </TabsTrigger>
+            )}
           </TabsList>
           <div className="overflow-auto p-4">
             <TabsContent
@@ -91,20 +101,26 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              <NodeCollaborators nodeId={space.id} nodes={[space]} />
-            </TabsContent>
-            <TabsContent
-              key="tab-content-delete"
-              className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              value="delete"
-            >
-              <SpaceDeleteForm
-                id={space.id}
-                onDeleted={() => {
-                  onOpenChange(false);
-                }}
+              <NodeCollaborators
+                nodeId={space.id}
+                nodes={[space]}
+                role={role}
               />
             </TabsContent>
+            {canDelete && (
+              <TabsContent
+                key="tab-content-delete"
+                className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                value="delete"
+              >
+                <SpaceDeleteForm
+                  id={space.id}
+                  onDeleted={() => {
+                    onOpenChange(false);
+                  }}
+                />
+              </TabsContent>
+            )}
           </div>
         </Tabs>
       </DialogContent>

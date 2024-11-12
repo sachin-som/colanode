@@ -54,8 +54,8 @@ export const NodeCollaborators = ({
                   nodeId={nodeId}
                   collaboratorId={collaborator.collaboratorId}
                   role={collaborator.role}
-                  editable={canEdit}
-                  removable={canEdit}
+                  canEdit={canEdit}
+                  canRemove={canEdit}
                 />
               ))}
             </React.Fragment>
@@ -88,8 +88,8 @@ export const NodeCollaborators = ({
                     nodeId={nodeId}
                     collaboratorId={collaborator.collaboratorId}
                     role={collaborator.role}
-                    editable={canEdit}
-                    removable={false}
+                    canEdit={canEdit}
+                    canRemove={false}
                   />
                 ))}
               </div>

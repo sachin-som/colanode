@@ -34,7 +34,7 @@ export const NodeCollaboratorCreate = ({
         <NodeCollaboratorRoleDropdown
           value={role}
           onChange={setRole}
-          editable={true}
+          canEdit={true}
         />
         <Button
           variant="default"

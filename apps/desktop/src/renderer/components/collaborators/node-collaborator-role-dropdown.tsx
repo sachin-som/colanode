@@ -43,17 +43,17 @@ const roles: NodeCollaboratorRole[] = [
 interface NodeCollaboratorRoleDropdownProps {
   value: string;
   onChange: (value: string) => void;
-  editable: boolean;
+  canEdit: boolean;
 }
 
 export const NodeCollaboratorRoleDropdown = ({
   value,
   onChange,
-  editable,
+  canEdit,
 }: NodeCollaboratorRoleDropdownProps) => {
   const currentRole = roles.find((role) => role.value === value);
 
-  if (!editable) {
+  if (!canEdit) {
     return (
       <p className="p-1 text-sm text-muted-foreground">{currentRole?.name}</p>
     );

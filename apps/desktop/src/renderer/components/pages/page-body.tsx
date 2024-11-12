@@ -16,7 +16,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
         nodeId={page.id}
         content={page.attributes.content}
         versionId={page.versionId}
-        editable={canEdit}
+        canEdit={canEdit}
       />
     </ScrollArea>
   );

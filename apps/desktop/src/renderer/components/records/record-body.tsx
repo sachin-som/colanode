@@ -25,7 +25,7 @@ export const RecordBody = ({ record, role }: RecordBodyProps) => {
           nodeId={record.id}
           content={record.attributes.content}
           versionId={record.versionId}
-          editable={canEdit}
+          canEdit={canEdit}
         />
       </ScrollArea>
     </Database>

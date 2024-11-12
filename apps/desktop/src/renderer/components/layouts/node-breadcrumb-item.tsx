@@ -8,13 +8,11 @@ import { RecordBreadcrumbItem } from '@/renderer/components/records/record-bread
 import { FolderBreadcrumbItem } from '@/renderer/components/folders/folder-breadcrumb-item';
 import { FileBreadcrumbItem } from '@/renderer/components/files/file-breadcrumb-item';
 
-interface ContainerBreadcrumbItemProps {
+interface NodeBreadcrumbItemProps {
   node: Node;
 }
 
-export const ContainerBreadcrumbItem = ({
-  node,
-}: ContainerBreadcrumbItemProps) => {
+export const NodeBreadcrumbItem = ({ node }: NodeBreadcrumbItemProps) => {
   switch (node.type) {
     case 'space':
       return <SpaceBreadcrumbItem node={node} />;

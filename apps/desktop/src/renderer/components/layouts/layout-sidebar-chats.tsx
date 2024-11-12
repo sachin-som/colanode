@@ -13,7 +13,7 @@ import {
 import { ChatNode } from '@colanode/core';
 import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
 
-export const SidebarChats = () => {
+export const LayoutSidebarChats = () => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({

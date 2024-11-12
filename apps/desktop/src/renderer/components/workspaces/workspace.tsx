@@ -1,19 +1,9 @@
 import React from 'react';
-import { Sidebar } from '@/renderer/components/workspaces/sidebars/sidebar';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
-import {
-  Outlet,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '@/renderer/contexts/account';
-import { Modal } from '@/renderer/components/workspaces/modals/modal';
 import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
-import {
-  SidebarInset,
-  SidebarProvider,
-} from '@/renderer/components/ui/sidebar';
+import { Layout } from '@/renderer/components/layouts/layout';
 
 export const Workspace = () => {
   const { userId, nodeId } = useParams<{ userId: string; nodeId?: string }>();
@@ -35,6 +25,12 @@ export const Workspace = () => {
         ...workspace,
         navigateToNode(nodeId) {
           navigate(`/${userId}/${nodeId}`);
+          if (nodeId === modal) {
+            setSearchParams((prev) => {
+              prev.delete('modal');
+              return prev;
+            });
+          }
         },
         isNodeActive(id) {
           return id === nodeId;
@@ -45,6 +41,12 @@ export const Workspace = () => {
               ...prev,
               modal: modal,
             };
+          });
+        },
+        closeModal() {
+          setSearchParams((prev) => {
+            prev.delete('modal');
+            return prev;
           });
         },
         openSettings() {
@@ -60,32 +62,13 @@ export const Workspace = () => {
         },
       }}
     >
-      <SidebarProvider>
-        <Sidebar />
-        <SidebarInset>
-          <main className="h-full max-h-screen w-full min-w-128 flex-grow overflow-hidden bg-white">
-            <Outlet />
-          </main>
-          {modal && (
-            <Modal
-              nodeId={modal}
-              key={modal}
-              onClose={() => {
-                setSearchParams((prev) => {
-                  prev.delete('modal');
-                  return prev;
-                });
-              }}
-            />
-          )}
-        </SidebarInset>
-        {openSettings && (
-          <WorkspaceSettingsDialog
-            open={openSettings}
-            onOpenChange={setOpenSettings}
-          />
-        )}
-      </SidebarProvider>
+      <Layout nodeId={nodeId} modal={modal} />
+      {openSettings && (
+        <WorkspaceSettingsDialog
+          open={openSettings}
+          onOpenChange={setOpenSettings}
+        />
+      )}
     </WorkspaceContext.Provider>
   );
 };

@@ -1,8 +1,10 @@
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { RecordNode, Node, NodeRole } from '@colanode/core';
 import { Header } from '@/renderer/components/ui/header';
-import { ContainerBreadcrumb } from '@/renderer/components/workspaces/containers/container-breadcrumb';
+import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
 import { RecordSettings } from '@/renderer/components/records/record-settings';
+import { useContainer } from '@/renderer/contexts/container';
+import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
 
 interface RecordHeaderProps {
   nodes: Node[];
@@ -11,10 +13,17 @@ interface RecordHeaderProps {
 }
 
 export const RecordHeader = ({ nodes, record }: RecordHeaderProps) => {
+  const container = useContainer();
+
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
-        <ContainerBreadcrumb nodes={nodes} />
+        <div className="flex-grow">
+          {container.mode === 'main' && <NodeBreadcrumb nodes={nodes} />}
+          {container.mode === 'modal' && (
+            <NodeFullscreenButton nodeId={record.id} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <NodeCollaboratorsPopover nodeId={record.id} nodes={nodes} />
           <RecordSettings nodeId={record.id} />

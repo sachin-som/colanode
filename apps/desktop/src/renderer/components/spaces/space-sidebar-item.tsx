@@ -12,7 +12,7 @@ import {
 import { ChannelCreateDialog } from '@/renderer/components/channels/channel-create-dialog';
 import { PageCreateDialog } from '@/renderer/components/pages/page-create-dialog';
 import { DatabaseCreateDialog } from '@/renderer/components/databases/database-create-dialog';
-import { SidebarItem } from '@/renderer/components/workspaces/sidebars/sidebar-item';
+import { NodeSidebarItem } from '@/renderer/components/layouts/node-sidebar-item';
 import {
   Collapsible,
   CollapsibleContent,
@@ -170,7 +170,7 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
                   <SidebarMenuSubButton
                     isActive={workspace.isNodeActive(child.id)}
                   >
-                    <SidebarItem node={child} />
+                    <NodeSidebarItem node={child} />
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}

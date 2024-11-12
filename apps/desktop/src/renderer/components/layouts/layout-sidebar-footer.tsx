@@ -23,7 +23,7 @@ import { useAccount } from '@/renderer/contexts/account';
 import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
 import { useApp } from '@/renderer/contexts/app';
 
-export function SidebarFooter() {
+export function LayoutSidebarFooter() {
   const [open, setOpen] = React.useState(false);
 
   const app = useApp();

@@ -14,16 +14,16 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { ContainerBreadcrumbItem } from '@/renderer/components/workspaces/containers/container-breadcrumb-item';
+import { NodeBreadcrumbItem } from '@/renderer/components/layouts/node-breadcrumb-item';
 
-interface ContainerBreadcrumbProps {
+interface NodeBreadcrumbProps {
   nodes: Node[];
 }
 
 const isClickable = (type: string) =>
   type !== NodeTypes.Space && type !== NodeTypes.Message;
 
-export const ContainerBreadcrumb = ({ nodes }: ContainerBreadcrumbProps) => {
+export const NodeBreadcrumb = ({ nodes }: NodeBreadcrumbProps) => {
   const workspace = useWorkspace();
 
   // Show ellipsis if we have more than 3 nodes (first + last two)
@@ -36,7 +36,7 @@ export const ContainerBreadcrumb = ({ nodes }: ContainerBreadcrumbProps) => {
   const ellipsisNodes = showEllipsis ? nodes.slice(1, -2) : [];
 
   return (
-    <Breadcrumb className="flex-grow">
+    <Breadcrumb>
       <BreadcrumbList>
         {visibleNodes.map((node, index) => {
           const isFirst = index === 0;
@@ -57,7 +57,7 @@ export const ContainerBreadcrumb = ({ nodes }: ContainerBreadcrumbProps) => {
                   }
                 }}
               >
-                <ContainerBreadcrumbItem node={node} />
+                <NodeBreadcrumbItem node={node} />
               </BreadcrumbItem>
               {showEllipsis && isFirst && (
                 <React.Fragment>
@@ -89,7 +89,7 @@ export const ContainerBreadcrumb = ({ nodes }: ContainerBreadcrumbProps) => {
                                     : ''
                                 }
                               >
-                                <ContainerBreadcrumbItem node={ellipsisNode} />
+                                <NodeBreadcrumbItem node={ellipsisNode} />
                               </BreadcrumbItem>
                             </DropdownMenuItem>
                           );

@@ -8,7 +8,6 @@ import { WorkspaceCreate } from '@/renderer/components/workspaces/workspace-crea
 import { Workspace } from '@/renderer/components/workspaces/workspace';
 import { WorkspaceRedirect } from '@/renderer/components/workspaces/workspace-redirect';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
-import { Container } from '@/renderer/components/workspaces/containers/container';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Login } from '@/renderer/components/accounts/login';
@@ -33,14 +32,8 @@ const router = createHashRouter([
         element: <Login />,
       },
       {
-        path: ':userId',
+        path: ':userId/:nodeId?',
         element: <Workspace />,
-        children: [
-          {
-            path: ':nodeId',
-            element: <Container />,
-          },
-        ],
       },
     ],
   },

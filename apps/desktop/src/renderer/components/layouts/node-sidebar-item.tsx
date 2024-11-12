@@ -7,11 +7,13 @@ import { PageSidebarItem } from '@/renderer/components/pages/page-sidebar-item';
 import { DatabaseSidebarItem } from '@/renderer/components/databases/database-sidiebar-item';
 import { FolderSidebarItem } from '@/renderer/components/folders/folder-sidebar-item';
 
-interface SidebarItemProps {
+interface NodeSidebarItemProps {
   node: Node;
 }
 
-export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
+export const NodeSidebarItem = ({
+  node,
+}: NodeSidebarItemProps): React.ReactNode => {
   switch (node.type) {
     case 'space':
       return <SpaceSidebarItem node={node} />;

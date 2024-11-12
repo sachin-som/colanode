@@ -10,7 +10,7 @@ import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-but
 import { SpaceNode } from '@colanode/core';
 import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
 
-export const SidebarSpaces = () => {
+export const LayoutSidebarSpaces = () => {
   const workspace = useWorkspace();
   const canCreateSpace =
     workspace.role !== 'guest' && workspace.role !== 'none';

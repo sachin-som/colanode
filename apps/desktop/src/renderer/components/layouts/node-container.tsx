@@ -1,4 +1,3 @@
-import { useParams } from 'react-router-dom';
 import { PageContainer } from '@/renderer/components/pages/page-container';
 import { ChannelContainer } from '@/renderer/components/channels/channel-container';
 import { DatabaseContainer } from '@/renderer/components/databases/database-container';
@@ -8,13 +7,13 @@ import { FolderContainer } from '@/renderer/components/folders/folder-container'
 import { FileContainer } from '@/renderer/components/files/file-container';
 import { getIdType, IdType } from '@colanode/core';
 
-export const Container = () => {
-  const { nodeId } = useParams<{ nodeId: string }>();
-  if (!nodeId) {
-    return null;
-  }
+interface NodeContainerProps {
+  nodeId: string;
+}
 
+export const NodeContainer = ({ nodeId }: NodeContainerProps) => {
   const idType = getIdType(nodeId);
+
   switch (idType) {
     case IdType.Channel:
       return <ChannelContainer nodeId={nodeId} />;

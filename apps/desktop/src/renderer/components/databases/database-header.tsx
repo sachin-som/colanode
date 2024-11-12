@@ -1,8 +1,10 @@
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { DatabaseNode, Node, NodeRole } from '@colanode/core';
 import { Header } from '@/renderer/components/ui/header';
-import { ContainerBreadcrumb } from '@/renderer/components/workspaces/containers/container-breadcrumb';
+import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
 import { DatabaseSettings } from '@/renderer/components/databases/database-settings';
+import { useContainer } from '@/renderer/contexts/container';
+import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
 
 interface DatabaseHeaderProps {
   nodes: Node[];
@@ -11,10 +13,17 @@ interface DatabaseHeaderProps {
 }
 
 export const DatabaseHeader = ({ nodes, database }: DatabaseHeaderProps) => {
+  const container = useContainer();
+
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
-        <ContainerBreadcrumb nodes={nodes} />
+        <div className="flex-grow">
+          {container.mode === 'main' && <NodeBreadcrumb nodes={nodes} />}
+          {container.mode === 'modal' && (
+            <NodeFullscreenButton nodeId={database.id} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <NodeCollaboratorsPopover nodeId={database.id} nodes={nodes} />
           <DatabaseSettings nodeId={database.id} />

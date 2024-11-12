@@ -18,7 +18,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { ChevronsUpDown, Settings, Plus } from 'lucide-react';
 
-export const SidebarHeader = () => {
+export const LayoutSidebarHeader = () => {
   const workspace = useWorkspace();
   const account = useAccount();
   const navigate = useNavigate();

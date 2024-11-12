@@ -1,8 +1,10 @@
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { ChannelNode, Node, NodeRole } from '@colanode/core';
 import { Header } from '@/renderer/components/ui/header';
-import { ContainerBreadcrumb } from '@/renderer/components/workspaces/containers/container-breadcrumb';
-import { ChannelSettings } from './channel-settings';
+import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
+import { ChannelSettings } from '@/renderer/components/channels/channel-settings';
+import { useContainer } from '@/renderer/contexts/container';
+import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
 
 interface ChannelHeaderProps {
   nodes: Node[];
@@ -11,10 +13,17 @@ interface ChannelHeaderProps {
 }
 
 export const ChannelHeader = ({ nodes, channel }: ChannelHeaderProps) => {
+  const container = useContainer();
+
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
-        <ContainerBreadcrumb nodes={nodes} />
+        <div className="flex-grow">
+          {container.mode === 'main' && <NodeBreadcrumb nodes={nodes} />}
+          {container.mode === 'modal' && (
+            <NodeFullscreenButton nodeId={channel.id} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <NodeCollaboratorsPopover nodeId={channel.id} nodes={nodes} />
           <ChannelSettings nodeId={channel.id} />

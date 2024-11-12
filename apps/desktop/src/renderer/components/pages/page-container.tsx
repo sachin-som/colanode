@@ -1,9 +1,8 @@
-import { ScrollArea } from '@/renderer/components/ui/scroll-area';
-import { Document } from '@/renderer/components/documents/document';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { extractNodeRole } from '@colanode/core';
 import { PageHeader } from '@/renderer/components/pages/page-header';
+import { PageBody } from '@/renderer/components/pages/page-body';
 
 interface PageContainerProps {
   nodeId: string;
@@ -32,13 +31,7 @@ export const PageContainer = ({ nodeId }: PageContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <PageHeader nodes={nodes} page={page} role={role} />
-      <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
-        <Document
-          nodeId={page.id}
-          content={page.attributes.content}
-          versionId={page.versionId}
-        />
-      </ScrollArea>
+      <PageBody page={page} />
     </div>
   );
 };

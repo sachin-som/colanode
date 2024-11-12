@@ -1,8 +1,8 @@
-import { Conversation } from '@/renderer/components/messages/conversation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { ChannelHeader } from '@/renderer/components/channels/channel-header';
 import { extractNodeRole } from '@colanode/core';
+import { ChannelBody } from '@/renderer/components/channels/channel-body';
 
 interface ChannelContainerProps {
   nodeId: string;
@@ -31,7 +31,7 @@ export const ChannelContainer = ({ nodeId }: ChannelContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <ChannelHeader nodes={nodes} channel={channel} role={role} />
-      <Conversation conversationId={nodeId} />
+      <ChannelBody channel={channel} />
     </div>
   );
 };

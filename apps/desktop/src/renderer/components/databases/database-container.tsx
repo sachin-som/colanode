@@ -1,9 +1,8 @@
-import { Database } from '@/renderer/components/databases/database';
-import { DatabaseViews } from '@/renderer/components/databases/database-views';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { DatabaseHeader } from '@/renderer/components/databases/database-header';
 import { extractNodeRole } from '@colanode/core';
+import { DatabaseBody } from '@/renderer/components/databases/database-body';
 
 interface DatabaseContainerProps {
   nodeId: string;
@@ -30,11 +29,9 @@ export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
   }
 
   return (
-    <Database databaseId={nodeId}>
-      <div className="flex h-full w-full flex-col">
-        <DatabaseHeader nodes={nodes} database={database} role={role} />
-        <DatabaseViews />
-      </div>
-    </Database>
+    <div className="flex h-full w-full flex-col">
+      <DatabaseHeader nodes={nodes} database={database} role={role} />
+      <DatabaseBody database={database} />
+    </div>
   );
 };

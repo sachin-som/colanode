@@ -16,7 +16,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 
 export const Workspace = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId, nodeId } = useParams<{ userId: string; nodeId?: string }>();
 
   const account = useAccount();
   const navigate = useNavigate();
@@ -35,6 +35,9 @@ export const Workspace = () => {
         ...workspace,
         navigateToNode(nodeId) {
           navigate(`/${userId}/${nodeId}`);
+        },
+        isNodeActive(id) {
+          return id === nodeId;
         },
         openModal(modal) {
           setSearchParams((prev) => {

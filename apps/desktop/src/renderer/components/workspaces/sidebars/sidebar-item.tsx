@@ -1,50 +1,31 @@
 import React from 'react';
-import { SidebarNode } from '@/types/workspaces';
-import { cn } from '@/lib/utils';
-import { Avatar } from '@/renderer/components/avatars/avatar';
+import { Node } from '@colanode/core';
+import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
+import { ChannelSidebarItem } from '@/renderer/components/channels/channel-sidebar-item';
+import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
+import { PageSidebarItem } from '@/renderer/components/pages/page-sidebar-item';
+import { DatabaseSidebarItem } from '@/renderer/components/databases/database-sidiebar-item';
+import { FolderSidebarItem } from '@/renderer/components/folders/folder-sidebar-item';
 
 interface SidebarItemProps {
-  node: SidebarNode;
-  isActive?: boolean;
+  node: Node;
 }
 
-export const SidebarItem = ({
-  node,
-  isActive,
-}: SidebarItemProps): React.ReactNode => {
-  const isUnread =
-    !isActive && (node.unreadCount > 0 || node.mentionsCount > 0);
-
-  return (
-    <button
-      key={node.id}
-      className={cn(
-        'flex w-full items-center',
-        isActive && 'bg-sidebar-accent'
-      )}
-    >
-      <Avatar
-        id={node.id}
-        avatar={node.avatar}
-        name={node.name}
-        className="h-4 w-4"
-      />
-      <span
-        className={cn(
-          'line-clamp-1 w-full flex-grow pl-2 text-left',
-          isUnread && 'font-bold'
-        )}
-      >
-        {node.name ?? 'Unnamed'}
-      </span>
-      {node.mentionsCount > 0 && (
-        <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">
-          {node.mentionsCount}
-        </span>
-      )}
-      {node.mentionsCount == 0 && isUnread && (
-        <span className="size-2 rounded-full bg-red-500" />
-      )}
-    </button>
-  );
+export const SidebarItem = ({ node }: SidebarItemProps): React.ReactNode => {
+  switch (node.type) {
+    case 'space':
+      return <SpaceSidebarItem node={node} />;
+    case 'channel':
+      return <ChannelSidebarItem node={node} />;
+    case 'chat':
+      return <ChatSidebarItem node={node} />;
+    case 'page':
+      return <PageSidebarItem node={node} />;
+    case 'database':
+      return <DatabaseSidebarItem node={node} />;
+    case 'folder':
+      return <FolderSidebarItem node={node} />;
+    default:
+      return null;
+  }
 };

@@ -4,8 +4,6 @@ import { AccountListQueryHandler } from '@/main/handlers/queries/accounts-list';
 import { MessageListQueryHandler } from '@/main/handlers/queries/message-list';
 import { NodeGetQueryHandler } from '@/main/handlers/queries/node-get';
 import { ServerListQueryHandler } from '@/main/handlers/queries/server-list';
-import { SidebarChatListQueryHandler } from '@/main/handlers/queries/sidebar-chat-list';
-import { SidebarSpaceListQueryHandler } from '@/main/handlers/queries/sidebar-space-list';
 import { UserSearchQueryHandler } from '@/main/handlers/queries/user-search';
 import { WorkspaceListQueryHandler } from '@/main/handlers/queries/workspace-list';
 import { WorkspaceUserListQueryHandler } from '@/main/handlers/queries/workspace-user-list';
@@ -14,6 +12,7 @@ import { FileListQueryHandler } from '@/main/handlers/queries/file-list';
 import { EmojisGetQueryHandler } from '@/main/handlers/queries/emojis-get';
 import { IconsGetQueryHandler } from '@/main/handlers/queries/icons-get';
 import { NodeWithAncestorsGetQueryHandler } from '@/main/handlers/queries/node-with-ancestors-get';
+import { NodeChildrenGetQueryHandler } from '@/main/handlers/queries/node-children-get';
 
 type QueryHandlerMap = {
   [K in keyof QueryMap]: QueryHandler<QueryMap[K]['input']>;
@@ -25,8 +24,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   node_get: new NodeGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
   server_list: new ServerListQueryHandler(),
-  sidebar_chat_list: new SidebarChatListQueryHandler(),
-  sidebar_space_list: new SidebarSpaceListQueryHandler(),
   user_search: new UserSearchQueryHandler(),
   workspace_list: new WorkspaceListQueryHandler(),
   workspace_user_list: new WorkspaceUserListQueryHandler(),
@@ -34,4 +31,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   emojis_get: new EmojisGetQueryHandler(),
   icons_get: new IconsGetQueryHandler(),
   node_with_ancestors_get: new NodeWithAncestorsGetQueryHandler(),
+  node_children_get: new NodeChildrenGetQueryHandler(),
 };

@@ -1,6 +1,5 @@
 import { ChatCreatePopover } from '@/renderer/components/chats/chat-create-popover';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { SidebarChatItem } from '@/renderer/components/workspaces/sidebars/sidebar-chat-item';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 import {
@@ -11,16 +10,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/renderer/components/ui/sidebar';
-import { useParams } from 'react-router-dom';
+import { ChatNode } from '@colanode/core';
+import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
 
 export const SidebarChats = () => {
   const workspace = useWorkspace();
-  const { nodeId } = useParams<{ nodeId?: string }>();
 
   const { data } = useQuery({
-    type: 'sidebar_chat_list',
+    type: 'node_children_get',
     userId: workspace.userId,
+    nodeId: workspace.id,
+    types: ['chat'],
   });
+
+  const chats = data?.map((node) => node as ChatNode) ?? [];
 
   return (
     <SidebarGroup className="group/sidebar-chats group-data-[collapsible=icon]:hidden">
@@ -29,15 +32,15 @@ export const SidebarChats = () => {
         <ChatCreatePopover />
       </SidebarGroupAction>
       <SidebarMenu>
-        {data?.map((item) => (
-          <SidebarMenuItem key={item.name}>
+        {chats.map((item) => (
+          <SidebarMenuItem key={item.id}>
             <SidebarMenuButton
-              isActive={nodeId === item.id}
+              isActive={workspace.isNodeActive(item.id)}
               onClick={() => {
                 workspace.navigateToNode(item.id);
               }}
             >
-              <SidebarChatItem node={item} isActive={nodeId === item.id} />
+              <ChatSidebarItem node={item} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

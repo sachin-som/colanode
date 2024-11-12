@@ -1,4 +1,5 @@
 import React from 'react';
+import { SpaceNode } from '@colanode/core';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import {
   DropdownMenu,
@@ -11,7 +12,6 @@ import {
 import { ChannelCreateDialog } from '@/renderer/components/channels/channel-create-dialog';
 import { PageCreateDialog } from '@/renderer/components/pages/page-create-dialog';
 import { DatabaseCreateDialog } from '@/renderer/components/databases/database-create-dialog';
-import { SidebarSpaceNode } from '@/types/workspaces';
 import { SidebarItem } from '@/renderer/components/workspaces/sidebars/sidebar-item';
 import {
   Collapsible,
@@ -39,20 +39,28 @@ import {
   Plus,
   ChevronRight,
 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface SettingsState {
   open: boolean;
   tab?: string;
 }
 
-interface SidebarSpaceNodeProps {
-  node: SidebarSpaceNode;
+interface SpaceSidebarItemProps {
+  node: SpaceNode;
 }
 
-export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
+export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
   const workspace = useWorkspace();
-  const { nodeId } = useParams<{ nodeId?: string }>();
+
+  const { data } = useQuery({
+    type: 'node_children_get',
+    nodeId: node.id,
+    userId: workspace.userId,
+    types: ['page', 'channel', 'database', 'folder'],
+  });
+
+  const children = data ?? [];
 
   const [openCreatePage, setOpenCreatePage] = React.useState(false);
   const [openCreateChannel, setOpenCreateChannel] = React.useState(false);
@@ -73,18 +81,17 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
-              isActive={nodeId === node.id}
-              tooltip={node.name ?? ''}
+              tooltip={node.attributes.name ?? ''}
               className="group/space-button"
             >
               <Avatar
                 id={node.id}
-                avatar={node.avatar}
-                name={node.name}
+                avatar={node.attributes.avatar}
+                name={node.attributes.name}
                 className="size-4 group-hover/space-button:hidden"
               />
               <ChevronRight className="hidden size-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/collapsible:rotate-90" />
-              <span>{node.name}</span>
+              <span>{node.attributes.name}</span>
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <DropdownMenu>
@@ -97,7 +104,9 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
               </SidebarMenuAction>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="ml-1 w-72">
-              <DropdownMenuLabel>{node.name ?? 'Unnamed'}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {node.attributes.name ?? 'Unnamed'}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
                 <div className="flex flex-row items-center gap-2">
@@ -150,7 +159,7 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
 
           <CollapsibleContent>
             <SidebarMenuSub className="mr-0 pr-0">
-              {node.children.map((child) => (
+              {children.map((child) => (
                 <SidebarMenuSubItem
                   key={child.id}
                   onClick={() => {
@@ -158,8 +167,10 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
                   }}
                   className="cursor-pointer"
                 >
-                  <SidebarMenuSubButton isActive={nodeId === child.id}>
-                    <SidebarItem node={child} isActive={nodeId === child.id} />
+                  <SidebarMenuSubButton
+                    isActive={workspace.isNodeActive(child.id)}
+                  >
+                    <SidebarItem node={child} />
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}
@@ -198,8 +209,8 @@ export const SidebarSpaceItem = ({ node }: SidebarSpaceNodeProps) => {
       {settingsState.open && (
         <SpaceSettingsDialog
           id={node.id}
-          name={node.name}
-          avatar={node.avatar}
+          name={node.attributes.name}
+          avatar={node.attributes.avatar}
           open={settingsState.open}
           onOpenChange={(open) =>
             setSettingsState({ open, tab: settingsState.tab })

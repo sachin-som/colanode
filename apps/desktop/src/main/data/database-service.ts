@@ -2,11 +2,10 @@ import fs from 'fs';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import { AppDatabaseSchema } from '@/main/data/app/schema';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
-import { buildSqlite } from '@/main/data/utils';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
 import { appDatabasePath, getWorkspaceDirectoryPath } from '@/main/utils';
-
+import SQLite from 'better-sqlite3';
 class DatabaseService {
   private initPromise: Promise<void> | null = null;
   private readonly workspaceDatabases: Map<
@@ -18,7 +17,7 @@ class DatabaseService {
 
   constructor() {
     const dialect = new SqliteDialect({
-      database: buildSqlite(appDatabasePath),
+      database: this.buildSqlite(appDatabasePath),
     });
 
     this.appDatabase = new Kysely<AppDatabaseSchema>({ dialect });
@@ -102,7 +101,7 @@ class DatabaseService {
     }
 
     const dialect = new SqliteDialect({
-      database: buildSqlite(`${workspaceDir}/workspace.db`),
+      database: this.buildSqlite(`${workspaceDir}/workspace.db`),
     });
 
     const workspaceDatabase = new Kysely<WorkspaceDatabaseSchema>({
@@ -140,6 +139,12 @@ class DatabaseService {
 
     await migrator.migrateToLatest();
   }
+
+  private buildSqlite = (filename: string): SQLite.Database => {
+    const database = new SQLite(filename);
+    database.pragma('journal_mode = WAL');
+    return database;
+  };
 }
 
 export const databaseService = new DatabaseService();

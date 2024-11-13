@@ -1,15 +1,15 @@
 import { Node } from '@colanode/core';
 
-export type NodeWithAncestorsGetQueryInput = {
-  type: 'node_with_ancestors_get';
+export type NodeTreeGetQueryInput = {
+  type: 'node_tree_get';
   nodeId: string;
   userId: string;
 };
 
 declare module '@/operations/queries' {
   interface QueryMap {
-    node_with_ancestors_get: {
-      input: NodeWithAncestorsGetQueryInput;
+    node_tree_get: {
+      input: NodeTreeGetQueryInput;
       output: Node[];
     };
   }

@@ -11,7 +11,7 @@ import { RecordListQueryHandler } from '@/main/handlers/queries/record-list';
 import { FileListQueryHandler } from '@/main/handlers/queries/file-list';
 import { EmojisGetQueryHandler } from '@/main/handlers/queries/emojis-get';
 import { IconsGetQueryHandler } from '@/main/handlers/queries/icons-get';
-import { NodeWithAncestorsGetQueryHandler } from '@/main/handlers/queries/node-with-ancestors-get';
+import { NodeTreeGetQueryHandler } from '@/main/handlers/queries/node-tree-get';
 import { NodeChildrenGetQueryHandler } from '@/main/handlers/queries/node-children-get';
 
 type QueryHandlerMap = {
@@ -30,6 +30,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_list: new FileListQueryHandler(),
   emojis_get: new EmojisGetQueryHandler(),
   icons_get: new IconsGetQueryHandler(),
-  node_with_ancestors_get: new NodeWithAncestorsGetQueryHandler(),
+  node_tree_get: new NodeTreeGetQueryHandler(),
   node_children_get: new NodeChildrenGetQueryHandler(),
 };

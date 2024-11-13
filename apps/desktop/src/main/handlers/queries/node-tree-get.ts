@@ -8,15 +8,15 @@ import {
   QueryResult,
 } from '@/main/types';
 import { isEqual } from 'lodash-es';
-import { NodeWithAncestorsGetQueryInput } from '@/operations/queries/node-with-ancestors-get';
+import { NodeTreeGetQueryInput } from '@/operations/queries/node-tree-get';
 import { fetchNodeAncestors } from '@/main/utils';
 
-export class NodeWithAncestorsGetQueryHandler
-  implements QueryHandler<NodeWithAncestorsGetQueryInput>
+export class NodeTreeGetQueryHandler
+  implements QueryHandler<NodeTreeGetQueryInput>
 {
   public async handleQuery(
-    input: NodeWithAncestorsGetQueryInput
-  ): Promise<QueryResult<NodeWithAncestorsGetQueryInput>> {
+    input: NodeTreeGetQueryInput
+  ): Promise<QueryResult<NodeTreeGetQueryInput>> {
     const rows = await this.fetchNodes(input);
 
     return {
@@ -29,9 +29,9 @@ export class NodeWithAncestorsGetQueryHandler
 
   public async checkForChanges(
     changes: MutationChange[],
-    input: NodeWithAncestorsGetQueryInput,
+    input: NodeTreeGetQueryInput,
     state: Record<string, any>
-  ): Promise<ChangeCheckResult<NodeWithAncestorsGetQueryInput>> {
+  ): Promise<ChangeCheckResult<NodeTreeGetQueryInput>> {
     if (
       !changes.some(
         (change) =>
@@ -64,7 +64,7 @@ export class NodeWithAncestorsGetQueryHandler
   }
 
   private async fetchNodes(
-    input: NodeWithAncestorsGetQueryInput
+    input: NodeTreeGetQueryInput
   ): Promise<SelectNode[]> {
     const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
       input.userId

@@ -11,7 +11,7 @@ interface FileContainerProps {
 export const FileContainer = ({ nodeId }: FileContainerProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    type: 'node_with_ancestors_get',
+    type: 'node_tree_get',
     nodeId,
     userId: workspace.userId,
   });

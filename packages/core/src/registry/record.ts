@@ -30,9 +30,21 @@ export const recordModel: NodeModel = {
       return false;
     }
 
-    return context.hasCollaboratorAccess();
+    if (node.createdBy === context.userId) {
+      return true;
+    }
+
+    return context.hasEditorAccess();
   },
-  canDelete: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canDelete: async (context, node) => {
+    if (node.type !== 'record') {
+      return false;
+    }
+
+    if (node.createdBy === context.userId) {
+      return true;
+    }
+
+    return context.hasEditorAccess();
   },
 };

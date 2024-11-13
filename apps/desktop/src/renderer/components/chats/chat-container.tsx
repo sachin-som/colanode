@@ -26,7 +26,7 @@ export const ChatContainer = ({ nodeId }: ChatContainerProps) => {
     return null;
   }
 
-  const role = extractNodeRole([node], workspace.userId);
+  const role = extractNodeRole(node, workspace.userId);
   if (!role) {
     return null;
   }

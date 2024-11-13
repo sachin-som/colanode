@@ -10,14 +10,15 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { FieldDeleteDialog } from '@/renderer/components/databases/fields/field-delete-dialog';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { Trash2 } from 'lucide-react';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface RecordFieldProps {
   field: FieldAttributes;
 }
 
 export const RecordField = ({ field }: RecordFieldProps) => {
+  const database = useDatabase();
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  const canEditDatabase = true;
 
   return (
     <React.Fragment>
@@ -31,7 +32,7 @@ export const RecordField = ({ field }: RecordFieldProps) => {
         <PopoverContent className="ml-1 flex w-72 flex-col gap-1 p-2 text-sm">
           <FieldRenameInput field={field} />
           <Separator />
-          {canEditDatabase && (
+          {database.canEdit && (
             <div
               className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100"
               onClick={() => {

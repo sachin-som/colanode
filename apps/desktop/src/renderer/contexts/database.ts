@@ -4,6 +4,7 @@ import {
   FieldAttributes,
   FieldType,
   SelectOptionAttributes,
+  NodeRole,
 } from '@colanode/core';
 
 interface DatabaseContext {
@@ -13,6 +14,7 @@ interface DatabaseContext {
   views: ViewAttributes[];
   canEdit: boolean;
   canCreateRecord: boolean;
+  role: NodeRole;
   createField: (type: FieldType, name: string) => void;
   renameField: (id: string, name: string) => void;
   deleteField: (id: string) => void;

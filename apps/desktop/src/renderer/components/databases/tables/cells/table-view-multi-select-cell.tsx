@@ -32,6 +32,21 @@ export const TableViewMultiSelectCell = ({
     selectedValues.includes(option.id)
   );
 
+  if (!record.canEdit) {
+    return (
+      <div className="flex h-full w-full cursor-pointer flex-wrap gap-1 p-1">
+        {selectedOptions?.map((option) => (
+          <SelectOptionBadge
+            key={option.id}
+            name={option.name}
+            color={option.color}
+          />
+        ))}
+        {selectedOptions?.length === 0 && ' '}
+      </div>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

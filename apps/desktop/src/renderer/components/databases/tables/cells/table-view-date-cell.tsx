@@ -12,6 +12,7 @@ export const TableViewDateCell = ({ field }: TableViewDateCellProps) => {
   return (
     <DatePicker
       value={record.getDateValue(field)}
+      readonly={!record.canEdit}
       onChange={(newValue) => {
         if (!record.canEdit) return;
 

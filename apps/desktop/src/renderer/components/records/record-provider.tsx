@@ -1,19 +1,23 @@
 import React from 'react';
 import { RecordContext } from '@/renderer/contexts/record';
-import { RecordNode } from '@colanode/core';
+import { hasEditorAccess, NodeRole, RecordNode } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 
 export const RecordProvider = ({
   record,
+  role,
   children,
 }: {
   record: RecordNode;
+  role: NodeRole;
   children: React.ReactNode;
 }) => {
   const workspace = useWorkspace();
-
   const { mutate } = useMutation();
+
+  const canEdit =
+    record.createdBy === workspace.userId || hasEditorAccess(role);
 
   return (
     <RecordContext.Provider
@@ -26,7 +30,7 @@ export const RecordProvider = ({
         createdAt: record.createdAt,
         updatedBy: record.updatedBy,
         updatedAt: record.updatedAt,
-        canEdit: true,
+        canEdit,
         updateFieldValue: (field, value) => {
           mutate({
             input: {

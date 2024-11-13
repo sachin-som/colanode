@@ -29,6 +29,21 @@ export const TableViewSelectCell = ({ field }: TableViewSelectCellProps) => {
     (option) => option.id === selectedValue
   );
 
+  if (!record.canEdit) {
+    return (
+      <div className="h-full w-full cursor-pointer p-1">
+        {selectedOption ? (
+          <SelectOptionBadge
+            name={selectedOption.name}
+            color={selectedOption.color}
+          />
+        ) : (
+          ' '
+        )}
+      </div>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

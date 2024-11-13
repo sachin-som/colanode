@@ -19,12 +19,13 @@ export const extractNodeName = (attributes: NodeAttributes): string | null => {
 };
 
 export const extractNodeRole = (
-  ancestors: Node[],
+  nodeTree: Node | Node[],
   collaboratorId: string
 ): NodeRole | null => {
+  const nodes = Array.isArray(nodeTree) ? nodeTree : [nodeTree];
   let role: NodeRole | null = null;
-  for (const ancestor of ancestors) {
-    const collaborators = extractNodeCollaborators(ancestor.attributes);
+  for (const node of nodes) {
+    const collaborators = extractNodeCollaborators(node.attributes);
     const collaboratorRole = collaborators[collaboratorId];
     if (collaboratorRole) {
       role = collaboratorRole;

@@ -1,8 +1,10 @@
 import { TableViewNameCell } from '@/renderer/components/databases/tables/table-view-name-cell';
 import { TableViewFieldCell } from '@/renderer/components/databases/tables/table-view-field-cell';
-import { RecordNode } from '@colanode/core';
+import { extractNodeRole, RecordNode } from '@colanode/core';
 import { useView } from '@/renderer/contexts/view';
 import { RecordProvider } from '@/renderer/components/records/record-provider';
+import { useDatabase } from '@/renderer/contexts/database';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface TableViewRowProps {
   index: number;
@@ -10,10 +12,13 @@ interface TableViewRowProps {
 }
 
 export const TableViewRow = ({ index, record }: TableViewRowProps) => {
+  const workspace = useWorkspace();
+  const database = useDatabase();
   const view = useView();
+  const role = extractNodeRole(record, workspace.userId) ?? database.role;
 
   return (
-    <RecordProvider record={record}>
+    <RecordProvider record={record} role={role}>
       <div className="animate-fade-in flex flex-row items-center gap-0.5 border-b">
         <span
           className="flex cursor-pointer items-center justify-center text-sm text-muted-foreground"

@@ -27,6 +27,7 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
       value={{
         id: database.id,
         name: database.attributes.name,
+        role,
         fields: Object.values(database.attributes.fields),
         views: Object.values(database.attributes.views),
         canEdit,

@@ -12,6 +12,7 @@ interface DatePickerProps {
   className?: string;
   onChange: (date: Date | null) => void;
   placeholder?: string;
+  readonly?: boolean;
 }
 
 export const DatePicker = ({
@@ -19,10 +20,21 @@ export const DatePicker = ({
   className,
   onChange,
   placeholder,
+  readonly,
 }: DatePickerProps) => {
   const [open, setOpen] = React.useState(false);
   const dateObj = value ? new Date(value) : undefined;
   const placeHolderText = placeholder ?? '';
+
+  if (readonly) {
+    return (
+      <div
+        className={cn(!dateObj && 'text-sm text-muted-foreground', className)}
+      >
+        {dateObj ? dateObj.toLocaleDateString() : ''}
+      </div>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>

@@ -32,7 +32,7 @@ export const SpaceSettingsDialog = ({
   defaultTab,
 }: SpaceSettingsDialogProps) => {
   const workspace = useWorkspace();
-  const role = extractNodeRole([space], workspace.userId);
+  const role = extractNodeRole(space, workspace.userId);
   if (!role) {
     return null;
   }

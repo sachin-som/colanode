@@ -10,6 +10,7 @@ import {
   NodeRole,
   RecordNode,
 } from '@colanode/core';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordBodyProps {
   record: RecordNode;
@@ -24,12 +25,14 @@ export const RecordBody = ({
   database,
   databaseRole,
 }: RecordBodyProps) => {
-  const canEdit = hasEditorAccess(recordRole);
+  const workspace = useWorkspace();
+  const canEdit =
+    record.createdBy === workspace.userId || hasEditorAccess(recordRole);
 
   return (
     <Database database={database} role={databaseRole}>
       <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
-        <RecordProvider record={record}>
+        <RecordProvider record={record} role={recordRole}>
           <RecordAttributes />
         </RecordProvider>
         <Separator className="my-4 w-full" />

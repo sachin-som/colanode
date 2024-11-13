@@ -41,6 +41,7 @@ export const SelectFieldOptions = ({
   const [inputValue, setInputValue] = React.useState('');
   const [color, setColor] = React.useState(getRandomSelectOptionColor());
   const showNewOption =
+    database.canEdit &&
     allowAdd &&
     !selectOptions.some((option) => option.name === inputValue.trim());
 

@@ -1,5 +1,5 @@
-import { MessageContext, MessageHandler } from '@/operations/messages';
-import { LocalNodeDeleteMessageInput } from '@/operations/messages/local-node-delete';
+import { MessageContext, MessageHandler } from '@/shared/messages';
+import { LocalNodeDeleteMessageInput } from '@/shared/messages/local-node-delete';
 import { socketService } from '@/main/services/socket-service';
 
 export class LocalNodeDeleteMessageHandler

@@ -1,6 +1,9 @@
-import { MutationHandler, MutationResult } from '@/main/types';
+import { MutationHandler } from '@/main/types';
 import { generateId, IdType } from '@colanode/core';
-import { FileCreateMutationInput } from '@/operations/mutations/file-create';
+import {
+  FileCreateMutationInput,
+  FileCreateMutationOutput,
+} from '@/shared/mutations/file-create';
 import { fileService } from '@/main/services/file-service';
 import { FileAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
@@ -10,7 +13,7 @@ export class FileCreateMutationHandler
 {
   async handleMutation(
     input: FileCreateMutationInput
-  ): Promise<MutationResult<FileCreateMutationInput>> {
+  ): Promise<FileCreateMutationOutput> {
     const metadata = fileService.getFileMetadata(input.filePath);
     if (!metadata) {
       throw new Error('Invalid file');
@@ -52,31 +55,7 @@ export class FileCreateMutationHandler
     });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'downloads',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'uploads',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

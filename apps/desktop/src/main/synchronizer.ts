@@ -1,7 +1,7 @@
-import { httpClient } from '@/lib/http-client';
+import { httpClient } from '@/shared/lib/http-client';
 import { databaseService } from '@/main/data/database-service';
-import { ServerSyncResponse } from '@/types/sync';
-import { WorkspaceCredentials } from '@/types/workspaces';
+import { ServerSyncResponse } from '@/shared/types/sync';
+import { WorkspaceCredentials } from '@/shared/types/workspaces';
 import { fileService } from '@/main/services/file-service';
 
 const EVENT_LOOP_INTERVAL = 1000;

@@ -1,6 +1,9 @@
 import { nodeService } from '@/main/services/node-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { NodeCollaboratorDeleteMutationInput } from '@/operations/mutations/node-collaborator-delete';
+import { MutationHandler } from '@/main/types';
+import {
+  NodeCollaboratorDeleteMutationInput,
+  NodeCollaboratorDeleteMutationOutput,
+} from '@/shared/mutations/node-collaborator-delete';
 import { unset } from 'lodash-es';
 
 export class NodeCollaboratorDeleteMutationHandler
@@ -8,28 +11,14 @@ export class NodeCollaboratorDeleteMutationHandler
 {
   async handleMutation(
     input: NodeCollaboratorDeleteMutationInput
-  ): Promise<MutationResult<NodeCollaboratorDeleteMutationInput>> {
+  ): Promise<NodeCollaboratorDeleteMutationOutput> {
     await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       unset(attributes, `collaborators.${input.collaboratorId}`);
       return attributes;
     });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      success: true,
     };
   }
 }

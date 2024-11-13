@@ -1,11 +1,11 @@
 import React from 'react';
 import { buttonVariants } from '@/renderer/components/ui/button';
-import { cn, getDisplayedDates, toUTCDate } from '@/lib/utils';
+import { cn, getDisplayedDates, toUTCDate } from '@/shared/lib/utils';
 import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
 import { FieldAttributes, ViewFilterAttributes } from '@colanode/core';
 import { useRecordsQuery } from '@/renderer/hooks/user-records-query';
-import { filterRecords } from '@/lib/databases';
+import { filterRecords } from '@/shared/lib/databases';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useView } from '@/renderer/contexts/view';

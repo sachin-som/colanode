@@ -1,7 +1,7 @@
 import { type NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/react';
 import { FilePreview } from '@/renderer/components/files/file-preview';
-import { getFilePlaceholderUrl } from '@/lib/files';
+import { getFilePlaceholderUrl } from '@/shared/lib/files';
 import { X } from 'lucide-react';
 
 export const FilePlaceholderNodeView = ({

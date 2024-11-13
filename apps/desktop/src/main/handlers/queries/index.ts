@@ -1,4 +1,4 @@
-import { QueryMap } from '@/operations/queries';
+import { QueryMap } from '@/shared/queries';
 import { QueryHandler } from '@/main/types';
 import { AccountListQueryHandler } from '@/main/handlers/queries/accounts-list';
 import { MessageListQueryHandler } from '@/main/handlers/queries/message-list';
@@ -13,6 +13,7 @@ import { EmojisGetQueryHandler } from '@/main/handlers/queries/emojis-get';
 import { IconsGetQueryHandler } from '@/main/handlers/queries/icons-get';
 import { NodeTreeGetQueryHandler } from '@/main/handlers/queries/node-tree-get';
 import { NodeChildrenGetQueryHandler } from '@/main/handlers/queries/node-children-get';
+import { ReadStatesGetQueryHandler } from '@/main/handlers/queries/read-states-get';
 
 type QueryHandlerMap = {
   [K in keyof QueryMap]: QueryHandler<QueryMap[K]['input']>;
@@ -32,4 +33,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   icons_get: new IconsGetQueryHandler(),
   node_tree_get: new NodeTreeGetQueryHandler(),
   node_children_get: new NodeChildrenGetQueryHandler(),
+  read_states_get: new ReadStatesGetQueryHandler(),
 };

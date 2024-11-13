@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/renderer/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { Check, Link, Trash2 } from 'lucide-react';
 
 const isValidUrl = (url: string) => {

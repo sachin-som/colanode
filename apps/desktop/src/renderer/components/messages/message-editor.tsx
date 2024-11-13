@@ -25,7 +25,7 @@ import {
   FileNode,
 } from '@/renderer/editor/extensions';
 import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
-import { FileMetadata } from '@/types/files';
+import { FileMetadata } from '@/shared/types/files';
 
 interface MessageEditorProps {
   conversationId: string;

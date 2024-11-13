@@ -1,5 +1,5 @@
 import React from 'react';
-import { MutationInput, MutationMap } from '@/operations/mutations';
+import { MutationInput, MutationMap } from '@/shared/mutations';
 
 interface MutationOptions<T extends MutationInput> {
   input: T;

@@ -1,4 +1,4 @@
-import { MutationMap } from '@/operations/mutations';
+import { MutationMap } from '@/shared/mutations';
 import { MutationHandler } from '@/main/types';
 import { EmailLoginMutationHandler } from '@/main/handlers/mutations/email-login';
 import { EmailRegisterMutationHandler } from '@/main/handlers/mutations/email-register';

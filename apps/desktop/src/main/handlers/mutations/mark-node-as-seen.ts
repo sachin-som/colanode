@@ -1,15 +1,18 @@
 import { generateId, IdType } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { MarkNodeAsSeenMutationInput } from '@/operations/mutations/mark-node-as-seen';
-import { LocalUserNodeChangeData } from '@/types/sync';
+import { MutationHandler } from '@/main/types';
+import {
+  MarkNodeAsSeenMutationInput,
+  MarkNodeAsSeenMutationOutput,
+} from '@/shared/mutations/mark-node-as-seen';
+import { LocalUserNodeChangeData } from '@/shared/types/sync';
 
 export class MarkNodeAsSeenMutationHandler
   implements MutationHandler<MarkNodeAsSeenMutationInput>
 {
   async handleMutation(
     input: MarkNodeAsSeenMutationInput
-  ): Promise<MutationResult<MarkNodeAsSeenMutationInput>> {
+  ): Promise<MarkNodeAsSeenMutationOutput> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
@@ -48,21 +51,7 @@ export class MarkNodeAsSeenMutationHandler
     });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'user_nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      success: true,
     };
   }
 }

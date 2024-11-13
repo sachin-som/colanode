@@ -1,14 +1,18 @@
+import { eventBus } from '@/shared/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
 import { socketService } from '@/main/services/socket-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ServerUserNodeSyncMutationInput } from '@/operations/mutations/server-user-node-sync';
+import { MutationHandler } from '@/main/types';
+import {
+  ServerUserNodeSyncMutationInput,
+  ServerUserNodeSyncMutationOutput,
+} from '@/shared/mutations/server-user-node-sync';
 
 export class ServerUserNodeSyncMutationHandler
   implements MutationHandler<ServerUserNodeSyncMutationInput>
 {
   public async handleMutation(
     input: ServerUserNodeSyncMutationInput
-  ): Promise<MutationResult<ServerUserNodeSyncMutationInput>> {
+  ): Promise<ServerUserNodeSyncMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -22,9 +26,7 @@ export class ServerUserNodeSyncMutationHandler
 
     if (!workspace) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -32,8 +34,9 @@ export class ServerUserNodeSyncMutationHandler
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    await workspaceDatabase
+    const createdUserNode = await workspaceDatabase
       .insertInto('user_nodes')
+      .returningAll()
       .values({
         user_id: input.userId,
         node_id: input.nodeId,
@@ -53,7 +56,7 @@ export class ServerUserNodeSyncMutationHandler
           version_id: input.versionId,
         })
       )
-      .execute();
+      .executeTakeFirst();
 
     socketService.sendMessage(workspace.account_id, {
       type: 'local_user_node_sync',
@@ -63,17 +66,26 @@ export class ServerUserNodeSyncMutationHandler
       workspaceId: input.workspaceId,
     });
 
-    return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'user_nodes',
-          userId: userId,
+    if (createdUserNode) {
+      eventBus.publish({
+        type: 'user_node_created',
+        userId: userId,
+        userNode: {
+          userId: createdUserNode.user_id,
+          nodeId: createdUserNode.node_id,
+          lastSeenAt: createdUserNode.last_seen_at,
+          lastSeenVersionId: createdUserNode.last_seen_version_id,
+          mentionsCount: createdUserNode.mentions_count,
+          attributes: createdUserNode.attributes,
+          versionId: createdUserNode.version_id,
+          createdAt: createdUserNode.created_at,
+          updatedAt: createdUserNode.updated_at,
         },
-      ],
+      });
+    }
+
+    return {
+      success: true,
     };
   }
 }

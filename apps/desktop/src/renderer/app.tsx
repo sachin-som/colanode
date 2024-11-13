@@ -7,6 +7,7 @@ import { AppContext } from '@/renderer/contexts/app';
 import { AccountProvider } from '@/renderer/components/accounts/account-provider';
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
+import { RadarProvider } from '@/renderer/radar-provider';
 
 export const App = () => {
   const navigate = useNavigate();
@@ -68,9 +69,11 @@ export const App = () => {
         },
       }}
     >
-      <AccountProvider>
-        <Outlet />
-      </AccountProvider>
+      <RadarProvider>
+        <AccountProvider>
+          <Outlet />
+        </AccountProvider>
+      </RadarProvider>
       {logoutId && (
         <AccountLogout
           id={logoutId}

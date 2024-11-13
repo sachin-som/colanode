@@ -1,6 +1,6 @@
 import { defaultClasses } from '@/renderer/editor/classes';
 import { NodeChildrenRenderer } from '@/renderer/editor/renderers/node-children';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { JSONContent } from '@tiptap/core';
 
 interface ParagraphRendererProps {

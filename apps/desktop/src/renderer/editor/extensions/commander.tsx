@@ -7,8 +7,8 @@ import Suggestion, {
   type SuggestionProps,
 } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
-import { EditorCommandContext, EditorCommand } from '@/types/editor';
-import { updateScrollView } from '@/lib/utils';
+import { EditorCommandContext, EditorCommand } from '@/shared/types/editor';
+import { updateScrollView } from '@/shared/lib/utils';
 
 interface CommanderOptions {
   commands: EditorCommand[];

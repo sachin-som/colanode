@@ -1,18 +1,22 @@
 import fs from 'fs';
 import { databaseService } from '@/main/data/database-service';
-import { LogoutMutationInput } from '@/operations/mutations/logout';
-import { MutationHandler, MutationResult } from '@/main/types';
+import {
+  LogoutMutationInput,
+  LogoutMutationOutput,
+} from '@/shared/mutations/logout';
+import { MutationHandler } from '@/main/types';
 import {
   getAccountAvatarsDirectoryPath,
   getWorkspaceDirectoryPath,
 } from '@/main/utils';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class LogoutMutationHandler
   implements MutationHandler<LogoutMutationInput>
 {
   async handleMutation(
     input: LogoutMutationInput
-  ): Promise<MutationResult<LogoutMutationInput>> {
+  ): Promise<LogoutMutationOutput> {
     const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
@@ -21,9 +25,7 @@ export class LogoutMutationHandler
 
     if (!account) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -47,15 +49,58 @@ export class LogoutMutationHandler
       fs.rmSync(avatarsDir, { recursive: true });
     }
 
-    await databaseService.appDatabase
+    const deletedAccount = await databaseService.appDatabase
       .deleteFrom('accounts')
+      .returningAll()
       .where('id', '=', account.id)
-      .execute();
+      .executeTakeFirst();
 
-    await databaseService.appDatabase
+    if (!deletedAccount) {
+      return {
+        success: false,
+      };
+    }
+
+    eventBus.publish({
+      type: 'account_deleted',
+      account: {
+        id: deletedAccount.id,
+        server: deletedAccount.server,
+        name: deletedAccount.name,
+        email: deletedAccount.email,
+        avatar: deletedAccount.avatar,
+        token: deletedAccount.token,
+        deviceId: deletedAccount.device_id,
+        status: deletedAccount.status,
+      },
+    });
+
+    const deletedWorkspaces = await databaseService.appDatabase
       .deleteFrom('workspaces')
       .where('account_id', '=', account.id)
       .execute();
+
+    if (deletedWorkspaces.length !== workspaces.length) {
+      return {
+        success: false,
+      };
+    }
+
+    for (const workspace of workspaces) {
+      eventBus.publish({
+        type: 'workspace_deleted',
+        workspace: {
+          id: workspace.workspace_id,
+          userId: workspace.user_id,
+          name: workspace.name,
+          avatar: workspace.avatar,
+          description: workspace.description,
+          role: workspace.role,
+          versionId: workspace.version_id,
+          accountId: workspace.account_id,
+        },
+      });
+    }
 
     await databaseService.appDatabase
       .insertInto('deleted_tokens')
@@ -68,19 +113,7 @@ export class LogoutMutationHandler
       .execute();
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'app',
-          table: 'accounts',
-        },
-        {
-          type: 'app',
-          table: 'workspaces',
-        },
-      ],
+      success: true,
     };
   }
 }

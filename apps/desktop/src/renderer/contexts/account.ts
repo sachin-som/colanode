@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { Account } from '@/types/accounts';
-import { Workspace } from '@/types/workspaces';
+import { Account } from '@/shared/types/accounts';
+import { Workspace } from '@/shared/types/workspaces';
 
 interface AccountContext extends Account {
   workspaces: Workspace[];

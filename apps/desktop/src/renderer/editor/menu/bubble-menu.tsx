@@ -6,7 +6,7 @@ import {
 import { useState } from 'react';
 import { ColorButton } from '@/renderer/editor/menu/color-button';
 import { LinkButton } from '@/renderer/editor/menu/link-button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { Bold, Code, Italic, Strikethrough, Underline } from 'lucide-react';
 
 type EditorBubbleMenuProps = Omit<BubbleMenuProps, 'children'>;

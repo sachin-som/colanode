@@ -1,6 +1,6 @@
 import React from 'react';
-import { formatBytes } from '@/lib/files';
-import { formatDate } from '@/lib/utils';
+import { formatBytes } from '@/shared/lib/files';
+import { formatDate } from '@/shared/lib/utils';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { FileNode } from '@colanode/core';

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { ViewAttributes } from '@colanode/core';
 

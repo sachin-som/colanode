@@ -1,5 +1,5 @@
 import React from 'react';
-import { EmojiPickerRowData } from '@/types/emojis';
+import { EmojiPickerRowData } from '@/shared/types/emojis';
 import { EmojiPickerItem } from '@/renderer/components/emojis/emoji-picker-item';
 
 interface EmojiPickerBrowserRowProps {

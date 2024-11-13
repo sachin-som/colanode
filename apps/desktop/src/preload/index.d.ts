@@ -1,7 +1,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { EventBus } from '@/lib/event-bus';
-import { MutationMap, MutationInput } from '@/operations/mutations';
-import { QueryMap, QueryInput } from '@/operations/queries';
+import { MutationMap, MutationInput } from '@/shared/mutations';
+import { QueryMap, QueryInput } from '@/shared/queries';
 import { FileMetadata } from '@/types/files';
 
 interface ColanodeApi {

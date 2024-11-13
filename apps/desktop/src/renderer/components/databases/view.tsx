@@ -12,14 +12,14 @@ import { CalendarView } from '@/renderer/components/databases/calendars/calendar
 import { ViewContext } from '@/renderer/contexts/view';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { compareString } from '@/lib/utils';
+import { compareString } from '@/shared/lib/utils';
 import {
   generateViewFieldIndex,
   getDefaultFieldWidth,
   getDefaultNameWidth,
   getFieldFilterOperators,
-} from '@/lib/databases';
-import { ViewField } from '@/types/databases';
+} from '@/shared/lib/databases';
+import { ViewField } from '@/shared/types/databases';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 
 interface ViewProps {

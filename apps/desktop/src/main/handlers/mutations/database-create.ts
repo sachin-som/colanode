@@ -1,7 +1,10 @@
 import { generateId, IdType } from '@colanode/core';
-import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { DatabaseCreateMutationInput } from '@/operations/mutations/database-create';
+import { generateNodeIndex } from '@/shared/lib/nodes';
+import { MutationHandler } from '@/main/types';
+import {
+  DatabaseCreateMutationInput,
+  DatabaseCreateMutationOutput,
+} from '@/shared/mutations/database-create';
 import { DatabaseAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
 
@@ -10,7 +13,7 @@ export class DatabaseCreateMutationHandler
 {
   async handleMutation(
     input: DatabaseCreateMutationInput
-  ): Promise<MutationResult<DatabaseCreateMutationInput>> {
+  ): Promise<DatabaseCreateMutationOutput> {
     const databaseId = generateId(IdType.Database);
     const viewId = generateId(IdType.View);
     const fieldId = generateId(IdType.Field);
@@ -48,21 +51,7 @@ export class DatabaseCreateMutationHandler
     });
 
     return {
-      output: {
-        id: databaseId,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: databaseId,
     };
   }
 }

@@ -13,7 +13,7 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { useDatabase } from '@/renderer/contexts/database';
-import { isSortableField } from '@/lib/databases';
+import { isSortableField } from '@/shared/lib/databases';
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 

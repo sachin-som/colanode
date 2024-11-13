@@ -1,4 +1,4 @@
-import { EditorCommand } from '@/types/editor';
+import { EditorCommand } from '@/shared/types/editor';
 import { NodeTypes } from '@colanode/core';
 import { Folder } from 'lucide-react';
 

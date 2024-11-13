@@ -1,15 +1,19 @@
-import { LoginOutput } from '@/types/accounts';
+import { LoginOutput } from '@/shared/types/accounts';
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { EmailRegisterMutationInput } from '@/operations/mutations/email-register';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
+import { httpClient } from '@/shared/lib/http-client';
+import {
+  EmailRegisterMutationInput,
+  EmailRegisterMutationOutput,
+} from '@/shared/mutations/email-register';
+import { MutationHandler } from '@/main/types';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class EmailRegisterMutationHandler
   implements MutationHandler<EmailRegisterMutationInput>
 {
-  handleMutation = async (
+  async handleMutation(
     input: EmailRegisterMutationInput
-  ): Promise<MutationResult<EmailRegisterMutationInput>> => {
+  ): Promise<EmailRegisterMutationOutput> {
     const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
@@ -18,9 +22,7 @@ export class EmailRegisterMutationHandler
 
     if (!server) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -37,7 +39,6 @@ export class EmailRegisterMutationHandler
       }
     );
 
-    const changedTables: MutationChange[] = [];
     await databaseService.appDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('accounts')
@@ -52,11 +53,6 @@ export class EmailRegisterMutationHandler
           status: 'active',
         })
         .execute();
-
-      changedTables.push({
-        type: 'app',
-        table: 'accounts',
-      });
 
       if (data.workspaces.length === 0) {
         return;
@@ -77,20 +73,33 @@ export class EmailRegisterMutationHandler
           }))
         )
         .execute();
-
-      changedTables.push({
-        type: 'app',
-        table: 'workspaces',
-      });
     });
 
+    eventBus.publish({
+      type: 'account_created',
+      account: data.account,
+    });
+
+    if (data.workspaces.length > 0) {
+      for (const workspace of data.workspaces) {
+        eventBus.publish({
+          type: 'workspace_created',
+          workspace: {
+            id: workspace.id,
+            name: workspace.name,
+            versionId: workspace.versionId,
+            accountId: workspace.user.accountId,
+            role: workspace.user.role,
+            userId: workspace.user.id,
+          },
+        });
+      }
+    }
+
     return {
-      output: {
-        success: true,
-        account: data.account,
-        workspaces: data.workspaces,
-      },
-      changes: changedTables,
+      success: true,
+      account: data.account,
+      workspaces: data.workspaces,
     };
-  };
+  }
 }

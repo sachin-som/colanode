@@ -1,62 +1,59 @@
-import { WorkspaceListQueryInput } from '@/operations/queries/workspace-list';
+import { WorkspaceListQueryInput } from '@/shared/queries/workspace-list';
 import { databaseService } from '@/main/data/database-service';
-import { Workspace } from '@/types/workspaces';
+import { Workspace } from '@/shared/types/workspaces';
 import { WorkspaceRole } from '@colanode/core';
 import { SelectWorkspace } from '@/main/data/app/schema';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { Event } from '@/shared/types/events';
 
 export class WorkspaceListQueryHandler
   implements QueryHandler<WorkspaceListQueryInput>
 {
-  public async handleQuery(
-    _: WorkspaceListQueryInput
-  ): Promise<QueryResult<WorkspaceListQueryInput>> {
+  public async handleQuery(_: WorkspaceListQueryInput): Promise<Workspace[]> {
     const rows = await this.fetchWorkspaces();
-
-    return {
-      output: this.buildWorkspaces(rows),
-      state: {
-        rows,
-      },
-    };
+    return this.buildWorkspaces(rows);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     _: WorkspaceListQueryInput,
-    state: Record<string, any>
+    output: Workspace[]
   ): Promise<ChangeCheckResult<WorkspaceListQueryInput>> {
-    if (
-      !changes.some(
-        (change) => change.type === 'app' && change.table === 'workspaces'
-      )
-    ) {
+    if (event.type === 'workspace_created') {
+      const newWorkspaces = [...output, event.workspace];
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newWorkspaces,
       };
     }
 
-    const rows = await this.fetchWorkspaces();
-    if (isEqual(rows, state.rows)) {
+    if (event.type === 'workspace_updated') {
+      const updatedWorkspaces = output.map((workspace) => {
+        if (workspace.id === event.workspace.id) {
+          return event.workspace;
+        }
+        return workspace;
+      });
+
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: updatedWorkspaces,
+      };
+    }
+
+    if (event.type === 'workspace_deleted') {
+      const activeWorkspaces = output.filter(
+        (workspace) => workspace.id !== event.workspace.id
+      );
+
+      return {
+        hasChanges: true,
+        result: activeWorkspaces,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildWorkspaces(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

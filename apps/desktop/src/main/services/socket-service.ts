@@ -1,6 +1,6 @@
 import { SocketConnection } from '@/main/services/socket-connection';
 import { databaseService } from '@/main/data/database-service';
-import { MessageInput } from '@/operations/messages';
+import { MessageInput } from '@/shared/messages';
 
 const EVENT_LOOP_INTERVAL = 5000;
 

@@ -1,11 +1,6 @@
-import { RecordListQueryInput } from '@/operations/queries/record-list';
+import { RecordListQueryInput } from '@/shared/queries/record-list';
 import { databaseService } from '@/main/data/database-service';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { sql } from 'kysely';
 import {
@@ -26,60 +21,94 @@ import {
   DatabaseNode,
   RecordNode,
 } from '@colanode/core';
-import { isStringArray } from '@/lib/utils';
+import { isStringArray } from '@/shared/lib/utils';
 import { mapNode } from '@/main/utils';
 import { NodeTypes } from '@colanode/core';
-import { isEqual } from 'lodash-es';
+import { Event } from '@/shared/types/events';
 
 export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>
 {
-  public async handleQuery(
-    input: RecordListQueryInput
-  ): Promise<QueryResult<RecordListQueryInput>> {
+  public async handleQuery(input: RecordListQueryInput): Promise<RecordNode[]> {
     const rows = await this.fetchRecords(input);
-
-    return {
-      output: this.buildRecords(rows),
-      state: {
-        rows,
-      },
-    };
+    return this.buildRecords(rows);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: RecordListQueryInput,
-    state: Record<string, any>
+    output: RecordNode[]
   ): Promise<ChangeCheckResult<RecordListQueryInput>> {
     if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
+      event.type === 'node_created' &&
+      event.userId === input.userId &&
+      event.node.type === 'record'
     ) {
+      const newResult = await this.handleQuery(input);
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newResult,
       };
     }
 
-    const rows = await this.fetchRecords(input);
-    if (isEqual(rows, state.rows)) {
-      return {
-        hasChanges: false,
-      };
+    if (event.type === 'node_updated' && event.userId === input.userId) {
+      if (
+        event.node.type === 'record' &&
+        event.node.attributes.databaseId === input.databaseId
+      ) {
+        const record = output.find((record) => record.id === event.node.id);
+        if (record) {
+          const newResult = output.map((record) => {
+            if (record.id === event.node.id) {
+              return event.node as RecordNode;
+            }
+            return record;
+          });
+
+          return {
+            hasChanges: true,
+            result: newResult,
+          };
+        }
+      }
+
+      if (
+        event.node.type === 'database' &&
+        event.node.id === input.databaseId
+      ) {
+        const newResult = await this.handleQuery(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+    }
+
+    if (event.type === 'node_deleted' && event.userId === input.userId) {
+      if (
+        event.node.type === 'record' &&
+        event.node.attributes.databaseId === input.databaseId
+      ) {
+        const newResult = await this.handleQuery(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+
+      if (
+        event.node.type === 'database' &&
+        event.node.id === input.databaseId
+      ) {
+        return {
+          hasChanges: true,
+          result: [],
+        };
+      }
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildRecords(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 
@@ -99,28 +128,13 @@ export class RecordListQueryHandler
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."index" ASC'}`;
     const offset = (input.page - 1) * input.count;
     const query = sql<SelectNode>`
-        WITH record_nodes AS (
-          SELECT n.*, ROW_NUMBER() OVER (${sql.raw(orderByQuery)}) AS order_number
-          FROM nodes n
-          WHERE n.parent_id = ${input.databaseId} AND n.type = ${NodeTypes.Record} ${sql.raw(filterQuery)}
-          ${sql.raw(orderByQuery)}
-          LIMIT ${sql.lit(input.count)}
-          OFFSET ${sql.lit(offset)}
-        ),
-        author_nodes AS (
-          SELECT *, NULL AS order_number
-          FROM nodes
-          WHERE id IN (SELECT DISTINCT created_by FROM record_nodes)
-        ),
-        all_nodes as (
-          SELECT * FROM record_nodes
-          UNION ALL
-          SELECT * FROM author_nodes
-        )
         SELECT n.*
-        FROM all_nodes n
-        ORDER BY n.order_number ASC
-      `.compile(workspaceDatabase);
+        FROM nodes n
+        WHERE n.parent_id = ${input.databaseId} AND n.type = ${NodeTypes.Record} ${sql.raw(filterQuery)}
+        ${sql.raw(orderByQuery)}
+        LIMIT ${sql.lit(input.count)}
+        OFFSET ${sql.lit(offset)}
+    `.compile(workspaceDatabase);
 
     const result = await workspaceDatabase.executeQuery(query);
     return result.rows;

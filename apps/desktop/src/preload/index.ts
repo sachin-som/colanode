@@ -1,8 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { eventBus, Event } from '@/lib/event-bus';
-import { MutationInput, MutationMap } from '@/operations/mutations';
-import { QueryInput, QueryMap } from '@/operations/queries';
+import { eventBus } from '@/shared/lib/event-bus';
+import { MutationInput, MutationMap } from '@/shared/mutations';
+import { QueryInput, QueryMap } from '@/shared/queries';
+import { Event } from '@/shared/types/events';
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

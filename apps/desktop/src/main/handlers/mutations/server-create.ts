@@ -1,19 +1,24 @@
 import axios from 'axios';
 import { databaseService } from '@/main/data/database-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ServerCreateMutationInput } from '@/operations/mutations/server-create';
-import { ServerConfig } from '@/types/servers';
+import { MutationHandler } from '@/main/types';
+import {
+  ServerCreateMutationInput,
+  ServerCreateMutationOutput,
+} from '@/shared/mutations/server-create';
+import { ServerConfig } from '@/shared/types/servers';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class ServerCreateMutationHandler
   implements MutationHandler<ServerCreateMutationInput>
 {
   async handleMutation(
     input: ServerCreateMutationInput
-  ): Promise<MutationResult<ServerCreateMutationInput>> {
+  ): Promise<ServerCreateMutationOutput> {
     const { data } = await axios.get<ServerConfig>(
       `http://${input.domain}/v1/config`
     );
 
+    const createdAt = new Date();
     await databaseService.appDatabase
       .insertInto('servers')
       .values({
@@ -22,20 +27,25 @@ export class ServerCreateMutationHandler
         avatar: data.avatar,
         attributes: JSON.stringify(data.attributes),
         version: data.version,
-        created_at: new Date().toISOString(),
+        created_at: createdAt.toISOString(),
       })
       .execute();
 
-    return {
-      output: {
-        success: true,
+    eventBus.publish({
+      type: 'server_created',
+      server: {
+        domain: input.domain,
+        name: data.name,
+        avatar: data.avatar,
+        attributes: data.attributes,
+        version: data.version,
+        createdAt,
+        lastSyncedAt: null,
       },
-      changes: [
-        {
-          type: 'app',
-          table: 'servers',
-        },
-      ],
+    });
+
+    return {
+      success: true,
     };
   }
 }

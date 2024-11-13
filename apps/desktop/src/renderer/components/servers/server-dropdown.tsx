@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { Server } from '@/types/servers';
+import { Server } from '@/shared/types/servers';
 import { ServerCreateDialog } from '@/renderer/components/servers/server-create-dialog';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';

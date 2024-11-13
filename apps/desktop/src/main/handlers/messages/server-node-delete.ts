@@ -1,6 +1,6 @@
-import { MessageContext, MessageHandler } from '@/operations/messages';
-import { ServerNodeDeleteMessageInput } from '@/operations/messages/server-node-delete';
-import { mediator } from '@/main/mediator';
+import { MessageContext, MessageHandler } from '@/shared/messages';
+import { ServerNodeDeleteMessageInput } from '../../../shared/messages/server-node-delete';
+import { mutationService } from '@/main/services/mutation-service';
 
 export class ServerNodeDeleteMessageHandler
   implements MessageHandler<ServerNodeDeleteMessageInput>
@@ -9,7 +9,7 @@ export class ServerNodeDeleteMessageHandler
     context: MessageContext,
     input: ServerNodeDeleteMessageInput
   ): Promise<void> {
-    await mediator.executeMutation({
+    await mutationService.executeMutation({
       type: 'server_node_delete',
       accountId: context.accountId,
       id: input.id,

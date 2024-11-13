@@ -1,7 +1,7 @@
 import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { IconPickerRowData } from '@/types/icons';
+import { IconPickerRowData } from '@/shared/types/icons';
 import { IconPickerBrowserRow } from '@/renderer/components/icons/icon-picker-browser-row';
 import { useIconPicker } from '@/renderer/contexts/icon-picker';
 

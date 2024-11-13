@@ -21,7 +21,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { useDatabase } from '@/renderer/contexts/database';
 import { FieldSelect } from '@/renderer/components/databases/fields/field-select';
 import { toast } from '@/renderer/hooks/use-toast';

@@ -56,6 +56,13 @@ class DatabaseService {
     return workspaceDatabase;
   }
 
+  public async getWorkspaceDatabases(): Promise<
+    Map<string, Kysely<WorkspaceDatabaseSchema>>
+  > {
+    await this.waitForInit();
+    return this.workspaceDatabases;
+  }
+
   public async deleteWorkspaceDatabase(userId: string): Promise<void> {
     await this.waitForInit();
 

@@ -1,6 +1,9 @@
 import { generateId, IdType } from '@colanode/core';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { RecordCreateMutationInput } from '@/operations/mutations/record-create';
+import { MutationHandler } from '@/main/types';
+import {
+  RecordCreateMutationInput,
+  RecordCreateMutationOutput,
+} from '@/shared/mutations/record-create';
 import { RecordAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
 
@@ -9,7 +12,7 @@ export class RecordCreateMutationHandler
 {
   async handleMutation(
     input: RecordCreateMutationInput
-  ): Promise<MutationResult<RecordCreateMutationInput>> {
+  ): Promise<RecordCreateMutationOutput> {
     const id = generateId(IdType.Record);
     const attributes: RecordAttributes = {
       type: 'record',
@@ -23,21 +26,7 @@ export class RecordCreateMutationHandler
     await nodeService.createNode(input.userId, { id, attributes });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

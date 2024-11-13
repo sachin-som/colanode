@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/renderer/hooks/use-toast';
-import { Server } from '@/types/servers';
+import { Server } from '@/shared/types/servers';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

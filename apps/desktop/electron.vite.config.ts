@@ -21,9 +21,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@/main': resolve('src/main'),
-        '@/lib': resolve('src/lib'),
-        '@/types': resolve('src/types'),
-        '@/operations': resolve('src/operations'),
+        '@/shared': resolve('src/shared'),
       },
     },
   },
@@ -35,9 +33,7 @@ export default defineConfig({
     ],
     resolve: {
       alias: {
-        '@/lib': resolve('src/lib'),
-        '@/types': resolve('src/types'),
-        '@/operations': resolve('src/operations'),
+        '@/shared': resolve('src/shared'),
       },
     },
   },
@@ -45,9 +41,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@/renderer': resolve('src/renderer'),
-        '@/lib': resolve('src/lib'),
-        '@/operations': resolve('src/operations'),
-        '@/types': resolve('src/types'),
+        '@/shared': resolve('src/shared'),
       },
     },
     plugins: [react()],

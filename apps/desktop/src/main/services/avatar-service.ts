@@ -2,7 +2,7 @@ import { net } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
+import { httpClient } from '@/shared/lib/http-client';
 import { getAccountAvatarsDirectoryPath } from '@/main/utils';
 
 class AvatarService {

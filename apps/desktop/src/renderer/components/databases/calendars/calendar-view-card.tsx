@@ -1,6 +1,6 @@
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { RecordNode } from '@colanode/core';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface CalendarViewCardProps {
   record: RecordNode;

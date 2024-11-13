@@ -1,4 +1,4 @@
-import { EditorCommand } from '@/types/editor';
+import { EditorCommand } from '@/shared/types/editor';
 import { Heading2 } from 'lucide-react';
 
 export const Heading2Command: EditorCommand = {

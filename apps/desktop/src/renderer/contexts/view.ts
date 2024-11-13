@@ -1,5 +1,5 @@
 import { ViewFilterAttributes, ViewSortAttributes } from '@colanode/core';
-import { ViewField } from '@/types/databases';
+import { ViewField } from '@/shared/types/databases';
 import { createContext, useContext } from 'react';
 
 interface ViewContext {

@@ -16,8 +16,8 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { defaultClasses } from '@/renderer/editor/classes';
-import { languages } from '@/lib/lowlight';
-import { cn } from '@/lib/utils';
+import { languages } from '@/shared/lib/lowlight';
+import { cn } from '@/shared/lib/utils';
 import { ChevronDown, Check, Clipboard } from 'lucide-react';
 
 export const CodeBlockNodeView = ({

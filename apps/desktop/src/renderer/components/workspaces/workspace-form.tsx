@@ -19,7 +19,7 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useAccount } from '@/renderer/contexts/account';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { generateId, IdType } from '@colanode/core';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { Upload } from 'lucide-react';
 
 const formSchema = z.object({

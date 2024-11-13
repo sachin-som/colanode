@@ -6,8 +6,8 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { Separator } from '@/renderer/components/ui/separator';
-import { selectOptionColors } from '@/lib/databases';
-import { cn } from '@/lib/utils';
+import { selectOptionColors } from '@/shared/lib/databases';
+import { cn } from '@/shared/lib/utils';
 import { SelectOptionAttributes } from '@colanode/core';
 import { SelectOptionDeleteDialog } from '@/renderer/components/databases/fields/select-option-delete-dialog';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';

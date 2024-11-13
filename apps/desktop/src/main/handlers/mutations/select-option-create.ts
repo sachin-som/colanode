@@ -1,8 +1,11 @@
 import { generateId, IdType } from '@colanode/core';
-import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { SelectOptionCreateMutationInput } from '@/operations/mutations/select-option-create';
-import { compareString } from '@/lib/utils';
+import { generateNodeIndex } from '@/shared/lib/nodes';
+import { MutationHandler } from '@/main/types';
+import {
+  SelectOptionCreateMutationInput,
+  SelectOptionCreateMutationOutput,
+} from '@/shared/mutations/select-option-create';
+import { compareString } from '@/shared/lib/utils';
 import { nodeService } from '@/main/services/node-service';
 
 export class SelectOptionCreateMutationHandler
@@ -10,7 +13,7 @@ export class SelectOptionCreateMutationHandler
 {
   async handleMutation(
     input: SelectOptionCreateMutationInput
-  ): Promise<MutationResult<SelectOptionCreateMutationInput>> {
+  ): Promise<SelectOptionCreateMutationOutput> {
     const id = generateId(IdType.SelectOption);
     await nodeService.updateNode(
       input.databaseId,
@@ -52,16 +55,7 @@ export class SelectOptionCreateMutationHandler
     );
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

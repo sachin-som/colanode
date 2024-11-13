@@ -5,7 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { cn, toUTCDate } from '@/lib/utils';
+import { cn, toUTCDate } from '@/shared/lib/utils';
 
 interface DatePickerProps {
   value: Date | null;

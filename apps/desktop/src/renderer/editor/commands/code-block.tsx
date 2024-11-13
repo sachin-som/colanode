@@ -1,4 +1,4 @@
-import { EditorCommand } from '@/types/editor';
+import { EditorCommand } from '@/shared/types/editor';
 import { Code } from 'lucide-react';
 
 export const CodeBlockCommand: EditorCommand = {

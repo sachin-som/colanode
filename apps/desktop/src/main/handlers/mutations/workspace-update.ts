@@ -1,15 +1,19 @@
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { WorkspaceUpdateMutationInput } from '@/operations/mutations/workspace-update';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { Workspace } from '@/types/workspaces';
+import { httpClient } from '@/shared/lib/http-client';
+import {
+  WorkspaceUpdateMutationInput,
+  WorkspaceUpdateMutationOutput,
+} from '@/shared/mutations/workspace-update';
+import { MutationHandler } from '@/main/types';
+import { Workspace } from '@/shared/types/workspaces';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class WorkspaceUpdateMutationHandler
   implements MutationHandler<WorkspaceUpdateMutationInput>
 {
   async handleMutation(
     input: WorkspaceUpdateMutationInput
-  ): Promise<MutationResult<WorkspaceUpdateMutationInput>> {
+  ): Promise<WorkspaceUpdateMutationOutput> {
     const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
@@ -44,8 +48,9 @@ export class WorkspaceUpdateMutationHandler
       }
     );
 
-    await databaseService.appDatabase
+    const updatedWorkspace = await databaseService.appDatabase
       .updateTable('workspaces')
+      .returningAll()
       .set({
         name: data.name,
         description: data.description,
@@ -59,18 +64,26 @@ export class WorkspaceUpdateMutationHandler
           eb('workspace_id', '=', input.id),
         ])
       )
-      .execute();
+      .executeTakeFirst();
+
+    if (!updatedWorkspace) {
+      throw new Error('Failed to update workspace!');
+    }
+
+    eventBus.publish({
+      type: 'workspace_updated',
+      workspace: {
+        id: updatedWorkspace.workspace_id,
+        userId: updatedWorkspace.user_id,
+        name: updatedWorkspace.name,
+        versionId: updatedWorkspace.version_id,
+        accountId: updatedWorkspace.account_id,
+        role: updatedWorkspace.role,
+      },
+    });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'app',
-          table: 'workspaces',
-        },
-      ],
+      success: true,
     };
   }
 }

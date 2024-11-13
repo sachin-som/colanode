@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 're-resizable';
 import {
@@ -13,7 +13,7 @@ import { FieldRenameInput } from '@/renderer/components/databases/fields/field-r
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ArrowDownAz, ArrowDownZa, EyeOff, Filter, Trash2 } from 'lucide-react';
-import { ViewField } from '@/types/databases';
+import { ViewField } from '@/shared/types/databases';
 import { useDatabase } from '@/renderer/contexts/database';
 
 interface TableViewFieldHeaderProps {

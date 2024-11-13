@@ -8,7 +8,7 @@ import {
   Node,
   NodeRole,
 } from '@colanode/core';
-import { buildNodeCollaborators } from '@/lib/nodes';
+import { buildNodeCollaborators } from '@/shared/lib/nodes';
 
 interface NodeCollaboratorsProps {
   nodeId: string;

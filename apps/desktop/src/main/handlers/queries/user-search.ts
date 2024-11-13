@@ -1,73 +1,68 @@
-import { UserSearchQueryInput } from '@/operations/queries/user-search';
+import { UserSearchQueryInput } from '@/shared/queries/user-search';
 import { databaseService } from '@/main/data/database-service';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@colanode/core';
 import { UserNode } from '@colanode/core';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapNode } from '@/main/utils';
+import { Event } from '@/shared/types/events';
 
 export class UserSearchQueryHandler
   implements QueryHandler<UserSearchQueryInput>
 {
-  public async handleQuery(
-    input: UserSearchQueryInput
-  ): Promise<QueryResult<UserSearchQueryInput>> {
+  public async handleQuery(input: UserSearchQueryInput): Promise<UserNode[]> {
     const rows =
       input.searchQuery.length > 0
         ? await this.searchUsers(input)
         : await this.fetchUsers(input);
-    return {
-      output: this.buildUserNodes(rows),
-      state: {
-        rows,
-      },
-    };
+
+    return this.buildUserNodes(rows);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: UserSearchQueryInput,
-    state: Record<string, any>
+    _: UserNode[]
   ): Promise<ChangeCheckResult<UserSearchQueryInput>> {
     if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
+      event.type === 'node_created' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
     ) {
+      const newResult = await this.handleQuery(input);
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newResult,
       };
     }
 
-    const rows =
-      input.searchQuery.length > 0
-        ? await this.searchUsers(input)
-        : await this.fetchUsers(input);
-
-    if (isEqual(rows, state.rows)) {
+    if (
+      event.type === 'node_updated' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
+    ) {
+      const newResult = await this.handleQuery(input);
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newResult,
+      };
+    }
+
+    if (
+      event.type === 'node_deleted' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
+    ) {
+      const newResult = await this.handleQuery(input);
+      return {
+        hasChanges: true,
+        result: newResult,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildUserNodes(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

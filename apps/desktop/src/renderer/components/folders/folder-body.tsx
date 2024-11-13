@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { FolderLayoutType } from '@/types/folders';
+import { FolderLayoutType } from '@/shared/types/folders';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';

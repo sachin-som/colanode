@@ -4,17 +4,13 @@
     "electron.vite.config.*",
     "src/main/**/*",
     "src/preload/**/*",
-    "src/lib/**/*",
-    "src/operations/**/*",
-    "src/types/**/*"
+    "src/shared/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
     "paths": {
-      "@/lib/*": ["./src/lib/*"],
-      "@/operations/*": ["./src/operations/*"],
-      "@/types/*": ["./src/types/*"],
+      "@/shared/*": ["./src/shared/*"],
       "@/main/*": ["./src/main/*"]
     }
   }

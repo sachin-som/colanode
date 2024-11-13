@@ -4,18 +4,14 @@
     "src/renderer/env.d.ts",
     "src/renderer/**/*",
     "src/preload/*.d.ts",
-    "src/operations/**/*",
-    "src/types/**/*",
-    "src/lib/**/*"
+    "src/shared/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
     "paths": {
       "@/renderer/*": ["./src/renderer/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/operations/*": ["./src/operations/*"],
-      "@/types/*": ["./src/types/*"]
+      "@/shared/*": ["./src/shared/*"]
     }
   }
 }

@@ -1,14 +1,14 @@
 import React from 'react';
 import { match } from 'ts-pattern';
 import { FolderContext } from '@/renderer/contexts/folder';
-import { FolderLayoutType } from '@/types/folders';
+import { FolderLayoutType } from '@/shared/types/folders';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQueries } from '@/renderer/hooks/use-queries';
 import { GridLayout } from '@/renderer/components/folders/grids/grid-layout';
 import { ListLayout } from '@/renderer/components/folders/lists/list-layout';
 import { GalleryLayout } from '@/renderer/components/folders/galleries/gallery-layout';
 import { getIdType, IdType } from '@colanode/core';
-import { FileListQueryInput } from '@/operations/queries/file-list';
+import { FileListQueryInput } from '@/shared/queries/file-list';
 
 const FILES_PER_PAGE = 100;
 

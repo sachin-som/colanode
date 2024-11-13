@@ -1,13 +1,16 @@
 import { nodeService } from '@/main/services/node-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { NodeReactionDeleteMutationInput } from '@/operations/mutations/node-reaction-delete';
+import { MutationHandler } from '@/main/types';
+import {
+  NodeReactionDeleteMutationInput,
+  NodeReactionDeleteMutationOutput,
+} from '@/shared/mutations/node-reaction-delete';
 
 export class NodeReactionDeleteMutationHandler
   implements MutationHandler<NodeReactionDeleteMutationInput>
 {
   async handleMutation(
     input: NodeReactionDeleteMutationInput
-  ): Promise<MutationResult<NodeReactionDeleteMutationInput>> {
+  ): Promise<NodeReactionDeleteMutationOutput> {
     await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       if (attributes.type !== 'message') {
         throw new Error('Node is not a message');
@@ -30,21 +33,7 @@ export class NodeReactionDeleteMutationHandler
     });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      success: true,
     };
   }
 }

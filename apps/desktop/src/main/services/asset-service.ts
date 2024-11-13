@@ -2,8 +2,8 @@ import { app, net } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import unzipper from 'unzipper';
-import { EmojiData } from '@/types/emojis';
-import { IconData } from '@/types/icons';
+import { EmojiData } from '@/shared/types/emojis';
+import { IconData } from '@/shared/types/icons';
 
 type AssetsVersion = {
   date: string;

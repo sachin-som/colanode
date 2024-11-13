@@ -1,9 +1,12 @@
 import fs from 'fs';
 import FormData from 'form-data';
 import { databaseService } from '@/main/data/database-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { AvatarUploadMutationInput } from '@/operations/mutations/avatar-upload';
-import { httpClient } from '@/lib/http-client';
+import { MutationHandler } from '@/main/types';
+import {
+  AvatarUploadMutationInput,
+  AvatarUploadMutationOutput,
+} from '@/shared/mutations/avatar-upload';
+import { httpClient } from '@/shared/lib/http-client';
 
 interface AvatarUploadResponse {
   id: string;
@@ -14,7 +17,7 @@ export class AvatarUploadMutationHandler
 {
   async handleMutation(
     input: AvatarUploadMutationInput
-  ): Promise<MutationResult<AvatarUploadMutationInput>> {
+  ): Promise<AvatarUploadMutationOutput> {
     const credentials = await databaseService.appDatabase
       .selectFrom('accounts')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
@@ -24,10 +27,8 @@ export class AvatarUploadMutationHandler
 
     if (!credentials) {
       return {
-        output: {
-          status: 'error',
-          id: null,
-        },
+        status: 'error',
+        id: null,
       };
     }
 
@@ -49,10 +50,8 @@ export class AvatarUploadMutationHandler
     );
 
     return {
-      output: {
-        status: 'success',
-        id: data.id,
-      },
+      status: 'success',
+      id: data.id,
     };
   }
 }

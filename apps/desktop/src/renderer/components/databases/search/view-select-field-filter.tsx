@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
-import { selectFieldFilterOperators } from '@/lib/databases';
+import { selectFieldFilterOperators } from '@/shared/lib/databases';
 import { SelectFieldOptions } from '@/renderer/components/databases/fields/select-field-options';
 import { SelectOptionBadge } from '@/renderer/components/databases/fields/select-option-badge';
 import { useView } from '@/renderer/contexts/view';

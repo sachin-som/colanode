@@ -1,4 +1,4 @@
-import { cn, isSameDay } from '@/lib/utils';
+import { cn, isSameDay } from '@/shared/lib/utils';
 import { RecordNode } from '@colanode/core';
 import { CalendarViewCard } from '@/renderer/components/databases/calendars/calendar-view-card';
 import { Plus } from 'lucide-react';

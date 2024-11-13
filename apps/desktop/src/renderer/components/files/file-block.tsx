@@ -1,4 +1,4 @@
-import { getFileUrl } from '@/lib/files';
+import { getFileUrl } from '@/shared/lib/files';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { FilePreview } from '@/renderer/components/files/file-preview';

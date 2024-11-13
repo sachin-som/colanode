@@ -7,13 +7,13 @@ import {
   FileMetadata,
   ServerFileDownloadResponse,
   ServerFileUploadResponse,
-} from '@/types/files';
-import { WorkspaceCredentials } from '@/types/workspaces';
+} from '@/shared/types/files';
+import { WorkspaceCredentials } from '@/shared/types/workspaces';
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { mediator } from '@/main/mediator';
+import { httpClient } from '@/shared/lib/http-client';
 import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
 import { FileAttributes } from '@colanode/core';
+import { eventBus } from '@/shared/lib/event-bus';
 
 class FileService {
   public async handleFileRequest(request: Request): Promise<Response> {
@@ -178,14 +178,6 @@ class FileService {
           .execute();
       }
     }
-
-    await mediator.checkForQueryChanges([
-      {
-        type: 'workspace',
-        userId: credentials.userId,
-        table: 'uploads',
-      },
-    ]);
   }
 
   public async checkForDownloads(
@@ -223,6 +215,18 @@ class FileService {
           .where('node_id', '=', download.node_id)
           .execute();
 
+        eventBus.publish({
+          type: 'download_deleted',
+          userId: credentials.userId,
+          download: {
+            nodeId: download.node_id,
+            createdAt: download.created_at,
+            updatedAt: download.updated_at,
+            progress: download.progress,
+            retryCount: download.retry_count,
+          },
+        });
+
         continue;
       }
 
@@ -240,6 +244,18 @@ class FileService {
           })
           .where('node_id', '=', download.node_id)
           .execute();
+
+        eventBus.publish({
+          type: 'download_updated',
+          userId: credentials.userId,
+          download: {
+            nodeId: download.node_id,
+            createdAt: download.created_at,
+            updatedAt: download.updated_at,
+            progress: 100,
+            retryCount: download.retry_count,
+          },
+        });
 
         continue;
       }
@@ -267,6 +283,18 @@ class FileService {
           .set({ progress: 100 })
           .where('node_id', '=', download.node_id)
           .execute();
+
+        eventBus.publish({
+          type: 'download_updated',
+          userId: credentials.userId,
+          download: {
+            nodeId: download.node_id,
+            createdAt: download.created_at,
+            updatedAt: download.updated_at,
+            progress: 100,
+            retryCount: download.retry_count,
+          },
+        });
       } catch (error) {
         console.log('error', error);
 
@@ -275,16 +303,20 @@ class FileService {
           .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
           .where('node_id', '=', download.node_id)
           .execute();
+
+        eventBus.publish({
+          type: 'download_updated',
+          userId: credentials.userId,
+          download: {
+            nodeId: download.node_id,
+            createdAt: download.created_at,
+            updatedAt: download.updated_at,
+            progress: download.progress,
+            retryCount: download.retry_count + 1,
+          },
+        });
       }
     }
-
-    await mediator.checkForQueryChanges([
-      {
-        type: 'workspace',
-        userId: credentials.userId,
-        table: 'downloads',
-      },
-    ]);
   }
 }
 

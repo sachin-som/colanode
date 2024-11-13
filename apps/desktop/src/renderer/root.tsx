@@ -46,14 +46,9 @@ const Root = () => {
 
   React.useEffect(() => {
     const id = eventBus.subscribe((event) => {
-      if (
-        event.event === 'query_result_updated' &&
-        event.payload &&
-        event.payload.id &&
-        event.payload.result
-      ) {
-        const result = event.payload.result;
-        const queryId = event.payload.id;
+      if (event.type === 'query_result_updated' && event.id && event.result) {
+        const result = event.result;
+        const queryId = event.id;
 
         if (!result) {
           return;

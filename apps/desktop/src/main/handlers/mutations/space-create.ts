@@ -1,7 +1,10 @@
 import { generateId, IdType, NodeRoles } from '@colanode/core';
-import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { SpaceCreateMutationInput } from '@/operations/mutations/space-create';
+import { generateNodeIndex } from '@/shared/lib/nodes';
+import { MutationHandler } from '@/main/types';
+import {
+  SpaceCreateMutationInput,
+  SpaceCreateMutationOutput,
+} from '@/shared/mutations/space-create';
 import {
   ChannelAttributes,
   PageAttributes,
@@ -15,7 +18,7 @@ export class SpaceCreateMutationHandler
 {
   async handleMutation(
     input: SpaceCreateMutationInput
-  ): Promise<MutationResult<SpaceCreateMutationInput>> {
+  ): Promise<SpaceCreateMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .where('user_id', '=', input.userId)
@@ -75,21 +78,7 @@ export class SpaceCreateMutationHandler
     ]);
 
     return {
-      output: {
-        id: spaceId,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: spaceId,
     };
   }
 }

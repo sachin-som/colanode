@@ -1,8 +1,11 @@
 import { databaseService } from '@/main/data/database-service';
 import { generateId, IdType } from '@colanode/core';
-import { generateNodeIndex } from '@/lib/nodes';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ChannelCreateMutationInput } from '@/operations/mutations/channel-create';
+import { generateNodeIndex } from '@/shared/lib/nodes';
+import { MutationHandler } from '@/main/types';
+import {
+  ChannelCreateMutationInput,
+  ChannelCreateMutationOutput,
+} from '@/shared/mutations/channel-create';
 import { ChannelAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
 
@@ -11,7 +14,7 @@ export class ChannelCreateMutationHandler
 {
   async handleMutation(
     input: ChannelCreateMutationInput
-  ): Promise<MutationResult<ChannelCreateMutationInput>> {
+  ): Promise<ChannelCreateMutationOutput> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
@@ -48,21 +51,7 @@ export class ChannelCreateMutationHandler
     await nodeService.createNode(input.userId, { id, attributes });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { MessageNode } from '@/types/messages';
+import { MessageNode } from '@/shared/types/messages';
 import { CircleX } from 'lucide-react';
 
 interface MessageReplyBannerProps {

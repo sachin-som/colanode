@@ -3,7 +3,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import { defaultClasses } from '@/renderer/editor/classes';
 import { CodeBlockNodeView } from '@/renderer/editor/views';
-import { lowlight } from '@/lib/lowlight';
+import { lowlight } from '@/shared/lib/lowlight';
 
 export const CodeBlockNode = CodeBlockLowlight.extend({
   addNodeView() {

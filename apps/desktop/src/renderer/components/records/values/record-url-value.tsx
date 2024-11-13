@@ -1,5 +1,5 @@
 import { UrlFieldAttributes } from '@colanode/core';
-import { cn, isValidUrl } from '@/lib/utils';
+import { cn, isValidUrl } from '@/shared/lib/utils';
 import {
   HoverCard,
   HoverCardContent,

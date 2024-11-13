@@ -1,7 +1,10 @@
 import { generateId, IdType, EditorNodeTypes, NodeTypes } from '@colanode/core';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
-import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
-import { mapContentsToBlocks } from '@/lib/editor';
+import { MutationHandler } from '@/main/types';
+import {
+  MessageCreateMutationInput,
+  MessageCreateMutationOutput,
+} from '@/shared/mutations/message-create';
+import { mapContentsToBlocks } from '@/shared/lib/editor';
 import { fileService } from '@/main/services/file-service';
 import { Block, FileAttributes, MessageAttributes } from '@colanode/core';
 import { CreateNodeInput, nodeService } from '@/main/services/node-service';
@@ -11,9 +14,8 @@ export class MessageCreateMutationHandler
 {
   async handleMutation(
     input: MessageCreateMutationInput
-  ): Promise<MutationResult<MessageCreateMutationInput>> {
+  ): Promise<MessageCreateMutationOutput> {
     const inputs: CreateNodeInput[] = [];
-    let hasFiles = false;
 
     const messageId = generateId(IdType.Message);
     const createdAt = new Date().toISOString();
@@ -71,8 +73,6 @@ export class MessageCreateMutationHandler
             retry_count: 0,
           },
         });
-
-        hasFiles = true;
       }
     }
 
@@ -92,38 +92,8 @@ export class MessageCreateMutationHandler
     inputs.unshift({ id: messageId, attributes: messageAttributes });
     await nodeService.createNode(input.userId, inputs);
 
-    const mutationChanges: MutationChange[] = [
-      {
-        type: 'workspace',
-        table: 'nodes',
-        userId: input.userId,
-      },
-      {
-        type: 'workspace',
-        table: 'changes',
-        userId: input.userId,
-      },
-    ];
-
-    if (hasFiles) {
-      mutationChanges.push({
-        type: 'workspace',
-        table: 'downloads',
-        userId: input.userId,
-      });
-
-      mutationChanges.push({
-        type: 'workspace',
-        table: 'uploads',
-        userId: input.userId,
-      });
-    }
-
     return {
-      output: {
-        id: messageId,
-      },
-      changes: mutationChanges,
+      id: messageId,
     };
   }
 }

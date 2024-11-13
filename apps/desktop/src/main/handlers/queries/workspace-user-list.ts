@@ -1,65 +1,74 @@
-import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
+import { WorkspaceUserListQueryInput } from '@/shared/queries/workspace-user-list';
 import { databaseService } from '@/main/data/database-service';
 import { NodeTypes } from '@colanode/core';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { UserNode } from '@colanode/core';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { Event } from '@/shared/types/events';
 
 export class WorkspaceUserListQueryHandler
   implements QueryHandler<WorkspaceUserListQueryInput>
 {
   public async handleQuery(
     input: WorkspaceUserListQueryInput
-  ): Promise<QueryResult<WorkspaceUserListQueryInput>> {
+  ): Promise<UserNode[]> {
     const rows = await this.fetchNodes(input);
-    return {
-      output: this.buildWorkspaceUserNodes(rows),
-      state: {
-        rows,
-      },
-    };
+    return this.buildWorkspaceUserNodes(rows);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: WorkspaceUserListQueryInput,
-    state: Record<string, any>
+    output: UserNode[]
   ): Promise<ChangeCheckResult<WorkspaceUserListQueryInput>> {
     if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
+      event.type === 'node_created' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
     ) {
+      const newResult = await this.handleQuery(input);
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newResult,
       };
     }
 
-    const rows = await this.fetchNodes(input);
-    if (isEqual(rows, state.rows)) {
+    if (
+      event.type === 'node_updated' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
+    ) {
+      const user = output.find((user) => user.id === event.node.id);
+      if (user) {
+        const newUsers = output.map((user) => {
+          if (user.id === event.node.id) {
+            return event.node as UserNode;
+          }
+          return user;
+        });
+
+        return {
+          hasChanges: true,
+          result: newUsers,
+        };
+      }
+    }
+
+    if (
+      event.type === 'node_deleted' &&
+      event.userId === input.userId &&
+      event.node.type === 'user'
+    ) {
+      const newResult = await this.handleQuery(input);
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newResult,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildWorkspaceUserNodes(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

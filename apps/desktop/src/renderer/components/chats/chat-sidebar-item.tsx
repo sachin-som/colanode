@@ -1,8 +1,9 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { ChatNode } from '@colanode/core';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { useRadar } from '@/renderer/contexts/radar';
 
 interface ChatSidebarItemProps {
   node: ChatNode;
@@ -10,6 +11,7 @@ interface ChatSidebarItemProps {
 
 export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
   const workspace = useWorkspace();
+  const radar = useRadar();
 
   const collaboratorId =
     Object.keys(node.attributes.collaborators).find(
@@ -26,9 +28,10 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
     return null;
   }
 
+  const nodeReadState = radar.getChatState(workspace.userId, node.id);
   const isActive = workspace.isNodeActive(node.id);
-  const isUnread = false;
-  const mentionsCount = 0;
+  const unreadCount =
+    nodeReadState.unseenMessagesCount + nodeReadState.mentionsCount;
 
   return (
     <div
@@ -47,18 +50,15 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
-          isUnread && 'font-bold'
+          !isActive && unreadCount > 0 && 'font-semibold'
         )}
       >
         {data.attributes.name ?? 'Unnamed'}
       </span>
-      {mentionsCount > 0 && (
-        <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">
-          {mentionsCount}
+      {!isActive && unreadCount > 0 && (
+        <span className="mr-1 rounded-md px-1 py-0.5 text-xs bg-red-400 text-white">
+          {unreadCount}
         </span>
-      )}
-      {mentionsCount == 0 && isUnread && (
-        <span className="size-2 rounded-full bg-red-500" />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { QueryInput } from '@/operations/queries';
+import { QueryInput } from '@/shared/queries';
 import { sha256 } from 'js-sha256';
 import { useQuery as useTanstackQuery } from '@tanstack/react-query';
 

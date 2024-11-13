@@ -1,13 +1,17 @@
+import { eventBus } from '@/shared/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { FileDownloadMutationInput } from '@/operations/mutations/file-download';
+import { MutationHandler } from '@/main/types';
+import {
+  FileDownloadMutationInput,
+  FileDownloadMutationOutput,
+} from '@/shared/mutations/file-download';
 
 export class FileDownloadMutationHandler
   implements MutationHandler<FileDownloadMutationInput>
 {
   async handleMutation(
     input: FileDownloadMutationInput
-  ): Promise<MutationResult<FileDownloadMutationInput>> {
+  ): Promise<FileDownloadMutationOutput> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
@@ -20,9 +24,7 @@ export class FileDownloadMutationHandler
 
     if (!node) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -34,33 +36,35 @@ export class FileDownloadMutationHandler
 
     if (download) {
       return {
-        output: {
-          success: true,
-        },
+        success: true,
       };
     }
 
+    const createdAt = new Date();
     await workspaceDatabase
       .insertInto('downloads')
       .values({
         node_id: input.fileId,
-        created_at: new Date().toISOString(),
+        created_at: createdAt.toISOString(),
         progress: 0,
         retry_count: 0,
       })
       .execute();
 
-    return {
-      output: {
-        success: true,
+    eventBus.publish({
+      type: 'download_created',
+      userId: input.userId,
+      download: {
+        nodeId: node.id,
+        createdAt: createdAt.toISOString(),
+        updatedAt: null,
+        progress: 0,
+        retryCount: 0,
       },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'downloads',
-          userId: input.userId,
-        },
-      ],
+    });
+
+    return {
+      success: true,
     };
   }
 }

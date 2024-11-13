@@ -2,9 +2,9 @@ import React from 'react';
 import { InView } from 'react-intersection-observer';
 import { Message } from '@/renderer/components/messages/message';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { compareString } from '@/lib/utils';
+import { compareString } from '@/shared/lib/utils';
 import { useQueries } from '@/renderer/hooks/use-queries';
-import { MessageListQueryInput } from '@/operations/queries/message-list';
+import { MessageListQueryInput } from '@/shared/queries/message-list';
 import { useConversation } from '@/renderer/contexts/conversation';
 
 const MESSAGES_PER_PAGE = 50;

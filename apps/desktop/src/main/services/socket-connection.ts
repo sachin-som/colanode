@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
-import { BackoffCalculator } from '@/lib/backoff-calculator';
-import { MessageContext, MessageInput } from '@/operations/messages';
+import { BackoffCalculator } from '@/shared/lib/backoff-calculator';
+import { MessageContext, MessageInput } from '@/shared/messages';
 import { mediator } from '@/main/mediator';
 import { SelectAccount, SelectServer } from '@/main/data/app/schema';
-import { ServerAttributes } from '@/types/servers';
+import { ServerAttributes } from '@/shared/types/servers';
 
 const buildSynapseUrl = (server: SelectServer, deviceId: string) => {
   const attributes = JSON.parse(server.attributes) as ServerAttributes;

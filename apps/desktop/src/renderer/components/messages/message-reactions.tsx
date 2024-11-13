@@ -1,6 +1,6 @@
-import { MessageNode } from '@/types/messages';
+import { MessageNode } from '@/shared/types/messages';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface MessageReactionsProps {
   message: MessageNode;

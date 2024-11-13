@@ -1,8 +1,11 @@
 import { generateId, IdType } from '@colanode/core';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ViewCreateMutationInput } from '@/operations/mutations/view-create';
-import { compareString } from '@/lib/utils';
-import { generateNodeIndex } from '@/lib/nodes';
+import { MutationHandler } from '@/main/types';
+import {
+  ViewCreateMutationInput,
+  ViewCreateMutationOutput,
+} from '@/shared/mutations/view-create';
+import { compareString } from '@/shared/lib/utils';
+import { generateNodeIndex } from '@/shared/lib/nodes';
 import { nodeService } from '@/main/services/node-service';
 
 export class ViewCreateMutationHandler
@@ -10,7 +13,7 @@ export class ViewCreateMutationHandler
 {
   async handleMutation(
     input: ViewCreateMutationInput
-  ): Promise<MutationResult<ViewCreateMutationInput>> {
+  ): Promise<ViewCreateMutationOutput> {
     const id = generateId(IdType.View);
     await nodeService.updateNode(
       input.databaseId,
@@ -41,16 +44,7 @@ export class ViewCreateMutationHandler
     );
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

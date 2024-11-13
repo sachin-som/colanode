@@ -1,15 +1,19 @@
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { AccountUpdateOutput } from '@/types/accounts';
-import { AccountUpdateMutationInput } from '@/operations/mutations/account-update';
+import { httpClient } from '@/shared/lib/http-client';
+import { MutationHandler } from '@/main/types';
+import { AccountUpdateOutput } from '@/shared/types/accounts';
+import {
+  AccountUpdateMutationInput,
+  AccountUpdateMutationOutput,
+} from '@/shared/mutations/account-update';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class AccountUpdateMutationHandler
   implements MutationHandler<AccountUpdateMutationInput>
 {
   async handleMutation(
     input: AccountUpdateMutationInput
-  ): Promise<MutationResult<AccountUpdateMutationInput>> {
+  ): Promise<AccountUpdateMutationOutput> {
     const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
@@ -43,25 +47,36 @@ export class AccountUpdateMutationHandler
       }
     );
 
-    await databaseService.appDatabase
+    const updatedAccount = await databaseService.appDatabase
       .updateTable('accounts')
       .set({
         name: data.name,
         avatar: data.avatar,
       })
       .where('id', '=', input.id)
-      .execute();
+      .returningAll()
+      .executeTakeFirst();
+
+    if (!updatedAccount) {
+      throw new Error('Account not found');
+    }
+
+    eventBus.publish({
+      type: 'account_updated',
+      account: {
+        id: updatedAccount.id,
+        name: updatedAccount.name,
+        email: updatedAccount.email,
+        token: updatedAccount.token,
+        avatar: updatedAccount.avatar,
+        deviceId: updatedAccount.device_id,
+        server: updatedAccount.server,
+        status: updatedAccount.status,
+      },
+    });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'app',
-          table: 'accounts',
-        },
-      ],
+      success: true,
     };
   }
 }

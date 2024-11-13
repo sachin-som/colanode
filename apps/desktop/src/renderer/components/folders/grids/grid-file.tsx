@@ -1,4 +1,4 @@
-import { FileNode } from '@/types/files';
+import { FileNode } from '@/shared/types/files';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';
 import { GridItem } from './grid-item';

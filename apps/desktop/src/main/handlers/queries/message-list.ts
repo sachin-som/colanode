@@ -1,77 +1,117 @@
-import { MessageListQueryInput } from '@/operations/queries/message-list';
+import { MessageListQueryInput } from '@/shared/queries/message-list';
 import { databaseService } from '@/main/data/database-service';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { SelectNode } from '@/main/data/workspace/schema';
-import { NodeTypes } from '@colanode/core';
+import { MessageAttributes, NodeTypes } from '@colanode/core';
 import {
   MessageNode,
   MessageReactionCount,
   MessageAuthor,
-} from '@/types/messages';
+} from '@/shared/types/messages';
 import { mapNode } from '@/main/utils';
-import { compareString } from '@/lib/utils';
-import { isEqual } from 'lodash-es';
-import { mapBlocksToContents } from '@/lib/editor';
+import { compareString } from '@/shared/lib/utils';
+import { mapBlocksToContents } from '@/shared/lib/editor';
+import { Event } from '@/shared/types/events';
 
 export class MessageListQueryHandler
   implements QueryHandler<MessageListQueryInput>
 {
   public async handleQuery(
     input: MessageListQueryInput
-  ): Promise<QueryResult<MessageListQueryInput>> {
+  ): Promise<MessageNode[]> {
     const messages = await this.fetchMesssages(input);
     const authors = await this.fetchAuthors(input, messages);
 
-    return {
-      output: this.buildMessages(input.userId, messages, authors),
-      state: {
-        messages,
-        authors,
-      },
-    };
+    return this.buildMessages(input.userId, messages, authors);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: MessageListQueryInput,
-    state: Record<string, any>
+    output: MessageNode[]
   ): Promise<ChangeCheckResult<MessageListQueryInput>> {
     if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
+      event.type === 'node_created' &&
+      event.userId === input.userId &&
+      event.node.type === 'message' &&
+      event.node.parentId === input.conversationId
     ) {
+      const messages = await this.fetchMesssages(input);
+      const authors = await this.fetchAuthors(input, messages);
+
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: this.buildMessages(input.userId, messages, authors),
       };
     }
 
-    const messages = await this.fetchMesssages(input);
-    const authors = await this.fetchAuthors(input, messages);
+    if (event.type === 'node_updated' && event.userId === input.userId) {
+      if (
+        event.node.type === 'message' &&
+        event.node.parentId === input.conversationId
+      ) {
+        const message = output.find((message) => message.id === event.node.id);
+        if (message) {
+          message.content = mapBlocksToContents(
+            event.node.id,
+            Object.values(event.node.attributes.content ?? {})
+          );
 
-    if (isEqual(messages, state.messages) && isEqual(authors, state.authors)) {
-      return {
-        hasChanges: false,
-      };
+          message.reactionCounts = this.buildReactionCounts(
+            event.node.attributes,
+            input.userId
+          );
+
+          message.createdAt = event.node.createdAt;
+          message.versionId = event.node.versionId;
+
+          return {
+            hasChanges: true,
+            result: output,
+          };
+        }
+      }
+
+      if (event.node.type === 'user') {
+        let hasChanges = false;
+        for (const message of output) {
+          if (message.author.id === event.node.id) {
+            message.author.name = event.node.attributes.name;
+            message.author.email = event.node.attributes.email;
+            message.author.avatar = event.node.attributes.avatar;
+
+            hasChanges = true;
+          }
+        }
+
+        if (hasChanges) {
+          return {
+            hasChanges: true,
+            result: output,
+          };
+        }
+      }
+    }
+
+    if (event.type === 'node_deleted' && event.userId === input.userId) {
+      if (
+        event.node.type === 'message' &&
+        event.node.parentId === input.conversationId
+      ) {
+        const message = output.find((message) => message.id === event.node.id);
+
+        if (message) {
+          const newOutput = await this.handleQuery(input);
+          return {
+            hasChanges: true,
+            result: newOutput,
+          };
+        }
+      }
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildMessages(input.userId, messages, authors),
-        state: {
-          messages,
-          authors,
-        },
-      },
+      hasChanges: false,
     };
   }
 
@@ -154,16 +194,10 @@ export class MessageListQueryHandler
       }
 
       const author = authorMap.get(messageNode.createdBy);
-      const reactions =
-        (messageNode.attributes.reactions as Record<string, string[]>) ?? {};
-
-      const reactionCounts: MessageReactionCount[] = Object.entries(reactions)
-        .map(([reaction, users]) => ({
-          reaction,
-          count: users.length,
-          isReactedTo: users.includes(userId),
-        }))
-        .filter((reactionCount) => reactionCount.count > 0);
+      const reactionCounts = this.buildReactionCounts(
+        messageNode.attributes,
+        userId
+      );
 
       const message: MessageNode = {
         id: messageNode.id,
@@ -187,4 +221,18 @@ export class MessageListQueryHandler
 
     return messages.sort((a, b) => compareString(a.id, b.id));
   };
+
+  private buildReactionCounts(
+    attributes: MessageAttributes,
+    userId: string
+  ): MessageReactionCount[] {
+    const reactions = attributes.reactions as Record<string, string[]>;
+    return Object.entries(reactions)
+      .map(([reaction, users]) => ({
+        reaction,
+        count: users.length,
+        isReactedTo: users.includes(userId),
+      }))
+      .filter((reactionCount) => reactionCount.count > 0);
+  }
 }

@@ -1,16 +1,20 @@
 import { databaseService } from '@/main/data/database-service';
 import { socketService } from '@/main/services/socket-service';
-import { hasInsertChanges, hasUpdateChanges } from '@/main/utils';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ServerNodeSyncMutationInput } from '@/operations/mutations/server-node-sync';
+import { mapNode } from '@/main/utils';
+import { MutationHandler } from '@/main/types';
+import {
+  ServerNodeSyncMutationInput,
+  ServerNodeSyncMutationOutput,
+} from '@/shared/mutations/server-node-sync';
 import { YDoc } from '@colanode/crdt';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class ServerNodeSyncMutationHandler
   implements MutationHandler<ServerNodeSyncMutationInput>
 {
   public async handleMutation(
     input: ServerNodeSyncMutationInput
-  ): Promise<MutationResult<ServerNodeSyncMutationInput>> {
+  ): Promise<ServerNodeSyncMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -24,9 +28,7 @@ export class ServerNodeSyncMutationHandler
 
     if (!workspace) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -49,6 +51,7 @@ export class ServerNodeSyncMutationHandler
 
         const result = await workspaceDatabase
           .insertInto('nodes')
+          .returningAll()
           .values({
             id: input.id,
             attributes: JSON.stringify(attributes),
@@ -60,10 +63,9 @@ export class ServerNodeSyncMutationHandler
             server_version_id: input.versionId,
           })
           .onConflict((cb) => cb.doNothing())
-          .execute();
+          .executeTakeFirst();
 
-        const isInserted = hasInsertChanges(result);
-        if (isInserted) {
+        if (result) {
           socketService.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
@@ -72,17 +74,14 @@ export class ServerNodeSyncMutationHandler
             workspaceId: input.workspaceId,
           });
 
+          eventBus.publish({
+            type: 'node_created',
+            userId: userId,
+            node: mapNode(result),
+          });
+
           return {
-            output: {
-              success: true,
-            },
-            changes: [
-              {
-                type: 'workspace',
-                table: 'nodes',
-                userId: userId,
-              },
-            ],
+            success: true,
           };
         }
       } else {
@@ -92,8 +91,9 @@ export class ServerNodeSyncMutationHandler
         const attributes = ydoc.getAttributes();
         const state = ydoc.getState();
 
-        const result = await workspaceDatabase
+        const updatedNode = await workspaceDatabase
           .updateTable('nodes')
+          .returningAll()
           .set({
             state: state,
             attributes: JSON.stringify(attributes),
@@ -106,10 +106,9 @@ export class ServerNodeSyncMutationHandler
           })
           .where('id', '=', input.id)
           .where('version_id', '=', existingNode.version_id)
-          .execute();
+          .executeTakeFirst();
 
-        const isUpdated = hasUpdateChanges(result);
-        if (isUpdated) {
+        if (updatedNode) {
           socketService.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
@@ -118,26 +117,21 @@ export class ServerNodeSyncMutationHandler
             workspaceId: input.workspaceId,
           });
 
+          eventBus.publish({
+            type: 'node_updated',
+            userId: userId,
+            node: mapNode(updatedNode),
+          });
+
           return {
-            output: {
-              success: true,
-            },
-            changes: [
-              {
-                type: 'workspace',
-                table: 'nodes',
-                userId: userId,
-              },
-            ],
+            success: true,
           };
         }
       }
     }
 
     return {
-      output: {
-        success: false,
-      },
+      success: false,
     };
   }
 }

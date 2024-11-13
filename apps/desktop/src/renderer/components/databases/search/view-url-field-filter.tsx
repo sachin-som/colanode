@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
-import { urlFieldFilterOperators } from '@/lib/databases';
+import { urlFieldFilterOperators } from '@/shared/lib/databases';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';

@@ -5,7 +5,7 @@ import { SquareArrowOutUpRight } from 'lucide-react';
 import { FileDownload } from '@/renderer/components/files/file-download';
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
-import { getFileUrl } from '@/lib/files';
+import { getFileUrl } from '@/shared/lib/files';
 
 interface FileBodyProps {
   file: FileNode;

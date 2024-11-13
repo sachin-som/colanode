@@ -1,6 +1,6 @@
 import React from 'react';
 import { EmojiSkinToneSelector } from '@/renderer/components/emojis/emoji-skin-tone-selector';
-import { Emoji } from '@/types/emojis';
+import { Emoji } from '@/shared/types/emojis';
 import { EmojiPickerContext } from '@/renderer/contexts/emoji-picker';
 import { EmojiPickerBrowser } from '@/renderer/components/emojis/emoji-picker-browser';
 import { EmojiPickerSearch } from '@/renderer/components/emojis/emoji-picker-search';

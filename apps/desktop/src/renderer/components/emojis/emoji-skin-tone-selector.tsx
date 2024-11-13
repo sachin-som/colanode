@@ -1,5 +1,5 @@
 import React from 'react';
-import { getEmojiUrl } from '@/lib/emojis';
+import { getEmojiUrl } from '@/shared/lib/emojis';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import {
   Popover,

@@ -1,16 +1,21 @@
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
+import { httpClient } from '@/shared/lib/http-client';
+import {
+  WorkspaceUserRoleUpdateMutationInput,
+  WorkspaceUserRoleUpdateMutationOutput,
+} from '@/shared/mutations/workspace-user-role-update';
 import { WorkspaceUserRoleUpdateOutput } from '@colanode/core';
+import { MutationHandler } from '@/main/types';
 import { toUint8Array } from 'js-base64';
+import { eventBus } from '@/shared/lib/event-bus';
+import { mapNode } from '@/main/utils';
 
 export class WorkspaceUserRoleUpdateMutationHandler
   implements MutationHandler<WorkspaceUserRoleUpdateMutationInput>
 {
   async handleMutation(
     input: WorkspaceUserRoleUpdateMutationInput
-  ): Promise<MutationResult<WorkspaceUserRoleUpdateMutationInput>> {
+  ): Promise<WorkspaceUserRoleUpdateMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -19,9 +24,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
 
     if (!workspace) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -33,9 +36,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
 
     if (!account) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -47,9 +48,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
 
     if (!server) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -69,8 +68,9 @@ export class WorkspaceUserRoleUpdateMutationHandler
       input.userId
     );
 
-    await workspaceDatabase
+    const updatedUser = await workspaceDatabase
       .updateTable('nodes')
+      .returningAll()
       .set({
         attributes: JSON.stringify(data.user.attributes),
         state: toUint8Array(data.user.state),
@@ -81,21 +81,22 @@ export class WorkspaceUserRoleUpdateMutationHandler
         server_version_id: data.user.versionId,
       })
       .where('id', '=', data.user.id)
-      .execute();
+      .executeTakeFirst();
 
-    const changedTables: MutationChange[] = [
-      {
-        type: 'workspace',
-        table: 'nodes',
-        userId: input.userId,
-      },
-    ];
+    if (!updatedUser) {
+      return {
+        success: false,
+      };
+    }
+
+    eventBus.publish({
+      type: 'node_updated',
+      userId: input.userId,
+      node: mapNode(updatedUser),
+    });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: changedTables,
+      success: true,
     };
   }
 }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { getIconUrl } from '@/lib/icons';
+import { getIconUrl } from '@/shared/lib/icons';
 
 interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
   id: string;

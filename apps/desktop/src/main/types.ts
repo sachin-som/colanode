@@ -1,50 +1,26 @@
-import { AppDatabaseSchema } from '@/main/data/app/schema';
-import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
-import { MutationInput, MutationMap } from '@/operations/mutations';
-import { QueryInput, QueryMap } from '@/operations/queries';
+import { MutationInput, MutationMap } from '@/shared/mutations';
+import { QueryInput, QueryMap } from '@/shared/queries';
+import { Event } from '@/shared/types/events';
 
 export interface MutationHandler<T extends MutationInput> {
-  handleMutation: (input: T) => Promise<MutationResult<T>>;
+  handleMutation: (input: T) => Promise<MutationMap[T['type']]['output']>;
 }
 
-export type MutationResult<T extends MutationInput> = {
-  output: MutationMap[T['type']]['output'];
-  changes?: MutationChange[];
-};
-
-export type MutationChange = AppMutationChange | WorkspaceMutationChange;
-
-export type AppMutationChange = {
-  type: 'app';
-  table: keyof AppDatabaseSchema;
-};
-
-export type WorkspaceMutationChange = {
-  type: 'workspace';
-  table: keyof WorkspaceDatabaseSchema;
-  userId: string;
-};
-
 export interface QueryHandler<T extends QueryInput> {
-  handleQuery: (input: T) => Promise<QueryResult<T>>;
+  handleQuery: (input: T) => Promise<QueryMap[T['type']]['output']>;
   checkForChanges: (
-    changes: MutationChange[],
+    event: Event,
     input: T,
-    state: Record<string, any>
+    output: QueryMap[T['type']]['output']
   ) => Promise<ChangeCheckResult<T>>;
 }
 
-export type QueryResult<T extends QueryInput> = {
-  output: QueryMap[T['type']]['output'];
-  state: Record<string, any>;
-};
-
 export type SubscribedQuery<T extends QueryInput> = {
   input: T;
-  result: QueryResult<T>;
+  result: QueryMap[T['type']]['output'];
 };
 
 export type ChangeCheckResult<T extends QueryInput> = {
   hasChanges: boolean;
-  result?: QueryResult<T>;
+  result?: QueryMap[T['type']]['output'];
 };

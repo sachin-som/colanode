@@ -1,13 +1,16 @@
-import { MutationHandler, MutationResult } from '@/main/types';
+import { MutationHandler } from '@/main/types';
 import { nodeService } from '@/main/services/node-service';
-import { ViewDeleteMutationInput } from '@/operations/mutations/view-delete';
+import {
+  ViewDeleteMutationInput,
+  ViewDeleteMutationOutput,
+} from '@/shared/mutations/view-delete';
 
 export class ViewDeleteMutationHandler
   implements MutationHandler<ViewDeleteMutationInput>
 {
   async handleMutation(
     input: ViewDeleteMutationInput
-  ): Promise<MutationResult<ViewDeleteMutationInput>> {
+  ): Promise<ViewDeleteMutationOutput> {
     await nodeService.updateNode(
       input.databaseId,
       input.userId,
@@ -22,16 +25,7 @@ export class ViewDeleteMutationHandler
     );
 
     return {
-      output: {
-        id: input.viewId,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-      ],
+      id: input.viewId,
     };
   }
 }

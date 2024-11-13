@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { Workspace } from '@/types/workspaces';
+import { Workspace } from '@/shared/types/workspaces';
 
 interface WorkspaceContext extends Workspace {
   navigateToNode: (nodeId: string) => void;

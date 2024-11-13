@@ -9,11 +9,14 @@ import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
   LocalUpdateNodeChangeData,
-} from '@/types/sync';
+} from '@/shared/types/sync';
 import { generateId, IdType } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
-import { fetchNodeAncestors, hasUpdateChanges, mapNode } from '@/main/utils';
+import { fetchNodeAncestors, mapNode } from '@/main/utils';
 import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
+import { eventBus } from '@/shared/lib/event-bus';
+import { Download } from '@/shared/types/nodes';
+import { Upload } from '@/shared/types/nodes';
 
 export type CreateNodeInput = {
   id: string;
@@ -35,6 +38,9 @@ class NodeService {
     }
 
     const inputs = Array.isArray(input) ? input : [input];
+    const createdNodes: Node[] = [];
+    const createdUploads: Upload[] = [];
+    const createdDownloads: Download[] = [];
 
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
@@ -82,8 +88,9 @@ class NodeService {
           versionId: versionId,
         };
 
-        await transaction
+        const createdNodeRow = await transaction
           .insertInto('nodes')
+          .returningAll()
           .values({
             id: input.id,
             attributes: JSON.stringify(input.attributes),
@@ -92,7 +99,12 @@ class NodeService {
             created_by: context.userId,
             version_id: versionId,
           })
-          .execute();
+          .executeTakeFirst();
+
+        if (createdNodeRow) {
+          const createdNode = mapNode(createdNodeRow);
+          createdNodes.push(createdNode);
+        }
 
         await transaction
           .insertInto('changes')
@@ -104,20 +116,66 @@ class NodeService {
           .execute();
 
         if (input.upload) {
-          await transaction
+          const createdUploadRow = await transaction
             .insertInto('uploads')
+            .returningAll()
             .values(input.upload)
-            .execute();
+            .executeTakeFirst();
+
+          if (createdUploadRow) {
+            createdUploads.push({
+              nodeId: createdUploadRow.node_id,
+              createdAt: createdUploadRow.created_at,
+              updatedAt: createdUploadRow.updated_at,
+              progress: createdUploadRow.progress,
+              retryCount: createdUploadRow.retry_count,
+            });
+          }
         }
 
         if (input.download) {
-          await transaction
+          const createdDownloadRow = await transaction
             .insertInto('downloads')
+            .returningAll()
             .values(input.download)
-            .execute();
+            .executeTakeFirst();
+
+          if (createdDownloadRow) {
+            createdDownloads.push({
+              nodeId: createdDownloadRow.node_id,
+              createdAt: createdDownloadRow.created_at,
+              updatedAt: createdDownloadRow.updated_at,
+              progress: createdDownloadRow.progress,
+              retryCount: createdDownloadRow.retry_count,
+            });
+          }
         }
       }
     });
+
+    for (const createdNode of createdNodes) {
+      eventBus.publish({
+        type: 'node_created',
+        userId,
+        node: createdNode,
+      });
+    }
+
+    for (const createdUpload of createdUploads) {
+      eventBus.publish({
+        type: 'upload_created',
+        userId,
+        upload: createdUpload,
+      });
+    }
+
+    for (const createdDownload of createdDownloads) {
+      eventBus.publish({
+        type: 'download_created',
+        userId,
+        download: createdDownload,
+      });
+    }
   }
 
   async updateNode(
@@ -161,7 +219,7 @@ class NodeService {
     }
 
     const ancestors = ancestorRows.map(mapNode);
-    const node = mapNode(nodeRow);
+    let node = mapNode(nodeRow);
 
     if (!node) {
       throw new Error('Node not found');
@@ -208,8 +266,9 @@ class NodeService {
     const result = await workspaceDatabase
       .transaction()
       .execute(async (trx) => {
-        const result = await trx
+        const updatedRow = await trx
           .updateTable('nodes')
+          .returningAll()
           .set({
             attributes: JSON.stringify(ydoc.getAttributes()),
             state: ydoc.getState(),
@@ -219,11 +278,11 @@ class NodeService {
           })
           .where('id', '=', nodeId)
           .where('version_id', '=', node.versionId)
-          .execute();
+          .executeTakeFirst();
 
-        const hasChanges = hasUpdateChanges(result);
+        if (updatedRow) {
+          node = mapNode(updatedRow);
 
-        if (hasChanges) {
           await trx
             .insertInto('changes')
             .values({
@@ -234,8 +293,16 @@ class NodeService {
             .execute();
         }
 
-        return hasChanges;
+        return true;
       });
+
+    if (result) {
+      eventBus.publish({
+        type: 'node_updated',
+        userId,
+        node,
+      });
+    }
 
     return result;
   }
@@ -299,6 +366,12 @@ class NodeService {
           retry_count: 0,
         })
         .execute();
+    });
+
+    eventBus.publish({
+      type: 'node_deleted',
+      userId,
+      node: node,
     });
   }
 }

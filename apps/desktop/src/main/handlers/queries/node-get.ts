@@ -1,62 +1,46 @@
-import { NodeGetQueryInput } from '@/operations/queries/node-get';
+import { NodeGetQueryInput } from '@/shared/queries/node-get';
 import { databaseService } from '@/main/data/database-service';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { Node } from '@colanode/core';
+import { Event } from '@/shared/types/events';
 
 export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
-  public async handleQuery(
-    input: NodeGetQueryInput
-  ): Promise<QueryResult<NodeGetQueryInput>> {
+  public async handleQuery(input: NodeGetQueryInput): Promise<Node | null> {
     const row = await this.fetchNode(input);
-
-    return {
-      output: row ? mapNode(row) : null,
-      state: {
-        row,
-      },
-    };
+    return row ? mapNode(row) : null;
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: NodeGetQueryInput,
-    state: Record<string, any>
+    _: Node | null
   ): Promise<ChangeCheckResult<NodeGetQueryInput>> {
     if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
+      event.type === 'node_updated' &&
+      event.userId === input.userId &&
+      event.node.id === input.nodeId
     ) {
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: event.node,
       };
     }
 
-    const row = await this.fetchNode(input);
-    if (isEqual(row, state.row)) {
+    if (
+      event.type === 'node_deleted' &&
+      event.userId === input.userId &&
+      event.node.id === input.nodeId
+    ) {
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: null,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: row ? mapNode(row) : null,
-        state: {
-          row,
-        },
-      },
+      hasChanges: false,
     };
   }
 

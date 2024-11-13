@@ -9,7 +9,7 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { Input } from '@/renderer/components/ui/input';
 import { useView } from '@/renderer/contexts/view';
 import { useDrop } from 'react-dnd';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { ArrowDownAz, ArrowDownZa, Filter, Type } from 'lucide-react';
 import { useDatabase } from '@/renderer/contexts/database';
 

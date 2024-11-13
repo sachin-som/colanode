@@ -1,6 +1,9 @@
 import { generateId, IdType } from '@colanode/core';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { FolderCreateMutationInput } from '@/operations/mutations/folder-create';
+import { MutationHandler } from '@/main/types';
+import {
+  FolderCreateMutationInput,
+  FolderCreateMutationOutput,
+} from '@/shared/mutations/folder-create';
 import { FolderAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
 
@@ -9,7 +12,7 @@ export class FolderCreateMutationHandler
 {
   async handleMutation(
     input: FolderCreateMutationInput
-  ): Promise<MutationResult<FolderCreateMutationInput>> {
+  ): Promise<FolderCreateMutationOutput> {
     const id = generateId(IdType.Folder);
     const attributes: FolderAttributes = {
       type: 'folder',
@@ -21,21 +24,7 @@ export class FolderCreateMutationHandler
     await nodeService.createNode(input.userId, { id, attributes });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

@@ -1,5 +1,5 @@
 import { match } from 'ts-pattern';
-import { getFilePreviewType } from '@/lib/files';
+import { getFilePreviewType } from '@/shared/lib/files';
 import { FilePreviewImage } from '@/renderer/components/files/previews/file-preview-image';
 import { FilePreviewVideo } from '@/renderer/components/files/previews/file-preview-video';
 import { FilePreviewOther } from '@/renderer/components/files/previews/file-preview-other';

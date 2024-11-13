@@ -1,17 +1,19 @@
 import { app, shell, BrowserWindow, ipcMain, protocol, dialog } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { eventBus } from '@/lib/event-bus';
+import { eventBus } from '@/shared/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
 import { socketService } from '@/main/services/socket-service';
 import { synchronizer } from '@/main/synchronizer';
 import { avatarService } from '@/main/services/avatar-service';
 import { fileService } from '@/main/services/file-service';
-import { mediator } from '@/main/mediator';
-import { FileMetadata } from '@/types/files';
-import { MutationInput, MutationMap } from '@/operations/mutations';
-import { QueryInput, QueryMap } from '@/operations/queries';
+import { FileMetadata } from '@/shared/types/files';
+import { MutationInput, MutationMap } from '@/shared/mutations';
+import { QueryInput, QueryMap } from '@/shared/queries';
 import { assetService } from '@/main/services/asset-service';
+import { radarService } from '@/main/services/radar-service';
+import { mutationService } from '@/main/services/mutation-service';
+import { queryService } from '@/main/services/query-service';
 
 let subscriptionId: string | null = null;
 const icon = join(__dirname, '../assets/icon.png');
@@ -23,6 +25,7 @@ const createWindow = async (): Promise<void> => {
   assetService.checkAssets();
   socketService.init();
   synchronizer.init();
+  radarService.init();
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -56,7 +59,9 @@ const createWindow = async (): Promise<void> => {
 
   if (subscriptionId === null) {
     subscriptionId = eventBus.subscribe((event) => {
-      mainWindow.webContents.send('event', event);
+      if (event.type === 'query_result_updated') {
+        mainWindow.webContents.send('event', event);
+      }
     });
   }
 
@@ -133,7 +138,7 @@ ipcMain.handle(
     _: unknown,
     input: T
   ): Promise<MutationMap[T['type']]['output']> => {
-    return mediator.executeMutation(input);
+    return mutationService.executeMutation(input);
   }
 );
 
@@ -143,7 +148,7 @@ ipcMain.handle(
     _: unknown,
     input: T
   ): Promise<QueryMap[T['type']]['output']> => {
-    return mediator.executeQuery(input);
+    return queryService.executeQuery(input);
   }
 );
 
@@ -154,12 +159,12 @@ ipcMain.handle(
     id: string,
     input: T
   ): Promise<QueryMap[T['type']]['output']> => {
-    return mediator.executeQueryAndSubscribe(id, input);
+    return queryService.executeQueryAndSubscribe(id, input);
   }
 );
 
 ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
-  mediator.unsubscribeQuery(id);
+  queryService.unsubscribeQuery(id);
 });
 
 ipcMain.handle(

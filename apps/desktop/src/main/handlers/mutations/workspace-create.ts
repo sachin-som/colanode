@@ -1,15 +1,19 @@
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
-import { MutationHandler, MutationResult } from '@/main/types';
+import { httpClient } from '@/shared/lib/http-client';
+import {
+  WorkspaceCreateMutationInput,
+  WorkspaceCreateMutationOutput,
+} from '@/shared/mutations/workspace-create';
+import { MutationHandler } from '@/main/types';
 import { WorkspaceOutput } from '@colanode/core';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>
 {
   async handleMutation(
     input: WorkspaceCreateMutationInput
-  ): Promise<MutationResult<WorkspaceCreateMutationInput>> {
+  ): Promise<WorkspaceCreateMutationOutput> {
     const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
@@ -44,8 +48,9 @@ export class WorkspaceCreateMutationHandler
       }
     );
 
-    await databaseService.appDatabase
+    const createdWorkspace = await databaseService.appDatabase
       .insertInto('workspaces')
+      .returningAll()
       .values({
         workspace_id: data.id ?? data.id,
         account_id: data.user.accountId,
@@ -57,24 +62,29 @@ export class WorkspaceCreateMutationHandler
         version_id: data.versionId,
       })
       .onConflict((cb) => cb.doNothing())
-      .execute();
+      .executeTakeFirst();
+
+    if (!createdWorkspace) {
+      throw new Error('Failed to create workspace!');
+    }
+
+    eventBus.publish({
+      type: 'workspace_created',
+      workspace: {
+        id: createdWorkspace.workspace_id,
+        userId: createdWorkspace.user_id,
+        name: createdWorkspace.name,
+        versionId: createdWorkspace.version_id,
+        accountId: createdWorkspace.account_id,
+        role: createdWorkspace.role,
+        avatar: createdWorkspace.avatar,
+        description: createdWorkspace.description,
+      },
+    });
 
     return {
-      output: {
-        id: data.id,
-        userId: data.user.id,
-      },
-      changes: [
-        {
-          type: 'app',
-          table: 'workspaces',
-        },
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: data.user.id,
-        },
-      ],
+      id: createdWorkspace.workspace_id,
+      userId: createdWorkspace.user_id,
     };
   }
 }

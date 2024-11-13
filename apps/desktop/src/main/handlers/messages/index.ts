@@ -1,4 +1,4 @@
-import { MessageHandler, MessageMap } from '@/operations/messages';
+import { MessageHandler, MessageMap } from '@/shared/messages';
 import { LocalNodeSyncMessageHandler } from '@/main/handlers/messages/local-node-sync';
 import { LocalNodeDeleteMessageHandler } from '@/main/handlers/messages/local-node-delete';
 import { ServerNodeSyncMessageHandler } from '@/main/handlers/messages/server-node-sync';

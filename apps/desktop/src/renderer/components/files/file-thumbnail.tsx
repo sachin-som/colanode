@@ -1,6 +1,6 @@
-import { getFileUrl } from '@/lib/files';
+import { getFileUrl } from '@/shared/lib/files';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { FileIcon } from '@/renderer/components/files/file-icon';
 
 interface FileThumbnailProps {

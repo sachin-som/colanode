@@ -1,6 +1,9 @@
 import { generateId, IdType } from '@colanode/core';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { PageCreateMutationInput } from '@/operations/mutations/page-create';
+import { MutationHandler } from '@/main/types';
+import {
+  PageCreateMutationInput,
+  PageCreateMutationOutput,
+} from '@/shared/mutations/page-create';
 import { PageAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
 
@@ -9,7 +12,7 @@ export class PageCreateMutationHandler
 {
   async handleMutation(
     input: PageCreateMutationInput
-  ): Promise<MutationResult<PageCreateMutationInput>> {
+  ): Promise<PageCreateMutationOutput> {
     const id = generateId(IdType.Page);
     const attributes: PageAttributes = {
       type: 'page',
@@ -21,21 +24,7 @@ export class PageCreateMutationHandler
     await nodeService.createNode(input.userId, { id, attributes });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: id,
     };
   }
 }

@@ -1,8 +1,11 @@
 import { generateId, IdType } from '@colanode/core';
-import { generateNodeIndex } from '@/lib/nodes';
-import { compareString } from '@/lib/utils';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { FieldCreateMutationInput } from '@/operations/mutations/field-create';
+import { generateNodeIndex } from '@/shared/lib/nodes';
+import { compareString } from '@/shared/lib/utils';
+import { MutationHandler } from '@/main/types';
+import {
+  FieldCreateMutationInput,
+  FieldCreateMutationOutput,
+} from '@/shared/mutations/field-create';
 import { nodeService } from '@/main/services/node-service';
 
 export class FieldCreateMutationHandler
@@ -10,7 +13,7 @@ export class FieldCreateMutationHandler
 {
   async handleMutation(
     input: FieldCreateMutationInput
-  ): Promise<MutationResult<FieldCreateMutationInput>> {
+  ): Promise<FieldCreateMutationOutput> {
     const fieldId = generateId(IdType.Field);
     await nodeService.updateNode(
       input.databaseId,
@@ -38,21 +41,7 @@ export class FieldCreateMutationHandler
     );
 
     return {
-      output: {
-        id: fieldId,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id: fieldId,
     };
   }
 }

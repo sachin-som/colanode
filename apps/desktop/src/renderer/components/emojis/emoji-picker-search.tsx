@@ -1,5 +1,5 @@
 import React from 'react';
-import { searchEmojis } from '@/lib/emojis';
+import { searchEmojis } from '@/shared/lib/emojis';
 import { EmojiPickerItem } from '@/renderer/components/emojis/emoji-picker-item';
 import { useEmojiPicker } from '@/renderer/contexts/emoji-picker';
 

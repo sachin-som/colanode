@@ -1,5 +1,5 @@
-import { MessageContext, MessageHandler } from '@/operations/messages';
-import { LocalNodeSyncMessageInput } from '@/operations/messages/local-node-sync';
+import { MessageContext, MessageHandler } from '@/shared/messages';
+import { LocalNodeSyncMessageInput } from '../../../shared/messages/local-node-sync';
 import { socketService } from '@/main/services/socket-service';
 
 export class LocalNodeSyncMessageHandler

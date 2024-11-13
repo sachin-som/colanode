@@ -5,8 +5,8 @@ import {
 } from '@/renderer/components/messages/message-editor';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { MessageNode } from '@/types/messages';
-import { editorHasContent } from '@/lib/editor';
+import { MessageNode } from '@/shared/types/messages';
+import { editorHasContent } from '@/shared/lib/editor';
 import { useConversation } from '@/renderer/contexts/conversation';
 import { MessageReplyBanner } from '@/renderer/components/messages/message-reply-banner';
 import { JSONContent } from '@tiptap/core';

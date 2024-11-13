@@ -1,7 +1,10 @@
 import { databaseService } from '@/main/data/database-service';
 import { generateId, IdType, NodeTypes, NodeRoles } from '@colanode/core';
-import { MutationHandler, MutationResult } from '@/main/types';
-import { ChatCreateMutationInput } from '@/operations/mutations/chat-create';
+import { MutationHandler } from '@/main/types';
+import {
+  ChatCreateMutationInput,
+  ChatCreateMutationOutput,
+} from '@/shared/mutations/chat-create';
 import { sql } from 'kysely';
 import { ChatAttributes } from '@colanode/core';
 import { nodeService } from '@/main/services/node-service';
@@ -15,7 +18,7 @@ export class ChatCreateMutationHandler
 {
   public async handleMutation(
     input: ChatCreateMutationInput
-  ): Promise<MutationResult<ChatCreateMutationInput>> {
+  ): Promise<ChatCreateMutationOutput> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
@@ -32,9 +35,7 @@ export class ChatCreateMutationHandler
     if (existingChats.rows?.length > 0) {
       const chat = existingChats.rows[0];
       return {
-        output: {
-          id: chat.id,
-        },
+        id: chat.id,
       };
     }
 
@@ -51,21 +52,7 @@ export class ChatCreateMutationHandler
     await nodeService.createNode(input.userId, { id, attributes });
 
     return {
-      output: {
-        id: id,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      id,
     };
   }
 }

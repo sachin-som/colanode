@@ -7,7 +7,7 @@ import {
 import { useView } from '@/renderer/contexts/view';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useDatabase } from '@/renderer/contexts/database';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import {
   Tooltip,
   TooltipContent,

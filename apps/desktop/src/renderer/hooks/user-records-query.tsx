@@ -2,7 +2,7 @@ import React from 'react';
 import { useDatabase } from '@/renderer/contexts/database';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ViewFilterAttributes, ViewSortAttributes } from '@colanode/core';
-import { RecordListQueryInput } from '@/operations/queries/record-list';
+import { RecordListQueryInput } from '@/shared/queries/record-list';
 import { useQueries } from '@/renderer/hooks/use-queries';
 
 const RECORDS_PER_PAGE = 50;

@@ -1,5 +1,8 @@
-import { MutationHandler, MutationResult } from '@/main/types';
-import { NodeAttributeSetMutationInput } from '@/operations/mutations/node-attribute-set';
+import { MutationHandler } from '@/main/types';
+import {
+  NodeAttributeSetMutationInput,
+  NodeAttributeSetMutationOutput,
+} from '@/shared/mutations/node-attribute-set';
 import { nodeService } from '@/main/services/node-service';
 import { set } from 'lodash-es';
 
@@ -8,28 +11,14 @@ export class NodeAttributeSetMutationHandler
 {
   async handleMutation(
     input: NodeAttributeSetMutationInput
-  ): Promise<MutationResult<NodeAttributeSetMutationInput>> {
+  ): Promise<NodeAttributeSetMutationOutput> {
     await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       set(attributes, input.path, input.value);
       return attributes;
     });
 
     return {
-      output: {
-        success: true,
-      },
-      changes: [
-        {
-          type: 'workspace',
-          table: 'nodes',
-          userId: input.userId,
-        },
-        {
-          type: 'workspace',
-          table: 'changes',
-          userId: input.userId,
-        },
-      ],
+      success: true,
     };
   }
 }

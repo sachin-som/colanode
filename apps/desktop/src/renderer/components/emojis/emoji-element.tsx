@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { getEmojiUrl } from '@/lib/emojis';
+import { getEmojiUrl } from '@/shared/lib/emojis';
 
 interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
   id: string;

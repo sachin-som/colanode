@@ -1,7 +1,7 @@
 import { mergeAttributes, Node, CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { FilePlaceholderNodeView } from '@/renderer/editor/views';
-import { FileMetadata } from '@/types/files';
+import { FileMetadata } from '@/shared/types/files';
 import { generateId, IdType } from '@colanode/core';
 
 declare module '@tiptap/core' {

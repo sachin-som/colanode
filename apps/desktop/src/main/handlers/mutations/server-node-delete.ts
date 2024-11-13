@@ -1,16 +1,19 @@
+import { eventBus } from '@/shared/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
 import { socketService } from '@/main/services/socket-service';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
-import { ServerNodeDeleteMutationInput } from '@/operations/mutations/server-node-delete';
+import { MutationHandler } from '@/main/types';
+import { mapNode } from '@/main/utils';
+import {
+  ServerNodeDeleteMutationInput,
+  ServerNodeDeleteMutationOutput,
+} from '@/shared/mutations/server-node-delete';
 
 export class ServerNodeDeleteMutationHandler
   implements MutationHandler<ServerNodeDeleteMutationInput>
 {
   public async handleMutation(
     input: ServerNodeDeleteMutationInput
-  ): Promise<MutationResult<ServerNodeDeleteMutationInput>> {
-    const changes: MutationChange[] = [];
-
+  ): Promise<ServerNodeDeleteMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -24,9 +27,7 @@ export class ServerNodeDeleteMutationHandler
 
     if (!workspace) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -34,16 +35,11 @@ export class ServerNodeDeleteMutationHandler
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    await workspaceDatabase
+    const deletedNode = await workspaceDatabase
       .deleteFrom('nodes')
+      .returningAll()
       .where('id', '=', input.id)
-      .execute();
-
-    changes.push({
-      type: 'workspace',
-      table: 'nodes',
-      userId: userId,
-    });
+      .executeTakeFirst();
 
     socketService.sendMessage(workspace.account_id, {
       type: 'local_node_delete',
@@ -51,11 +47,16 @@ export class ServerNodeDeleteMutationHandler
       workspaceId: input.workspaceId,
     });
 
+    if (deletedNode) {
+      eventBus.publish({
+        type: 'node_deleted',
+        userId,
+        node: mapNode(deletedNode),
+      });
+    }
+
     return {
-      output: {
-        success: true,
-      },
-      changes: changes,
+      success: true,
     };
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '@/types/icons';
+import { Icon } from '@/shared/types/icons';
 import { IconPickerContext } from '@/renderer/contexts/icon-picker';
 import { IconPickerSearch } from '@/renderer/components/icons/icon-picker-search';
 import { IconPickerBrowser } from '@/renderer/components/icons/icon-picker-browser';

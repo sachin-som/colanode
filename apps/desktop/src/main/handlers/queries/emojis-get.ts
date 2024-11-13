@@ -1,30 +1,21 @@
 import { assetService } from '@/main/services/asset-service';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { EmojisGetQueryInput } from '@/operations/queries/emojis-get';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { EmojisGetQueryInput } from '@/shared/queries/emojis-get';
+import { EmojiData } from '@/shared/types/emojis';
+import { Event } from '@/shared/types/events';
 
 export class EmojisGetQueryHandler
   implements QueryHandler<EmojisGetQueryInput>
 {
-  public async handleQuery(
-    _: EmojisGetQueryInput
-  ): Promise<QueryResult<EmojisGetQueryInput>> {
+  public async handleQuery(_: EmojisGetQueryInput): Promise<EmojiData> {
     const data = assetService.getEmojiData();
-
-    return {
-      output: data,
-      state: {},
-    };
+    return data;
   }
 
   public async checkForChanges(
-    _: MutationChange[],
+    _: Event,
     __: EmojisGetQueryInput,
-    ___: Record<string, any>
+    ___: EmojiData
   ): Promise<ChangeCheckResult<EmojisGetQueryInput>> {
     return {
       hasChanges: false,

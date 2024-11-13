@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { Button } from '@/renderer/components/ui/button';
-import { dateFieldFilterOperators } from '@/lib/databases';
+import { dateFieldFilterOperators } from '@/shared/lib/databases';
 import { DatePicker } from '@/renderer/components/ui/date-picker';
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';

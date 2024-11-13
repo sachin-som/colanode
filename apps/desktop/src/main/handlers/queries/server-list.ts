@@ -1,60 +1,33 @@
-import { ServerListQueryInput } from '@/operations/queries/server-list';
+import { ServerListQueryInput } from '@/shared/queries/server-list';
 import { databaseService } from '@/main/data/database-service';
 import { SelectServer } from '@/main/data/app/schema';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
-import { Server } from '@/types/servers';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { Server } from '@/shared/types/servers';
+import { Event } from '@/shared/types/events';
 
 export class ServerListQueryHandler
   implements QueryHandler<ServerListQueryInput>
 {
-  async handleQuery(
-    _: ServerListQueryInput
-  ): Promise<QueryResult<ServerListQueryInput>> {
+  async handleQuery(_: ServerListQueryInput): Promise<Server[]> {
     const rows = await this.fetchServers();
-    return {
-      output: this.mapServers(rows),
-      state: {
-        rows,
-      },
-    };
+    return this.mapServers(rows);
   }
 
   async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     _: ServerListQueryInput,
-    state: Record<string, any>
+    output: Server[]
   ): Promise<ChangeCheckResult<ServerListQueryInput>> {
-    if (
-      !changes.some(
-        (change) => change.type === 'app' && change.table === 'servers'
-      )
-    ) {
+    if (event.type === 'server_created') {
+      const newServers = [...output, event.server];
       return {
-        hasChanges: false,
-      };
-    }
-
-    const rows = await this.fetchServers();
-    if (isEqual(rows, state.rows)) {
-      return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newServers,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.mapServers(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

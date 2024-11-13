@@ -4,12 +4,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/renderer/components/ui/tooltip';
-import { formatDate, timeAgo } from '@/lib/utils';
+import { formatDate, timeAgo } from '@/shared/lib/utils';
 import { InView } from 'react-intersection-observer';
 import { MessageReactionCreatePopover } from '@/renderer/components/messages/message-reaction-create-popover';
 import { MessageDeleteButton } from '@/renderer/components/messages/message-delete-button';
 import { NodeRenderer } from '@/renderer/editor/renderers/node';
-import { MessageNode } from '@/types/messages';
+import { MessageNode } from '@/shared/types/messages';
 import { MessageReactions } from '@/renderer/components/messages/message-reactions';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';

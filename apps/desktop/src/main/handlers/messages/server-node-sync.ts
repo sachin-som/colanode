@@ -1,6 +1,6 @@
-import { MessageContext, MessageHandler } from '@/operations/messages';
-import { ServerNodeSyncMessageInput } from '@/operations/messages/server-node-sync';
-import { mediator } from '@/main/mediator';
+import { MessageContext, MessageHandler } from '@/shared/messages';
+import { ServerNodeSyncMessageInput } from '../../../shared/messages/server-node-sync';
+import { mutationService } from '@/main/services/mutation-service';
 
 export class ServerNodeSyncMessageHandler
   implements MessageHandler<ServerNodeSyncMessageInput>
@@ -9,7 +9,7 @@ export class ServerNodeSyncMessageHandler
     context: MessageContext,
     input: ServerNodeSyncMessageInput
   ): Promise<void> {
-    await mediator.executeMutation({
+    await mutationService.executeMutation({
       type: 'server_node_sync',
       accountId: context.accountId,
       id: input.id,

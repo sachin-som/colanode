@@ -1,65 +1,55 @@
 import { databaseService } from '@/main/data/database-service';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
-import { isEqual } from 'lodash-es';
-import { NodeTreeGetQueryInput } from '@/operations/queries/node-tree-get';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { NodeTreeGetQueryInput } from '@/shared/queries/node-tree-get';
 import { fetchNodeAncestors } from '@/main/utils';
+import { Event } from '@/shared/types/events';
+import { Node } from '@colanode/core';
 
 export class NodeTreeGetQueryHandler
   implements QueryHandler<NodeTreeGetQueryInput>
 {
-  public async handleQuery(
-    input: NodeTreeGetQueryInput
-  ): Promise<QueryResult<NodeTreeGetQueryInput>> {
+  public async handleQuery(input: NodeTreeGetQueryInput): Promise<Node[]> {
     const rows = await this.fetchNodes(input);
-
-    return {
-      output: rows.map(mapNode),
-      state: {
-        rows,
-      },
-    };
+    return rows.map(mapNode);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     input: NodeTreeGetQueryInput,
-    state: Record<string, any>
+    output: Node[]
   ): Promise<ChangeCheckResult<NodeTreeGetQueryInput>> {
-    if (
-      !changes.some(
-        (change) =>
-          change.type === 'workspace' &&
-          change.table === 'nodes' &&
-          change.userId === input.userId
-      )
-    ) {
-      return {
-        hasChanges: false,
-      };
+    if (event.type === 'node_updated' && event.userId === input.userId) {
+      const node = output.find((node) => node.id === event.node.id);
+      if (node) {
+        const newNodes = output.map((node) => {
+          if (node.id === event.node.id) {
+            return event.node;
+          }
+          return node;
+        });
+
+        return {
+          hasChanges: true,
+          result: newNodes,
+        };
+      }
     }
 
-    const rows = await this.fetchNodes(input);
-    if (isEqual(rows, state.rows)) {
-      return {
-        hasChanges: false,
-      };
+    if (event.type === 'node_deleted' && event.userId === input.userId) {
+      const node = output.find((node) => node.id === event.node.id);
+      if (node) {
+        const newResult = await this.handleQuery(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: rows.map(mapNode),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

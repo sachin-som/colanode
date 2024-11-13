@@ -17,7 +17,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { SmartNumberInput } from '@/renderer/components/ui/smart-number-input';
 import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
-import { numberFieldFilterOperators } from '@/lib/databases';
+import { numberFieldFilterOperators } from '@/shared/lib/databases';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 interface ViewNumberFieldFilterProps {

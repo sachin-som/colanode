@@ -1,4 +1,4 @@
-import { EditorCommand } from '@/types/editor';
+import { EditorCommand } from '@/shared/types/editor';
 import { ListTodo } from 'lucide-react';
 
 export const TodoCommand: EditorCommand = {

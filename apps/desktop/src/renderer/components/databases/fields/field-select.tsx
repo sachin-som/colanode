@@ -14,7 +14,7 @@ import {
   CommandList,
 } from '@/renderer/components/ui/command';
 import { FieldType, FieldAttributes } from '@colanode/core';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { FieldIcon } from './field-icon';
 import { Check, ChevronDown } from 'lucide-react';
 

@@ -7,7 +7,7 @@ import {
   SelectOptionAttributes,
 } from '@colanode/core';
 import { useDrag } from 'react-dnd';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface BoardViewCardProps {
   record: RecordNode;

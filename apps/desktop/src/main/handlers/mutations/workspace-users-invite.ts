@@ -1,17 +1,22 @@
 import { databaseService } from '@/main/data/database-service';
-import { httpClient } from '@/lib/http-client';
-import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
+import { httpClient } from '@/shared/lib/http-client';
+import {
+  WorkspaceUsersInviteMutationInput,
+  WorkspaceUsersInviteMutationOutput,
+} from '@/shared/mutations/workspace-users-invite';
+import { MutationHandler } from '@/main/types';
 import { WorkspaceUsersInviteOutput } from '@colanode/core';
 import { CreateNode } from '@/main/data/workspace/schema';
 import { toUint8Array } from 'js-base64';
+import { eventBus } from '@/shared/lib/event-bus';
+import { mapNode } from '@/main/utils';
 
 export class WorkspaceUsersInviteMutationHandler
   implements MutationHandler<WorkspaceUsersInviteMutationInput>
 {
   async handleMutation(
     input: WorkspaceUsersInviteMutationInput
-  ): Promise<MutationResult<WorkspaceUsersInviteMutationInput>> {
+  ): Promise<WorkspaceUsersInviteMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -20,9 +25,7 @@ export class WorkspaceUsersInviteMutationHandler
 
     if (!workspace) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -34,9 +37,7 @@ export class WorkspaceUsersInviteMutationHandler
 
     if (!account) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -48,9 +49,7 @@ export class WorkspaceUsersInviteMutationHandler
 
     if (!server) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -86,25 +85,29 @@ export class WorkspaceUsersInviteMutationHandler
       };
     });
 
-    await workspaceDatabase
+    const createdNodes = await workspaceDatabase
       .insertInto('nodes')
+      .returningAll()
       .values(usersToCreate)
       .onConflict((cb) => cb.doNothing())
       .execute();
 
-    const changedTables: MutationChange[] = [
-      {
-        type: 'workspace',
-        table: 'nodes',
+    if (createdNodes.length !== usersToCreate.length) {
+      return {
+        success: false,
+      };
+    }
+
+    for (const createdNode of createdNodes) {
+      eventBus.publish({
+        type: 'node_created',
         userId: input.userId,
-      },
-    ];
+        node: mapNode(createdNode),
+      });
+    }
 
     return {
-      output: {
-        success: true,
-      },
-      changes: changedTables,
+      success: true,
     };
   }
 }

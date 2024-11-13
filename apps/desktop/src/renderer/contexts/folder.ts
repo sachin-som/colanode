@@ -1,4 +1,4 @@
-import { FileNode } from '@/types/files';
+import { FileNode } from '@/shared/types/files';
 import { createContext, useContext } from 'react';
 
 interface FolderContext {

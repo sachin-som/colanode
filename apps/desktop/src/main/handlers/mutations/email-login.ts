@@ -1,15 +1,19 @@
-import { LoginOutput } from '@/types/accounts';
+import { LoginOutput } from '@/shared/types/accounts';
 import { databaseService } from '@/main/data/database-service';
-import { EmailLoginMutationInput } from '@/operations/mutations/email-login';
-import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
-import { httpClient } from '@/lib/http-client';
+import {
+  EmailLoginMutationInput,
+  EmailLoginMutationOutput,
+} from '@/shared/mutations/email-login';
+import { MutationHandler } from '@/main/types';
+import { httpClient } from '@/shared/lib/http-client';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class EmailLoginMutationHandler
   implements MutationHandler<EmailLoginMutationInput>
 {
   async handleMutation(
     input: EmailLoginMutationInput
-  ): Promise<MutationResult<EmailLoginMutationInput>> {
+  ): Promise<EmailLoginMutationOutput> {
     const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
@@ -18,9 +22,7 @@ export class EmailLoginMutationHandler
 
     if (!server) {
       return {
-        output: {
-          success: false,
-        },
+        success: false,
       };
     }
 
@@ -36,7 +38,6 @@ export class EmailLoginMutationHandler
       }
     );
 
-    const changedTables: MutationChange[] = [];
     await databaseService.appDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('accounts')
@@ -51,11 +52,6 @@ export class EmailLoginMutationHandler
           status: 'active',
         })
         .execute();
-
-      changedTables.push({
-        type: 'app',
-        table: 'accounts',
-      });
 
       if (data.workspaces.length === 0) {
         return;
@@ -76,20 +72,33 @@ export class EmailLoginMutationHandler
           }))
         )
         .execute();
-
-      changedTables.push({
-        type: 'app',
-        table: 'workspaces',
-      });
     });
 
+    eventBus.publish({
+      type: 'account_created',
+      account: data.account,
+    });
+
+    if (data.workspaces.length > 0) {
+      for (const workspace of data.workspaces) {
+        eventBus.publish({
+          type: 'workspace_created',
+          workspace: {
+            id: workspace.id,
+            name: workspace.name,
+            versionId: workspace.versionId,
+            accountId: workspace.user.accountId,
+            role: workspace.user.role,
+            userId: workspace.user.id,
+          },
+        });
+      }
+    }
+
     return {
-      output: {
-        success: true,
-        account: data.account,
-        workspaces: data.workspaces,
-      },
-      changes: changedTables,
+      success: true,
+      account: data.account,
+      workspaces: data.workspaces,
     };
   }
 }

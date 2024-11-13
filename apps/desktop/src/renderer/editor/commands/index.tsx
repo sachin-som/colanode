@@ -11,7 +11,7 @@ import { TodoCommand } from '@/renderer/editor/commands/todo';
 import { PageCommand } from '@/renderer/editor/commands/page';
 import { FolderCommand } from '@/renderer/editor/commands/folder';
 import { FileCommand } from '@/renderer/editor/commands/file';
-import { EditorCommand, EditorCommandProps } from '@/types/editor';
+import { EditorCommand, EditorCommandProps } from '@/shared/types/editor';
 
 export type { EditorCommand, EditorCommandProps };
 

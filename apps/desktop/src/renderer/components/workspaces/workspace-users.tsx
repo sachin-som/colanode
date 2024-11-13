@@ -8,7 +8,7 @@ import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@colanode/core';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
+import { WorkspaceUserListQueryInput } from '../../../shared/queries/workspace-user-list';
 
 const USERS_PER_PAGE = 50;
 

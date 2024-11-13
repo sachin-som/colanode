@@ -1,60 +1,58 @@
-import { AccountListQueryInput } from '@/operations/queries/account-list';
+import { AccountListQueryInput } from '@/shared/queries/account-list';
 import { databaseService } from '@/main/data/database-service';
-import { Account } from '@/types/accounts';
+import { Account } from '@/shared/types/accounts';
 import { SelectAccount } from '@/main/data/app/schema';
-import { isEqual } from 'lodash-es';
-import {
-  MutationChange,
-  ChangeCheckResult,
-  QueryHandler,
-  QueryResult,
-} from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { Event } from '@/shared/types/events';
 
 export class AccountListQueryHandler
   implements QueryHandler<AccountListQueryInput>
 {
-  public async handleQuery(
-    _: AccountListQueryInput
-  ): Promise<QueryResult<AccountListQueryInput>> {
+  public async handleQuery(_: AccountListQueryInput): Promise<Account[]> {
     const rows = await this.fetchAccounts();
-    return {
-      output: this.buildAccounts(rows),
-      state: {
-        rows,
-      },
-    };
+    return this.buildAccounts(rows);
   }
 
   public async checkForChanges(
-    changes: MutationChange[],
+    event: Event,
     _: AccountListQueryInput,
-    state: Record<string, any>
+    output: Account[]
   ): Promise<ChangeCheckResult<AccountListQueryInput>> {
-    if (
-      !changes.some(
-        (change) => change.type === 'app' && change.table === 'accounts'
-      )
-    ) {
+    if (event.type === 'account_created') {
+      const newAccounts = [...output, event.account];
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: newAccounts,
       };
     }
 
-    const rows = await this.fetchAccounts();
-    if (isEqual(rows, state.rows)) {
+    if (event.type === 'account_updated') {
+      const updatedAccounts = output.map((account) => {
+        if (account.id === event.account.id) {
+          return event.account;
+        }
+        return account;
+      });
+
       return {
-        hasChanges: false,
+        hasChanges: true,
+        result: updatedAccounts,
+      };
+    }
+
+    if (event.type === 'account_deleted') {
+      const activeAccounts = output.filter(
+        (account) => account.id !== event.account.id
+      );
+
+      return {
+        hasChanges: true,
+        result: activeAccounts,
       };
     }
 
     return {
-      hasChanges: true,
-      result: {
-        output: this.buildAccounts(rows),
-        state: {
-          rows,
-        },
-      },
+      hasChanges: false,
     };
   }
 

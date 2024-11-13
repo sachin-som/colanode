@@ -30,7 +30,7 @@ export const NodeCollaborators = ({
   );
 
   const isAdmin = hasAdminAccess(role);
-  const ancestors = nodes.reverse().filter((node) => node.id !== nodeId);
+  const ancestors = nodes.filter((node) => node.id !== nodeId);
 
   return (
     <div className="flex flex-col gap-2">

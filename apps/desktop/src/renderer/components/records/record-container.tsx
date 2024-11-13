@@ -41,7 +41,10 @@ export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
   const databaseAncestors = nodes.slice(0, databaseIndex);
 
   const recordRole = extractNodeRole(nodes, workspace.userId);
-  const databaseRole = extractNodeRole(databaseAncestors, workspace.userId);
+  const databaseRole = extractNodeRole(
+    [...databaseAncestors, database],
+    workspace.userId
+  );
 
   if (!recordRole || !databaseRole) {
     return null;

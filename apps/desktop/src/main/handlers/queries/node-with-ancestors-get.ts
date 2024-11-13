@@ -83,7 +83,7 @@ export class NodeWithAncestorsGetQueryHandler
     }
 
     while (node) {
-      result.push(node);
+      result.unshift(node);
       node = rows.find((row) => row.id === node?.parent_id);
 
       if (!node || node.id === node.parent_id) {
@@ -91,6 +91,6 @@ export class NodeWithAncestorsGetQueryHandler
       }
     }
 
-    return result.reverse();
+    return result;
   }
 }

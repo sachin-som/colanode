@@ -4,7 +4,7 @@ import { NodeCollaborator } from '@/renderer/components/collaborators/node-colla
 import { NodeCollaboratorCreate } from '@/renderer/components/collaborators/node-collaborator-create';
 import {
   extractNodeName,
-  hasEditorAccess,
+  hasAdminAccess,
   Node,
   NodeRole,
 } from '@colanode/core';
@@ -29,12 +29,12 @@ export const NodeCollaborators = ({
     (collaborator) => collaborator.collaboratorId
   );
 
-  const canEdit = hasEditorAccess(role);
+  const isAdmin = hasAdminAccess(role);
   const ancestors = nodes.reverse().filter((node) => node.id !== nodeId);
 
   return (
     <div className="flex flex-col gap-2">
-      {canEdit && (
+      {isAdmin && (
         <React.Fragment>
           <NodeCollaboratorCreate
             nodeId={nodeId}
@@ -48,16 +48,32 @@ export const NodeCollaborators = ({
         <div className="flex flex-col gap-3">
           {directCollaborators.length > 0 ? (
             <React.Fragment>
-              {directCollaborators.map((collaborator) => (
-                <NodeCollaborator
-                  key={collaborator.collaboratorId}
-                  nodeId={nodeId}
-                  collaboratorId={collaborator.collaboratorId}
-                  role={collaborator.role}
-                  canEdit={canEdit}
-                  canRemove={canEdit}
-                />
-              ))}
+              {directCollaborators.map((collaborator) => {
+                // you can edit only if you have admin access
+                // and there is at least one more admin
+
+                let canEdit = isAdmin;
+                if (canEdit && collaborator.role === 'admin') {
+                  const otherAdmins = collaborators.filter(
+                    (c) =>
+                      c.collaboratorId !== collaborator.collaboratorId &&
+                      c.role === 'admin'
+                  ).length;
+
+                  canEdit = otherAdmins > 0;
+                }
+
+                return (
+                  <NodeCollaborator
+                    key={collaborator.collaboratorId}
+                    nodeId={nodeId}
+                    collaboratorId={collaborator.collaboratorId}
+                    role={collaborator.role}
+                    canEdit={canEdit}
+                    canRemove={canEdit}
+                  />
+                );
+              })}
             </React.Fragment>
           ) : (
             <span className="text-xs text-muted-foreground">
@@ -82,16 +98,20 @@ export const NodeCollaborators = ({
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Inherit from {name}</h4>
               <div className="flex flex-col gap-3">
-                {inheritCollaborators.map((collaborator) => (
-                  <NodeCollaborator
-                    key={collaborator.collaboratorId}
-                    nodeId={nodeId}
-                    collaboratorId={collaborator.collaboratorId}
-                    role={collaborator.role}
-                    canEdit={canEdit}
-                    canRemove={false}
-                  />
-                ))}
+                {inheritCollaborators.map((collaborator) => {
+                  const canEdit = isAdmin && collaborator.role !== 'admin';
+
+                  return (
+                    <NodeCollaborator
+                      key={collaborator.collaboratorId}
+                      nodeId={nodeId}
+                      collaboratorId={collaborator.collaboratorId}
+                      role={collaborator.role}
+                      canEdit={canEdit}
+                      canRemove={false}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>

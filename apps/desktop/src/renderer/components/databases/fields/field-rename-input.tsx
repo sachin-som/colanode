@@ -13,6 +13,7 @@ export const FieldRenameInput = ({ field }: FieldRenameInputProps) => {
     <div className="w-full p-1">
       <SmartTextInput
         value={field.name}
+        readOnly={!database.canEdit}
         onChange={(newName) => {
           if (newName === field.name) return;
           database.renameField(field.id, newName);

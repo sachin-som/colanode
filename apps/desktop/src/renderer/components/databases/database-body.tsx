@@ -1,14 +1,15 @@
-import { DatabaseNode } from '@colanode/core';
+import { DatabaseNode, NodeRole } from '@colanode/core';
 import { DatabaseViews } from '@/renderer/components/databases/database-views';
 import { Database } from '@/renderer/components/databases/database';
 
 interface DatabaseBodyProps {
   database: DatabaseNode;
+  role: NodeRole;
 }
 
-export const DatabaseBody = ({ database }: DatabaseBodyProps) => {
+export const DatabaseBody = ({ database, role }: DatabaseBodyProps) => {
   return (
-    <Database databaseId={database.id}>
+    <Database database={database} role={role}>
       <DatabaseViews />
     </Database>
   );

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Resizable } from 're-resizable';
 import {
   Popover,
@@ -10,11 +11,11 @@ import { useView } from '@/renderer/contexts/view';
 import { useDrop } from 'react-dnd';
 import { cn } from '@/lib/utils';
 import { ArrowDownAz, ArrowDownZa, Filter, Type } from 'lucide-react';
+import { useDatabase } from '@/renderer/contexts/database';
 
 export const TableViewNameHeader = () => {
+  const database = useDatabase();
   const view = useView();
-
-  const canEditView = true;
 
   const [dropMonitor, dropRef] = useDrop({
     accept: 'table-field-header',
@@ -41,7 +42,7 @@ export const TableViewNameHeader = () => {
         bottomLeft: false,
         bottomRight: false,
         left: false,
-        right: canEditView,
+        right: database.canEdit,
         top: false,
         topLeft: false,
         topRight: false,
@@ -86,8 +87,8 @@ export const TableViewNameHeader = () => {
             />
           </div>
           <Separator />
-          {true && (
-            <>
+          {database.canEdit && (
+            <React.Fragment>
               <div
                 className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100"
                 onClick={() => {
@@ -117,7 +118,7 @@ export const TableViewNameHeader = () => {
                 <ArrowDownZa className="size-4" />
                 <span>Sort descending</span>
               </div>
-            </>
+            </React.Fragment>
           )}
           <div className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100">
             <Filter className="size-4" />

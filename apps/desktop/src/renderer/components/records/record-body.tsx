@@ -4,18 +4,30 @@ import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { Document } from '@/renderer/components/documents/document';
 import { Separator } from '@/renderer/components/ui/separator';
 import { RecordProvider } from '@/renderer/components/records/record-provider';
-import { hasEditorAccess, NodeRole, RecordNode } from '@colanode/core';
+import {
+  DatabaseNode,
+  hasEditorAccess,
+  NodeRole,
+  RecordNode,
+} from '@colanode/core';
 
 interface RecordBodyProps {
   record: RecordNode;
-  role: NodeRole;
+  recordRole: NodeRole;
+  database: DatabaseNode;
+  databaseRole: NodeRole;
 }
 
-export const RecordBody = ({ record, role }: RecordBodyProps) => {
-  const canEdit = hasEditorAccess(role);
+export const RecordBody = ({
+  record,
+  recordRole,
+  database,
+  databaseRole,
+}: RecordBodyProps) => {
+  const canEdit = hasEditorAccess(recordRole);
 
   return (
-    <Database databaseId={record.attributes.databaseId}>
+    <Database database={database} role={databaseRole}>
       <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
         <RecordProvider record={record}>
           <RecordAttributes />

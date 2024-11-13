@@ -35,10 +35,6 @@ export const TableViewSettingsPopover = () => {
   const [openDelete, setOpenDelete] = React.useState(false);
   const [deleteFieldId, setDeleteFieldId] = React.useState<string | null>(null);
 
-  const canEditDatabase = true;
-  const canEditView = true;
-  const canDeleteView = true;
-
   return (
     <React.Fragment>
       <Popover open={open} onOpenChange={setOpen}>
@@ -49,22 +45,33 @@ export const TableViewSettingsPopover = () => {
         </PopoverTrigger>
         <PopoverContent className="mr-4 flex w-[600px] flex-col gap-1.5 p-2">
           <div className="flex flex-row items-center gap-2">
-            <AvatarPopover
-              onPick={(avatar) => {
-                if (isPending) return;
-                if (avatar === view.avatar) return;
+            {database.canEdit ? (
+              <AvatarPopover
+                onPick={(avatar) => {
+                  if (isPending) return;
+                  if (avatar === view.avatar) return;
 
-                mutate({
-                  input: {
-                    type: 'node_attribute_set',
-                    nodeId: view.id,
-                    path: 'avatar',
-                    value: avatar,
-                    userId: workspace.userId,
-                  },
-                });
-              }}
-            >
+                  mutate({
+                    input: {
+                      type: 'node_attribute_set',
+                      nodeId: view.id,
+                      path: 'avatar',
+                      value: avatar,
+                      userId: workspace.userId,
+                    },
+                  });
+                }}
+              >
+                <Button type="button" variant="outline" size="icon">
+                  <Avatar
+                    id={view.id}
+                    name={view.name}
+                    avatar={view.avatar}
+                    className="h-6 w-6"
+                  />
+                </Button>
+              </AvatarPopover>
+            ) : (
               <Button type="button" variant="outline" size="icon">
                 <Avatar
                   id={view.id}
@@ -73,9 +80,10 @@ export const TableViewSettingsPopover = () => {
                   className="h-6 w-6"
                 />
               </Button>
-            </AvatarPopover>
+            )}
             <SmartTextInput
               value={view.name}
+              readOnly={!database.canEdit}
               onChange={(newName) => {
                 if (isPending) return;
                 if (newName === view.name) return;
@@ -117,10 +125,10 @@ export const TableViewSettingsPopover = () => {
                       <TooltipTrigger>
                         <span
                           className={cn(
-                            canEditView ? 'cursor-pointer' : 'opacity-50'
+                            database.canEdit ? 'cursor-pointer' : 'opacity-50'
                           )}
                           onClick={() => {
-                            if (!canEditView) return;
+                            if (!database.canEdit) return;
 
                             view.setFieldDisplay(field.id, !isHidden);
                           }}
@@ -138,13 +146,13 @@ export const TableViewSettingsPopover = () => {
                           : 'Hide field from this view'}
                       </TooltipContent>
                     </Tooltip>
-                    {canEditDatabase && (
+                    {database.canEdit && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Trash2
                             className={cn(
                               'size-4',
-                              canEditView ? 'cursor-pointer' : 'opacity-50'
+                              database.canEdit ? 'cursor-pointer' : 'opacity-50'
                             )}
                             onClick={() => {
                               setDeleteFieldId(field.id);
@@ -162,7 +170,7 @@ export const TableViewSettingsPopover = () => {
               );
             })}
           </div>
-          {canEditView && canDeleteView && (
+          {database.canEdit && (
             <React.Fragment>
               <Separator />
               <div className="flex flex-col gap-2 text-sm">

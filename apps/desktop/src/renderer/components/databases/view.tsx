@@ -67,6 +67,10 @@ export const View = ({ view }: ViewProps) => {
         isSearchBarOpened,
         isSortsOpened,
         setFieldDisplay: (id: string, display: boolean) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           const viewField = view.fields[id];
           if (viewField && viewField.display === display) {
             return;
@@ -92,6 +96,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         resizeField: (id: string, width: number) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           const viewField = view.fields[id];
           if (viewField && viewField.width === width) {
             return;
@@ -117,6 +125,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         resizeName: (width: number) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (view.nameWidth === width) {
             return;
           }
@@ -134,6 +146,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         moveField: (id: string, after: string) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           const newIndex = generateViewFieldIndex(
             database.fields,
             Object.values(view.fields),
@@ -166,6 +182,10 @@ export const View = ({ view }: ViewProps) => {
         isFieldFilterOpened: (fieldId: string) =>
           openedFieldFilters.includes(fieldId),
         initFieldFilter: (fieldId: string) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (view.filters[fieldId]) {
             setOpenedFieldFilters((prev) => [...prev, fieldId]);
             return;
@@ -202,6 +222,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         updateFilter: (id: string, filter: ViewFilterAttributes) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (!view.filters[id]) {
             return;
           }
@@ -222,6 +246,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         removeFilter: (id: string) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (!view.filters[id]) {
             return;
           }
@@ -242,6 +270,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         initFieldSort: (fieldId: string) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (view.sorts[fieldId]) {
             return;
           }
@@ -274,6 +306,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         updateSort: (id: string, sort: ViewSortAttributes) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (!view.sorts[id]) {
             return;
           }
@@ -295,6 +331,10 @@ export const View = ({ view }: ViewProps) => {
           });
         },
         removeSort: (id: string) => {
+          if (!database.canEdit) {
+            return;
+          }
+
           if (!view.sorts[id]) {
             return;
           }

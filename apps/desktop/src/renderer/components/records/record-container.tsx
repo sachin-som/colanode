@@ -22,16 +22,40 @@ export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
 
   const nodes = data ?? [];
   const record = nodes.find((node) => node.id === nodeId);
-  const role = extractNodeRole(nodes, workspace.userId);
+  if (!record || record.type !== 'record') {
+    return null;
+  }
 
-  if (!record || record.type !== 'record' || !role) {
+  const databaseIndex = nodes.findIndex(
+    (node) => node.id === record.attributes.databaseId
+  );
+  if (databaseIndex === -1) {
+    return null;
+  }
+
+  const database = nodes[databaseIndex];
+  if (!database || database.type !== 'database') {
+    return null;
+  }
+
+  const databaseAncestors = nodes.slice(0, databaseIndex);
+
+  const recordRole = extractNodeRole(nodes, workspace.userId);
+  const databaseRole = extractNodeRole(databaseAncestors, workspace.userId);
+
+  if (!recordRole || !databaseRole) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <RecordHeader nodes={nodes} record={record} role={role} />
-      <RecordBody record={record} role={role} />
+      <RecordHeader nodes={nodes} record={record} role={recordRole} />
+      <RecordBody
+        record={record}
+        recordRole={recordRole}
+        database={database}
+        databaseRole={databaseRole}
+      />
     </div>
   );
 };

@@ -1,44 +1,45 @@
 import React from 'react';
 import { DatabaseContext } from '@/renderer/contexts/database';
-import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import {
+  DatabaseNode,
+  hasCollaboratorAccess,
+  hasEditorAccess,
+  NodeRole,
+} from '@colanode/core';
 
 interface DatabaseProps {
-  databaseId: string;
+  database: DatabaseNode;
+  role: NodeRole;
   children: React.ReactNode;
 }
 
-export const Database = ({ databaseId, children }: DatabaseProps) => {
+export const Database = ({ database, role, children }: DatabaseProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'node_get',
-    nodeId: databaseId,
-    userId: workspace.userId,
-  });
+  const { mutate } = useMutation();
 
-  const { mutate, isPending: isMutating } = useMutation();
-
-  if (isPending || isMutating || !data) {
-    return null;
-  }
-
-  if (data.type !== 'database') {
-    return null;
-  }
+  const canEdit = hasEditorAccess(role);
+  const canCreateRecord = hasCollaboratorAccess(role);
 
   return (
     <DatabaseContext.Provider
       value={{
-        id: data.id,
-        name: data.attributes.name,
-        fields: Object.values(data.attributes.fields),
-        views: Object.values(data.attributes.views),
+        id: database.id,
+        name: database.attributes.name,
+        fields: Object.values(database.attributes.fields),
+        views: Object.values(database.attributes.views),
+        canEdit,
+        canCreateRecord,
         createField: (type, name) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'field_create',
-              databaseId: data.id,
+              databaseId: database.id,
               name,
               fieldType: type,
               userId: workspace.userId,
@@ -46,10 +47,14 @@ export const Database = ({ databaseId, children }: DatabaseProps) => {
           });
         },
         renameField: (id, name) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'node_attribute_set',
-              nodeId: data.id,
+              nodeId: database.id,
               path: `fields.${id}.name`,
               value: name,
               userId: workspace.userId,
@@ -57,20 +62,28 @@ export const Database = ({ databaseId, children }: DatabaseProps) => {
           });
         },
         deleteField: (id) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'node_attribute_delete',
-              nodeId: data.id,
+              nodeId: database.id,
               path: `fields.${id}`,
               userId: workspace.userId,
             },
           });
         },
         createSelectOption: (fieldId, name, color) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'select_option_create',
-              databaseId: data.id,
+              databaseId: database.id,
               fieldId,
               name,
               color,
@@ -79,10 +92,14 @@ export const Database = ({ databaseId, children }: DatabaseProps) => {
           });
         },
         updateSelectOption: (fieldId, attributes) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'node_attribute_set',
-              nodeId: data.id,
+              nodeId: database.id,
               path: `fields.${fieldId}.options.${attributes.id}`,
               value: attributes,
               userId: workspace.userId,
@@ -90,10 +107,14 @@ export const Database = ({ databaseId, children }: DatabaseProps) => {
           });
         },
         deleteSelectOption: (fieldId, optionId) => {
+          if (!canEdit) {
+            return;
+          }
+
           mutate({
             input: {
               type: 'node_attribute_delete',
-              nodeId: data.id,
+              nodeId: database.id,
               path: `fields.${fieldId}.options.${optionId}`,
               userId: workspace.userId,
             },

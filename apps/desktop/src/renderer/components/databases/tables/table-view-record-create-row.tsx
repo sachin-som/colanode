@@ -8,6 +8,10 @@ export const TableViewRecordCreateRow = () => {
   const database = useDatabase();
   const { mutate, isPending } = useMutation();
 
+  if (!database.canCreateRecord) {
+    return null;
+  }
+
   return (
     <button
       type="button"

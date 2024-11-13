@@ -14,6 +14,7 @@ import { useView } from '@/renderer/contexts/view';
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { ArrowDownAz, ArrowDownZa, EyeOff, Filter, Trash2 } from 'lucide-react';
 import { ViewField } from '@/types/databases';
+import { useDatabase } from '@/renderer/contexts/database';
 
 interface TableViewFieldHeaderProps {
   viewField: ViewField;
@@ -22,17 +23,15 @@ interface TableViewFieldHeaderProps {
 export const TableViewFieldHeader = ({
   viewField,
 }: TableViewFieldHeaderProps) => {
+  const database = useDatabase();
   const view = useView();
-
-  const canEditDatabase = true;
-  const canEditView = true;
 
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
   const [, dragRef] = useDrag<ViewField>({
     type: 'table-field-header',
     item: viewField,
-    canDrag: () => canEditView,
+    canDrag: () => database.canEdit,
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult<{ after: string }>();
       if (!dropResult?.after) return;
@@ -76,7 +75,7 @@ export const TableViewFieldHeader = ({
           bottomLeft: false,
           bottomRight: false,
           left: false,
-          right: canEditView,
+          right: database.canEdit,
           top: false,
           topLeft: false,
           topRight: false,
@@ -151,7 +150,7 @@ export const TableViewFieldHeader = ({
               <span>Filter</span>
             </div>
             <Separator />
-            {canEditView && (
+            {database.canEdit && (
               <div
                 className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100"
                 onClick={() => {
@@ -162,7 +161,7 @@ export const TableViewFieldHeader = ({
                 <span>Hide in view</span>
               </div>
             )}
-            {canEditDatabase && (
+            {database.canEdit && (
               <div
                 className="flex cursor-pointer flex-row items-center gap-2 p-1 hover:bg-gray-100"
                 onClick={() => {

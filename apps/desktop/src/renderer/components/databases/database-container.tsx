@@ -31,7 +31,7 @@ export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <DatabaseHeader nodes={nodes} database={database} role={role} />
-      <DatabaseBody database={database} />
+      <DatabaseBody database={database} role={role} />
     </div>
   );
 };

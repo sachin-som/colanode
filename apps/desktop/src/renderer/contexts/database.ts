@@ -11,6 +11,8 @@ interface DatabaseContext {
   name: string;
   fields: FieldAttributes[];
   views: ViewAttributes[];
+  canEdit: boolean;
+  canCreateRecord: boolean;
   createField: (type: FieldType, name: string) => void;
   renameField: (id: string, name: string) => void;
   deleteField: (id: string) => void;

@@ -129,6 +129,10 @@ export const ViewCreateDialog = ({
     });
   };
 
+  if (!database.canEdit) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

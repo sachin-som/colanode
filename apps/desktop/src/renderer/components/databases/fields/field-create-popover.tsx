@@ -83,6 +83,10 @@ export const FieldCreatePopover = () => {
     });
   };
 
+  if (!database.canEdit) {
+    return null;
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger>

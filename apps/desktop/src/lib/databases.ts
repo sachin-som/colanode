@@ -7,7 +7,7 @@ import {
   RecordNode,
 } from '@colanode/core';
 import { compareString, isStringArray } from '@/lib/utils';
-import { generateNodeIndex } from './nodes';
+import { generateNodeIndex } from '@/lib/nodes';
 
 export const getDefaultFieldWidth = (type: FieldType): number => {
   if (!type) return 0;

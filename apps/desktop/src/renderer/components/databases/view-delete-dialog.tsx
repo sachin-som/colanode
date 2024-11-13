@@ -27,6 +27,10 @@ export const ViewDeleteDialog = ({
   const database = useDatabase();
   const { mutate, isPending } = useMutation();
 
+  if (!database.canEdit) {
+    return null;
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>

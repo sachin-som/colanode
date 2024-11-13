@@ -2,8 +2,10 @@ import { useView } from '@/renderer/contexts/view';
 import { TableViewNameHeader } from '@/renderer/components/databases/tables/table-view-name-header';
 import { TableViewFieldHeader } from '@/renderer/components/databases/tables/table-view-field-header';
 import { FieldCreatePopover } from '@/renderer/components/databases/fields/field-create-popover';
+import { useDatabase } from '@/renderer/contexts/database';
 
 export const TableViewHeader = () => {
+  const database = useDatabase();
   const view = useView();
 
   return (
@@ -13,7 +15,7 @@ export const TableViewHeader = () => {
       {view.fields.map((field) => {
         return <TableViewFieldHeader viewField={field} key={field.field.id} />;
       })}
-      <FieldCreatePopover />
+      {database.canEdit && <FieldCreatePopover />}
     </div>
   );
 };

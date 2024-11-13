@@ -1,10 +1,10 @@
-import { SocketConnection } from '@/main/sockets/socket-connection';
+import { SocketConnection } from '@/main/services/socket-connection';
 import { databaseService } from '@/main/data/database-service';
 import { MessageInput } from '@/operations/messages';
 
 const EVENT_LOOP_INTERVAL = 5000;
 
-class SocketManager {
+class SocketService {
   private readonly accounts: Map<string, SocketConnection> = new Map();
   private initiated: boolean = false;
 
@@ -85,4 +85,4 @@ class SocketManager {
   }
 }
 
-export const socketManager = new SocketManager();
+export const socketService = new SocketService();

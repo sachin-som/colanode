@@ -1,6 +1,6 @@
 import { MessageContext, MessageHandler } from '@/operations/messages';
 import { LocalNodeDeleteMessageInput } from '@/operations/messages/local-node-delete';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 
 export class LocalNodeDeleteMessageHandler
   implements MessageHandler<LocalNodeDeleteMessageInput>
@@ -9,6 +9,6 @@ export class LocalNodeDeleteMessageHandler
     context: MessageContext,
     input: LocalNodeDeleteMessageInput
   ): Promise<void> {
-    socketManager.sendMessage(context.accountId, input);
+    socketService.sendMessage(context.accountId, input);
   }
 }

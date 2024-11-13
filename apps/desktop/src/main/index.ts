@@ -3,7 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { eventBus } from '@/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 import { synchronizer } from '@/main/synchronizer';
 import { avatarService } from '@/main/services/avatar-service';
 import { fileService } from '@/main/services/file-service';
@@ -21,7 +21,7 @@ app.setName('Colanode');
 const createWindow = async (): Promise<void> => {
   await databaseService.init();
   assetService.checkAssets();
-  socketManager.init();
+  socketService.init();
   synchronizer.init();
 
   // Create the browser window.

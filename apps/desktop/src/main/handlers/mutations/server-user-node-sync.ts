@@ -1,5 +1,5 @@
 import { databaseService } from '@/main/data/database-service';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerUserNodeSyncMutationInput } from '@/operations/mutations/server-user-node-sync';
 
@@ -55,7 +55,7 @@ export class ServerUserNodeSyncMutationHandler
       )
       .execute();
 
-    socketManager.sendMessage(workspace.account_id, {
+    socketService.sendMessage(workspace.account_id, {
       type: 'local_user_node_sync',
       userId: input.userId,
       nodeId: input.nodeId,

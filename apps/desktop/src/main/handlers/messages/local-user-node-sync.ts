@@ -1,6 +1,6 @@
 import { MessageContext, MessageHandler } from '@/operations/messages';
 import { LocalUserNodeSyncMessageInput } from '@/operations/messages/local-user-node-sync';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 
 export class LocalUserNodeSyncMessageHandler
   implements MessageHandler<LocalUserNodeSyncMessageInput>
@@ -9,6 +9,6 @@ export class LocalUserNodeSyncMessageHandler
     context: MessageContext,
     input: LocalUserNodeSyncMessageInput
   ): Promise<void> {
-    socketManager.sendMessage(context.accountId, input);
+    socketService.sendMessage(context.accountId, input);
   }
 }

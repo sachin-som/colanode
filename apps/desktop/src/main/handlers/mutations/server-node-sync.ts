@@ -1,5 +1,5 @@
 import { databaseService } from '@/main/data/database-service';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 import { hasInsertChanges, hasUpdateChanges } from '@/main/utils';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerNodeSyncMutationInput } from '@/operations/mutations/server-node-sync';
@@ -64,7 +64,7 @@ export class ServerNodeSyncMutationHandler
 
         const isInserted = hasInsertChanges(result);
         if (isInserted) {
-          socketManager.sendMessage(workspace.account_id, {
+          socketService.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
             userId: userId,
@@ -110,7 +110,7 @@ export class ServerNodeSyncMutationHandler
 
         const isUpdated = hasUpdateChanges(result);
         if (isUpdated) {
-          socketManager.sendMessage(workspace.account_id, {
+          socketService.sendMessage(workspace.account_id, {
             type: 'local_node_sync',
             nodeId: input.id,
             userId: userId,

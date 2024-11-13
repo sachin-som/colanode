@@ -1,5 +1,5 @@
 import { databaseService } from '@/main/data/database-service';
-import { socketManager } from '@/main/sockets/socket-manager';
+import { socketService } from '@/main/services/socket-service';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { ServerNodeDeleteMutationInput } from '@/operations/mutations/server-node-delete';
 
@@ -45,7 +45,7 @@ export class ServerNodeDeleteMutationHandler
       userId: userId,
     });
 
-    socketManager.sendMessage(workspace.account_id, {
+    socketService.sendMessage(workspace.account_id, {
       type: 'local_node_delete',
       nodeId: input.id,
       workspaceId: input.workspaceId,

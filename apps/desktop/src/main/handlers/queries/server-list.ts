@@ -1,5 +1,5 @@
 import { ServerListQueryInput } from '@/operations/queries/server-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { SelectServer } from '@/main/data/app/schema';
 import {
   MutationChange,
@@ -59,7 +59,7 @@ export class ServerListQueryHandler
   }
 
   private fetchServers(): Promise<SelectServer[]> {
-    return databaseManager.appDatabase
+    return databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .execute();

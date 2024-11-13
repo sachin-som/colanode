@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { ServerNodeDeleteMutationInput } from '@/operations/mutations/server-node-delete';
@@ -11,7 +11,7 @@ export class ServerNodeDeleteMutationHandler
   ): Promise<MutationResult<ServerNodeDeleteMutationInput>> {
     const changes: MutationChange[] = [];
 
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where((eb) =>
@@ -32,7 +32,7 @@ export class ServerNodeDeleteMutationHandler
 
     const userId = workspace.user_id;
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     await workspaceDatabase
       .deleteFrom('nodes')

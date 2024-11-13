@@ -1,4 +1,4 @@
-import { assetManager } from '@/main/asset-manager';
+import { assetService } from '@/main/services/asset-service';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -11,7 +11,7 @@ export class IconsGetQueryHandler implements QueryHandler<IconsGetQueryInput> {
   public async handleQuery(
     _: IconsGetQueryInput
   ): Promise<QueryResult<IconsGetQueryInput>> {
-    const data = assetManager.getIconData();
+    const data = assetService.getIconData();
 
     return {
       output: data,

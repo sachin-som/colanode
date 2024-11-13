@@ -1,4 +1,4 @@
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeReactionCreateMutationInput } from '@/operations/mutations/node-reaction-create';
 
@@ -8,7 +8,7 @@ export class NodeReactionCreateMutationHandler
   async handleMutation(
     input: NodeReactionCreateMutationInput
   ): Promise<MutationResult<NodeReactionCreateMutationInput>> {
-    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
+    await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       if (attributes.type !== 'message') {
         throw new Error('Node is not a message');
       }

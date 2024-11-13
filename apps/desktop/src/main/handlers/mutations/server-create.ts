@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ServerCreateMutationInput } from '@/operations/mutations/server-create';
 import { ServerConfig } from '@/types/servers';
@@ -14,7 +14,7 @@ export class ServerCreateMutationHandler
       `http://${input.domain}/v1/config`
     );
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .insertInto('servers')
       .values({
         domain: input.domain,

@@ -1,5 +1,5 @@
 import { LoginOutput } from '@/types/accounts';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { EmailLoginMutationInput } from '@/operations/mutations/email-login';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { httpClient } from '@/lib/http-client';
@@ -10,7 +10,7 @@ export class EmailLoginMutationHandler
   async handleMutation(
     input: EmailLoginMutationInput
   ): Promise<MutationResult<EmailLoginMutationInput>> {
-    const server = await databaseManager.appDatabase
+    const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', input.server)
@@ -37,7 +37,7 @@ export class EmailLoginMutationHandler
     );
 
     const changedTables: MutationChange[] = [];
-    await databaseManager.appDatabase.transaction().execute(async (trx) => {
+    await databaseService.appDatabase.transaction().execute(async (trx) => {
       await trx
         .insertInto('accounts')
         .values({

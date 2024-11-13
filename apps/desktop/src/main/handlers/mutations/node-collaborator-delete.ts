@@ -1,4 +1,4 @@
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeCollaboratorDeleteMutationInput } from '@/operations/mutations/node-collaborator-delete';
 import { unset } from 'lodash-es';
@@ -9,7 +9,7 @@ export class NodeCollaboratorDeleteMutationHandler
   async handleMutation(
     input: NodeCollaboratorDeleteMutationInput
   ): Promise<MutationResult<NodeCollaboratorDeleteMutationInput>> {
-    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
+    await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       unset(attributes, `collaborators.${input.collaboratorId}`);
       return attributes;
     });

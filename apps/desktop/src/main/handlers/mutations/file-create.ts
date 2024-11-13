@@ -1,9 +1,9 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { generateId, IdType } from '@colanode/core';
 import { FileCreateMutationInput } from '@/operations/mutations/file-create';
-import { fileManager } from '@/main/file-manager';
+import { fileService } from '@/main/services/file-service';
 import { FileAttributes } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
@@ -11,13 +11,13 @@ export class FileCreateMutationHandler
   async handleMutation(
     input: FileCreateMutationInput
   ): Promise<MutationResult<FileCreateMutationInput>> {
-    const metadata = fileManager.getFileMetadata(input.filePath);
+    const metadata = fileService.getFileMetadata(input.filePath);
     if (!metadata) {
       throw new Error('Invalid file');
     }
 
     const id = generateId(IdType.File);
-    fileManager.copyFileToWorkspace(
+    fileService.copyFileToWorkspace(
       input.filePath,
       id,
       metadata.extension,
@@ -34,7 +34,7 @@ export class FileCreateMutationHandler
       mimeType: metadata.mimeType,
     };
 
-    await nodeManager.createNode(input.userId, {
+    await nodeService.createNode(input.userId, {
       id,
       attributes,
       upload: {

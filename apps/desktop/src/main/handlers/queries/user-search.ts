@@ -1,5 +1,5 @@
 import { UserSearchQueryInput } from '@/operations/queries/user-search';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { sql } from 'kysely';
 import { SelectNode } from '@/main/data/workspace/schema';
 import { NodeTypes } from '@colanode/core';
@@ -74,7 +74,7 @@ export class UserSearchQueryHandler
   private async searchUsers(
     input: UserSearchQueryInput
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
@@ -101,7 +101,7 @@ export class UserSearchQueryHandler
   }
 
   private async fetchUsers(input: UserSearchQueryInput): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

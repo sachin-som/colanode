@@ -1,4 +1,4 @@
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeReactionDeleteMutationInput } from '@/operations/mutations/node-reaction-delete';
 
@@ -8,7 +8,7 @@ export class NodeReactionDeleteMutationHandler
   async handleMutation(
     input: NodeReactionDeleteMutationInput
   ): Promise<MutationResult<NodeReactionDeleteMutationInput>> {
-    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
+    await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       if (attributes.type !== 'message') {
         throw new Error('Node is not a message');
       }

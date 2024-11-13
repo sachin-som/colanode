@@ -2,7 +2,7 @@ import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { RecordCreateMutationInput } from '@/operations/mutations/record-create';
 import { RecordAttributes } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class RecordCreateMutationHandler
   implements MutationHandler<RecordCreateMutationInput>
@@ -20,7 +20,7 @@ export class RecordCreateMutationHandler
       content: {},
     };
 
-    await nodeManager.createNode(input.userId, { id, attributes });
+    await nodeService.createNode(input.userId, { id, attributes });
 
     return {
       output: {

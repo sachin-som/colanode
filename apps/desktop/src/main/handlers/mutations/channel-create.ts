@@ -1,10 +1,10 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { generateId, IdType } from '@colanode/core';
 import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { ChannelCreateMutationInput } from '@/operations/mutations/channel-create';
 import { ChannelAttributes } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class ChannelCreateMutationHandler
   implements MutationHandler<ChannelCreateMutationInput>
@@ -12,7 +12,7 @@ export class ChannelCreateMutationHandler
   async handleMutation(
     input: ChannelCreateMutationInput
   ): Promise<MutationResult<ChannelCreateMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
@@ -45,7 +45,7 @@ export class ChannelCreateMutationHandler
       collaborators: null,
     };
 
-    await nodeManager.createNode(input.userId, { id, attributes });
+    await nodeService.createNode(input.userId, { id, attributes });
 
     return {
       output: {

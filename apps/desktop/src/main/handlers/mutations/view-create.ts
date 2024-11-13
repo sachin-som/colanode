@@ -3,7 +3,7 @@ import { MutationHandler, MutationResult } from '@/main/types';
 import { ViewCreateMutationInput } from '@/operations/mutations/view-create';
 import { compareString } from '@/lib/utils';
 import { generateNodeIndex } from '@/lib/nodes';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class ViewCreateMutationHandler
   implements MutationHandler<ViewCreateMutationInput>
@@ -12,7 +12,7 @@ export class ViewCreateMutationHandler
     input: ViewCreateMutationInput
   ): Promise<MutationResult<ViewCreateMutationInput>> {
     const id = generateId(IdType.View);
-    await nodeManager.updateNode(
+    await nodeService.updateNode(
       input.databaseId,
       input.userId,
       (attributes) => {

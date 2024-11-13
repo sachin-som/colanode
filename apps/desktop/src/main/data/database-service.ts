@@ -7,7 +7,7 @@ import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
 import { appDatabasePath, getWorkspaceDirectoryPath } from '@/main/utils';
 
-class DatabaseManager {
+class DatabaseService {
   private initPromise: Promise<void> | null = null;
   private readonly workspaceDatabases: Map<
     string,
@@ -142,4 +142,4 @@ class DatabaseManager {
   }
 }
 
-export const databaseManager = new DatabaseManager();
+export const databaseService = new DatabaseService();

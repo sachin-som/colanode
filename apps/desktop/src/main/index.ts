@@ -2,16 +2,16 @@ import { app, shell, BrowserWindow, ipcMain, protocol, dialog } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { eventBus } from '@/lib/event-bus';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { synchronizer } from '@/main/synchronizer';
-import { avatarManager } from '@/main/avatar-manager';
-import { fileManager } from '@/main/file-manager';
+import { avatarService } from '@/main/services/avatar-service';
+import { fileService } from '@/main/services/file-service';
 import { mediator } from '@/main/mediator';
 import { FileMetadata } from '@/types/files';
 import { MutationInput, MutationMap } from '@/operations/mutations';
 import { QueryInput, QueryMap } from '@/operations/queries';
-import { assetManager } from '@/main/asset-manager';
+import { assetService } from '@/main/services/asset-service';
 
 let subscriptionId: string | null = null;
 const icon = join(__dirname, '../assets/icon.png');
@@ -19,8 +19,8 @@ const icon = join(__dirname, '../assets/icon.png');
 app.setName('Colanode');
 
 const createWindow = async (): Promise<void> => {
-  await databaseManager.init();
-  assetManager.checkAssets();
+  await databaseService.init();
+  assetService.checkAssets();
   socketManager.init();
   synchronizer.init();
 
@@ -62,25 +62,25 @@ const createWindow = async (): Promise<void> => {
 
   if (!protocol.isProtocolHandled('avatar')) {
     protocol.handle('avatar', (request) => {
-      return avatarManager.handleAvatarRequest(request);
+      return avatarService.handleAvatarRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('local-file')) {
     protocol.handle('local-file', (request) => {
-      return fileManager.handleFileRequest(request);
+      return fileService.handleFileRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('local-file-preview')) {
     protocol.handle('local-file-preview', (request) => {
-      return fileManager.handleFilePreviewRequest(request);
+      return fileService.handleFilePreviewRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('asset')) {
     protocol.handle('asset', (request) => {
-      return assetManager.handleAssetRequest(request);
+      return assetService.handleAssetRequest(request);
     });
   }
 };
@@ -180,7 +180,7 @@ ipcMain.handle(
 ipcMain.handle(
   'get-file-metadata',
   (_: unknown, path: string): FileMetadata | null => {
-    return fileManager.getFileMetadata(path);
+    return fileService.getFileMetadata(path);
   }
 );
 
@@ -192,6 +192,6 @@ ipcMain.handle(
     id: string,
     extension: string
   ): Promise<void> => {
-    return fileManager.openFile(userId, id, extension);
+    return fileService.openFile(userId, id, extension);
   }
 );

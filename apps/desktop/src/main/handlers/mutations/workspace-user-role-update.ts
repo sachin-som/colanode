@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUserRoleUpdateMutationInput } from '@/operations/mutations/workspace-user-role-update';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
@@ -11,7 +11,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
   async handleMutation(
     input: WorkspaceUserRoleUpdateMutationInput
   ): Promise<MutationResult<WorkspaceUserRoleUpdateMutationInput>> {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', input.userId)
@@ -25,7 +25,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       };
     }
 
-    const account = await databaseManager.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', workspace.account_id)
@@ -39,7 +39,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       };
     }
 
-    const server = await databaseManager.appDatabase
+    const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -65,7 +65,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       }
     );
 
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

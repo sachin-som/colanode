@@ -1,5 +1,5 @@
 import { MessageListQueryInput } from '@/operations/queries/message-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -78,7 +78,7 @@ export class MessageListQueryHandler
   private async fetchMesssages(
     input: MessageListQueryInput
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
@@ -108,7 +108,7 @@ export class MessageListQueryHandler
       return [];
     }
 
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

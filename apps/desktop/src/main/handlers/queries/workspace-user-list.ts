@@ -1,5 +1,5 @@
 import { WorkspaceUserListQueryInput } from '@/operations/queries/workspace-user-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { NodeTypes } from '@colanode/core';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
@@ -66,7 +66,7 @@ export class WorkspaceUserListQueryHandler
   private async fetchNodes(
     input: WorkspaceUserListQueryInput
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

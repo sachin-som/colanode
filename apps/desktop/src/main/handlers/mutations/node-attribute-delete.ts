@@ -1,6 +1,6 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeAttributeDeleteMutationInput } from '@/operations/mutations/node-attribute-delete';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { unset } from 'lodash-es';
 
 export class NodeAttributeDeleteMutationHandler
@@ -9,7 +9,7 @@ export class NodeAttributeDeleteMutationHandler
   async handleMutation(
     input: NodeAttributeDeleteMutationInput
   ): Promise<MutationResult<NodeAttributeDeleteMutationInput>> {
-    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
+    await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       unset(attributes, input.path);
       return attributes;
     });

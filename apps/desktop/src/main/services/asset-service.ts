@@ -14,7 +14,7 @@ type AssetsVersion = {
 const EMOJIS_VERSION = '1.0.0';
 const ICONS_VERSION = '1.0.0';
 
-class AssetManager {
+class AssetService {
   private readonly assetsDir: string;
 
   constructor() {
@@ -125,4 +125,4 @@ class AssetManager {
   }
 }
 
-export const assetManager = new AssetManager();
+export const assetService = new AssetService();

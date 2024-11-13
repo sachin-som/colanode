@@ -1,5 +1,5 @@
 import { AccountListQueryInput } from '@/operations/queries/account-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { Account } from '@/types/accounts';
 import { SelectAccount } from '@/main/data/app/schema';
 import { isEqual } from 'lodash-es';
@@ -59,7 +59,7 @@ export class AccountListQueryHandler
   }
 
   private fetchAccounts(): Promise<SelectAccount[]> {
-    return databaseManager.appDatabase
+    return databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('status', '=', 'active')

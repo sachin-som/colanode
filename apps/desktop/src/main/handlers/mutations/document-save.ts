@@ -2,7 +2,7 @@ import { MutationHandler, MutationResult } from '@/main/types';
 import { DocumentSaveMutationInput } from '@/operations/mutations/document-save';
 import { mapContentsToBlocks } from '@/lib/editor';
 import { Block } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class DocumentSaveMutationHandler
   implements MutationHandler<DocumentSaveMutationInput>
@@ -10,7 +10,7 @@ export class DocumentSaveMutationHandler
   async handleMutation(
     input: DocumentSaveMutationInput
   ): Promise<MutationResult<DocumentSaveMutationInput>> {
-    await nodeManager.updateNode(
+    await nodeService.updateNode(
       input.documentId,
       input.userId,
       (attributes) => {

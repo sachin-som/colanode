@@ -1,8 +1,8 @@
 import { httpClient } from '@/lib/http-client';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { ServerSyncResponse } from '@/types/sync';
 import { WorkspaceCredentials } from '@/types/workspaces';
-import { fileManager } from '@/main/file-manager';
+import { fileService } from '@/main/services/file-service';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
@@ -34,7 +34,7 @@ class Synchronizer {
   }
 
   private async syncDeletedTokens() {
-    const deletedTokens = await databaseManager.appDatabase
+    const deletedTokens = await databaseService.appDatabase
       .selectFrom('deleted_tokens')
       .innerJoin('servers', 'deleted_tokens.server', 'servers.domain')
       .select([
@@ -61,7 +61,7 @@ class Synchronizer {
           return;
         }
 
-        await databaseManager.appDatabase
+        await databaseService.appDatabase
           .deleteFrom('deleted_tokens')
           .where('token', '=', deletedToken.token)
           .where('account_id', '=', deletedToken.account_id)
@@ -73,7 +73,7 @@ class Synchronizer {
   }
 
   private async syncWorkspaces() {
-    const workspaces = await databaseManager.appDatabase
+    const workspaces = await databaseService.appDatabase
       .selectFrom('workspaces')
       .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
@@ -99,8 +99,8 @@ class Synchronizer {
 
       try {
         await this.checkForChanges(credentials);
-        await fileManager.checkForUploads(credentials);
-        await fileManager.checkForDownloads(credentials);
+        await fileService.checkForUploads(credentials);
+        await fileService.checkForDownloads(credentials);
       } catch (error) {
         // console.log('error', error);
       }
@@ -108,7 +108,7 @@ class Synchronizer {
   }
 
   private async checkForChanges(credentials: WorkspaceCredentials) {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       credentials.userId
     );
 

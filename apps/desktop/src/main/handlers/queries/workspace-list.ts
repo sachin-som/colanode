@@ -1,5 +1,5 @@
 import { WorkspaceListQueryInput } from '@/operations/queries/workspace-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { Workspace } from '@/types/workspaces';
 import { WorkspaceRole } from '@colanode/core';
 import { SelectWorkspace } from '@/main/data/app/schema';
@@ -61,13 +61,13 @@ export class WorkspaceListQueryHandler
   }
 
   private fetchWorkspaces(): Promise<SelectWorkspace[]> {
-    return databaseManager.appDatabase
+    return databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where(
         'account_id',
         'in',
-        databaseManager.appDatabase
+        databaseService.appDatabase
           .selectFrom('accounts')
           .where('status', '=', 'active')
           .select('id')

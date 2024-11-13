@@ -3,7 +3,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { SelectOptionCreateMutationInput } from '@/operations/mutations/select-option-create';
 import { compareString } from '@/lib/utils';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class SelectOptionCreateMutationHandler
   implements MutationHandler<SelectOptionCreateMutationInput>
@@ -12,7 +12,7 @@ export class SelectOptionCreateMutationHandler
     input: SelectOptionCreateMutationInput
   ): Promise<MutationResult<SelectOptionCreateMutationInput>> {
     const id = generateId(IdType.SelectOption);
-    await nodeManager.updateNode(
+    await nodeService.updateNode(
       input.databaseId,
       input.userId,
       (attributes) => {

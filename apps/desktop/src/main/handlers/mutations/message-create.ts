@@ -2,9 +2,9 @@ import { generateId, IdType, EditorNodeTypes, NodeTypes } from '@colanode/core';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
 import { MessageCreateMutationInput } from '@/operations/mutations/message-create';
 import { mapContentsToBlocks } from '@/lib/editor';
-import { fileManager } from '@/main/file-manager';
+import { fileService } from '@/main/services/file-service';
 import { Block, FileAttributes, MessageAttributes } from '@colanode/core';
-import { CreateNodeInput, nodeManager } from '@/main/node-manager';
+import { CreateNodeInput, nodeService } from '@/main/services/node-service';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -27,7 +27,7 @@ export class MessageCreateMutationHandler
     for (const block of blocks) {
       if (block.type === EditorNodeTypes.FilePlaceholder) {
         const path = block.attrs?.path;
-        const metadata = fileManager.getFileMetadata(path);
+        const metadata = fileService.getFileMetadata(path);
         if (!metadata) {
           throw new Error('Invalid file');
         }
@@ -38,7 +38,7 @@ export class MessageCreateMutationHandler
         block.type = NodeTypes.File;
         block.attrs = null;
 
-        fileManager.copyFileToWorkspace(
+        fileService.copyFileToWorkspace(
           path,
           fileId,
           metadata.extension,
@@ -90,7 +90,7 @@ export class MessageCreateMutationHandler
     };
 
     inputs.unshift({ id: messageId, attributes: messageAttributes });
-    await nodeManager.createNode(input.userId, inputs);
+    await nodeService.createNode(input.userId, inputs);
 
     const mutationChanges: MutationChange[] = [
       {

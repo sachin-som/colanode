@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceUsersInviteMutationInput } from '@/operations/mutations/workspace-users-invite';
 import { MutationChange, MutationHandler, MutationResult } from '@/main/types';
@@ -12,7 +12,7 @@ export class WorkspaceUsersInviteMutationHandler
   async handleMutation(
     input: WorkspaceUsersInviteMutationInput
   ): Promise<MutationResult<WorkspaceUsersInviteMutationInput>> {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', input.userId)
@@ -26,7 +26,7 @@ export class WorkspaceUsersInviteMutationHandler
       };
     }
 
-    const account = await databaseManager.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', workspace.account_id)
@@ -40,7 +40,7 @@ export class WorkspaceUsersInviteMutationHandler
       };
     }
 
-    const server = await databaseManager.appDatabase
+    const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -66,7 +66,7 @@ export class WorkspaceUsersInviteMutationHandler
       }
     );
 
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

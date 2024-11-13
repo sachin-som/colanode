@@ -1,6 +1,6 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeDeleteMutationInput } from '@/operations/mutations/node-delete';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class NodeDeleteMutationHandler
   implements MutationHandler<NodeDeleteMutationInput>
@@ -8,7 +8,7 @@ export class NodeDeleteMutationHandler
   async handleMutation(
     input: NodeDeleteMutationInput
   ): Promise<MutationResult<NodeDeleteMutationInput>> {
-    await nodeManager.deleteNode(input.nodeId, input.userId);
+    await nodeService.deleteNode(input.nodeId, input.userId);
 
     return {
       output: {

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { LogoutMutationInput } from '@/operations/mutations/logout';
 import { MutationHandler, MutationResult } from '@/main/types';
 import {
@@ -13,7 +13,7 @@ export class LogoutMutationHandler
   async handleMutation(
     input: LogoutMutationInput
   ): Promise<MutationResult<LogoutMutationInput>> {
-    const account = await databaseManager.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', input.accountId)
@@ -27,14 +27,14 @@ export class LogoutMutationHandler
       };
     }
 
-    const workspaces = await databaseManager.appDatabase
+    const workspaces = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('account_id', '=', account.id)
       .execute();
 
     for (const workspace of workspaces) {
-      await databaseManager.deleteWorkspaceDatabase(workspace.user_id);
+      await databaseService.deleteWorkspaceDatabase(workspace.user_id);
 
       const workspaceDir = getWorkspaceDirectoryPath(workspace.user_id);
       if (fs.existsSync(workspaceDir)) {
@@ -47,17 +47,17 @@ export class LogoutMutationHandler
       fs.rmSync(avatarsDir, { recursive: true });
     }
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .deleteFrom('accounts')
       .where('id', '=', account.id)
       .execute();
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .deleteFrom('workspaces')
       .where('account_id', '=', account.id)
       .execute();
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .insertInto('deleted_tokens')
       .values({
         token: account.token,

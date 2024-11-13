@@ -3,7 +3,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { compareString } from '@/lib/utils';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { FieldCreateMutationInput } from '@/operations/mutations/field-create';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class FieldCreateMutationHandler
   implements MutationHandler<FieldCreateMutationInput>
@@ -12,7 +12,7 @@ export class FieldCreateMutationHandler
     input: FieldCreateMutationInput
   ): Promise<MutationResult<FieldCreateMutationInput>> {
     const fieldId = generateId(IdType.Field);
-    await nodeManager.updateNode(
+    await nodeService.updateNode(
       input.databaseId,
       input.userId,
       (attributes) => {

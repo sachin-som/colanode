@@ -1,4 +1,4 @@
-import { assetManager } from '@/main/asset-manager';
+import { assetService } from '@/main/services/asset-service';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -13,7 +13,7 @@ export class EmojisGetQueryHandler
   public async handleQuery(
     _: EmojisGetQueryInput
   ): Promise<QueryResult<EmojisGetQueryInput>> {
-    const data = assetManager.getEmojiData();
+    const data = assetService.getEmojiData();
 
     return {
       output: data,

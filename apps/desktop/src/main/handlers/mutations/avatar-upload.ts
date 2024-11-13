@@ -1,6 +1,6 @@
 import fs from 'fs';
 import FormData from 'form-data';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { AvatarUploadMutationInput } from '@/operations/mutations/avatar-upload';
 import { httpClient } from '@/lib/http-client';
@@ -15,7 +15,7 @@ export class AvatarUploadMutationHandler
   async handleMutation(
     input: AvatarUploadMutationInput
   ): Promise<MutationResult<AvatarUploadMutationInput>> {
-    const credentials = await databaseManager.appDatabase
+    const credentials = await databaseService.appDatabase
       .selectFrom('accounts')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
       .select(['domain', 'attributes', 'token'])

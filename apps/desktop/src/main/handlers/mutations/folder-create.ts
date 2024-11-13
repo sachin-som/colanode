@@ -2,7 +2,7 @@ import { generateId, IdType } from '@colanode/core';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { FolderCreateMutationInput } from '@/operations/mutations/folder-create';
 import { FolderAttributes } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class FolderCreateMutationHandler
   implements MutationHandler<FolderCreateMutationInput>
@@ -18,7 +18,7 @@ export class FolderCreateMutationHandler
       collaborators: {},
     };
 
-    await nodeManager.createNode(input.userId, { id, attributes });
+    await nodeService.createNode(input.userId, { id, attributes });
 
     return {
       output: {

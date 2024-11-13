@@ -1,11 +1,11 @@
 import { net } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { getAccountAvatarsDirectoryPath } from '@/main/utils';
 
-class AvatarManager {
+class AvatarService {
   public async handleAvatarRequest(request: Request): Promise<Response> {
     const url = request.url.replace('avatar://', '');
     const [accountId, avatarId] = url.split('/');
@@ -19,7 +19,7 @@ class AvatarManager {
     }
 
     // Download the avatar file if it doesn't exist
-    const credentials = await databaseManager.appDatabase
+    const credentials = await databaseService.appDatabase
       .selectFrom('accounts')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
       .select(['domain', 'attributes', 'token'])
@@ -62,4 +62,4 @@ class AvatarManager {
   }
 }
 
-export const avatarManager = new AvatarManager();
+export const avatarService = new AvatarService();

@@ -1,5 +1,5 @@
 import { NodeGetQueryInput } from '@/operations/queries/node-get';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { mapNode } from '@/main/utils';
 import { SelectNode } from '@/main/data/workspace/schema';
 import {
@@ -63,7 +63,7 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
   private async fetchNode(
     input: NodeGetQueryInput
   ): Promise<SelectNode | undefined> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

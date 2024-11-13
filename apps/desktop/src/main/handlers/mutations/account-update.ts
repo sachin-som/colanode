@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { AccountUpdateOutput } from '@/types/accounts';
@@ -10,7 +10,7 @@ export class AccountUpdateMutationHandler
   async handleMutation(
     input: AccountUpdateMutationInput
   ): Promise<MutationResult<AccountUpdateMutationInput>> {
-    const account = await databaseManager.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', input.id)
@@ -20,7 +20,7 @@ export class AccountUpdateMutationHandler
       throw new Error('Account not found!');
     }
 
-    const server = await databaseManager.appDatabase
+    const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -43,7 +43,7 @@ export class AccountUpdateMutationHandler
       }
     );
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .updateTable('accounts')
       .set({
         name: data.name,

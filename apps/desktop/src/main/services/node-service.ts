@@ -11,7 +11,7 @@ import {
   LocalUpdateNodeChangeData,
 } from '@/types/sync';
 import { generateId, IdType } from '@colanode/core';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { fetchNodeAncestors, hasUpdateChanges, mapNode } from '@/main/utils';
 import { CreateDownload, CreateUpload } from '@/main/data/workspace/schema';
 
@@ -22,9 +22,9 @@ export type CreateNodeInput = {
   download?: CreateDownload;
 };
 
-class NodeManager {
+class NodeService {
   async createNode(userId: string, input: CreateNodeInput | CreateNodeInput[]) {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', userId)
@@ -37,7 +37,7 @@ class NodeManager {
     const inputs = Array.isArray(input) ? input : [input];
 
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     await workspaceDatabase.transaction().execute(async (transaction) => {
       for (const input of inputs) {
@@ -141,7 +141,7 @@ class NodeManager {
     userId: string,
     updater: (attributes: NodeAttributes) => NodeAttributes
   ): Promise<boolean> {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', userId)
@@ -152,7 +152,7 @@ class NodeManager {
     }
 
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     const ancestorRows = await fetchNodeAncestors(workspaceDatabase, nodeId);
     const nodeRow = ancestorRows.find((ancestor) => ancestor.id === nodeId);
@@ -241,7 +241,7 @@ class NodeManager {
   }
 
   async deleteNode(nodeId: string, userId: string) {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where('user_id', '=', userId)
@@ -252,7 +252,7 @@ class NodeManager {
     }
 
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     const ancestorRows = await fetchNodeAncestors(workspaceDatabase, nodeId);
     const ancestors = ancestorRows.map(mapNode);
@@ -303,4 +303,4 @@ class NodeManager {
   }
 }
 
-export const nodeManager = new NodeManager();
+export const nodeService = new NodeService();

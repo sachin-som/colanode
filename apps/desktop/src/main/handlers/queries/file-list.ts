@@ -1,5 +1,5 @@
 import { FileListQueryInput } from '@/operations/queries/file-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -72,7 +72,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
   }
 
   private async fetchFiles(input: FileListQueryInput): Promise<FileRow[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { socketManager } from '@/main/sockets/socket-manager';
 import { hasInsertChanges, hasUpdateChanges } from '@/main/utils';
 import { MutationHandler, MutationResult } from '@/main/types';
@@ -11,7 +11,7 @@ export class ServerNodeSyncMutationHandler
   public async handleMutation(
     input: ServerNodeSyncMutationInput
   ): Promise<MutationResult<ServerNodeSyncMutationInput>> {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
       .where((eb) =>
@@ -32,7 +32,7 @@ export class ServerNodeSyncMutationHandler
 
     const userId = workspace.user_id;
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     let count = 0;
     while (count++ < 10) {

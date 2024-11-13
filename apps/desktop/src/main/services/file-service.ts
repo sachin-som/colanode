@@ -9,13 +9,13 @@ import {
   ServerFileUploadResponse,
 } from '@/types/files';
 import { WorkspaceCredentials } from '@/types/workspaces';
-import { databaseManager } from './data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { mediator } from '@/main/mediator';
 import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
 import { FileAttributes } from '@colanode/core';
 
-class FileManager {
+class FileService {
   public async handleFileRequest(request: Request): Promise<Response> {
     const url = request.url.replace('local-file://', '');
     const [userId, file] = url.split('/');
@@ -90,7 +90,7 @@ class FileManager {
   public async checkForUploads(
     credentials: WorkspaceCredentials
   ): Promise<void> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       credentials.userId
     );
 
@@ -191,7 +191,7 @@ class FileManager {
   public async checkForDownloads(
     credentials: WorkspaceCredentials
   ): Promise<void> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       credentials.userId
     );
 
@@ -288,4 +288,4 @@ class FileManager {
   }
 }
 
-export const fileManager = new FileManager();
+export const fileService = new FileService();

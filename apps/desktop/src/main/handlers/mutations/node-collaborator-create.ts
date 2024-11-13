@@ -1,6 +1,6 @@
 import { MutationHandler, MutationResult } from '@/main/types';
 import { NodeCollaboratorCreateMutationInput } from '@/operations/mutations/node-collaborator-create';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { set } from 'lodash-es';
 
 export class NodeCollaboratorCreateMutationHandler
@@ -9,7 +9,7 @@ export class NodeCollaboratorCreateMutationHandler
   async handleMutation(
     input: NodeCollaboratorCreateMutationInput
   ): Promise<MutationResult<NodeCollaboratorCreateMutationInput>> {
-    await nodeManager.updateNode(input.nodeId, input.userId, (attributes) => {
+    await nodeService.updateNode(input.nodeId, input.userId, (attributes) => {
       for (const collaboratorId of input.collaboratorIds) {
         set(attributes, `collaborators.${collaboratorId}`, input.role);
       }

@@ -1,5 +1,5 @@
 import { generateId, IdType } from '@colanode/core';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { MarkNodeAsSeenMutationInput } from '@/operations/mutations/mark-node-as-seen';
 import { LocalUserNodeChangeData } from '@/types/sync';
@@ -10,7 +10,7 @@ export class MarkNodeAsSeenMutationHandler
   async handleMutation(
     input: MarkNodeAsSeenMutationInput
   ): Promise<MutationResult<MarkNodeAsSeenMutationInput>> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 

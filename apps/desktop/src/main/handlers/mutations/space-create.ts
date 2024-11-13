@@ -7,8 +7,8 @@ import {
   PageAttributes,
   SpaceAttributes,
 } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
-import { databaseManager } from '@/main/data/database-manager';
+import { nodeService } from '@/main/services/node-service';
+import { databaseService } from '@/main/data/database-service';
 
 export class SpaceCreateMutationHandler
   implements MutationHandler<SpaceCreateMutationInput>
@@ -16,7 +16,7 @@ export class SpaceCreateMutationHandler
   async handleMutation(
     input: SpaceCreateMutationInput
   ): Promise<MutationResult<SpaceCreateMutationInput>> {
-    const workspace = await databaseManager.appDatabase
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .where('user_id', '=', input.userId)
       .selectAll()
@@ -59,7 +59,7 @@ export class SpaceCreateMutationHandler
       index: generateNodeIndex(null, null),
     };
 
-    await nodeManager.createNode(input.userId, [
+    await nodeService.createNode(input.userId, [
       {
         id: spaceId,
         attributes: spaceAttributes,

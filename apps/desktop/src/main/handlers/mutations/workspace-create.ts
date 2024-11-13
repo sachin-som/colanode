@@ -1,4 +1,4 @@
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/lib/http-client';
 import { WorkspaceCreateMutationInput } from '@/operations/mutations/workspace-create';
 import { MutationHandler, MutationResult } from '@/main/types';
@@ -10,7 +10,7 @@ export class WorkspaceCreateMutationHandler
   async handleMutation(
     input: WorkspaceCreateMutationInput
   ): Promise<MutationResult<WorkspaceCreateMutationInput>> {
-    const account = await databaseManager.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', input.accountId)
@@ -20,7 +20,7 @@ export class WorkspaceCreateMutationHandler
       throw new Error('Account not found!');
     }
 
-    const server = await databaseManager.appDatabase
+    const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .where('domain', '=', account.server)
@@ -44,7 +44,7 @@ export class WorkspaceCreateMutationHandler
       }
     );
 
-    await databaseManager.appDatabase
+    await databaseService.appDatabase
       .insertInto('workspaces')
       .values({
         workspace_id: data.id ?? data.id,

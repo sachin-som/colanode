@@ -1,5 +1,5 @@
 import { SocketConnection } from '@/main/sockets/socket-connection';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import { MessageInput } from '@/operations/messages';
 
 const EVENT_LOOP_INTERVAL = 5000;
@@ -39,12 +39,12 @@ class SocketManager {
   }
 
   private async checkAccounts() {
-    const servers = await databaseManager.appDatabase
+    const servers = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
       .execute();
 
-    const accounts = await databaseManager.appDatabase
+    const accounts = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
       .where('status', '=', 'active')

@@ -1,5 +1,5 @@
 import { RecordListQueryInput } from '@/operations/queries/record-list';
-import { databaseManager } from '@/main/data/database-manager';
+import { databaseService } from '@/main/data/database-service';
 import {
   MutationChange,
   ChangeCheckResult,
@@ -86,7 +86,7 @@ export class RecordListQueryHandler
   private async fetchRecords(
     input: RecordListQueryInput
   ): Promise<SelectNode[]> {
-    const workspaceDatabase = await databaseManager.getWorkspaceDatabase(
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
@@ -146,7 +146,7 @@ export class RecordListQueryHandler
     databaseId: string
   ): Promise<DatabaseNode> {
     const workspaceDatabase =
-      await databaseManager.getWorkspaceDatabase(userId);
+      await databaseService.getWorkspaceDatabase(userId);
 
     const row = await workspaceDatabase
       .selectFrom('nodes')

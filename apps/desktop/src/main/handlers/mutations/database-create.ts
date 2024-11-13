@@ -3,7 +3,7 @@ import { generateNodeIndex } from '@/lib/nodes';
 import { MutationHandler, MutationResult } from '@/main/types';
 import { DatabaseCreateMutationInput } from '@/operations/mutations/database-create';
 import { DatabaseAttributes } from '@colanode/core';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 
 export class DatabaseCreateMutationHandler
   implements MutationHandler<DatabaseCreateMutationInput>
@@ -42,7 +42,7 @@ export class DatabaseCreateMutationHandler
       },
     };
 
-    await nodeManager.createNode(input.userId, {
+    await nodeService.createNode(input.userId, {
       id: databaseId,
       attributes,
     });

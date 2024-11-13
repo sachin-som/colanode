@@ -1,5 +1,5 @@
 import { MutationHandler, MutationResult } from '@/main/types';
-import { nodeManager } from '@/main/node-manager';
+import { nodeService } from '@/main/services/node-service';
 import { ViewUpdateMutationInput } from '@/operations/mutations/view-update';
 
 export class ViewUpdateMutationHandler
@@ -8,7 +8,7 @@ export class ViewUpdateMutationHandler
   async handleMutation(
     input: ViewUpdateMutationInput
   ): Promise<MutationResult<ViewUpdateMutationInput>> {
-    await nodeManager.updateNode(
+    await nodeService.updateNode(
       input.databaseId,
       input.userId,
       (attributes) => {

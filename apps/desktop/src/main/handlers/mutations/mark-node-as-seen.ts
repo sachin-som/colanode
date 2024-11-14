@@ -1,11 +1,10 @@
-import { generateId, IdType } from '@colanode/core';
+import { generateId, IdType, LocalUserNodeChangeData } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   MarkNodeAsSeenMutationInput,
   MarkNodeAsSeenMutationOutput,
 } from '@/shared/mutations/mark-node-as-seen';
-import { LocalUserNodeChangeData } from '@/shared/types/sync';
 
 export class MarkNodeAsSeenMutationHandler
   implements MutationHandler<MarkNodeAsSeenMutationInput>

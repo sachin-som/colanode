@@ -3,13 +3,11 @@ import {
   NodeAttributes,
   NodeMutationContext,
   registry,
-} from '@colanode/core';
-import { YDoc } from '@colanode/crdt';
-import {
   LocalCreateNodeChangeData,
   LocalDeleteNodeChangeData,
   LocalUpdateNodeChangeData,
-} from '@/shared/types/sync';
+} from '@colanode/core';
+import { YDoc } from '@colanode/crdt';
 import { generateId, IdType } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
 import { fetchNodeAncestors, mapNode } from '@/main/utils';

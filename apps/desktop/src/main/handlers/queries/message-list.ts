@@ -31,6 +31,16 @@ export class MessageListQueryHandler
     output: MessageNode[]
   ): Promise<ChangeCheckResult<MessageListQueryInput>> {
     if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.userId === input.userId
+    ) {
+      return {
+        hasChanges: true,
+        result: [],
+      };
+    }
+
+    if (
       event.type === 'node_created' &&
       event.userId === input.userId &&
       event.node.type === 'message' &&

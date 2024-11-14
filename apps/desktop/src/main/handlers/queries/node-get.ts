@@ -18,6 +18,16 @@ export class NodeGetQueryHandler implements QueryHandler<NodeGetQueryInput> {
     _: Node | null
   ): Promise<ChangeCheckResult<NodeGetQueryInput>> {
     if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.userId === input.userId
+    ) {
+      return {
+        hasChanges: true,
+        result: null,
+      };
+    }
+
+    if (
       event.type === 'node_updated' &&
       event.userId === input.userId &&
       event.node.id === input.nodeId

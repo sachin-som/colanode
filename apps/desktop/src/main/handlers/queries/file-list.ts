@@ -28,6 +28,16 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
     output: FileNode[]
   ): Promise<ChangeCheckResult<FileListQueryInput>> {
     if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.userId === input.userId
+    ) {
+      return {
+        hasChanges: true,
+        result: [],
+      };
+    }
+
+    if (
       event.type === 'node_created' &&
       event.userId === input.userId &&
       event.node.type === 'file' &&

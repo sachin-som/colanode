@@ -20,6 +20,16 @@ export class NodeTreeGetQueryHandler
     input: NodeTreeGetQueryInput,
     output: Node[]
   ): Promise<ChangeCheckResult<NodeTreeGetQueryInput>> {
+    if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.userId === input.userId
+    ) {
+      return {
+        hasChanges: true,
+        result: [],
+      };
+    }
+
     if (event.type === 'node_updated' && event.userId === input.userId) {
       const node = output.find((node) => node.id === event.node.id);
       if (node) {

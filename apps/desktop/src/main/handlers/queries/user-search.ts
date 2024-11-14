@@ -26,6 +26,16 @@ export class UserSearchQueryHandler
     _: UserNode[]
   ): Promise<ChangeCheckResult<UserSearchQueryInput>> {
     if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.userId === input.userId
+    ) {
+      return {
+        hasChanges: true,
+        result: [],
+      };
+    }
+
+    if (
       event.type === 'node_created' &&
       event.userId === input.userId &&
       event.node.type === 'user'

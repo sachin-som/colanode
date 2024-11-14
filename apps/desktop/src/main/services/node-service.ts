@@ -39,6 +39,7 @@ class NodeService {
     const createdNodes: Node[] = [];
     const createdUploads: Upload[] = [];
     const createdDownloads: Download[] = [];
+    const createdChangeIds: number[] = [];
 
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
@@ -104,14 +105,19 @@ class NodeService {
           createdNodes.push(createdNode);
         }
 
-        await transaction
+        const createdChange = await transaction
           .insertInto('changes')
+          .returning('id')
           .values({
             data: JSON.stringify(changeData),
             created_at: createdAt,
             retry_count: 0,
           })
-          .execute();
+          .executeTakeFirst();
+
+        if (createdChange) {
+          createdChangeIds.push(createdChange.id);
+        }
 
         if (input.upload) {
           const createdUploadRow = await transaction
@@ -172,6 +178,14 @@ class NodeService {
         type: 'download_created',
         userId,
         download: createdDownload,
+      });
+    }
+
+    for (const createdChangeId of createdChangeIds) {
+      eventBus.publish({
+        type: 'change_created',
+        userId,
+        changeId: createdChangeId,
       });
     }
   }
@@ -252,6 +266,7 @@ class NodeService {
       return true;
     }
 
+    let changeId: number | undefined;
     const changeData: LocalUpdateNodeChangeData = {
       type: 'node_update',
       id: nodeId,
@@ -281,14 +296,19 @@ class NodeService {
         if (updatedRow) {
           node = mapNode(updatedRow);
 
-          await trx
+          const createdChange = await trx
             .insertInto('changes')
+            .returning('id')
             .values({
               data: JSON.stringify(changeData),
               created_at: updatedAt,
               retry_count: 0,
             })
-            .execute();
+            .executeTakeFirst();
+
+          if (createdChange) {
+            changeId = createdChange.id;
+          }
         }
 
         return true;
@@ -299,6 +319,14 @@ class NodeService {
         type: 'node_updated',
         userId,
         node,
+      });
+    }
+
+    if (changeId) {
+      eventBus.publish({
+        type: 'change_created',
+        userId,
+        changeId,
       });
     }
 
@@ -340,6 +368,7 @@ class NodeService {
       throw new Error('Insufficient permissions');
     }
 
+    let changeId: number | undefined;
     const changeData: LocalDeleteNodeChangeData = {
       type: 'node_delete',
       id: nodeId,
@@ -356,14 +385,19 @@ class NodeService {
       await trx.deleteFrom('uploads').where('node_id', '=', nodeId).execute();
       await trx.deleteFrom('downloads').where('node_id', '=', nodeId).execute();
 
-      await trx
+      const createdChange = await trx
         .insertInto('changes')
+        .returning('id')
         .values({
           data: JSON.stringify(changeData),
           created_at: new Date().toISOString(),
           retry_count: 0,
         })
-        .execute();
+        .executeTakeFirst();
+
+      if (createdChange) {
+        changeId = createdChange.id;
+      }
     });
 
     eventBus.publish({
@@ -371,6 +405,14 @@ class NodeService {
       userId,
       node: node,
     });
+
+    if (changeId) {
+      eventBus.publish({
+        type: 'change_created',
+        userId,
+        changeId,
+      });
+    }
   }
 }
 

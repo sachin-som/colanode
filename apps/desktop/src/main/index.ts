@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { databaseService } from '@/main/data/database-service';
 import { socketService } from '@/main/services/socket-service';
-import { synchronizer } from '@/main/synchronizer';
+import { syncService } from '@/main/services/sync-service';
 import { avatarService } from '@/main/services/avatar-service';
 import { fileService } from '@/main/services/file-service';
 import { FileMetadata } from '@/shared/types/files';
@@ -24,7 +24,7 @@ const createWindow = async (): Promise<void> => {
   await databaseService.init();
   assetService.checkAssets();
   socketService.init();
-  synchronizer.init();
+  syncService.init();
   radarService.init();
 
   // Create the browser window.

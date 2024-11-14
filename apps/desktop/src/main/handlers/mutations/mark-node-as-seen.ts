@@ -5,6 +5,8 @@ import {
   MarkNodeAsSeenMutationInput,
   MarkNodeAsSeenMutationOutput,
 } from '@/shared/mutations/mark-node-as-seen';
+import { UserNode } from '@/shared/types/nodes';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class MarkNodeAsSeenMutationHandler
   implements MutationHandler<MarkNodeAsSeenMutationInput>
@@ -15,6 +17,9 @@ export class MarkNodeAsSeenMutationHandler
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
+
+    let changeId: number | undefined;
+    let userNode: UserNode | undefined;
 
     const changeData: LocalUserNodeChangeData = {
       type: 'user_node_update',
@@ -27,7 +32,7 @@ export class MarkNodeAsSeenMutationHandler
     };
 
     await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
+      const updatedUserNode = await trx
         .updateTable('user_nodes')
         .set({
           last_seen_version_id: input.versionId,
@@ -37,17 +42,53 @@ export class MarkNodeAsSeenMutationHandler
         })
         .where('node_id', '=', input.nodeId)
         .where('user_id', '=', input.userId)
-        .execute();
+        .returningAll()
+        .executeTakeFirst();
 
-      await trx
+      if (updatedUserNode) {
+        userNode = {
+          userId: updatedUserNode.user_id,
+          nodeId: updatedUserNode.node_id,
+          lastSeenAt: updatedUserNode.last_seen_at,
+          lastSeenVersionId: updatedUserNode.last_seen_version_id,
+          mentionsCount: updatedUserNode.mentions_count,
+          attributes: updatedUserNode.attributes,
+          versionId: updatedUserNode.version_id,
+          createdAt: updatedUserNode.created_at,
+          updatedAt: updatedUserNode.updated_at,
+        };
+      }
+
+      const createdChange = await trx
         .insertInto('changes')
         .values({
           data: JSON.stringify(changeData),
           created_at: new Date().toISOString(),
           retry_count: 0,
         })
-        .execute();
+        .returning('id')
+        .executeTakeFirst();
+
+      if (createdChange) {
+        changeId = createdChange.id;
+      }
     });
+
+    if (userNode) {
+      eventBus.publish({
+        type: 'user_node_created',
+        userId: input.userId,
+        userNode,
+      });
+    }
+
+    if (changeId) {
+      eventBus.publish({
+        type: 'change_created',
+        userId: input.userId,
+        changeId,
+      });
+    }
 
     return {
       success: true,

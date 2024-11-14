@@ -63,6 +63,12 @@ export type UserNodeCreatedEvent = {
   userNode: UserNode;
 };
 
+export type UserNodeUpdatedEvent = {
+  type: 'user_node_updated';
+  userId: string;
+  userNode: UserNode;
+};
+
 export type DownloadCreatedEvent = {
   type: 'download_created';
   userId: string;
@@ -109,6 +115,12 @@ export type RadarDataUpdatedEvent = {
   type: 'radar_data_updated';
 };
 
+export type ChangeCreatedEvent = {
+  type: 'change_created';
+  userId: string;
+  changeId: number;
+};
+
 export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
@@ -121,6 +133,7 @@ export type Event =
   | WorkspaceDeletedEvent
   | ServerCreatedEvent
   | UserNodeCreatedEvent
+  | UserNodeUpdatedEvent
   | DownloadCreatedEvent
   | DownloadUpdatedEvent
   | DownloadDeletedEvent
@@ -128,4 +141,5 @@ export type Event =
   | UploadUpdatedEvent
   | UploadDeletedEvent
   | QueryResultUpdatedEvent
-  | RadarDataUpdatedEvent;
+  | RadarDataUpdatedEvent
+  | ChangeCreatedEvent;

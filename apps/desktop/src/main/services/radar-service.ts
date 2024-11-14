@@ -94,7 +94,10 @@ class RadarService {
       eventBus.publish({
         type: 'radar_data_updated',
       });
-    } else if (event.type === 'user_node_created') {
+    } else if (
+      event.type === 'user_node_created' ||
+      event.type === 'user_node_updated'
+    ) {
       // to be optimized
       const workspaceDatabase = await databaseService.getWorkspaceDatabase(
         event.userId

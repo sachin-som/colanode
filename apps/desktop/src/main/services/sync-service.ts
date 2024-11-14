@@ -1,21 +1,28 @@
 import { httpClient } from '@/shared/lib/http-client';
 import { databaseService } from '@/main/data/database-service';
 import { LocalChange, SyncChangesOutput } from '@colanode/core';
-import { WorkspaceCredentials } from '@/shared/types/workspaces';
-import { fileService } from '@/main/services/file-service';
 import {
   SelectChange,
   WorkspaceDatabaseSchema,
 } from '@/main/data/workspace/schema';
 import { Kysely } from 'kysely';
+import { eventBus } from '@/shared/lib/event-bus';
 
-const EVENT_LOOP_INTERVAL = 1000;
+type SyncState = {
+  isSyncing: boolean;
+  scheduledSync: boolean;
+};
 
-class Synchronizer {
+class SyncService {
   private initiated: boolean = false;
+  private syncStates: Map<string, SyncState> = new Map();
 
   constructor() {
-    this.executeEventLoop = this.executeEventLoop.bind(this);
+    eventBus.subscribe((event) => {
+      if (event.type === 'change_created') {
+        this.syncWorkspace(event.userId);
+      }
+    });
   }
 
   public init() {
@@ -23,62 +30,100 @@ class Synchronizer {
       return;
     }
 
-    setTimeout(this.executeEventLoop, 10);
     this.initiated = true;
+    this.syncAllWorkspaces();
   }
 
-  private async executeEventLoop() {
-    try {
-      await this.syncDeletedTokens();
-      await this.syncWorkspaces();
-    } catch (error) {
-      console.log('error', error);
-    }
-
-    setTimeout(this.executeEventLoop, EVENT_LOOP_INTERVAL);
-  }
-
-  private async syncDeletedTokens() {
-    const deletedTokens = await databaseService.appDatabase
-      .selectFrom('deleted_tokens')
-      .innerJoin('servers', 'deleted_tokens.server', 'servers.domain')
-      .select([
-        'deleted_tokens.token',
-        'deleted_tokens.account_id',
-        'servers.domain',
-        'servers.attributes',
-      ])
+  private async syncAllWorkspaces() {
+    const workspaces = await databaseService.appDatabase
+      .selectFrom('workspaces')
+      .select(['user_id'])
       .execute();
 
-    if (deletedTokens.length === 0) {
+    for (const workspace of workspaces) {
+      this.syncWorkspace(workspace.user_id);
+    }
+  }
+
+  public async syncWorkspace(userId: string) {
+    if (!this.syncStates.has(userId)) {
+      this.syncStates.set(userId, {
+        isSyncing: false,
+        scheduledSync: false,
+      });
+    }
+
+    const syncState = this.syncStates.get(userId)!;
+    if (syncState.isSyncing) {
+      syncState.scheduledSync = true;
       return;
     }
 
-    for (const deletedToken of deletedTokens) {
-      try {
-        const { status } = await httpClient.delete(`/v1/accounts/logout`, {
-          serverDomain: deletedToken.domain,
-          serverAttributes: deletedToken.attributes,
-          token: deletedToken.token,
-        });
+    syncState.isSyncing = true;
+    try {
+      await this.syncWorkspaceChanges(userId);
+    } catch (error) {
+      console.log('error', error);
+    } finally {
+      syncState.isSyncing = false;
 
-        if (status !== 200) {
-          return;
-        }
-
-        await databaseService.appDatabase
-          .deleteFrom('deleted_tokens')
-          .where('token', '=', deletedToken.token)
-          .where('account_id', '=', deletedToken.account_id)
-          .execute();
-      } catch (error) {
-        // console.log('error', error);
+      if (syncState.scheduledSync) {
+        syncState.scheduledSync = false;
+        this.syncWorkspace(userId);
       }
     }
   }
 
-  private async syncWorkspaces() {
-    const workspaces = await databaseService.appDatabase
+  // private async syncDeletedTokens() {
+  //   const deletedTokens = await databaseService.appDatabase
+  //     .selectFrom('deleted_tokens')
+  //     .innerJoin('servers', 'deleted_tokens.server', 'servers.domain')
+  //     .select([
+  //       'deleted_tokens.token',
+  //       'deleted_tokens.account_id',
+  //       'servers.domain',
+  //       'servers.attributes',
+  //     ])
+  //     .execute();
+
+  //   if (deletedTokens.length === 0) {
+  //     return;
+  //   }
+
+  //   for (const deletedToken of deletedTokens) {
+  //     try {
+  //       const { status } = await httpClient.delete(`/v1/accounts/logout`, {
+  //         serverDomain: deletedToken.domain,
+  //         serverAttributes: deletedToken.attributes,
+  //         token: deletedToken.token,
+  //       });
+
+  //       if (status !== 200) {
+  //         return;
+  //       }
+
+  //       await databaseService.appDatabase
+  //         .deleteFrom('deleted_tokens')
+  //         .where('token', '=', deletedToken.token)
+  //         .where('account_id', '=', deletedToken.account_id)
+  //         .execute();
+  //     } catch (error) {
+  //       // console.log('error', error);
+  //     }
+  //   }
+  // }
+
+  private async syncWorkspaceChanges(userId: string) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const changes =
+      await this.fetchAndCompactWorkspaceChanges(workspaceDatabase);
+    if (changes.length === 0) {
+      return;
+    }
+
+    const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
       .innerJoin('servers', 'accounts.server', 'servers.domain')
@@ -90,45 +135,24 @@ class Synchronizer {
         'servers.domain',
         'servers.attributes',
       ])
-      .execute();
+      .where('workspaces.user_id', '=', userId)
+      .executeTakeFirst();
 
-    for (const workspace of workspaces) {
-      const credentials: WorkspaceCredentials = {
-        workspaceId: workspace.workspace_id,
-        accountId: workspace.account_id,
-        userId: workspace.user_id,
-        token: workspace.token,
-        serverDomain: workspace.domain,
-        serverAttributes: workspace.attributes,
-      };
-
-      try {
-        await this.checkForChanges(credentials);
-        await fileService.checkForUploads(credentials);
-        await fileService.checkForDownloads(credentials);
-      } catch (error) {
-        // console.log('error', error);
-      }
+    if (!workspace) {
+      return;
     }
-  }
 
-  private async checkForChanges(credentials: WorkspaceCredentials) {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      credentials.userId
-    );
-
-    const changes = await this.fetchAndCompactChanges(workspaceDatabase);
     while (changes.length > 0) {
       const changesToSync = changes.splice(0, 20);
       const { data } = await httpClient.post<SyncChangesOutput>(
-        `/v1/sync/${credentials.workspaceId}`,
+        `/v1/sync/${workspace.workspace_id}`,
         {
           changes: changesToSync,
         },
         {
-          serverDomain: credentials.serverDomain,
-          serverAttributes: credentials.serverAttributes,
-          token: credentials.token,
+          serverDomain: workspace.domain,
+          serverAttributes: workspace.attributes,
+          token: workspace.token,
         }
       );
 
@@ -166,7 +190,7 @@ class Synchronizer {
     }
   }
 
-  private async fetchAndCompactChanges(
+  private async fetchAndCompactWorkspaceChanges(
     database: Kysely<WorkspaceDatabaseSchema>
   ): Promise<LocalChange[]> {
     const changeRows = await database
@@ -242,4 +266,4 @@ class Synchronizer {
   }
 }
 
-export const synchronizer = new Synchronizer();
+export const syncService = new SyncService();

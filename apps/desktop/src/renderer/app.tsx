@@ -4,7 +4,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { DelayedComponent } from '@/renderer/components/ui/delayed-component';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { AppContext } from '@/renderer/contexts/app';
-import { AccountProvider } from '@/renderer/components/accounts/account-provider';
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
 import { RadarProvider } from '@/renderer/radar-provider';
@@ -64,14 +63,7 @@ export const App = () => {
             return;
           }
 
-          const accountWorkspaces =
-            workspaces?.filter((w) => w.accountId === id) ?? [];
-
-          if (accountWorkspaces.length === 0) {
-            return;
-          }
-
-          navigate(`/${accountWorkspaces[0].userId}`);
+          navigate(`/${id}`);
         },
         showWorkspaceSettings: (id) => {
           setWorkspaceSettingsId(id);
@@ -79,9 +71,7 @@ export const App = () => {
       }}
     >
       <RadarProvider>
-        <AccountProvider>
-          <Outlet />
-        </AccountProvider>
+        <Outlet />
       </RadarProvider>
       {logoutId && (
         <AccountLogout
@@ -92,15 +82,7 @@ export const App = () => {
             const activeAccounts =
               accounts?.filter((a) => a.id !== logoutId) ?? [];
             if (activeAccounts.length > 0) {
-              const activeWorkspaces =
-                workspaces?.filter((w) =>
-                  activeAccounts.some((a) => a.id === w.accountId)
-                ) ?? [];
-
-              if (activeWorkspaces.length > 0) {
-                navigate(`/${activeWorkspaces[0].userId}`);
-                return;
-              }
+              navigate(`/${activeAccounts[0].id}`);
             }
 
             navigate('/login');

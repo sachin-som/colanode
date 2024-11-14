@@ -8,11 +8,11 @@ export const WorkspaceRedirect = (): React.ReactNode => {
 
   React.useEffect(() => {
     if (account.workspaces.length == 0) {
-      navigate('/create');
+      navigate(`/${account.id}/create`);
       return;
     }
 
-    navigate(`/${account.workspaces[0].userId}`);
+    navigate(`/${account.id}/${account.workspaces[0].id}`);
   }, [account.workspaces, navigate]);
 
   return null;

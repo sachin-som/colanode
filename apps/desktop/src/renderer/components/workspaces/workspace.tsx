@@ -1,43 +1,40 @@
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '@/renderer/contexts/account';
 import { Layout } from '@/renderer/components/layouts/layout';
 
 export const Workspace = () => {
-  const { userId, nodeId } = useParams<{ userId: string; nodeId?: string }>();
-
+  const { workspaceId } = useParams<{ workspaceId: string }>();
   const account = useAccount();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const workspace = account.workspaces.find((w) => w.userId === userId);
+  const workspace = account.workspaces.find((w) => w.id === workspaceId);
 
   if (!workspace) {
     return <p>Workspace not found</p>;
   }
 
+  const main = searchParams.get('main');
   const modal = searchParams.get('modal');
   return (
     <WorkspaceContext.Provider
       value={{
         ...workspace,
         navigateToNode(nodeId) {
-          navigate(`/${userId}/${nodeId}`);
-          if (nodeId === modal) {
-            setSearchParams((prev) => {
+          setSearchParams((prev) => {
+            prev.set('main', nodeId);
+            if (nodeId === modal) {
               prev.delete('modal');
-              return prev;
-            });
-          }
+            }
+            return prev;
+          });
         },
         isNodeActive(id) {
-          return id === nodeId;
+          return id === main;
         },
         openModal(modal) {
           setSearchParams((prev) => {
-            return {
-              ...prev,
-              modal: modal,
-            };
+            prev.set('modal', modal);
+            return prev;
           });
         },
         closeModal() {
@@ -56,7 +53,7 @@ export const Workspace = () => {
         },
       }}
     >
-      <Layout nodeId={nodeId} modal={modal} />
+      <Layout main={main} modal={modal} />
     </WorkspaceContext.Provider>
   );
 };

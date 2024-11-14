@@ -13,6 +13,9 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Login } from '@/renderer/components/accounts/login';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventBus } from '@/renderer/hooks/use-event-bus';
+import { Event } from '@/shared/types/events';
+import { AccountRedirect } from '@/renderer/components/accounts/account-redirect';
+import { Account } from '@/renderer/components/accounts/account';
 
 const router = createHashRouter([
   {
@@ -21,19 +24,29 @@ const router = createHashRouter([
     children: [
       {
         path: '',
-        element: <WorkspaceRedirect />,
+        element: <AccountRedirect />,
       },
       {
-        path: '/create',
-        element: <WorkspaceCreate />,
+        path: ':accountId',
+        element: <Account />,
+        children: [
+          {
+            path: '',
+            element: <WorkspaceRedirect />,
+          },
+          {
+            path: 'create',
+            element: <WorkspaceCreate />,
+          },
+          {
+            path: ':workspaceId',
+            element: <Workspace />,
+          },
+        ],
       },
       {
         path: '/login',
         element: <Login />,
-      },
-      {
-        path: ':userId/:nodeId?',
-        element: <Workspace />,
       },
     ],
   },
@@ -45,7 +58,7 @@ const Root = () => {
   const eventBus = useEventBus();
 
   React.useEffect(() => {
-    const id = eventBus.subscribe((event) => {
+    const id = eventBus.subscribe((event: Event) => {
       if (event.type === 'query_result_updated' && event.id && event.result) {
         const result = event.result;
         const queryId = event.id;

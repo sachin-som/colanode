@@ -111,7 +111,7 @@ export const LayoutSidebarHeader = () => {
                   key={workspaceItem.id}
                   className="p-0"
                   onClick={() => {
-                    navigate(`/${workspaceItem.userId}`);
+                    navigate(`/${account.id}/${workspaceItem.id}`);
                   }}
                 >
                   <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -156,7 +156,7 @@ export const LayoutSidebarHeader = () => {
             <DropdownMenuItem
               className="gap-2 p-2 text-muted-foreground"
               onClick={() => {
-                navigate('/create');
+                navigate(`/${account.id}/create`);
               }}
             >
               <Plus className="size-4" />

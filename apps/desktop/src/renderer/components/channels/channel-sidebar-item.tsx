@@ -3,6 +3,7 @@ import { ChannelNode } from '@colanode/core';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useRadar } from '@/renderer/contexts/radar';
+import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
 
 interface ChannelSidebarItemProps {
   node: ChannelNode;
@@ -39,13 +40,11 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
       >
         {node.attributes.name ?? 'Unnamed'}
       </span>
-      {!isActive && mentionsCount > 0 && (
-        <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs bg-red-400 text-white">
-          {mentionsCount}
-        </span>
-      )}
-      {!isActive && mentionsCount === 0 && unreadCount > 0 && (
-        <span className="size-2 rounded-full bg-red-500" />
+      {!isActive && (
+        <ReadStateIndicator
+          count={mentionsCount}
+          hasChanges={unreadCount > 0}
+        />
       )}
     </button>
   );

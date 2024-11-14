@@ -4,6 +4,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useRadar } from '@/renderer/contexts/radar';
+import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
 
 interface ChatSidebarItemProps {
   node: ChatNode;
@@ -55,11 +56,7 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
       >
         {data.attributes.name ?? 'Unnamed'}
       </span>
-      {!isActive && unreadCount > 0 && (
-        <span className="mr-1 rounded-md px-1 py-0.5 text-xs bg-red-400 text-white">
-          {unreadCount}
-        </span>
-      )}
+      <ReadStateIndicator count={unreadCount} hasChanges={unreadCount > 0} />
     </div>
   );
 };

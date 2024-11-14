@@ -19,29 +19,12 @@ import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
 import { useApp } from '@/renderer/contexts/app';
 import { useNavigate } from 'react-router-dom';
 import { useRadar } from '@/renderer/contexts/radar';
+import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
 
-interface ReadStateIndicatorProps {
+interface AccountReadState {
   importantCount: number;
   hasUnseenChanges: boolean;
 }
-
-const ReadStateIndicator = ({
-  importantCount,
-  hasUnseenChanges,
-}: ReadStateIndicatorProps) => {
-  return (
-    <React.Fragment>
-      {importantCount > 0 && (
-        <span className="mr-1 rounded-md px-1 py-0.5 text-xs bg-red-400 text-white">
-          {importantCount}
-        </span>
-      )}
-      {importantCount === 0 && hasUnseenChanges && (
-        <span className="size-2 rounded-full bg-red-500" />
-      )}
-    </React.Fragment>
-  );
-};
 
 export function LayoutSidebarFooter() {
   const app = useApp();
@@ -53,13 +36,13 @@ export function LayoutSidebarFooter() {
   const [open, setOpen] = React.useState(false);
   const otherAccounts = app.accounts.filter((a) => a.id !== account.id);
 
-  const accountStates: Record<string, ReadStateIndicatorProps> = {};
+  const accountStates: Record<string, AccountReadState> = {};
   for (const otherAccount of otherAccounts) {
     const accountWorkspaces = app.workspaces.filter(
       (w) => w.accountId === otherAccount.id
     );
 
-    const state: ReadStateIndicatorProps = {
+    const state: AccountReadState = {
       importantCount: 0,
       hasUnseenChanges: false,
     };
@@ -103,8 +86,8 @@ export function LayoutSidebarFooter() {
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
               <ReadStateIndicator
-                importantCount={importantCount}
-                hasUnseenChanges={hasUnseenChanges}
+                count={importantCount}
+                hasChanges={hasUnseenChanges}
               />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -179,8 +162,8 @@ export function LayoutSidebarFooter() {
                           </span>
                         </div>
                         <ReadStateIndicator
-                          importantCount={state.importantCount}
-                          hasUnseenChanges={state.hasUnseenChanges}
+                          count={state.importantCount}
+                          hasChanges={state.hasUnseenChanges}
                         />
                       </div>
                     </DropdownMenuItem>

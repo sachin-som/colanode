@@ -19,29 +19,7 @@ import {
 } from '@/renderer/components/ui/sidebar';
 import { ChevronsUpDown, Settings, Plus, Bell } from 'lucide-react';
 import { useRadar } from '@/renderer/contexts/radar';
-
-interface ReadStateIndicatorProps {
-  importantCount: number;
-  hasUnseenChanges: boolean;
-}
-
-const ReadStateIndicator = ({
-  importantCount,
-  hasUnseenChanges,
-}: ReadStateIndicatorProps) => {
-  return (
-    <React.Fragment>
-      {importantCount > 0 && (
-        <span className="mr-1 rounded-md px-1 py-0.5 text-xs bg-red-400 text-white">
-          {importantCount}
-        </span>
-      )}
-      {importantCount === 0 && hasUnseenChanges && (
-        <span className="size-2 rounded-full bg-red-500" />
-      )}
-    </React.Fragment>
-  );
-};
+import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
 
 export const LayoutSidebarHeader = () => {
   const workspace = useWorkspace();
@@ -86,8 +64,8 @@ export const LayoutSidebarHeader = () => {
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
               <ReadStateIndicator
-                importantCount={importantCount}
-                hasUnseenChanges={hasUnseenChanges}
+                count={importantCount}
+                hasChanges={hasUnseenChanges}
               />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -153,8 +131,8 @@ export const LayoutSidebarHeader = () => {
                           {otherWorkspace.name}
                         </p>
                         <ReadStateIndicator
-                          importantCount={workspaceState.importantCount}
-                          hasUnseenChanges={workspaceState.hasUnseenChanges}
+                          count={workspaceState.importantCount}
+                          hasChanges={workspaceState.hasUnseenChanges}
                         />
                       </div>
                     </DropdownMenuItem>

@@ -595,7 +595,6 @@ workspacesRouter.post(
         accountId: account!.id,
         parentId: workspace.id,
       };
-
       userDoc.updateAttributes(userAttributes);
 
       workspaceUsersToCreate.push({

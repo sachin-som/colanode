@@ -68,7 +68,7 @@ class RadarService {
         }
 
         if (messagesCount > 0) {
-          workspaceState.hasUnseenChanges = true;
+          workspaceState.importantCount += messagesCount;
         }
       } else if (idType === IdType.Channel) {
         workspaceState.nodeStates[nodeId] = {
@@ -79,9 +79,9 @@ class RadarService {
         };
 
         if (messagesCount > 0) {
-          workspaceState.importantCount += messagesCount;
+          workspaceState.hasUnseenChanges = true;
         } else if (mentionsCount > 0) {
-          workspaceState.importantCount += mentionsCount;
+          workspaceState.importantCount += messagesCount;
         }
       }
     }

@@ -16,27 +16,34 @@ import {
   SidebarHeader,
 } from '@/renderer/components/ui/sidebar';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceUpdate } from '@/renderer/components/workspaces/workspace-update';
 import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Info, Trash2, Users } from 'lucide-react';
 import { match } from 'ts-pattern';
+import { useApp } from '@/renderer/contexts/app';
 
 interface WorkspaceSettingsDialogProps {
+  id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const WorkspaceSettingsDialog = ({
+  id,
   open,
   onOpenChange,
 }: WorkspaceSettingsDialogProps) => {
-  const workspace = useWorkspace();
+  const app = useApp();
   const [tab, setTab] = React.useState<'info' | 'users' | 'delete'>('info');
 
-  const canDelete = workspace.role === 'owner';
+  const workspace = app.workspaces.find((w) => w.id === id);
 
+  if (!workspace) {
+    return null;
+  }
+
+  const canDelete = workspace.role === 'owner';
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -107,8 +114,8 @@ export const WorkspaceSettingsDialog = ({
           </Sidebar>
           <div className="flex-1 overflow-auto p-7">
             {match(tab)
-              .with('info', () => <WorkspaceUpdate />)
-              .with('users', () => <WorkspaceUsers />)
+              .with('info', () => <WorkspaceUpdate workspace={workspace} />)
+              .with('users', () => <WorkspaceUsers workspace={workspace} />)
               .with('delete', () => <p>Coming soon.</p>)
               .exhaustive()}
           </div>

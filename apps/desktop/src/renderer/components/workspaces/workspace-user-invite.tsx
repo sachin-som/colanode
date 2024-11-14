@@ -4,11 +4,16 @@ import { Button } from '@/renderer/components/ui/button';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { toast } from '@/renderer/hooks/use-toast';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { X } from 'lucide-react';
+import { Workspace } from '@/shared/types/workspaces';
 
-export const WorkspaceUserInvite = () => {
-  const workspace = useWorkspace();
+interface WorkspaceUserInviteProps {
+  workspace: Workspace;
+}
+
+export const WorkspaceUserInvite = ({
+  workspace,
+}: WorkspaceUserInviteProps) => {
   const { mutate, isPending } = useMutation();
 
   const [input, setInput] = React.useState('');
@@ -79,6 +84,7 @@ export const WorkspaceUserInvite = () => {
                 type: 'workspace_users_invite',
                 emails: emails,
                 userId: workspace.userId,
+                role: 'collaborator',
               },
               onSuccess() {
                 setEmails([]);

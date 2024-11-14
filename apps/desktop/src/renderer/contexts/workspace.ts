@@ -6,7 +6,6 @@ interface WorkspaceContext extends Workspace {
   isNodeActive: (nodeId: string) => boolean;
   openModal: (nodeId: string) => void;
   closeModal: () => void;
-  openSettings: () => void;
   markAsSeen: (nodeId: string, versionId: string) => void;
 }
 

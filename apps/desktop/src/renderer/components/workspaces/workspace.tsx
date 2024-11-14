@@ -1,8 +1,6 @@
-import React from 'react';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '@/renderer/contexts/account';
-import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
 import { Layout } from '@/renderer/components/layouts/layout';
 
 export const Workspace = () => {
@@ -11,7 +9,6 @@ export const Workspace = () => {
   const account = useAccount();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [openSettings, setOpenSettings] = React.useState(false);
   const workspace = account.workspaces.find((w) => w.userId === userId);
 
   if (!workspace) {
@@ -49,9 +46,6 @@ export const Workspace = () => {
             return prev;
           });
         },
-        openSettings() {
-          setOpenSettings(true);
-        },
         markAsSeen() {
           // window.colanode.executeMutation({
           //   type: 'mark_node_as_seen',
@@ -63,12 +57,6 @@ export const Workspace = () => {
       }}
     >
       <Layout nodeId={nodeId} modal={modal} />
-      {openSettings && (
-        <WorkspaceSettingsDialog
-          open={openSettings}
-          onOpenChange={setOpenSettings}
-        />
-      )}
     </WorkspaceContext.Provider>
   );
 };

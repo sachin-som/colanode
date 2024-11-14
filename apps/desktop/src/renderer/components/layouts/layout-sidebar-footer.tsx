@@ -24,11 +24,11 @@ import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
 import { useApp } from '@/renderer/contexts/app';
 
 export function LayoutSidebarFooter() {
-  const [open, setOpen] = React.useState(false);
-
   const app = useApp();
   const account = useAccount();
   const sidebar = useSidebar();
+
+  const [open, setOpen] = React.useState(false);
 
   return (
     <SidebarMenu>
@@ -123,7 +123,7 @@ export function LayoutSidebarFooter() {
               }}
             >
               <Plus className="size-4" />
-              Add account
+              <p className="font-medium">Add account</p>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

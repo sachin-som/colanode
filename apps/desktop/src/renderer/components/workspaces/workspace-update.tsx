@@ -1,10 +1,13 @@
 import { toast } from '@/renderer/hooks/use-toast';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useWorkspace } from '@/renderer/contexts/workspace';
 import { WorkspaceForm } from './workspace-form';
+import { Workspace } from '@/shared/types/workspaces';
 
-export const WorkspaceUpdate = () => {
-  const workspace = useWorkspace();
+interface WorkspaceUpdateProps {
+  workspace: Workspace;
+}
+
+export const WorkspaceUpdate = ({ workspace }: WorkspaceUpdateProps) => {
   const { mutate, isPending } = useMutation();
   const canEdit = workspace.role === 'owner';
 

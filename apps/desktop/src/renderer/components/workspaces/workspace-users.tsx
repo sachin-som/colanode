@@ -7,13 +7,16 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@colanode/core';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { WorkspaceUserListQueryInput } from '../../../shared/queries/workspace-user-list';
+import { WorkspaceUserListQueryInput } from '@/shared/queries/workspace-user-list';
+import { Workspace } from '@/shared/types/workspaces';
 
 const USERS_PER_PAGE = 50;
 
-export const WorkspaceUsers = () => {
-  const workspace = useWorkspace();
+interface WorkspaceUsersProps {
+  workspace: Workspace;
+}
+
+export const WorkspaceUsers = ({ workspace }: WorkspaceUsersProps) => {
   const canEditUsers = workspace.role === 'owner' || workspace.role === 'admin';
   const [lastPage, setLastPage] = React.useState<number>(1);
 
@@ -35,7 +38,7 @@ export const WorkspaceUsers = () => {
     <div className="flex flex-col space-y-4">
       {canEditUsers && (
         <React.Fragment>
-          <WorkspaceUserInvite />
+          <WorkspaceUserInvite workspace={workspace} />
           <Separator />
         </React.Fragment>
       )}
@@ -66,6 +69,7 @@ export const WorkspaceUsers = () => {
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
               <WorkspaceUserRoleDropdown
+                workspace={workspace}
                 userId={user.id}
                 value={role}
                 canEdit={canEditUsers}

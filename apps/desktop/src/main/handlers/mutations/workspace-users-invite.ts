@@ -57,6 +57,7 @@ export class WorkspaceUsersInviteMutationHandler
       `/v1/workspaces/${workspace.workspace_id}/users`,
       {
         emails: input.emails,
+        role: input.role,
       },
       {
         serverDomain: server.domain,

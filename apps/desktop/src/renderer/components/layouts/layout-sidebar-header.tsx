@@ -17,14 +17,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/renderer/components/ui/sidebar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/renderer/components/ui/tooltip';
 import { ChevronsUpDown, Settings, Plus } from 'lucide-react';
 import { useRadar } from '@/renderer/contexts/radar';
-import { useApp } from '@/renderer/contexts/app';
 
 interface WorkspaceStateIndicatorProps {
   importantCount: number;
@@ -50,7 +44,6 @@ const WorkspaceStateIndicator = ({
 };
 
 export const LayoutSidebarHeader = () => {
-  const app = useApp();
   const workspace = useWorkspace();
   const account = useAccount();
   const navigate = useNavigate();
@@ -58,9 +51,12 @@ export const LayoutSidebarHeader = () => {
   const radar = useRadar();
 
   const [open, setOpen] = React.useState(false);
-  const otherWorkspaceStates = account.workspaces
-    .filter((w) => w.id !== workspace.id)
-    .map((w) => radar.getWorkspaceState(w.userId));
+  const otherWorkspaces = account.workspaces.filter(
+    (w) => w.id !== workspace.id
+  );
+  const otherWorkspaceStates = otherWorkspaces.map((w) =>
+    radar.getWorkspaceState(w.userId)
+  );
   const importantCount = otherWorkspaceStates.reduce(
     (acc, curr) => acc + curr.importantCount,
     0
@@ -101,57 +97,67 @@ export const LayoutSidebarHeader = () => {
             side={sidebar.isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="mb-1">Workspace</DropdownMenuLabel>
-            {account.workspaces.map((workspaceItem) => {
-              const workspaceState = radar.getWorkspaceState(
-                workspaceItem.userId
-              );
-              return (
-                <DropdownMenuItem
-                  key={workspaceItem.id}
-                  className="p-0"
-                  onClick={() => {
-                    navigate(`/${account.id}/${workspaceItem.id}`);
-                  }}
-                >
-                  <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <Avatar
-                      className="h-8 w-8 rounded-lg"
-                      id={workspaceItem.id}
-                      name={workspaceItem.name}
-                      avatar={workspaceItem.avatar}
-                    />
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {workspaceItem.name}
-                      </span>
-                      <span className="truncate text-xs">Free plan</span>
-                    </div>
-                    <div className="ml-auto flex items-center gap-2 text-muted-foreground mr-1">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Settings
-                            className="size-4 hover:cursor-pointer hover:text-sidebar-accent-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              app.showWorkspaceSettings(workspaceItem.id);
-                              setOpen(false);
-                            }}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent className="flex flex-row items-center gap-2">
-                          Settings
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <WorkspaceStateIndicator
-                      importantCount={workspaceState.importantCount}
-                      hasUnseenChanges={workspaceState.hasUnseenChanges}
-                    />
-                  </div>
-                </DropdownMenuItem>
-              );
-            })}
+            <DropdownMenuItem key={workspace.id} className="p-0">
+              <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar
+                  className="h-8 w-8 rounded-lg"
+                  id={workspace.id}
+                  name={workspace.name}
+                  avatar={workspace.avatar}
+                />
+                <p className="flex-1 text-left text-sm leading-tight truncate font-semibold">
+                  {workspace.name}
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 p-2 text-muted-foreground"
+              onClick={() => {
+                workspace.openSettings();
+              }}
+            >
+              <Settings className="size-4" />
+              <p className="font-medium">Settings</p>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {otherWorkspaces.length > 0 && (
+              <React.Fragment>
+                <DropdownMenuLabel className="mb-1">
+                  Other workspaces
+                </DropdownMenuLabel>
+                {otherWorkspaces.map((otherWorkspace) => {
+                  const workspaceState = radar.getWorkspaceState(
+                    otherWorkspace.userId
+                  );
+                  return (
+                    <DropdownMenuItem
+                      key={otherWorkspace.id}
+                      className="p-0"
+                      onClick={() => {
+                        navigate(`/${account.id}/${otherWorkspace.id}`);
+                      }}
+                    >
+                      <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                        <Avatar
+                          className="h-8 w-8 rounded-lg"
+                          id={otherWorkspace.id}
+                          name={otherWorkspace.name}
+                          avatar={otherWorkspace.avatar}
+                        />
+                        <p className="flex-1 text-left text-sm leading-tight truncate font-normal">
+                          {otherWorkspace.name}
+                        </p>
+                        <WorkspaceStateIndicator
+                          importantCount={workspaceState.importantCount}
+                          hasUnseenChanges={workspaceState.hasUnseenChanges}
+                        />
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </React.Fragment>
+            )}
             <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
               className="gap-2 p-2 text-muted-foreground"

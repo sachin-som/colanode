@@ -9,7 +9,7 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { Check, ChevronDown } from 'lucide-react';
-import { Workspace } from '@/shared/types/workspaces';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface WorkspaceRoleItem {
   name: string;
@@ -52,18 +52,17 @@ const roles: WorkspaceRoleItem[] = [
 ];
 
 interface WorkspaceUserRoleDropdownProps {
-  workspace: Workspace;
   userId: string;
   value: WorkspaceRole;
   canEdit: boolean;
 }
 
 export const WorkspaceUserRoleDropdown = ({
-  workspace,
   userId,
   value,
   canEdit,
 }: WorkspaceUserRoleDropdownProps) => {
+  const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
   const currentRole = roles.find((role) => role.value === value);
 

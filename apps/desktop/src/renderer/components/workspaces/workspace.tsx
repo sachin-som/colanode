@@ -1,12 +1,17 @@
+import React from 'react';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '@/renderer/contexts/account';
 import { Layout } from '@/renderer/components/layouts/layout';
+import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
 
 export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const account = useAccount();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const account = useAccount();
+  const [openSettings, setOpenSettings] = React.useState(false);
+
   const workspace = account.workspaces.find((w) => w.id === workspaceId);
 
   if (!workspace) {
@@ -43,6 +48,9 @@ export const Workspace = () => {
             return prev;
           });
         },
+        openSettings() {
+          setOpenSettings(true);
+        },
         markAsSeen() {
           // window.colanode.executeMutation({
           //   type: 'mark_node_as_seen',
@@ -54,6 +62,12 @@ export const Workspace = () => {
       }}
     >
       <Layout main={main} modal={modal} />
+      {openSettings && (
+        <WorkspaceSettingsDialog
+          open={openSettings}
+          onOpenChange={() => setOpenSettings(false)}
+        />
+      )}
     </WorkspaceContext.Provider>
   );
 };

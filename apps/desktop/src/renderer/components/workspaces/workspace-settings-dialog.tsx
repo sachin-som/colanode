@@ -21,23 +21,19 @@ import { WorkspaceUsers } from '@/renderer/components/workspaces/workspace-users
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Info, Trash2, Users } from 'lucide-react';
 import { match } from 'ts-pattern';
-import { useApp } from '@/renderer/contexts/app';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface WorkspaceSettingsDialogProps {
-  id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const WorkspaceSettingsDialog = ({
-  id,
   open,
   onOpenChange,
 }: WorkspaceSettingsDialogProps) => {
-  const app = useApp();
+  const workspace = useWorkspace();
   const [tab, setTab] = React.useState<'info' | 'users' | 'delete'>('info');
-
-  const workspace = app.workspaces.find((w) => w.id === id);
 
   if (!workspace) {
     return null;
@@ -114,8 +110,8 @@ export const WorkspaceSettingsDialog = ({
           </Sidebar>
           <div className="flex-1 overflow-auto p-7">
             {match(tab)
-              .with('info', () => <WorkspaceUpdate workspace={workspace} />)
-              .with('users', () => <WorkspaceUsers workspace={workspace} />)
+              .with('info', () => <WorkspaceUpdate />)
+              .with('users', () => <WorkspaceUsers />)
               .with('delete', () => <p>Coming soon.</p>)
               .exhaustive()}
           </div>

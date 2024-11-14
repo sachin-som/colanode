@@ -7,6 +7,7 @@ interface WorkspaceContext extends Workspace {
   openModal: (nodeId: string) => void;
   closeModal: () => void;
   markAsSeen: (nodeId: string, versionId: string) => void;
+  openSettings: () => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

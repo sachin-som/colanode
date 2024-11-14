@@ -11,7 +11,6 @@ interface AppContext {
   setAccount: (id: string) => void;
   showAccountLogout: (id: string) => void;
   showAccountSettings: (id: string) => void;
-  showWorkspaceSettings: (id: string) => void;
 }
 
 export const AppContext = createContext<AppContext>({} as AppContext);

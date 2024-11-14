@@ -7,7 +7,6 @@ import { AppContext } from '@/renderer/contexts/app';
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
 import { RadarProvider } from '@/renderer/radar-provider';
-import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
 
 export const App = () => {
   const navigate = useNavigate();
@@ -15,10 +14,6 @@ export const App = () => {
   const [accountSettingsId, setSettingsId] = React.useState<string | null>(
     null
   );
-  const [workspaceSettingsId, setWorkspaceSettingsId] = React.useState<
-    string | null
-  >(null);
-
   const { data: servers, isPending: isPendingServers } = useQuery({
     type: 'server_list',
   });
@@ -65,9 +60,6 @@ export const App = () => {
 
           navigate(`/${id}`);
         },
-        showWorkspaceSettings: (id) => {
-          setWorkspaceSettingsId(id);
-        },
       }}
     >
       <RadarProvider>
@@ -94,13 +86,6 @@ export const App = () => {
           id={accountSettingsId}
           open={true}
           onOpenChange={() => setSettingsId(null)}
-        />
-      )}
-      {workspaceSettingsId && (
-        <WorkspaceSettingsDialog
-          id={workspaceSettingsId}
-          open={true}
-          onOpenChange={() => setWorkspaceSettingsId(null)}
         />
       )}
     </AppContext.Provider>

@@ -8,15 +8,12 @@ import { InView } from 'react-intersection-observer';
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
 import { WorkspaceRole } from '@colanode/core';
 import { WorkspaceUserListQueryInput } from '@/shared/queries/workspace-user-list';
-import { Workspace } from '@/shared/types/workspaces';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 const USERS_PER_PAGE = 50;
 
-interface WorkspaceUsersProps {
-  workspace: Workspace;
-}
-
-export const WorkspaceUsers = ({ workspace }: WorkspaceUsersProps) => {
+export const WorkspaceUsers = () => {
+  const workspace = useWorkspace();
   const canEditUsers = workspace.role === 'owner' || workspace.role === 'admin';
   const [lastPage, setLastPage] = React.useState<number>(1);
 
@@ -69,7 +66,6 @@ export const WorkspaceUsers = ({ workspace }: WorkspaceUsersProps) => {
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
               <WorkspaceUserRoleDropdown
-                workspace={workspace}
                 userId={user.id}
                 value={role}
                 canEdit={canEditUsers}

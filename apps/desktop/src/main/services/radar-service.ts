@@ -4,14 +4,13 @@ import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { getIdType, IdType, NodeTypes } from '@colanode/core';
 import { WorkspaceReadState } from '@/shared/types/radars';
 import { eventBus } from '@/shared/lib/event-bus';
+import { Event } from '@/shared/types/events';
 
 class RadarService {
   private readonly workspaceStates: Record<string, WorkspaceReadState> = {};
 
   constructor() {
-    eventBus.subscribe((event) => {
-      console.log('event', event);
-    });
+    eventBus.subscribe(this.handleEvent.bind(this));
   }
 
   public async init(): Promise<void> {
@@ -87,6 +86,18 @@ class RadarService {
     }
 
     this.workspaceStates[userId] = workspaceState;
+  }
+
+  private async handleEvent(event: Event) {
+    if (event.type === 'workspace_deleted') {
+      delete this.workspaceStates[event.workspace.userId];
+    } else if (event.type === 'user_node_created') {
+      // to be optimized
+      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+        event.userId
+      );
+      await this.initWorkspace(event.userId, workspaceDatabase);
+    }
   }
 }
 

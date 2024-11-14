@@ -20,15 +20,15 @@ import {
 import { ChevronsUpDown, Settings, Plus, Bell } from 'lucide-react';
 import { useRadar } from '@/renderer/contexts/radar';
 
-interface WorkspaceStateIndicatorProps {
+interface ReadStateIndicatorProps {
   importantCount: number;
   hasUnseenChanges: boolean;
 }
 
-const WorkspaceStateIndicator = ({
+const ReadStateIndicator = ({
   importantCount,
   hasUnseenChanges,
-}: WorkspaceStateIndicatorProps) => {
+}: ReadStateIndicatorProps) => {
   return (
     <React.Fragment>
       {importantCount > 0 && (
@@ -85,7 +85,7 @@ export const LayoutSidebarHeader = () => {
                 <span className="truncate text-xs">Free Plan</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
-              <WorkspaceStateIndicator
+              <ReadStateIndicator
                 importantCount={importantCount}
                 hasUnseenChanges={hasUnseenChanges}
               />
@@ -152,7 +152,7 @@ export const LayoutSidebarHeader = () => {
                         <p className="flex-1 text-left text-sm leading-tight truncate font-normal">
                           {otherWorkspace.name}
                         </p>
-                        <WorkspaceStateIndicator
+                        <ReadStateIndicator
                           importantCount={workspaceState.importantCount}
                           hasUnseenChanges={workspaceState.hasUnseenChanges}
                         />

@@ -9,20 +9,17 @@ import {
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
 import { Spinner } from '@/renderer/components/ui/spinner';
+import { useAccount } from '@/renderer/contexts/account';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface AccountLogoutProps {
-  id: string;
   onCancel: () => void;
   onLogout: () => void;
 }
 
-export const AccountLogout = ({
-  id,
-  onCancel,
-  onLogout,
-}: AccountLogoutProps) => {
+export const AccountLogout = ({ onCancel, onLogout }: AccountLogoutProps) => {
+  const account = useAccount();
   const { mutate, isPending } = useMutation();
   return (
     <AlertDialog
@@ -49,7 +46,7 @@ export const AccountLogout = ({
               mutate({
                 input: {
                   type: 'logout',
-                  accountId: id,
+                  accountId: account.id,
                 },
                 onSuccess() {
                   onLogout();

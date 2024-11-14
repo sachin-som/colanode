@@ -13,25 +13,18 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Info, Trash2 } from 'lucide-react';
 import { AccountUpdate } from '@/renderer/components/accounts/account-update';
-import { useApp } from '@/renderer/contexts/app';
+import { useAccount } from '@/renderer/contexts/account';
 
 interface AccountSettingsDialogProps {
-  id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const AccountSettingsDialog = ({
-  id,
   open,
   onOpenChange,
 }: AccountSettingsDialogProps) => {
-  const app = useApp();
-  const account = app.accounts.find((a) => a.id === id);
-
-  if (!account) {
-    return null;
-  }
+  const account = useAccount();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

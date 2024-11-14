@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/renderer/components/ui/sidebar';
-import { ChevronsUpDown, Settings, Plus } from 'lucide-react';
+import { ChevronsUpDown, Settings, Plus, Bell } from 'lucide-react';
 import { useRadar } from '@/renderer/contexts/radar';
 
 interface WorkspaceStateIndicatorProps {
@@ -112,7 +112,7 @@ export const LayoutSidebarHeader = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="gap-2 p-2 text-muted-foreground"
+              className="gap-2 p-2"
               onClick={() => {
                 workspace.openSettings();
               }}
@@ -120,9 +120,13 @@ export const LayoutSidebarHeader = () => {
               <Settings className="size-4" />
               <p className="font-medium">Settings</p>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 p-2" disabled={true}>
+              <Bell className="size-4" />
+              <p className="font-medium">Notifications</p>
+            </DropdownMenuItem>
             {otherWorkspaces.length > 0 && (
               <React.Fragment>
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel className="mb-1">
                   Other workspaces
                 </DropdownMenuLabel>
@@ -160,7 +164,7 @@ export const LayoutSidebarHeader = () => {
             )}
             <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
-              className="gap-2 p-2 text-muted-foreground"
+              className="gap-2 p-2 text-muted-foreground hover:text-foreground"
               onClick={() => {
                 navigate(`/${account.id}/create`);
               }}

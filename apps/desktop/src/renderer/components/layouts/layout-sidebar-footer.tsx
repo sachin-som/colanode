@@ -13,22 +13,21 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/renderer/components/ui/sidebar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/renderer/components/ui/tooltip';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useAccount } from '@/renderer/contexts/account';
 import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
 import { useApp } from '@/renderer/contexts/app';
+import { useNavigate } from 'react-router-dom';
 
 export function LayoutSidebarFooter() {
   const app = useApp();
   const account = useAccount();
   const sidebar = useSidebar();
+  const navigate = useNavigate();
 
   const [open, setOpen] = React.useState(false);
+
+  const otherAccounts = app.accounts.filter((a) => a.id !== account.id);
 
   return (
     <SidebarMenu>
@@ -58,68 +57,79 @@ export function LayoutSidebarFooter() {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="mb-1">Accounts</DropdownMenuLabel>
-            {app.accounts.map((account) => (
-              <DropdownMenuItem
-                key={account.id}
-                className="p-0"
-                onClick={() => {
-                  app.setAccount(account.id);
-                }}
-              >
-                <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar
-                    className="h-8 w-8 rounded-lg"
-                    id={account.id}
-                    name={account.name}
-                    avatar={account.avatar}
-                  />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {account.name}
-                    </span>
-                    <span className="truncate text-xs">{account.email}</span>
-                  </div>
-                  <div className="ml-auto flex items-center gap-2 text-muted-foreground mr-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <LogOut
-                          className="size-4 hover:cursor-pointer hover:text-red-500"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            app.showAccountLogout(account.id);
-                            setOpen(false);
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent className="flex flex-row items-center gap-2">
-                        Log out
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Settings
-                          className="size-4 hover:cursor-pointer hover:text-sidebar-accent-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            app.showAccountSettings(account.id);
-                            setOpen(false);
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent className="flex flex-row items-center gap-2">
-                        Settings
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+            <DropdownMenuItem key={account.id} className="p-0">
+              <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar
+                  className="h-8 w-8 rounded-lg"
+                  id={account.id}
+                  name={account.name}
+                  avatar={account.avatar}
+                />
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{account.name}</span>
+                  <span className="truncate text-xs">{account.email}</span>
                 </div>
-              </DropdownMenuItem>
-            ))}
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onClick={() => {
+                account.openSettings();
+              }}
+            >
+              <Settings className="size-4" />
+              <p className="font-medium">Settings</p>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onClick={() => {
+                account.openLogout();
+              }}
+            >
+              <LogOut className="size-4" />
+              <p className="font-medium">Logout</p>
+            </DropdownMenuItem>
+            {otherAccounts.length > 0 && (
+              <React.Fragment>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="mb-1">
+                  Other accounts
+                </DropdownMenuLabel>
+                {otherAccounts.map((otherAccount) => (
+                  <DropdownMenuItem
+                    key={otherAccount.id}
+                    className="p-0"
+                    onClick={() => {
+                      navigate(`/${otherAccount.id}`);
+                    }}
+                  >
+                    <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar
+                        className="h-8 w-8 rounded-lg"
+                        id={otherAccount.id}
+                        name={otherAccount.name}
+                        avatar={otherAccount.avatar}
+                      />
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {otherAccount.name}
+                        </span>
+                        <span className="truncate text-xs">
+                          {otherAccount.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </React.Fragment>
+            )}
+
             <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
               onClick={() => {
-                app.showAccountLogin();
+                navigate(`/login`);
               }}
             >
               <Plus className="size-4" />

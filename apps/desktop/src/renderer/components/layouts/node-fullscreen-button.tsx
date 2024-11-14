@@ -12,7 +12,7 @@ export const NodeFullscreenButton = ({ nodeId }: NodeFullscreenButtonProps) => {
     <Fullscreen
       className="size-5 cursor-pointer text-muted-foreground hover:text-foreground"
       onClick={() => {
-        workspace.navigateToNode(nodeId);
+        workspace.openInMain(nodeId);
       }}
     />
   );

@@ -25,7 +25,7 @@ export const TableViewRecordCreateRow = () => {
             userId: workspace.userId,
           },
           onSuccess: (output) => {
-            workspace.openModal(output.id);
+            workspace.openInModal(output.id);
           },
         });
       }}

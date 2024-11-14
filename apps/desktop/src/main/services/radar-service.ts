@@ -91,12 +91,18 @@ class RadarService {
   private async handleEvent(event: Event) {
     if (event.type === 'workspace_deleted') {
       delete this.workspaceStates[event.workspace.userId];
+      eventBus.publish({
+        type: 'radar_data_updated',
+      });
     } else if (event.type === 'user_node_created') {
       // to be optimized
       const workspaceDatabase = await databaseService.getWorkspaceDatabase(
         event.userId
       );
       await this.initWorkspace(event.userId, workspaceDatabase);
+      eventBus.publish({
+        type: 'radar_data_updated',
+      });
     }
   }
 }

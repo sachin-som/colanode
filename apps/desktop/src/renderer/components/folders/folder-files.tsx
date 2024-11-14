@@ -47,9 +47,9 @@ export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
           const idType = getIdType(id);
 
           if (idType === IdType.Folder) {
-            workspace.navigateToNode(id);
+            workspace.openInMain(id);
           } else if (idType === IdType.File) {
-            workspace.openModal(id);
+            workspace.openInModal(id);
           }
         },
         onMove: () => {},

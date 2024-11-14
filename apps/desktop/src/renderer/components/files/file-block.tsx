@@ -27,7 +27,7 @@ export const FileBlock = ({ id }: FileBlockProps) => {
     <div
       className="flex h-72 max-h-72 w-full cursor-pointer overflow-hidden rounded-md p-2 hover:bg-gray-100"
       onClick={() => {
-        workspace.openModal(id);
+        workspace.openInModal(id);
       }}
     >
       {downloadProgress !== 100 ? (

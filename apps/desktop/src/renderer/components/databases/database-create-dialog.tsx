@@ -64,7 +64,7 @@ export const DatabaseCreateDialog = ({
       onSuccess(output) {
         onOpenChange(false);
         form.reset();
-        workspace.navigateToNode(output.id);
+        workspace.openInMain(output.id);
       },
     });
   };

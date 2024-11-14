@@ -54,6 +54,14 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
+        markAsSeen: (userId, nodeId, versionId) => {
+          window.colanode.executeMutation({
+            type: 'mark_node_as_seen',
+            nodeId,
+            versionId,
+            userId,
+          });
+        },
       }}
     >
       {children}

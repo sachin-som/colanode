@@ -53,7 +53,7 @@ export const NodeBreadcrumb = ({ nodes }: NodeBreadcrumbProps) => {
                 }
                 onClick={() => {
                   if (isClickableNode) {
-                    workspace.navigateToNode(node.id);
+                    workspace.openInMain(node.id);
                   }
                 }}
               >
@@ -78,7 +78,7 @@ export const NodeBreadcrumb = ({ nodes }: NodeBreadcrumbProps) => {
                               disabled={!isClickableEllipsisNode}
                               onClick={() => {
                                 if (isClickableEllipsisNode) {
-                                  workspace.navigateToNode(ellipsisNode.id);
+                                  workspace.openInMain(ellipsisNode.id);
                                 }
                               }}
                             >

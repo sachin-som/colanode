@@ -37,7 +37,7 @@ export const LayoutSidebarChats = () => {
             <SidebarMenuButton
               isActive={workspace.isNodeActive(item.id)}
               onClick={() => {
-                workspace.navigateToNode(item.id);
+                workspace.openInMain(item.id);
               }}
             >
               <ChatSidebarItem node={item} />

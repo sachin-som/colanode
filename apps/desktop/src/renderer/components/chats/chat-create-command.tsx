@@ -47,7 +47,7 @@ export const ChatCreateCommand = () => {
                     workspaceId: workspace.id,
                   },
                   onSuccess(output) {
-                    workspace.navigateToNode(output.id);
+                    workspace.openInMain(output.id);
                     setQuery('');
                   },
                 });

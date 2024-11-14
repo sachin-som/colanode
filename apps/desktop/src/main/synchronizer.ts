@@ -1,8 +1,13 @@
 import { httpClient } from '@/shared/lib/http-client';
 import { databaseService } from '@/main/data/database-service';
-import { ServerSyncResponse } from '@/shared/types/sync';
+import { LocalChange, SyncChangesOutput } from '@colanode/core';
 import { WorkspaceCredentials } from '@/shared/types/workspaces';
 import { fileService } from '@/main/services/file-service';
+import {
+  SelectChange,
+  WorkspaceDatabaseSchema,
+} from '@/main/data/workspace/schema';
+import { Kysely } from 'kysely';
 
 const EVENT_LOOP_INTERVAL = 1000;
 
@@ -112,24 +117,13 @@ class Synchronizer {
       credentials.userId
     );
 
-    let hasMoreChanges = true;
-    while (hasMoreChanges) {
-      const changes = await workspaceDatabase
-        .selectFrom('changes')
-        .selectAll()
-        .orderBy('id asc')
-        .limit(20)
-        .execute();
-
-      if (changes.length === 0) {
-        hasMoreChanges = false;
-        break;
-      }
-
-      const { data } = await httpClient.post<ServerSyncResponse>(
+    const changes = await this.fetchAndCompactChanges(workspaceDatabase);
+    while (changes.length > 0) {
+      const changesToSync = changes.splice(0, 20);
+      const { data } = await httpClient.post<SyncChangesOutput>(
         `/v1/sync/${credentials.workspaceId}`,
         {
-          changes: changes,
+          changes: changesToSync,
         },
         {
           serverDomain: credentials.serverDomain,
@@ -170,6 +164,81 @@ class Synchronizer {
           .execute();
       }
     }
+  }
+
+  private async fetchAndCompactChanges(
+    database: Kysely<WorkspaceDatabaseSchema>
+  ): Promise<LocalChange[]> {
+    const changeRows = await database
+      .selectFrom('changes')
+      .selectAll()
+      .orderBy('id asc')
+      .limit(1000)
+      .execute();
+
+    if (changeRows.length === 0) {
+      return [];
+    }
+
+    const changes: LocalChange[] = changeRows.map(this.mapChange);
+    const changesToDelete = new Set<number>();
+    for (let i = changes.length - 1; i >= 0; i--) {
+      const change = changes[i];
+
+      if (changesToDelete.has(change.id)) {
+        continue;
+      }
+
+      if (change.data.type === 'node_delete') {
+        for (let j = i - 1; j >= 0; j--) {
+          const otherChange = changes[j];
+          if (
+            otherChange.data.type === 'node_create' &&
+            otherChange.data.id === change.data.id
+          ) {
+            // if the node has been created and then deleted, we don't need to sync the delete
+            changesToDelete.add(change.id);
+            changesToDelete.add(otherChange.id);
+          }
+
+          if (
+            otherChange.data.type === 'node_update' &&
+            otherChange.data.id === change.data.id
+          ) {
+            changesToDelete.add(otherChange.id);
+          }
+        }
+      } else if (change.data.type === 'user_node_update') {
+        for (let j = i - 1; j >= 0; j--) {
+          const otherChange = changes[j];
+          if (
+            otherChange.data.type === 'user_node_update' &&
+            otherChange.data.nodeId === change.data.nodeId &&
+            otherChange.data.userId === change.data.userId
+          ) {
+            changesToDelete.add(otherChange.id);
+          }
+        }
+      }
+    }
+
+    if (changesToDelete.size > 0) {
+      const toDeleteIds = Array.from(changesToDelete);
+      await database
+        .deleteFrom('changes')
+        .where('id', 'in', toDeleteIds)
+        .execute();
+    }
+
+    return changes.filter((change) => !changesToDelete.has(change.id));
+  }
+
+  private mapChange(change: SelectChange): LocalChange {
+    return {
+      id: change.id,
+      data: JSON.parse(change.data),
+      createdAt: change.created_at,
+    };
   }
 }
 

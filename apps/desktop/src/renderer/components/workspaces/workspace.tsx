@@ -24,7 +24,7 @@ export const Workspace = () => {
     <WorkspaceContext.Provider
       value={{
         ...workspace,
-        navigateToNode(nodeId) {
+        openInMain(nodeId) {
           setSearchParams((prev) => {
             prev.set('main', nodeId);
             if (nodeId === modal) {
@@ -36,7 +36,7 @@ export const Workspace = () => {
         isNodeActive(id) {
           return id === main;
         },
-        openModal(modal) {
+        openInModal(modal) {
           setSearchParams((prev) => {
             prev.set('modal', modal);
             return prev;
@@ -50,14 +50,6 @@ export const Workspace = () => {
         },
         openSettings() {
           setOpenSettings(true);
-        },
-        markAsSeen() {
-          // window.colanode.executeMutation({
-          //   type: 'mark_node_as_seen',
-          //   nodeId: nodeId,
-          //   versionId: versionId,
-          //   userId: workspace.userId,
-          // });
         },
       }}
     >

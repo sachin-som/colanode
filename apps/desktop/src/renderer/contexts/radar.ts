@@ -9,6 +9,7 @@ interface RadarContext {
   getWorkspaceState: (userId: string) => WorkspaceReadState;
   getChatState: (userId: string, nodeId: string) => ChatReadState;
   getChannelState: (userId: string, nodeId: string) => ChannelReadState;
+  markAsSeen: (userId: string, nodeId: string, versionId: string) => void;
 }
 
 export const RadarContext = createContext<RadarContext>({} as RadarContext);

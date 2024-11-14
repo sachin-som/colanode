@@ -105,6 +105,10 @@ export type QueryResultUpdatedEvent = {
   result: any;
 };
 
+export type RadarDataUpdatedEvent = {
+  type: 'radar_data_updated';
+};
+
 export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
@@ -123,4 +127,5 @@ export type Event =
   | UploadCreatedEvent
   | UploadUpdatedEvent
   | UploadDeletedEvent
-  | QueryResultUpdatedEvent;
+  | QueryResultUpdatedEvent
+  | RadarDataUpdatedEvent;

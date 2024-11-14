@@ -1,21 +1,21 @@
-export type SyncLocalChangesInput = {
+export type SyncChangesInput = {
   changes: LocalChange[];
 };
 
-export type SyncLocalChangeResult = {
-  status: SyncLocalChangeStatus;
+export type SyncChangesOutput = {
+  results: SyncChangeResult[];
 };
 
-export type SyncLocalChangeStatus = 'success' | 'error';
+export type SyncChangeStatus = 'success' | 'error';
 
-export type ServerSyncChangeResult = {
+export type SyncChangeResult = {
   id: number;
-  status: SyncLocalChangeStatus;
+  status: SyncChangeStatus;
 };
 
 export type LocalChange = {
   id: number;
-  data: string;
+  data: LocalChangeData;
   createdAt: string;
 };
 
@@ -54,7 +54,7 @@ export type LocalUserNodeChangeData = {
   versionId: string;
 };
 
-export type LocalNodeChangeData =
+export type LocalChangeData =
   | LocalCreateNodeChangeData
   | LocalUpdateNodeChangeData
   | LocalDeleteNodeChangeData

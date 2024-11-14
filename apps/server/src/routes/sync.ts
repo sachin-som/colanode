@@ -1,17 +1,6 @@
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
 import { database, hasUpdateChanges } from '@/data/database';
 import { Router } from 'express';
-import {
-  LocalChange,
-  LocalCreateNodeChangeData,
-  LocalDeleteNodeChangeData,
-  LocalNodeChangeData,
-  LocalUpdateNodeChangeData,
-  LocalUserNodeChangeData,
-  ServerSyncChangeResult,
-  SyncLocalChangeResult,
-  SyncLocalChangesInput,
-} from '@/types/sync';
 import { SelectWorkspaceUser } from '@/data/schema';
 import {
   NodeCreatedEvent,
@@ -21,7 +10,18 @@ import {
 import { enqueueEvent } from '@/queues/events';
 import { synapse } from '@/services/synapse';
 import { fetchNodeAncestors, mapNode } from '@/lib/nodes';
-import { NodeMutationContext, registry } from '@colanode/core';
+import {
+  NodeMutationContext,
+  registry,
+  LocalChange,
+  LocalCreateNodeChangeData,
+  LocalDeleteNodeChangeData,
+  LocalUpdateNodeChangeData,
+  LocalUserNodeChangeData,
+  SyncChangeResult,
+  SyncChangesInput,
+  SyncChangeStatus,
+} from '@colanode/core';
 import { YDoc } from '@colanode/crdt';
 
 export const syncRouter = Router();
@@ -30,7 +30,7 @@ syncRouter.post(
   '/:workspaceId',
   async (req: ColanodeRequest, res: ColanodeResponse) => {
     const workspaceId = req.params.workspaceId as string;
-    const input = req.body as SyncLocalChangesInput;
+    const input = req.body as SyncChangesInput;
     if (!req.account) {
       return res.status(401).json({
         code: ApiError.Unauthorized,
@@ -52,13 +52,13 @@ syncRouter.post(
       });
     }
 
-    const results: ServerSyncChangeResult[] = [];
+    const results: SyncChangeResult[] = [];
     for (const change of input.changes) {
       try {
-        const result = await handleLocalChange(workspaceUser, change);
+        const status = await handleLocalChange(workspaceUser, change);
         results.push({
           id: change.id,
-          status: result.status,
+          status: status,
         });
       } catch (error) {
         console.error('Error handling local change', error);
@@ -77,25 +77,22 @@ syncRouter.post(
 const handleLocalChange = async (
   workspaceUser: SelectWorkspaceUser,
   change: LocalChange
-): Promise<SyncLocalChangeResult> => {
-  const changeData = JSON.parse(change.data) as LocalNodeChangeData;
-  switch (changeData.type) {
+): Promise<SyncChangeStatus> => {
+  switch (change.data.type) {
     case 'node_create': {
-      return handleCreateNodeChange(workspaceUser, changeData);
+      return handleCreateNodeChange(workspaceUser, change.data);
     }
     case 'node_update': {
-      return handleUpdateNodeChange(workspaceUser, changeData);
+      return handleUpdateNodeChange(workspaceUser, change.data);
     }
     case 'node_delete': {
-      return handleDeleteNodeChange(workspaceUser, changeData);
+      return handleDeleteNodeChange(workspaceUser, change.data);
     }
     case 'user_node_update': {
-      return handleUserNodeStateChange(workspaceUser, changeData);
+      return handleUserNodeStateChange(workspaceUser, change.data);
     }
     default: {
-      return {
-        status: 'error',
-      };
+      return 'error';
     }
   }
 };
@@ -103,16 +100,14 @@ const handleLocalChange = async (
 const handleCreateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
   changeData: LocalCreateNodeChangeData
-): Promise<SyncLocalChangeResult> => {
+): Promise<SyncChangeStatus> => {
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', changeData.id)
     .executeTakeFirst();
 
   if (existingNode) {
-    return {
-      status: 'success',
-    };
+    return 'success';
   }
 
   const ydoc = new YDoc(changeData.id, changeData.state);
@@ -120,9 +115,7 @@ const handleCreateNodeChange = async (
 
   const model = registry.getModel(attributes.type);
   if (!model.schema.safeParse(attributes).success) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   const ancestorRows = attributes.parentId
@@ -139,9 +132,7 @@ const handleCreateNodeChange = async (
   );
 
   if (!model.canCreate(context, attributes)) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   await database
@@ -171,15 +162,13 @@ const handleCreateNodeChange = async (
 
   await enqueueEvent(event);
 
-  return {
-    status: 'success',
-  };
+  return 'success';
 };
 
 const handleUpdateNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
   changeData: LocalUpdateNodeChangeData
-): Promise<SyncLocalChangeResult> => {
+): Promise<SyncChangeStatus> => {
   let count = 0;
   while (count++ < 10) {
     const existingNode = await database
@@ -192,9 +181,7 @@ const handleUpdateNodeChange = async (
       !existingNode ||
       existingNode.workspace_id != workspaceUser.workspace_id
     ) {
-      return {
-        status: 'error',
-      };
+      return 'error';
     }
 
     const ydoc = new YDoc(changeData.id, existingNode.state);
@@ -209,18 +196,14 @@ const handleUpdateNodeChange = async (
 
     const model = registry.getModel(attributes.type);
     if (!model.schema.safeParse(attributes).success) {
-      return {
-        status: 'error',
-      };
+      return 'error';
     }
 
     const ancestorRows = await fetchNodeAncestors(existingNode.id);
     const ancestors = ancestorRows.map(mapNode);
     const node = ancestors.find((ancestor) => ancestor.id === existingNode.id);
     if (!node) {
-      return {
-        status: 'error',
-      };
+      return 'error';
     }
 
     const context = new NodeMutationContext(
@@ -232,9 +215,7 @@ const handleUpdateNodeChange = async (
     );
 
     if (!model.canUpdate(context, node, attributes)) {
-      return {
-        status: 'error',
-      };
+      return 'error';
     }
 
     const result = await database
@@ -266,21 +247,17 @@ const handleUpdateNodeChange = async (
 
       await enqueueEvent(event);
 
-      return {
-        status: 'success',
-      };
+      return 'success';
     }
   }
 
-  return {
-    status: 'error',
-  };
+  return 'error';
 };
 
 const handleDeleteNodeChange = async (
   workspaceUser: SelectWorkspaceUser,
   changeData: LocalDeleteNodeChangeData
-): Promise<SyncLocalChangeResult> => {
+): Promise<SyncChangeStatus> => {
   const existingNode = await database
     .selectFrom('nodes')
     .where('id', '=', changeData.id)
@@ -288,15 +265,11 @@ const handleDeleteNodeChange = async (
     .executeTakeFirst();
 
   if (!existingNode) {
-    return {
-      status: 'success',
-    };
+    return 'success';
   }
 
   if (existingNode.workspace_id !== workspaceUser.workspace_id) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   const model = registry.getModel(existingNode.type);
@@ -304,9 +277,7 @@ const handleDeleteNodeChange = async (
   const ancestors = ancestorRows.map(mapNode);
   const node = ancestors.find((ancestor) => ancestor.id === existingNode.id);
   if (!node) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   const context = new NodeMutationContext(
@@ -318,9 +289,7 @@ const handleDeleteNodeChange = async (
   );
 
   if (!model.canDelete(context, node)) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   await database.deleteFrom('nodes').where('id', '=', changeData.id).execute();
@@ -334,19 +303,15 @@ const handleDeleteNodeChange = async (
 
   await enqueueEvent(event);
 
-  return {
-    status: 'success',
-  };
+  return 'success';
 };
 
 const handleUserNodeStateChange = async (
   workspaceUser: SelectWorkspaceUser,
   changeData: LocalUserNodeChangeData
-): Promise<SyncLocalChangeResult> => {
+): Promise<SyncChangeStatus> => {
   if (workspaceUser.id !== changeData.userId) {
-    return {
-      status: 'error',
-    };
+    return 'error';
   }
 
   await database
@@ -369,5 +334,5 @@ const handleUserNodeStateChange = async (
     workspaceId: workspaceUser.workspace_id,
   });
 
-  return { status: 'success' };
+  return 'success';
 };

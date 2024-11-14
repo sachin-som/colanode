@@ -30,7 +30,7 @@ export const FolderNodeView = ({ node }: NodeViewProps) => {
       data-id={node.attrs.id}
       className="my-0.5 flex h-12 w-full cursor-pointer flex-row items-center gap-1 rounded-md bg-gray-50 p-2 hover:bg-gray-100"
       onClick={() => {
-        workspace.navigateToNode(id);
+        workspace.openInMain(id);
       }}
     >
       <Avatar size="small" id={id} name={name} avatar={avatar} />

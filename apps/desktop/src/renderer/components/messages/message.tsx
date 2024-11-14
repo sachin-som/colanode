@@ -15,6 +15,7 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessagesSquare, Reply } from 'lucide-react';
 import { useConversation } from '@/renderer/contexts/conversation';
+import { useRadar } from '@/renderer/contexts/radar';
 
 interface MessageProps {
   message: MessageNode;
@@ -42,6 +43,7 @@ const shouldDisplayUserInfo = (
 export const Message = ({ message, previousMessage }: MessageProps) => {
   const workspace = useWorkspace();
   const conversation = useConversation();
+  const radar = useRadar();
 
   const { mutate, isPending } = useMutation();
 
@@ -91,7 +93,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           rootMargin="50px"
           onChange={(inView) => {
             if (inView) {
-              workspace.markAsSeen(message.id, message.versionId);
+              radar.markAsSeen(workspace.userId, message.id, message.versionId);
             }
           }}
         >

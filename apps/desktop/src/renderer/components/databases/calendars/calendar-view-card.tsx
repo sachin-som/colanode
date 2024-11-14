@@ -20,7 +20,7 @@ export const CalendarViewCard = ({ record }: CalendarViewCardProps) => {
         'animate-fade-in flex cursor-pointer flex-col gap-1 rounded-md border p-2 hover:bg-gray-50',
         hasName ? '' : 'text-muted-foreground'
       )}
-      onClick={() => workspace.openModal(record.id)}
+      onClick={() => workspace.openInModal(record.id)}
     >
       {name ?? 'Unnamed'}
     </button>

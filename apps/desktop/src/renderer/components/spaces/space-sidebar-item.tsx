@@ -163,7 +163,7 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
                 <SidebarMenuSubItem
                   key={child.id}
                   onClick={() => {
-                    workspace.navigateToNode(child.id);
+                    workspace.openInMain(child.id);
                   }}
                   className="cursor-pointer"
                 >

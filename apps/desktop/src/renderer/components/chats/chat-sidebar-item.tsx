@@ -56,7 +56,9 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
       >
         {data.attributes.name ?? 'Unnamed'}
       </span>
-      <ReadStateIndicator count={unreadCount} hasChanges={unreadCount > 0} />
+      {!isActive && (
+        <ReadStateIndicator count={unreadCount} hasChanges={unreadCount > 0} />
+      )}
     </div>
   );
 };

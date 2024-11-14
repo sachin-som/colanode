@@ -2,11 +2,10 @@ import { createContext, useContext } from 'react';
 import { Workspace } from '@/shared/types/workspaces';
 
 interface WorkspaceContext extends Workspace {
-  navigateToNode: (nodeId: string) => void;
+  openInMain: (nodeId: string) => void;
   isNodeActive: (nodeId: string) => boolean;
-  openModal: (nodeId: string) => void;
+  openInModal: (nodeId: string) => void;
   closeModal: () => void;
-  markAsSeen: (nodeId: string, versionId: string) => void;
   openSettings: () => void;
 }
 

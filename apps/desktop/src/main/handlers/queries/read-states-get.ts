@@ -19,12 +19,7 @@ export class ReadStatesGetQueryHandler
     _: ReadStatesGetQueryInput,
     ___: Record<string, WorkspaceReadState>
   ): Promise<ChangeCheckResult<ReadStatesGetQueryInput>> {
-    if (
-      event.type === 'node_created' ||
-      event.type === 'node_updated' ||
-      event.type === 'node_deleted' ||
-      event.type === 'user_node_created'
-    ) {
+    if (event.type === 'radar_data_updated') {
       const data = radarService.getWorkspaceStates();
       return {
         hasChanges: true,

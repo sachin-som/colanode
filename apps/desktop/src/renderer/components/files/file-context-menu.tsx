@@ -26,7 +26,7 @@ export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
         <ContextMenuContent className="w-64">
           <ContextMenuItem
             onSelect={() => {
-              workspace.openModal(id);
+              workspace.openInModal(id);
             }}
             className="pl-2"
           >

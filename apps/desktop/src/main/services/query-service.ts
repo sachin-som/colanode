@@ -1,6 +1,6 @@
 import { QueryInput, QueryMap } from '@/shared/queries';
 import { QueryHandler, SubscribedQuery } from '@/main/types';
-import { queryHandlerMap } from '@/main/handlers/queries';
+import { queryHandlerMap } from '@/main/queries';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Event } from '@/shared/types/events';
 
@@ -44,6 +44,10 @@ class QueryService {
   }
 
   private async checkForQueryChanges(event: Event): Promise<void> {
+    if (event.type !== 'query_result_updated') {
+      return;
+    }
+
     for (const [id, query] of this.subscribedQueries) {
       const handler = queryHandlerMap[query.input.type] as QueryHandler<
         typeof query.input

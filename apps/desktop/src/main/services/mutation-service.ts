@@ -1,7 +1,7 @@
 import { MutationInput } from '@/shared/mutations';
 
 import { MutationMap } from '@/shared/mutations';
-import { mutationHandlerMap } from '@/main/handlers/mutations';
+import { mutationHandlerMap } from '@/main/mutations';
 import { MutationHandler } from '@/main/types';
 
 class MutationService {

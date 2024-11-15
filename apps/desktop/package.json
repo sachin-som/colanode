@@ -91,6 +91,7 @@
     "lowlight": "^3.1.0",
     "lucide-react": "^0.453.0",
     "mime-types": "^2.1.35",
+    "public-ip": "^7.0.1",
     "re-resizable": "^6.10.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",

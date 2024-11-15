@@ -1,8 +1,9 @@
 import { accountService } from '@/main/services/account-service';
 import { workspaceService } from '@/main/services/workspace-service';
+import { deviceService } from '@/main/services/device-service';
 
 // one minute
-const EVENT_LOOP_INTERVAL = 1000 * 60;
+const EVENT_LOOP_INTERVAL = 1000 * 5;
 
 class SyncService {
   private initiated: boolean = false;
@@ -22,9 +23,12 @@ class SyncService {
 
   private async executeEventLoop() {
     try {
-      await accountService.syncAccounts();
-      await accountService.syncDeletedTokens();
-      await workspaceService.syncAllWorkspaces();
+      await deviceService.checkOnlineState();
+      if (deviceService.isOnline) {
+        await accountService.syncAccounts();
+        await accountService.syncDeletedTokens();
+        await workspaceService.syncAllWorkspaces();
+      }
     } catch (error) {
       console.log('error', error);
     }

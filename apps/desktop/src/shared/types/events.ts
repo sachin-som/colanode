@@ -121,6 +121,11 @@ export type ChangeCreatedEvent = {
   changeId: number;
 };
 
+export type OnlineStateChangedEvent = {
+  type: 'online_state_changed';
+  isOnline: boolean;
+};
+
 export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
@@ -142,4 +147,5 @@ export type Event =
   | UploadDeletedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
-  | ChangeCreatedEvent;
+  | ChangeCreatedEvent
+  | OnlineStateChangedEvent;

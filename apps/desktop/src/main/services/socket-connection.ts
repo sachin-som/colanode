@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
 import { BackoffCalculator } from '@/shared/lib/backoff-calculator';
-import { MessageContext, MessageInput } from '@/shared/messages';
-import { mediator } from '@/main/mediator';
+import { Message } from '@colanode/core';
 import { SelectAccount, SelectServer } from '@/main/data/app/schema';
 import { ServerAttributes } from '@/shared/types/servers';
+import { mutationService } from './mutation-service';
 
 const buildSynapseUrl = (server: SelectServer, deviceId: string) => {
   const attributes = JSON.parse(server.attributes) as ServerAttributes;
@@ -55,13 +55,44 @@ export class SocketConnection {
         console.error('Unsupported message data type:', typeof event.data);
         return;
       }
-
-      const context: MessageContext = {
-        accountId: this.account.id,
-        deviceId: this.account.device_id,
-      };
-      const message: MessageInput = JSON.parse(data);
-      await mediator.executeMessage(context, message);
+      const message: Message = JSON.parse(data);
+      if (message.type === 'server_node_delete') {
+        mutationService.executeMutation({
+          type: 'server_node_delete',
+          id: message.id,
+          accountId: this.account.id,
+          workspaceId: message.workspaceId,
+        });
+      } else if (message.type === 'server_node_sync') {
+        mutationService.executeMutation({
+          type: 'server_node_sync',
+          accountId: this.account.id,
+          id: message.id,
+          workspaceId: message.workspaceId,
+          state: message.state,
+          createdAt: message.createdAt,
+          createdBy: message.createdBy,
+          updatedAt: message.updatedAt,
+          updatedBy: message.updatedBy,
+          serverCreatedAt: message.serverCreatedAt,
+          serverUpdatedAt: message.serverUpdatedAt,
+          versionId: message.versionId,
+        });
+      } else if (message.type === 'server_user_node_sync') {
+        mutationService.executeMutation({
+          type: 'server_user_node_sync',
+          accountId: this.account.id,
+          nodeId: message.nodeId,
+          userId: message.userId,
+          workspaceId: message.workspaceId,
+          versionId: message.versionId,
+          lastSeenAt: message.lastSeenAt,
+          lastSeenVersionId: message.lastSeenVersionId,
+          mentionsCount: message.mentionsCount,
+          createdAt: message.createdAt,
+          updatedAt: message.updatedAt,
+        });
+      }
     };
 
     this.socket.onopen = () => {
@@ -77,7 +108,7 @@ export class SocketConnection {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
-  public sendMessage(message: MessageInput): void {
+  public sendMessage(message: Message): void {
     if (this.socket) {
       this.socket.send(JSON.stringify(message));
     }

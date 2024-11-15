@@ -1,6 +1,6 @@
 import { SocketConnection } from '@/main/services/socket-connection';
 import { databaseService } from '@/main/data/database-service';
-import { MessageInput } from '@/shared/messages';
+import { Message } from '@colanode/core';
 
 const EVENT_LOOP_INTERVAL = 5000;
 
@@ -22,7 +22,7 @@ class SocketService {
     this.initiated = true;
   }
 
-  public sendMessage(accountId: string, message: MessageInput) {
+  public sendMessage(accountId: string, message: Message) {
     const connection = this.accounts.get(accountId);
     if (!connection) {
       return;

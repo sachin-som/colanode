@@ -10,7 +10,7 @@ import {
   SynapseUserNodeChangeMessage,
 } from '@/types/synapse';
 import { getIdType, IdType } from '@colanode/core';
-import { MessageInput } from '@/types/messages';
+import { Message } from '@colanode/core';
 import { fromUint8Array } from 'js-base64';
 
 interface SynapseConnection {
@@ -96,16 +96,13 @@ class SynapseService {
     );
   }
 
-  private sendSocketMessage(
-    connection: SynapseConnection,
-    message: MessageInput
-  ) {
+  private sendSocketMessage(connection: SynapseConnection, message: Message) {
     connection.socket.send(JSON.stringify(message));
   }
 
   private async handleSocketMessage(
     connection: SynapseConnection,
-    message: MessageInput
+    message: Message
   ) {
     if (message.type === 'local_node_sync') {
       await database

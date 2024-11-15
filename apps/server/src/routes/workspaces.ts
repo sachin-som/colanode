@@ -15,6 +15,7 @@ import {
   IdType,
   UserAttributes,
   WorkspaceAttributes,
+  AccountStatus,
 } from '@colanode/core';
 import { database } from '@/data/database';
 import { Router } from 'express';
@@ -26,7 +27,6 @@ import {
   SelectWorkspaceUser,
 } from '@/data/schema';
 import { getNameFromEmail } from '@/lib/utils';
-import { AccountStatus } from '@/types/accounts';
 import { mapNodeOutput } from '@/lib/nodes';
 import { NodeCreatedEvent, NodeUpdatedEvent } from '@/types/events';
 import { enqueueEvent } from '@/queues/events';

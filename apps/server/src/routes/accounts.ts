@@ -8,13 +8,16 @@ import {
   GoogleLoginInput,
   GoogleUserInfo,
   LoginOutput,
-} from '@/types/accounts';
+  WorkspaceOutput,
+  WorkspaceRole,
+  generateId,
+  IdType,
+  AccountSyncOutput,
+} from '@colanode/core';
 import axios from 'axios';
 import { ApiError, ColanodeRequest, ColanodeResponse } from '@/types/api';
-import { generateId, IdType } from '@colanode/core';
 import { database } from '@/data/database';
 import bcrypt from 'bcrypt';
-import { WorkspaceOutput, WorkspaceRole } from '@colanode/core';
 import { authMiddleware } from '@/middlewares/auth';
 import { generateToken } from '@/lib/tokens';
 import { enqueueTask } from '@/queues/tasks';
@@ -383,6 +386,83 @@ accountsRouter.put(
   }
 );
 
+accountsRouter.get(
+  '/sync',
+  authMiddleware,
+  async (req: ColanodeRequest, res: ColanodeResponse) => {
+    if (!req.account) {
+      return res.status(401).json({
+        code: ApiError.Unauthorized,
+        message: 'Unauthorized.',
+      });
+    }
+
+    const account = await database
+      .selectFrom('accounts')
+      .where('id', '=', req.account.id)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!account) {
+      return res.status(404).json({
+        code: ApiError.ResourceNotFound,
+        message: 'Account not found.',
+      });
+    }
+
+    const workspaceOutputs: WorkspaceOutput[] = [];
+    const workspaceUsers = await database
+      .selectFrom('workspace_users')
+      .where('account_id', '=', account.id)
+      .selectAll()
+      .execute();
+
+    if (workspaceUsers.length > 0) {
+      const workspaceIds = workspaceUsers.map((wu) => wu.workspace_id);
+      const workspaces = await database
+        .selectFrom('workspaces')
+        .where('id', 'in', workspaceIds)
+        .selectAll()
+        .execute();
+
+      for (const workspaceUser of workspaceUsers) {
+        const workspace = workspaces.find(
+          (w) => w.id === workspaceUser.workspace_id
+        );
+
+        if (!workspace) {
+          continue;
+        }
+
+        workspaceOutputs.push({
+          id: workspace.id,
+          name: workspace.name,
+          versionId: workspaceUser.version_id,
+          avatar: workspace.avatar,
+          description: workspace.description,
+          user: {
+            id: workspaceUser.id,
+            accountId: workspaceUser.account_id,
+            role: workspaceUser.role as WorkspaceRole,
+          },
+        });
+      }
+    }
+
+    const output: AccountSyncOutput = {
+      account: {
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        avatar: account.avatar,
+      },
+      workspaces: workspaceOutputs,
+    };
+
+    return res.status(200).json(output);
+  }
+);
+
 const buildLoginOutput = async (
   account: SelectAccount
 ): Promise<LoginOutput> => {
@@ -459,12 +539,13 @@ const buildLoginOutput = async (
 
   return {
     account: {
-      token,
       id: account.id,
       name: account.name,
       email: account.email,
-      deviceId: device.id,
+      avatar: account.avatar,
     },
     workspaces: workspaceOutputs,
+    deviceId: device.id,
+    token,
   };
 };

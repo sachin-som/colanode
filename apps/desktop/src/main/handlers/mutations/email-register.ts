@@ -1,4 +1,4 @@
-import { LoginOutput } from '@/shared/types/accounts';
+import { LoginOutput } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/shared/lib/http-client';
 import {
@@ -7,6 +7,7 @@ import {
 } from '@/shared/mutations/email-register';
 import { MutationHandler } from '@/main/types';
 import { eventBus } from '@/shared/lib/event-bus';
+import { Account } from '@/shared/types/accounts';
 
 export class EmailRegisterMutationHandler
   implements MutationHandler<EmailRegisterMutationInput>
@@ -39,20 +40,37 @@ export class EmailRegisterMutationHandler
       }
     );
 
+    let account: Account | undefined;
     await databaseService.appDatabase.transaction().execute(async (trx) => {
-      await trx
+      const createdAccount = await trx
         .insertInto('accounts')
+        .returningAll()
         .values({
           id: data.account.id,
           name: data.account.name,
           avatar: data.account.avatar,
-          device_id: data.account.deviceId,
+          device_id: data.deviceId,
           email: data.account.email,
-          token: data.account.token,
+          token: data.token,
           server: server.domain,
           status: 'active',
         })
-        .execute();
+        .executeTakeFirst();
+
+      if (!createdAccount) {
+        throw new Error('Failed to create account!');
+      }
+
+      account = {
+        id: createdAccount.id,
+        name: createdAccount.name,
+        email: createdAccount.email,
+        avatar: createdAccount.avatar,
+        deviceId: data.deviceId,
+        token: data.token,
+        status: 'active',
+        server: server.domain,
+      };
 
       if (data.workspaces.length === 0) {
         return;
@@ -75,9 +93,13 @@ export class EmailRegisterMutationHandler
         .execute();
     });
 
+    if (!account) {
+      throw new Error('Failed to create account!');
+    }
+
     eventBus.publish({
       type: 'account_created',
-      account: data.account,
+      account,
     });
 
     if (data.workspaces.length > 0) {
@@ -98,7 +120,7 @@ export class EmailRegisterMutationHandler
 
     return {
       success: true,
-      account: data.account,
+      account,
       workspaces: data.workspaces,
     };
   }

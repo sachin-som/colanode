@@ -8,10 +8,14 @@ import {
 } from 'kysely';
 import path from 'path';
 import {
+  SelectChange,
   SelectNode,
   WorkspaceDatabaseSchema,
 } from '@/main/data/workspace/schema';
-import { Node, NodeTypes } from '@colanode/core';
+import { LocalChange, Node, NodeTypes } from '@colanode/core';
+import { Account } from '@/shared/types/accounts';
+import { SelectAccount, SelectWorkspace } from './data/app/schema';
+import { Workspace } from '@/shared/types/workspaces';
 
 export const appPath = app.getPath('userData');
 
@@ -87,5 +91,39 @@ export const mapNode = (row: SelectNode): Node => {
     serverCreatedAt: row.server_created_at,
     serverUpdatedAt: row.server_updated_at,
     serverVersionId: row.server_version_id,
+  };
+};
+
+export const mapAccount = (row: SelectAccount): Account => {
+  return {
+    id: row.id,
+    server: row.server,
+    name: row.name,
+    avatar: row.avatar,
+    deviceId: row.device_id,
+    email: row.email,
+    token: row.token,
+    status: row.status,
+  };
+};
+
+export const mapWorkspace = (row: SelectWorkspace): Workspace => {
+  return {
+    id: row.workspace_id,
+    name: row.name,
+    versionId: row.version_id,
+    accountId: row.account_id,
+    role: row.role,
+    userId: row.user_id,
+    avatar: row.avatar,
+    description: row.description,
+  };
+};
+
+export const mapChange = (change: SelectChange): LocalChange => {
+  return {
+    id: change.id,
+    data: JSON.parse(change.data),
+    createdAt: change.created_at,
   };
 };

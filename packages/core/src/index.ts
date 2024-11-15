@@ -20,3 +20,4 @@ export * from './registry/workspace';
 export * from './types/workspaces';
 export * from './types/nodes';
 export * from './types/sync';
+export * from './types/accounts';

@@ -1,4 +1,4 @@
-import { WorkspaceOutput } from '@colanode/core';
+import { WorkspaceOutput } from './workspaces';
 
 export type GoogleLoginInput = {
   access_token: string;
@@ -27,6 +27,8 @@ export type GoogleUserInfo = {
 export type LoginOutput = {
   account: AccountOutput;
   workspaces: WorkspaceOutput[];
+  deviceId: string;
+  token: string;
 };
 
 export type AccountOutput = {
@@ -34,8 +36,6 @@ export type AccountOutput = {
   name: string;
   email: string;
   avatar?: string | null;
-  token: string;
-  deviceId: string;
 };
 
 export enum AccountStatus {
@@ -52,4 +52,10 @@ export type AccountUpdateOutput = {
   id: string;
   name: string;
   avatar?: string | null;
+};
+
+export type AccountSyncOutput = {
+  account: AccountOutput;
+  workspaces: WorkspaceOutput[];
+  token?: string;
 };

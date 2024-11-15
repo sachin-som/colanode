@@ -1,7 +1,7 @@
 import { databaseService } from '@/main/data/database-service';
 import { httpClient } from '@/shared/lib/http-client';
 import { MutationHandler } from '@/main/types';
-import { AccountUpdateOutput } from '@/shared/types/accounts';
+import { AccountUpdateOutput } from '@colanode/core';
 import {
   AccountUpdateMutationInput,
   AccountUpdateMutationOutput,

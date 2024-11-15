@@ -60,9 +60,12 @@ export const AvatarUpload = ({ onUpload }: AvatarUploadProps) => {
           }
 
           setIsFileDialogOpen(true);
-          const result = await window.colanode.openFileDialog({
-            properties: ['openFile'],
-            filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }],
+          const result = await window.colanode.executeCommand({
+            type: 'file_dialog_open',
+            options: {
+              properties: ['openFile'],
+              filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }],
+            },
           });
 
           if (result.canceled || !result.filePaths.length) {

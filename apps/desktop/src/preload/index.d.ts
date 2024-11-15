@@ -2,9 +2,9 @@ import { ElectronAPI } from '@electron-toolkit/preload';
 import { EventBus } from '@/lib/event-bus';
 import { MutationMap, MutationInput } from '@/shared/mutations';
 import { QueryMap, QueryInput } from '@/shared/queries';
-import { FileMetadata } from '@/types/files';
+import { CommandMap, CommandInput } from '@/shared/commands';
 
-interface ColanodeApi {
+interface ColanodeAPI {
   init: () => Promise<void>;
   logout: (accountId: string) => Promise<void>;
 
@@ -23,18 +23,15 @@ interface ColanodeApi {
 
   unsubscribeQuery: (id: string) => Promise<void>;
 
-  openFileDialog: (
-    options: Electron.OpenDialogOptions
-  ) => Promise<Electron.OpenDialogReturnValue>;
-
-  openFile: (userId: string, id: string, extension: string) => Promise<void>;
-  getFileMetadata: (path: string) => Promise<FileMetadata | null>;
+  executeCommand: <T extends CommandInput>(
+    input: T
+  ) => Promise<CommandMap[T['type']]['output']>;
 }
 
 declare global {
   interface Window {
     electron: ElectronAPI;
-    colanode: ColanodeApi;
+    colanode: ColanodeAPI;
     eventBus: EventBus;
   }
 }

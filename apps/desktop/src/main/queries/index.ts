@@ -14,6 +14,7 @@ import { IconsGetQueryHandler } from '@/main/queries/icons-get';
 import { NodeTreeGetQueryHandler } from '@/main/queries/node-tree-get';
 import { NodeChildrenGetQueryHandler } from '@/main/queries/node-children-get';
 import { ReadStatesGetQueryHandler } from '@/main/queries/read-states-get';
+import { FileMetadataGetQueryHandler } from '@/main/queries/file-metadata-get';
 
 type QueryHandlerMap = {
   [K in keyof QueryMap]: QueryHandler<QueryMap[K]['input']>;
@@ -34,4 +35,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   node_tree_get: new NodeTreeGetQueryHandler(),
   node_children_get: new NodeChildrenGetQueryHandler(),
   read_states_get: new ReadStatesGetQueryHandler(),
+  file_metadata_get: new FileMetadataGetQueryHandler(),
 };

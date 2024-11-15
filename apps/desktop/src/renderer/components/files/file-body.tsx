@@ -24,11 +24,12 @@ export const FileBody = ({ file }: FileBodyProps) => {
             variant="outline"
             size="sm"
             onClick={() =>
-              window.colanode.openFile(
-                workspace.userId,
-                file.id,
-                file.attributes.extension
-              )
+              window.colanode.executeCommand({
+                type: 'file_open',
+                userId: workspace.userId,
+                fileId: file.id,
+                extension: file.attributes.extension,
+              })
             }
           >
             <SquareArrowOutUpRight className="mr-1 size-4" /> Open

@@ -102,10 +102,13 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
         return;
       }
 
-      const result = await window.colanode.openFileDialog({
-        properties: ['openFile'],
-        buttonLabel: 'Upload',
-        title: 'Upload files to message',
+      const result = await window.colanode.executeCommand({
+        type: 'file_dialog_open',
+        options: {
+          properties: ['openFile'],
+          buttonLabel: 'Upload',
+          title: 'Upload files to message',
+        },
       });
 
       if (result.canceled) {
@@ -113,7 +116,10 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
       }
 
       const filePath = result.filePaths[0];
-      const fileMetadata = await window.colanode.getFileMetadata(filePath);
+      const fileMetadata = await window.colanode.executeQuery({
+        type: 'file_metadata_get',
+        path: filePath,
+      });
 
       if (fileMetadata === null) {
         toast({

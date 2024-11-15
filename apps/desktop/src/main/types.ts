@@ -1,9 +1,15 @@
+import { CommandMap } from '@/shared/commands';
+import { CommandInput } from '@/shared/commands';
 import { MutationInput, MutationMap } from '@/shared/mutations';
 import { QueryInput, QueryMap } from '@/shared/queries';
 import { Event } from '@/shared/types/events';
 
 export interface MutationHandler<T extends MutationInput> {
   handleMutation: (input: T) => Promise<MutationMap[T['type']]['output']>;
+}
+
+export interface CommandHandler<T extends CommandInput> {
+  handleCommand: (input: T) => Promise<CommandMap[T['type']]['output']>;
 }
 
 export interface QueryHandler<T extends QueryInput> {

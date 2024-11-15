@@ -14,10 +14,13 @@ export const FileCommand: EditorCommand = {
       return;
     }
 
-    const result = await window.colanode.openFileDialog({
-      properties: ['openFile'],
-      buttonLabel: 'Upload',
-      title: 'Upload files to page',
+    const result = await window.colanode.executeCommand({
+      type: 'file_dialog_open',
+      options: {
+        properties: ['openFile'],
+        buttonLabel: 'Upload',
+        title: 'Upload files to page',
+      },
     });
 
     if (result.canceled) {

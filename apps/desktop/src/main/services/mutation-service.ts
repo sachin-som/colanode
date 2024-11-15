@@ -11,6 +11,7 @@ class MutationService {
     const handler = mutationHandlerMap[
       input.type
     ] as unknown as MutationHandler<T>;
+
     if (!handler) {
       throw new Error(`No handler found for mutation type: ${input.type}`);
     }

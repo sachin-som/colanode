@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, protocol, dialog } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, protocol } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -7,13 +7,15 @@ import { socketService } from '@/main/services/socket-service';
 import { syncService } from '@/main/services/sync-service';
 import { avatarService } from '@/main/services/avatar-service';
 import { fileService } from '@/main/services/file-service';
-import { FileMetadata } from '@/shared/types/files';
 import { MutationInput, MutationMap } from '@/shared/mutations';
 import { QueryInput, QueryMap } from '@/shared/queries';
 import { assetService } from '@/main/services/asset-service';
 import { radarService } from '@/main/services/radar-service';
 import { mutationService } from '@/main/services/mutation-service';
 import { queryService } from '@/main/services/query-service';
+import { CommandInput } from '@/shared/commands';
+import { commandService } from '@/main/services/command-service';
+import { CommandMap } from '@/shared/commands';
 
 let subscriptionId: string | null = null;
 const icon = join(__dirname, '../assets/icon.png');
@@ -95,7 +97,7 @@ const createWindow = async (): Promise<void> => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron');
+  electronApp.setAppUserModelId('com.colanode.desktop');
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -168,35 +170,11 @@ ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
 });
 
 ipcMain.handle(
-  'open-file-dialog',
-  async (
+  'execute-command',
+  async <T extends CommandInput>(
     _: unknown,
-    options: Electron.OpenDialogOptions
-  ): Promise<Electron.OpenDialogReturnValue> => {
-    const window = BrowserWindow.getFocusedWindow();
-    if (!window) {
-      throw new Error('No focused window');
-    }
-
-    return dialog.showOpenDialog(window, options);
-  }
-);
-
-ipcMain.handle(
-  'get-file-metadata',
-  (_: unknown, path: string): FileMetadata | null => {
-    return fileService.getFileMetadata(path);
-  }
-);
-
-ipcMain.handle(
-  'open-file',
-  async (
-    _: unknown,
-    userId: string,
-    id: string,
-    extension: string
-  ): Promise<void> => {
-    return fileService.openFile(userId, id, extension);
+    input: T
+  ): Promise<CommandMap[T['type']]['output']> => {
+    return commandService.executeCommand(input);
   }
 );

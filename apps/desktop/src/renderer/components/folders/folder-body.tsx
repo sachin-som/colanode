@@ -72,10 +72,13 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
     }
 
     isDialogOpenedRef.current = true;
-    const result = await window.colanode.openFileDialog({
-      properties: ['openFile'],
-      buttonLabel: 'Upload',
-      title: 'Upload files to folder',
+    const result = await window.colanode.executeCommand({
+      type: 'file_dialog_open',
+      options: {
+        properties: ['openFile'],
+        buttonLabel: 'Upload',
+        title: 'Upload files to folder',
+      },
     });
 
     if (result.canceled) {

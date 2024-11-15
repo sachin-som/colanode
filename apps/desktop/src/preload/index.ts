@@ -4,6 +4,8 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { MutationInput, MutationMap } from '@/shared/mutations';
 import { QueryInput, QueryMap } from '@/shared/queries';
 import { Event } from '@/shared/types/events';
+import { CommandMap } from '@/shared/commands';
+import { CommandInput } from '@/shared/commands';
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -38,16 +40,10 @@ if (process.contextIsolated) {
         return ipcRenderer.invoke('unsubscribe-query', id);
       },
 
-      openFileDialog: (options: Electron.OpenDialogOptions) => {
-        return ipcRenderer.invoke('open-file-dialog', options);
-      },
-
-      openFile: (userId: string, id: string, extension: string) => {
-        return ipcRenderer.invoke('open-file', userId, id, extension);
-      },
-
-      getFileMetadata: (path: string) => {
-        return ipcRenderer.invoke('get-file-metadata', path);
+      executeCommand: <T extends CommandInput>(
+        input: T
+      ): Promise<CommandMap[T['type']]['output']> => {
+        return ipcRenderer.invoke('execute-command', input);
       },
     });
 

@@ -1,4 +1,4 @@
-import { EditorNodeTypes,generateId, getIdTypeFromNode } from '@colanode/core';
+import { EditorNodeTypes, generateId, IdType } from '@colanode/core';
 import { Extension } from '@tiptap/react';
 import { Plugin, PluginKey } from 'prosemirror-state';
 
@@ -50,16 +50,31 @@ export const IdExtension = Extension.create({
         key: new PluginKey('id'),
         appendTransaction(_, __, state) {
           const { tr } = state;
+          const ids = new Set<string>();
           state.doc.descendants((node, pos) => {
             if (node.isText) {
               return; // Text nodes don't need IDs
             }
 
             if (!node.attrs.id || typeof node.attrs.id !== 'string') {
+              const id = generateId(IdType.Block);
+              ids.add(id);
               tr.setNodeMarkup(pos, null, {
                 ...node.attrs,
-                id: generateId(getIdTypeFromNode(node.type.name)),
+                id,
               });
+            } else {
+              let id = node.attrs.id;
+              if (ids.has(id)) {
+                id = generateId(IdType.Block);
+                ids.add(id);
+                tr.setNodeMarkup(pos, null, {
+                  ...node.attrs,
+                  id,
+                });
+              } else {
+                ids.add(id);
+              }
             }
           });
           return tr;

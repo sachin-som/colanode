@@ -5,7 +5,7 @@ import {
   EditorNodeTypes,
   generateId,
   generateNodeIndex,
-  getIdTypeFromNode,
+  IdType,
 } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 
@@ -208,7 +208,7 @@ const getIdFromContent = (content: JSONContent): string => {
     throw new Error('Invalid content type');
   }
 
-  return content.attrs?.id ?? generateId(getIdTypeFromNode(content.type));
+  return content.attrs?.id ?? generateId(IdType.Block);
 };
 
 export const editorHasContent = (block?: JSONContent) => {

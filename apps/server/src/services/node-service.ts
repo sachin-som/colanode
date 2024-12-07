@@ -113,8 +113,7 @@ class NodeService {
   public async updateNode(
     input: UpdateNodeInput
   ): Promise<UpdateNodeOutput | null> {
-    let count = 0;
-    while (count < UPDATE_RETRIES_LIMIT) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
       const result = await this.tryUpdateNode(input);
 
       if (result.type === 'success') {
@@ -124,8 +123,6 @@ class NodeService {
       if (result.type === 'error') {
         return null;
       }
-
-      count++;
     }
 
     return null;
@@ -331,8 +328,7 @@ class NodeService {
     workspaceUser: SelectWorkspaceUser,
     input: ApplyUpdateTransactionInput
   ): Promise<ApplyUpdateTransactionOutput | null> {
-    let count = 0;
-    while (count < UPDATE_RETRIES_LIMIT) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
       const result = await this.tryApplyUpdateTransaction(workspaceUser, input);
 
       if (result.type === 'success') {
@@ -342,8 +338,6 @@ class NodeService {
       if (result.type === 'error') {
         return null;
       }
-
-      count++;
     }
 
     return null;

@@ -88,6 +88,7 @@ class SyncService {
   private async syncWorkspace(userId: string) {
     this.syncLocalPendingTransactions(userId);
     this.syncLocalIncompleteTransactions(userId);
+    this.syncInvalidTransactions(userId);
     this.syncLocalPendingInteractions(userId);
 
     this.initSyncConsumer(userId, 'transactions');
@@ -478,6 +479,37 @@ class SyncService {
           error,
           `Error syncing incomplete transactions for node ${nodeId} for user ${userId}`
         );
+      }
+    }
+  }
+
+  private async syncInvalidTransactions(userId: string) {
+    this.debug(`Syncing invalid transactions for user ${userId}`);
+
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const invalidTransactions = await workspaceDatabase
+      .selectFrom('transactions')
+      .selectAll()
+      .where('status', '=', 'pending')
+      .where('retry_count', '>=', 10)
+      .execute();
+
+    if (invalidTransactions.length === 0) {
+      this.debug(`No invalid transactions found for user ${userId}, skipping`);
+      return;
+    }
+
+    for (const transactionRow of invalidTransactions) {
+      const transaction = mapTransaction(transactionRow);
+
+      if (transaction.operation === 'create') {
+        await nodeService.revertCreateTransaction(userId, transaction);
+      } else if (transaction.operation === 'update') {
+        await nodeService.revertUpdateTransaction(userId, transaction);
+      } else if (transaction.operation === 'delete') {
+        await nodeService.revertDeleteTransaction(userId, transaction);
       }
     }
   }

@@ -1,6 +1,9 @@
 import {
   generateId,
   IdType,
+  LocalCreateTransaction,
+  LocalDeleteTransaction,
+  LocalUpdateTransaction,
   Node,
   NodeAttributes,
   NodeMutationContext,
@@ -32,6 +35,8 @@ import {
   mapUpload,
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
+
+const UPDATE_RETRIES_LIMIT = 20;
 
 export type CreateNodeInput = {
   id: string;
@@ -269,8 +274,7 @@ class NodeService {
     userId: string,
     updater: (attributes: NodeAttributes) => NodeAttributes
   ): Promise<UpdateNodeResult> {
-    let count = 0;
-    while (count++ < 20) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
       const result = await this.tryUpdateNode(nodeId, userId, updater);
       if (result) {
         return result;
@@ -991,59 +995,265 @@ class NodeService {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    const result = await workspaceDatabase
+    const node = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', transaction.nodeId)
+      .executeTakeFirst();
+
+    if (!node) {
+      return;
+    }
+
+    await workspaceDatabase.transaction().execute(async (trx) => {
+      await trx
+        .deleteFrom('nodes')
+        .where('id', '=', transaction.nodeId)
+        .execute();
+      await trx
+        .deleteFrom('transactions')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await trx
+        .deleteFrom('interactions')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await trx
+        .deleteFrom('interaction_events')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await trx
+        .deleteFrom('collaborations')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await trx
+        .deleteFrom('node_names')
+        .where('id', '=', transaction.nodeId)
+        .execute();
+
+      await trx
+        .deleteFrom('node_texts')
+        .where('id', '=', transaction.nodeId)
+        .execute();
+    });
+
+    this.debug(
+      `Deleted node ${node.id} with type ${node.type} with transaction ${transaction.id}`
+    );
+
+    eventBus.publish({
+      type: 'node_deleted',
+      userId,
+      node: mapNode(node),
+    });
+  }
+
+  public async revertCreateTransaction(
+    userId: string,
+    transaction: LocalCreateTransaction
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const node = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', transaction.nodeId)
+      .executeTakeFirst();
+
+    if (!node) {
+      return;
+    }
+
+    const transactionRow = await workspaceDatabase
+      .selectFrom('transactions')
+      .selectAll()
+      .where('id', '=', transaction.id)
+      .executeTakeFirst();
+
+    if (!transactionRow) {
+      return;
+    }
+
+    await workspaceDatabase.transaction().execute(async (tx) => {
+      await tx
+        .deleteFrom('nodes')
+        .where('id', '=', transaction.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('transactions')
+        .where('id', '=', transaction.id)
+        .execute();
+
+      await tx
+        .deleteFrom('collaborations')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('interaction_events')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('interactions')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('uploads')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('downloads')
+        .where('node_id', '=', transaction.nodeId)
+        .execute();
+    });
+
+    eventBus.publish({
+      type: 'node_deleted',
+      userId,
+      node: mapNode(node),
+    });
+  }
+
+  public async revertUpdateTransaction(
+    userId: string,
+    transaction: LocalUpdateTransaction
+  ) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
+      const result = await this.tryRevertUpdateTransaction(userId, transaction);
+
+      if (result) {
+        return;
+      }
+    }
+  }
+
+  private async tryRevertUpdateTransaction(
+    userId: string,
+    transaction: LocalUpdateTransaction
+  ): Promise<boolean> {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const node = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', transaction.nodeId)
+      .executeTakeFirst();
+
+    if (!node) {
+      return true;
+    }
+
+    const transactionRow = await workspaceDatabase
+      .selectFrom('transactions')
+      .selectAll()
+      .where('id', '=', transaction.id)
+      .executeTakeFirst();
+
+    if (!transactionRow) {
+      return true;
+    }
+
+    const previousTransactions = await workspaceDatabase
+      .selectFrom('transactions')
+      .selectAll()
+      .where('node_id', '=', transaction.nodeId)
+      .orderBy('id', 'asc')
+      .execute();
+
+    const model = registry.getModel(transaction.nodeType);
+    if (!model) {
+      return true;
+    }
+
+    const ydoc = new YDoc();
+
+    let lastTransaction: SelectTransaction | undefined;
+    for (const previousTransaction of previousTransactions) {
+      if (previousTransaction.id === transaction.id) {
+        continue;
+      }
+
+      if (previousTransaction.data) {
+        ydoc.applyUpdate(previousTransaction.data);
+      }
+
+      lastTransaction = previousTransaction;
+    }
+
+    if (!lastTransaction) {
+      return true;
+    }
+
+    const updatedNode = await workspaceDatabase
       .transaction()
       .execute(async (trx) => {
-        await trx
-          .deleteFrom('transactions')
-          .where('node_id', '=', transaction.nodeId)
-          .execute();
-
-        await trx
-          .deleteFrom('interactions')
-          .where('node_id', '=', transaction.nodeId)
-          .execute();
-
-        await trx
-          .deleteFrom('interaction_events')
-          .where('node_id', '=', transaction.nodeId)
-          .execute();
-
-        await trx
-          .deleteFrom('collaborations')
-          .where('node_id', '=', transaction.nodeId)
-          .execute();
-
-        await trx
-          .deleteFrom('node_names')
-          .where('id', '=', transaction.nodeId)
-          .execute();
-
-        await trx
-          .deleteFrom('node_texts')
-          .where('id', '=', transaction.nodeId)
-          .execute();
-
-        const nodeRow = await trx
-          .deleteFrom('nodes')
+        const updatedNode = await trx
+          .updateTable('nodes')
           .returningAll()
+          .set({
+            attributes: JSON.stringify(ydoc.getAttributes()),
+            updated_at: lastTransaction.created_at,
+            updated_by: lastTransaction.created_by,
+            transaction_id: lastTransaction.id,
+          })
           .where('id', '=', transaction.nodeId)
+          .where('transaction_id', '=', node.transaction_id)
           .executeTakeFirst();
 
-        return nodeRow;
+        if (!updatedNode) {
+          return undefined;
+        }
+
+        await trx
+          .deleteFrom('transactions')
+          .where('id', '=', transaction.id)
+          .execute();
       });
 
-    if (result) {
-      this.debug(
-        `Deleted node ${result.id} with type ${result.type} with transaction ${transaction.id}`
-      );
-
+    if (updatedNode) {
       eventBus.publish({
-        type: 'node_deleted',
+        type: 'node_updated',
         userId,
-        node: mapNode(result),
+        node: mapNode(updatedNode),
       });
+
+      return true;
     }
+
+    return false;
+  }
+
+  public async revertDeleteTransaction(
+    userId: string,
+    transaction: LocalDeleteTransaction
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const transactionRow = await workspaceDatabase
+      .selectFrom('transactions')
+      .selectAll()
+      .where('id', '=', transaction.id)
+      .executeTakeFirst();
+
+    if (!transactionRow) {
+      return;
+    }
+
+    await workspaceDatabase
+      .deleteFrom('transactions')
+      .where('id', '=', transaction.id)
+      .execute();
   }
 
   async fetchWorkspace(userId: string): Promise<SelectWorkspace> {

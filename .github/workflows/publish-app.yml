@@ -55,7 +55,6 @@ jobs:
       - name: Install Dependencies
         run: |
           npm ci
-        working-directory: apps/desktop
 
       - name: Build Electron App
         env:

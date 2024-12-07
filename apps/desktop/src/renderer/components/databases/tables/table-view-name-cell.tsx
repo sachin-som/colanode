@@ -63,10 +63,9 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const handleSave = (newName: string) => {
     mutate({
       input: {
-        type: 'view_name_update',
-        databaseId: record.attributes.databaseId,
-        viewId: record.id,
+        type: 'record_name_update',
         name: newName,
+        recordId: record.id,
         userId: workspace.userId,
       },
       onSuccess() {
@@ -74,7 +73,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
       },
       onError(error) {
         toast({
-          title: 'Failed to update view',
+          title: 'Failed to update record',
           description: error.message,
           variant: 'destructive',
         });

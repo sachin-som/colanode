@@ -47,6 +47,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
         transactionId={page.transactionId}
         canEdit={canEdit}
         onUpdate={handleUpdate}
+        autoFocus="start"
       />
     </ScrollArea>
   );

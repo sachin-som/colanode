@@ -70,6 +70,7 @@ export const RecordBody = ({
           transactionId={record.transactionId}
           canEdit={canEdit}
           onUpdate={handleUpdate}
+          autoFocus={false}
         />
       </ScrollArea>
     </Database>

@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useEffect } from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { AvatarPopover } from '@/renderer/components/avatars/avatar-popover';
@@ -46,6 +47,16 @@ export const ChannelForm = ({
 
   const name = form.watch('name');
   const avatar = form.watch('avatar');
+
+  useEffect(() => {
+    if (readOnly) return;
+
+    const timeoutId = setTimeout(() => {
+      form.setFocus('name');
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [readOnly]);
 
   return (
     <Form {...form}>

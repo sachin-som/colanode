@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
 import { useRecord } from '@/renderer/contexts/record';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -9,10 +11,23 @@ export const RecordName = () => {
   const record = useRecord();
   const { mutate, isPending } = useMutation();
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!record.canEdit) return;
+
+    const timeoutId = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [record.canEdit, inputRef]);
+
   return (
     <SmartTextInput
       value={record.name}
       readOnly={!record.canEdit}
+      ref={inputRef}
       onChange={(value) => {
         if (isPending) {
           return;

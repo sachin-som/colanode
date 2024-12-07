@@ -1,5 +1,5 @@
 import { Block } from '@colanode/core';
-import { JSONContent } from '@tiptap/core';
+import { FocusPosition, JSONContent } from '@tiptap/core';
 
 import { DocumentEditor } from '@/renderer/components/documents/document-editor';
 import { mapBlocksToContents } from '@/shared/lib/editor';
@@ -10,6 +10,7 @@ interface DocumentProps {
   transactionId: string;
   canEdit: boolean;
   onUpdate: (content: JSONContent) => void;
+  autoFocus?: FocusPosition;
 }
 
 export const Document = ({
@@ -18,6 +19,7 @@ export const Document = ({
   transactionId,
   canEdit,
   onUpdate,
+  autoFocus,
 }: DocumentProps) => {
   const nodeBlocks = Object.values(content ?? {});
   const contents = mapBlocksToContents(nodeId, nodeBlocks);
@@ -41,6 +43,7 @@ export const Document = ({
       transactionId={transactionId}
       canEdit={canEdit}
       onUpdate={onUpdate}
+      autoFocus={autoFocus}
     />
   );
 };

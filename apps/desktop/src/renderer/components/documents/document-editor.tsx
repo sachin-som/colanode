@@ -1,6 +1,11 @@
 import '@/renderer/styles/editor.css';
 
-import { EditorContent, JSONContent, useEditor } from '@tiptap/react';
+import {
+  EditorContent,
+  FocusPosition,
+  JSONContent,
+  useEditor,
+} from '@tiptap/react';
 import { debounce } from 'lodash-es';
 import React from 'react';
 
@@ -63,6 +68,7 @@ interface DocumentEditorProps {
   transactionId: string;
   canEdit: boolean;
   onUpdate: (content: JSONContent) => void;
+  autoFocus?: FocusPosition;
 }
 
 export const DocumentEditor = ({
@@ -71,6 +77,7 @@ export const DocumentEditor = ({
   transactionId,
   canEdit,
   onUpdate,
+  autoFocus,
 }: DocumentEditorProps) => {
   const workspace = useWorkspace();
 
@@ -154,7 +161,7 @@ export const DocumentEditor = ({
       content: content,
       editable: canEdit,
       shouldRerenderOnTransaction: false,
-      autofocus: 'start',
+      autofocus: autoFocus,
       onUpdate: async ({ editor, transaction }) => {
         if (transaction.docChanged) {
           hasPendingChanges.current = true;

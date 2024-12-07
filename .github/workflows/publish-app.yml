@@ -21,6 +21,16 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Cache Electron (Windows)
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
       - name: Set VERSION
         shell: pwsh
         run: |
@@ -44,7 +54,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm ci --production
+          npm ci
         working-directory: apps/desktop
 
       - name: Build Electron App
@@ -84,6 +94,16 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Cache Electron (macOS)
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
       - name: Set VERSION
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
@@ -93,7 +113,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm ci --production
+          npm ci
         working-directory: apps/desktop
 
       - name: Build Electron App

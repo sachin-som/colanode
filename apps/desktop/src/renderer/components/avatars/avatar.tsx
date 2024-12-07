@@ -100,13 +100,13 @@ const IconAvatar = ({ avatar, size, className }: AvatarProps) => {
 };
 
 const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
-  const server = useAccount();
+  const account = useAccount();
 
   if (!avatar) {
     return null;
   }
 
-  const url = getAvatarUrl(server.id, avatar);
+  const url = getAvatarUrl(account.id, avatar);
   return (
     <img
       src={url}

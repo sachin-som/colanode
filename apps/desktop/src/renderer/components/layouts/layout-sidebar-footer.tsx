@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/renderer/components/ui/sidebar';
-import { useAccount } from '@/renderer/contexts/account';
+import { AccountContext, useAccount } from '@/renderer/contexts/account';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { AccountReadState } from '@/shared/types/radars';
@@ -130,30 +130,38 @@ export function LayoutSidebarFooter() {
                         navigate(`/${accountItem.id}`);
                       }}
                     >
-                      <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                        <Avatar
-                          className="h-8 w-8 rounded-lg"
-                          id={accountItem.id}
-                          name={accountItem.name}
-                          avatar={accountItem.avatar}
-                        />
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate font-semibold">
-                            {accountItem.name}
-                          </span>
-                          <span className="truncate text-xs">
-                            {accountItem.email}
-                          </span>
-                        </div>
-                        {accountItem.id === account.id ? (
-                          <Check className="size-4" />
-                        ) : (
-                          <ReadStateIndicator
-                            count={state.importantCount}
-                            hasChanges={state.hasUnseenChanges}
+                      <AccountContext.Provider
+                        value={{
+                          ...accountItem,
+                          openSettings: () => {},
+                          openLogout: () => {},
+                        }}
+                      >
+                        <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                          <Avatar
+                            className="h-8 w-8 rounded-lg"
+                            id={accountItem.id}
+                            name={accountItem.name}
+                            avatar={accountItem.avatar}
                           />
-                        )}
-                      </div>
+                          <div className="grid flex-1 text-left text-sm leading-tight">
+                            <span className="truncate font-semibold">
+                              {accountItem.name}
+                            </span>
+                            <span className="truncate text-xs">
+                              {accountItem.email}
+                            </span>
+                          </div>
+                          {accountItem.id === account.id ? (
+                            <Check className="size-4" />
+                          ) : (
+                            <ReadStateIndicator
+                              count={state.importantCount}
+                              hasChanges={state.hasUnseenChanges}
+                            />
+                          )}
+                        </div>
+                      </AccountContext.Provider>
                     </DropdownMenuItem>
                   );
                 })}

@@ -80,11 +80,21 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
-        markAsSeen: (userId, nodeId, versionId) => {
+        markAsSeen: (userId, nodeId, nodeType, transactionId) => {
           window.colanode.executeMutation({
             type: 'mark_node_as_seen',
             nodeId,
-            versionId,
+            nodeType,
+            transactionId,
+            userId,
+          });
+        },
+        markAsOpened: (userId, nodeId, nodeType, transactionId) => {
+          window.colanode.executeMutation({
+            type: 'mark_node_as_opened',
+            nodeId,
+            nodeType,
+            transactionId,
             userId,
           });
         },

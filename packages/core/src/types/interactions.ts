@@ -3,6 +3,8 @@ export type InteractionAttributes = {
   lastSeenTransactionId?: string | null;
   firstSeenAt?: Date | null;
   lastSeenAt?: Date | null;
+  lastOpenedAt?: Date | null;
+  lastOpenedTransactionId?: string | null;
 };
 
 export type InteractionAttribute = keyof InteractionAttributes;

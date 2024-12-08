@@ -239,8 +239,10 @@ class NodeService {
         userId,
         createdTransaction.node_id,
         createdTransaction.node_type,
-        'lastReceivedTransactionId',
-        createdTransaction.id
+        {
+          attribute: 'lastReceivedTransactionId',
+          value: createdTransaction.id,
+        }
       );
     }
 
@@ -442,8 +444,10 @@ class NodeService {
         userId,
         createdTransaction.node_id,
         createdTransaction.node_type,
-        'lastReceivedTransactionId',
-        createdTransaction.id
+        {
+          attribute: 'lastReceivedTransactionId',
+          value: createdTransaction.id,
+        }
       );
     } else {
       this.debug(`Failed to create transaction for node ${nodeId}`);
@@ -806,8 +810,10 @@ class NodeService {
         userId,
         createdNode.id,
         createdNode.type,
-        'lastReceivedTransactionId',
-        transaction.id
+        {
+          attribute: 'lastReceivedTransactionId',
+          value: transaction.id,
+        }
       );
     } else {
       this.debug(
@@ -968,8 +974,10 @@ class NodeService {
         userId,
         updatedNode.id,
         updatedNode.type,
-        'lastReceivedTransactionId',
-        transaction.id
+        {
+          attribute: 'lastReceivedTransactionId',
+          value: transaction.id,
+        }
       );
     } else {
       this.debug(

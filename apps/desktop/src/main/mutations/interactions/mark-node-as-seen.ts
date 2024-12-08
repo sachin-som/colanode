@@ -14,17 +14,21 @@ export class MarkNodeAsSeenMutationHandler
     await interactionService.setInteraction(
       input.userId,
       input.nodeId,
-      'message',
-      'lastSeenAt',
-      new Date().toISOString()
-    );
-
-    await interactionService.setInteraction(
-      input.userId,
-      input.nodeId,
-      'message',
-      'firstSeenAt',
-      new Date().toISOString()
+      input.nodeType,
+      [
+        {
+          attribute: 'lastSeenAt',
+          value: new Date().toISOString(),
+        },
+        {
+          attribute: 'firstSeenAt',
+          value: new Date().toISOString(),
+        },
+        {
+          attribute: 'lastSeenTransactionId',
+          value: input.transactionId,
+        },
+      ]
     );
 
     return {

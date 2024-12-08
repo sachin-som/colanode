@@ -22,6 +22,7 @@ import { FolderCreateMutationHandler } from '@/main/mutations/folders/folder-cre
 import { FolderUpdateMutationHandler } from '@/main/mutations/folders/folder-update';
 import { FolderDeleteMutationHandler } from '@/main/mutations/folders/folder-delete';
 import { MarkNodeAsSeenMutationHandler } from '@/main/mutations/interactions/mark-node-as-seen';
+import { MarkNodeAsOpenedMutationHandler } from '@/main/mutations/interactions/mark-node-as-opened';
 import { MessageCreateMutationHandler } from '@/main/mutations/messages/message-create';
 import { MessageDeleteMutationHandler } from '@/main/mutations/messages/message-delete';
 import { NodeCollaboratorCreateMutationHandler } from '@/main/mutations/collaborators/node-collaborator-create';
@@ -109,6 +110,7 @@ export const mutationHandlerMap: MutationHandlerMap = {
   space_update: new SpaceUpdateMutationHandler(),
   account_update: new AccountUpdateMutationHandler(),
   mark_node_as_seen: new MarkNodeAsSeenMutationHandler(),
+  mark_node_as_opened: new MarkNodeAsOpenedMutationHandler(),
   view_update: new ViewUpdateMutationHandler(),
   view_delete: new ViewDeleteMutationHandler(),
   view_name_update: new ViewNameUpdateMutationHandler(),

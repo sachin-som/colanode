@@ -7,9 +7,13 @@ import {
   NodeType,
   ServerInteraction,
 } from '@colanode/core';
+import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectInteractionEvent } from '@/main/data/workspace/schema';
+import {
+  CreateInteractionEvent,
+  SelectInteractionEvent,
+} from '@/main/data/workspace/schema';
 import { mapInteraction } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 
@@ -20,21 +24,24 @@ type ServerAttributesMergeResult = {
   toDeleteEventIds: string[];
 };
 
+export type UpdateInteractionInput = {
+  attribute: InteractionAttribute;
+  value: string;
+};
+
 class InteractionService {
   public async setInteraction(
     userId: string,
     nodeId: string,
     nodeType: NodeType,
-    attribute: InteractionAttribute,
-    value: string
+    input: UpdateInteractionInput | UpdateInteractionInput[]
   ) {
     for (let i = 0; i < UPDATE_RETRIES_COUNT; i++) {
       const updated = await this.tryUpdateInteraction(
         userId,
         nodeId,
         nodeType,
-        attribute,
-        value
+        input
       );
 
       if (updated) {
@@ -49,8 +56,7 @@ class InteractionService {
     userId: string,
     nodeId: string,
     nodeType: NodeType,
-    attribute: InteractionAttribute,
-    value: string
+    input: UpdateInteractionInput | UpdateInteractionInput[]
   ): Promise<boolean> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
@@ -65,11 +71,37 @@ class InteractionService {
       ? JSON.parse(interaction.attributes)
       : null;
 
-    const attributes = mergeInteractionAttributes(
-      existingAttributes,
-      attribute,
-      value
-    );
+    const eventsToCreate: CreateInteractionEvent[] = [];
+    let attributes: InteractionAttributes | null = {
+      ...existingAttributes,
+    };
+
+    const inputs = Array.isArray(input) ? input : [input];
+
+    for (const input of inputs) {
+      const merged = mergeInteractionAttributes(
+        attributes,
+        input.attribute,
+        input.value
+      );
+
+      if (merged) {
+        attributes = merged;
+
+        eventsToCreate.push({
+          node_id: nodeId,
+          node_type: nodeType,
+          attribute: input.attribute,
+          value: input.value,
+          created_at: new Date().toISOString(),
+          event_id: generateId(IdType.Event),
+        });
+      }
+    }
+
+    if (eventsToCreate.length === 0) {
+      return true;
+    }
 
     if (!attributes) {
       return true;
@@ -97,19 +129,12 @@ class InteractionService {
 
           await tx
             .insertInto('interaction_events')
-            .values({
-              node_id: nodeId,
-              node_type: nodeType,
-              attribute,
-              value,
-              created_at: new Date().toISOString(),
-              event_id: generateId(IdType.Event),
-            })
+            .values(eventsToCreate)
             .onConflict((b) =>
               b.columns(['node_id', 'attribute']).doUpdateSet({
-                value,
+                value: sql`excluded.value`,
                 sent_at: null,
-                event_id: generateId(IdType.Event),
+                event_id: sql`excluded.event_id`,
               })
             )
             .execute();
@@ -159,19 +184,12 @@ class InteractionService {
 
         await tx
           .insertInto('interaction_events')
-          .values({
-            node_id: nodeId,
-            node_type: nodeType,
-            attribute,
-            value,
-            created_at: new Date().toISOString(),
-            event_id: generateId(IdType.Event),
-          })
+          .values(eventsToCreate)
           .onConflict((b) =>
             b.columns(['node_id', 'attribute']).doUpdateSet({
-              value,
+              value: sql`excluded.value`,
               sent_at: null,
-              event_id: generateId(IdType.Event),
+              event_id: sql`excluded.event_id`,
             })
           )
           .execute();

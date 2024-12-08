@@ -1,8 +1,11 @@
+import { NodeType } from '@colanode/core';
+
 export type MarkNodeAsSeenMutationInput = {
   type: 'mark_node_as_seen';
   userId: string;
   nodeId: string;
-  versionId: string;
+  nodeType: NodeType;
+  transactionId: string;
 };
 
 export type MarkNodeAsSeenMutationOutput = {

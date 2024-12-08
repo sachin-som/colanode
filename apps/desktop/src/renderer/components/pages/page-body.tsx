@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { hasEditorAccess, NodeRole, PageNode } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 
@@ -7,6 +7,7 @@ import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useRadar } from '@/renderer/contexts/radar';
 
 interface PageBodyProps {
   page: PageNode;
@@ -15,6 +16,7 @@ interface PageBodyProps {
 
 export const PageBody = ({ page, role }: PageBodyProps) => {
   const workspace = useWorkspace();
+  const radar = useRadar();
   const { mutate } = useMutation();
   const canEdit = hasEditorAccess(role);
 
@@ -38,6 +40,26 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
     },
     [mutate, workspace.userId, page.id]
   );
+
+  useEffect(() => {
+    radar.markAsOpened(
+      workspace.userId,
+      page.id,
+      page.type,
+      page.transactionId
+    );
+
+    const interval = setInterval(() => {
+      radar.markAsOpened(
+        workspace.userId,
+        page.id,
+        page.type,
+        page.transactionId
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [page.id, page.type, page.transactionId]);
 
   return (
     <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">

@@ -39,7 +39,7 @@ export const mergeInteractionAttributes = (
   if (attribute === 'lastReceivedTransactionId') {
     if (
       !attributes.lastReceivedTransactionId ||
-      compareString(attributes.lastReceivedTransactionId, value) > 0
+      compareString(attributes.lastReceivedTransactionId, value) < 0
     ) {
       return { ...attributes, lastReceivedTransactionId: value };
     }
@@ -48,9 +48,29 @@ export const mergeInteractionAttributes = (
   if (attribute === 'lastSeenTransactionId') {
     if (
       !attributes.lastSeenTransactionId ||
-      compareString(attributes.lastSeenTransactionId, value) > 0
+      compareString(attributes.lastSeenTransactionId, value) < 0
     ) {
       return { ...attributes, lastSeenTransactionId: value };
+    }
+  }
+
+  if (attribute === 'lastOpenedAt') {
+    const date = new Date(value);
+
+    if (
+      !attributes.lastOpenedAt ||
+      compareDate(attributes.lastOpenedAt, date) < 0
+    ) {
+      return { ...attributes, lastOpenedAt: date };
+    }
+  }
+
+  if (attribute === 'lastOpenedTransactionId') {
+    if (
+      !attributes.lastOpenedTransactionId ||
+      compareString(attributes.lastOpenedTransactionId, value) < 0
+    ) {
+      return { ...attributes, lastOpenedTransactionId: value };
     }
   }
 

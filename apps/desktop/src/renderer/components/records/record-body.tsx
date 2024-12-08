@@ -5,7 +5,7 @@ import {
   RecordNode,
 } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { Database } from '@/renderer/components/databases/database';
 import { Document } from '@/renderer/components/documents/document';
@@ -16,6 +16,7 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useRadar } from '@/renderer/contexts/radar';
 
 interface RecordBodyProps {
   record: RecordNode;
@@ -31,6 +32,7 @@ export const RecordBody = ({
   databaseRole,
 }: RecordBodyProps) => {
   const workspace = useWorkspace();
+  const radar = useRadar();
   const { mutate } = useMutation();
 
   const canEdit =
@@ -56,6 +58,26 @@ export const RecordBody = ({
     },
     [mutate]
   );
+
+  useEffect(() => {
+    radar.markAsOpened(
+      workspace.userId,
+      record.id,
+      record.type,
+      record.transactionId
+    );
+
+    const interval = setInterval(() => {
+      radar.markAsOpened(
+        workspace.userId,
+        record.id,
+        record.type,
+        record.transactionId
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [record.id, record.type, record.transactionId]);
 
   return (
     <Database database={database} role={databaseRole}>

@@ -92,6 +92,7 @@ interface InteractionTable {
   node_type: ColumnType<NodeType, NodeType, never>;
   attributes: ColumnType<string, string, string>;
   last_seen_at: ColumnType<string | null, string | null, string | null>;
+  last_opened_at: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   server_created_at: ColumnType<string | null, string | null, string | null>;

@@ -65,6 +65,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
               radar.markAsSeen(
                 workspace.userId,
                 message.id,
+                message.type,
                 message.transactionId
               );
             }

@@ -7,7 +7,7 @@ import {
   List,
   Upload,
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { FolderFiles } from '@/renderer/components/folders/folder-files';
 import { Button } from '@/renderer/components/ui/button';
@@ -25,6 +25,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { FolderLayoutType } from '@/shared/types/folders';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useRadar } from '@/renderer/contexts/radar';
 
 export type FolderLayout = {
   value: FolderLayoutType;
@@ -60,6 +61,7 @@ interface FolderBodyProps {
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {
   const workspace = useWorkspace();
+  const radar = useRadar();
   const { mutate } = useMutation();
 
   const [layout, setLayout] = React.useState<FolderLayoutType>('grid');
@@ -115,6 +117,26 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
 
     isDialogOpenedRef.current = false;
   };
+
+  useEffect(() => {
+    radar.markAsOpened(
+      workspace.userId,
+      folder.id,
+      folder.type,
+      folder.transactionId
+    );
+
+    const interval = setInterval(() => {
+      radar.markAsOpened(
+        workspace.userId,
+        folder.id,
+        folder.type,
+        folder.transactionId
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [folder.id, folder.type, folder.transactionId]);
 
   return (
     <Dropzone

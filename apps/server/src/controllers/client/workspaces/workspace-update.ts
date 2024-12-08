@@ -4,6 +4,7 @@ import { WorkspaceOutput, WorkspaceUpdateInput } from '@colanode/core';
 import { database } from '@/data/database';
 import { nodeService } from '@/services/node-service';
 import { ApiError } from '@/types/api';
+import { eventBus } from '@/lib/event-bus';
 
 export const workspaceUpdateHandler = async (
   req: Request,
@@ -56,6 +57,11 @@ export const workspaceUpdateHandler = async (
 
       return attributes;
     },
+  });
+
+  eventBus.publish({
+    type: 'workspace_updated',
+    workspaceId: updatedWorkspace.id,
   });
 
   const output: WorkspaceOutput = {

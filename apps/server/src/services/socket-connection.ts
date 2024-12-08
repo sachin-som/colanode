@@ -22,6 +22,7 @@ import {
   mapTransaction,
 } from '@/lib/nodes';
 import {
+  AccountUpdatedEvent,
   CollaboratorAddedEvent,
   CollaboratorRemovedEvent,
   Event,
@@ -29,6 +30,9 @@ import {
   NodeCreatedEvent,
   NodeDeletedEvent,
   NodeUpdatedEvent,
+  WorkspaceDeletedEvent,
+  WorkspaceUpdatedEvent,
+  WorkspaceUserCreatedEvent,
 } from '@/types/events';
 
 const PUBLIC_NODES: NodeType[] = ['workspace', 'user'];
@@ -74,6 +78,10 @@ export class SocketConnection {
     this.socket.send(JSON.stringify(message));
   }
 
+  public close() {
+    this.socket.close();
+  }
+
   public handleEvent(event: Event) {
     if (event.type === 'node_created') {
       this.handleNodeCreatedEvent(event);
@@ -87,6 +95,14 @@ export class SocketConnection {
       this.handleCollaboratorRemovedEvent(event);
     } else if (event.type === 'interaction_updated') {
       this.handleInteractionUpdatedEvent(event);
+    } else if (event.type === 'account_updated') {
+      this.handleAccountUpdatedEvent(event);
+    } else if (event.type === 'workspace_user_created') {
+      this.handleWorkspaceUserCreatedEvent(event);
+    } else if (event.type === 'workspace_updated') {
+      this.handleWorkspaceUpdatedEvent(event);
+    } else if (event.type === 'workspace_deleted') {
+      this.handleWorkspaceDeletedEvent(event);
     }
   }
 
@@ -454,5 +470,59 @@ export class SocketConnection {
 
     this.users.set(userId, newSocketUser);
     return newSocketUser;
+  }
+
+  private handleAccountUpdatedEvent(event: AccountUpdatedEvent) {
+    if (event.accountId !== this.account.id) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'account_updated',
+      accountId: this.account.id,
+    });
+  }
+
+  private handleWorkspaceUserCreatedEvent(event: WorkspaceUserCreatedEvent) {
+    if (event.accountId !== this.account.id) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'workspace_user_created',
+      workspaceId: event.workspaceId,
+      userId: event.userId,
+      accountId: event.accountId,
+    });
+  }
+
+  private handleWorkspaceUpdatedEvent(event: WorkspaceUpdatedEvent) {
+    const workspaceUsers = Array.from(this.users.values()).filter(
+      (user) => user.workspaceId === event.workspaceId
+    );
+
+    if (workspaceUsers.length === 0) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'workspace_updated',
+      workspaceId: event.workspaceId,
+    });
+  }
+
+  private handleWorkspaceDeletedEvent(event: WorkspaceDeletedEvent) {
+    const workspaceUsers = Array.from(this.users.values()).filter(
+      (user) => user.workspaceId === event.workspaceId
+    );
+
+    if (workspaceUsers.length === 0) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'workspace_deleted',
+      accountId: this.account.id,
+    });
   }
 }

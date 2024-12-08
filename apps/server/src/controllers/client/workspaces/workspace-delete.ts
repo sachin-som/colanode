@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
+import { eventBus } from '@/lib/event-bus';
 
 export const workspaceDeleteHandler = async (
   req: Request,
@@ -21,6 +22,11 @@ export const workspaceDeleteHandler = async (
     .deleteFrom('workspaces')
     .where('id', '=', workspaceId)
     .execute();
+
+  eventBus.publish({
+    type: 'workspace_deleted',
+    workspaceId: workspaceId,
+  });
 
   res.status(200).json({
     id: res.locals.workspace.id,

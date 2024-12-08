@@ -14,6 +14,15 @@ class SocketService {
 
   constructor() {
     eventBus.subscribe((event) => {
+      if (event.type === 'device_deleted') {
+        const connection = this.connections.get(event.deviceId);
+        if (connection) {
+          connection.close();
+          this.connections.delete(event.deviceId);
+          return;
+        }
+      }
+
       for (const connection of this.connections.values()) {
         connection.handleEvent(event);
       }

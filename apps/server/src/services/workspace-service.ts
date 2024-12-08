@@ -11,6 +11,7 @@ import { database } from '@/data/database';
 import { SelectAccount } from '@/data/schema';
 import { mapNode } from '@/lib/nodes';
 import { nodeService } from '@/services/node-service';
+import { eventBus } from '@/lib/event-bus';
 
 class WorkspaceService {
   public async createWorkspace(
@@ -136,6 +137,18 @@ class WorkspaceService {
         ancestors: [spaceNode],
       });
     }
+
+    eventBus.publish({
+      type: 'workspace_created',
+      workspaceId: workspaceId,
+    });
+
+    eventBus.publish({
+      type: 'workspace_user_created',
+      userId: userId,
+      workspaceId: workspaceId,
+      accountId: account.id,
+    });
 
     return {
       id: workspace.id,

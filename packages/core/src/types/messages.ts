@@ -48,10 +48,36 @@ export type InitSyncConsumerMessage = {
   cursor: string;
 };
 
+export type AccountUpdatedMessage = {
+  type: 'account_updated';
+  accountId: string;
+};
+
+export type WorkspaceUpdatedMessage = {
+  type: 'workspace_updated';
+  workspaceId: string;
+};
+
+export type WorkspaceUserCreatedMessage = {
+  type: 'workspace_user_created';
+  workspaceId: string;
+  userId: string;
+  accountId: string;
+};
+
+export type WorkspaceDeletedMessage = {
+  type: 'workspace_deleted';
+  accountId: string;
+};
+
 export type Message =
   | TransactionsBatchMessage
   | CollaborationsBatchMessage
   | DeletedCollaborationsBatchMessage
   | InteractionsBatchMessage
   | SyncInteractionsMessage
-  | InitSyncConsumerMessage;
+  | InitSyncConsumerMessage
+  | AccountUpdatedMessage
+  | WorkspaceUpdatedMessage
+  | WorkspaceUserCreatedMessage
+  | WorkspaceDeletedMessage;

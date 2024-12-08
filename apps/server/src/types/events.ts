@@ -41,10 +41,49 @@ export type InteractionUpdatedEvent = {
   workspaceId: string;
 };
 
+export type WorkspaceUserCreatedEvent = {
+  type: 'workspace_user_created';
+  userId: string;
+  workspaceId: string;
+  accountId: string;
+};
+
+export type AccountUpdatedEvent = {
+  type: 'account_updated';
+  accountId: string;
+};
+
+export type WorkspaceCreatedEvent = {
+  type: 'workspace_created';
+  workspaceId: string;
+};
+
+export type WorkspaceUpdatedEvent = {
+  type: 'workspace_updated';
+  workspaceId: string;
+};
+
+export type WorkspaceDeletedEvent = {
+  type: 'workspace_deleted';
+  workspaceId: string;
+};
+
+export type DeviceDeletedEvent = {
+  type: 'device_deleted';
+  accountId: string;
+  deviceId: string;
+};
+
 export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
   | NodeDeletedEvent
   | CollaboratorAddedEvent
   | CollaboratorRemovedEvent
-  | InteractionUpdatedEvent;
+  | InteractionUpdatedEvent
+  | WorkspaceUserCreatedEvent
+  | AccountUpdatedEvent
+  | WorkspaceCreatedEvent
+  | WorkspaceUpdatedEvent
+  | WorkspaceDeletedEvent
+  | DeviceDeletedEvent;

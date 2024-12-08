@@ -4,6 +4,7 @@ import { AccountUpdateInput, AccountUpdateOutput } from '@colanode/core';
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
 import { nodeService } from '@/services/node-service';
+import { eventBus } from '@/lib/event-bus';
 
 export const accountUpdateHandler = async (
   req: Request,
@@ -97,6 +98,11 @@ export const accountUpdateHandler = async (
       },
     });
   }
+
+  eventBus.publish({
+    type: 'account_updated',
+    accountId: account.id,
+  });
 
   const output: AccountUpdateOutput = {
     id: account.id,

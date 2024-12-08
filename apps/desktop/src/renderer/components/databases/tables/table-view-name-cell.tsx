@@ -1,7 +1,7 @@
 import { RecordNode } from '@colanode/core';
 import isHotkey from 'is-hotkey';
 import { Maximize2 } from 'lucide-react';
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -23,7 +23,11 @@ const NameEditor = ({ initialValue, onSave, onCancel }: NameEditorProps) => {
   }, []);
 
   const handleBlur = () => {
-    onSave(value);
+    if (value === initialValue) {
+      onCancel();
+    } else {
+      onSave(value);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -61,6 +65,8 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
   const hasName = record.attributes.name && record.attributes.name.length > 0;
 
   const handleSave = (newName: string) => {
+    if (newName === record.attributes.name) return;
+
     mutate({
       input: {
         type: 'record_name_update',
@@ -90,13 +96,13 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
           onCancel={() => setIsEditing(false)}
         />
       ) : (
-        <>
+        <Fragment>
           <div
             onClick={() => canEdit && setIsEditing(true)}
             className="flex h-full w-full cursor-pointer flex-row items-center gap-1 p-1 text-sm"
           >
             {hasName ? (
-              record.attributes.name
+              <span className="truncate">{record.attributes.name}</span>
             ) : (
               <span className="text-muted-foreground">Unnamed</span>
             )}
@@ -113,7 +119,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
               <Spinner size="small" />
             </span>
           )}
-        </>
+        </Fragment>
       )}
     </div>
   );

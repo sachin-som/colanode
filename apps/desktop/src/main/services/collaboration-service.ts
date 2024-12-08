@@ -24,16 +24,14 @@ class CollaborationService {
     await workspaceDatabase
       .insertInto('collaborations')
       .values({
-        user_id: userId,
         node_id: collaboration.nodeId,
-        workspace_id: collaboration.workspaceId,
         roles: JSON.stringify(collaboration.roles),
         created_at: collaboration.createdAt,
         version: BigInt(collaboration.version),
       })
       .onConflict((oc) =>
         oc
-          .columns(['user_id', 'node_id'])
+          .columns(['node_id'])
           .doUpdateSet({
             roles: JSON.stringify(collaboration.roles),
             version: BigInt(collaboration.version),
@@ -47,7 +45,6 @@ class CollaborationService {
       type: 'collaboration_synced',
       userId,
       nodeId: collaboration.nodeId,
-      workspaceId: collaboration.workspaceId,
     });
   }
 

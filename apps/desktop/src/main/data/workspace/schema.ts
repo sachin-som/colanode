@@ -48,9 +48,7 @@ export type CreateTransaction = Insertable<TransactionTable>;
 export type UpdateTransaction = Updateable<TransactionTable>;
 
 interface CollaborationTable {
-  user_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
   roles: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;

@@ -126,7 +126,6 @@ export type CollaborationCreatedEvent = {
   type: 'collaboration_synced';
   userId: string;
   nodeId: string;
-  workspaceId: string;
 };
 
 export type ServerAvailabilityChangedEvent = {

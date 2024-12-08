@@ -1,12 +1,10 @@
-<div align="center">
+<p align="center">
+   <img alt="Colanode cover" src="apps/desktop/assets/colanode_cover_black.png">
+</p>
 
 # Colanode
 
 **An all-in-one, open-source, and self-hosted collaboration platform that puts you in control of your data.**
-
-<img alt="Colanode cover" src="apps/desktop/assets/colanode_cover_black.png">
-
-</div>
 
 ## Overview
 

@@ -6,11 +6,7 @@
 
 **An all-in-one, open-source, and self-hosted collaboration platform that puts you in control of your data.**
 
-## Overview
-
 Colanode is a local-first, open-source platform for seamless collaboration. It combines the flexibility of online teamwork with the privacy and security of self-hosted data. Whether you’re chatting with teammates, documenting projects, managing databases, or organizing files, Colanode provides an integrated experience that works both online and offline.
-
-**Key Features:**
 
 - **Chat:** Communicate in real-time through direct messages or group chats.
 - **Pages:** Create and edit rich-content documents, wikis, and notes using a Notion-style editor.

@@ -1,4 +1,5 @@
 import { ChannelNode } from '@colanode/core';
+import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
@@ -20,8 +21,13 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
   const mentionsCount = channelState.mentionsCount;
 
   return (
-    <button
-      key={node.id}
+    <InView
+      rootMargin="20px"
+      onChange={(inView) => {
+        if (inView) {
+          radar.markAsSeen(workspace.userId, node.id, node.transactionId);
+        }
+      }}
       className={cn(
         'flex w-full items-center',
         isActive && 'bg-sidebar-accent'
@@ -47,6 +53,6 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
           hasChanges={unreadCount > 0}
         />
       )}
-    </button>
+    </InView>
   );
 };

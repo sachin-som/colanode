@@ -19,7 +19,7 @@ export const mergeInteractionAttributes = (
 
     if (
       !attributes.firstSeenAt ||
-      compareDate(attributes.firstSeenAt, date) < 0
+      compareDate(attributes.firstSeenAt, date) > 0
     ) {
       return { ...attributes, firstSeenAt: date };
     }
@@ -30,7 +30,7 @@ export const mergeInteractionAttributes = (
 
     if (
       !attributes.lastSeenAt ||
-      compareDate(attributes.lastSeenAt, date) > 0
+      compareDate(attributes.lastSeenAt, date) < 0
     ) {
       return { ...attributes, lastSeenAt: date };
     }

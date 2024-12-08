@@ -1,5 +1,10 @@
-import { getIdType, IdType } from '@colanode/core';
-import { Kysely } from 'kysely';
+import {
+  compareDate,
+  getIdType,
+  IdType,
+  InteractionAttributes,
+} from '@colanode/core';
+import { Kysely, sql } from 'kysely';
 
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { mapWorkspace } from '@/main/utils';
@@ -88,11 +93,26 @@ class RadarWorkspace {
   public async init(): Promise<void> {
     const unreadMessagesRows = await this.workspaceDatabase
       .selectFrom('nodes as node')
-      .leftJoin('interactions as interaction', 'node.id', 'interaction.node_id')
+      .leftJoin(
+        'interactions as node_interactions',
+        'node.id',
+        'node_interactions.node_id'
+      )
+      .leftJoin(
+        'interactions as parent_interactions',
+        'node.parent_id',
+        'parent_interactions.node_id'
+      )
       .select(['node.id as node_id', 'node.parent_id as parent_id'])
       .where('node.type', '=', 'message')
       .where('node.created_by', '!=', this.workspace.userId)
-      .where('interaction.last_seen_at', 'is', null)
+      .where('node_interactions.last_seen_at', 'is', null)
+      .where('parent_interactions.last_seen_at', '!=', null)
+      .whereRef(
+        'node.created_at',
+        '>=',
+        sql`json_extract(parent_interactions.attributes, '$.firstSeenAt')`
+      )
       .execute();
 
     for (const unreadMessageRow of unreadMessagesRows) {
@@ -125,6 +145,29 @@ class RadarWorkspace {
       .executeTakeFirst();
 
     if (interactions && interactions.last_seen_at) {
+      return;
+    }
+
+    const parentInteractions = await this.workspaceDatabase
+      .selectFrom('interactions')
+      .selectAll()
+      .where('node_id', '=', event.node.parentId)
+      .executeTakeFirst();
+
+    if (!parentInteractions || !parentInteractions.last_seen_at) {
+      return;
+    }
+
+    const parentInteractionAttributes: InteractionAttributes = JSON.parse(
+      parentInteractions.attributes
+    );
+
+    if (
+      compareDate(
+        parentInteractionAttributes.firstSeenAt,
+        event.node.createdAt
+      ) > 0
+    ) {
       return;
     }
 

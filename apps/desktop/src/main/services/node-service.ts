@@ -589,6 +589,28 @@ class NodeService {
     transactions: ServerTransaction[],
     transactionCursor: bigint
   ): Promise<boolean> {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
+      const result = await this.tryReplaceTransactions(
+        userId,
+        nodeId,
+        transactions,
+        transactionCursor
+      );
+
+      if (result !== null) {
+        return result;
+      }
+    }
+
+    return false;
+  }
+
+  public async tryReplaceTransactions(
+    userId: string,
+    nodeId: string,
+    transactions: ServerTransaction[],
+    transactionCursor: bigint
+  ): Promise<boolean | null> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
@@ -626,71 +648,179 @@ class NodeService {
     const name = model.getName(nodeId, attributes);
     const text = model.getText(nodeId, attributes);
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx.deleteFrom('nodes').where('id', '=', nodeId).execute();
-      await trx
-        .deleteFrom('transactions')
-        .where('node_id', '=', nodeId)
-        .execute();
+    const existingNode = await workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', nodeId)
+      .executeTakeFirst();
 
-      await trx
-        .insertInto('nodes')
-        .values({
-          id: nodeId,
-          attributes: attributesJson,
-          created_at: firstTransaction.createdAt,
-          created_by: firstTransaction.createdBy,
-          updated_at:
-            firstTransaction.id !== lastTransaction.id
-              ? lastTransaction.createdAt
-              : null,
-          updated_by:
-            firstTransaction.id !== lastTransaction.id
-              ? lastTransaction.createdBy
-              : null,
-          transaction_id: lastTransaction.id,
-        })
-        .execute();
+    if (existingNode) {
+      const updatedNode = await workspaceDatabase
+        .transaction()
+        .execute(async (trx) => {
+          const updatedNode = await trx
+            .updateTable('nodes')
+            .returningAll()
+            .set({
+              attributes: attributesJson,
+              updated_at:
+                firstTransaction.id !== lastTransaction.id
+                  ? lastTransaction.createdAt
+                  : null,
+              updated_by:
+                firstTransaction.id !== lastTransaction.id
+                  ? lastTransaction.createdBy
+                  : null,
+              transaction_id: lastTransaction.id,
+            })
+            .where('id', '=', nodeId)
+            .where('transaction_id', '=', existingNode.transaction_id)
+            .executeTakeFirst();
 
-      await trx
-        .insertInto('transactions')
-        .values(
-          transactions.map((t) => ({
-            id: t.id,
-            node_id: t.nodeId,
-            node_type: t.nodeType,
-            operation: t.operation,
-            data:
-              t.operation !== 'delete' && t.data ? decodeState(t.data) : null,
-            created_at: t.createdAt,
-            created_by: t.createdBy,
-            retry_count: 0,
-            status: 'synced',
-            version: BigInt(t.version),
-            server_created_at: t.serverCreatedAt,
-          }))
-        )
-        .execute();
+          if (!updatedNode) {
+            return undefined;
+          }
 
-      await trx.deleteFrom('node_names').where('id', '=', nodeId).execute();
-      await trx.deleteFrom('node_texts').where('id', '=', nodeId).execute();
+          await trx
+            .deleteFrom('transactions')
+            .where('node_id', '=', nodeId)
+            .execute();
 
-      if (name) {
-        await trx
-          .insertInto('node_names')
-          .values({ id: nodeId, name })
-          .execute();
+          await trx
+            .insertInto('transactions')
+            .values(
+              transactions.map((t) => ({
+                id: t.id,
+                node_id: t.nodeId,
+                node_type: t.nodeType,
+                operation: t.operation,
+                data:
+                  t.operation !== 'delete' && t.data
+                    ? decodeState(t.data)
+                    : null,
+                created_at: t.createdAt,
+                created_by: t.createdBy,
+                retry_count: 0,
+                status: 'synced',
+                version: BigInt(t.version),
+                server_created_at: t.serverCreatedAt,
+              }))
+            )
+            .execute();
+
+          await trx.deleteFrom('node_names').where('id', '=', nodeId).execute();
+          await trx.deleteFrom('node_texts').where('id', '=', nodeId).execute();
+
+          if (name) {
+            await trx
+              .insertInto('node_names')
+              .values({ id: nodeId, name })
+              .execute();
+          }
+
+          if (text) {
+            await trx
+              .insertInto('node_texts')
+              .values({ id: nodeId, text })
+              .execute();
+          }
+        });
+
+      if (updatedNode) {
+        eventBus.publish({
+          type: 'node_updated',
+          userId,
+          node: mapNode(updatedNode),
+        });
+
+        return true;
       }
 
-      if (text) {
-        await trx
-          .insertInto('node_texts')
-          .values({ id: nodeId, text })
-          .execute();
-      }
-    });
+      return null;
+    }
 
-    return true;
+    const createdNode = await workspaceDatabase
+      .transaction()
+      .execute(async (trx) => {
+        const createdNode = await trx
+          .insertInto('nodes')
+          .returningAll()
+          .values({
+            id: nodeId,
+            attributes: attributesJson,
+            created_at: firstTransaction.createdAt,
+            created_by: firstTransaction.createdBy,
+            updated_at:
+              firstTransaction.id !== lastTransaction.id
+                ? lastTransaction.createdAt
+                : null,
+            updated_by:
+              firstTransaction.id !== lastTransaction.id
+                ? lastTransaction.createdBy
+                : null,
+            transaction_id: lastTransaction.id,
+          })
+          .onConflict((b) => b.doNothing())
+          .executeTakeFirst();
+
+        if (!createdNode) {
+          return undefined;
+        }
+
+        await trx
+          .deleteFrom('transactions')
+          .where('node_id', '=', nodeId)
+          .execute();
+
+        await trx
+          .insertInto('transactions')
+          .values(
+            transactions.map((t) => ({
+              id: t.id,
+              node_id: t.nodeId,
+              node_type: t.nodeType,
+              operation: t.operation,
+              data:
+                t.operation !== 'delete' && t.data ? decodeState(t.data) : null,
+              created_at: t.createdAt,
+              created_by: t.createdBy,
+              retry_count: 0,
+              status: 'synced',
+              version: BigInt(t.version),
+              server_created_at: t.serverCreatedAt,
+            }))
+          )
+          .execute();
+
+        await trx.deleteFrom('node_names').where('id', '=', nodeId).execute();
+        await trx.deleteFrom('node_texts').where('id', '=', nodeId).execute();
+
+        if (name) {
+          await trx
+            .insertInto('node_names')
+            .values({ id: nodeId, name })
+            .execute();
+        }
+
+        if (text) {
+          await trx
+            .insertInto('node_texts')
+            .values({ id: nodeId, text })
+            .execute();
+        }
+      });
+
+    if (createdNode) {
+      eventBus.publish({
+        type: 'node_created',
+        userId,
+        node: mapNode(createdNode),
+      });
+
+      return true;
+    }
+
+    return null;
   }
 
   private async applyServerCreateTransaction(

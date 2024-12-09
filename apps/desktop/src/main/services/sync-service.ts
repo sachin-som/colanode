@@ -439,10 +439,12 @@ class SyncService {
           continue;
         }
 
+        const cursor = await this.fetchCursor(userId, 'transactions');
         const synced = await nodeService.replaceTransactions(
           userId,
           nodeId,
-          data.transactions
+          data.transactions,
+          cursor
         );
 
         if (!synced) {
@@ -558,10 +560,12 @@ class SyncService {
           }
         );
 
+        const cursor = await this.fetchCursor(userId, 'transactions');
         await nodeService.replaceTransactions(
           userId,
           node.node_id,
-          data.transactions
+          data.transactions,
+          cursor
         );
       } catch (error) {
         this.debug(
@@ -626,10 +630,12 @@ class SyncService {
         }
       );
 
+      const cursor = await this.fetchCursor(event.userId, 'transactions');
       await nodeService.replaceTransactions(
         event.userId,
         event.nodeId,
-        data.transactions
+        data.transactions,
+        cursor
       );
     } catch (error) {
       this.debug(

@@ -586,13 +586,18 @@ class NodeService {
   public async replaceTransactions(
     userId: string,
     nodeId: string,
-    transactions: ServerTransaction[]
+    transactions: ServerTransaction[],
+    transactionCursor: bigint
   ): Promise<boolean> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
     const firstTransaction = transactions[0];
-    if (!firstTransaction) {
+    if (!firstTransaction || firstTransaction.operation !== 'create') {
+      return false;
+    }
+
+    if (transactionCursor < BigInt(firstTransaction.version)) {
       return false;
     }
 

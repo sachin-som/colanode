@@ -10,11 +10,7 @@ import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { mapWorkspace } from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import {
-  Event,
-  InteractionUpdatedEvent,
-  NodeCreatedEvent,
-} from '@/shared/types/events';
+import { Event, InteractionUpdatedEvent } from '@/shared/types/events';
 import {
   WorkspaceRadarData,
   ChannelReadState,
@@ -93,21 +89,21 @@ class RadarWorkspace {
   public async init(): Promise<void> {
     const unreadMessagesRows = await this.workspaceDatabase
       .selectFrom('nodes as node')
-      .leftJoin(
-        'interactions as node_interactions',
-        'node.id',
-        'node_interactions.node_id'
+      .innerJoin('interactions as node_interactions', (join) =>
+        join
+          .onRef('node.id', '=', 'node_interactions.node_id')
+          .on('node_interactions.user_id', '=', this.workspace.userId)
       )
-      .leftJoin(
-        'interactions as parent_interactions',
-        'node.parent_id',
-        'parent_interactions.node_id'
+      .innerJoin('interactions as parent_interactions', (join) =>
+        join
+          .onRef('node.parent_id', '=', 'parent_interactions.node_id')
+          .on('parent_interactions.user_id', '=', this.workspace.userId)
       )
       .select(['node.id as node_id', 'node.parent_id as parent_id'])
       .where('node.type', '=', 'message')
       .where('node.created_by', '!=', this.workspace.userId)
       .where('node_interactions.last_seen_at', 'is', null)
-      .where('parent_interactions.last_seen_at', '!=', null)
+      .where('parent_interactions.last_seen_at', 'is not', null)
       .whereRef(
         'node.created_at',
         '>=',
@@ -124,86 +120,79 @@ class RadarWorkspace {
     }
   }
 
-  public async handleNodeCreated(event: NodeCreatedEvent): Promise<void> {
-    if (event.userId !== this.workspace.userId) {
-      return;
-    }
-
-    if (event.node.type !== 'message') {
-      return;
-    }
-
-    if (event.node.createdBy === this.workspace.userId) {
-      return;
-    }
-
-    const interactions = await this.workspaceDatabase
-      .selectFrom('interactions')
-      .selectAll()
-      .where('node_id', '=', event.node.id)
-      .where('user_id', '=', this.workspace.userId)
-      .executeTakeFirst();
-
-    if (interactions && interactions.last_seen_at) {
-      return;
-    }
-
-    const parentInteractions = await this.workspaceDatabase
-      .selectFrom('interactions')
-      .selectAll()
-      .where('node_id', '=', event.node.parentId)
-      .executeTakeFirst();
-
-    if (!parentInteractions || !parentInteractions.last_seen_at) {
-      return;
-    }
-
-    const parentInteractionAttributes: InteractionAttributes = JSON.parse(
-      parentInteractions.attributes
-    );
-
+  public async handleInteractionUpdated(
+    event: InteractionUpdatedEvent
+  ): Promise<void> {
+    const interaction = event.interaction;
     if (
-      compareDate(
-        parentInteractionAttributes.firstSeenAt,
-        event.node.createdAt
-      ) > 0
+      event.userId !== this.workspace.userId ||
+      interaction.userId !== this.workspace.userId ||
+      interaction.nodeType !== 'message'
     ) {
       return;
     }
 
-    this.unreadMessages.set(event.node.id, {
-      messageId: event.node.id,
-      parentId: event.node.parentId,
-      parentIdType: getIdType(event.node.parentId),
+    if (interaction.attributes.lastSeenAt) {
+      const unreadMessage = this.unreadMessages.get(interaction.nodeId);
+      if (unreadMessage) {
+        this.unreadMessages.delete(interaction.nodeId);
+
+        eventBus.publish({
+          type: 'radar_data_updated',
+        });
+      }
+
+      return;
+    }
+
+    if (this.unreadMessages.has(interaction.nodeId)) {
+      return;
+    }
+
+    const node = await this.workspaceDatabase
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', interaction.nodeId)
+      .executeTakeFirst();
+
+    if (!node) {
+      return;
+    }
+
+    if (node.type !== 'message') {
+      return;
+    }
+
+    const parentInteraction = await this.workspaceDatabase
+      .selectFrom('interactions')
+      .selectAll()
+      .where('node_id', '=', node.parent_id)
+      .executeTakeFirst();
+
+    if (!parentInteraction || !parentInteraction.last_seen_at) {
+      return;
+    }
+
+    const parentInteractionAttributes: InteractionAttributes = JSON.parse(
+      parentInteraction.attributes
+    );
+
+    if (
+      !parentInteractionAttributes.firstSeenAt ||
+      compareDate(parentInteractionAttributes.firstSeenAt, node.created_at) > 0
+    ) {
+      return;
+    }
+
+    this.unreadMessages.set(interaction.nodeId, {
+      messageId: interaction.nodeId,
+      parentId: node.parent_id,
+      parentIdType: getIdType(node.parent_id),
     });
 
     eventBus.publish({
       type: 'radar_data_updated',
     });
-  }
-
-  public async handleInteractionUpdated(
-    event: InteractionUpdatedEvent
-  ): Promise<void> {
-    if (
-      event.userId !== this.workspace.userId ||
-      event.interaction.userId !== this.workspace.userId
-    ) {
-      return;
-    }
-
-    const unreadMessage = this.unreadMessages.get(event.interaction.nodeId);
-    if (!unreadMessage) {
-      return;
-    }
-
-    if (event.interaction.attributes.lastSeenAt) {
-      this.unreadMessages.delete(unreadMessage.messageId);
-
-      eventBus.publish({
-        type: 'radar_data_updated',
-      });
-    }
   }
 }
 
@@ -257,11 +246,17 @@ class RadarService {
       if (radarWorkspace) {
         radarWorkspace.handleInteractionUpdated(event);
       }
-    } else if (event.type === 'node_created') {
-      const radarWorkspace = this.workspaces.get(event.userId);
-      if (radarWorkspace) {
-        radarWorkspace.handleNodeCreated(event);
-      }
+    } else if (event.type === 'workspace_created') {
+      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+        event.workspace.userId
+      );
+
+      const radarWorkspace = new RadarWorkspace(
+        event.workspace,
+        workspaceDatabase
+      );
+      this.workspaces.set(event.workspace.userId, radarWorkspace);
+      await radarWorkspace.init();
     }
   }
 }

@@ -249,8 +249,9 @@ export const mapDownload = (row: SelectDownload): Download => {
 
 export const mapInteraction = (row: SelectInteraction): Interaction => {
   return {
-    nodeId: row.node_id,
     userId: row.user_id,
+    nodeId: row.node_id,
+    nodeType: row.node_type,
     attributes: JSON.parse(row.attributes),
     createdAt: new Date(row.created_at),
     updatedAt: row.updated_at ? new Date(row.updated_at) : null,

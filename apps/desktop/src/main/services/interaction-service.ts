@@ -65,6 +65,7 @@ class InteractionService {
       .selectFrom('interactions')
       .selectAll()
       .where('node_id', '=', nodeId)
+      .where('user_id', '=', userId)
       .executeTakeFirst();
 
     const existingAttributes = interaction?.attributes
@@ -289,6 +290,7 @@ class InteractionService {
       .selectFrom('interactions')
       .selectAll()
       .where('node_id', '=', interaction.nodeId)
+      .where('user_id', '=', userId)
       .executeTakeFirst();
 
     const interactionEvents = await workspaceDatabase

@@ -827,8 +827,16 @@ class SyncService {
 
         await workspaceDatabase
           .updateTable('interaction_events')
-          .set({ sent_at: new Date().toISOString() })
+          .set({
+            sent_at: new Date().toISOString(),
+            sent_count: sql`sent_count + 1`,
+          })
           .where('event_id', 'in', sentEventIds)
+          .execute();
+
+        await workspaceDatabase
+          .deleteFrom('interaction_events')
+          .where('sent_count', '>', 20)
           .execute();
       }
     }

@@ -96,6 +96,7 @@ class InteractionService {
           value: input.value,
           created_at: new Date().toISOString(),
           event_id: generateId(IdType.Event),
+          sent_count: 0,
         });
       }
     }
@@ -135,6 +136,7 @@ class InteractionService {
               b.columns(['node_id', 'attribute']).doUpdateSet({
                 value: sql`excluded.value`,
                 sent_at: null,
+                sent_count: 0,
                 event_id: sql`excluded.event_id`,
               })
             )
@@ -190,6 +192,7 @@ class InteractionService {
             b.columns(['node_id', 'attribute']).doUpdateSet({
               value: sql`excluded.value`,
               sent_at: null,
+              sent_count: 0,
               event_id: sql`excluded.event_id`,
             })
           )

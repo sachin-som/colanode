@@ -153,6 +153,7 @@ const createInteractionEventsTable: Migration = {
       .addColumn('value', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('sent_at', 'text')
+      .addColumn('sent_count', 'integer', (col) => col.defaultTo(0))
       .addColumn('event_id', 'text', (col) => col.notNull())
       .addPrimaryKeyConstraint('interaction_events_pkey', [
         'node_id',

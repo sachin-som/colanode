@@ -111,6 +111,7 @@ interface InteractionEventTable {
   value: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   sent_at: ColumnType<string | null, string | null, string | null>;
+  sent_count: ColumnType<number, number, number>;
   event_id: ColumnType<string, string, string>;
 }
 

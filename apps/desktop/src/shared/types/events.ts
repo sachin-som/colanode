@@ -122,10 +122,11 @@ export type TransactionIncompleteEvent = {
   transactionId: string;
 };
 
-export type CollaborationCreatedEvent = {
+export type CollaborationSyncedEvent = {
   type: 'collaboration_synced';
   userId: string;
   nodeId: string;
+  createdAt: Date;
 };
 
 export type ServerAvailabilityChangedEvent = {
@@ -175,6 +176,6 @@ export type Event =
   | TransactionIncompleteEvent
   | ServerAvailabilityChangedEvent
   | SocketConnectionOpenedEvent
-  | CollaborationCreatedEvent
+  | CollaborationSyncedEvent
   | InteractionEventCreatedEvent
   | InteractionUpdatedEvent;

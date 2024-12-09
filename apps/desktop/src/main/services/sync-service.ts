@@ -26,6 +26,7 @@ import { socketService } from '@/main/services/socket-service';
 import { fetchWorkspaceCredentials, mapTransaction } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
+import { CollaborationSyncedEvent } from '@/shared/types/events';
 
 type WorkspaceSyncState = {
   isSyncing: boolean;
@@ -65,7 +66,7 @@ class SyncService {
       } else if (event.type === 'socket_connection_opened') {
         this.syncAllWorkspaces();
       } else if (event.type === 'collaboration_synced') {
-        this.checkForMissingNode(event.userId, event.nodeId);
+        this.checkForMissingNode(event);
       } else if (event.type === 'interaction_event_created') {
         this.syncLocalPendingInteractions(event.userId);
       }
@@ -571,26 +572,41 @@ class SyncService {
     }
   }
 
-  private async checkForMissingNode(userId: string, nodeId: string) {
-    this.debug(`Checking for missing node ${nodeId} for user ${userId}`);
+  private async checkForMissingNode(event: CollaborationSyncedEvent) {
+    this.debug(
+      `Checking for missing node ${event.nodeId} for user ${event.userId}`
+    );
 
-    const workspaceDatabase =
-      await databaseService.getWorkspaceDatabase(userId);
+    // check only if the collaboration has been created in the last minute
+    if (new Date().getTime() - event.createdAt.getTime() > 60000) {
+      this.debug(
+        `Collaboration ${event.nodeId} for user ${event.userId} was created more than a minute ago, skipping`
+      );
+      return;
+    }
+
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+      event.userId
+    );
 
     const node = await workspaceDatabase
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', nodeId)
+      .where('id', '=', event.nodeId)
       .executeTakeFirst();
 
     if (node) {
-      this.debug(`Node ${nodeId} for user ${userId} found, skipping`);
+      this.debug(
+        `Node ${event.nodeId} for user ${event.userId} found, skipping`
+      );
       return;
     }
 
-    const credentials = await fetchWorkspaceCredentials(userId);
+    const credentials = await fetchWorkspaceCredentials(event.userId);
     if (!credentials) {
-      this.debug(`No workspace credentials found for user ${userId}, skipping`);
+      this.debug(
+        `No workspace credentials found for user ${event.userId}, skipping`
+      );
       return;
     }
 
@@ -603,18 +619,22 @@ class SyncService {
 
     try {
       const { data } = await httpClient.get<GetTransactionsOutput>(
-        `/v1/workspaces/${credentials.workspaceId}/transactions/${nodeId}`,
+        `/v1/workspaces/${credentials.workspaceId}/transactions/${event.nodeId}`,
         {
           domain: credentials.serverDomain,
           token: credentials.token,
         }
       );
 
-      await nodeService.replaceTransactions(userId, nodeId, data.transactions);
+      await nodeService.replaceTransactions(
+        event.userId,
+        event.nodeId,
+        data.transactions
+      );
     } catch (error) {
       this.debug(
         error,
-        `Error checking for missing node ${nodeId} for user ${userId}`
+        `Error checking for missing node ${event.nodeId} for user ${event.userId}`
       );
     }
   }

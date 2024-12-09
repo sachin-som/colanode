@@ -45,6 +45,7 @@ class CollaborationService {
       type: 'collaboration_synced',
       userId,
       nodeId: collaboration.nodeId,
+      createdAt: new Date(collaboration.createdAt),
     });
   }
 

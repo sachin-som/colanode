@@ -1,10 +1,8 @@
 import AdmZip from 'adm-zip';
 import fetch from 'node-fetch';
-import { monotonicFactory } from 'ulid';
+import { generateId, IdType } from '@colanode/core';
 
 import fs from 'fs';
-
-const ulid = monotonicFactory();
 
 type SimpleIconsData = {
   icons: SimpleIconItem[];
@@ -84,10 +82,6 @@ type IconCategory = {
   id: string;
   name: string;
   icons: string[];
-};
-
-const generateIconId = () => {
-  return ulid().toLowerCase() + 'ic';
 };
 
 const downloadRemixIconRepo = async () => {
@@ -189,7 +183,7 @@ const generateIconsDir = async () => {
         }
       }
 
-      const iconId = existingIcon ? existingIcon.id : generateIconId();
+      const iconId = existingIcon ? existingIcon.id : generateId(IdType.Icon);
       const icon: Icon = {
         id: iconId,
         name: iconName,
@@ -237,7 +231,7 @@ const generateIconsDir = async () => {
       simpleIconSlug,
     ]);
 
-    const iconId = existingIcon ? existingIcon.id : generateIconId();
+    const iconId = existingIcon ? existingIcon.id : generateId(IdType.Icon);
     const icon: Icon = {
       id: iconId,
       name: simpleIconTitle,

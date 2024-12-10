@@ -27,6 +27,7 @@ class MutationService {
       const output = await handler.handleMutation(input);
       return { success: true, output };
     } catch (error) {
+      this.debug(`Error executing mutation: ${input.type}`, error);
       if (error instanceof MutationError) {
         return {
           success: false,

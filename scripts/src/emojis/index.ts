@@ -1,10 +1,8 @@
 import AdmZip from 'adm-zip';
 import fetch from 'node-fetch';
-import { monotonicFactory } from 'ulid';
+import { generateId, IdType } from '@colanode/core';
 
 import fs from 'fs';
-
-const ulid = monotonicFactory();
 
 type EmojiMartI18n = {
   categories: Record<string, string>;
@@ -75,10 +73,6 @@ type EmojiCategory = {
 type EmojiSkin = {
   id: string;
   unified: string;
-};
-
-const generateEmojiId = () => {
-  return ulid().toLowerCase() + 'em';
 };
 
 const downloadEmojiMartRepo = async () => {
@@ -178,7 +172,7 @@ const generateEmojisDir = () => {
       (emoji) => emoji.code === emojiMartItem.id
     );
 
-    const emojiId = existingEmoji ? existingEmoji.id : generateEmojiId();
+    const emojiId = existingEmoji ? existingEmoji.id : generateId(IdType.Emoji);
     const emoji: Emoji = {
       id: emojiId,
       code: emojiMartItem.id,
@@ -193,7 +187,7 @@ const generateEmojisDir = () => {
         (s) => s.unified === skin.unified
       );
 
-      const skinId = existingSkin?.id ?? generateEmojiId();
+      const skinId = existingSkin?.id ?? generateId(IdType.Emoji);
       emoji.skins.push({
         id: skinId,
         unified: skin.unified,

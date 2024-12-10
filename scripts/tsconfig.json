@@ -4,5 +4,10 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "resolveJsonModule": true
-  }
+  },
+  "references": [
+    { "path": "../packages/core/tsconfig.json" },
+    { "path": "../packages/crdt/tsconfig.json" }
+  ],
+  "include": ["src"]
 }

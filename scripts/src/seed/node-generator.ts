@@ -317,8 +317,8 @@ export class NodeGenerator {
       id: generateId(IdType.ViewFilter),
       type: 'field',
       fieldId: statusField.id,
-      value: activeStatusOption.id,
-      operator: 'equals',
+      value: [activeStatusOption.id],
+      operator: 'is_in',
     };
 
     const activeTasksView: ViewAttributes = {

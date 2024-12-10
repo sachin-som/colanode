@@ -35,6 +35,7 @@ export const LayoutSidebarChats = () => {
         {chats.map((item) => (
           <SidebarMenuItem key={item.id}>
             <SidebarMenuButton
+              className="p-1 px-2 h-7"
               isActive={workspace.isNodeActive(item.id)}
               onClick={() => {
                 workspace.openInMain(item.id);

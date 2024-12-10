@@ -110,7 +110,11 @@ const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
   return (
     <img
       src={url}
-      className={cn(getAvatarSizeClasses(size), 'object-cover', className)}
+      className={cn(
+        getAvatarSizeClasses(size),
+        'object-cover rounded',
+        className
+      )}
       alt={'Custom Avatar'}
     />
   );

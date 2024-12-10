@@ -35,7 +35,7 @@ export const TableViewNameHeader = () => {
         width: `${view.nameWidth}px`,
         height: '2rem',
       }}
-      minWidth={100}
+      minWidth={300}
       maxWidth={500}
       size={{ width: `${view.nameWidth}px`, height: '2rem' }}
       enable={{

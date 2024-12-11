@@ -1,7 +1,7 @@
 import { sha256 } from 'js-sha256';
 
-import { socketService } from './services/socket-service';
-
+import { socketService } from '@/main/services/socket-service';
+import { radarService } from '@/main/services/radar-service';
 import { databaseService } from '@/main/data/database-service';
 import { createDebugger } from '@/main/debugger';
 import { JobHandler, JobInput, JobMap } from '@/main/jobs';
@@ -69,8 +69,10 @@ class Scheduler {
     this.debug('Initializing scheduler');
     await databaseService.init();
     await this.scheduleJobs();
+    radarService.init();
 
     this.initialized = true;
+    this.debug('Scheduler initialized');
   }
 
   public schedule(input: JobInput) {

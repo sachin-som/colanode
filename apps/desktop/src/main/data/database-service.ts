@@ -1,9 +1,9 @@
 import SQLite from 'better-sqlite3';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
-import debug from 'debug';
 
 import fs from 'fs';
 
+import { createDebugger } from '@/main/debugger';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { AppDatabaseSchema } from '@/main/data/app/schema';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
@@ -19,10 +19,10 @@ class DatabaseService {
   > = new Map();
 
   public readonly appDatabase: Kysely<AppDatabaseSchema>;
-  private readonly debugger = debug('database-service');
+  private readonly debug = createDebugger('database-service');
 
   constructor() {
-    this.debugger('Constructing database service');
+    this.debug('Constructing database service');
     const dialect = new SqliteDialect({
       database: this.buildSqlite(appDatabasePath),
     });
@@ -37,7 +37,7 @@ class DatabaseService {
   }
 
   public async init(): Promise<void> {
-    this.debugger('Initializing database service');
+    this.debug('Initializing database service');
     if (!this.initPromise) {
       this.initPromise = this.executeInit();
     }
@@ -78,7 +78,7 @@ class DatabaseService {
   }
 
   public async deleteWorkspaceDatabase(userId: string): Promise<void> {
-    this.debugger(`Deleting workspace database for user: ${userId}`);
+    this.debug(`Deleting workspace database for user: ${userId}`);
     await this.waitForInit();
 
     if (this.workspaceDatabases.has(userId)) {
@@ -114,7 +114,7 @@ class DatabaseService {
   private async initWorkspaceDatabase(
     userId: string
   ): Promise<Kysely<WorkspaceDatabaseSchema>> {
-    this.debugger(`Initializing workspace database for user: ${userId}`);
+    this.debug(`Initializing workspace database for user: ${userId}`);
     const workspaceDir = getWorkspaceDirectoryPath(userId);
 
     if (!fs.existsSync(workspaceDir)) {
@@ -136,7 +136,7 @@ class DatabaseService {
   }
 
   private async migrateAppDatabase(): Promise<void> {
-    this.debugger('Migrating app database');
+    this.debug('Migrating app database');
     const migrator = new Migrator({
       db: this.appDatabase,
       provider: {
@@ -152,7 +152,7 @@ class DatabaseService {
   private async migrateWorkspaceDatabase(
     database: Kysely<WorkspaceDatabaseSchema>
   ): Promise<void> {
-    this.debugger('Migrating workspace database');
+    this.debug('Migrating workspace database');
     const migrator = new Migrator({
       db: database,
       provider: {
@@ -166,7 +166,7 @@ class DatabaseService {
   }
 
   private buildSqlite = (filename: string): SQLite.Database => {
-    this.debugger(`Building sqlite database: ${filename}`);
+    this.debug(`Building sqlite database: ${filename}`);
     const database = new SQLite(filename);
     database.pragma('journal_mode = WAL');
     return database;

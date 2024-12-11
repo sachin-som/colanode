@@ -14,27 +14,24 @@ import {
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
+import { socketService } from '@/main/services/socket-service';
 
 class AccountService {
   private readonly debug = createDebugger('service:account');
 
-  async syncAccounts() {
-    this.debug('Syncing all accounts');
+  public async syncAccount(accountId: string) {
+    this.debug(`Syncing account ${accountId}`);
 
-    const accounts = await databaseService.appDatabase
+    const account = await databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
-      .execute();
+      .where('id', '=', accountId)
+      .executeTakeFirst();
 
-    for (const account of accounts) {
-      await this.syncAccount(account);
+    if (!account) {
+      this.debug(`Account ${accountId} not found`);
+      return;
     }
-
-    await this.syncDeletedTokens();
-  }
-
-  private async syncAccount(account: SelectAccount) {
-    this.debug(`Syncing account ${account.email}`);
 
     const server = await databaseService.appDatabase
       .selectFrom('servers')
@@ -69,6 +66,7 @@ class AccountService {
     if (status >= 400 && status < 500) {
       this.debug(`Account ${account.email} is not valid, logging out...`);
       await this.logoutAccount(account);
+      socketService.removeConnection(account.id);
       return;
     }
 
@@ -82,27 +80,32 @@ class AccountService {
       .where('account_id', '=', account.id)
       .execute();
 
-    const updatedAccount = await databaseService.appDatabase
-      .updateTable('accounts')
-      .returningAll()
-      .set({
-        name: data.account.name,
-        avatar: data.account.avatar,
-      })
-      .where('id', '=', account.id)
-      .executeTakeFirst();
+    if (
+      data.account.name !== account.name ||
+      data.account.avatar !== account.avatar
+    ) {
+      const updatedAccount = await databaseService.appDatabase
+        .updateTable('accounts')
+        .returningAll()
+        .set({
+          name: data.account.name,
+          avatar: data.account.avatar,
+        })
+        .where('id', '=', account.id)
+        .executeTakeFirst();
 
-    if (!updatedAccount) {
-      this.debug(`Failed to update account ${account.email} after sync`);
-      return;
-    } else {
-      this.debug(`Updated account ${account.email} after sync`);
+      if (!updatedAccount) {
+        this.debug(`Failed to update account ${account.email} after sync`);
+        return;
+      } else {
+        this.debug(`Updated account ${account.email} after sync`);
+      }
+
+      eventBus.publish({
+        type: 'account_updated',
+        account: mapAccount(updatedAccount),
+      });
     }
-
-    eventBus.publish({
-      type: 'account_updated',
-      account: mapAccount(updatedAccount),
-    });
 
     for (const workspace of data.workspaces) {
       const currentWorkspace = currentWorkspaces.find(
@@ -232,62 +235,6 @@ class AccountService {
       .execute();
 
     return true;
-  }
-
-  public async syncDeletedTokens() {
-    this.debug('Syncing deleted tokens');
-
-    const deletedTokens = await databaseService.appDatabase
-      .selectFrom('deleted_tokens')
-      .innerJoin('servers', 'deleted_tokens.server', 'servers.domain')
-      .select([
-        'deleted_tokens.token',
-        'deleted_tokens.account_id',
-        'servers.domain',
-        'servers.attributes',
-      ])
-      .execute();
-
-    if (deletedTokens.length === 0) {
-      this.debug('No deleted tokens found');
-      return;
-    }
-
-    for (const deletedToken of deletedTokens) {
-      if (!serverService.isAvailable(deletedToken.domain)) {
-        this.debug(
-          `Server ${deletedToken.domain} is not available for logging out account ${deletedToken.account_id}`
-        );
-        continue;
-      }
-
-      try {
-        const { status } = await httpClient.delete(`/v1/accounts/logout`, {
-          domain: deletedToken.domain,
-          token: deletedToken.token,
-        });
-
-        this.debug(`Deleted token logout response status code: ${status}`);
-
-        if (status !== 200) {
-          return;
-        }
-
-        await databaseService.appDatabase
-          .deleteFrom('deleted_tokens')
-          .where('token', '=', deletedToken.token)
-          .where('account_id', '=', deletedToken.account_id)
-          .execute();
-
-        this.debug(
-          `Logged out account ${deletedToken.account_id} from server ${deletedToken.domain}`
-        );
-      } catch {
-        this.debug(
-          `Failed to logout account ${deletedToken.account_id} from server ${deletedToken.domain}`
-        );
-      }
-    }
   }
 
   private async deleteWorkspace(userId: string): Promise<boolean> {

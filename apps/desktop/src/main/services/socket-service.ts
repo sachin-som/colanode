@@ -1,28 +1,15 @@
 import { Message } from '@colanode/core';
 
+import { SelectAccount } from '@/main/data/app/schema';
 import { createDebugger } from '@/main/debugger';
-import { databaseService } from '@/main/data/database-service';
 import { serverService } from '@/main/services/server-service';
 import { SocketConnection } from '@/main/services/socket-connection';
-import { eventBus } from '@/shared/lib/event-bus';
 
 class SocketService {
   private readonly debug = createDebugger('service:socket');
   private readonly sockets: Map<string, SocketConnection> = new Map();
 
-  constructor() {
-    eventBus.subscribe((event) => {
-      if (event.type === 'server_availability_changed' && event.isAvailable) {
-        this.checkConnections();
-      } else if (
-        event.type === 'account_created' ||
-        event.type === 'account_updated' ||
-        event.type === 'account_deleted'
-      ) {
-        this.checkConnections();
-      }
-    });
-  }
+  constructor() {}
 
   public sendMessage(accountId: string, message: Message): boolean {
     const connection = this.sockets.get(accountId);
@@ -33,46 +20,31 @@ class SocketService {
     return connection.sendMessage(message);
   }
 
-  public async checkConnections() {
-    this.debug('Checking socket connections');
-
-    const accounts = await databaseService.appDatabase
-      .selectFrom('accounts')
-      .selectAll()
-      .where('status', '=', 'active')
-      .execute();
-
-    // Update accounts map
-    for (const account of accounts) {
-      if (!serverService.isAvailable(account.server)) {
-        this.debug(
-          `Server ${account.server} is not available, skipping socket connection`
-        );
-
-        continue;
-      }
-
-      const socket = this.sockets.get(account.id);
-      if (socket) {
-        socket.checkConnection();
-        continue;
-      }
-
-      const synapseUrl = serverService.buildSynapseUrl(account.server);
-      const connection = new SocketConnection(synapseUrl, account);
-      connection.init();
-
-      this.sockets.set(account.id, connection);
+  public checkConnection(account: SelectAccount) {
+    const socket = this.sockets.get(account.id);
+    if (socket) {
+      socket.checkConnection();
+      return;
     }
 
-    // Remove logged out or missing accounts
-    for (const [accountId, connection] of this.sockets.entries()) {
-      const account = accounts.find((acc) => acc.id === accountId);
-      if (!account) {
-        connection.close();
-        this.sockets.delete(accountId);
-      }
+    const synapseUrl = serverService.buildSynapseUrl(account.server);
+    const connection = new SocketConnection(synapseUrl, account);
+    connection.init();
+
+    this.sockets.set(account.id, connection);
+  }
+
+  public removeConnection(accountId: string) {
+    const connection = this.sockets.get(accountId);
+    if (connection) {
+      connection.close();
+      this.sockets.delete(accountId);
     }
+  }
+
+  public isConnected(accountId: string): boolean {
+    const connection = this.sockets.get(accountId);
+    return connection?.isConnected() ?? false;
   }
 }
 

@@ -36,7 +36,7 @@ clientRouter.post('/v1/accounts/login/google', loginWithGoogleHandler);
 
 clientRouter.post('/v1/accounts/register/email', registerWithEmailHandler);
 
-clientRouter.post('/v1/accounts/logout', authMiddleware, logoutHandler);
+clientRouter.delete('/v1/accounts/logout', authMiddleware, logoutHandler);
 
 clientRouter.put(
   '/v1/accounts/:accountId',

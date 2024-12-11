@@ -6,7 +6,7 @@ import path from 'path';
 import { metadataService } from '@/main/services/metadata-service';
 import { WindowSize } from '@/shared/types/metadata';
 import { createDebugger } from '@/main/debugger';
-import { bootstrapper } from '@/main/bootstrapper';
+import { scheduler } from '@/main/scheduler';
 import { assetService } from '@/main/services/asset-service';
 import { avatarService } from '@/main/services/avatar-service';
 import { commandService } from '@/main/services/command-service';
@@ -30,7 +30,7 @@ if (started) {
 }
 
 const createWindow = async () => {
-  await bootstrapper.init();
+  await scheduler.init();
 
   // Create the browser window.
   let windowSize = await metadataService.get<WindowSize>('window_size');
@@ -152,7 +152,7 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 ipcMain.handle('init', async () => {
-  await bootstrapper.init();
+  await scheduler.init();
 });
 
 ipcMain.handle(

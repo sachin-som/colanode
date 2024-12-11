@@ -1,7 +1,7 @@
 import { Message } from '@colanode/core';
 import { WebSocket } from 'ws';
 
-import { accountService } from '@/main/services/account-service';
+import { scheduler } from '@/main/scheduler';
 import { createDebugger } from '@/main/debugger';
 import { SelectAccount } from '@/main/data/app/schema';
 import { syncService } from '@/main/services/sync-service';
@@ -67,13 +67,25 @@ export class SocketConnection {
       } else if (message.type === 'interactions_batch') {
         syncService.syncServerInteractions(message);
       } else if (message.type === 'account_updated') {
-        accountService.syncAccounts();
+        scheduler.trigger({
+          type: 'sync_account',
+          accountId: this.account.id,
+        });
       } else if (message.type === 'workspace_updated') {
-        accountService.syncAccounts();
+        scheduler.trigger({
+          type: 'sync_account',
+          accountId: this.account.id,
+        });
       } else if (message.type === 'workspace_user_created') {
-        accountService.syncAccounts();
+        scheduler.trigger({
+          type: 'sync_account',
+          accountId: this.account.id,
+        });
       } else if (message.type === 'workspace_deleted') {
-        accountService.syncAccounts();
+        scheduler.trigger({
+          type: 'sync_account',
+          accountId: this.account.id,
+        });
       }
     };
 

@@ -55,6 +55,8 @@ export class SocketConnection {
   private readonly socket: WebSocket;
 
   private readonly users: Map<string, SocketUser> = new Map();
+  private readonly pendingUsers: Map<string, Promise<SocketUser | null>> =
+    new Map();
 
   constructor(account: RequestAccount, socket: WebSocket) {
     this.account = account;
@@ -118,7 +120,7 @@ export class SocketConnection {
 
   private async handleInitSyncConsumer(message: InitSyncConsumerMessage) {
     this.logger.info(
-      `Init sync consumer from ${this.account.id} for ${message.consumerType}`
+      `Init sync consumer from ${this.account.id} and user ${message.userId} for ${message.consumerType}`
     );
 
     const user = await this.getOrCreateUser(message.userId);
@@ -166,7 +168,7 @@ export class SocketConnection {
 
     consumer.fetching = true;
     this.logger.trace(
-      `Sending pending node transactions for ${this.account.id} with ${consumer.type}`
+      `Checking for pending node transactions for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
     );
 
     const unsyncedTransactions = await database
@@ -192,6 +194,9 @@ export class SocketConnection {
       .execute();
 
     if (unsyncedTransactions.length === 0) {
+      this.logger.trace(
+        `No pending node transactions found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+      );
       consumer.fetching = false;
       return;
     }
@@ -217,8 +222,7 @@ export class SocketConnection {
 
     consumer.fetching = true;
     this.logger.trace(
-      consumer,
-      `Sending pending deleted collaborations for ${this.account.id} with ${consumer.type}`
+      `Checking for pending deleted collaborations for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
     );
 
     const unsyncedDeletedCollaborations = await database
@@ -231,6 +235,9 @@ export class SocketConnection {
       .execute();
 
     if (unsyncedDeletedCollaborations.length === 0) {
+      this.logger.trace(
+        `No pending deleted collaborations found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+      );
       consumer.fetching = false;
       return;
     }
@@ -258,8 +265,7 @@ export class SocketConnection {
 
     consumer.fetching = true;
     this.logger.trace(
-      consumer,
-      `Sending pending collaborations for ${this.account.id} with ${consumer.type}`
+      `Checking for pending collaborations for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
     );
 
     const unsyncedCollaborations = await database
@@ -272,6 +278,9 @@ export class SocketConnection {
       .execute();
 
     if (unsyncedCollaborations.length === 0) {
+      this.logger.trace(
+        `No pending collaborations found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+      );
       consumer.fetching = false;
       return;
     }
@@ -297,8 +306,7 @@ export class SocketConnection {
 
     consumer.fetching = true;
     this.logger.trace(
-      consumer,
-      `Sending pending interactions for ${this.account.id} with ${consumer.type}`
+      `Checking for pending interactions for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
     );
 
     const unsyncedInteractions = await database
@@ -324,6 +332,9 @@ export class SocketConnection {
       .execute();
 
     if (unsyncedInteractions.length === 0) {
+      this.logger.trace(
+        `No pending interactions found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+      );
       consumer.fetching = false;
       return;
     }
@@ -439,29 +450,48 @@ export class SocketConnection {
   }
 
   private async getOrCreateUser(userId: string): Promise<SocketUser | null> {
-    const socketUser = this.users.get(userId);
-    if (socketUser) {
-      return socketUser;
+    const existingUser = this.users.get(userId);
+    if (existingUser) {
+      return existingUser;
     }
 
+    const pendingUser = this.pendingUsers.get(userId);
+    if (pendingUser) {
+      return pendingUser;
+    }
+
+    const userPromise = this.fetchAndCreateUser(userId);
+    this.pendingUsers.set(userId, userPromise);
+
+    try {
+      const user = await userPromise;
+      return user;
+    } finally {
+      this.pendingUsers.delete(userId);
+    }
+  }
+
+  private async fetchAndCreateUser(userId: string): Promise<SocketUser | null> {
     const workspaceUser = await database
       .selectFrom('workspace_users')
       .where('id', '=', userId)
       .selectAll()
       .executeTakeFirst();
 
-    if (!workspaceUser) {
+    if (
+      !workspaceUser ||
+      workspaceUser.status !== WorkspaceStatus.Active ||
+      workspaceUser.account_id !== this.account.id
+    ) {
       return null;
     }
 
-    if (workspaceUser.status !== WorkspaceStatus.Active) {
-      return null;
+    const addedSocketUser = this.users.get(userId);
+    if (addedSocketUser) {
+      return addedSocketUser;
     }
 
-    if (workspaceUser.account_id !== this.account.id) {
-      return null;
-    }
-
+    // Create and store the new SocketUser
     const newSocketUser: SocketUser = {
       userId,
       workspaceId: workspaceUser.workspace_id,

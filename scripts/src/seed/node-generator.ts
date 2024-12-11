@@ -19,8 +19,8 @@ import { faker } from '@faker-js/faker';
 
 import { User } from './types';
 
-const MESSAGES_PER_CONVERSATION = 500;
-const RECORDS_PER_DATABASE = 1000;
+const MESSAGES_PER_CONVERSATION = 1000;
+const RECORDS_PER_DATABASE = 5000;
 
 export class NodeGenerator {
   constructor(
@@ -31,23 +31,43 @@ export class NodeGenerator {
   public generate() {
     this.buildGeneralSpace();
     this.buildProductSpace();
+    this.buildBusinessSpace();
     this.buildChats();
   }
 
   private buildGeneralSpace() {
-    const spaceId = this.buildSpace('General', 'The general space');
-    this.buildPage('Welcome', spaceId);
-    this.buildPage('Resources', spaceId);
-    this.buildPage('Guide', spaceId);
-    this.buildChannel('Announcements', spaceId);
+    const spaceId = this.buildSpace(
+      'General',
+      'The general space',
+      '01je8kh1yekmqd9643naenqf1rem'
+    );
+    this.buildPage('Welcome', spaceId, '01je8kh2018tqrrxqsc6af71zfem');
+    this.buildPage('Resources', spaceId, '01je8kh202et2bagv8phg219cbem');
+    this.buildPage('Guide', spaceId, '01je8kh202et2bagv8phg219cdem');
+    this.buildChannel('Announcements', spaceId, '01je8kh1zvyrbp8fgt59t2cy8pem');
   }
 
   private buildProductSpace() {
-    const spaceId = this.buildSpace('Product', 'The product space');
-    this.buildChannel('Discussions', spaceId);
-    this.buildChannel('Alerts', spaceId);
-    this.buildPage('Roadmap', spaceId);
+    const spaceId = this.buildSpace(
+      'Product',
+      'The product space',
+      '01je8kh20sp99fzn32cf9mf3pyem'
+    );
+    this.buildChannel('Discussions', spaceId, '01je8kh1j5m7v8bk06ara5txq5em');
+    this.buildChannel('Alerts', spaceId, '01je8kh1yv79yfr5dsvy19g696em');
+    this.buildPage('Roadmap', spaceId, '01je8kh1yyqmcxbdf67bgsc0wqem');
     this.buildTasksDatabase(spaceId);
+  }
+
+  private buildBusinessSpace() {
+    const spaceId = this.buildSpace(
+      'Business',
+      'The business space',
+      '01je8kh2055hxb5k4g0sr5vj6gem'
+    );
+    this.buildPage('Notes', spaceId, '01je8kh2055hxb5k4g0sr5vj6aem');
+    this.buildClientsDatabase(spaceId);
+    this.buildMeetingsDatabase(spaceId);
   }
 
   private buildChats() {
@@ -57,7 +77,7 @@ export class NodeGenerator {
     }
   }
 
-  private buildSpace(name: string, description: string) {
+  private buildSpace(name: string, description: string, avatar: string) {
     const spaceId = generateId(IdType.Space);
     const collaborators: Record<string, NodeRole> = {};
     for (const user of this.users) {
@@ -70,6 +90,7 @@ export class NodeGenerator {
       description,
       parentId: this.workspaceId,
       collaborators,
+      avatar,
     };
 
     const user = this.getMainUser();
@@ -83,12 +104,13 @@ export class NodeGenerator {
     return spaceId;
   }
 
-  private buildChannel(name: string, spaceId: string) {
+  private buildChannel(name: string, spaceId: string, avatar: string) {
     const channelId = generateId(IdType.Channel);
     const channelAttributes: NodeAttributes = {
       type: 'channel',
       name,
       parentId: spaceId,
+      avatar,
     };
 
     const user = this.getMainUser();
@@ -126,13 +148,14 @@ export class NodeGenerator {
     this.buidMessages(chatId, MESSAGES_PER_CONVERSATION, [mainUser, user]);
   }
 
-  private buildPage(name: string, parentId: string) {
+  private buildPage(name: string, parentId: string, avatar: string) {
     const pageId = generateId(IdType.Page);
     const pageAttributes: NodeAttributes = {
       type: 'page',
       name,
       parentId,
       content: this.buildDocumentContent(pageId),
+      avatar,
     };
 
     const user = this.getMainUser();
@@ -353,6 +376,7 @@ export class NodeGenerator {
       type: 'database',
       parentId,
       name: 'Tasks',
+      avatar: '01je8kh202et2bagv8phg219chem',
       fields: {
         [statusField.id]: statusField,
         [teamsField.id]: teamsField,
@@ -366,6 +390,376 @@ export class NodeGenerator {
         [allTasksView.id]: allTasksView,
         [activeTasksView.id]: activeTasksView,
         [kanbanView.id]: kanbanView,
+      },
+    };
+
+    const user = this.getMainUser();
+    const createTransaction = this.buildCreateTransaction(
+      databaseId,
+      user.userId,
+      databaseAttributes
+    );
+
+    user.transactions.push(createTransaction);
+
+    this.buildRecords(databaseId, databaseAttributes, RECORDS_PER_DATABASE);
+  }
+
+  private buildClientsDatabase(parentId: string) {
+    const databaseId = generateId(IdType.Database);
+
+    const newLeadStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'New Lead',
+      color: 'gray',
+      index: generateNodeIndex(),
+    };
+
+    const contactedStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Contacted',
+      color: 'blue',
+      index: generateNodeIndex(newLeadStatusOption.index),
+    };
+
+    const qualifiedStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Qualified',
+      color: 'yellow',
+      index: generateNodeIndex(contactedStatusOption.index),
+    };
+
+    const proposalSentStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Proposal Sent',
+      color: 'red',
+      index: generateNodeIndex(qualifiedStatusOption.index),
+    };
+
+    const negotiatingStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Negotiating',
+      color: 'orange',
+      index: generateNodeIndex(proposalSentStatusOption.index),
+    };
+
+    const convertedStatusOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Converted',
+      color: 'green',
+      index: generateNodeIndex(negotiatingStatusOption.index),
+    };
+
+    const statusField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'select',
+      name: 'Status',
+      index: generateNodeIndex(),
+      options: {
+        [newLeadStatusOption.id]: newLeadStatusOption,
+        [contactedStatusOption.id]: contactedStatusOption,
+        [qualifiedStatusOption.id]: qualifiedStatusOption,
+        [proposalSentStatusOption.id]: proposalSentStatusOption,
+        [negotiatingStatusOption.id]: negotiatingStatusOption,
+        [convertedStatusOption.id]: convertedStatusOption,
+      },
+    };
+
+    const techSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Tech',
+      color: 'blue',
+      index: generateNodeIndex(),
+    };
+
+    const financeSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Finance',
+      color: 'green',
+      index: generateNodeIndex(techSectorSelectOption.index),
+    };
+
+    const marketingSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Marketing',
+      color: 'purple',
+      index: generateNodeIndex(financeSectorSelectOption.index),
+    };
+
+    const salesSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Sales',
+      color: 'pink',
+      index: generateNodeIndex(marketingSectorSelectOption.index),
+    };
+
+    const educationSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Education',
+      color: 'purple',
+      index: generateNodeIndex(salesSectorSelectOption.index),
+    };
+
+    const nonprofitSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'Nonprofit',
+      color: 'gray',
+      index: generateNodeIndex(educationSectorSelectOption.index),
+    };
+
+    const otherSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'other',
+      color: 'gray',
+      index: generateNodeIndex(nonprofitSectorSelectOption.index),
+    };
+
+    const sectorField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'multiSelect',
+      name: 'Sector',
+      index: generateNodeIndex(statusField.index),
+      options: {
+        [techSectorSelectOption.id]: techSectorSelectOption,
+        [financeSectorSelectOption.id]: financeSectorSelectOption,
+        [marketingSectorSelectOption.id]: marketingSectorSelectOption,
+        [salesSectorSelectOption.id]: salesSectorSelectOption,
+        [educationSectorSelectOption.id]: educationSectorSelectOption,
+        [nonprofitSectorSelectOption.id]: nonprofitSectorSelectOption,
+        [otherSectorSelectOption.id]: otherSectorSelectOption,
+      },
+    };
+
+    const assignedField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'collaborator',
+      name: 'Assigned',
+      index: generateNodeIndex(sectorField.index),
+    };
+
+    const revenueField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'number',
+      name: 'Revenue',
+      index: generateNodeIndex(assignedField.index),
+    };
+
+    const archivedField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'boolean',
+      name: 'Archived',
+      index: generateNodeIndex(revenueField.index),
+    };
+
+    const startDateField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'date',
+      name: 'Start Date',
+      index: generateNodeIndex(archivedField.index),
+    };
+
+    const commentsField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'text',
+      name: 'Comment',
+      index: generateNodeIndex(startDateField.index),
+    };
+
+    const allTasksView: ViewAttributes = {
+      id: generateId(IdType.View),
+      type: 'table',
+      name: 'All Clients',
+      avatar: null,
+      fields: {},
+      filters: {},
+      index: generateNodeIndex(),
+      nameWidth: null,
+      groupBy: null,
+      sorts: {},
+    };
+
+    const activeTasksFilter: ViewFilterAttributes = {
+      id: generateId(IdType.ViewFilter),
+      type: 'field',
+      fieldId: statusField.id,
+      value: [newLeadStatusOption.id],
+      operator: 'is_in',
+    };
+
+    const activeTasksView: ViewAttributes = {
+      id: generateId(IdType.View),
+      type: 'table',
+      name: 'Active Clients',
+      avatar: null,
+      fields: {},
+      filters: {
+        [activeTasksFilter.id]: activeTasksFilter,
+      },
+      index: generateNodeIndex(),
+      nameWidth: null,
+      groupBy: null,
+      sorts: {},
+    };
+
+    const kanbanView: ViewAttributes = {
+      id: generateId(IdType.View),
+      type: 'board',
+      name: 'Board',
+      avatar: null,
+      fields: {},
+      filters: {},
+      index: generateNodeIndex(),
+      nameWidth: null,
+      groupBy: statusField.id,
+      sorts: {},
+    };
+
+    const databaseAttributes: NodeAttributes = {
+      type: 'database',
+      parentId,
+      name: 'Clients',
+      avatar: '01je8kh1zbbrb0mc3zrtrmz9dwem',
+      fields: {
+        [statusField.id]: statusField,
+        [sectorField.id]: sectorField,
+        [assignedField.id]: assignedField,
+        [revenueField.id]: revenueField,
+        [archivedField.id]: archivedField,
+        [startDateField.id]: startDateField,
+        [commentsField.id]: commentsField,
+      },
+      views: {
+        [allTasksView.id]: allTasksView,
+        [activeTasksView.id]: activeTasksView,
+        [kanbanView.id]: kanbanView,
+      },
+    };
+
+    const user = this.getMainUser();
+    const createTransaction = this.buildCreateTransaction(
+      databaseId,
+      user.userId,
+      databaseAttributes
+    );
+
+    user.transactions.push(createTransaction);
+
+    this.buildRecords(databaseId, databaseAttributes, RECORDS_PER_DATABASE);
+  }
+
+  private buildMeetingsDatabase(parentId: string) {
+    const databaseId = generateId(IdType.Database);
+
+    const techTagSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'tech',
+      color: 'blue',
+      index: generateNodeIndex(),
+    };
+
+    const productTagSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'product',
+      color: 'green',
+      index: generateNodeIndex(techTagSelectOption.index),
+    };
+
+    const designTagSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'design (ui/ux)',
+      color: 'purple',
+      index: generateNodeIndex(productTagSelectOption.index),
+    };
+
+    const clientTagSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'client',
+      color: 'pink',
+      index: generateNodeIndex(designTagSelectOption.index),
+    };
+
+    const hiringSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'hiring',
+      color: 'purple',
+      index: generateNodeIndex(clientTagSelectOption.index),
+    };
+
+    const otherSectorSelectOption: SelectOptionAttributes = {
+      id: generateId(IdType.SelectOption),
+      name: 'other',
+      color: 'gray',
+      index: generateNodeIndex(hiringSectorSelectOption.index),
+    };
+
+    const tagsField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'multiSelect',
+      name: 'Tags',
+      index: generateNodeIndex(),
+      options: {
+        [techTagSelectOption.id]: techTagSelectOption,
+        [productTagSelectOption.id]: productTagSelectOption,
+        [designTagSelectOption.id]: designTagSelectOption,
+        [clientTagSelectOption.id]: clientTagSelectOption,
+        [hiringSectorSelectOption.id]: hiringSectorSelectOption,
+        [otherSectorSelectOption.id]: otherSectorSelectOption,
+      },
+    };
+
+    const attendeesField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'collaborator',
+      name: 'Attendees',
+      index: generateNodeIndex(tagsField.index),
+    };
+
+    const dateField: FieldAttributes = {
+      id: generateId(IdType.Field),
+      type: 'date',
+      name: 'Date',
+      index: generateNodeIndex(attendeesField.index),
+    };
+
+    const calendarView: ViewAttributes = {
+      id: generateId(IdType.View),
+      type: 'calendar',
+      name: 'Calendar',
+      avatar: null,
+      fields: {},
+      filters: {},
+      index: generateNodeIndex(),
+      nameWidth: null,
+      groupBy: dateField.id,
+      sorts: {},
+    };
+
+    const tableView: ViewAttributes = {
+      id: generateId(IdType.View),
+      type: 'table',
+      name: 'Table',
+      avatar: null,
+      fields: {},
+      filters: {},
+      index: generateNodeIndex(calendarView.index),
+      nameWidth: null,
+      groupBy: null,
+      sorts: {},
+    };
+
+    const databaseAttributes: NodeAttributes = {
+      type: 'database',
+      parentId,
+      name: 'Meetings',
+      avatar: '01je8kh206r0bn9mrvsmhrrxzkem',
+      fields: {
+        [tagsField.id]: tagsField,
+        [attendeesField.id]: attendeesField,
+        [dateField.id]: dateField,
+      },
+      views: {
+        [calendarView.id]: calendarView,
+        [tableView.id]: tableView,
       },
     };
 

@@ -19,7 +19,7 @@ const createServersTable: Migration = {
         {
           domain: 'eu.colanode.com',
           name: 'Colanode Cloud (EU)',
-          avatar: '',
+          avatar: 'https://colanode.com/colanode_eu.svg',
           attributes: '{}',
           version: '0.1.0',
           created_at: new Date().toISOString(),
@@ -27,7 +27,7 @@ const createServersTable: Migration = {
         {
           domain: 'us.colanode.com',
           name: 'Colanode Cloud (US)',
-          avatar: '',
+          avatar: 'https://colanode.com/colanode_us.svg',
           attributes: '{}',
           version: '0.1.0',
           created_at: new Date().toISOString(),

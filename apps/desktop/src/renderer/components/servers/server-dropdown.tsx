@@ -2,7 +2,7 @@ import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import React from 'react';
 
-import { Avatar } from '@/renderer/components/avatars/avatar';
+import { ServerAvatar } from '@/renderer/components/servers/server-avatar';
 import { ServerCreateDialog } from '@/renderer/components/servers/server-create-dialog';
 import {
   DropdownMenu,
@@ -29,8 +29,12 @@ export const ServerDropdown = ({
     <React.Fragment>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div className="flex w-full flex-grow flex-row items-center gap-2 rounded-md border border-input p-2 hover:cursor-pointer hover:bg-gray-100">
-            <Avatar id={value.domain} name={value.name} />
+          <div className="flex w-full flex-grow flex-row items-center gap-3 rounded-md border border-input p-2 hover:cursor-pointer hover:bg-gray-100">
+            <ServerAvatar
+              url={value.avatar}
+              name={value.name}
+              className="size-8"
+            />
             <div className="flex-grow">
               <p className="flex-grow font-semibold">{value.name}</p>
               <p className="text-xs text-muted-foreground">{value.domain}</p>
@@ -47,9 +51,13 @@ export const ServerDropdown = ({
                   onChange(server);
                 }
               }}
-              className="flex w-full flex-grow flex-row items-center gap-2 rounded-md border-b border-input p-2 hover:cursor-pointer hover:bg-gray-100"
+              className="flex w-full flex-grow flex-row items-center gap-3 rounded-md border-b border-input p-2 hover:cursor-pointer hover:bg-gray-100"
             >
-              <Avatar id={server.domain} name={server.name} />
+              <ServerAvatar
+                url={server.avatar}
+                name={server.name}
+                className="size-8"
+              />
               <div className="flex-grow">
                 <p className="flex-grow font-semibold">{server.name}</p>
                 <p className="text-xs text-muted-foreground">{server.domain}</p>

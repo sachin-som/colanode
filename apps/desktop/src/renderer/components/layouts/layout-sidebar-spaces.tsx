@@ -2,12 +2,6 @@ import { SpaceNode } from '@colanode/core';
 
 import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-button';
 import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
-import {
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupLabel,
-  SidebarMenu,
-} from '@/renderer/components/ui/sidebar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -26,18 +20,23 @@ export const LayoutSidebarSpaces = () => {
   const spaces = data?.map((node) => node as SpaceNode) ?? [];
 
   return (
-    <SidebarGroup className="group/sidebar-spaces">
-      <SidebarGroupLabel>Spaces</SidebarGroupLabel>
-      {canCreateSpace && (
-        <SidebarGroupAction className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100">
-          <SpaceCreateButton />
-        </SidebarGroupAction>
-      )}
-      <SidebarMenu>
+    <div className="group/sidebar-spaces flex w-full min-w-0 flex-col p-2">
+      <div className="flex items-center justify-between">
+        <div className="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">
+          Spaces
+        </div>
+        {canCreateSpace && (
+          <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center p-0">
+            <SpaceCreateButton />
+          </div>
+        )}
+      </div>
+
+      <div className="flex w-full min-w-0 flex-col gap-1">
         {spaces.map((space) => (
           <SpaceSidebarItem node={space} key={space.id} />
         ))}
-      </SidebarMenu>
-    </SidebarGroup>
+      </div>
+    </div>
   );
 };

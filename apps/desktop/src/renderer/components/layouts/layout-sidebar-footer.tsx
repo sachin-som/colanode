@@ -12,11 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/renderer/components/ui/sidebar';
 import { AccountContext, useAccount } from '@/renderer/contexts/account';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -48,14 +43,35 @@ export function LayoutSidebarFooter() {
   );
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+    <div className="p-2">
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-12 text-sm focus-visible:outline-none focus-visible:ring-0">
+            <Avatar
+              className="h-8 w-8 rounded-lg"
+              id={account.id}
+              name={account.name}
+              avatar={account.avatar}
+            />
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">{account.name}</span>
+              <span className="truncate text-xs">{account.email}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
+            <ReadStateIndicator
+              count={importantCount}
+              hasChanges={hasUnseenChanges}
+            />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-[--radix-dropdown-menu-trigger-width] min-w-80 rounded-lg"
+          side="right"
+          align="end"
+          sideOffset={4}
+        >
+          <DropdownMenuItem key={account.id} className="p-0">
+            <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar
                 className="h-8 w-8 rounded-lg"
                 id={account.id}
@@ -66,121 +82,95 @@ export function LayoutSidebarFooter() {
                 <span className="truncate font-semibold">{account.name}</span>
                 <span className="truncate text-xs">{account.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-              <ReadStateIndicator
-                count={importantCount}
-                hasChanges={hasUnseenChanges}
-              />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-80 rounded-lg"
-            side="right"
-            align="end"
-            sideOffset={4}
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="gap-2 p-2"
+            onClick={() => {
+              account.openSettings();
+            }}
           >
-            <DropdownMenuItem key={account.id} className="p-0">
-              <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar
-                  className="h-8 w-8 rounded-lg"
-                  id={account.id}
-                  name={account.name}
-                  avatar={account.avatar}
-                />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{account.name}</span>
-                  <span className="truncate text-xs">{account.email}</span>
-                </div>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="gap-2 p-2"
-              onClick={() => {
-                account.openSettings();
-              }}
-            >
-              <Settings className="size-4" />
-              <p className="font-medium">Settings</p>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="gap-2 p-2"
-              onClick={() => {
-                account.openLogout();
-              }}
-            >
-              <LogOut className="size-4" />
-              <p className="font-medium">Logout</p>
-            </DropdownMenuItem>
-            {otherAccounts.length > 0 && (
-              <React.Fragment>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="mb-1">Accounts</DropdownMenuLabel>
-                {accounts.map((accountItem) => {
-                  const state = accountStates[accountItem.id] ?? {
-                    importantCount: 0,
-                    hasUnseenChanges: false,
-                  };
+            <Settings className="size-4" />
+            <p className="font-medium">Settings</p>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="gap-2 p-2"
+            onClick={() => {
+              account.openLogout();
+            }}
+          >
+            <LogOut className="size-4" />
+            <p className="font-medium">Logout</p>
+          </DropdownMenuItem>
+          {otherAccounts.length > 0 && (
+            <React.Fragment>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="mb-1">Accounts</DropdownMenuLabel>
+              {accounts.map((accountItem) => {
+                const state = accountStates[accountItem.id] ?? {
+                  importantCount: 0,
+                  hasUnseenChanges: false,
+                };
 
-                  return (
-                    <DropdownMenuItem
-                      key={accountItem.id}
-                      className="p-0"
-                      onClick={() => {
-                        navigate(`/${accountItem.id}`);
+                return (
+                  <DropdownMenuItem
+                    key={accountItem.id}
+                    className="p-0"
+                    onClick={() => {
+                      navigate(`/${accountItem.id}`);
+                    }}
+                  >
+                    <AccountContext.Provider
+                      value={{
+                        ...accountItem,
+                        openSettings: () => {},
+                        openLogout: () => {},
                       }}
                     >
-                      <AccountContext.Provider
-                        value={{
-                          ...accountItem,
-                          openSettings: () => {},
-                          openLogout: () => {},
-                        }}
-                      >
-                        <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                          <Avatar
-                            className="h-8 w-8 rounded-lg"
-                            id={accountItem.id}
-                            name={accountItem.name}
-                            avatar={accountItem.avatar}
-                          />
-                          <div className="grid flex-1 text-left text-sm leading-tight">
-                            <span className="truncate font-semibold">
-                              {accountItem.name}
-                            </span>
-                            <span className="truncate text-xs">
-                              {accountItem.email}
-                            </span>
-                          </div>
-                          {accountItem.id === account.id ? (
-                            <Check className="size-4" />
-                          ) : (
-                            <ReadStateIndicator
-                              count={state.importantCount}
-                              hasChanges={state.hasUnseenChanges}
-                            />
-                          )}
+                      <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                        <Avatar
+                          className="h-8 w-8 rounded-lg"
+                          id={accountItem.id}
+                          name={accountItem.name}
+                          avatar={accountItem.avatar}
+                        />
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">
+                            {accountItem.name}
+                          </span>
+                          <span className="truncate text-xs">
+                            {accountItem.email}
+                          </span>
                         </div>
-                      </AccountContext.Provider>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </React.Fragment>
-            )}
+                        {accountItem.id === account.id ? (
+                          <Check className="size-4" />
+                        ) : (
+                          <ReadStateIndicator
+                            count={state.importantCount}
+                            hasChanges={state.hasUnseenChanges}
+                          />
+                        )}
+                      </div>
+                    </AccountContext.Provider>
+                  </DropdownMenuItem>
+                );
+              })}
+            </React.Fragment>
+          )}
 
-            <DropdownMenuSeparator className="my-1" />
-            <DropdownMenuItem
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                navigate(`/login`);
-              }}
-            >
-              <Plus className="size-4" />
-              <p className="font-medium">Add account</p>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+          <DropdownMenuSeparator className="my-1" />
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              navigate(`/login`);
+            }}
+          >
+            <Plus className="size-4" />
+            <p className="font-medium">Add account</p>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

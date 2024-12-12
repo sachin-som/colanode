@@ -1,4 +1,4 @@
-import { compareString,SpaceNode } from '@colanode/core';
+import { compareString, SpaceNode } from '@colanode/core';
 import {
   ChevronRight,
   Database,
@@ -31,16 +31,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import {
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from '@/renderer/components/ui/sidebar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { cn } from '@/shared/lib/utils';
 
 interface SettingsState {
   open: boolean;
@@ -77,107 +70,106 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
         key={node.id}
         asChild
         defaultOpen={true}
-        className="group/collapsible"
+        className="group/sidebar-space"
       >
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              tooltip={node.attributes.name ?? ''}
-              className="group/space-button"
-            >
-              <Avatar
-                id={node.id}
-                avatar={node.attributes.avatar}
-                name={node.attributes.name}
-                className="size-4 group-hover/space-button:hidden"
-              />
-              <ChevronRight className="hidden size-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/collapsible:rotate-90" />
-              <span>{node.attributes.name}</span>
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuAction
-                showOnHover
-                className="size-4 focus-visible:outline-none focus-visible:ring-0"
-              >
-                <Ellipsis />
-              </SidebarMenuAction>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="ml-1 w-72">
-              <DropdownMenuLabel>
-                {node.attributes.name ?? 'Unnamed'}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
-                <div className="flex flex-row items-center gap-2">
-                  <StickyNote className="size-4" />
-                  <span>Add page</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setOpenCreateChannel(true)}>
-                <div className="flex flex-row items-center gap-2">
-                  <MessageCircle className="size-4" />
-                  <span>Add channel</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setOpenCreateDatabase(true)}>
-                <div className="flex flex-row items-center gap-2">
-                  <Database className="size-4" />
-                  <span>Add database</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setOpenCreateFolder(true)}>
-                <div className="flex flex-row items-center gap-2">
-                  <Folder className="size-4" />
-                  <span>Add folder</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setSettingsState({ open: true })}
-              >
-                <div className="flex flex-row items-center gap-2">
-                  <Settings className="size-4" />
-                  <span>Settings</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  setSettingsState({
-                    open: true,
-                    tab: 'collaborators',
-                  })
-                }
-              >
-                <div className="flex flex-row items-center gap-2">
-                  <Plus className="size-4" />
-                  <span>Add collaborators</span>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
+        <div>
+          <div className="flex w-full min-w-0 flex-row items-center hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8">
+            <CollapsibleTrigger asChild>
+              <button className="group/space-button flex items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm flex-1">
+                <Avatar
+                  id={node.id}
+                  avatar={node.attributes.avatar}
+                  name={node.attributes.name}
+                  className="size-4 group-hover/space-button:hidden"
+                />
+                <ChevronRight className="hidden size-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/sidebar-space:rotate-90" />
+                <span>{node.attributes.name}</span>
+              </button>
+            </CollapsibleTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-space:opacity-100 flex items-center justify-center p-0 mr-1 size-4 focus-visible:outline-none focus-visible:ring-0">
+                  <Ellipsis />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="ml-1 w-72">
+                <DropdownMenuLabel>
+                  {node.attributes.name ?? 'Unnamed'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
+                  <div className="flex flex-row items-center gap-2">
+                    <StickyNote className="size-4" />
+                    <span>Add page</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setOpenCreateChannel(true)}>
+                  <div className="flex flex-row items-center gap-2">
+                    <MessageCircle className="size-4" />
+                    <span>Add channel</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setOpenCreateDatabase(true)}>
+                  <div className="flex flex-row items-center gap-2">
+                    <Database className="size-4" />
+                    <span>Add database</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setOpenCreateFolder(true)}>
+                  <div className="flex flex-row items-center gap-2">
+                    <Folder className="size-4" />
+                    <span>Add folder</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setSettingsState({ open: true })}
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <Settings className="size-4" />
+                    <span>Settings</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    setSettingsState({
+                      open: true,
+                      tab: 'collaborators',
+                    })
+                  }
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <Plus className="size-4" />
+                    <span>Add collaborators</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <CollapsibleContent>
-            <SidebarMenuSub className="mr-0 pr-0">
+            <ul className="mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5 mr-0 pr-0">
               {children.map((child) => (
-                <SidebarMenuSubItem
+                <li
                   key={child.id}
                   onClick={() => {
                     workspace.openInMain(child.id);
                   }}
                   className="cursor-pointer"
                 >
-                  <SidebarMenuSubButton
-                    isActive={workspace.isNodeActive(child.id)}
+                  <div
+                    className={cn(
+                      'text-sm flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                      workspace.isNodeActive(child.id) &&
+                        'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                    )}
                   >
                     <NodeSidebarItem node={child} />
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
+                  </div>
+                </li>
               ))}
-            </SidebarMenuSub>
+            </ul>
           </CollapsibleContent>
-        </SidebarMenuItem>
+        </div>
       </Collapsible>
       {openCreateChannel && (
         <ChannelCreateDialog

@@ -33,7 +33,7 @@ export const ServerDropdown = ({
             <ServerAvatar
               url={value.avatar}
               name={value.name}
-              className="size-8"
+              className="size-8 rounded-md"
             />
             <div className="flex-grow">
               <p className="flex-grow font-semibold">{value.name}</p>
@@ -56,7 +56,7 @@ export const ServerDropdown = ({
               <ServerAvatar
                 url={server.avatar}
                 name={server.name}
-                className="size-8"
+                className="size-8 rounded-md"
               />
               <div className="flex-grow">
                 <p className="flex-grow font-semibold">{server.name}</p>

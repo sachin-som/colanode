@@ -14,21 +14,29 @@ import { Label } from '@/renderer/components/ui/label';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { Server } from '@/shared/types/servers';
 
 interface ServerCreateDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onCancel: () => void;
+  onCreate: (server: Server) => void;
 }
 
 export const ServerCreateDialog = ({
-  open,
-  onOpenChange,
+  onCancel,
+  onCreate,
 }: ServerCreateDialogProps) => {
+  const [open, setOpen] = React.useState(true);
   const { mutate, isPending } = useMutation();
   const [domain, setDomain] = React.useState('');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        onCancel();
+        setOpen(false);
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a server</DialogTitle>
@@ -43,11 +51,7 @@ export const ServerCreateDialog = ({
           />
         </div>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type="button" variant="outline" onClick={() => onCancel()}>
             Cancel
           </Button>
           <Button
@@ -59,8 +63,8 @@ export const ServerCreateDialog = ({
                   type: 'server_create',
                   domain,
                 },
-                onSuccess() {
-                  onOpenChange(false);
+                onSuccess(output) {
+                  onCreate(output.server);
                 },
                 onError(error) {
                   toast({

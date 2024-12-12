@@ -1,10 +1,12 @@
+import { Server } from '@/shared/types/servers';
+
 export type ServerCreateMutationInput = {
   type: 'server_create';
   domain: string;
 };
 
 export type ServerCreateMutationOutput = {
-  success: boolean;
+  server: Server;
 };
 
 declare module '@/shared/mutations' {

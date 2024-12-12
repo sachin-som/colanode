@@ -31,7 +31,7 @@ export const EmojiPicker = ({ onPick }: EmojiPickerProps) => {
           onSkinToneChange={setSkinTone}
         />
       </div>
-      <div className="h-[280px] min-h-[280px] overflow-auto w-[350px] min-w-[350px]">
+      <div className="h-[280px] min-h-[280px] overflow-auto w-[330px] min-w-[330px]">
         {!isPending && data && (
           <EmojiPickerContext.Provider
             value={{

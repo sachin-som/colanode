@@ -28,7 +28,7 @@ export const IconPicker = ({ onPick }: IconPickerProps) => {
           onChange={(e) => setQuery(e.target.value)}
           className="w-full rounded-md bg-gray-100 p-2 text-xs focus:outline-none"
         />
-        <div className="h-[280px] min-h-[280px] overflow-auto w-[350px] min-w-[350px]">
+        <div className="h-[280px] min-h-[280px] overflow-auto w-[330px] min-w-[330px]">
           {!isPending && data && (
             <IconPickerContext.Provider value={{ data, onPick }}>
               {query.length > 2 ? (

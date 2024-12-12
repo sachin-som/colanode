@@ -35,7 +35,7 @@ export class ServerCreateMutationHandler
     }
 
     return {
-      success: true,
+      server,
     };
   }
 }

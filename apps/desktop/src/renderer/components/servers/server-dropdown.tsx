@@ -76,7 +76,13 @@ export const ServerDropdown = ({
         </DropdownMenuContent>
       </DropdownMenu>
       {openCreate && (
-        <ServerCreateDialog open={openCreate} onOpenChange={setOpenCreate} />
+        <ServerCreateDialog
+          onCancel={() => setOpenCreate(false)}
+          onCreate={(server) => {
+            setOpenCreate(false);
+            onChange(server);
+          }}
+        />
       )}
     </React.Fragment>
   );

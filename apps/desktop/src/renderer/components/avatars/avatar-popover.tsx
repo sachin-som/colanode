@@ -16,7 +16,10 @@ export const AvatarPopover = ({ onPick, children }: AvatarPopoverProps) => {
   return (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-max p-0">
+      <PopoverContent
+        className="w-max p-0"
+        onWheel={(e) => e.stopPropagation()}
+      >
         <AvatarPicker onPick={onPick} />
       </PopoverContent>
     </Popover>

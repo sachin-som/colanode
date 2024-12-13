@@ -17,7 +17,6 @@
     "build": "tsc",
     "coverage": "vitest run --coverage "
   },
-  "author": "Hakan Shehu",
   "dependencies": {
     "fractional-indexing-jittered": "^0.9.1",
     "ulid": "^2.3.0",

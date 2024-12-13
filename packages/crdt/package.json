@@ -17,7 +17,6 @@
     "build": "tsc",
     "coverage": "vitest run --coverage "
   },
-  "author": "Hakan Shehu",
   "devDependencies": {
     "@types/diff": "^6.0.0"
   },

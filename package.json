@@ -9,7 +9,6 @@
     "apps/*",
     "scripts"
   ],
-  "author": "Hakan Shehu",
   "repository": {
     "type": "git",
     "url": "https://github.com/colanode/colanode"

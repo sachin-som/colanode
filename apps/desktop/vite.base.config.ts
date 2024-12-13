@@ -4,19 +4,14 @@ import { builtinModules } from 'node:module';
 import type { AddressInfo } from 'node:net';
 import path from 'path';
 
-import pkg from './package.json';
-
 export const builtins = [
   'electron',
   ...builtinModules.map((m) => [m, `node:${m}`]).flat(),
 ];
 
-export const external = [
-  ...builtins,
-  ...Object.keys(
-    'dependencies' in pkg ? (pkg.dependencies as Record<string, unknown>) : {}
-  ).filter((key) => !key.startsWith('@colanode')),
-];
+const nativeModules = ['better-sqlite3'];
+
+export const external = [...builtins, ...nativeModules];
 
 export function getBuildConfig(env: ConfigEnv<'build'>): UserConfig {
   const { root, mode, command } = env;

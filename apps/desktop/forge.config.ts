@@ -5,6 +5,7 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
+import path from 'path';
 import fs from 'fs/promises';
 
 const config: ForgeConfig = {
@@ -28,7 +29,16 @@ const config: ForgeConfig = {
         return false;
       }
 
-      if (path.startsWith('/node_modules')) {
+      if (path === '/node_modules') {
+        return false;
+      }
+
+      // there are the only native modules that are needed in the main process as external dependencies
+      if (
+        path.startsWith('/node_modules/better-sqlite3') ||
+        path.startsWith('/node_modules/bindings') ||
+        path.startsWith('/node_modules/file-uri-to-path')
+      ) {
         return false;
       }
 
@@ -131,8 +141,75 @@ const config: ForgeConfig = {
       });
     },
     postPackage: async () => {
-      // remove the node_modules directory
+      // Remove the node_modules directory
       await fs.rm('./node_modules', { recursive: true, force: true });
+    },
+    packageAfterPrune: async (_, buildPath) => {
+      // Remove empty node_modules folders that are left behind
+      // after the package and prune process. We also delete all non-necessary
+      // files, for example md files, license files, development config files etc.
+      const nodeModulesPath = path.join(buildPath, 'node_modules');
+      const nodeModules = await fs.readdir(nodeModulesPath, {
+        withFileTypes: true,
+      });
+
+      for (const nodeModule of nodeModules) {
+        if (nodeModule.isDirectory() && nodeModule.name !== 'node_modules') {
+          const files = await fs.readdir(
+            path.join(nodeModulesPath, nodeModule.name),
+            {
+              withFileTypes: true,
+            }
+          );
+
+          if (files.length === 0) {
+            await fs.rmdir(path.join(nodeModulesPath, nodeModule.name));
+          } else {
+            for (const file of files) {
+              if (!file.isFile()) {
+                continue;
+              }
+
+              const shouldDelete =
+                file.name === 'LICENSE' ||
+                file.name.endsWith('.md') ||
+                file.name.endsWith('.txt') ||
+                file.name.endsWith('.lock') ||
+                file.name.endsWith('.yaml') ||
+                file.name.endsWith('.yml') ||
+                file.name.endsWith('.gitignore') ||
+                file.name.endsWith('.npmignore') ||
+                file.name.endsWith('.npmrc') ||
+                file.name.endsWith('.npm');
+
+              if (shouldDelete) {
+                await fs.rm(
+                  path.join(nodeModulesPath, nodeModule.name, file.name)
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // Clean up the package.json file and remove all fields that are not needed
+      const packageJsonPath = path.join(buildPath, 'package.json');
+      const packageJson = await fs.readFile(packageJsonPath, 'utf-8');
+      const content = JSON.parse(packageJson);
+      const allowedKeys = [
+        'name',
+        'productName',
+        'version',
+        'description',
+        'main',
+        'author',
+        'license',
+      ];
+
+      const result = Object.fromEntries(
+        Object.entries(content).filter(([key]) => allowedKeys.includes(key))
+      );
+      await fs.writeFile(packageJsonPath, JSON.stringify(result, null, 2));
     },
   },
 };

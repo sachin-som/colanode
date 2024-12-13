@@ -15,36 +15,29 @@ const config: ForgeConfig = {
     appBundleId: 'com.colanode.desktop',
     ...(process.platform === 'win32' && {
       certificateFile: process.env.CERTIFICATE_PATH,
-      certificatePassword: process.env.CERTIFICATE_PASSWORD
+      certificatePassword: process.env.CERTIFICATE_PASSWORD,
     }),
     asar: true,
-    ignore: [
-      /^\/src/,
-      /^\/test/,
-      /^\/tools/,
-      /^\/release/,
-      /^\/docs/,
-      /^\/dist/,
-      /^\/assets/,
-      /\.git/,
-      /\.vscode/,
-      /\.idea/,
-      /^\/\.env/,
-      // Config files
-      /\.eslintrc\.json$/,
-      /components\.json$/,
-      /postcss\.config\.js$/,
-      /tailwind\.config\.js$/,
-      /tsconfig\.json$/,
-      /forge\.config\.ts$/,
-      /forge\.env\.d\.ts$/,
-      /vite\.base\.config\.ts$/,
-      /vite\.main\.config\.ts$/,
-      /vite\.renderer\.config\.ts$/,
-      /vite\.preload\.config\.ts$/,
-      // Don't ignore node_modules
-      // /^\/node_modules/,
-    ],
+    prune: true,
+    ignore: (path) => {
+      if (!path) {
+        return false;
+      }
+
+      if (path === '/package.json') {
+        return false;
+      }
+
+      if (path.startsWith('/node_modules')) {
+        return false;
+      }
+
+      if (path.startsWith('/.vite')) {
+        return false;
+      }
+
+      return true;
+    },
     extraResource: ['assets'],
   },
   rebuildConfig: {},
@@ -53,8 +46,8 @@ const config: ForgeConfig = {
       name: 'Colanode',
       ...(process.platform === 'win32' && {
         certificateFile: process.env.CERTIFICATE_PATH,
-        certificatePassword: process.env.CERTIFICATE_PASSWORD
-      })
+        certificatePassword: process.env.CERTIFICATE_PASSWORD,
+      }),
     }),
     new MakerDMG({
       name: 'Colanode',

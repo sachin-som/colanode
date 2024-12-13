@@ -1,4 +1,4 @@
-import { databaseService } from '../data/database-service';
+import { databaseService } from '@/main/data/database-service';
 
 class MetadataService {
   public async get<T>(key: string): Promise<T | null> {

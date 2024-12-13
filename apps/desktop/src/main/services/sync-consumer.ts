@@ -7,8 +7,7 @@ import {
   TransactionsBatchMessage,
 } from '@colanode/core';
 
-import { interactionService } from './interaction-service';
-
+import { interactionService } from '@/main/services/interaction-service';
 import { nodeService } from '@/main/services/node-service';
 import { collaborationService } from '@/main/services/collaboration-service';
 import { socketService } from '@/main/services/socket-service';

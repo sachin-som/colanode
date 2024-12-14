@@ -15,6 +15,9 @@ import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-inte
 import { SyncMissingNodesJobHandler } from '@/main/jobs/sync-missing-nodes';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
+import { UploadFilesJobHandler } from '@/main/jobs/upload-files';
+import { DownloadFilesJobHandler } from '@/main/jobs/download-files';
+import { CleanDeletedFilesJobHandler } from '@/main/jobs/clean-deleted-files';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Event } from '@/shared/types/events';
 
@@ -33,6 +36,9 @@ export const jobHandlerMap: JobHandlerMap = {
   sync_missing_nodes: new SyncMissingNodesJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
+  upload_files: new UploadFilesJobHandler(),
+  download_files: new DownloadFilesJobHandler(),
+  clean_deleted_files: new CleanDeletedFilesJobHandler(),
 };
 
 type JobState = {
@@ -147,7 +153,15 @@ class Scheduler {
     } finally {
       state.running = false;
 
-      if (state.timeout === null && state.handler.interval > 0) {
+      if (state.timeout) {
+        clearTimeout(state.timeout);
+      }
+
+      if (state.triggered) {
+        state.timeout = setTimeout(() => {
+          this.executeJob(state);
+        }, state.handler.triggerDebounce);
+      } else if (state.handler.interval > 0) {
         state.timeout = setTimeout(() => {
           this.executeJob(state);
         }, state.handler.interval);
@@ -247,6 +261,16 @@ class Scheduler {
       userId,
       accountId,
     });
+
+    this.schedule({
+      type: 'upload_files',
+      userId,
+    });
+
+    this.schedule({
+      type: 'download_files',
+      userId,
+    });
   }
 
   private deleteWorkspaceJobs(userId: string) {
@@ -258,48 +282,78 @@ class Scheduler {
         continue;
       }
 
-      if (
-        state.input.type === 'init_sync_consumers' &&
-        state.input.userId === userId
-      ) {
-        this.states.delete(jobId);
-      }
+      if (this.isWorkspaceJob(state, userId)) {
+        if (state.timeout) {
+          clearTimeout(state.timeout);
+        }
 
-      if (
-        state.input.type === 'sync_pending_transactions' &&
-        state.input.userId === userId
-      ) {
-        this.states.delete(jobId);
-      }
-
-      if (
-        state.input.type === 'sync_incomplete_transactions' &&
-        state.input.userId === userId
-      ) {
-        this.states.delete(jobId);
-      }
-
-      if (
-        state.input.type === 'sync_pending_interactions' &&
-        state.input.userId === userId
-      ) {
-        this.states.delete(jobId);
-      }
-
-      if (
-        state.input.type === 'sync_missing_nodes' &&
-        state.input.userId === userId
-      ) {
-        this.states.delete(jobId);
-      }
-
-      if (
-        state.input.type === 'revert_invalid_transactions' &&
-        state.input.userId === userId
-      ) {
         this.states.delete(jobId);
       }
     }
+  }
+
+  private isWorkspaceJob(state: JobState, userId: string) {
+    if (
+      state.input.type === 'init_sync_consumers' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'sync_pending_transactions' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'sync_incomplete_transactions' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'sync_pending_interactions' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'sync_missing_nodes' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'revert_invalid_transactions' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (state.input.type === 'upload_files' && state.input.userId === userId) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'download_files' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'clean_deleted_files' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   private handleEvent(event: Event) {
@@ -340,6 +394,39 @@ class Scheduler {
     } else if (event.type === 'interaction_event_created') {
       this.trigger({
         type: 'sync_pending_interactions',
+        userId: event.userId,
+      });
+    } else if (event.type === 'node_created' && event.node.type === 'file') {
+      this.trigger({
+        type: 'upload_files',
+        userId: event.userId,
+      });
+      this.trigger({
+        type: 'download_files',
+        userId: event.userId,
+      });
+    } else if (event.type === 'node_updated' && event.node.type === 'file') {
+      this.trigger({
+        type: 'upload_files',
+        userId: event.userId,
+      });
+      this.trigger({
+        type: 'download_files',
+        userId: event.userId,
+      });
+    } else if (event.type === 'node_deleted' && event.node.type === 'file') {
+      this.trigger({
+        type: 'clean_deleted_files',
+        userId: event.userId,
+      });
+    } else if (event.type === 'download_created') {
+      this.trigger({
+        type: 'download_files',
+        userId: event.userId,
+      });
+    } else if (event.type === 'upload_created') {
+      this.trigger({
+        type: 'upload_files',
         userId: event.userId,
       });
     }

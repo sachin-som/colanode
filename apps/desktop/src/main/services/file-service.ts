@@ -23,35 +23,8 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
 import { FileMetadata } from '@/shared/types/files';
 
-type WorkspaceFileState = {
-  isUploading: boolean;
-  isDownloading: boolean;
-  isUploadScheduled: boolean;
-  isDownloadScheduled: boolean;
-};
-
 class FileService {
   private readonly debug = createDebugger('service:file');
-  private readonly fileStates: Map<string, WorkspaceFileState> = new Map();
-
-  constructor() {
-    eventBus.subscribe((event) => {
-      if (event.type === 'download_created') {
-        this.syncWorkspaceDownloads(event.userId);
-      } else if (event.type === 'upload_created') {
-        this.syncWorkspaceUploads(event.userId);
-      } else if (event.type === 'node_created' && event.node.type === 'file') {
-        this.syncWorkspaceDownloads(event.userId);
-        this.syncWorkspaceUploads(event.userId);
-      } else if (event.type === 'node_updated' && event.node.type === 'file') {
-        this.syncWorkspaceDownloads(event.userId);
-        this.syncWorkspaceUploads(event.userId);
-      } else if (event.type === 'node_deleted' && event.node.type === 'file') {
-        this.syncWorkspaceDownloads(event.userId);
-        this.syncWorkspaceUploads(event.userId);
-      }
-    });
-  }
 
   public async handleFileRequest(request: Request): Promise<Response> {
     const url = request.url.replace('local-file://', '');
@@ -143,88 +116,7 @@ class FileService {
     };
   }
 
-  public async syncFiles() {
-    this.debug('Syncing files');
-
-    const workspaces = await databaseService.appDatabase
-      .selectFrom('workspaces')
-      .select(['user_id'])
-      .execute();
-
-    for (const workspace of workspaces) {
-      await this.syncWorkspaceUploads(workspace.user_id);
-      await this.syncWorkspaceDownloads(workspace.user_id);
-      await this.checkDeletedFiles(workspace.user_id);
-    }
-  }
-
-  public async syncWorkspaceUploads(userId: string): Promise<void> {
-    if (!this.fileStates.has(userId)) {
-      this.fileStates.set(userId, {
-        isUploading: false,
-        isDownloading: false,
-        isUploadScheduled: false,
-        isDownloadScheduled: false,
-      });
-    }
-
-    const fileState = this.fileStates.get(userId)!;
-    if (fileState.isUploading) {
-      fileState.isUploadScheduled = true;
-      this.debug(
-        `Uploading files for user ${userId} is in progress, scheduling upload`
-      );
-      return;
-    }
-
-    fileState.isUploading = true;
-    try {
-      await this.uploadWorkspaceFiles(userId);
-    } catch (error) {
-      this.debug(error, `Error uploading files for user ${userId}`);
-    } finally {
-      fileState.isUploading = false;
-      if (fileState.isUploadScheduled) {
-        fileState.isUploadScheduled = false;
-        this.syncWorkspaceUploads(userId);
-      }
-    }
-  }
-
-  public async syncWorkspaceDownloads(userId: string): Promise<void> {
-    if (!this.fileStates.has(userId)) {
-      this.fileStates.set(userId, {
-        isUploading: false,
-        isDownloading: false,
-        isUploadScheduled: false,
-        isDownloadScheduled: false,
-      });
-    }
-
-    const fileState = this.fileStates.get(userId)!;
-    if (fileState.isDownloading) {
-      fileState.isDownloadScheduled = true;
-      this.debug(
-        `Downloading files for user ${userId} is in progress, scheduling download`
-      );
-      return;
-    }
-
-    fileState.isDownloading = true;
-    try {
-      await this.downloadWorkspaceFiles(userId);
-    } catch (error) {
-      this.debug(error, `Error downloading files for user ${userId}`);
-    } finally {
-      fileState.isDownloading = false;
-      if (fileState.isDownloadScheduled) {
-        fileState.isDownloadScheduled = false;
-        this.syncWorkspaceDownloads(userId);
-      }
-    }
-  }
-
-  private async uploadWorkspaceFiles(userId: string): Promise<void> {
+  public async uploadFiles(userId: string): Promise<void> {
     this.debug(`Uploading files for user ${userId}`);
 
     const workspaceDatabase =
@@ -355,7 +247,7 @@ class FileService {
     }
   }
 
-  public async downloadWorkspaceFiles(userId: string): Promise<void> {
+  public async downloadFiles(userId: string): Promise<void> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
@@ -505,7 +397,7 @@ class FileService {
     }
   }
 
-  private async checkDeletedFiles(userId: string): Promise<void> {
+  public async cleanDeletedFiles(userId: string): Promise<void> {
     this.debug(`Checking deleted files for user ${userId}`);
 
     const workspaceDatabase =

@@ -1,5 +1,6 @@
 import { FieldType } from '@colanode/core';
 import {
+  Cable,
   Calendar,
   File,
   Hash,
@@ -43,6 +44,8 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <Smartphone className={className} />;
     case 'select':
       return <ListCheck className={className} />;
+    case 'relation':
+      return <Cable className={className} />;
     case 'text':
       return <Text className={className} />;
     case 'url':

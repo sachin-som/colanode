@@ -16,6 +16,8 @@ import { UserSearchQueryHandler } from '@/main/queries/users/user-search';
 import { WorkspaceGetQueryHandler } from '@/main/queries/workspaces/workspace-get';
 import { WorkspaceListQueryHandler } from '@/main/queries/workspaces/workspace-list';
 import { WorkspaceUserListQueryHandler } from '@/main/queries/workspaces/workspace-user-list';
+import { DatabaseListQueryHandler } from '@/main/queries/databases/database-list';
+import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { QueryHandler } from '@/main/types';
 import { QueryMap } from '@/shared/queries';
 
@@ -42,4 +44,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   account_get: new AccountGetQueryHandler(),
   workspace_get: new WorkspaceGetQueryHandler(),
   download_get: new DownloadGetQueryHandler(),
+  database_list: new DatabaseListQueryHandler(),
+  record_search: new RecordSearchQueryHandler(),
 };

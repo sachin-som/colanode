@@ -14,6 +14,7 @@ import { RecordTextValue } from '@/renderer/components/records/values/record-tex
 import { RecordUpdatedAtValue } from '@/renderer/components/records/values/record-updated-at-value';
 import { RecordUpdatedByValue } from '@/renderer/components/records/values/record-updated-by-value';
 import { RecordUrlValue } from '@/renderer/components/records/values/record-url-value';
+import { RecordRelationValue } from '@/renderer/components/records/values/record-relation-value';
 
 interface RecordFieldValueProps {
   field: FieldAttributes;
@@ -45,6 +46,8 @@ export const RecordFieldValue = ({
       return <RecordPhoneValue field={field} readOnly={readOnly} />;
     case 'select':
       return <RecordSelectValue field={field} readOnly={readOnly} />;
+    case 'relation':
+      return <RecordRelationValue field={field} readOnly={readOnly} />;
     case 'text':
       return <RecordTextValue field={field} readOnly={readOnly} />;
     case 'url':

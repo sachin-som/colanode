@@ -5,6 +5,7 @@ export type FieldCreateMutationInput = {
   databaseId: string;
   name: string;
   fieldType: FieldType;
+  relationDatabaseId?: string | null;
   userId: string;
 };
 

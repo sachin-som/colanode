@@ -70,6 +70,10 @@ const fieldTypes: FieldTypeOption[] = [
     type: 'select',
   },
   {
+    name: 'Relation',
+    type: 'relation',
+  },
+  {
     name: 'Text',
     type: 'text',
   },

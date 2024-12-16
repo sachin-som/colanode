@@ -191,6 +191,7 @@ export const relationFieldAttributesSchema = z.object({
   type: z.literal('relation'),
   name: z.string(),
   index: z.string(),
+  databaseId: z.string().optional().nullable(),
 });
 
 export type RelationFieldAttributes = z.infer<

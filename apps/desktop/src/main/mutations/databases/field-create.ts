@@ -1,5 +1,7 @@
 import {
   compareString,
+  FieldAttributes,
+  FieldType,
   generateId,
   generateNodeIndex,
   IdType,
@@ -19,6 +21,27 @@ export class FieldCreateMutationHandler
   async handleMutation(
     input: FieldCreateMutationInput
   ): Promise<FieldCreateMutationOutput> {
+    if (input.fieldType === 'relation') {
+      if (!input.relationDatabaseId) {
+        throw new MutationError(
+          'relation_database_not_found',
+          'Relation database not found.'
+        );
+      }
+
+      const relationDatabase = await nodeService.fetchNode(
+        input.relationDatabaseId,
+        input.userId
+      );
+
+      if (!relationDatabase || relationDatabase.type !== 'database') {
+        throw new MutationError(
+          'relation_database_not_found',
+          'Relation database not found.'
+        );
+      }
+    }
+
     const fieldId = generateId(IdType.Field);
     const result = await nodeService.updateNode(
       input.databaseId,
@@ -34,12 +57,18 @@ export class FieldCreateMutationHandler
 
         const index = generateNodeIndex(maxIndex, null);
 
-        attributes.fields[fieldId] = {
+        const newField: FieldAttributes = {
           id: fieldId,
-          type: input.fieldType,
+          type: input.fieldType as FieldType,
           name: input.name,
           index,
         };
+
+        if (newField.type === 'relation') {
+          newField.databaseId = input.relationDatabaseId;
+        }
+
+        attributes.fields[fieldId] = newField;
 
         return attributes;
       }

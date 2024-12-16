@@ -4,7 +4,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-import { FieldAttrs } from '@/renderer/components/databases/fields/field-attrs';
+import { DatabaseSelect } from '@/renderer/components/databases/database-select';
 import { FieldTypeSelect } from '@/renderer/components/databases/fields/field-type-select';
 import { Button } from '@/renderer/components/ui/button';
 import {
@@ -42,10 +42,12 @@ const formSchema = z.object({
     z.literal('phone'),
     z.literal('select'),
     z.literal('text'),
+    z.literal('relation'),
     z.literal('updatedAt'),
     z.literal('updatedBy'),
     z.literal('url'),
   ]),
+  relationDatabaseId: z.string().optional().nullable(),
 });
 
 export const FieldCreatePopover = () => {
@@ -63,6 +65,8 @@ export const FieldCreatePopover = () => {
     },
   });
 
+  const type = form.watch('type');
+
   const handleCancelClick = () => {
     setOpen(false);
     form.reset();
@@ -76,6 +80,7 @@ export const FieldCreatePopover = () => {
         name: values.name,
         fieldType: values.type,
         userId: workspace.userId,
+        relationDatabaseId: values.relationDatabaseId,
       },
       onSuccess: () => {
         setOpen(false);
@@ -135,7 +140,23 @@ export const FieldCreatePopover = () => {
                   </FormItem>
                 )}
               />
-              <FieldAttrs />
+              {type === 'relation' && (
+                <FormField
+                  control={form.control}
+                  name="relationDatabaseId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Database</FormLabel>
+                      <FormControl>
+                        <DatabaseSelect
+                          id={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             <div className="mt-2 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
               <Button

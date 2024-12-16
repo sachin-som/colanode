@@ -50,4 +50,5 @@ export type MutationErrorCode =
   | 'message_not_found'
   | 'invalid_server_domain'
   | 'server_already_exists'
-  | 'workspace_not_found';
+  | 'workspace_not_found'
+  | 'relation_database_not_found';

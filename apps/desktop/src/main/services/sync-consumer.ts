@@ -1,6 +1,5 @@
 import {
   CollaborationsBatchMessage,
-  DeletedCollaborationsBatchMessage,
   InitSyncConsumerMessage,
   InteractionsBatchMessage,
   SyncConsumerType,
@@ -121,13 +120,13 @@ export class SyncConsumer {
       return;
     }
 
-    this.debug(`Syncing server collaborations for user ${message.userId}`);
+    this.debug(`Syncing server collaborators for user ${message.userId}`);
 
     this.status = 'syncing';
     let cursor: bigint | null = null;
     try {
       for (const collaboration of message.collaborations) {
-        await collaborationService.applyServerCollaboration(
+        await collaborationService.syncServerCollaboration(
           message.userId,
           collaboration
         );
@@ -136,64 +135,11 @@ export class SyncConsumer {
     } catch (error) {
       this.debug(
         error,
-        `Error syncing server collaborations for user ${message.userId}`
+        `Error syncing server collaborators for user ${message.userId}`
       );
     } finally {
       if (cursor) {
         await updateCursor(message.userId, 'collaborations', cursor);
-        this.cursor = cursor;
-        this.status = 'idle';
-        this.initConsumer(cursor);
-      } else {
-        this.status = 'idle';
-        this.ping();
-      }
-    }
-  }
-
-  public async syncDeletedCollaborations(
-    message: DeletedCollaborationsBatchMessage
-  ) {
-    if (this.type !== 'deleted_collaborations') {
-      this.debug(
-        `Syncing of server deleted collaborations not supported for consumer type ${this.type}, skipping`
-      );
-      return;
-    }
-
-    if (this.status === 'syncing') {
-      this.debug(
-        `Syncing of server deleted collaborations already in progress for user ${message.userId}, skipping`
-      );
-      return;
-    }
-
-    this.debug(
-      `Syncing server deleted collaborations for user ${message.userId}`
-    );
-
-    this.status = 'syncing';
-    let cursor: bigint | null = null;
-    try {
-      for (const deletedCollaboration of message.deletedCollaborations) {
-        await collaborationService.applyServerDeletedCollaboration(
-          message.userId,
-          deletedCollaboration
-        );
-        cursor = BigInt(deletedCollaboration.version);
-      }
-    } catch (error) {
-      this.debug(
-        error,
-        `Error syncing server deleted collaborations for user ${message.userId}`
-      );
-    } finally {
-      this.debug(
-        `Syncing of server deleted collaborations completed for user ${message.userId}`
-      );
-
-      if (cursor) {
-        await updateCursor(message.userId, 'deleted_collaborations', cursor);
         this.cursor = cursor;
         this.status = 'idle';
         this.initConsumer(cursor);

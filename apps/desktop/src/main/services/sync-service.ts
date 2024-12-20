@@ -1,6 +1,5 @@
 import {
   CollaborationsBatchMessage,
-  DeletedCollaborationsBatchMessage,
   InteractionsBatchMessage,
   SyncConsumerType,
   TransactionsBatchMessage,
@@ -16,7 +15,6 @@ class SyncService {
 
   public async initUserConsumers(accountId: string, userId: string) {
     await this.createConsumer(accountId, userId, 'transactions');
-    await this.createConsumer(accountId, userId, 'deleted_collaborations');
     await this.createConsumer(accountId, userId, 'collaborations');
     await this.createConsumer(accountId, userId, 'interactions');
     await this.createConsumer(accountId, userId, 'users');
@@ -57,17 +55,6 @@ class SyncService {
     );
     if (consumer) {
       consumer.syncTransactions(message);
-    }
-  }
-
-  public async syncServerDeletedCollaborations(
-    message: DeletedCollaborationsBatchMessage
-  ) {
-    const consumer = this.consumers.get(
-      this.getConsumerKey(message.userId, 'deleted_collaborations')
-    );
-    if (consumer) {
-      consumer.syncDeletedCollaborations(message);
     }
   }
 

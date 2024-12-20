@@ -1,14 +1,13 @@
 import { WebSocket } from 'ws';
 import {
-  CollaborationsBatchMessage,
   InitSyncConsumerMessage,
   InteractionsBatchMessage,
   Message,
   TransactionsBatchMessage,
   SyncConsumerType,
   WorkspaceStatus,
-  DeletedCollaborationsBatchMessage,
   UsersBatchMessage,
+  CollaborationsBatchMessage,
 } from '@colanode/core';
 
 import { interactionService } from '@/services/interaction-service';
@@ -17,15 +16,14 @@ import { RequestAccount } from '@/types/api';
 import { database } from '@/data/database';
 import {
   mapCollaboration,
-  mapDeletedCollaboration,
   mapInteraction,
   mapTransaction,
   mapUser,
 } from '@/lib/nodes';
 import {
   AccountUpdatedEvent,
-  CollaboratorAddedEvent,
-  CollaboratorRemovedEvent,
+  CollaborationCreatedEvent,
+  CollaborationUpdatedEvent,
   Event,
   InteractionUpdatedEvent,
   NodeCreatedEvent,
@@ -46,6 +44,7 @@ type SocketSyncConsumer = {
 type SocketUser = {
   userId: string;
   workspaceId: string;
+  rootIds: string[];
   consumers: Map<SyncConsumerType, SocketSyncConsumer>;
 };
 
@@ -91,10 +90,10 @@ export class SocketConnection {
       this.handleNodeUpdatedEvent(event);
     } else if (event.type === 'node_deleted') {
       this.handleNodeDeletedEvent(event);
-    } else if (event.type === 'collaborator_added') {
-      this.handleCollaboratorAddedEvent(event);
-    } else if (event.type === 'collaborator_removed') {
-      this.handleCollaboratorRemovedEvent(event);
+    } else if (event.type === 'collaboration_created') {
+      this.handleCollaborationCreatedEvent(event);
+    } else if (event.type === 'collaboration_updated') {
+      this.handleCollaborationUpdatedEvent(event);
     } else if (event.type === 'interaction_updated') {
       this.handleInteractionUpdatedEvent(event);
     } else if (event.type === 'account_updated') {
@@ -151,8 +150,6 @@ export class SocketConnection {
   ) {
     if (consumer.type === 'transactions') {
       this.consumeTransactions(user, consumer);
-    } else if (consumer.type === 'deleted_collaborations') {
-      this.consumeDeletedCollaborations(user, consumer);
     } else if (consumer.type === 'collaborations') {
       this.consumeCollaborations(user, consumer);
     } else if (consumer.type === 'interactions') {
@@ -170,22 +167,21 @@ export class SocketConnection {
       return;
     }
 
+    if (user.rootIds.length === 0) {
+      return;
+    }
+
     consumer.fetching = true;
     this.logger.trace(
       `Checking for pending node transactions for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
     );
 
     const unsyncedTransactions = await database
-      .selectFrom('transactions as t')
-      .leftJoin('collaborations as c', (join) =>
-        join
-          .on('c.user_id', '=', user.userId)
-          .onRef('c.node_id', '=', 't.node_id')
-      )
-      .selectAll('t')
-      .whereRef('c.node_id', '=', 't.node_id')
-      .where('t.version', '>', BigInt(consumer.cursor))
-      .orderBy('t.version', 'asc')
+      .selectFrom('transactions')
+      .selectAll()
+      .where('root_id', 'in', user.rootIds)
+      .where('version', '>', BigInt(consumer.cursor))
+      .orderBy('version', 'asc')
       .limit(20)
       .execute();
 
@@ -208,49 +204,6 @@ export class SocketConnection {
     this.sendMessage(message);
   }
 
-  private async consumeDeletedCollaborations(
-    user: SocketUser,
-    consumer: SocketSyncConsumer
-  ) {
-    if (consumer.fetching) {
-      return;
-    }
-
-    consumer.fetching = true;
-    this.logger.trace(
-      `Checking for pending deleted collaborations for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-    );
-
-    const unsyncedDeletedCollaborations = await database
-      .selectFrom('deleted_collaborations as dc')
-      .selectAll()
-      .where('dc.user_id', '=', user.userId)
-      .where('dc.version', '>', BigInt(consumer.cursor))
-      .orderBy('dc.version', 'asc')
-      .limit(50)
-      .execute();
-
-    if (unsyncedDeletedCollaborations.length === 0) {
-      this.logger.trace(
-        `No pending deleted collaborations found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-      );
-      consumer.fetching = false;
-      return;
-    }
-
-    const deletedCollaborations = unsyncedDeletedCollaborations.map(
-      mapDeletedCollaboration
-    );
-    const message: DeletedCollaborationsBatchMessage = {
-      type: 'deleted_collaborations_batch',
-      userId: user.userId,
-      deletedCollaborations,
-    };
-
-    user.consumers.delete(consumer.type);
-    this.sendMessage(message);
-  }
-
   private async consumeCollaborations(
     user: SocketUser,
     consumer: SocketSyncConsumer
@@ -265,11 +218,11 @@ export class SocketConnection {
     );
 
     const unsyncedCollaborations = await database
-      .selectFrom('collaborations as c')
+      .selectFrom('collaborations')
       .selectAll()
-      .where('c.user_id', '=', user.userId)
-      .where('c.version', '>', BigInt(consumer.cursor))
-      .orderBy('c.version', 'asc')
+      .where('collaborator_id', '=', user.userId)
+      .where('version', '>', BigInt(consumer.cursor))
+      .orderBy('version', 'asc')
       .limit(50)
       .execute();
 
@@ -306,16 +259,11 @@ export class SocketConnection {
     );
 
     const unsyncedInteractions = await database
-      .selectFrom('interactions as i')
-      .leftJoin('collaborations as c', (join) =>
-        join
-          .on('c.user_id', '=', user.userId)
-          .onRef('c.node_id', '=', 'i.node_id')
-      )
-      .whereRef('c.node_id', '=', 'i.node_id')
-      .selectAll('i')
-      .where('i.version', '>', BigInt(consumer.cursor))
-      .orderBy('i.version', 'asc')
+      .selectFrom('interactions')
+      .selectAll()
+      .where('node_id', 'in', user.rootIds)
+      .where('version', '>', BigInt(consumer.cursor))
+      .orderBy('version', 'asc')
       .limit(20)
       .execute();
 
@@ -379,14 +327,13 @@ export class SocketConnection {
         continue;
       }
 
+      if (!user.rootIds.includes(event.rootId)) {
+        continue;
+      }
+
       const transactionsConsumer = user.consumers.get('transactions');
       if (transactionsConsumer) {
         this.consumePendingSync(user, transactionsConsumer);
-      }
-
-      const collaborationsConsumer = user.consumers.get('collaborations');
-      if (collaborationsConsumer) {
-        this.consumePendingSync(user, collaborationsConsumer);
       }
 
       const interactionsConsumer = user.consumers.get('interactions');
@@ -399,6 +346,10 @@ export class SocketConnection {
   private async handleNodeUpdatedEvent(event: NodeUpdatedEvent) {
     for (const user of this.users.values()) {
       if (user.workspaceId !== event.workspaceId) {
+        continue;
+      }
+
+      if (!user.rootIds.includes(event.rootId)) {
         continue;
       }
 
@@ -415,24 +366,27 @@ export class SocketConnection {
         continue;
       }
 
+      if (!user.rootIds.includes(event.rootId)) {
+        continue;
+      }
+
       const transactionsConsumer = user.consumers.get('transactions');
       if (transactionsConsumer) {
         this.consumePendingSync(user, transactionsConsumer);
       }
-
-      const deletedCollaborationsConsumer = user.consumers.get(
-        'deleted_collaborations'
-      );
-      if (deletedCollaborationsConsumer) {
-        this.consumePendingSync(user, deletedCollaborationsConsumer);
-      }
     }
   }
 
-  private async handleCollaboratorAddedEvent(event: CollaboratorAddedEvent) {
+  private async handleCollaborationCreatedEvent(
+    event: CollaborationCreatedEvent
+  ) {
     for (const user of this.users.values()) {
-      if (user.userId !== event.userId) {
+      if (user.userId !== event.collaboratorId) {
         continue;
+      }
+
+      if (!user.rootIds.includes(event.nodeId)) {
+        user.rootIds.push(event.nodeId);
       }
 
       const collaborationsConsumer = user.consumers.get('collaborations');
@@ -442,19 +396,21 @@ export class SocketConnection {
     }
   }
 
-  private async handleCollaboratorRemovedEvent(
-    event: CollaboratorRemovedEvent
+  private async handleCollaborationUpdatedEvent(
+    event: CollaborationUpdatedEvent
   ) {
     for (const user of this.users.values()) {
-      if (user.userId !== event.userId) {
+      if (user.userId !== event.collaboratorId) {
         continue;
       }
 
-      const deletedCollaborationsConsumer = user.consumers.get(
-        'deleted_collaborations'
-      );
-      if (deletedCollaborationsConsumer) {
-        this.consumePendingSync(user, deletedCollaborationsConsumer);
+      if (!user.rootIds.includes(event.nodeId)) {
+        user.rootIds.push(event.nodeId);
+      }
+
+      const collaborationsConsumer = user.consumers.get('collaborations');
+      if (collaborationsConsumer) {
+        this.consumePendingSync(user, collaborationsConsumer);
       }
     }
   }
@@ -535,6 +491,17 @@ export class SocketConnection {
       return null;
     }
 
+    const collaborations = await database
+      .selectFrom('collaborations')
+      .select(['node_id'])
+      .where('collaborator_id', '=', userId)
+      .where('deleted_at', 'is', null)
+      .execute();
+
+    const rootIds = collaborations.map(
+      (collaboration) => collaboration.node_id
+    );
+
     const addedSocketUser = this.users.get(userId);
     if (addedSocketUser) {
       return addedSocketUser;
@@ -544,6 +511,7 @@ export class SocketConnection {
     const newSocketUser: SocketUser = {
       userId,
       workspaceId: user.workspace_id,
+      rootIds,
       consumers: new Map(),
     };
 

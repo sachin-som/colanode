@@ -4,6 +4,7 @@ export type NodeCreatedEvent = {
   type: 'node_created';
   nodeId: string;
   nodeType: NodeType;
+  rootId: string;
   workspaceId: string;
 };
 
@@ -11,6 +12,7 @@ export type NodeUpdatedEvent = {
   type: 'node_updated';
   nodeId: string;
   nodeType: NodeType;
+  rootId: string;
   workspaceId: string;
 };
 
@@ -18,19 +20,22 @@ export type NodeDeletedEvent = {
   type: 'node_deleted';
   nodeId: string;
   nodeType: NodeType;
+  rootId: string;
   workspaceId: string;
 };
 
-export type CollaboratorAddedEvent = {
-  type: 'collaborator_added';
-  userId: string;
+export type CollaborationCreatedEvent = {
+  type: 'collaboration_created';
+  collaboratorId: string;
   nodeId: string;
+  workspaceId: string;
 };
 
-export type CollaboratorRemovedEvent = {
-  type: 'collaborator_removed';
-  userId: string;
+export type CollaborationUpdatedEvent = {
+  type: 'collaboration_updated';
+  collaboratorId: string;
   nodeId: string;
+  workspaceId: string;
 };
 
 export type InteractionUpdatedEvent = {
@@ -84,8 +89,8 @@ export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
   | NodeDeletedEvent
-  | CollaboratorAddedEvent
-  | CollaboratorRemovedEvent
+  | CollaborationCreatedEvent
+  | CollaborationUpdatedEvent
   | InteractionUpdatedEvent
   | UserCreatedEvent
   | UserUpdatedEvent

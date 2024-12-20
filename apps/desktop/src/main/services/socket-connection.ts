@@ -60,8 +60,6 @@ export class SocketConnection {
 
       if (message.type === 'transactions_batch') {
         syncService.syncServerTransactions(message);
-      } else if (message.type === 'deleted_collaborations_batch') {
-        syncService.syncServerDeletedCollaborations(message);
       } else if (message.type === 'collaborations_batch') {
         syncService.syncServerCollaborations(message);
       } else if (message.type === 'interactions_batch') {

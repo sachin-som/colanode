@@ -142,8 +142,8 @@ const deleteChildren = async (
         await trx
           .updateTable('collaborations')
           .set({
-            roles: '{}',
-            updated_at: new Date(),
+            deleted_at: new Date(),
+            deleted_by: userId,
           })
           .where('node_id', 'in', nodeIds)
           .execute();
@@ -169,6 +169,7 @@ const deleteChildren = async (
           type: 'node_deleted',
           nodeId: node.id,
           nodeType: node.type,
+          rootId: node.root_id,
           workspaceId: workspaceId,
         });
 

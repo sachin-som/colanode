@@ -6,7 +6,6 @@ import {
   NodeRole,
   NodeType,
   ServerCollaboration,
-  ServerDeletedCollaboration,
   ServerInteraction,
   ServerTransaction,
   ServerUser,
@@ -15,10 +14,9 @@ import { encodeState } from '@colanode/crdt';
 
 import { database } from '@/data/database';
 import {
-  SelectCollaboration,
-  SelectDeletedCollaboration,
   SelectInteraction,
   SelectNode,
+  SelectCollaboration,
   SelectTransaction,
   SelectUser,
 } from '@/data/schema';
@@ -44,6 +42,7 @@ export const mapNode = (node: SelectNode): Node => {
   return {
     id: node.id,
     parentId: node.parent_id,
+    rootId: node.root_id,
     type: node.type as NodeType,
     attributes: node.attributes,
     createdAt: node.created_at.toISOString(),
@@ -104,32 +103,6 @@ export const mapTransaction = (
   throw new Error('Unknown transaction type');
 };
 
-export const mapDeletedCollaboration = (
-  deletedCollaboration: SelectDeletedCollaboration
-): ServerDeletedCollaboration => {
-  return {
-    userId: deletedCollaboration.user_id,
-    nodeId: deletedCollaboration.node_id,
-    workspaceId: deletedCollaboration.workspace_id,
-    createdAt: deletedCollaboration.created_at.toISOString(),
-    version: deletedCollaboration.version.toString(),
-  };
-};
-
-export const mapCollaboration = (
-  collaboration: SelectCollaboration
-): ServerCollaboration => {
-  return {
-    userId: collaboration.user_id,
-    nodeId: collaboration.node_id,
-    workspaceId: collaboration.workspace_id,
-    roles: collaboration.roles,
-    createdAt: collaboration.created_at.toISOString(),
-    updatedAt: collaboration.updated_at?.toISOString() ?? null,
-    version: collaboration.version.toString(),
-  };
-};
-
 export const mapInteraction = (
   interaction: SelectInteraction
 ): ServerInteraction => {
@@ -159,6 +132,25 @@ export const mapUser = (user: SelectUser): ServerUser => {
     createdAt: user.created_at.toISOString(),
     updatedAt: user.updated_at?.toISOString() ?? null,
     version: user.version.toString(),
+  };
+};
+
+export const mapCollaboration = (
+  collaboration: SelectCollaboration
+): ServerCollaboration => {
+  return {
+    nodeId: collaboration.node_id,
+    rootId: collaboration.root_id,
+    workspaceId: collaboration.workspace_id,
+    collaboratorId: collaboration.collaborator_id,
+    role: collaboration.role,
+    createdBy: collaboration.created_by,
+    updatedBy: collaboration.updated_by,
+    createdAt: collaboration.created_at.toISOString(),
+    updatedAt: collaboration.updated_at?.toISOString() ?? null,
+    deletedAt: collaboration.deleted_at?.toISOString() ?? null,
+    deletedBy: collaboration.deleted_by ?? null,
+    version: collaboration.version,
   };
 };
 

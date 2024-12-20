@@ -109,6 +109,25 @@ export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
 
+interface CollaborationTable {
+  node_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  role: ColumnType<NodeRole, NodeRole, NodeRole>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
+  deleted_by: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, never, never>;
+}
+
+export type SelectCollaboration = Selectable<CollaborationTable>;
+export type CreateCollaboration = Insertable<CollaborationTable>;
+export type UpdateCollaboration = Updateable<CollaborationTable>;
+
 interface TransactionTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
@@ -125,32 +144,6 @@ interface TransactionTable {
 export type SelectTransaction = Selectable<TransactionTable>;
 export type CreateTransaction = Insertable<TransactionTable>;
 export type UpdateTransaction = Updateable<TransactionTable>;
-
-interface CollaborationTable {
-  user_id: ColumnType<string, string, never>;
-  node_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  roles: JSONColumnType<Record<string, NodeRole>, string, string>;
-  created_at: ColumnType<Date, Date, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectCollaboration = Selectable<CollaborationTable>;
-export type CreateCollaboration = Insertable<CollaborationTable>;
-export type UpdateCollaboration = Updateable<CollaborationTable>;
-
-interface DeletedCollaborationTable {
-  user_id: ColumnType<string, never, never>;
-  node_id: ColumnType<string, never, never>;
-  workspace_id: ColumnType<string, string, never>;
-  created_at: ColumnType<Date, never, never>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectDeletedCollaboration = Selectable<DeletedCollaborationTable>;
-export type CreateDeletedCollaboration = Insertable<DeletedCollaborationTable>;
-export type UpdateDeletedCollaboration = Updateable<DeletedCollaborationTable>;
 
 interface NodePathTable {
   ancestor_id: ColumnType<string, string, never>;
@@ -208,7 +201,6 @@ export interface DatabaseSchema {
   nodes: NodeTable;
   transactions: TransactionTable;
   collaborations: CollaborationTable;
-  deleted_collaborations: DeletedCollaborationTable;
   node_paths: NodePathTable;
   uploads: UploadTable;
   interactions: InteractionTable;

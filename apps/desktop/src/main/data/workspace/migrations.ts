@@ -83,12 +83,12 @@ const createCollaborationsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('collaborations')
-      .addColumn('node_id', 'text', (col) => col.notNull())
-      .addColumn('roles', 'text')
+      .addColumn('node_id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('role', 'text')
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
+      .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer')
-      .addPrimaryKeyConstraint('collaborations_pkey', ['node_id'])
       .execute();
   },
   down: async (db) => {

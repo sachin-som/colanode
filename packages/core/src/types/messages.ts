@@ -1,7 +1,6 @@
 import { InteractionEvent } from './interactions';
 import {
   ServerCollaboration,
-  ServerDeletedCollaboration,
   ServerInteraction,
   ServerTransaction,
   ServerUser,
@@ -12,12 +11,6 @@ export type TransactionsBatchMessage = {
   type: 'transactions_batch';
   userId: string;
   transactions: ServerTransaction[];
-};
-
-export type DeletedCollaborationsBatchMessage = {
-  type: 'deleted_collaborations_batch';
-  userId: string;
-  deletedCollaborations: ServerDeletedCollaboration[];
 };
 
 export type CollaborationsBatchMessage = {
@@ -70,7 +63,6 @@ export type WorkspaceDeletedMessage = {
 export type Message =
   | TransactionsBatchMessage
   | CollaborationsBatchMessage
-  | DeletedCollaborationsBatchMessage
   | InteractionsBatchMessage
   | UsersBatchMessage
   | SyncInteractionsMessage

@@ -104,13 +104,18 @@ export type ServerDeletedCollaboration = {
 };
 
 export type ServerCollaboration = {
-  userId: string;
+  collaboratorId: string;
   nodeId: string;
+  rootId: string;
   workspaceId: string;
-  roles: Record<string, NodeRole>;
+  role: NodeRole;
   createdAt: string;
+  createdBy: string;
   updatedAt: string | null;
-  version: string;
+  updatedBy: string | null;
+  deletedAt: string | null;
+  deletedBy: string | null;
+  version: bigint;
 };
 
 export type ServerInteraction = {
@@ -142,6 +147,5 @@ export type ServerUser = {
 export type SyncConsumerType =
   | 'transactions'
   | 'collaborations'
-  | 'deleted_collaborations'
   | 'interactions'
   | 'users';

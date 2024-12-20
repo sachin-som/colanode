@@ -1,7 +1,4 @@
-import {
-  ServerCollaboration,
-  ServerDeletedCollaboration,
-} from '@colanode/core';
+import { ServerCollaboration } from '@colanode/core';
 
 import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
@@ -10,7 +7,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 class CollaborationService {
   private readonly debug = createDebugger('service:collaboration');
 
-  public async applyServerCollaboration(
+  public async syncServerCollaboration(
     userId: string,
     collaboration: ServerCollaboration
   ) {
@@ -25,66 +22,54 @@ class CollaborationService {
       .insertInto('collaborations')
       .values({
         node_id: collaboration.nodeId,
-        roles: JSON.stringify(collaboration.roles),
+        role: collaboration.role,
         created_at: collaboration.createdAt,
+        updated_at: collaboration.updatedAt,
+        deleted_at: collaboration.deletedAt,
         version: BigInt(collaboration.version),
       })
       .onConflict((oc) =>
         oc
           .columns(['node_id'])
           .doUpdateSet({
-            roles: JSON.stringify(collaboration.roles),
+            role: collaboration.role,
             version: BigInt(collaboration.version),
             updated_at: collaboration.updatedAt,
+            deleted_at: collaboration.deletedAt,
           })
           .where('version', '<', BigInt(collaboration.version))
       )
       .execute();
+
+    if (collaboration.deletedAt) {
+      await workspaceDatabase.transaction().execute(async (tx) => {
+        await tx
+          .deleteFrom('nodes')
+          .where('id', '=', collaboration.nodeId)
+          .execute();
+
+        await tx
+          .deleteFrom('transactions')
+          .where('node_id', '=', collaboration.nodeId)
+          .execute();
+
+        await tx
+          .deleteFrom('interaction_events')
+          .where('node_id', '=', collaboration.nodeId)
+          .execute();
+
+        await tx
+          .deleteFrom('interactions')
+          .where('node_id', '=', collaboration.nodeId)
+          .execute();
+      });
+    }
 
     eventBus.publish({
       type: 'collaboration_synced',
       userId,
       nodeId: collaboration.nodeId,
       createdAt: new Date(collaboration.createdAt),
-    });
-  }
-
-  public async applyServerDeletedCollaboration(
-    userId: string,
-    deletedCollaboration: ServerDeletedCollaboration
-  ) {
-    this.debug(
-      `Applying server deleted collaboration: ${deletedCollaboration.nodeId} for user ${userId}`
-    );
-
-    const workspaceDatabase =
-      await databaseService.getWorkspaceDatabase(userId);
-
-    await workspaceDatabase.transaction().execute(async (tx) => {
-      await tx
-        .deleteFrom('nodes')
-        .where('id', '=', deletedCollaboration.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('transactions')
-        .where('node_id', '=', deletedCollaboration.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('collaborations')
-        .where('node_id', '=', deletedCollaboration.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('interaction_events')
-        .where('node_id', '=', deletedCollaboration.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('interactions')
-        .where('node_id', '=', deletedCollaboration.nodeId)
-        .execute();
     });
   }
 }

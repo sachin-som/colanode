@@ -12,7 +12,6 @@ import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-
 import { SyncPendingTransactionsJobHandler } from '@/main/jobs/sync-pending-transactions';
 import { SyncIncompleteTransactionsJobHandler } from '@/main/jobs/sync-incomplete-transactions';
 import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-interactions';
-import { SyncMissingNodesJobHandler } from '@/main/jobs/sync-missing-nodes';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
 import { UploadFilesJobHandler } from '@/main/jobs/upload-files';
@@ -33,7 +32,6 @@ export const jobHandlerMap: JobHandlerMap = {
   sync_pending_transactions: new SyncPendingTransactionsJobHandler(),
   sync_incomplete_transactions: new SyncIncompleteTransactionsJobHandler(),
   sync_pending_interactions: new SyncPendingInteractionsJobHandler(),
-  sync_missing_nodes: new SyncMissingNodesJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
   upload_files: new UploadFilesJobHandler(),
@@ -247,11 +245,6 @@ class Scheduler {
     });
 
     this.schedule({
-      type: 'sync_missing_nodes',
-      userId,
-    });
-
-    this.schedule({
       type: 'revert_invalid_transactions',
       userId,
     });
@@ -316,13 +309,6 @@ class Scheduler {
 
     if (
       state.input.type === 'sync_pending_interactions' &&
-      state.input.userId === userId
-    ) {
-      return true;
-    }
-
-    if (
-      state.input.type === 'sync_missing_nodes' &&
       state.input.userId === userId
     ) {
       return true;

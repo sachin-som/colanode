@@ -69,9 +69,10 @@ export type UpdateTransaction = Updateable<TransactionTable>;
 
 interface CollaborationTable {
   node_id: ColumnType<string, string, never>;
-  roles: ColumnType<string, string, string>;
+  role: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<string | null, string | null, string | null>;
   version: ColumnType<bigint, bigint, bigint>;
 }
 

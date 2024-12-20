@@ -8,17 +8,18 @@ import {
   registry,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
-import { sql, Transaction } from 'kysely';
+import { Transaction } from 'kysely';
 import { cloneDeep } from 'lodash-es';
 
 import { jobService } from '@/services/job-service';
 import { database } from '@/data/database';
 import {
-  CreateCollaboration,
   CreateNode,
+  CreateCollaboration,
   CreateTransaction,
   DatabaseSchema,
   SelectUser,
+  SelectCollaboration,
 } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
 import { fetchNodeAncestors, mapNode } from '@/lib/nodes';
@@ -87,7 +88,7 @@ class NodeService {
     };
 
     try {
-      const { createdNode, createdTransaction } =
+      const { createdNode, createdTransaction, createdCollaborations } =
         await this.applyDatabaseCreateTransaction(
           attributes,
           createNode,
@@ -98,8 +99,18 @@ class NodeService {
         type: 'node_created',
         nodeId: input.nodeId,
         nodeType: input.attributes.type,
+        rootId: input.rootId,
         workspaceId: input.workspaceId,
       });
+
+      for (const createdCollaboration of createdCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_created',
+          collaboratorId: createdCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: input.workspaceId,
+        });
+      }
 
       return {
         node: createdNode,
@@ -177,64 +188,92 @@ class NodeService {
     );
 
     try {
-      const { updatedNode, createdTransaction } = await database
-        .transaction()
-        .execute(async (trx) => {
-          const updatedNode = await trx
-            .updateTable('nodes')
-            .returningAll()
-            .set({
-              attributes: attributesJson,
-              updated_at: date,
-              updated_by: input.userId,
-              transaction_id: transactionId,
-            })
-            .where('id', '=', input.nodeId)
-            .where('transaction_id', '=', node.transactionId)
-            .executeTakeFirst();
+      const {
+        updatedNode,
+        createdTransaction,
+        createdCollaborations,
+        updatedCollaborations,
+      } = await database.transaction().execute(async (trx) => {
+        const updatedNode = await trx
+          .updateTable('nodes')
+          .returningAll()
+          .set({
+            attributes: attributesJson,
+            updated_at: date,
+            updated_by: input.userId,
+            transaction_id: transactionId,
+          })
+          .where('id', '=', input.nodeId)
+          .where('transaction_id', '=', node.transactionId)
+          .executeTakeFirst();
 
-          if (!updatedNode) {
-            throw new Error('Failed to update node');
-          }
+        if (!updatedNode) {
+          throw new Error('Failed to update node');
+        }
 
-          const createdTransaction = await trx
-            .insertInto('transactions')
-            .returningAll()
-            .values({
-              id: transactionId,
-              node_id: input.nodeId,
-              root_id: node.rootId,
-              workspace_id: input.workspaceId,
-              operation: 'update',
-              data: update,
-              created_at: date,
-              created_by: input.userId,
-              server_created_at: date,
-            })
-            .executeTakeFirst();
+        const createdTransaction = await trx
+          .insertInto('transactions')
+          .returningAll()
+          .values({
+            id: transactionId,
+            node_id: input.nodeId,
+            root_id: node.rootId,
+            workspace_id: input.workspaceId,
+            operation: 'update',
+            data: update,
+            created_at: date,
+            created_by: input.userId,
+            server_created_at: date,
+          })
+          .executeTakeFirst();
 
-          if (!createdTransaction) {
-            throw new Error('Failed to create transaction');
-          }
+        if (!createdTransaction) {
+          throw new Error('Failed to create transaction');
+        }
 
-          await this.applyCollaborationUpdates(
+        const { createdCollaborations, updatedCollaborations } =
+          await this.applyCollaboratorUpdates(
             trx,
             input.nodeId,
+            node.rootId,
+            input.userId,
+            input.workspaceId,
             collaboratorChanges
           );
 
-          return {
-            updatedNode,
-            createdTransaction,
-          };
-        });
+        return {
+          updatedNode,
+          createdTransaction,
+          createdCollaborations,
+          updatedCollaborations,
+        };
+      });
 
       eventBus.publish({
         type: 'node_updated',
         nodeId: input.nodeId,
         nodeType: node.type,
+        rootId: node.rootId,
         workspaceId: input.workspaceId,
       });
+
+      for (const createdCollaboration of createdCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_created',
+          collaboratorId: createdCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: input.workspaceId,
+        });
+      }
+
+      for (const updatedCollaboration of updatedCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_updated',
+          collaboratorId: updatedCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: input.workspaceId,
+        });
+      }
 
       return {
         type: 'success',
@@ -302,7 +341,7 @@ class NodeService {
     };
 
     try {
-      const { createdNode, createdTransaction } =
+      const { createdNode, createdTransaction, createdCollaborations } =
         await this.applyDatabaseCreateTransaction(
           attributes,
           createNode,
@@ -313,8 +352,18 @@ class NodeService {
         type: 'node_created',
         nodeId: input.nodeId,
         nodeType: attributes.type,
+        rootId: input.rootId,
         workspaceId: context.workspaceId,
       });
+
+      for (const createdCollaboration of createdCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_created',
+          collaboratorId: createdCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: context.workspaceId,
+        });
+      }
 
       return {
         node: createdNode,
@@ -400,94 +449,94 @@ class NodeService {
     );
 
     try {
-      const { updatedNode, createdTransaction } = await database
-        .transaction()
-        .execute(async (trx) => {
-          const updatedNode = await trx
-            .updateTable('nodes')
-            .returningAll()
-            .set({
-              attributes: attributesJson,
-              updated_at: input.createdAt,
-              updated_by: input.userId,
-              transaction_id: input.id,
-            })
-            .where('id', '=', input.nodeId)
-            .where('transaction_id', '=', node.transactionId)
-            .executeTakeFirst();
+      const {
+        updatedNode,
+        createdTransaction,
+        createdCollaborations,
+        updatedCollaborations,
+      } = await database.transaction().execute(async (trx) => {
+        const updatedNode = await trx
+          .updateTable('nodes')
+          .returningAll()
+          .set({
+            attributes: attributesJson,
+            updated_at: input.createdAt,
+            updated_by: input.userId,
+            transaction_id: input.id,
+          })
+          .where('id', '=', input.nodeId)
+          .where('transaction_id', '=', node.transactionId)
+          .executeTakeFirst();
 
-          if (!updatedNode) {
-            throw new Error('Failed to update node');
-          }
+        if (!updatedNode) {
+          throw new Error('Failed to update node');
+        }
 
-          const createdTransaction = await trx
-            .insertInto('transactions')
-            .returningAll()
-            .values({
-              id: input.id,
-              node_id: input.nodeId,
-              root_id: input.rootId,
-              workspace_id: context.workspaceId,
-              operation: 'update',
-              data:
-                typeof input.data === 'string'
-                  ? decodeState(input.data)
-                  : input.data,
-              created_at: input.createdAt,
-              created_by: input.userId,
-              server_created_at: new Date(),
-            })
-            .executeTakeFirst();
+        const createdTransaction = await trx
+          .insertInto('transactions')
+          .returningAll()
+          .values({
+            id: input.id,
+            node_id: input.nodeId,
+            root_id: input.rootId,
+            workspace_id: context.workspaceId,
+            operation: 'update',
+            data:
+              typeof input.data === 'string'
+                ? decodeState(input.data)
+                : input.data,
+            created_at: input.createdAt,
+            created_by: input.userId,
+            server_created_at: new Date(),
+          })
+          .executeTakeFirst();
 
-          if (!createdTransaction) {
-            throw new Error('Failed to create transaction');
-          }
+        if (!createdTransaction) {
+          throw new Error('Failed to create transaction');
+        }
 
-          await this.applyCollaborationUpdates(
+        const { createdCollaborations, updatedCollaborations } =
+          await this.applyCollaboratorUpdates(
             trx,
             input.nodeId,
+            input.rootId,
+            input.userId,
+            context.workspaceId,
             collaboratorChanges
           );
 
-          return {
-            updatedNode,
-            createdTransaction,
-          };
-        });
+        return {
+          updatedNode,
+          createdTransaction,
+          createdCollaborations,
+          updatedCollaborations,
+        };
+      });
 
       eventBus.publish({
         type: 'node_updated',
         nodeId: input.nodeId,
         nodeType: node.type,
+        rootId: node.rootId,
         workspaceId: context.workspaceId,
       });
 
-      const addedCollaboratorIds = Object.keys(
-        collaboratorChanges.addedCollaborators
-      );
-
-      if (addedCollaboratorIds.length > 0) {
-        for (const userId of addedCollaboratorIds) {
-          eventBus.publish({
-            type: 'collaborator_added',
-            userId,
-            nodeId: input.nodeId,
-          });
-        }
+      for (const createdCollaboration of createdCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_created',
+          collaboratorId: createdCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: context.workspaceId,
+        });
       }
 
-      const removedCollaboratorIds = Object.keys(
-        collaboratorChanges.removedCollaborators
-      );
-
-      if (removedCollaboratorIds.length > 0) {
-        for (const userId of removedCollaboratorIds) {
-          eventBus.publish({
-            type: 'collaborator_removed',
-            userId,
-            nodeId: input.nodeId,
-          });
-        }
+      for (const updatedCollaboration of updatedCollaborations) {
+        eventBus.publish({
+          type: 'collaboration_updated',
+          collaboratorId: updatedCollaboration.collaborator_id,
+          nodeId: input.nodeId,
+          workspaceId: context.workspaceId,
+        });
       }
 
       return {
@@ -526,9 +575,8 @@ class NodeService {
       return null;
     }
 
-    const { deletedNode, createdTransaction } = await database
-      .transaction()
-      .execute(async (trx) => {
+    const { deletedNode, createdTransaction, updatedCollaborations } =
+      await database.transaction().execute(async (trx) => {
         const deletedNode = await trx
           .deleteFrom('nodes')
           .returningAll()
@@ -563,18 +611,20 @@ class NodeService {
           throw new Error('Failed to create transaction');
         }
 
-        await trx
+        const updatedCollaborations = await trx
           .updateTable('collaborations')
           .set({
-            roles: '{}',
-            updated_at: new Date(),
+            deleted_at: new Date(),
+            deleted_by: user.id,
           })
+          .returningAll()
           .where('node_id', '=', input.nodeId)
           .execute();
 
         return {
           deletedNode,
           createdTransaction,
+          updatedCollaborations,
         };
       });
 
@@ -582,8 +632,18 @@ class NodeService {
       type: 'node_deleted',
       nodeId: input.nodeId,
       nodeType: node.type,
+      rootId: node.rootId,
       workspaceId: user.workspace_id,
     });
+
+    for (const updatedCollaboration of updatedCollaborations) {
+      eventBus.publish({
+        type: 'collaboration_updated',
+        collaboratorId: updatedCollaboration.collaborator_id,
+        nodeId: input.nodeId,
+        workspaceId: user.workspace_id,
+      });
+    }
 
     await jobService.addJob({
       type: 'clean_node_data',
@@ -605,11 +665,13 @@ class NodeService {
     const collaborationsToCreate: CreateCollaboration[] = Object.entries(
       extractNodeCollaborators(attributes)
     ).map(([userId, role]) => ({
-      user_id: userId,
+      collaborator_id: userId,
       node_id: node.id,
+      root_id: node.root_id,
       workspace_id: node.workspace_id,
-      roles: JSON.stringify({ [node.id]: role }),
+      role,
       created_at: new Date(),
+      created_by: transaction.created_by,
     }));
 
     return await database.transaction().execute(async (trx) => {
@@ -643,73 +705,80 @@ class NodeService {
         if (createdCollaborations.length !== collaborationsToCreate.length) {
           throw new Error('Failed to create collaborations');
         }
+
+        return { createdNode, createdTransaction, createdCollaborations };
       }
 
-      await sql`
-        INSERT INTO collaborations (user_id, node_id, workspace_id, roles, created_at)
-        SELECT 
-          c.user_id,
-          ${node.id} as node_id,
-          ${node.workspace_id} as workspace_id,
-          c.roles,
-          ${new Date()} as created_at
-        FROM collaborations as c
-        WHERE c.node_id = ${attributes.parentId}
-        ON CONFLICT (user_id, node_id) DO UPDATE
-        SET
-          roles = collaborations.roles || EXCLUDED.roles,
-          updated_at = NOW()
-      `.execute(trx);
-
-      return { createdNode, createdTransaction };
+      return { createdNode, createdTransaction, createdCollaborations: [] };
     });
   }
 
-  private async applyCollaborationUpdates(
+  private async applyCollaboratorUpdates(
     transaction: Transaction<DatabaseSchema>,
     nodeId: string,
+    rootId: string,
+    userId: string,
+    workspaceId: string,
     updateResult: CollaboratorChangeResult
   ) {
-    for (const [userId, role] of Object.entries(
+    const createdCollaborations: SelectCollaboration[] = [];
+    const updatedCollaborations: SelectCollaboration[] = [];
+
+    for (const [collaboratorId, role] of Object.entries(
       updateResult.addedCollaborators
     )) {
-      const roles = JSON.stringify({ [nodeId]: role });
-      await sql`
-        INSERT INTO collaborations (user_id, node_id, workspace_id, roles, created_at)
-        SELECT 
-          ${userId} as user_id,
-          np.descendant_id as node_id,
-          np.workspace_id as workspace_id,
-          ${roles},
-          ${new Date()} as created_at
-        FROM node_paths as np
-        WHERE np.ancestor_id = ${nodeId}
-        ON CONFLICT (user_id, node_id) DO UPDATE
-        SET
-          roles = collaborations.roles || EXCLUDED.roles,
-          updated_at = NOW()
-      `.execute(transaction);
+      const createdCollaboration = await transaction
+        .insertInto('collaborations')
+        .returningAll()
+        .values({
+          collaborator_id: collaboratorId,
+          node_id: nodeId,
+          root_id: rootId,
+          workspace_id: workspaceId,
+          role,
+          created_at: new Date(),
+          created_by: userId,
+        })
+        .onConflict((oc) =>
+          oc.columns(['collaborator_id', 'node_id']).doUpdateSet({
+            role,
+            updated_at: new Date(),
+            updated_by: userId,
+            deleted_at: null,
+            deleted_by: null,
+          })
+        )
+        .executeTakeFirst();
+
+      if (!createdCollaboration) {
+        throw new Error('Failed to create collaboration');
+      }
+
+      createdCollaborations.push(createdCollaboration);
     }
 
-    for (const [userId, role] of Object.entries(
+    for (const [collaboratorId, role] of Object.entries(
       updateResult.updatedCollaborators
     )) {
-      const roles = JSON.stringify({ [nodeId]: role });
-      await sql`
-        INSERT INTO collaborations (user_id, node_id, workspace_id, roles, created_at)
-        SELECT 
-          ${userId} as user_id,
-          np.descendant_id as node_id,
-          np.workspace_id as workspace_id,
-          ${roles},
-          ${new Date()} as created_at
-        FROM node_paths as np
-        WHERE np.ancestor_id = ${nodeId}
-        ON CONFLICT (user_id, node_id) DO UPDATE
-        SET
-          roles = collaborations.roles || EXCLUDED.roles,
-          updated_at = NOW()
-      `.execute(transaction);
+      const updatedCollaboration = await transaction
+        .updateTable('collaborations')
+        .returningAll()
+        .set({
+          role,
+          updated_at: new Date(),
+          updated_by: userId,
+          deleted_at: null,
+          deleted_by: null,
+        })
+        .where('collaborator_id', '=', collaboratorId)
+        .where('node_id', '=', nodeId)
+        .executeTakeFirst();
+
+      if (!updatedCollaboration) {
+        throw new Error('Failed to update collaboration');
+      }
+
+      updatedCollaborations.push(updatedCollaboration);
     }
 
     const removedCollaboratorIds = Object.keys(
@@ -717,20 +786,25 @@ class NodeService {
     );
 
     if (removedCollaboratorIds.length > 0) {
-      await sql`
-        UPDATE collaborations
-        SET
-          roles = collaborations.roles - ${nodeId},
-          updated_at = NOW()
-        WHERE user_id IN (${sql.join(removedCollaboratorIds, sql`, `)}) 
-        AND node_id IN 
-          (
-            SELECT np.descendant_id 
-            FROM node_paths as np 
-            WHERE np.ancestor_id = ${nodeId}
-          )
-      `.execute(transaction);
+      const removedCollaborations = await transaction
+        .updateTable('collaborations')
+        .returningAll()
+        .set({
+          deleted_at: new Date(),
+          deleted_by: userId,
+        })
+        .where('collaborator_id', 'in', removedCollaboratorIds)
+        .where('node_id', '=', nodeId)
+        .execute();
+
+      if (removedCollaborations.length !== removedCollaboratorIds.length) {
+        throw new Error('Failed to remove collaborations');
+      }
+
+      updatedCollaborations.push(...removedCollaborations);
     }
+
+    return { createdCollaborations, updatedCollaborations };
   }
 
   private checkCollaboratorChanges(

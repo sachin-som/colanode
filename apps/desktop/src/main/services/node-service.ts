@@ -104,6 +104,7 @@ class NodeService {
           ancestors = ancestorRows.map(mapNode);
         }
 
+        const rootId = ancestors[0]?.id ?? inputItem.id;
         const context = new NodeMutationContext(
           workspace.account_id,
           workspace.workspace_id,
@@ -133,6 +134,7 @@ class NodeService {
           .returningAll()
           .values({
             id: inputItem.id,
+            root_id: rootId,
             attributes: JSON.stringify(inputItem.attributes),
             created_at: createdAt,
             created_by: context.userId,
@@ -152,6 +154,7 @@ class NodeService {
           .values({
             id: transactionId,
             node_id: inputItem.id,
+            root_id: rootId,
             operation: 'create',
             data: update,
             created_at: createdAt,
@@ -372,6 +375,7 @@ class NodeService {
             .values({
               id: transactionId,
               node_id: nodeId,
+              root_id: node.rootId,
               operation: 'update',
               data: update,
               created_at: updatedAt,
@@ -524,6 +528,7 @@ class NodeService {
           .values({
             id: generateId(IdType.Transaction),
             node_id: nodeId,
+            root_id: node.rootId,
             operation: 'delete',
             data: null,
             created_at: new Date().toISOString(),
@@ -687,6 +692,7 @@ class NodeService {
               transactions.map((t) => ({
                 id: t.id,
                 node_id: t.nodeId,
+                root_id: t.rootId,
                 operation: t.operation,
                 data:
                   t.operation !== 'delete' && t.data
@@ -741,6 +747,7 @@ class NodeService {
           .returningAll()
           .values({
             id: nodeId,
+            root_id: firstTransaction.rootId,
             attributes: attributesJson,
             created_at: firstTransaction.createdAt,
             created_by: firstTransaction.createdBy,
@@ -772,6 +779,7 @@ class NodeService {
             transactions.map((t) => ({
               id: t.id,
               node_id: t.nodeId,
+              root_id: t.rootId,
               operation: t.operation,
               data:
                 t.operation !== 'delete' && t.data ? decodeState(t.data) : null,
@@ -882,6 +890,7 @@ class NodeService {
           .returningAll()
           .values({
             id: transaction.nodeId,
+            root_id: transaction.rootId,
             attributes: JSON.stringify(attributes),
             created_at: transaction.createdAt,
             created_by: transaction.createdBy,
@@ -894,6 +903,7 @@ class NodeService {
           .values({
             id: transaction.id,
             node_id: transaction.nodeId,
+            root_id: transaction.rootId,
             operation: 'create',
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
@@ -1038,6 +1048,7 @@ class NodeService {
           .values({
             id: transaction.id,
             node_id: transaction.nodeId,
+            root_id: transaction.rootId,
             operation: 'update',
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,

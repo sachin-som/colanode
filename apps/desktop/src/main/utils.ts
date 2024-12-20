@@ -193,6 +193,7 @@ export const mapNode = (row: SelectNode): Node => {
     id: row.id,
     type: row.type,
     parentId: row.parent_id,
+    rootId: row.root_id,
     attributes: JSON.parse(row.attributes),
     createdAt: row.created_at,
     createdBy: row.created_by,
@@ -233,6 +234,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
+      rootId: row.root_id,
       operation: 'create',
       data: encodeState(row.data),
       createdAt: row.created_at,
@@ -244,6 +246,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
+      rootId: row.root_id,
       operation: 'update',
       data: encodeState(row.data),
       createdAt: row.created_at,
@@ -255,6 +258,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
+      rootId: row.root_id,
       operation: 'delete',
       createdAt: row.created_at,
       createdBy: row.created_by,

@@ -26,8 +26,9 @@ export type UpdateUser = Updateable<UserTable>;
 
 interface NodeTable {
   id: ColumnType<string, string, never>;
-  parent_id: ColumnType<string, never, never>;
   type: ColumnType<NodeType, never, never>;
+  parent_id: ColumnType<string, never, never>;
+  root_id: ColumnType<string, string, never>;
   attributes: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
@@ -51,6 +52,7 @@ export type SelectNodePath = Selectable<NodePathTable>;
 interface TransactionTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
   operation: ColumnType<string, string, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, never>;
   created_at: ColumnType<string, string, never>;

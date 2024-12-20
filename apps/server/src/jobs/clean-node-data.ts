@@ -105,7 +105,7 @@ const deleteChildren = async (
         (descendant) => ({
           id: generateId(IdType.Transaction),
           node_id: descendant.id,
-          node_type: descendant.type,
+          root_id: descendant.root_id,
           workspace_id: workspaceId,
           operation: 'delete',
           created_at: new Date(),

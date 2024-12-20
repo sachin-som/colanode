@@ -10,6 +10,7 @@ export type NodeCollaborator = {
 
 export type CreateNodeInput = {
   nodeId: string;
+  rootId: string;
   attributes: NodeAttributes;
   userId: string;
   workspaceId: string;
@@ -36,6 +37,7 @@ export type UpdateNodeOutput = {
 export type ApplyCreateTransactionInput = {
   id: string;
   nodeId: string;
+  rootId: string;
   data: string | Uint8Array;
   createdAt: Date;
 };
@@ -48,6 +50,7 @@ export type ApplyCreateTransactionOutput = {
 export type ApplyUpdateTransactionInput = {
   id: string;
   nodeId: string;
+  rootId: string;
   userId: string;
   data: string | Uint8Array;
   createdAt: Date;
@@ -61,6 +64,7 @@ export type ApplyUpdateTransactionOutput = {
 export type ApplyDeleteTransactionInput = {
   id: string;
   nodeId: string;
+  rootId: string;
   createdAt: Date;
 };
 

@@ -26,6 +26,7 @@ export type LocalTransaction =
 export type LocalCreateTransaction = {
   id: string;
   nodeId: string;
+  rootId: string;
   operation: 'create';
   data: string;
   createdAt: string;
@@ -35,6 +36,7 @@ export type LocalCreateTransaction = {
 export type LocalUpdateTransaction = {
   id: string;
   nodeId: string;
+  rootId: string;
   operation: 'update';
   data: string;
   createdAt: string;
@@ -44,6 +46,7 @@ export type LocalUpdateTransaction = {
 export type LocalDeleteTransaction = {
   id: string;
   nodeId: string;
+  rootId: string;
   operation: 'delete';
   createdAt: string;
   createdBy: string;
@@ -53,6 +56,7 @@ export type ServerCreateTransaction = {
   id: string;
   operation: 'create';
   nodeId: string;
+  rootId: string;
   workspaceId: string;
   data: string;
   createdAt: string;
@@ -65,6 +69,7 @@ export type ServerUpdateTransaction = {
   id: string;
   operation: 'update';
   nodeId: string;
+  rootId: string;
   workspaceId: string;
   data: string;
   createdAt: string;
@@ -77,6 +82,7 @@ export type ServerDeleteTransaction = {
   id: string;
   operation: 'delete';
   nodeId: string;
+  rootId: string;
   workspaceId: string;
   createdAt: string;
   createdBy: string;

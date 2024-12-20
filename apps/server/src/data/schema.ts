@@ -95,6 +95,7 @@ interface NodeTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<NodeType, never, never>;
   parent_id: ColumnType<string, never, never>;
+  root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   attributes: JSONColumnType<NodeAttributes, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
@@ -111,6 +112,7 @@ export type UpdateNode = Updateable<NodeTable>;
 interface TransactionTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   operation: ColumnType<string, string, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, Uint8Array | null>;

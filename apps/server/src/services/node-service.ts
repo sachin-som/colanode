@@ -66,6 +66,7 @@ class NodeService {
 
     const createNode: CreateNode = {
       id: input.nodeId,
+      root_id: input.rootId,
       workspace_id: input.workspaceId,
       attributes: attributesJson,
       created_at: date,
@@ -75,6 +76,7 @@ class NodeService {
 
     const createTransaction: CreateTransaction = {
       id: transactionId,
+      root_id: input.rootId,
       node_id: input.nodeId,
       workspace_id: input.workspaceId,
       operation: 'create',
@@ -201,6 +203,7 @@ class NodeService {
             .values({
               id: transactionId,
               node_id: input.nodeId,
+              root_id: node.rootId,
               workspace_id: input.workspaceId,
               operation: 'update',
               data: update,
@@ -277,6 +280,7 @@ class NodeService {
 
     const createNode: CreateNode = {
       id: input.nodeId,
+      root_id: input.rootId,
       attributes: JSON.stringify(attributes),
       workspace_id: context.workspaceId,
       created_at: input.createdAt,
@@ -287,6 +291,7 @@ class NodeService {
     const createTransaction: CreateTransaction = {
       id: input.id,
       node_id: input.nodeId,
+      root_id: input.rootId,
       workspace_id: context.workspaceId,
       operation: 'create',
       data:
@@ -421,6 +426,7 @@ class NodeService {
             .values({
               id: input.id,
               node_id: input.nodeId,
+              root_id: input.rootId,
               workspace_id: context.workspaceId,
               operation: 'update',
               data:
@@ -544,6 +550,7 @@ class NodeService {
           .values({
             id: input.id,
             node_id: input.nodeId,
+            root_id: input.rootId,
             workspace_id: user.workspace_id,
             operation: 'delete',
             created_at: input.createdAt,

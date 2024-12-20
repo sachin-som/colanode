@@ -65,6 +65,7 @@ class WorkspaceService {
 
     const createSpaceNodeOutput = await nodeService.createNode({
       nodeId: spaceId,
+      rootId: spaceId,
       attributes: {
         type: 'space',
         name: 'Home',
@@ -83,6 +84,7 @@ class WorkspaceService {
       const spaceNode = mapNode(createSpaceNodeOutput.node);
       await nodeService.createNode({
         nodeId: generateId(IdType.Page),
+        rootId: spaceId,
         attributes: {
           type: 'page',
           name: 'Notes',
@@ -96,6 +98,7 @@ class WorkspaceService {
 
       await nodeService.createNode({
         nodeId: generateId(IdType.Channel),
+        rootId: spaceId,
         attributes: {
           type: 'channel',
           name: 'Discussions',

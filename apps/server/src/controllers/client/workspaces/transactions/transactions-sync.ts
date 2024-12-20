@@ -61,6 +61,7 @@ const handleCreateTransaction = async (
   const output = await nodeService.applyCreateTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
+    rootId: transaction.rootId,
     data: transaction.data,
     createdAt: new Date(transaction.createdAt),
   });
@@ -79,6 +80,7 @@ const handleUpdateTransaction = async (
   const output = await nodeService.applyUpdateTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
+    rootId: transaction.rootId,
     userId: transaction.createdBy,
     data: transaction.data,
     createdAt: new Date(transaction.createdAt),
@@ -98,6 +100,7 @@ const handleDeleteTransaction = async (
   const output = await nodeService.applyDeleteTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
+    rootId: transaction.rootId,
     createdAt: new Date(transaction.createdAt),
   });
 

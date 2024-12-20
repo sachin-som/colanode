@@ -12,6 +12,7 @@ import { SpaceAttributes, spaceModel } from './space';
 type NodeBase = {
   id: string;
   parentId: string;
+  rootId: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;

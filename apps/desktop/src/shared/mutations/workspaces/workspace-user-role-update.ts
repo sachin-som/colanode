@@ -1,19 +1,19 @@
-export type WorkspaceUserRoleUpdateMutationInput = {
-  type: 'workspace_user_role_update';
+export type UserRoleUpdateMutationInput = {
+  type: 'user_role_update';
   userToUpdateId: string;
   role: string;
   userId: string;
 };
 
-export type WorkspaceUserRoleUpdateMutationOutput = {
+export type UserRoleUpdateMutationOutput = {
   success: boolean;
 };
 
 declare module '@/shared/mutations' {
   interface MutationMap {
-    workspace_user_role_update: {
-      input: WorkspaceUserRoleUpdateMutationInput;
-      output: WorkspaceUserRoleUpdateMutationOutput;
+    user_role_update: {
+      input: UserRoleUpdateMutationInput;
+      output: UserRoleUpdateMutationOutput;
     };
   }
 }

@@ -2,8 +2,27 @@ import {
   InteractionAttribute,
   NodeType,
   SyncConsumerType,
+  WorkspaceRole,
 } from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
+
+interface UserTable {
+  id: ColumnType<string, string, never>;
+  email: ColumnType<string, string, never>;
+  name: ColumnType<string, string, string>;
+  avatar: ColumnType<string | null, string | null, string | null>;
+  custom_name: ColumnType<string | null, string | null, string | null>;
+  custom_avatar: ColumnType<string | null, string | null, string | null>;
+  role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
+  status: ColumnType<string, string, never>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectUser = Selectable<UserTable>;
+export type CreateUser = Insertable<UserTable>;
+export type UpdateUser = Updateable<UserTable>;
 
 interface NodeTable {
   id: ColumnType<string, string, never>;
@@ -32,7 +51,6 @@ export type SelectNodePath = Selectable<NodePathTable>;
 interface TransactionTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  node_type: ColumnType<NodeType, NodeType, never>;
   operation: ColumnType<string, string, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, never>;
   created_at: ColumnType<string, string, never>;
@@ -89,7 +107,6 @@ export type UpdateDownload = Updateable<DownloadTable>;
 interface InteractionTable {
   user_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  node_type: ColumnType<NodeType, NodeType, never>;
   attributes: ColumnType<string, string, string>;
   last_seen_at: ColumnType<string | null, string | null, string | null>;
   last_opened_at: ColumnType<string | null, string | null, string | null>;
@@ -106,7 +123,6 @@ export type UpdateInteraction = Updateable<InteractionTable>;
 
 interface InteractionEventTable {
   node_id: ColumnType<string, string, never>;
-  node_type: ColumnType<NodeType, NodeType, never>;
   attribute: ColumnType<InteractionAttribute, string, string>;
   value: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
@@ -145,6 +161,7 @@ interface CursorTable {
 }
 
 export interface WorkspaceDatabaseSchema {
+  users: UserTable;
   nodes: NodeTable;
   transactions: TransactionTable;
   node_paths: NodePathTable;

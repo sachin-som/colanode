@@ -9,6 +9,7 @@ import {
   ServerDeletedCollaboration,
   ServerInteraction,
   ServerTransaction,
+  ServerUser,
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
@@ -19,6 +20,7 @@ import {
   SelectInteraction,
   SelectNode,
   SelectTransaction,
+  SelectUser,
 } from '@/data/schema';
 import { NodeCollaborator } from '@/types/nodes';
 
@@ -60,7 +62,6 @@ export const mapTransaction = (
       id: transaction.id,
       operation: 'create',
       nodeId: transaction.node_id,
-      nodeType: transaction.node_type,
       workspaceId: transaction.workspace_id,
       data: encodeState(transaction.data),
       createdAt: transaction.created_at.toISOString(),
@@ -75,7 +76,6 @@ export const mapTransaction = (
       id: transaction.id,
       operation: 'update',
       nodeId: transaction.node_id,
-      nodeType: transaction.node_type,
       workspaceId: transaction.workspace_id,
       data: encodeState(transaction.data),
       createdAt: transaction.created_at.toISOString(),
@@ -90,7 +90,6 @@ export const mapTransaction = (
       id: transaction.id,
       operation: 'delete',
       nodeId: transaction.node_id,
-      nodeType: transaction.node_type,
       workspaceId: transaction.workspace_id,
       createdAt: transaction.created_at.toISOString(),
       createdBy: transaction.created_by,
@@ -134,7 +133,6 @@ export const mapInteraction = (
   return {
     userId: interaction.user_id,
     nodeId: interaction.node_id,
-    nodeType: interaction.node_type,
     workspaceId: interaction.workspace_id,
     attributes: interaction.attributes,
     createdAt: interaction.created_at.toISOString(),
@@ -142,6 +140,22 @@ export const mapInteraction = (
     serverCreatedAt: interaction.server_created_at.toISOString(),
     serverUpdatedAt: interaction.server_updated_at?.toISOString() ?? null,
     version: interaction.version.toString(),
+  };
+};
+
+export const mapUser = (user: SelectUser): ServerUser => {
+  return {
+    id: user.id,
+    workspaceId: user.workspace_id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    avatar: user.avatar,
+    customName: user.custom_name,
+    customAvatar: user.custom_avatar,
+    createdAt: user.created_at.toISOString(),
+    updatedAt: user.updated_at?.toISOString() ?? null,
+    version: user.version.toString(),
   };
 };
 
@@ -214,16 +228,4 @@ export const fetchNodeRole = async (
   }
 
   return extractNodeRole(ancestors.map(mapNode), collaboratorId);
-};
-
-export const fetchWorkspaceUsers = async (
-  workspaceId: string
-): Promise<string[]> => {
-  const result = await database
-    .selectFrom('workspace_users')
-    .select('id')
-    .where('workspace_id', '=', workspaceId)
-    .execute();
-
-  return result.map((row) => row.id);
 };

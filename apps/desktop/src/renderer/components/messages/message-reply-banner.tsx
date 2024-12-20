@@ -15,20 +15,19 @@ export const MessageReplyBanner = ({
 }: MessageReplyBannerProps) => {
   const workspace = useWorkspace();
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: message.createdBy,
+    type: 'user_get',
+    id: message.createdBy,
     userId: workspace.userId,
   });
 
-  if (!data || data.type !== 'user') {
+  if (!data) {
     return null;
   }
 
   return (
     <div className="flex flex-row items-center justify-between rounded-t-lg border-b-2 bg-gray-100 p-2 text-foreground">
       <p className="text-sm">
-        Replying to{' '}
-        <span className="font-semibold">{data.attributes.name}</span>
+        Replying to <span className="font-semibold">{data.name}</span>
       </p>
       <button className="cursor-pointer" onClick={onCancel}>
         <CircleX className="size-4" />

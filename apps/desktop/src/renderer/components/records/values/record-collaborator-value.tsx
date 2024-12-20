@@ -1,4 +1,4 @@
-import { CollaboratorFieldAttributes, UserNode } from '@colanode/core';
+import { CollaboratorFieldAttributes } from '@colanode/core';
 import { X } from 'lucide-react';
 import React from 'react';
 
@@ -14,22 +14,23 @@ import { UserSearch } from '@/renderer/components/users/user-search';
 import { useRecord } from '@/renderer/contexts/record';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQueries } from '@/renderer/hooks/use-queries';
+import { User } from '@/shared/types/users';
 
 interface RecordCollaboratorValueProps {
   field: CollaboratorFieldAttributes;
   readOnly?: boolean;
 }
 
-const CollaboratorBadge = ({ collaborator }: { collaborator: UserNode }) => {
+const CollaboratorBadge = ({ collaborator }: { collaborator: User }) => {
   return (
     <div className="flex flex-row items-center gap-1 text-sm">
       <Avatar
         id={collaborator.id}
-        name={collaborator.attributes.name}
-        avatar={collaborator.attributes.avatar}
+        name={collaborator.name}
+        avatar={collaborator.avatar}
         size="small"
       />
-      <p>{collaborator.attributes.name}</p>
+      <p>{collaborator.name}</p>
     </div>
   );
 };
@@ -46,15 +47,15 @@ export const RecordCollaboratorValue = ({
   const collaboratorIds = record.getCollaboratorValue(field) ?? [];
   const results = useQueries(
     collaboratorIds.map((id) => ({
-      type: 'node_get',
-      nodeId: id,
+      type: 'user_get',
+      id,
       userId: workspace.userId,
     }))
   );
 
-  const collaborators: UserNode[] = [];
+  const collaborators: User[] = [];
   for (const result of results) {
-    if (result.data && result.data.type === 'user') {
+    if (result.data) {
       collaborators.push(result.data);
     }
   }
@@ -91,14 +92,14 @@ export const RecordCollaboratorValue = ({
                 >
                   <Avatar
                     id={collaborator.id}
-                    name={collaborator.attributes.name}
-                    avatar={collaborator.attributes.avatar}
+                    name={collaborator.name}
+                    avatar={collaborator.avatar}
                     className="h-7 w-7"
                   />
                   <div className="flex flex-grow flex-col">
-                    <p className="text-sm">{collaborator.attributes.name}</p>
+                    <p className="text-sm">{collaborator.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {collaborator.attributes.email}
+                      {collaborator.email}
                     </p>
                   </div>
                   {record.canEdit && !readOnly && (

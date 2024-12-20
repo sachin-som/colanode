@@ -1,26 +1,20 @@
 import { Request, Response } from 'express';
-import {
-  generateId,
-  IdType,
-  WorkspaceUserRoleUpdateInput,
-} from '@colanode/core';
+import { UserRoleUpdateInput } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
-import { nodeService } from '@/services/node-service';
-import { mapTransaction } from '@/lib/nodes';
-import { SelectWorkspaceUser } from '@/data/schema';
+import { SelectUser } from '@/data/schema';
+import { eventBus } from '@/lib/event-bus';
 
 export const userRoleUpdateHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const workspaceId = req.params.workspaceId as string;
   const userId = req.params.userId as string;
-  const input: WorkspaceUserRoleUpdateInput = req.body;
-  const workspaceUser: SelectWorkspaceUser = res.locals.workspaceUser;
+  const input: UserRoleUpdateInput = req.body;
+  const user: SelectUser = res.locals.user;
 
-  if (workspaceUser.role !== 'owner' && workspaceUser.role !== 'admin') {
+  if (user.role !== 'owner' && user.role !== 'admin') {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
@@ -28,27 +22,13 @@ export const userRoleUpdateHandler = async (
     return;
   }
 
-  const workspaceUserToUpdate = await database
-    .selectFrom('workspace_users')
+  const userToUpdate = await database
+    .selectFrom('users')
     .selectAll()
     .where('id', '=', userId)
     .executeTakeFirst();
 
-  if (!workspaceUserToUpdate) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'NotFound.',
-    });
-    return;
-  }
-
-  const user = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where('id', '=', workspaceUserToUpdate.id)
-    .executeTakeFirst();
-
-  if (!user) {
+  if (!userToUpdate) {
     res.status(404).json({
       code: ApiError.ResourceNotFound,
       message: 'NotFound.',
@@ -57,39 +37,23 @@ export const userRoleUpdateHandler = async (
   }
 
   await database
-    .updateTable('workspace_users')
+    .updateTable('users')
     .set({
       role: input.role,
       updated_at: new Date(),
-      updated_by: workspaceUser.account_id,
-      version_id: generateId(IdType.Version),
+      updated_by: user.id,
     })
-    .where('id', '=', userId)
+    .where('id', '=', userToUpdate.id)
     .execute();
 
-  const updateUserOutput = await nodeService.updateNode({
-    nodeId: user.id,
-    userId: workspaceUser.account_id,
-    workspaceId: workspaceId,
-    updater: (attributes) => {
-      if (attributes.type !== 'user') {
-        return null;
-      }
-
-      attributes.role = input.role;
-      return attributes;
-    },
+  eventBus.publish({
+    type: 'user_updated',
+    userId: userToUpdate.id,
+    accountId: user.account_id,
+    workspaceId: userToUpdate.workspace_id,
   });
 
-  if (!updateUserOutput) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
-      message: 'Something went wrong.',
-    });
-    return;
-  }
-
   res.status(200).json({
-    transaction: mapTransaction(updateUserOutput.transaction),
+    success: true,
   });
 };

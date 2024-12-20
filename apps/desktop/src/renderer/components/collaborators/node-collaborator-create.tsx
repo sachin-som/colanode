@@ -1,6 +1,6 @@
-import { UserNode } from '@colanode/core';
 import React from 'react';
 
+import { User } from '@/shared/types/users';
 import { NodeCollaboratorRoleDropdown } from '@/renderer/components/collaborators/node-collaborator-role-dropdown';
 import { NodeCollaboratorSearch } from '@/renderer/components/collaborators/node-collaborator-search';
 import { Button } from '@/renderer/components/ui/button';
@@ -21,7 +21,7 @@ export const NodeCollaboratorCreate = ({
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  const [users, setUsers] = React.useState<UserNode[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
   const [role, setRole] = React.useState('collaborator');
 
   return (

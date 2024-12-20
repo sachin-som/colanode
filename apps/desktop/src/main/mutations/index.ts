@@ -52,8 +52,8 @@ import { ViewUpdateMutationHandler } from '@/main/mutations/databases/view-updat
 import { ViewNameUpdateMutationHandler } from '@/main/mutations/databases/view-name-update';
 import { WorkspaceCreateMutationHandler } from '@/main/mutations/workspaces/workspace-create';
 import { WorkspaceUpdateMutationHandler } from '@/main/mutations/workspaces/workspace-update';
-import { WorkspaceUserRoleUpdateMutationHandler } from '@/main/mutations/workspaces/workspace-user-role-update';
-import { WorkspaceUsersInviteMutationHandler } from '@/main/mutations/workspaces/workspace-users-invite';
+import { UserRoleUpdateMutationHandler } from '@/main/mutations/users/user-role-update';
+import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite';
 import { MutationHandler } from '@/main/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -98,8 +98,8 @@ export const mutationHandlerMap: MutationHandlerMap = {
   server_create: new ServerCreateMutationHandler(),
   space_create: new SpaceCreateMutationHandler(),
   space_delete: new SpaceDeleteMutationHandler(),
-  workspace_user_role_update: new WorkspaceUserRoleUpdateMutationHandler(),
-  workspace_users_invite: new WorkspaceUsersInviteMutationHandler(),
+  user_role_update: new UserRoleUpdateMutationHandler(),
+  users_invite: new UsersInviteMutationHandler(),
   workspace_create: new WorkspaceCreateMutationHandler(),
   workspace_update: new WorkspaceUpdateMutationHandler(),
   avatar_upload: new AvatarUploadMutationHandler(),

@@ -1,4 +1,4 @@
-import { MessageNode, UserNode } from '@colanode/core';
+import { MessageNode } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -15,22 +15,20 @@ export const MessageAuthorAvatar = ({
 }: MessageAuthorAvatarProps) => {
   const workspace = useWorkspace();
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: message.createdBy,
+    type: 'user_get',
+    id: message.createdBy,
     userId: workspace.userId,
   });
 
-  if (!data || data.type !== 'user') {
+  if (!data) {
     return null;
   }
 
-  const author = data as UserNode;
-
   return (
     <Avatar
-      id={author.id}
-      name={author.attributes.name}
-      avatar={author.attributes.avatar}
+      id={data.id}
+      name={data.name}
+      avatar={data.avatar}
       size="medium"
       className={className}
     />

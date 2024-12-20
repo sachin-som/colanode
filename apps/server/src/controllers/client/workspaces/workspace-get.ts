@@ -24,14 +24,14 @@ export const workspaceGetHandler = async (
     return;
   }
 
-  const workspaceUser = await database
-    .selectFrom('workspace_users')
+  const user = await database
+    .selectFrom('users')
     .selectAll()
     .where('workspace_id', '=', workspaceId)
     .where('account_id', '=', res.locals.account.id)
     .executeTakeFirst();
 
-  if (!workspaceUser) {
+  if (!user) {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
@@ -46,9 +46,9 @@ export const workspaceGetHandler = async (
     avatar: workspace.avatar,
     versionId: workspace.version_id,
     user: {
-      id: workspaceUser.id,
-      accountId: workspaceUser.account_id,
-      role: workspaceUser.role as WorkspaceRole,
+      id: user.id,
+      accountId: user.account_id,
+      role: user.role as WorkspaceRole,
     },
   };
 

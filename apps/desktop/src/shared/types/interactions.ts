@@ -1,9 +1,8 @@
-import { InteractionAttributes, NodeType } from '@colanode/core';
+import { InteractionAttributes } from '@colanode/core';
 
 export type Interaction = {
   userId: string;
   nodeId: string;
-  nodeType: NodeType;
   attributes: InteractionAttributes;
   createdAt: Date;
   updatedAt: Date | null;

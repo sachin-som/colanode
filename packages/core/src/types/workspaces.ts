@@ -12,7 +12,7 @@ export enum WorkspaceStatus {
   Inactive = 2,
 }
 
-export enum WorkspaceUserStatus {
+export enum UserStatus {
   Active = 1,
   Inactive = 2,
 }
@@ -44,24 +44,24 @@ export type WorkspaceUpdateInput = {
   avatar?: string | null;
 };
 
-export type WorkspaceUsersInviteInput = {
+export type UsersInviteInput = {
   emails: string[];
   role: WorkspaceRole;
 };
 
-export type WorkspaceUserInviteResult = {
+export type UserInviteResult = {
   email: string;
   result: 'success' | 'error' | 'exists';
 };
 
-export type WorkspaceUsersInviteOutput = {
-  results: WorkspaceUserInviteResult[];
+export type UsersInviteOutput = {
+  results: UserInviteResult[];
 };
 
-export type WorkspaceUserRoleUpdateInput = {
+export type UserRoleUpdateInput = {
   role: WorkspaceRole;
 };
 
-export type WorkspaceUserRoleUpdateOutput = {
+export type UserRoleUpdateOutput = {
   user: NodeOutput;
 };

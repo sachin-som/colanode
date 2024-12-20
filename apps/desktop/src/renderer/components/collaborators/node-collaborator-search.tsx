@@ -1,7 +1,7 @@
-import { UserNode } from '@colanode/core';
 import { X } from 'lucide-react';
 import React from 'react';
 
+import { User } from '@/shared/types/users';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { Badge } from '@/renderer/components/ui/badge';
 import { Button } from '@/renderer/components/ui/button';
@@ -23,8 +23,8 @@ import { useQuery } from '@/renderer/hooks/use-query';
 
 interface NodeCollaboratorSearchProps {
   excluded: string[];
-  value: UserNode[];
-  onChange: (value: UserNode[]) => void;
+  value: User[];
+  onChange: (value: User[]) => void;
 }
 
 export const NodeCollaboratorSearch = ({
@@ -57,7 +57,7 @@ export const NodeCollaboratorSearch = ({
         >
           {value.map((user) => (
             <Badge key={user.id} variant="outline">
-              {user.attributes.name}
+              {user.name}
               <span
                 className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 onClick={(e) => {
@@ -99,14 +99,14 @@ export const NodeCollaboratorSearch = ({
                   <div className="flex w-full flex-row items-center gap-2">
                     <Avatar
                       id={user.id}
-                      name={user.attributes.name}
-                      avatar={user.attributes.avatar}
+                      name={user.name}
+                      avatar={user.avatar}
                       className="h-7 w-7"
                     />
                     <div className="flex flex-grow flex-col">
-                      <p className="text-sm">{user.attributes.name}</p>
+                      <p className="text-sm">{user.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {user.attributes.email}
+                        {user.email}
                       </p>
                     </div>
                   </div>

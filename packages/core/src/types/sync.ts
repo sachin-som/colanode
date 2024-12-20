@@ -1,6 +1,6 @@
 import { InteractionAttributes } from './interactions';
+import { WorkspaceRole } from './workspaces';
 
-import { NodeType } from '../registry';
 import { NodeRole } from '../registry/core';
 
 export type SyncTransactionsInput = {
@@ -26,7 +26,6 @@ export type LocalTransaction =
 export type LocalCreateTransaction = {
   id: string;
   nodeId: string;
-  nodeType: string;
   operation: 'create';
   data: string;
   createdAt: string;
@@ -36,7 +35,6 @@ export type LocalCreateTransaction = {
 export type LocalUpdateTransaction = {
   id: string;
   nodeId: string;
-  nodeType: string;
   operation: 'update';
   data: string;
   createdAt: string;
@@ -46,7 +44,6 @@ export type LocalUpdateTransaction = {
 export type LocalDeleteTransaction = {
   id: string;
   nodeId: string;
-  nodeType: string;
   operation: 'delete';
   createdAt: string;
   createdBy: string;
@@ -56,7 +53,6 @@ export type ServerCreateTransaction = {
   id: string;
   operation: 'create';
   nodeId: string;
-  nodeType: NodeType;
   workspaceId: string;
   data: string;
   createdAt: string;
@@ -69,7 +65,6 @@ export type ServerUpdateTransaction = {
   id: string;
   operation: 'update';
   nodeId: string;
-  nodeType: NodeType;
   workspaceId: string;
   data: string;
   createdAt: string;
@@ -82,7 +77,6 @@ export type ServerDeleteTransaction = {
   id: string;
   operation: 'delete';
   nodeId: string;
-  nodeType: NodeType;
   workspaceId: string;
   createdAt: string;
   createdBy: string;
@@ -116,7 +110,6 @@ export type ServerCollaboration = {
 export type ServerInteraction = {
   userId: string;
   nodeId: string;
-  nodeType: NodeType;
   workspaceId: string;
   attributes: InteractionAttributes;
   createdAt: string;
@@ -126,8 +119,23 @@ export type ServerInteraction = {
   version: string;
 };
 
+export type ServerUser = {
+  id: string;
+  workspaceId: string;
+  email: string;
+  name: string;
+  avatar: string | null;
+  role: WorkspaceRole;
+  customName: string | null;
+  customAvatar: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  version: string;
+};
+
 export type SyncConsumerType =
   | 'transactions'
   | 'collaborations'
   | 'deleted_collaborations'
-  | 'interactions';
+  | 'interactions'
+  | 'users';

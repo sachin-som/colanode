@@ -27,30 +27,22 @@ export const NodeCollaborator = ({
   const { mutate } = useMutation();
 
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: collaboratorId,
+    type: 'user_get',
+    id: collaboratorId,
     userId: workspace.userId,
   });
 
-  if (!data || data.type !== 'user') {
+  if (!data) {
     return null;
   }
 
   return (
     <div className="flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
-        <Avatar
-          id={data.id}
-          name={data.attributes.name}
-          avatar={data.attributes.avatar}
-        />
+        <Avatar id={data.id} name={data.name} avatar={data.avatar} />
         <div className="flex-grow">
-          <p className="text-sm font-medium leading-none">
-            {data.attributes.name}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {data.attributes.email}
-          </p>
+          <p className="text-sm font-medium leading-none">{data.name}</p>
+          <p className="text-sm text-muted-foreground">{data.email}</p>
         </div>
       </div>
       <div className="flex flex-row items-center gap-1">

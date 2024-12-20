@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { WorkspaceOutput, WorkspaceUpdateInput } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { nodeService } from '@/services/node-service';
 import { ApiError } from '@/types/api';
 import { eventBus } from '@/lib/event-bus';
 
@@ -13,7 +12,7 @@ export const workspaceUpdateHandler = async (
   const workspaceId = req.params.workspaceId as string;
   const input: WorkspaceUpdateInput = req.body;
 
-  if (res.locals.workspaceUser.role !== 'owner') {
+  if (res.locals.user.role !== 'owner') {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
@@ -42,23 +41,6 @@ export const workspaceUpdateHandler = async (
     return;
   }
 
-  await nodeService.updateNode({
-    nodeId: updatedWorkspace.id,
-    userId: res.locals.account.id,
-    workspaceId: workspaceId,
-    updater: (attributes) => {
-      if (attributes.type !== 'workspace') {
-        return null;
-      }
-
-      attributes.name = input.name;
-      attributes.description = input.description;
-      attributes.avatar = input.avatar;
-
-      return attributes;
-    },
-  });
-
   eventBus.publish({
     type: 'workspace_updated',
     workspaceId: updatedWorkspace.id,
@@ -71,9 +53,9 @@ export const workspaceUpdateHandler = async (
     avatar: updatedWorkspace.avatar,
     versionId: updatedWorkspace.version_id,
     user: {
-      id: res.locals.workspaceUser.id,
-      accountId: res.locals.workspaceUser.account_id,
-      role: res.locals.workspaceUser.role,
+      id: res.locals.user.id,
+      accountId: res.locals.user.account_id,
+      role: res.locals.user.role,
     },
   };
 

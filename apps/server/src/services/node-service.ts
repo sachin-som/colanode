@@ -18,7 +18,7 @@ import {
   CreateNode,
   CreateTransaction,
   DatabaseSchema,
-  SelectWorkspaceUser,
+  SelectUser,
 } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
 import { fetchNodeAncestors, mapNode } from '@/lib/nodes';
@@ -76,7 +76,6 @@ class NodeService {
     const createTransaction: CreateTransaction = {
       id: transactionId,
       node_id: input.nodeId,
-      node_type: input.attributes.type,
       workspace_id: input.workspaceId,
       operation: 'create',
       data: update,
@@ -202,7 +201,6 @@ class NodeService {
             .values({
               id: transactionId,
               node_id: input.nodeId,
-              node_type: node.type,
               workspace_id: input.workspaceId,
               operation: 'update',
               data: update,
@@ -248,7 +246,7 @@ class NodeService {
   }
 
   public async applyCreateTransaction(
-    workspaceUser: SelectWorkspaceUser,
+    user: SelectUser,
     input: ApplyCreateTransactionInput
   ): Promise<ApplyCreateTransactionOutput | null> {
     const ydoc = new YDoc();
@@ -261,10 +259,10 @@ class NodeService {
 
     const ancestors = ancestorRows.map(mapNode);
     const context = new NodeMutationContext(
-      workspaceUser.account_id,
-      workspaceUser.workspace_id,
-      workspaceUser.id,
-      workspaceUser.role,
+      user.account_id,
+      user.workspace_id,
+      user.id,
+      user.role,
       ancestors
     );
 
@@ -289,7 +287,6 @@ class NodeService {
     const createTransaction: CreateTransaction = {
       id: input.id,
       node_id: input.nodeId,
-      node_type: attributes.type,
       workspace_id: context.workspaceId,
       operation: 'create',
       data:
@@ -325,11 +322,11 @@ class NodeService {
   }
 
   public async applyUpdateTransaction(
-    workspaceUser: SelectWorkspaceUser,
+    user: SelectUser,
     input: ApplyUpdateTransactionInput
   ): Promise<ApplyUpdateTransactionOutput | null> {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-      const result = await this.tryApplyUpdateTransaction(workspaceUser, input);
+      const result = await this.tryApplyUpdateTransaction(user, input);
 
       if (result.type === 'success') {
         return result.output;
@@ -344,7 +341,7 @@ class NodeService {
   }
 
   private async tryApplyUpdateTransaction(
-    workspaceUser: SelectWorkspaceUser,
+    user: SelectUser,
     input: ApplyUpdateTransactionInput
   ): Promise<UpdateResult<ApplyUpdateTransactionOutput>> {
     const ancestorRows = await fetchNodeAncestors(input.nodeId);
@@ -381,10 +378,10 @@ class NodeService {
     }
 
     const context = new NodeMutationContext(
-      workspaceUser.account_id,
-      workspaceUser.workspace_id,
-      workspaceUser.id,
-      workspaceUser.role,
+      user.account_id,
+      user.workspace_id,
+      user.id,
+      user.role,
       ancestors
     );
 
@@ -425,7 +422,6 @@ class NodeService {
               id: input.id,
               node_id: input.nodeId,
               workspace_id: context.workspaceId,
-              node_type: node.type,
               operation: 'update',
               data:
                 typeof input.data === 'string'
@@ -501,7 +497,7 @@ class NodeService {
   }
 
   public async applyDeleteTransaction(
-    workspaceUser: SelectWorkspaceUser,
+    user: SelectUser,
     input: ApplyDeleteTransactionInput
   ): Promise<ApplyDeleteTransactionOutput | null> {
     const ancestorRows = await fetchNodeAncestors(input.nodeId);
@@ -513,10 +509,10 @@ class NodeService {
 
     const model = registry.getModel(node.attributes.type);
     const context = new NodeMutationContext(
-      workspaceUser.account_id,
-      workspaceUser.workspace_id,
-      workspaceUser.id,
-      workspaceUser.role,
+      user.account_id,
+      user.workspace_id,
+      user.id,
+      user.role,
       ancestors
     );
 
@@ -548,11 +544,10 @@ class NodeService {
           .values({
             id: input.id,
             node_id: input.nodeId,
-            workspace_id: workspaceUser.workspace_id,
-            node_type: node.type,
+            workspace_id: user.workspace_id,
             operation: 'delete',
             created_at: input.createdAt,
-            created_by: workspaceUser.id,
+            created_by: user.id,
             server_created_at: new Date(),
           })
           .executeTakeFirst();
@@ -580,13 +575,13 @@ class NodeService {
       type: 'node_deleted',
       nodeId: input.nodeId,
       nodeType: node.type,
-      workspaceId: workspaceUser.workspace_id,
+      workspaceId: user.workspace_id,
     });
 
     await jobService.addJob({
       type: 'clean_node_data',
       nodeId: input.nodeId,
-      workspaceId: workspaceUser.workspace_id,
+      workspaceId: user.workspace_id,
     });
 
     return {

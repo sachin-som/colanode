@@ -9,7 +9,7 @@ import {
   SyncTransactionStatus,
 } from '@colanode/core';
 
-import { SelectWorkspaceUser } from '@/data/schema';
+import { SelectUser } from '@/data/schema';
 import { nodeService } from '@/services/node-service';
 
 export const transactionsSyncHandler = async (
@@ -21,10 +21,7 @@ export const transactionsSyncHandler = async (
   const results: SyncTransactionResult[] = [];
   for (const transaction of input.transactions) {
     try {
-      const status = await handleLocalTransaction(
-        res.locals.workspaceUser,
-        transaction
-      );
+      const status = await handleLocalTransaction(res.locals.user, transaction);
       results.push({
         id: transaction.id,
         status: status,
@@ -43,25 +40,25 @@ export const transactionsSyncHandler = async (
 };
 
 const handleLocalTransaction = async (
-  workspaceUser: SelectWorkspaceUser,
+  user: SelectUser,
   transaction: LocalTransaction
 ): Promise<SyncTransactionStatus> => {
   if (transaction.operation === 'create') {
-    return await handleCreateTransaction(workspaceUser, transaction);
+    return await handleCreateTransaction(user, transaction);
   } else if (transaction.operation === 'update') {
-    return await handleUpdateTransaction(workspaceUser, transaction);
+    return await handleUpdateTransaction(user, transaction);
   } else if (transaction.operation === 'delete') {
-    return await handleDeleteTransaction(workspaceUser, transaction);
+    return await handleDeleteTransaction(user, transaction);
   } else {
     return 'error';
   }
 };
 
 const handleCreateTransaction = async (
-  workspaceUser: SelectWorkspaceUser,
+  user: SelectUser,
   transaction: LocalCreateTransaction
 ): Promise<SyncTransactionStatus> => {
-  const output = await nodeService.applyCreateTransaction(workspaceUser, {
+  const output = await nodeService.applyCreateTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
     data: transaction.data,
@@ -76,10 +73,10 @@ const handleCreateTransaction = async (
 };
 
 const handleUpdateTransaction = async (
-  workspaceUser: SelectWorkspaceUser,
+  user: SelectUser,
   transaction: LocalUpdateTransaction
 ): Promise<SyncTransactionStatus> => {
-  const output = await nodeService.applyUpdateTransaction(workspaceUser, {
+  const output = await nodeService.applyUpdateTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
     userId: transaction.createdBy,
@@ -95,10 +92,10 @@ const handleUpdateTransaction = async (
 };
 
 const handleDeleteTransaction = async (
-  workspaceUser: SelectWorkspaceUser,
+  user: SelectUser,
   transaction: LocalDeleteTransaction
 ): Promise<SyncTransactionStatus> => {
-  const output = await nodeService.applyDeleteTransaction(workspaceUser, {
+  const output = await nodeService.applyDeleteTransaction(user, {
     id: transaction.id,
     nodeId: transaction.nodeId,
     createdAt: new Date(transaction.createdAt),

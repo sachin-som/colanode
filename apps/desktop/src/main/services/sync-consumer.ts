@@ -5,7 +5,10 @@ import {
   InteractionsBatchMessage,
   SyncConsumerType,
   TransactionsBatchMessage,
+  UsersBatchMessage,
 } from '@colanode/core';
+
+import { userService } from './user-service';
 
 import { interactionService } from '@/main/services/interaction-service';
 import { nodeService } from '@/main/services/node-service';
@@ -240,6 +243,45 @@ export class SyncConsumer {
 
       if (cursor) {
         await updateCursor(message.userId, 'interactions', cursor);
+        this.cursor = cursor;
+        this.status = 'idle';
+        this.initConsumer(cursor);
+      } else {
+        this.status = 'idle';
+        this.ping();
+      }
+    }
+  }
+
+  public async syncUsers(message: UsersBatchMessage) {
+    if (this.type !== 'users') {
+      this.debug(
+        `Syncing of server users not supported for consumer type ${this.type}, skipping`
+      );
+      return;
+    }
+
+    this.debug(`Syncing server users for user ${message.userId}`);
+
+    this.status = 'syncing';
+    let cursor: bigint | null = null;
+    try {
+      for (const user of message.users) {
+        await userService.syncServerUser(message.userId, user);
+        cursor = BigInt(user.version);
+      }
+    } catch (error) {
+      this.debug(
+        error,
+        `Error syncing server users for user ${message.userId}`
+      );
+    } finally {
+      this.debug(
+        `Syncing of server users completed for user ${message.userId}`
+      );
+
+      if (cursor) {
+        await updateCursor(message.userId, 'users', cursor);
         this.cursor = cursor;
         this.status = 'idle';
         this.initConsumer(cursor);

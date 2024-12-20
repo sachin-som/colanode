@@ -153,7 +153,6 @@ class NodeService {
             id: transactionId,
             node_id: inputItem.id,
             operation: 'create',
-            node_type: inputItem.attributes.type,
             data: update,
             created_at: createdAt,
             created_by: context.userId,
@@ -238,7 +237,6 @@ class NodeService {
       await interactionService.setInteraction(
         userId,
         createdTransaction.node_id,
-        createdTransaction.node_type,
         {
           attribute: 'lastReceivedTransactionId',
           value: createdTransaction.id,
@@ -374,7 +372,6 @@ class NodeService {
             .values({
               id: transactionId,
               node_id: nodeId,
-              node_type: node.type,
               operation: 'update',
               data: update,
               created_at: updatedAt,
@@ -443,7 +440,6 @@ class NodeService {
       await interactionService.setInteraction(
         userId,
         createdTransaction.node_id,
-        createdTransaction.node_type,
         {
           attribute: 'lastReceivedTransactionId',
           value: createdTransaction.id,
@@ -528,7 +524,6 @@ class NodeService {
           .values({
             id: generateId(IdType.Transaction),
             node_id: nodeId,
-            node_type: node.type,
             operation: 'delete',
             data: null,
             created_at: new Date().toISOString(),
@@ -638,12 +633,12 @@ class NodeService {
       ydoc.applyUpdate(transaction.data);
     }
 
-    const model = registry.getModel(firstTransaction.nodeType);
+    const attributes = ydoc.getAttributes<NodeAttributes>();
+    const model = registry.getModel(attributes.type);
     if (!model) {
       return false;
     }
 
-    const attributes = ydoc.getAttributes<NodeAttributes>();
     const attributesJson = JSON.stringify(attributes);
     const name = model.getName(nodeId, attributes);
     const text = model.getText(nodeId, attributes);
@@ -692,7 +687,6 @@ class NodeService {
               transactions.map((t) => ({
                 id: t.id,
                 node_id: t.nodeId,
-                node_type: t.nodeType,
                 operation: t.operation,
                 data:
                   t.operation !== 'delete' && t.data
@@ -778,7 +772,6 @@ class NodeService {
             transactions.map((t) => ({
               id: t.id,
               node_id: t.nodeId,
-              node_type: t.nodeType,
               operation: t.operation,
               data:
                 t.operation !== 'delete' && t.data ? decodeState(t.data) : null,
@@ -869,15 +862,15 @@ class NodeService {
       return;
     }
 
-    const model = registry.getModel(transaction.nodeType);
+    const ydoc = new YDoc();
+    ydoc.applyUpdate(transaction.data);
+    const attributes = ydoc.getAttributes<NodeAttributes>();
+
+    const model = registry.getModel(attributes.type);
     if (!model) {
       return;
     }
 
-    const ydoc = new YDoc();
-    ydoc.applyUpdate(transaction.data);
-
-    const attributes = ydoc.getAttributes<NodeAttributes>();
     const name = model.getName(transaction.nodeId, attributes);
     const text = model.getText(transaction.nodeId, attributes);
 
@@ -901,7 +894,6 @@ class NodeService {
           .values({
             id: transaction.id,
             node_id: transaction.nodeId,
-            node_type: transaction.nodeType,
             operation: 'create',
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
@@ -941,15 +933,10 @@ class NodeService {
         node: mapNode(createdNode),
       });
 
-      await interactionService.setInteraction(
-        userId,
-        createdNode.id,
-        createdNode.type,
-        {
-          attribute: 'lastReceivedTransactionId',
-          value: transaction.id,
-        }
-      );
+      await interactionService.setInteraction(userId, createdNode.id, {
+        attribute: 'lastReceivedTransactionId',
+        value: transaction.id,
+      });
     } else {
       this.debug(
         `Server create transaction ${transaction.id} for node ${transaction.nodeId} is incomplete`
@@ -1005,7 +992,7 @@ class NodeService {
       return;
     }
 
-    const model = registry.getModel(transaction.nodeType);
+    const model = registry.getModel(transaction.nodeId);
     if (!model) {
       return;
     }
@@ -1051,7 +1038,6 @@ class NodeService {
           .values({
             id: transaction.id,
             node_id: transaction.nodeId,
-            node_type: transaction.nodeType,
             operation: 'update',
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
@@ -1105,15 +1091,10 @@ class NodeService {
         node: mapNode(updatedNode),
       });
 
-      await interactionService.setInteraction(
-        userId,
-        updatedNode.id,
-        updatedNode.type,
-        {
-          attribute: 'lastReceivedTransactionId',
-          value: transaction.id,
-        }
-      );
+      await interactionService.setInteraction(userId, updatedNode.id, {
+        attribute: 'lastReceivedTransactionId',
+        value: transaction.id,
+      });
     } else {
       this.debug(
         `Server update transaction ${transaction.id} for node ${transaction.nodeId} is incomplete`
@@ -1313,7 +1294,7 @@ class NodeService {
       .orderBy('id', 'asc')
       .execute();
 
-    const model = registry.getModel(transaction.nodeType);
+    const model = registry.getModel(node.type);
     if (!model) {
       return true;
     }

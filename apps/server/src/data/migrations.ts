@@ -68,21 +68,36 @@ const createWorkspacesTable: Migration = {
   },
 };
 
-const createWorkspaceUsersTable: Migration = {
+const createUsersTable: Migration = {
   up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS users_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
     await db.schema
-      .createTable('workspace_users')
+      .createTable('users')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('account_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('email', 'varchar(256)', (col) => col.notNull())
+      .addColumn('name', 'varchar(256)', (col) => col.notNull())
+      .addColumn('avatar', 'varchar(256)')
+      .addColumn('custom_name', 'varchar(256)')
+      .addColumn('custom_avatar', 'varchar(256)')
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
-      .addColumn('attrs', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
       .addColumn('status', 'integer', (col) => col.notNull())
-      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version', 'bigint', (col) =>
+        col.notNull().defaultTo(sql`nextval('users_version_sequence')`)
+      )
       .addUniqueConstraint('unique_workspace_account_combination', [
         'workspace_id',
         'account_id',
@@ -90,7 +105,8 @@ const createWorkspaceUsersTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('workspace_users').execute();
+    await db.schema.dropTable('users').execute();
+    await sql`DROP SEQUENCE IF EXISTS users_version_sequence`.execute(db);
   },
 };
 
@@ -125,7 +141,7 @@ const createNodesTable: Migration = {
 const createTransactionsTable: Migration = {
   up: async (db) => {
     await sql`
-      CREATE SEQUENCE IF NOT EXISTS transactions_version_seq
+      CREATE SEQUENCE IF NOT EXISTS transactions_version_sequence
       START WITH 1000000000
       INCREMENT BY 1
       NO MINVALUE
@@ -137,7 +153,6 @@ const createTransactionsTable: Migration = {
       .createTable('transactions')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('node_type', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('operation', 'varchar(30)', (col) => col.notNull())
       .addColumn('data', 'bytea')
@@ -145,13 +160,15 @@ const createTransactionsTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('version', 'bigint', (col) =>
-        col.notNull().defaultTo(sql`nextval('transactions_version_seq')`)
+        col.notNull().defaultTo(sql`nextval('transactions_version_sequence')`)
       )
       .execute();
   },
   down: async (db) => {
     await db.schema.dropTable('transactions').execute();
-    await sql`DROP SEQUENCE IF EXISTS transactions_version_seq`.execute(db);
+    await sql`DROP SEQUENCE IF EXISTS transactions_version_sequence`.execute(
+      db
+    );
   },
 };
 
@@ -375,7 +392,6 @@ const createInteractionsTable: Migration = {
       .createTable('interactions')
       .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('node_type', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('attributes', 'jsonb')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
@@ -417,7 +433,7 @@ export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
   '00002_create_devices_table': createDevicesTable,
   '00003_create_workspaces_table': createWorkspacesTable,
-  '00004_create_workspace_users_table': createWorkspaceUsersTable,
+  '00004_create_users_table': createUsersTable,
   '00005_create_nodes_table': createNodesTable,
   '00006_create_transactions_table': createTransactionsTable,
   '00007_create_node_paths_table': createNodePathsTable,

@@ -10,14 +10,14 @@ export const workspaceMiddleware: RequestHandler = async (
 ) => {
   const workspaceId = req.params.workspaceId as string;
 
-  const workspaceUser = await database
-    .selectFrom('workspace_users')
+  const user = await database
+    .selectFrom('users')
     .selectAll()
     .where('workspace_id', '=', workspaceId)
     .where('account_id', '=', res.locals.account.id)
     .executeTakeFirst();
 
-  if (!workspaceUser) {
+  if (!user) {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
@@ -25,7 +25,7 @@ export const workspaceMiddleware: RequestHandler = async (
     return;
   }
 
-  res.locals.workspaceUser = workspaceUser;
+  res.locals.user = user;
 
   next();
 };

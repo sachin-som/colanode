@@ -100,7 +100,7 @@ export const fileUploadCompleteHandler = async (
       mime_type: metadata.mimeType,
       size: metadata.size,
       type: extractFileType(metadata.mimeType),
-      created_by: res.locals.workspaceUser.id,
+      created_by: res.locals.user.id,
       created_at: new Date(metadata.createdAt),
       completed_at: new Date(),
     })
@@ -108,7 +108,7 @@ export const fileUploadCompleteHandler = async (
 
   await nodeService.updateNode({
     nodeId: file.id,
-    userId: res.locals.workspaceUser.id,
+    userId: res.locals.user.id,
     workspaceId: workspaceId,
     updater: (attributes) => ({
       ...attributes,

@@ -4,7 +4,7 @@ import {
   WorkspaceCreateInput,
   WorkspaceOutput,
   WorkspaceStatus,
-  WorkspaceUserStatus,
+  UserStatus,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
@@ -42,57 +42,26 @@ class WorkspaceService {
       throw new Error('Failed to create workspace.');
     }
 
-    const workspaceUser = await database
-      .insertInto('workspace_users')
+    const user = await database
+      .insertInto('users')
       .values({
         id: userId,
         account_id: account.id,
         workspace_id: workspaceId,
         role: 'owner',
+        name: account.name,
+        email: account.email,
+        avatar: account.avatar,
         created_at: date,
         created_by: account.id,
-        status: WorkspaceUserStatus.Active,
-        version_id: generateId(IdType.Version),
+        status: UserStatus.Active,
       })
       .returningAll()
       .executeTakeFirst();
 
-    if (!workspaceUser) {
+    if (!user) {
       throw new Error('Failed to create workspace user.');
     }
-
-    const createWorkspaceNodeOutput = await nodeService.createNode({
-      nodeId: workspaceId,
-      attributes: {
-        type: 'workspace',
-        name: input.name,
-        description: input.description,
-        avatar: input.avatar,
-        parentId: workspaceId,
-      },
-      userId: userId,
-      workspaceId: workspaceId,
-      ancestors: [],
-    });
-
-    if (!createWorkspaceNodeOutput) {
-      throw new Error('Failed to create workspace node.');
-    }
-
-    await nodeService.createNode({
-      nodeId: userId,
-      attributes: {
-        type: 'user',
-        name: account.name,
-        email: account.email,
-        role: 'owner',
-        accountId: account.id,
-        parentId: workspaceId,
-      },
-      userId: userId,
-      workspaceId: workspaceId,
-      ancestors: [],
-    });
 
     const createSpaceNodeOutput = await nodeService.createNode({
       nodeId: spaceId,
@@ -144,7 +113,7 @@ class WorkspaceService {
     });
 
     eventBus.publish({
-      type: 'workspace_user_created',
+      type: 'user_created',
       userId: userId,
       workspaceId: workspaceId,
       accountId: account.id,
@@ -157,9 +126,9 @@ class WorkspaceService {
       avatar: workspace.avatar,
       versionId: workspace.version_id,
       user: {
-        id: workspaceUser.id,
-        accountId: workspaceUser.account_id,
-        role: workspaceUser.role,
+        id: user.id,
+        accountId: user.account_id,
+        role: user.role,
       },
     };
   }

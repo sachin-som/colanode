@@ -16,18 +16,18 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
 
-  const collaboratorId =
+  const userId =
     Object.keys(node.attributes.collaborators).find(
       (id) => id !== workspace.userId
     ) ?? '';
 
   const { data, isPending } = useQuery({
-    type: 'node_get',
-    nodeId: collaboratorId,
+    type: 'user_get',
+    id: userId,
     userId: workspace.userId,
   });
 
-  if (isPending || !data || data.type !== 'user') {
+  if (isPending || !data) {
     return null;
   }
 
@@ -56,8 +56,8 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
     >
       <Avatar
         id={data.id}
-        avatar={data.attributes.avatar}
-        name={data.attributes.name}
+        avatar={data.avatar}
+        name={data.name}
         className="h-5 w-5"
       />
       <span
@@ -66,7 +66,7 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
           !isActive && unreadCount > 0 && 'font-semibold'
         )}
       >
-        {data.attributes.name ?? 'Unnamed'}
+        {data.name ?? 'Unnamed'}
       </span>
       {!isActive && (
         <ReadStateIndicator count={unreadCount} hasChanges={unreadCount > 0} />

@@ -10,7 +10,7 @@ export const workspaceDeleteHandler = async (
 ): Promise<void> => {
   const workspaceId = req.params.workspaceId as string;
 
-  if (res.locals.workspaceUser.role !== 'owner') {
+  if (res.locals.user.role !== 'owner') {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',

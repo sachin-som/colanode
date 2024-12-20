@@ -37,12 +37,18 @@ export type InteractionUpdatedEvent = {
   type: 'interaction_updated';
   userId: string;
   nodeId: string;
-  nodeType: NodeType;
   workspaceId: string;
 };
 
-export type WorkspaceUserCreatedEvent = {
-  type: 'workspace_user_created';
+export type UserCreatedEvent = {
+  type: 'user_created';
+  userId: string;
+  workspaceId: string;
+  accountId: string;
+};
+
+export type UserUpdatedEvent = {
+  type: 'user_updated';
   userId: string;
   workspaceId: string;
   accountId: string;
@@ -81,7 +87,8 @@ export type Event =
   | CollaboratorAddedEvent
   | CollaboratorRemovedEvent
   | InteractionUpdatedEvent
-  | WorkspaceUserCreatedEvent
+  | UserCreatedEvent
+  | UserUpdatedEvent
   | AccountUpdatedEvent
   | WorkspaceCreatedEvent
   | WorkspaceUpdatedEvent

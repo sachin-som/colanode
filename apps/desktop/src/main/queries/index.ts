@@ -15,9 +15,10 @@ import { ServerListQueryHandler } from '@/main/queries/servers/server-list';
 import { UserSearchQueryHandler } from '@/main/queries/users/user-search';
 import { WorkspaceGetQueryHandler } from '@/main/queries/workspaces/workspace-get';
 import { WorkspaceListQueryHandler } from '@/main/queries/workspaces/workspace-list';
-import { WorkspaceUserListQueryHandler } from '@/main/queries/workspaces/workspace-user-list';
+import { UserListQueryHandler } from '@/main/queries/users/user-list';
 import { DatabaseListQueryHandler } from '@/main/queries/databases/database-list';
 import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
+import { UserGetQueryHandler } from '@/main/queries/users/user-get';
 import { QueryHandler } from '@/main/types';
 import { QueryMap } from '@/shared/queries';
 
@@ -33,7 +34,7 @@ export const queryHandlerMap: QueryHandlerMap = {
   server_list: new ServerListQueryHandler(),
   user_search: new UserSearchQueryHandler(),
   workspace_list: new WorkspaceListQueryHandler(),
-  workspace_user_list: new WorkspaceUserListQueryHandler(),
+  user_list: new UserListQueryHandler(),
   file_list: new FileListQueryHandler(),
   emojis_get: new EmojisGetQueryHandler(),
   icons_get: new IconsGetQueryHandler(),
@@ -46,4 +47,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   download_get: new DownloadGetQueryHandler(),
   database_list: new DatabaseListQueryHandler(),
   record_search: new RecordSearchQueryHandler(),
+  user_get: new UserGetQueryHandler(),
 };

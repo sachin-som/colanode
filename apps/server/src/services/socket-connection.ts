@@ -5,10 +5,10 @@ import {
   InteractionsBatchMessage,
   Message,
   TransactionsBatchMessage,
-  NodeType,
   SyncConsumerType,
   WorkspaceStatus,
   DeletedCollaborationsBatchMessage,
+  UsersBatchMessage,
 } from '@colanode/core';
 
 import { interactionService } from '@/services/interaction-service';
@@ -20,6 +20,7 @@ import {
   mapDeletedCollaboration,
   mapInteraction,
   mapTransaction,
+  mapUser,
 } from '@/lib/nodes';
 import {
   AccountUpdatedEvent,
@@ -30,12 +31,11 @@ import {
   NodeCreatedEvent,
   NodeDeletedEvent,
   NodeUpdatedEvent,
+  UserCreatedEvent,
+  UserUpdatedEvent,
   WorkspaceDeletedEvent,
   WorkspaceUpdatedEvent,
-  WorkspaceUserCreatedEvent,
 } from '@/types/events';
-
-const PUBLIC_NODES: NodeType[] = ['workspace', 'user'];
 
 type SocketSyncConsumer = {
   type: SyncConsumerType;
@@ -99,8 +99,10 @@ export class SocketConnection {
       this.handleInteractionUpdatedEvent(event);
     } else if (event.type === 'account_updated') {
       this.handleAccountUpdatedEvent(event);
-    } else if (event.type === 'workspace_user_created') {
-      this.handleWorkspaceUserCreatedEvent(event);
+    } else if (event.type === 'user_created') {
+      this.handleUserCreatedEvent(event);
+    } else if (event.type === 'user_updated') {
+      this.handleUserUpdatedEvent(event);
     } else if (event.type === 'workspace_updated') {
       this.handleWorkspaceUpdatedEvent(event);
     } else if (event.type === 'workspace_deleted') {
@@ -155,6 +157,8 @@ export class SocketConnection {
       this.consumeCollaborations(user, consumer);
     } else if (consumer.type === 'interactions') {
       this.consumeInteractions(user, consumer);
+    } else if (consumer.type === 'users') {
+      this.consumeUsers(user, consumer);
     }
   }
 
@@ -179,15 +183,7 @@ export class SocketConnection {
           .onRef('c.node_id', '=', 't.node_id')
       )
       .selectAll('t')
-      .where((eb) =>
-        eb.or([
-          eb.and([
-            eb('t.workspace_id', '=', user.workspaceId),
-            eb('t.node_type', 'in', PUBLIC_NODES),
-          ]),
-          eb('c.node_id', '=', eb.ref('t.node_id')),
-        ])
-      )
+      .whereRef('c.node_id', '=', 't.node_id')
       .where('t.version', '>', BigInt(consumer.cursor))
       .orderBy('t.version', 'asc')
       .limit(20)
@@ -316,15 +312,7 @@ export class SocketConnection {
           .on('c.user_id', '=', user.userId)
           .onRef('c.node_id', '=', 'i.node_id')
       )
-      .where((eb) =>
-        eb.or([
-          eb.and([
-            eb('i.workspace_id', '=', user.workspaceId),
-            eb('i.node_type', 'in', PUBLIC_NODES),
-          ]),
-          eb('c.node_id', '=', eb.ref('i.node_id')),
-        ])
-      )
+      .whereRef('c.node_id', '=', 'i.node_id')
       .selectAll('i')
       .where('i.version', '>', BigInt(consumer.cursor))
       .orderBy('i.version', 'asc')
@@ -344,6 +332,41 @@ export class SocketConnection {
       type: 'interactions_batch',
       userId: user.userId,
       interactions,
+    };
+
+    user.consumers.delete(consumer.type);
+    this.sendMessage(message);
+  }
+
+  private async consumeUsers(user: SocketUser, consumer: SocketSyncConsumer) {
+    if (consumer.fetching) {
+      return;
+    }
+
+    consumer.fetching = true;
+    this.logger.trace(
+      `Checking for pending users for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+    );
+
+    const unsyncedUsers = await database
+      .selectFrom('users')
+      .selectAll()
+      .where('workspace_id', '=', user.workspaceId)
+      .where('version', '>', BigInt(consumer.cursor))
+      .orderBy('version', 'asc')
+      .limit(50)
+      .execute();
+
+    if (unsyncedUsers.length === 0) {
+      consumer.fetching = false;
+      return;
+    }
+
+    const users = unsyncedUsers.map(mapUser);
+    const message: UsersBatchMessage = {
+      type: 'users_batch',
+      userId: user.userId,
+      users,
     };
 
     user.consumers.delete(consumer.type);
@@ -449,6 +472,32 @@ export class SocketConnection {
     }
   }
 
+  private handleUserCreatedEvent(event: UserCreatedEvent) {
+    for (const user of this.users.values()) {
+      if (user.userId !== event.userId) {
+        continue;
+      }
+
+      const usersConsumer = user.consumers.get('users');
+      if (usersConsumer) {
+        this.consumePendingSync(user, usersConsumer);
+      }
+    }
+  }
+
+  private handleUserUpdatedEvent(event: UserUpdatedEvent) {
+    for (const user of this.users.values()) {
+      if (user.userId !== event.userId) {
+        continue;
+      }
+
+      const usersConsumer = user.consumers.get('users');
+      if (usersConsumer) {
+        this.consumePendingSync(user, usersConsumer);
+      }
+    }
+  }
+
   private async getOrCreateUser(userId: string): Promise<SocketUser | null> {
     const existingUser = this.users.get(userId);
     if (existingUser) {
@@ -472,16 +521,16 @@ export class SocketConnection {
   }
 
   private async fetchAndCreateUser(userId: string): Promise<SocketUser | null> {
-    const workspaceUser = await database
-      .selectFrom('workspace_users')
+    const user = await database
+      .selectFrom('users')
       .where('id', '=', userId)
       .selectAll()
       .executeTakeFirst();
 
     if (
-      !workspaceUser ||
-      workspaceUser.status !== WorkspaceStatus.Active ||
-      workspaceUser.account_id !== this.account.id
+      !user ||
+      user.status !== WorkspaceStatus.Active ||
+      user.account_id !== this.account.id
     ) {
       return null;
     }
@@ -494,7 +543,7 @@ export class SocketConnection {
     // Create and store the new SocketUser
     const newSocketUser: SocketUser = {
       userId,
-      workspaceId: workspaceUser.workspace_id,
+      workspaceId: user.workspace_id,
       consumers: new Map(),
     };
 
@@ -513,25 +562,12 @@ export class SocketConnection {
     });
   }
 
-  private handleWorkspaceUserCreatedEvent(event: WorkspaceUserCreatedEvent) {
-    if (event.accountId !== this.account.id) {
-      return;
-    }
-
-    this.sendMessage({
-      type: 'workspace_user_created',
-      workspaceId: event.workspaceId,
-      userId: event.userId,
-      accountId: event.accountId,
-    });
-  }
-
   private handleWorkspaceUpdatedEvent(event: WorkspaceUpdatedEvent) {
-    const workspaceUsers = Array.from(this.users.values()).filter(
+    const users = Array.from(this.users.values()).filter(
       (user) => user.workspaceId === event.workspaceId
     );
 
-    if (workspaceUsers.length === 0) {
+    if (users.length === 0) {
       return;
     }
 
@@ -542,11 +578,11 @@ export class SocketConnection {
   }
 
   private handleWorkspaceDeletedEvent(event: WorkspaceDeletedEvent) {
-    const workspaceUsers = Array.from(this.users.values()).filter(
+    const users = Array.from(this.users.values()).filter(
       (user) => user.workspaceId === event.workspaceId
     );
 
-    if (workspaceUsers.length === 0) {
+    if (users.length === 0) {
       return;
     }
 

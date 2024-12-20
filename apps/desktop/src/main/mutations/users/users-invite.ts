@@ -1,20 +1,20 @@
-import { WorkspaceUsersInviteOutput } from '@colanode/core';
+import { UsersInviteOutput } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { httpClient } from '@/shared/lib/http-client';
 import {
-  WorkspaceUsersInviteMutationInput,
-  WorkspaceUsersInviteMutationOutput,
+  UsersInviteMutationInput,
+  UsersInviteMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-users-invite';
 import { MutationError } from '@/shared/mutations';
 
-export class WorkspaceUsersInviteMutationHandler
-  implements MutationHandler<WorkspaceUsersInviteMutationInput>
+export class UsersInviteMutationHandler
+  implements MutationHandler<UsersInviteMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUsersInviteMutationInput
-  ): Promise<WorkspaceUsersInviteMutationOutput> {
+    input: UsersInviteMutationInput
+  ): Promise<UsersInviteMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -51,7 +51,7 @@ export class WorkspaceUsersInviteMutationHandler
       );
     }
 
-    await httpClient.post<WorkspaceUsersInviteOutput>(
+    await httpClient.post<UsersInviteOutput>(
       `/v1/workspaces/${workspace.workspace_id}/users`,
       {
         emails: input.emails,

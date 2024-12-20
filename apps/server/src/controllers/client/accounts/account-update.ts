@@ -3,7 +3,6 @@ import { AccountUpdateInput, AccountUpdateOutput } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
-import { nodeService } from '@/services/node-service';
 import { eventBus } from '@/lib/event-bus';
 
 export const accountUpdateHandler = async (
@@ -57,46 +56,33 @@ export const accountUpdateHandler = async (
     .execute();
 
   const users = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where(
-      'id',
-      'in',
-      database
-        .selectFrom('workspace_users')
-        .select('id')
-        .where('account_id', '=', account.id)
-    )
+    .selectFrom('users')
+    .select(['id', 'workspace_id'])
+    .where('account_id', '=', account.id)
     .execute();
 
-  for (const user of users) {
-    if (user.attributes.type !== 'user') {
-      throw new Error('User node not found.');
+  if (users.length > 0) {
+    const userIds = users.map((u) => u.id);
+
+    await database
+      .updateTable('users')
+      .set({
+        name: input.name,
+        avatar: input.avatar,
+        updated_at: new Date(),
+        updated_by: account.id,
+      })
+      .where('id', 'in', userIds)
+      .execute();
+
+    for (const user of users) {
+      eventBus.publish({
+        type: 'user_updated',
+        userId: user.id,
+        accountId: account.id,
+        workspaceId: user.workspace_id,
+      });
     }
-
-    const name = user.attributes.name ?? null;
-    const avatar = user.attributes.avatar ?? null;
-
-    if (account.name !== name || account.avatar !== avatar) {
-      continue;
-    }
-
-    await nodeService.updateNode({
-      nodeId: user.id,
-      userId: user.created_by,
-      workspaceId: user.workspace_id,
-      updater: (attributes) => {
-        if (attributes.type !== 'user') {
-          return null;
-        }
-
-        return {
-          ...attributes,
-          name: input.name,
-          avatar: input.avatar,
-        };
-      },
-    });
   }
 
   eventBus.publish({

@@ -15,12 +15,12 @@ export const NodeCollaboratorAudit = ({
 }: NodeCollaboratorAuditProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    type: 'node_get',
-    nodeId: collaboratorId,
+    type: 'user_get',
+    id: collaboratorId,
     userId: workspace.userId,
   });
 
-  if (isPending || !data || data.type !== 'user') {
+  if (isPending || !data) {
     return null;
   }
 
@@ -28,12 +28,12 @@ export const NodeCollaboratorAudit = ({
     <div className="flex items-center gap-2 w-full">
       <Avatar
         id={data.id}
-        name={data.attributes.name}
-        avatar={data.attributes.avatar}
+        name={data.name}
+        avatar={data.avatar}
         className="size-7"
       />
       <div className="flex flex-col">
-        <span className="font-normal flex-grow">{data.attributes.name}</span>
+        <span className="font-normal flex-grow">{data.name}</span>
         <span className="text-xs text-muted-foreground">{timeAgo(date)}</span>
       </div>
     </div>

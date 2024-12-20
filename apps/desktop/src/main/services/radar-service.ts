@@ -126,8 +126,7 @@ class RadarWorkspace {
     const interaction = event.interaction;
     if (
       event.userId !== this.workspace.userId ||
-      interaction.userId !== this.workspace.userId ||
-      interaction.nodeType !== 'message'
+      interaction.userId !== this.workspace.userId
     ) {
       return;
     }

@@ -17,8 +17,6 @@ export * from './registry/message';
 export * from './registry/page';
 export * from './registry/record';
 export * from './registry/space';
-export * from './registry/user';
-export * from './registry/workspace';
 export * from './registry/zod';
 export * from './types/accounts';
 export * from './types/files';

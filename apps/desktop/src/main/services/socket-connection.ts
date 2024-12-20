@@ -66,17 +66,14 @@ export class SocketConnection {
         syncService.syncServerCollaborations(message);
       } else if (message.type === 'interactions_batch') {
         syncService.syncServerInteractions(message);
+      } else if (message.type === 'users_batch') {
+        syncService.syncServerUsers(message);
       } else if (message.type === 'account_updated') {
         scheduler.trigger({
           type: 'sync_account',
           accountId: this.account.id,
         });
       } else if (message.type === 'workspace_updated') {
-        scheduler.trigger({
-          type: 'sync_account',
-          accountId: this.account.id,
-        });
-      } else if (message.type === 'workspace_user_created') {
         scheduler.trigger({
           type: 'sync_account',
           accountId: this.account.id,

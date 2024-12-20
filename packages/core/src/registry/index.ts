@@ -8,8 +8,6 @@ import { MessageAttributes, messageModel } from './message';
 import { PageAttributes, pageModel } from './page';
 import { RecordAttributes, recordModel } from './record';
 import { SpaceAttributes, spaceModel } from './space';
-import { UserAttributes, userModel } from './user';
-import { WorkspaceAttributes, workspaceModel } from './workspace';
 
 type NodeBase = {
   id: string;
@@ -75,16 +73,6 @@ export type SpaceNode = NodeBase & {
   attributes: SpaceAttributes;
 };
 
-export type UserNode = NodeBase & {
-  type: 'user';
-  attributes: UserAttributes;
-};
-
-export type WorkspaceNode = NodeBase & {
-  type: 'workspace';
-  attributes: WorkspaceAttributes;
-};
-
 export type NodeType =
   | 'channel'
   | 'chat'
@@ -94,12 +82,9 @@ export type NodeType =
   | 'message'
   | 'page'
   | 'record'
-  | 'space'
-  | 'user'
-  | 'workspace';
+  | 'space';
 
 export type NodeAttributes =
-  | UserAttributes
   | SpaceAttributes
   | DatabaseAttributes
   | ChannelAttributes
@@ -108,8 +93,7 @@ export type NodeAttributes =
   | FolderAttributes
   | MessageAttributes
   | PageAttributes
-  | RecordAttributes
-  | WorkspaceAttributes;
+  | RecordAttributes;
 
 export type Node =
   | ChannelNode
@@ -120,9 +104,7 @@ export type Node =
   | MessageNode
   | PageNode
   | RecordNode
-  | SpaceNode
-  | UserNode
-  | WorkspaceNode;
+  | SpaceNode;
 
 class Registry {
   private models: Map<string, NodeModel> = new Map();
@@ -137,8 +119,6 @@ class Registry {
     this.models.set('page', pageModel);
     this.models.set('record', recordModel);
     this.models.set('space', spaceModel);
-    this.models.set('user', userModel);
-    this.models.set('workspace', workspaceModel);
   }
 
   getModel(type: string): NodeModel {

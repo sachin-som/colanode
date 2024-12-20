@@ -15,21 +15,18 @@ class InteractionService {
     accountId: string,
     message: SyncInteractionsMessage
   ) {
-    const workspaceUser = await database
-      .selectFrom('workspace_users')
+    const user = await database
+      .selectFrom('users')
       .selectAll()
       .where('id', '=', message.userId)
       .executeTakeFirst();
 
-    if (!workspaceUser || workspaceUser.account_id !== accountId) {
+    if (!user || user.account_id !== accountId) {
       return false;
     }
 
     for (let i = 0; i < UPDATE_RETRIES_COUNT; i++) {
-      const synced = await this.trySyncInteraction(
-        workspaceUser.workspace_id,
-        message
-      );
+      const synced = await this.trySyncInteraction(user.workspace_id, message);
 
       if (synced) {
         return true;
@@ -92,7 +89,6 @@ class InteractionService {
           type: 'interaction_updated',
           userId: message.userId,
           nodeId: message.nodeId,
-          nodeType: message.nodeType,
           workspaceId,
         });
 
@@ -106,7 +102,6 @@ class InteractionService {
       .values({
         user_id: message.userId,
         node_id: message.nodeId,
-        node_type: message.nodeType,
         workspace_id: workspaceId,
         attributes: JSON.stringify(attributes),
         created_at: new Date(firstEvent.createdAt),
@@ -120,7 +115,6 @@ class InteractionService {
         type: 'interaction_updated',
         userId: message.userId,
         nodeId: message.nodeId,
-        nodeType: message.nodeType,
         workspaceId,
       });
 

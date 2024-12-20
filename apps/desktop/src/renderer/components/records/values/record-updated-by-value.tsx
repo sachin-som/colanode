@@ -16,8 +16,8 @@ export const RecordUpdatedByValue = ({ field }: RecordUpdatedByValueProps) => {
 
   const { data } = useQuery(
     {
-      type: 'node_get',
-      nodeId: record.updatedBy!,
+      type: 'user_get',
+      id: record.updatedBy!,
       userId: workspace.userId,
     },
     {
@@ -25,13 +25,12 @@ export const RecordUpdatedByValue = ({ field }: RecordUpdatedByValueProps) => {
     }
   );
 
-  const updatedBy =
-    data && data.attributes.type === 'user'
-      ? {
-          name: data.attributes.name,
-          avatar: data.attributes.avatar,
-        }
-      : null;
+  const updatedBy = data
+    ? {
+        name: data.name,
+        avatar: data.avatar,
+      }
+    : null;
 
   return (
     <div

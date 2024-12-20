@@ -1,16 +1,16 @@
 import { User } from '@/shared/types/users';
 
-export type UserSearchQueryInput = {
-  type: 'user_search';
-  searchQuery: string;
+export type UserListQueryInput = {
+  type: 'user_list';
   userId: string;
-  exclude?: string[];
+  page: number;
+  count: number;
 };
 
 declare module '@/shared/queries' {
   interface QueryMap {
-    user_search: {
-      input: UserSearchQueryInput;
+    user_list: {
+      input: UserListQueryInput;
       output: User[];
     };
   }

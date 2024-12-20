@@ -41,7 +41,7 @@ export const fileUploadInitHandler = async (
     return;
   }
 
-  if (node.created_by !== res.locals.workspaceUser.id) {
+  if (node.created_by !== res.locals.user.id) {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',

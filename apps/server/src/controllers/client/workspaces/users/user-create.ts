@@ -3,25 +3,25 @@ import {
   AccountStatus,
   generateId,
   IdType,
-  WorkspaceUserInviteResult,
-  WorkspaceUsersInviteInput,
-  WorkspaceUserStatus,
+  UserInviteResult,
+  UsersInviteInput,
+  UserStatus,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
-import { fetchNode, mapNode } from '@/lib/nodes';
+import { fetchNode } from '@/lib/nodes';
 import { getNameFromEmail } from '@/lib/utils';
-import { nodeService } from '@/services/node-service';
-import { SelectWorkspaceUser } from '@/data/schema';
+import { SelectUser } from '@/data/schema';
+import { eventBus } from '@/lib/event-bus';
 
 export const userCreateHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const workspaceId = req.params.workspaceId as string;
-  const input: WorkspaceUsersInviteInput = req.body;
-  const workspaceUser: SelectWorkspaceUser = res.locals.workspaceUser;
+  const input: UsersInviteInput = req.body;
+  const user: SelectUser = res.locals.user;
 
   if (!input.emails || input.emails.length === 0) {
     res.status(400).json({
@@ -39,7 +39,7 @@ export const userCreateHandler = async (
     return;
   }
 
-  if (workspaceUser.role !== 'owner' && workspaceUser.role !== 'admin') {
+  if (user.role !== 'owner' && user.role !== 'admin') {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
@@ -56,8 +56,7 @@ export const userCreateHandler = async (
     return;
   }
 
-  const workspaceNode = mapNode(workspaceNodeRow);
-  const results: WorkspaceUserInviteResult[] = [];
+  const results: UserInviteResult[] = [];
   for (const email of input.emails) {
     let account = await database
       .selectFrom('accounts')
@@ -91,14 +90,14 @@ export const userCreateHandler = async (
       continue;
     }
 
-    const existingWorkspaceUser = await database
-      .selectFrom('workspace_users')
+    const existingUser = await database
+      .selectFrom('users')
       .selectAll()
       .where('account_id', '=', account.id)
       .where('workspace_id', '=', workspaceId)
       .executeTakeFirst();
 
-    if (existingWorkspaceUser) {
+    if (existingUser) {
       results.push({
         email: email,
         result: 'exists',
@@ -107,41 +106,35 @@ export const userCreateHandler = async (
     }
 
     const userId = generateId(IdType.User);
-    const newWorkspaceUser = await database
-      .insertInto('workspace_users')
+    const newUser = await database
+      .insertInto('users')
       .returningAll()
       .values({
         id: userId,
         account_id: account.id,
         workspace_id: workspaceId,
         role: input.role,
+        name: account.name,
+        email: account.email,
+        avatar: account.avatar,
         created_at: new Date(),
         created_by: res.locals.account.id,
-        status: WorkspaceUserStatus.Active,
-        version_id: generateId(IdType.Version),
+        status: UserStatus.Active,
       })
       .executeTakeFirst();
 
-    if (!newWorkspaceUser) {
+    if (!newUser) {
       results.push({
         email: email,
         result: 'error',
       });
     }
 
-    await nodeService.createNode({
-      nodeId: userId,
-      attributes: {
-        type: 'user',
-        name: account.name,
-        email: account.email,
-        role: input.role,
-        accountId: account.id,
-        parentId: workspaceId,
-      },
-      userId: workspaceUser.id,
+    eventBus.publish({
+      type: 'user_created',
+      accountId: account.id,
+      userId: userId,
       workspaceId: workspaceId,
-      ancestors: [workspaceNode],
     });
 
     results.push({

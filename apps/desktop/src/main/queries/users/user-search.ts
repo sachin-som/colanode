@@ -1,17 +1,17 @@
-import { NodeTypes, UserNode } from '@colanode/core';
 import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectNode } from '@/main/data/workspace/schema';
+import { SelectUser } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapUser } from '@/main/utils';
 import { UserSearchQueryInput } from '@/shared/queries/users/user-search';
 import { Event } from '@/shared/types/events';
+import { User } from '@/shared/types/users';
 
 export class UserSearchQueryHandler
   implements QueryHandler<UserSearchQueryInput>
 {
-  public async handleQuery(input: UserSearchQueryInput): Promise<UserNode[]> {
+  public async handleQuery(input: UserSearchQueryInput): Promise<User[]> {
     const rows =
       input.searchQuery.length > 0
         ? await this.searchUsers(input)
@@ -23,7 +23,7 @@ export class UserSearchQueryHandler
   public async checkForChanges(
     event: Event,
     input: UserSearchQueryInput,
-    _: UserNode[]
+    _: User[]
   ): Promise<ChangeCheckResult<UserSearchQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -35,11 +35,7 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (
-      event.type === 'node_created' &&
-      event.userId === input.userId &&
-      event.node.type === 'user'
-    ) {
+    if (event.type === 'user_created' && event.userId === input.userId) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -47,11 +43,7 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (
-      event.type === 'node_updated' &&
-      event.userId === input.userId &&
-      event.node.type === 'user'
-    ) {
+    if (event.type === 'user_updated' && event.userId === input.userId) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -59,11 +51,7 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (
-      event.type === 'node_deleted' &&
-      event.userId === input.userId &&
-      event.node.type === 'user'
-    ) {
+    if (event.type === 'user_deleted' && event.userId === input.userId) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -78,22 +66,21 @@ export class UserSearchQueryHandler
 
   private async searchUsers(
     input: UserSearchQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectUser[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const exclude = input.exclude ?? [];
-    const query = sql<SelectNode>`
-      SELECT n.*
-      FROM nodes n
-      JOIN node_names nn ON n.id = nn.id
-      WHERE n.type = ${NodeTypes.User}
-        AND n.id != ${input.userId}
+    const query = sql<SelectUser>`
+      SELECT u.*
+      FROM users u
+      JOIN node_names nn ON u.id = nn.id
+      WHERE u.id != ${input.userId}
         AND nn.name MATCH ${input.searchQuery + '*'}
         ${
           exclude.length > 0
-            ? sql`AND n.id NOT IN (${sql.join(
+            ? sql`AND u.id NOT IN (${sql.join(
                 exclude.map((id) => sql`${id}`),
                 sql`, `
               )})`
@@ -105,22 +92,21 @@ export class UserSearchQueryHandler
     return result.rows;
   }
 
-  private async fetchUsers(input: UserSearchQueryInput): Promise<SelectNode[]> {
+  private async fetchUsers(input: UserSearchQueryInput): Promise<SelectUser[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const exclude = input.exclude ?? [];
     return workspaceDatabase
-      .selectFrom('nodes')
-      .where('type', '=', 'user')
+      .selectFrom('users')
       .where('id', '!=', input.userId)
       .where('id', 'not in', exclude)
       .selectAll()
       .execute();
   }
 
-  private buildUserNodes = (rows: SelectNode[]): UserNode[] => {
-    return rows.map((row) => mapNode(row) as UserNode);
+  private buildUserNodes = (rows: SelectUser[]): User[] => {
+    return rows.map((row) => mapUser(row));
   };
 }

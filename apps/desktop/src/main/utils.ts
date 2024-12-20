@@ -24,12 +24,14 @@ import {
   SelectNode,
   SelectTransaction,
   SelectUpload,
+  SelectUser,
   WorkspaceDatabaseSchema,
 } from '@/main/data/workspace/schema';
 import { Account } from '@/shared/types/accounts';
 import { Interaction } from '@/shared/types/interactions';
 import { Download, Upload } from '@/shared/types/nodes';
 import { Server } from '@/shared/types/servers';
+import { User } from '@/shared/types/users';
 import { Workspace, WorkspaceCredentials } from '@/shared/types/workspaces';
 
 export const appPath = app.getPath('userData');
@@ -99,7 +101,6 @@ export const fetchNodeAncestors = (
         .select('ancestor_id')
         .where('descendant_id', '=', nodeId)
     )
-    .where('type', '!=', 'workspace')
     .execute();
 };
 
@@ -173,6 +174,20 @@ export const fetchCursor = async (
   return cursor?.value ?? 0n;
 };
 
+export const mapUser = (row: SelectUser): User => {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    avatar: row.avatar,
+    customName: row.custom_name,
+    customAvatar: row.custom_avatar,
+    role: row.role,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
 export const mapNode = (row: SelectNode): Node => {
   return {
     id: row.id,
@@ -218,7 +233,6 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
-      nodeType: row.node_type,
       operation: 'create',
       data: encodeState(row.data),
       createdAt: row.created_at,
@@ -230,7 +244,6 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
-      nodeType: row.node_type,
       operation: 'update',
       data: encodeState(row.data),
       createdAt: row.created_at,
@@ -242,7 +255,6 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
     return {
       id: row.id,
       nodeId: row.node_id,
-      nodeType: row.node_type,
       operation: 'delete',
       createdAt: row.created_at,
       createdBy: row.created_by,
@@ -289,7 +301,6 @@ export const mapInteraction = (row: SelectInteraction): Interaction => {
   return {
     userId: row.user_id,
     nodeId: row.node_id,
-    nodeType: row.node_type,
     attributes: JSON.parse(row.attributes),
     createdAt: new Date(row.created_at),
     updatedAt: row.updated_at ? new Date(row.updated_at) : null,

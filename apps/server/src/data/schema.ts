@@ -69,23 +69,27 @@ export type SelectWorkspace = Selectable<WorkspaceTable>;
 export type CreateWorkspace = Insertable<WorkspaceTable>;
 export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
-interface WorkspaceUserTable {
+interface UserTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
+  email: ColumnType<string, string, string>;
   role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
-  attrs: ColumnType<string | null, string | null, string | null>;
+  name: ColumnType<string, string, string>;
+  avatar: ColumnType<string | null, string | null, string | null>;
+  custom_name: ColumnType<string | null, string | null, string | null>;
+  custom_avatar: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   updated_by: ColumnType<string | null, string | null, string>;
   status: ColumnType<number, number, number>;
-  version_id: ColumnType<string, string, string>;
+  version: ColumnType<bigint, never, never>;
 }
 
-export type SelectWorkspaceUser = Selectable<WorkspaceUserTable>;
-export type CreateWorkspaceUser = Insertable<WorkspaceUserTable>;
-export type UpdateWorkspaceUser = Updateable<WorkspaceUserTable>;
+export type SelectUser = Selectable<UserTable>;
+export type CreateUser = Insertable<UserTable>;
+export type UpdateUser = Updateable<UserTable>;
 
 interface NodeTable {
   id: ColumnType<string, string, never>;
@@ -107,7 +111,6 @@ export type UpdateNode = Updateable<NodeTable>;
 interface TransactionTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  node_type: ColumnType<NodeType, NodeType, never>;
   workspace_id: ColumnType<string, string, never>;
   operation: ColumnType<string, string, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, Uint8Array | null>;
@@ -178,7 +181,6 @@ export type UpdateUpload = Updateable<UploadTable>;
 interface InteractionTable {
   user_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  node_type: ColumnType<NodeType, NodeType, never>;
   workspace_id: ColumnType<string, string, never>;
   attributes: JSONColumnType<
     InteractionAttributes,
@@ -200,7 +202,7 @@ export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
   workspaces: WorkspaceTable;
-  workspace_users: WorkspaceUserTable;
+  users: UserTable;
   nodes: NodeTable;
   transactions: TransactionTable;
   collaborations: CollaborationTable;

@@ -13,21 +13,20 @@ export const RecordCreatedByValue = ({ field }: RecordCreatedByValueProps) => {
   const workspace = useWorkspace();
   const record = useRecord();
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: record.createdBy,
+    type: 'user_get',
+    id: record.createdBy,
     userId: workspace.userId,
   });
 
-  const createdBy =
-    data && data.attributes.type === 'user'
-      ? {
-          name: data.attributes.name,
-          avatar: data.attributes.avatar,
-        }
-      : {
-          name: 'Unknown',
-          avatar: null,
-        };
+  const createdBy = data
+    ? {
+        name: data.name,
+        avatar: data.avatar,
+      }
+    : {
+        name: 'Unknown',
+        avatar: null,
+      };
 
   return (
     <div

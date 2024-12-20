@@ -1,4 +1,3 @@
-import { UserNode } from '@colanode/core';
 import React from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -12,10 +11,11 @@ import {
 } from '@/renderer/components/ui/command';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { User } from '@/shared/types/users';
 
 interface UserSearchProps {
   exclude?: string[];
-  onSelect: (user: UserNode) => void;
+  onSelect: (user: User) => void;
 }
 
 export const UserSearch = ({ exclude, onSelect }: UserSearchProps) => {
@@ -51,15 +51,13 @@ export const UserSearch = ({ exclude, onSelect }: UserSearchProps) => {
               <div className="flex w-full flex-row items-center gap-2">
                 <Avatar
                   id={user.id}
-                  name={user.attributes.name}
-                  avatar={user.attributes.avatar}
+                  name={user.name}
+                  avatar={user.avatar}
                   className="h-7 w-7"
                 />
                 <div className="flex flex-grow flex-col">
-                  <p className="text-sm">{user.attributes.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.attributes.email}
-                  </p>
+                  <p className="text-sm">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
             </CommandItem>

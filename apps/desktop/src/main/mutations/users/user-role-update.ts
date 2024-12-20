@@ -1,20 +1,20 @@
-import { WorkspaceUserRoleUpdateOutput } from '@colanode/core';
+import { UserRoleUpdateOutput } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { httpClient } from '@/shared/lib/http-client';
 import {
-  WorkspaceUserRoleUpdateMutationInput,
-  WorkspaceUserRoleUpdateMutationOutput,
+  UserRoleUpdateMutationInput,
+  UserRoleUpdateMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-user-role-update';
 import { MutationError } from '@/shared/mutations';
 
-export class WorkspaceUserRoleUpdateMutationHandler
-  implements MutationHandler<WorkspaceUserRoleUpdateMutationInput>
+export class UserRoleUpdateMutationHandler
+  implements MutationHandler<UserRoleUpdateMutationInput>
 {
   async handleMutation(
-    input: WorkspaceUserRoleUpdateMutationInput
-  ): Promise<WorkspaceUserRoleUpdateMutationOutput> {
+    input: UserRoleUpdateMutationInput
+  ): Promise<UserRoleUpdateMutationOutput> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()
@@ -51,7 +51,7 @@ export class WorkspaceUserRoleUpdateMutationHandler
       );
     }
 
-    await httpClient.put<WorkspaceUserRoleUpdateOutput>(
+    await httpClient.put<UserRoleUpdateOutput>(
       `/v1/workspaces/${workspace.workspace_id}/users/${input.userToUpdateId}`,
       {
         role: input.role,

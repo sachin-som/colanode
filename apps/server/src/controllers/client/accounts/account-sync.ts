@@ -27,24 +27,22 @@ export const accountSyncHandler = async (
   }
 
   const workspaceOutputs: WorkspaceOutput[] = [];
-  const workspaceUsers = await database
-    .selectFrom('workspace_users')
+  const users = await database
+    .selectFrom('users')
     .where('account_id', '=', account.id)
     .selectAll()
     .execute();
 
-  if (workspaceUsers.length > 0) {
-    const workspaceIds = workspaceUsers.map((wu) => wu.workspace_id);
+  if (users.length > 0) {
+    const workspaceIds = users.map((u) => u.workspace_id);
     const workspaces = await database
       .selectFrom('workspaces')
       .where('id', 'in', workspaceIds)
       .selectAll()
       .execute();
 
-    for (const workspaceUser of workspaceUsers) {
-      const workspace = workspaces.find(
-        (w) => w.id === workspaceUser.workspace_id
-      );
+    for (const user of users) {
+      const workspace = workspaces.find((w) => w.id === user.workspace_id);
 
       if (!workspace) {
         continue;
@@ -53,13 +51,13 @@ export const accountSyncHandler = async (
       workspaceOutputs.push({
         id: workspace.id,
         name: workspace.name,
-        versionId: workspaceUser.version_id,
+        versionId: workspace.version_id,
         avatar: workspace.avatar,
         description: workspace.description,
         user: {
-          id: workspaceUser.id,
-          accountId: workspaceUser.account_id,
-          role: workspaceUser.role as WorkspaceRole,
+          id: user.id,
+          accountId: user.account_id,
+          role: user.role as WorkspaceRole,
         },
       });
     }

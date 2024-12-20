@@ -4,6 +4,7 @@ import {
   InteractionsBatchMessage,
   SyncConsumerType,
   TransactionsBatchMessage,
+  UsersBatchMessage,
 } from '@colanode/core';
 
 import { SyncConsumer } from '@/main/services/sync-consumer';
@@ -18,6 +19,7 @@ class SyncService {
     await this.createConsumer(accountId, userId, 'deleted_collaborations');
     await this.createConsumer(accountId, userId, 'collaborations');
     await this.createConsumer(accountId, userId, 'interactions');
+    await this.createConsumer(accountId, userId, 'users');
   }
 
   public async deleteUserConsumers(userId: string) {
@@ -84,6 +86,15 @@ class SyncService {
     );
     if (consumer) {
       consumer.syncInteractions(message);
+    }
+  }
+
+  public async syncServerUsers(message: UsersBatchMessage) {
+    const consumer = this.consumers.get(
+      this.getConsumerKey(message.userId, 'users')
+    );
+    if (consumer) {
+      consumer.syncUsers(message);
     }
   }
 

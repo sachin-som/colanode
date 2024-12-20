@@ -5,6 +5,25 @@ import { Interaction } from '@/shared/types/interactions';
 import { Download, Upload } from '@/shared/types/nodes';
 import { Server } from '@/shared/types/servers';
 import { Workspace } from '@/shared/types/workspaces';
+import { User } from '@/shared/types/users';
+
+export type UserCreatedEvent = {
+  type: 'user_created';
+  userId: string;
+  user: User;
+};
+
+export type UserUpdatedEvent = {
+  type: 'user_updated';
+  userId: string;
+  user: User;
+};
+
+export type UserDeletedEvent = {
+  type: 'user_deleted';
+  userId: string;
+  user: User;
+};
 
 export type NodeCreatedEvent = {
   type: 'node_created';
@@ -153,6 +172,9 @@ export type InteractionUpdatedEvent = {
 };
 
 export type Event =
+  | UserCreatedEvent
+  | UserUpdatedEvent
+  | UserDeletedEvent
   | NodeCreatedEvent
   | NodeUpdatedEvent
   | NodeDeletedEvent

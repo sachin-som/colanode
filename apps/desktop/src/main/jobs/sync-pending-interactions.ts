@@ -103,7 +103,6 @@ export class SyncPendingInteractionsJobHandler
         const message: SyncInteractionsMessage = {
           type: 'sync_interactions',
           nodeId,
-          nodeType: firstEvent.node_type,
           userId: credentials.userId,
           events: events.map((e) => ({
             attribute: e.attribute,

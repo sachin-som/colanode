@@ -9,7 +9,7 @@ import { WorkspaceUserInvite } from '@/renderer/components/workspaces/workspace-
 import { WorkspaceUserRoleDropdown } from '@/renderer/components/workspaces/workspace-user-role-dropdown';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQueries } from '@/renderer/hooks/use-queries';
-import { WorkspaceUserListQueryInput } from '@/shared/queries/workspaces/workspace-user-list';
+import { UserListQueryInput } from '@/shared/queries/users/user-list';
 
 const USERS_PER_PAGE = 50;
 
@@ -18,10 +18,10 @@ export const WorkspaceUsers = () => {
   const canEditUsers = workspace.role === 'owner' || workspace.role === 'admin';
   const [lastPage, setLastPage] = React.useState<number>(1);
 
-  const inputs: WorkspaceUserListQueryInput[] = Array.from({
+  const inputs: UserListQueryInput[] = Array.from({
     length: lastPage,
   }).map((_, i) => ({
-    type: 'workspace_user_list',
+    type: 'user_list',
     page: i + 1,
     count: USERS_PER_PAGE,
     userId: workspace.userId,
@@ -48,10 +48,10 @@ export const WorkspaceUsers = () => {
       </div>
       <div className="flex flex-col gap-2">
         {users.map((user) => {
-          const name: string = user.attributes.name ?? 'Unknown';
-          const email: string = user.attributes.email ?? ' ';
-          const avatar: string | null | undefined = user.attributes.avatar;
-          const role: WorkspaceRole = user.attributes.role;
+          const name: string = user.name ?? 'Unknown';
+          const email: string = user.email ?? ' ';
+          const avatar: string | null | undefined = user.avatar;
+          const role: WorkspaceRole = user.role;
 
           if (!role) {
             return null;
@@ -61,9 +61,7 @@ export const WorkspaceUsers = () => {
             <div key={user.id} className="flex items-center space-x-3">
               <Avatar id={user.id} name={name} avatar={avatar} />
               <div className="flex-grow">
-                <p className="text-sm font-medium leading-none">
-                  {user.attributes.name}
-                </p>
+                <p className="text-sm font-medium leading-none">{name}</p>
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
               <WorkspaceUserRoleDropdown

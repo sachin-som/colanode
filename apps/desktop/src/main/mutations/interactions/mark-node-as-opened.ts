@@ -11,33 +11,28 @@ export class MarkNodeAsOpenedMutationHandler
   async handleMutation(
     input: MarkNodeAsOpenedMutationInput
   ): Promise<MarkNodeAsOpenedMutationOutput> {
-    await interactionService.setInteraction(
-      input.userId,
-      input.nodeId,
-      input.nodeType,
-      [
-        {
-          attribute: 'firstSeenAt',
-          value: new Date().toISOString(),
-        },
-        {
-          attribute: 'lastSeenAt',
-          value: new Date().toISOString(),
-        },
-        {
-          attribute: 'lastSeenTransactionId',
-          value: input.transactionId,
-        },
-        {
-          attribute: 'lastOpenedAt',
-          value: new Date().toISOString(),
-        },
-        {
-          attribute: 'lastOpenedTransactionId',
-          value: input.transactionId,
-        },
-      ]
-    );
+    await interactionService.setInteraction(input.userId, input.nodeId, [
+      {
+        attribute: 'firstSeenAt',
+        value: new Date().toISOString(),
+      },
+      {
+        attribute: 'lastSeenAt',
+        value: new Date().toISOString(),
+      },
+      {
+        attribute: 'lastSeenTransactionId',
+        value: input.transactionId,
+      },
+      {
+        attribute: 'lastOpenedAt',
+        value: new Date().toISOString(),
+      },
+      {
+        attribute: 'lastOpenedTransactionId',
+        value: input.transactionId,
+      },
+    ]);
 
     return {
       success: true,

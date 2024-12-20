@@ -6,18 +6,6 @@ export type NodeCollaborator = {
   role: NodeRole;
 };
 
-export type UserNode = {
-  userId: string;
-  nodeId: string;
-  lastSeenAt: string | null;
-  lastSeenVersionId: string | null;
-  mentionsCount: number;
-  attributes: string | null;
-  versionId: string;
-  createdAt: string;
-  updatedAt: string | null;
-};
-
 export type Download = {
   nodeId: string;
   uploadId: string;

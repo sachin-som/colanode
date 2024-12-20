@@ -1,4 +1,4 @@
-import { MessageNode, UserNode } from '@colanode/core';
+import { MessageNode } from '@colanode/core';
 
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -15,20 +15,14 @@ export const MessageAuthorName = ({
 }: MessageAuthorNameProps) => {
   const workspace = useWorkspace();
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: message.createdBy,
+    type: 'user_get',
+    id: message.createdBy,
     userId: workspace.userId,
   });
 
-  if (!data || data.type !== 'user') {
+  if (!data) {
     return null;
   }
 
-  const author = data as UserNode;
-
-  return (
-    <span className={cn('font-medium', className)}>
-      {author.attributes.name}
-    </span>
-  );
+  return <span className={cn('font-medium', className)}>{data.name}</span>;
 };

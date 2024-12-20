@@ -23,12 +23,12 @@ const FileMeta = ({ title, value }: { title: string; value: string }) => {
 export const FileSidebar = ({ file }: FileSidebarProps) => {
   const workspace = useWorkspace();
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: file.createdBy,
+    type: 'user_get',
+    id: file.createdBy,
     userId: workspace.userId,
   });
 
-  const user = data?.type === 'user' ? data : null;
+  const user = data ?? null;
 
   return (
     <React.Fragment>
@@ -57,11 +57,11 @@ export const FileSidebar = ({ file }: FileSidebarProps) => {
             <div className="mt-1 flex flex-row items-center gap-2">
               <Avatar
                 id={user.id}
-                name={user.attributes.name}
-                avatar={user.attributes.avatar}
+                name={user.name}
+                avatar={user.avatar}
                 className="h-8 w-8"
               />
-              <p className="text-foreground/80">{user.attributes.name}</p>
+              <p className="text-foreground/80">{user.name}</p>
             </div>
           </div>
         )}

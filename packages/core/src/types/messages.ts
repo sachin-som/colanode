@@ -4,10 +4,9 @@ import {
   ServerDeletedCollaboration,
   ServerInteraction,
   ServerTransaction,
+  ServerUser,
   SyncConsumerType,
 } from './sync';
-
-import { NodeType } from '../registry';
 
 export type TransactionsBatchMessage = {
   type: 'transactions_batch';
@@ -33,11 +32,16 @@ export type InteractionsBatchMessage = {
   interactions: ServerInteraction[];
 };
 
+export type UsersBatchMessage = {
+  type: 'users_batch';
+  userId: string;
+  users: ServerUser[];
+};
+
 export type SyncInteractionsMessage = {
   type: 'sync_interactions';
   userId: string;
   nodeId: string;
-  nodeType: NodeType;
   events: InteractionEvent[];
 };
 
@@ -58,13 +62,6 @@ export type WorkspaceUpdatedMessage = {
   workspaceId: string;
 };
 
-export type WorkspaceUserCreatedMessage = {
-  type: 'workspace_user_created';
-  workspaceId: string;
-  userId: string;
-  accountId: string;
-};
-
 export type WorkspaceDeletedMessage = {
   type: 'workspace_deleted';
   accountId: string;
@@ -75,9 +72,9 @@ export type Message =
   | CollaborationsBatchMessage
   | DeletedCollaborationsBatchMessage
   | InteractionsBatchMessage
+  | UsersBatchMessage
   | SyncInteractionsMessage
   | InitSyncConsumerMessage
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
-  | WorkspaceUserCreatedMessage
   | WorkspaceDeletedMessage;

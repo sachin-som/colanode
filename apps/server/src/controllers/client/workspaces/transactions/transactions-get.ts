@@ -11,7 +11,7 @@ export const transactionsGetHandler = async (
 ): Promise<void> => {
   const nodeId = req.params.nodeId as string;
 
-  const role = await fetchNodeRole(nodeId, res.locals.workspaceUser.id);
+  const role = await fetchNodeRole(nodeId, res.locals.user.id);
   if (role === null || !hasViewerAccess(role)) {
     res.status(403).json({
       code: ApiError.Forbidden,

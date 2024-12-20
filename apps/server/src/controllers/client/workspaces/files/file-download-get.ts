@@ -14,7 +14,7 @@ export const fileDownloadGetHandler = async (
 ): Promise<void> => {
   const fileId = req.params.fileId as string;
 
-  const role = await fetchNodeRole(fileId, res.locals.workspaceUser.id);
+  const role = await fetchNodeRole(fileId, res.locals.user.id);
   if (role === null || !hasCollaboratorAccess(role)) {
     res.status(403).json({
       code: ApiError.Forbidden,

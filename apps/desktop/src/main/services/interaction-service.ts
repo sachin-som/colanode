@@ -4,7 +4,6 @@ import {
   InteractionAttribute,
   InteractionAttributes,
   mergeInteractionAttributes,
-  NodeType,
   ServerInteraction,
 } from '@colanode/core';
 import { sql } from 'kysely';
@@ -33,16 +32,10 @@ class InteractionService {
   public async setInteraction(
     userId: string,
     nodeId: string,
-    nodeType: NodeType,
     input: UpdateInteractionInput | UpdateInteractionInput[]
   ) {
     for (let i = 0; i < UPDATE_RETRIES_COUNT; i++) {
-      const updated = await this.tryUpdateInteraction(
-        userId,
-        nodeId,
-        nodeType,
-        input
-      );
+      const updated = await this.tryUpdateInteraction(userId, nodeId, input);
 
       if (updated) {
         return true;
@@ -55,7 +48,6 @@ class InteractionService {
   private async tryUpdateInteraction(
     userId: string,
     nodeId: string,
-    nodeType: NodeType,
     input: UpdateInteractionInput | UpdateInteractionInput[]
   ): Promise<boolean> {
     const workspaceDatabase =
@@ -91,7 +83,6 @@ class InteractionService {
 
         eventsToCreate.push({
           node_id: nodeId,
-          node_type: nodeType,
           attribute: input.attribute,
           value: input.value,
           created_at: new Date().toISOString(),
@@ -172,7 +163,6 @@ class InteractionService {
           .returningAll()
           .values({
             node_id: nodeId,
-            node_type: nodeType,
             user_id: userId,
             attributes: JSON.stringify(attributes),
             created_at: new Date().toISOString(),
@@ -253,7 +243,6 @@ class InteractionService {
       .values({
         user_id: interaction.userId,
         node_id: interaction.nodeId,
-        node_type: interaction.nodeType,
         attributes: JSON.stringify(interaction.attributes),
         created_at: interaction.createdAt,
         updated_at: interaction.updatedAt,
@@ -362,7 +351,6 @@ class InteractionService {
           .values({
             user_id: interaction.userId,
             node_id: interaction.nodeId,
-            node_type: interaction.nodeType,
             attributes: JSON.stringify(attributes),
             created_at: interaction.createdAt,
             updated_at: interaction.updatedAt,

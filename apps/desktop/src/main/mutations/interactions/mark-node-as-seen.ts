@@ -11,25 +11,20 @@ export class MarkNodeAsSeenMutationHandler
   async handleMutation(
     input: MarkNodeAsSeenMutationInput
   ): Promise<MarkNodeAsSeenMutationOutput> {
-    await interactionService.setInteraction(
-      input.userId,
-      input.nodeId,
-      input.nodeType,
-      [
-        {
-          attribute: 'lastSeenAt',
-          value: new Date().toISOString(),
-        },
-        {
-          attribute: 'firstSeenAt',
-          value: new Date().toISOString(),
-        },
-        {
-          attribute: 'lastSeenTransactionId',
-          value: input.transactionId,
-        },
-      ]
-    );
+    await interactionService.setInteraction(input.userId, input.nodeId, [
+      {
+        attribute: 'lastSeenAt',
+        value: new Date().toISOString(),
+      },
+      {
+        attribute: 'firstSeenAt',
+        value: new Date().toISOString(),
+      },
+      {
+        attribute: 'lastSeenTransactionId',
+        value: input.transactionId,
+      },
+    ]);
 
     return {
       success: true,

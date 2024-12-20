@@ -1,5 +1,27 @@
 import { Migration, sql } from 'kysely';
 
+const createUsersTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('users')
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('email', 'text', (col) => col.notNull())
+      .addColumn('name', 'text', (col) => col.notNull())
+      .addColumn('avatar', 'text')
+      .addColumn('custom_name', 'text')
+      .addColumn('custom_avatar', 'text')
+      .addColumn('role', 'text', (col) => col.notNull())
+      .addColumn('status', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('version', 'integer')
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('users').execute();
+  },
+};
+
 const createNodesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -40,7 +62,6 @@ const createTransactionsTable: Migration = {
       .createTable('transactions')
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('node_id', 'text', (col) => col.notNull())
-      .addColumn('node_type', 'text', (col) => col.notNull())
       .addColumn('operation', 'text', (col) => col.notNull())
       .addColumn('data', 'blob')
       .addColumn('created_at', 'text', (col) => col.notNull())
@@ -118,7 +139,6 @@ const createInteractionsTable: Migration = {
       .createTable('interactions')
       .addColumn('user_id', 'text', (col) => col.notNull())
       .addColumn('node_id', 'text', (col) => col.notNull())
-      .addColumn('node_type', 'text', (col) => col.notNull())
       .addColumn('attributes', 'text')
       .addColumn('last_seen_at', 'text', (col) =>
         col
@@ -148,7 +168,6 @@ const createInteractionEventsTable: Migration = {
     await db.schema
       .createTable('interaction_events')
       .addColumn('node_id', 'text', (col) => col.notNull())
-      .addColumn('node_type', 'text', (col) => col.notNull())
       .addColumn('attribute', 'text', (col) => col.notNull())
       .addColumn('value', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
@@ -270,15 +289,16 @@ const createCursorsTable: Migration = {
 };
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
-  '00001_create_nodes_table': createNodesTable,
-  '00002_create_transactions_table': createTransactionsTable,
-  '00003_create_collaborations_table': createCollaborationsTable,
-  '00004_create_uploads_table': createUploadsTable,
-  '00005_create_downloads_table': createDownloadsTable,
-  '00006_create_interactions_table': createInteractionsTable,
-  '00007_create_interaction_events_table': createInteractionEventsTable,
-  '00008_create_node_paths_table': createNodePathsTable,
-  '00009_create_node_names_table': createNodeNamesTable,
-  '00010_create_node_texts_table': createNodeTextsTable,
-  '00011_create_cursors_table': createCursorsTable,
+  '00001_create_users_table': createUsersTable,
+  '00002_create_nodes_table': createNodesTable,
+  '00003_create_transactions_table': createTransactionsTable,
+  '00004_create_collaborations_table': createCollaborationsTable,
+  '00005_create_uploads_table': createUploadsTable,
+  '00006_create_downloads_table': createDownloadsTable,
+  '00007_create_interactions_table': createInteractionsTable,
+  '00008_create_interaction_events_table': createInteractionEventsTable,
+  '00009_create_node_paths_table': createNodePathsTable,
+  '00010_create_node_names_table': createNodeNamesTable,
+  '00011_create_node_texts_table': createNodeTextsTable,
+  '00012_create_cursors_table': createCursorsTable,
 };

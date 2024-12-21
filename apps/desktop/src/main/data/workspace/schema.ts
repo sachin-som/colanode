@@ -1,9 +1,4 @@
-import {
-  InteractionAttribute,
-  NodeType,
-  SyncConsumerType,
-  WorkspaceRole,
-} from '@colanode/core';
+import { InteractionAttribute, NodeType, WorkspaceRole } from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
 interface UserTable {
@@ -157,7 +152,7 @@ export type CreateNodeText = Insertable<NodeTextTable>;
 export type UpdateNodeText = Updateable<NodeTextTable>;
 
 interface CursorTable {
-  type: ColumnType<SyncConsumerType, SyncConsumerType, never>;
+  key: ColumnType<string, string, never>;
   value: ColumnType<bigint, bigint, bigint>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;

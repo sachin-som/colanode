@@ -143,9 +143,3 @@ export type ServerUser = {
   updatedAt: string | null;
   version: string;
 };
-
-export type SyncConsumerType =
-  | 'transactions'
-  | 'collaborations'
-  | 'interactions'
-  | 'users';

@@ -42,6 +42,7 @@ export type InteractionUpdatedEvent = {
   type: 'interaction_updated';
   userId: string;
   nodeId: string;
+  rootId: string;
   workspaceId: string;
 };
 

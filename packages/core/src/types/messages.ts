@@ -4,12 +4,12 @@ import {
   ServerInteraction,
   ServerTransaction,
   ServerUser,
-  SyncConsumerType,
 } from './sync';
 
 export type TransactionsBatchMessage = {
   type: 'transactions_batch';
   userId: string;
+  rootId: string;
   transactions: ServerTransaction[];
 };
 
@@ -22,6 +22,7 @@ export type CollaborationsBatchMessage = {
 export type InteractionsBatchMessage = {
   type: 'interactions_batch';
   userId: string;
+  rootId: string;
   interactions: ServerInteraction[];
 };
 
@@ -35,13 +36,33 @@ export type SyncInteractionsMessage = {
   type: 'sync_interactions';
   userId: string;
   nodeId: string;
+  rootId: string;
   events: InteractionEvent[];
 };
 
-export type InitSyncConsumerMessage = {
-  type: 'init_sync_consumer';
+export type ConsumeUsersMessage = {
+  type: 'consume_users';
   userId: string;
-  consumerType: SyncConsumerType;
+  cursor: string;
+};
+
+export type ConsumeCollaborationsMessage = {
+  type: 'consume_collaborations';
+  userId: string;
+  cursor: string;
+};
+
+export type ConsumeInteractionsMessage = {
+  type: 'consume_interactions';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type ConsumeTransactionsMessage = {
+  type: 'consume_transactions';
+  userId: string;
+  rootId: string;
   cursor: string;
 };
 
@@ -66,7 +87,10 @@ export type Message =
   | InteractionsBatchMessage
   | UsersBatchMessage
   | SyncInteractionsMessage
-  | InitSyncConsumerMessage
+  | ConsumeUsersMessage
+  | ConsumeCollaborationsMessage
+  | ConsumeInteractionsMessage
+  | ConsumeTransactionsMessage
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
   | WorkspaceDeletedMessage;

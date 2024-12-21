@@ -932,32 +932,27 @@ class NodeService {
         return { createdNode };
       });
 
-    if (createdNode) {
-      this.debug(
-        `Created node ${createdNode.id} with type ${createdNode.type} with transaction ${transaction.id}`
-      );
-
-      eventBus.publish({
-        type: 'node_created',
-        userId,
-        node: mapNode(createdNode),
-      });
-
-      await interactionService.setInteraction(userId, createdNode.id, {
-        attribute: 'lastReceivedTransactionId',
-        value: transaction.id,
-      });
-    } else {
+    if (!createdNode) {
       this.debug(
         `Server create transaction ${transaction.id} for node ${transaction.nodeId} is incomplete`
       );
-
-      eventBus.publish({
-        type: 'transaction_incomplete',
-        userId,
-        transactionId: transaction.id,
-      });
+      return;
     }
+
+    this.debug(
+      `Created node ${createdNode.id} with type ${createdNode.type} with transaction ${transaction.id}`
+    );
+
+    eventBus.publish({
+      type: 'node_created',
+      userId,
+      node: mapNode(createdNode),
+    });
+
+    await interactionService.setInteraction(userId, createdNode.id, {
+      attribute: 'lastReceivedTransactionId',
+      value: transaction.id,
+    });
   }
 
   private async applyServerUpdateTransaction(
@@ -1091,32 +1086,27 @@ class NodeService {
         return { updatedNode };
       });
 
-    if (updatedNode) {
-      this.debug(
-        `Updated node ${updatedNode.id} with type ${updatedNode.type} with transaction ${transaction.id}`
-      );
-
-      eventBus.publish({
-        type: 'node_updated',
-        userId,
-        node: mapNode(updatedNode),
-      });
-
-      await interactionService.setInteraction(userId, updatedNode.id, {
-        attribute: 'lastReceivedTransactionId',
-        value: transaction.id,
-      });
-    } else {
+    if (!updatedNode) {
       this.debug(
         `Server update transaction ${transaction.id} for node ${transaction.nodeId} is incomplete`
       );
-
-      eventBus.publish({
-        type: 'transaction_incomplete',
-        userId,
-        transactionId: transaction.id,
-      });
+      return;
     }
+
+    this.debug(
+      `Updated node ${updatedNode.id} with type ${updatedNode.type} with transaction ${transaction.id}`
+    );
+
+    eventBus.publish({
+      type: 'node_updated',
+      userId,
+      node: mapNode(updatedNode),
+    });
+
+    await interactionService.setInteraction(userId, updatedNode.id, {
+      attribute: 'lastReceivedTransactionId',
+      value: transaction.id,
+    });
   }
 
   private async applyServerDeleteTransaction(

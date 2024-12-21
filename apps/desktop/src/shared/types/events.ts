@@ -135,17 +135,16 @@ export type TransactionCreatedEvent = {
   transaction: LocalTransaction;
 };
 
-export type TransactionIncompleteEvent = {
-  type: 'transaction_incomplete';
-  userId: string;
-  transactionId: string;
-};
-
-export type CollaborationSyncedEvent = {
-  type: 'collaboration_synced';
+export type CollaborationCreatedEvent = {
+  type: 'collaboration_created';
   userId: string;
   nodeId: string;
-  createdAt: Date;
+};
+
+export type CollaborationDeletedEvent = {
+  type: 'collaboration_deleted';
+  userId: string;
+  nodeId: string;
 };
 
 export type ServerAvailabilityChangedEvent = {
@@ -195,9 +194,9 @@ export type Event =
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
   | TransactionCreatedEvent
-  | TransactionIncompleteEvent
   | ServerAvailabilityChangedEvent
   | SocketConnectionOpenedEvent
-  | CollaborationSyncedEvent
+  | CollaborationCreatedEvent
+  | CollaborationDeletedEvent
   | InteractionEventCreatedEvent
   | InteractionUpdatedEvent;

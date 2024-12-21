@@ -1,13 +1,11 @@
 import { WebSocket } from 'ws';
 import {
-  InitSyncConsumerMessage,
-  InteractionsBatchMessage,
   Message,
-  TransactionsBatchMessage,
-  SyncConsumerType,
   WorkspaceStatus,
-  UsersBatchMessage,
-  CollaborationsBatchMessage,
+  ConsumeUsersMessage,
+  ConsumeCollaborationsMessage,
+  ConsumeTransactionsMessage,
+  ConsumeInteractionsMessage,
 } from '@colanode/core';
 
 import { interactionService } from '@/services/interaction-service';
@@ -15,37 +13,31 @@ import { createLogger } from '@/lib/logger';
 import { RequestAccount } from '@/types/api';
 import { database } from '@/data/database';
 import {
-  mapCollaboration,
-  mapInteraction,
-  mapTransaction,
-  mapUser,
-} from '@/lib/nodes';
-import {
   AccountUpdatedEvent,
-  CollaborationCreatedEvent,
-  CollaborationUpdatedEvent,
   Event,
-  InteractionUpdatedEvent,
-  NodeCreatedEvent,
-  NodeDeletedEvent,
-  NodeUpdatedEvent,
-  UserCreatedEvent,
-  UserUpdatedEvent,
   WorkspaceDeletedEvent,
   WorkspaceUpdatedEvent,
 } from '@/types/events';
+import { ConnectedUser } from '@/types/users';
+import { UsersConsumer } from '@/consumers/users';
+import { CollaborationsConsumer } from '@/consumers/collaborations';
+import { TransactionsConsumer } from '@/consumers/transactions';
+import { InteractionsConsumer } from '@/consumers/interactions';
 
-type SocketSyncConsumer = {
-  type: SyncConsumerType;
-  cursor: string;
-  fetching: boolean;
+type NodeConsumersWrapper = {
+  transactions: TransactionsConsumer;
+  interactions: InteractionsConsumer;
+};
+
+type ConsumersWrapper = {
+  users: UsersConsumer;
+  collaborations: CollaborationsConsumer;
+  nodes: Map<string, NodeConsumersWrapper>;
 };
 
 type SocketUser = {
-  userId: string;
-  workspaceId: string;
-  rootIds: string[];
-  consumers: Map<SyncConsumerType, SocketSyncConsumer>;
+  user: ConnectedUser;
+  consumers: ConsumersWrapper;
 };
 
 export class SocketConnection {
@@ -84,44 +76,43 @@ export class SocketConnection {
   }
 
   public handleEvent(event: Event) {
-    if (event.type === 'node_created') {
-      this.handleNodeCreatedEvent(event);
-    } else if (event.type === 'node_updated') {
-      this.handleNodeUpdatedEvent(event);
-    } else if (event.type === 'node_deleted') {
-      this.handleNodeDeletedEvent(event);
-    } else if (event.type === 'collaboration_created') {
-      this.handleCollaborationCreatedEvent(event);
-    } else if (event.type === 'collaboration_updated') {
-      this.handleCollaborationUpdatedEvent(event);
-    } else if (event.type === 'interaction_updated') {
-      this.handleInteractionUpdatedEvent(event);
-    } else if (event.type === 'account_updated') {
+    if (event.type === 'account_updated') {
       this.handleAccountUpdatedEvent(event);
-    } else if (event.type === 'user_created') {
-      this.handleUserCreatedEvent(event);
-    } else if (event.type === 'user_updated') {
-      this.handleUserUpdatedEvent(event);
     } else if (event.type === 'workspace_updated') {
       this.handleWorkspaceUpdatedEvent(event);
     } else if (event.type === 'workspace_deleted') {
       this.handleWorkspaceDeletedEvent(event);
+    } else {
+      for (const user of this.users.values()) {
+        user.consumers.users.processEvent(event);
+        user.consumers.collaborations.processEvent(event);
+        for (const node of user.consumers.nodes.values()) {
+          node.transactions.processEvent(event);
+          node.interactions.processEvent(event);
+        }
+      }
     }
   }
 
   private async handleMessage(message: Message) {
     this.logger.trace(message, `Socket message from ${this.account.id}`);
 
-    if (message.type === 'init_sync_consumer') {
-      this.handleInitSyncConsumer(message);
+    if (message.type === 'consume_users') {
+      this.handleConsumeUsers(message);
+    } else if (message.type === 'consume_collaborations') {
+      this.handleConsumeCollaborations(message);
+    } else if (message.type === 'consume_transactions') {
+      this.handleConsumeTransactions(message);
+    } else if (message.type === 'consume_interactions') {
+      this.handleConsumeInteractions(message);
     } else if (message.type === 'sync_interactions') {
       interactionService.syncLocalInteractions(this.account.id, message);
     }
   }
 
-  private async handleInitSyncConsumer(message: InitSyncConsumerMessage) {
+  private async handleConsumeUsers(message: ConsumeUsersMessage) {
     this.logger.info(
-      `Init sync consumer from ${this.account.id} and user ${message.userId} for ${message.consumerType}`
+      `Consume users from ${this.account.id} and user ${message.userId}`
     );
 
     const user = await this.getOrCreateUser(message.userId);
@@ -129,329 +120,68 @@ export class SocketConnection {
       return;
     }
 
-    const consumer = user.consumers.get(message.consumerType);
-    if (!consumer) {
-      const newConsumer: SocketSyncConsumer = {
-        type: message.consumerType,
-        cursor: message.cursor,
-        fetching: false,
+    await user.consumers.users.consume(message);
+  }
+
+  private async handleConsumeCollaborations(
+    message: ConsumeCollaborationsMessage
+  ) {
+    this.logger.info(
+      `Consume collaborations from ${this.account.id} and user ${message.userId}`
+    );
+
+    const user = await this.getOrCreateUser(message.userId);
+    if (user === null) {
+      return;
+    }
+
+    await user.consumers.collaborations.consume(message);
+  }
+
+  private async handleConsumeTransactions(message: ConsumeTransactionsMessage) {
+    this.logger.info(
+      `Consume transactions from ${this.account.id} and user ${message.userId}`
+    );
+
+    const user = await this.getOrCreateUser(message.userId);
+    if (user === null) {
+      return;
+    }
+
+    let nodeConsumers = user.consumers.nodes.get(message.rootId);
+    if (!nodeConsumers) {
+      nodeConsumers = {
+        transactions: new TransactionsConsumer(user.user, message.rootId),
+        interactions: new InteractionsConsumer(user.user, message.rootId),
       };
-      user.consumers.set(message.consumerType, newConsumer);
-      this.consumePendingSync(user, newConsumer);
-    } else if (!consumer.fetching && consumer.cursor !== message.cursor) {
-      consumer.cursor = message.cursor;
-      this.consumePendingSync(user, consumer);
+
+      user.consumers.nodes.set(message.rootId, nodeConsumers);
     }
+
+    await nodeConsumers.transactions.consume(message);
   }
 
-  private async consumePendingSync(
-    user: SocketUser,
-    consumer: SocketSyncConsumer
-  ) {
-    if (consumer.type === 'transactions') {
-      this.consumeTransactions(user, consumer);
-    } else if (consumer.type === 'collaborations') {
-      this.consumeCollaborations(user, consumer);
-    } else if (consumer.type === 'interactions') {
-      this.consumeInteractions(user, consumer);
-    } else if (consumer.type === 'users') {
-      this.consumeUsers(user, consumer);
-    }
-  }
-
-  private async consumeTransactions(
-    user: SocketUser,
-    consumer: SocketSyncConsumer
-  ) {
-    if (consumer.fetching) {
-      return;
-    }
-
-    if (user.rootIds.length === 0) {
-      return;
-    }
-
-    consumer.fetching = true;
-    this.logger.trace(
-      `Checking for pending node transactions for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
+  private async handleConsumeInteractions(message: ConsumeInteractionsMessage) {
+    this.logger.info(
+      `Consume interactions from ${this.account.id} and user ${message.userId}`
     );
 
-    const unsyncedTransactions = await database
-      .selectFrom('transactions')
-      .selectAll()
-      .where('root_id', 'in', user.rootIds)
-      .where('version', '>', BigInt(consumer.cursor))
-      .orderBy('version', 'asc')
-      .limit(20)
-      .execute();
-
-    if (unsyncedTransactions.length === 0) {
-      this.logger.trace(
-        `No pending node transactions found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-      );
-      consumer.fetching = false;
+    const user = await this.getOrCreateUser(message.userId);
+    if (user === null) {
       return;
     }
 
-    const transactions = unsyncedTransactions.map(mapTransaction);
-    const message: TransactionsBatchMessage = {
-      type: 'transactions_batch',
-      userId: user.userId,
-      transactions,
-    };
+    let nodeConsumers = user.consumers.nodes.get(message.rootId);
+    if (!nodeConsumers) {
+      nodeConsumers = {
+        transactions: new TransactionsConsumer(user.user, message.rootId),
+        interactions: new InteractionsConsumer(user.user, message.rootId),
+      };
 
-    user.consumers.delete(consumer.type);
-    this.sendMessage(message);
-  }
-
-  private async consumeCollaborations(
-    user: SocketUser,
-    consumer: SocketSyncConsumer
-  ) {
-    if (consumer.fetching) {
-      return;
+      user.consumers.nodes.set(message.rootId, nodeConsumers);
     }
 
-    consumer.fetching = true;
-    this.logger.trace(
-      `Checking for pending collaborations for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-    );
-
-    const unsyncedCollaborations = await database
-      .selectFrom('collaborations')
-      .selectAll()
-      .where('collaborator_id', '=', user.userId)
-      .where('version', '>', BigInt(consumer.cursor))
-      .orderBy('version', 'asc')
-      .limit(50)
-      .execute();
-
-    if (unsyncedCollaborations.length === 0) {
-      this.logger.trace(
-        `No pending collaborations found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-      );
-      consumer.fetching = false;
-      return;
-    }
-
-    const collaborations = unsyncedCollaborations.map(mapCollaboration);
-    const message: CollaborationsBatchMessage = {
-      type: 'collaborations_batch',
-      userId: user.userId,
-      collaborations,
-    };
-
-    user.consumers.delete(consumer.type);
-    this.sendMessage(message);
-  }
-
-  private async consumeInteractions(
-    user: SocketUser,
-    consumer: SocketSyncConsumer
-  ) {
-    if (consumer.fetching) {
-      return;
-    }
-
-    consumer.fetching = true;
-    this.logger.trace(
-      `Checking for pending interactions for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-    );
-
-    const unsyncedInteractions = await database
-      .selectFrom('interactions')
-      .selectAll()
-      .where('node_id', 'in', user.rootIds)
-      .where('version', '>', BigInt(consumer.cursor))
-      .orderBy('version', 'asc')
-      .limit(20)
-      .execute();
-
-    if (unsyncedInteractions.length === 0) {
-      this.logger.trace(
-        `No pending interactions found for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-      );
-      consumer.fetching = false;
-      return;
-    }
-
-    const interactions = unsyncedInteractions.map(mapInteraction);
-    const message: InteractionsBatchMessage = {
-      type: 'interactions_batch',
-      userId: user.userId,
-      interactions,
-    };
-
-    user.consumers.delete(consumer.type);
-    this.sendMessage(message);
-  }
-
-  private async consumeUsers(user: SocketUser, consumer: SocketSyncConsumer) {
-    if (consumer.fetching) {
-      return;
-    }
-
-    consumer.fetching = true;
-    this.logger.trace(
-      `Checking for pending users for ${this.account.id} and user ${user.userId} with cursor ${consumer.cursor}`
-    );
-
-    const unsyncedUsers = await database
-      .selectFrom('users')
-      .selectAll()
-      .where('workspace_id', '=', user.workspaceId)
-      .where('version', '>', BigInt(consumer.cursor))
-      .orderBy('version', 'asc')
-      .limit(50)
-      .execute();
-
-    if (unsyncedUsers.length === 0) {
-      consumer.fetching = false;
-      return;
-    }
-
-    const users = unsyncedUsers.map(mapUser);
-    const message: UsersBatchMessage = {
-      type: 'users_batch',
-      userId: user.userId,
-      users,
-    };
-
-    user.consumers.delete(consumer.type);
-    this.sendMessage(message);
-  }
-
-  private async handleNodeCreatedEvent(event: NodeCreatedEvent) {
-    for (const user of this.users.values()) {
-      if (user.workspaceId !== event.workspaceId) {
-        continue;
-      }
-
-      if (!user.rootIds.includes(event.rootId)) {
-        continue;
-      }
-
-      const transactionsConsumer = user.consumers.get('transactions');
-      if (transactionsConsumer) {
-        this.consumePendingSync(user, transactionsConsumer);
-      }
-
-      const interactionsConsumer = user.consumers.get('interactions');
-      if (interactionsConsumer) {
-        this.consumePendingSync(user, interactionsConsumer);
-      }
-    }
-  }
-
-  private async handleNodeUpdatedEvent(event: NodeUpdatedEvent) {
-    for (const user of this.users.values()) {
-      if (user.workspaceId !== event.workspaceId) {
-        continue;
-      }
-
-      if (!user.rootIds.includes(event.rootId)) {
-        continue;
-      }
-
-      const transactionsConsumer = user.consumers.get('transactions');
-      if (transactionsConsumer) {
-        this.consumePendingSync(user, transactionsConsumer);
-      }
-    }
-  }
-
-  private async handleNodeDeletedEvent(event: NodeDeletedEvent) {
-    for (const user of this.users.values()) {
-      if (user.workspaceId !== event.workspaceId) {
-        continue;
-      }
-
-      if (!user.rootIds.includes(event.rootId)) {
-        continue;
-      }
-
-      const transactionsConsumer = user.consumers.get('transactions');
-      if (transactionsConsumer) {
-        this.consumePendingSync(user, transactionsConsumer);
-      }
-    }
-  }
-
-  private async handleCollaborationCreatedEvent(
-    event: CollaborationCreatedEvent
-  ) {
-    for (const user of this.users.values()) {
-      if (user.userId !== event.collaboratorId) {
-        continue;
-      }
-
-      if (!user.rootIds.includes(event.nodeId)) {
-        user.rootIds.push(event.nodeId);
-      }
-
-      const collaborationsConsumer = user.consumers.get('collaborations');
-      if (collaborationsConsumer) {
-        this.consumePendingSync(user, collaborationsConsumer);
-      }
-    }
-  }
-
-  private async handleCollaborationUpdatedEvent(
-    event: CollaborationUpdatedEvent
-  ) {
-    for (const user of this.users.values()) {
-      if (user.userId !== event.collaboratorId) {
-        continue;
-      }
-
-      if (!user.rootIds.includes(event.nodeId)) {
-        user.rootIds.push(event.nodeId);
-      }
-
-      const collaborationsConsumer = user.consumers.get('collaborations');
-      if (collaborationsConsumer) {
-        this.consumePendingSync(user, collaborationsConsumer);
-      }
-    }
-  }
-
-  private async handleInteractionUpdatedEvent(event: InteractionUpdatedEvent) {
-    for (const user of this.users.values()) {
-      if (user.userId !== event.userId) {
-        continue;
-      }
-
-      const interactionsConsumer = user.consumers.get('interactions');
-      if (interactionsConsumer) {
-        this.consumePendingSync(user, interactionsConsumer);
-      }
-    }
-  }
-
-  private handleUserCreatedEvent(event: UserCreatedEvent) {
-    for (const user of this.users.values()) {
-      if (user.userId !== event.userId) {
-        continue;
-      }
-
-      const usersConsumer = user.consumers.get('users');
-      if (usersConsumer) {
-        this.consumePendingSync(user, usersConsumer);
-      }
-    }
-  }
-
-  private handleUserUpdatedEvent(event: UserUpdatedEvent) {
-    for (const user of this.users.values()) {
-      if (user.userId !== event.userId) {
-        continue;
-      }
-
-      const usersConsumer = user.consumers.get('users');
-      if (usersConsumer) {
-        this.consumePendingSync(user, usersConsumer);
-      }
-    }
+    await nodeConsumers.interactions.consume(message);
   }
 
   private async getOrCreateUser(userId: string): Promise<SocketUser | null> {
@@ -491,28 +221,31 @@ export class SocketConnection {
       return null;
     }
 
-    const collaborations = await database
-      .selectFrom('collaborations')
-      .select(['node_id'])
-      .where('collaborator_id', '=', userId)
-      .where('deleted_at', 'is', null)
-      .execute();
-
-    const rootIds = collaborations.map(
-      (collaboration) => collaboration.node_id
-    );
-
     const addedSocketUser = this.users.get(userId);
     if (addedSocketUser) {
       return addedSocketUser;
     }
 
     // Create and store the new SocketUser
-    const newSocketUser: SocketUser = {
-      userId,
+    const connectedUser: ConnectedUser = {
+      userId: user.id,
       workspaceId: user.workspace_id,
-      rootIds,
-      consumers: new Map(),
+      accountId: this.account.id,
+      deviceId: this.account.deviceId,
+      sendMessage: this.sendMessage.bind(this),
+    };
+
+    const usersConsumer = new UsersConsumer(connectedUser);
+    const collaborationsConsumer = new CollaborationsConsumer(connectedUser);
+    const nodesConsumers = new Map<string, NodeConsumersWrapper>();
+
+    const newSocketUser: SocketUser = {
+      user: connectedUser,
+      consumers: {
+        users: usersConsumer,
+        collaborations: collaborationsConsumer,
+        nodes: nodesConsumers,
+      },
     };
 
     this.users.set(userId, newSocketUser);
@@ -531,11 +264,11 @@ export class SocketConnection {
   }
 
   private handleWorkspaceUpdatedEvent(event: WorkspaceUpdatedEvent) {
-    const users = Array.from(this.users.values()).filter(
-      (user) => user.workspaceId === event.workspaceId
+    const socketUsers = Array.from(this.users.values()).filter(
+      (user) => user.user.workspaceId === event.workspaceId
     );
 
-    if (users.length === 0) {
+    if (socketUsers.length === 0) {
       return;
     }
 
@@ -546,11 +279,11 @@ export class SocketConnection {
   }
 
   private handleWorkspaceDeletedEvent(event: WorkspaceDeletedEvent) {
-    const users = Array.from(this.users.values()).filter(
-      (user) => user.workspaceId === event.workspaceId
+    const socketUsers = Array.from(this.users.values()).filter(
+      (user) => user.user.workspaceId === event.workspaceId
     );
 
-    if (users.length === 0) {
+    if (socketUsers.length === 0) {
       return;
     }
 

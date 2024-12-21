@@ -59,13 +59,25 @@ export class SocketConnection {
       );
 
       if (message.type === 'transactions_batch') {
-        syncService.syncServerTransactions(message);
+        const transactionsConsumer = syncService.getTransactionsConsumer(
+          message.userId,
+          message.rootId
+        );
+        transactionsConsumer?.processTransactions(message);
       } else if (message.type === 'collaborations_batch') {
-        syncService.syncServerCollaborations(message);
+        const collaborationsConsumer = syncService.getCollaborationsConsumer(
+          message.userId
+        );
+        collaborationsConsumer?.processCollaborations(message);
       } else if (message.type === 'interactions_batch') {
-        syncService.syncServerInteractions(message);
+        const interactionsConsumer = syncService.getInteractionsConsumer(
+          message.userId,
+          message.rootId
+        );
+        interactionsConsumer?.processInteractions(message);
       } else if (message.type === 'users_batch') {
-        syncService.syncServerUsers(message);
+        const usersConsumer = syncService.getUsersConsumer(message.userId);
+        usersConsumer?.processUsers(message);
       } else if (message.type === 'account_updated') {
         scheduler.trigger({
           type: 'sync_account',

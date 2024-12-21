@@ -10,7 +10,6 @@ import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
 import { InitSyncConsumersJobHandler } from '@/main/jobs/init-sync-consumers';
 import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
 import { SyncPendingTransactionsJobHandler } from '@/main/jobs/sync-pending-transactions';
-import { SyncIncompleteTransactionsJobHandler } from '@/main/jobs/sync-incomplete-transactions';
 import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-interactions';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
@@ -30,7 +29,6 @@ export const jobHandlerMap: JobHandlerMap = {
   init_sync_consumers: new InitSyncConsumersJobHandler(),
   revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
   sync_pending_transactions: new SyncPendingTransactionsJobHandler(),
-  sync_incomplete_transactions: new SyncIncompleteTransactionsJobHandler(),
   sync_pending_interactions: new SyncPendingInteractionsJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
@@ -235,11 +233,6 @@ class Scheduler {
     });
 
     this.schedule({
-      type: 'sync_incomplete_transactions',
-      userId,
-    });
-
-    this.schedule({
       type: 'sync_pending_interactions',
       userId,
     });
@@ -295,13 +288,6 @@ class Scheduler {
 
     if (
       state.input.type === 'sync_pending_transactions' &&
-      state.input.userId === userId
-    ) {
-      return true;
-    }
-
-    if (
-      state.input.type === 'sync_incomplete_transactions' &&
       state.input.userId === userId
     ) {
       return true;
@@ -370,11 +356,6 @@ class Scheduler {
     } else if (event.type === 'transaction_created') {
       this.trigger({
         type: 'sync_pending_transactions',
-        userId: event.userId,
-      });
-    } else if (event.type === 'transaction_incomplete') {
-      this.trigger({
-        type: 'sync_incomplete_transactions',
         userId: event.userId,
       });
     } else if (event.type === 'interaction_event_created') {

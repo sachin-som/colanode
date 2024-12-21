@@ -279,7 +279,7 @@ const createCursorsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('cursors')
-      .addColumn('type', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('key', 'text', (col) => col.notNull().primaryKey())
       .addColumn('value', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')

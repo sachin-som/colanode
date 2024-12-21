@@ -31,6 +31,10 @@ export class SyncPendingInteractionsJobHandler
   private readonly debug = createDebugger('job:sync-pending-interactions');
 
   public async handleJob(input: SyncPendingInteractionsInput) {
+    if (this.triggerDebounce === 100) {
+      return;
+    }
+
     this.debug(`Sending local pending interactions for user ${input.userId}`);
 
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
@@ -103,6 +107,7 @@ export class SyncPendingInteractionsJobHandler
         const message: SyncInteractionsMessage = {
           type: 'sync_interactions',
           nodeId,
+          rootId: firstEvent.node_id,
           userId: credentials.userId,
           events: events.map((e) => ({
             attribute: e.attribute,

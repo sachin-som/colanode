@@ -63,14 +63,19 @@ class CollaborationService {
           .where('node_id', '=', collaboration.nodeId)
           .execute();
       });
-    }
 
-    eventBus.publish({
-      type: 'collaboration_synced',
-      userId,
-      nodeId: collaboration.nodeId,
-      createdAt: new Date(collaboration.createdAt),
-    });
+      eventBus.publish({
+        type: 'collaboration_deleted',
+        userId,
+        nodeId: collaboration.nodeId,
+      });
+    } else {
+      eventBus.publish({
+        type: 'collaboration_created',
+        userId,
+        nodeId: collaboration.nodeId,
+      });
+    }
   }
 }
 

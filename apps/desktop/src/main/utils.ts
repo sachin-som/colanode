@@ -1,4 +1,4 @@
-import { LocalTransaction, Node, SyncConsumerType } from '@colanode/core';
+import { LocalTransaction, Node } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 import {
   DeleteResult,
@@ -134,44 +134,6 @@ export const fetchWorkspaceCredentials = async (
     serverDomain: workspace.domain,
     serverAttributes: workspace.attributes,
   };
-};
-
-export const updateCursor = async (
-  userId: string,
-  type: SyncConsumerType,
-  cursor: bigint
-) => {
-  const workspaceDatabase = await databaseService.getWorkspaceDatabase(userId);
-
-  await workspaceDatabase
-    .insertInto('cursors')
-    .values({
-      type,
-      value: cursor,
-      created_at: new Date().toISOString(),
-    })
-    .onConflict((eb) =>
-      eb.column('type').doUpdateSet({
-        value: cursor,
-        updated_at: new Date().toISOString(),
-      })
-    )
-    .execute();
-};
-
-export const fetchCursor = async (
-  userId: string,
-  type: SyncConsumerType
-): Promise<bigint> => {
-  const workspaceDatabase = await databaseService.getWorkspaceDatabase(userId);
-
-  const cursor = await workspaceDatabase
-    .selectFrom('cursors')
-    .select('value')
-    .where('type', '=', type)
-    .executeTakeFirst();
-
-  return cursor?.value ?? 0n;
 };
 
 export const mapUser = (row: SelectUser): User => {

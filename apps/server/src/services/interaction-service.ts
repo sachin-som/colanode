@@ -89,6 +89,7 @@ class InteractionService {
           type: 'interaction_updated',
           userId: message.userId,
           nodeId: message.nodeId,
+          rootId: message.rootId,
           workspaceId,
         });
 
@@ -115,6 +116,7 @@ class InteractionService {
         type: 'interaction_updated',
         userId: message.userId,
         nodeId: message.nodeId,
+        rootId: message.rootId,
         workspaceId,
       });
 

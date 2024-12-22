@@ -11,27 +11,36 @@ interface FileContainerProps {
 
 export const FileContainer = ({ nodeId }: FileContainerProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'node_tree_get',
-    nodeId,
+
+  const { data: file, isPending: isFilePending } = useQuery({
+    type: 'file_get',
+    id: nodeId,
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  const { data: nodes, isPending: isNodesPending } = useQuery(
+    {
+      type: 'node_tree_get',
+      nodeId: file?.parentId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!file,
+    }
+  );
+
+  if (isFilePending || isNodesPending) {
     return null;
   }
 
-  const nodes = data ?? [];
-  const file = nodes.find((node) => node.id === nodeId);
-  const role = extractNodeRole(nodes, workspace.userId);
-
-  if (!file || file.type !== 'file' || !role) {
+  const role = extractNodeRole(nodes ?? [], workspace.userId);
+  if (!file || !role) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <FileHeader nodes={nodes} file={file} role={role} />
+      <FileHeader nodes={nodes ?? []} file={file} role={role} />
       <FileBody file={file} />
     </div>
   );

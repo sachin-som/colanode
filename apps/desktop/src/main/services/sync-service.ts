@@ -3,11 +3,13 @@ import { UsersConsumer } from '@/main/consumers/users';
 import { TransactionsConsumer } from '@/main/consumers/transactions';
 import { CollaborationsConsumer } from '@/main/consumers/collaborations';
 import { InteractionsConsumer } from '@/main/consumers/interactions';
+import { FilesConsumer } from '@/main/consumers/files';
 import { createDebugger } from '@/main/debugger';
 
 export type NodeConsumersWrapper = {
   transactions: TransactionsConsumer;
   interactions: InteractionsConsumer;
+  files: FilesConsumer;
 };
 
 export type ConsumersWrapper = {
@@ -77,9 +79,18 @@ class SyncService {
       );
       await interactionsConsumer.init();
 
+      const filesConsumer = new FilesConsumer(
+        userId,
+        accountId,
+        rootId,
+        workspaceDatabase
+      );
+      await filesConsumer.init();
+
       consumers.nodes[rootId] = {
         transactions: transactionsConsumer,
         interactions: interactionsConsumer,
+        files: filesConsumer,
       };
     }
 
@@ -113,6 +124,13 @@ class SyncService {
     rootId: string
   ): InteractionsConsumer | undefined {
     return this.users.get(userId)?.nodes[rootId]?.interactions;
+  }
+
+  public getFilesConsumer(
+    userId: string,
+    rootId: string
+  ): FilesConsumer | undefined {
+    return this.users.get(userId)?.nodes[rootId]?.files;
   }
 }
 

@@ -78,6 +78,12 @@ export class SocketConnection {
       } else if (message.type === 'users_batch') {
         const usersConsumer = syncService.getUsersConsumer(message.userId);
         usersConsumer?.processUsers(message);
+      } else if (message.type === 'files_batch') {
+        const filesConsumer = syncService.getFilesConsumer(
+          message.userId,
+          message.rootId
+        );
+        filesConsumer?.processFiles(message);
       } else if (message.type === 'account_updated') {
         scheduler.trigger({
           type: 'sync_account',

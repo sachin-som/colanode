@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateDownloadOutput, hasCollaboratorAccess } from '@colanode/core';
+import { CreateDownloadOutput, hasViewerAccess } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -14,22 +14,13 @@ export const fileDownloadGetHandler = async (
 ): Promise<void> => {
   const fileId = req.params.fileId as string;
 
-  const role = await fetchNodeRole(fileId, res.locals.user.id);
-  if (role === null || !hasCollaboratorAccess(role)) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
-    });
-    return;
-  }
-
-  const node = await database
-    .selectFrom('nodes')
+  const file = await database
+    .selectFrom('files')
     .selectAll()
     .where('id', '=', fileId)
     .executeTakeFirst();
 
-  if (!node) {
+  if (!file) {
     res.status(404).json({
       code: ApiError.ResourceNotFound,
       message: 'File not found.',
@@ -37,33 +28,20 @@ export const fileDownloadGetHandler = async (
     return;
   }
 
-  if (node.attributes.type !== 'file') {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'File not found.',
-    });
-    return;
-  }
-
-  // check if the upload is completed
-  const upload = await database
-    .selectFrom('uploads')
-    .selectAll()
-    .where('node_id', '=', fileId)
-    .executeTakeFirst();
-
-  if (!upload) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'Upload not completed.',
+  const role = await fetchNodeRole(file.root_id, res.locals.user.id);
+  if (role === null || !hasViewerAccess(role)) {
+    res.status(403).json({
+      code: ApiError.Forbidden,
+      message: 'Forbidden.',
     });
     return;
   }
 
   //generate presigned url for download
+  const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAMES.FILES,
-    Key: upload.path,
+    Key: path,
   });
 
   const presignedUrl = await getSignedUrl(filesStorage, command, {

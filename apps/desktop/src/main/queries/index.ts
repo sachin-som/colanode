@@ -1,8 +1,8 @@
 import { AccountGetQueryHandler } from '@/main/queries/accounts/account-get';
 import { AccountListQueryHandler } from '@/main/queries/accounts/accounts-list';
-import { DownloadGetQueryHandler } from '@/main/queries/files/download-get';
 import { EmojisGetQueryHandler } from '@/main/queries/emojis/emojis-get';
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
+import { FileGetQueryHandler } from '@/main/queries/files/file-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
 import { IconsGetQueryHandler } from '@/main/queries/icons/icons-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
@@ -44,8 +44,8 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_metadata_get: new FileMetadataGetQueryHandler(),
   account_get: new AccountGetQueryHandler(),
   workspace_get: new WorkspaceGetQueryHandler(),
-  download_get: new DownloadGetQueryHandler(),
   database_list: new DatabaseListQueryHandler(),
   record_search: new RecordSearchQueryHandler(),
   user_get: new UserGetQueryHandler(),
+  file_get: new FileGetQueryHandler(),
 };

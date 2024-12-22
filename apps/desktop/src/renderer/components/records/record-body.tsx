@@ -88,6 +88,7 @@ export const RecordBody = ({
         <Separator className="my-4 w-full" />
         <Document
           nodeId={record.id}
+          rootId={record.rootId}
           content={record.attributes.content}
           transactionId={record.transactionId}
           canEdit={canEdit}

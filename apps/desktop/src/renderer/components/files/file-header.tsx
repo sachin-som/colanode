@@ -1,4 +1,4 @@
-import { FileNode, Node, NodeRole } from '@colanode/core';
+import { Node, NodeRole } from '@colanode/core';
 
 import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { FileSettings } from '@/renderer/components/files/file-settings';
@@ -6,10 +6,11 @@ import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
 import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
 import { Header } from '@/renderer/components/ui/header';
 import { useContainer } from '@/renderer/contexts/container';
+import { FileWithState } from '@/shared/types/files';
 
 interface FileHeaderProps {
   nodes: Node[];
-  file: FileNode;
+  file: FileWithState;
   role: NodeRole;
 }
 

@@ -69,9 +69,7 @@ const createTransactionsTable: Migration = {
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('server_created_at', 'text')
-      .addColumn('retry_count', 'integer', (col) => col.defaultTo(0))
-      .addColumn('status', 'text', (col) => col.defaultTo('pending'))
-      .addColumn('version', 'integer')
+      .addColumn('version', 'integer', (col) => col.notNull())
       .execute();
   },
   down: async (db) => {
@@ -96,42 +94,67 @@ const createCollaborationsTable: Migration = {
   },
 };
 
-const createDownloadsTable: Migration = {
+const createFilesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('downloads')
-      .addColumn('node_id', 'text', (col) =>
-        col.notNull().primaryKey().references('nodes.id').onDelete('cascade')
-      )
-      .addColumn('upload_id', 'text', (col) => col.notNull())
+      .createTable('files')
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('type', 'text', (col) => col.notNull())
+      .addColumn('parent_id', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('name', 'text', (col) => col.notNull())
+      .addColumn('original_name', 'text', (col) => col.notNull())
+      .addColumn('mime_type', 'text', (col) => col.notNull())
+      .addColumn('extension', 'text', (col) => col.notNull())
+      .addColumn('size', 'integer', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
-      .addColumn('completed_at', 'text')
-      .addColumn('progress', 'integer', (col) => col.defaultTo(0))
-      .addColumn('retry_count', 'integer', (col) => col.defaultTo(0))
+      .addColumn('updated_by', 'text')
+      .addColumn('status', 'integer', (col) => col.notNull())
+      .addColumn('version', 'integer')
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('downloads').execute();
+    await db.schema.dropTable('files').execute();
   },
 };
 
-const createUploadsTable: Migration = {
+const createFileStatesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('uploads')
-      .addColumn('node_id', 'text', (col) =>
-        col.notNull().primaryKey().references('nodes.id').onDelete('cascade')
-      )
-      .addColumn('upload_id', 'text', (col) => col.notNull())
+      .createTable('file_states')
+      .addColumn('file_id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('download_status', 'text', (col) => col.notNull())
+      .addColumn('download_progress', 'integer', (col) => col.notNull())
+      .addColumn('download_retries', 'integer', (col) => col.notNull())
+      .addColumn('upload_status', 'text', (col) => col.notNull())
+      .addColumn('upload_progress', 'integer', (col) => col.notNull())
+      .addColumn('upload_retries', 'integer', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
-      .addColumn('progress', 'integer', (col) => col.defaultTo(0))
-      .addColumn('retry_count', 'integer', (col) => col.defaultTo(0))
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('uploads').execute();
+    await db.schema.dropTable('file_states').execute();
+  },
+};
+
+const createMutationsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('mutations')
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('type', 'text', (col) => col.notNull())
+      .addColumn('node_id', 'text', (col) => col.notNull())
+      .addColumn('key', 'text', (col) => col.notNull())
+      .addColumn('data', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('retries', 'integer', (col) => col.notNull())
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('mutations').execute();
   },
 };
 
@@ -295,12 +318,13 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00002_create_nodes_table': createNodesTable,
   '00003_create_transactions_table': createTransactionsTable,
   '00004_create_collaborations_table': createCollaborationsTable,
-  '00005_create_uploads_table': createUploadsTable,
-  '00006_create_downloads_table': createDownloadsTable,
+  '00005_create_files_table': createFilesTable,
+  '00006_create_file_states_table': createFileStatesTable,
   '00007_create_interactions_table': createInteractionsTable,
   '00008_create_interaction_events_table': createInteractionEventsTable,
-  '00009_create_node_paths_table': createNodePathsTable,
-  '00010_create_node_names_table': createNodeNamesTable,
-  '00011_create_node_texts_table': createNodeTextsTable,
-  '00012_create_cursors_table': createCursorsTable,
+  '00009_create_mutations_table': createMutationsTable,
+  '00010_create_node_paths_table': createNodePathsTable,
+  '00011_create_node_names_table': createNodeNamesTable,
+  '00012_create_node_texts_table': createNodeTextsTable,
+  '00013_create_cursors_table': createCursorsTable,
 };

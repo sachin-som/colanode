@@ -1,22 +1,8 @@
 import { InteractionAttributes } from './interactions';
 import { WorkspaceRole } from './workspaces';
+import { FileStatus, FileType } from './files';
 
 import { NodeRole } from '../registry/core';
-
-export type SyncTransactionsInput = {
-  transactions: LocalTransaction[];
-};
-
-export type SyncTransactionsOutput = {
-  results: SyncTransactionResult[];
-};
-
-export type SyncTransactionStatus = 'success' | 'error';
-
-export type SyncTransactionResult = {
-  id: string;
-  status: SyncTransactionStatus;
-};
 
 export type LocalTransaction =
   | LocalCreateTransaction
@@ -141,5 +127,26 @@ export type ServerUser = {
   customAvatar: string | null;
   createdAt: string;
   updatedAt: string | null;
+  version: string;
+};
+
+export type ServerFile = {
+  id: string;
+  type: FileType;
+  parentId: string;
+  rootId: string;
+  workspaceId: string;
+  name: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  extension: string;
+  status: FileStatus;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  deletedAt: string | null;
+  deletedBy: string | null;
   version: string;
 };

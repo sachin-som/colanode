@@ -1,4 +1,4 @@
-import { FileNode } from '@colanode/core';
+import { FileWithState } from '@/shared/types/files';
 
 export type FileListQueryInput = {
   type: 'file_list';
@@ -12,7 +12,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     file_list: {
       input: FileListQueryInput;
-      output: FileNode[];
+      output: FileWithState[];
     };
   }
 }

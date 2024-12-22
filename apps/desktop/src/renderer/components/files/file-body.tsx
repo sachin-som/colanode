@@ -1,40 +1,40 @@
-import { FileNode } from '@colanode/core';
 import { SquareArrowOutUpRight } from 'lucide-react';
-import { useEffect } from 'react';
+// import { useEffect } from 'react';
 
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useRadar } from '@/renderer/contexts/radar';
+// import { useRadar } from '@/renderer/contexts/radar';
+import { FileWithState } from '@/shared/types/files';
 
 interface FileBodyProps {
-  file: FileNode;
+  file: FileWithState;
 }
 
 export const FileBody = ({ file }: FileBodyProps) => {
   const workspace = useWorkspace();
-  const radar = useRadar();
+  // const radar = useRadar();
 
-  useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      file.id,
-      file.type,
-      file.transactionId
-    );
+  // useEffect(() => {
+  //   radar.markAsOpened(
+  //     workspace.userId,
+  //     file.id,
+  //     'file',
+  //     file.transactionId
+  //   );
 
-    const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        file.id,
-        file.type,
-        file.transactionId
-      );
-    }, 60000);
+  //   const interval = setInterval(() => {
+  //     radar.markAsOpened(
+  //       workspace.userId,
+  //       file.id,
+  //       file.type,
+  //       file.transactionId
+  //     );
+  //   }, 60000);
 
-    return () => clearInterval(interval);
-  }, [file.id, file.type, file.transactionId]);
+  //   return () => clearInterval(interval);
+  // }, [file.id, file.type, file.transactionId]);
 
   return (
     <div className="flex h-full max-h-full w-full flex-row items-center gap-2">
@@ -48,7 +48,7 @@ export const FileBody = ({ file }: FileBodyProps) => {
                 type: 'file_open',
                 userId: workspace.userId,
                 fileId: file.id,
-                extension: file.attributes.extension,
+                extension: file.extension,
               })
             }
           >

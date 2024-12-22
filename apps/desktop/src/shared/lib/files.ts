@@ -13,10 +13,9 @@ export const formatBytes = (bytes: number, decimals?: number): string => {
 export const getFileUrl = (
   userId: string,
   fileId: string,
-  uploadId: string,
   extension: string
 ) => {
-  return `local-file://${userId}/${fileId}_${uploadId}${extension}`;
+  return `local-file://${userId}/${fileId}${extension}`;
 };
 
 export const getFilePlaceholderUrl = (path: string) => {

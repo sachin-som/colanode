@@ -1,6 +1,7 @@
 import { InteractionEvent } from './interactions';
 import {
   ServerCollaboration,
+  ServerFile,
   ServerInteraction,
   ServerTransaction,
   ServerUser,
@@ -30,6 +31,13 @@ export type UsersBatchMessage = {
   type: 'users_batch';
   userId: string;
   users: ServerUser[];
+};
+
+export type FilesBatchMessage = {
+  type: 'files_batch';
+  userId: string;
+  rootId: string;
+  files: ServerFile[];
 };
 
 export type SyncInteractionsMessage = {
@@ -66,6 +74,13 @@ export type ConsumeTransactionsMessage = {
   cursor: string;
 };
 
+export type ConsumeFilesMessage = {
+  type: 'consume_files';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
 export type AccountUpdatedMessage = {
   type: 'account_updated';
   accountId: string;
@@ -93,4 +108,6 @@ export type Message =
   | ConsumeTransactionsMessage
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
-  | WorkspaceDeletedMessage;
+  | WorkspaceDeletedMessage
+  | FilesBatchMessage
+  | ConsumeFilesMessage;

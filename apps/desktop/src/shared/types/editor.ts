@@ -10,6 +10,7 @@ export type EditorCommandProps = {
 export type EditorCommandContext = {
   documentId: string;
   userId: string;
+  rootId: string;
 };
 
 export type EditorCommand = {

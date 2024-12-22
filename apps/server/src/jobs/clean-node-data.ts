@@ -1,10 +1,10 @@
 import { generateId, IdType } from '@colanode/core';
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+// import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 import { database } from '@/data/database';
-import { CreateTransaction, SelectUpload } from '@/data/schema';
+import { CreateTransaction } from '@/data/schema';
 import { JobHandler } from '@/types/jobs';
-import { filesStorage, BUCKET_NAMES } from '@/data/storage';
+// import { filesStorage, BUCKET_NAMES } from '@/data/storage';
 import { eventBus } from '@/lib/event-bus';
 import { createLogger } from '@/lib/logger';
 
@@ -87,18 +87,18 @@ const deleteChildren = async (
         break;
       }
 
-      const fileIds: string[] = descendants
-        .filter((d) => d.type === 'file')
-        .map((d) => d.id);
+      // const fileIds: string[] = descendants
+      //   .filter((d) => d.type === 'file')
+      //   .map((d) => d.id);
 
-      const uploads: SelectUpload[] =
-        fileIds.length > 0
-          ? await database
-              .selectFrom('uploads')
-              .selectAll()
-              .where('node_id', 'in', fileIds)
-              .execute()
-          : [];
+      // const uploads: SelectUpload[] =
+      //   fileIds.length > 0
+      //     ? await database
+      //         .selectFrom('uploads')
+      //         .selectAll()
+      //         .where('node_id', 'in', fileIds)
+      //         .execute()
+      //     : [];
 
       const nodeIds: string[] = descendants.map((d) => d.id);
       const transactionsToCreate: CreateTransaction[] = descendants.map(
@@ -113,7 +113,7 @@ const deleteChildren = async (
           server_created_at: new Date(),
         })
       );
-      const uploadsToDelete: string[] = uploads.map((u) => u.node_id);
+      // const uploadsToDelete: string[] = uploads.map((u) => u.node_id);
 
       await database.transaction().execute(async (trx) => {
         await trx
@@ -131,12 +131,12 @@ const deleteChildren = async (
           throw new Error('Failed to create transactions');
         }
 
-        if (uploadsToDelete.length > 0) {
-          await trx
-            .deleteFrom('uploads')
-            .where('node_id', 'in', uploadsToDelete)
-            .execute();
-        }
+        // if (uploadsToDelete.length > 0) {
+        //   await trx
+        //     .deleteFrom('uploads')
+        //     .where('node_id', 'in', uploadsToDelete)
+        //     .execute();
+        // }
 
         await trx.deleteFrom('nodes').where('id', 'in', nodeIds).execute();
         await trx
@@ -149,18 +149,18 @@ const deleteChildren = async (
           .execute();
       });
 
-      for (const upload of uploads) {
-        const command = new DeleteObjectCommand({
-          Bucket: BUCKET_NAMES.FILES,
-          Key: upload.path,
-        });
+      // for (const upload of uploads) {
+      //   const command = new DeleteObjectCommand({
+      //     Bucket: BUCKET_NAMES.FILES,
+      //     Key: upload.path,
+      //   });
 
-        logger.trace(
-          `Deleting file as a descendant of ${parentIds}: ${upload.path}`
-        );
+      //   logger.trace(
+      //     `Deleting file as a descendant of ${parentIds}: ${upload.path}`
+      //   );
 
-        await filesStorage.send(command);
-      }
+      //   await filesStorage.send(command);
+      // }
 
       for (const node of descendants) {
         logger.trace(`Publishing node deleted event for ${node.id}`);

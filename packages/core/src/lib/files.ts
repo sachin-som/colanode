@@ -14,7 +14,7 @@ export const extractFileType = (mimeType: string): FileType => {
   }
 
   if (mimeType.startsWith('application/pdf')) {
-    return 'document';
+    return 'pdf';
   }
 
   return 'other';

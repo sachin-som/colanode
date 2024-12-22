@@ -6,6 +6,7 @@ import {
   ConsumeCollaborationsMessage,
   ConsumeTransactionsMessage,
   ConsumeInteractionsMessage,
+  ConsumeFilesMessage,
 } from '@colanode/core';
 
 import { interactionService } from '@/services/interaction-service';
@@ -23,10 +24,12 @@ import { UsersConsumer } from '@/consumers/users';
 import { CollaborationsConsumer } from '@/consumers/collaborations';
 import { TransactionsConsumer } from '@/consumers/transactions';
 import { InteractionsConsumer } from '@/consumers/interactions';
+import { FilesConsumer } from '@/consumers/files';
 
 type NodeConsumersWrapper = {
   transactions: TransactionsConsumer;
   interactions: InteractionsConsumer;
+  files: FilesConsumer;
 };
 
 type ConsumersWrapper = {
@@ -105,6 +108,8 @@ export class SocketConnection {
       this.handleConsumeTransactions(message);
     } else if (message.type === 'consume_interactions') {
       this.handleConsumeInteractions(message);
+    } else if (message.type === 'consume_files') {
+      this.handleConsumeFiles(message);
     } else if (message.type === 'sync_interactions') {
       interactionService.syncLocalInteractions(this.account.id, message);
     }
@@ -153,6 +158,7 @@ export class SocketConnection {
       nodeConsumers = {
         transactions: new TransactionsConsumer(user.user, message.rootId),
         interactions: new InteractionsConsumer(user.user, message.rootId),
+        files: new FilesConsumer(user.user, message.rootId),
       };
 
       user.consumers.nodes.set(message.rootId, nodeConsumers);
@@ -176,12 +182,37 @@ export class SocketConnection {
       nodeConsumers = {
         transactions: new TransactionsConsumer(user.user, message.rootId),
         interactions: new InteractionsConsumer(user.user, message.rootId),
+        files: new FilesConsumer(user.user, message.rootId),
       };
 
       user.consumers.nodes.set(message.rootId, nodeConsumers);
     }
 
     await nodeConsumers.interactions.consume(message);
+  }
+
+  private async handleConsumeFiles(message: ConsumeFilesMessage) {
+    this.logger.info(
+      `Consume files from ${this.account.id} and user ${message.userId}`
+    );
+
+    const user = await this.getOrCreateUser(message.userId);
+    if (user === null) {
+      return;
+    }
+
+    let nodeConsumers = user.consumers.nodes.get(message.rootId);
+    if (!nodeConsumers) {
+      nodeConsumers = {
+        transactions: new TransactionsConsumer(user.user, message.rootId),
+        interactions: new InteractionsConsumer(user.user, message.rootId),
+        files: new FilesConsumer(user.user, message.rootId),
+      };
+
+      user.consumers.nodes.set(message.rootId, nodeConsumers);
+    }
+
+    await nodeConsumers.files.consume(message);
   }
 
   private async getOrCreateUser(userId: string): Promise<SocketUser | null> {

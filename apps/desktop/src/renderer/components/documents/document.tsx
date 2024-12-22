@@ -6,6 +6,7 @@ import { mapBlocksToContents } from '@/shared/lib/editor';
 
 interface DocumentProps {
   nodeId: string;
+  rootId: string;
   content?: Record<string, Block> | null;
   transactionId: string;
   canEdit: boolean;
@@ -15,6 +16,7 @@ interface DocumentProps {
 
 export const Document = ({
   nodeId,
+  rootId,
   content,
   transactionId,
   canEdit,
@@ -39,6 +41,7 @@ export const Document = ({
     <DocumentEditor
       key={nodeId}
       documentId={nodeId}
+      rootId={rootId}
       content={tiptapContent}
       transactionId={transactionId}
       canEdit={canEdit}

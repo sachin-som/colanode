@@ -19,9 +19,8 @@ import {
   fileDownloadGetHandler,
   fileUploadInitHandler,
   fileUploadCompleteHandler,
-  transactionsGetHandler,
-  transactionsSyncHandler,
   avatarUploadParameter,
+  mutationsSyncHandler,
 } from '@/controllers/client';
 import { workspaceMiddleware } from '@/middlewares/workspace';
 import { authMiddleware } from '@/middlewares/auth';
@@ -104,29 +103,22 @@ clientRouter.get(
 );
 
 clientRouter.post(
-  '/v1/workspaces/:workspaceId/uploads',
+  '/v1/workspaces/:workspaceId/files',
   authMiddleware,
   workspaceMiddleware,
   fileUploadInitHandler
 );
 
 clientRouter.put(
-  '/v1/workspaces/:workspaceId/uploads/:uploadId',
+  '/v1/workspaces/:workspaceId/files/:fileId',
   authMiddleware,
   workspaceMiddleware,
   fileUploadCompleteHandler
 );
 
-clientRouter.get(
-  '/v1/workspaces/:workspaceId/transactions/:nodeId',
-  authMiddleware,
-  workspaceMiddleware,
-  transactionsGetHandler
-);
-
 clientRouter.post(
-  '/v1/workspaces/:workspaceId/transactions',
+  '/v1/workspaces/:workspaceId/mutations',
   authMiddleware,
   workspaceMiddleware,
-  transactionsSyncHandler
+  mutationsSyncHandler
 );

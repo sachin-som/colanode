@@ -19,21 +19,12 @@ import { createDebugger } from '@/main/debugger';
 import { SelectWorkspace } from '@/main/data/app/schema';
 import { databaseService } from '@/main/data/database-service';
 import {
-  CreateDownload,
-  CreateUpload,
-  SelectDownload,
+  SelectMutation,
   SelectNode,
   SelectTransaction,
-  SelectUpload,
 } from '@/main/data/workspace/schema';
 import { interactionService } from '@/main/services/interaction-service';
-import {
-  fetchNodeAncestors,
-  mapDownload,
-  mapNode,
-  mapTransaction,
-  mapUpload,
-} from '@/main/utils';
+import { fetchNodeAncestors, mapNode, mapTransaction } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 
 const UPDATE_RETRIES_LIMIT = 20;
@@ -41,8 +32,6 @@ const UPDATE_RETRIES_LIMIT = 20;
 export type CreateNodeInput = {
   id: string;
   attributes: NodeAttributes;
-  upload?: CreateUpload;
-  download?: CreateDownload;
 };
 
 export type UpdateNodeResult =
@@ -81,9 +70,7 @@ class NodeService {
 
     const inputs = Array.isArray(input) ? input : [input];
     const createdNodes: SelectNode[] = [];
-    const createdTransactions: SelectTransaction[] = [];
-    const createdUploads: SelectUpload[] = [];
-    const createdDownloads: SelectDownload[] = [];
+    const createdMutations: SelectMutation[] = [];
 
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
@@ -159,8 +146,7 @@ class NodeService {
             data: update,
             created_at: createdAt,
             created_by: context.userId,
-            retry_count: 0,
-            status: 'pending',
+            version: 0n,
           })
           .executeTakeFirst();
 
@@ -168,35 +154,25 @@ class NodeService {
           throw new Error('Failed to create transaction');
         }
 
-        createdTransactions.push(createdTransaction);
+        const mutation = await transaction
+          .insertInto('mutations')
+          .returningAll()
+          .values({
+            id: generateId(IdType.Mutation),
+            node_id: inputItem.id,
+            type: 'apply_create_transaction',
+            key: `transaction_${createdTransaction.id}`,
+            data: JSON.stringify(mapTransaction(createdTransaction)),
+            created_at: createdAt,
+            retries: 0,
+          })
+          .executeTakeFirst();
 
-        if (inputItem.upload) {
-          const createdUpload = await transaction
-            .insertInto('uploads')
-            .returningAll()
-            .values(inputItem.upload)
-            .executeTakeFirst();
-
-          if (!createdUpload) {
-            throw new Error('Failed to create upload');
-          }
-
-          createdUploads.push(createdUpload);
+        if (!mutation) {
+          throw new Error('Failed to create mutation');
         }
 
-        if (inputItem.download) {
-          const createdDownload = await transaction
-            .insertInto('downloads')
-            .returningAll()
-            .values(inputItem.download)
-            .executeTakeFirst();
-
-          if (!createdDownload) {
-            throw new Error('Failed to create download');
-          }
-
-          createdDownloads.push(createdDownload);
-        }
+        createdMutations.push(mutation);
 
         if (name) {
           await transaction
@@ -226,48 +202,13 @@ class NodeService {
       });
     }
 
-    for (const createdTransaction of createdTransactions) {
-      this.debug(
-        `Created transaction ${createdTransaction.id} for node ${createdTransaction.node_id} with operation ${createdTransaction.operation}`
-      );
+    for (const createdMutation of createdMutations) {
+      this.debug(`Created mutation ${createdMutation.id}`);
 
       eventBus.publish({
-        type: 'transaction_created',
+        type: 'mutation_created',
         userId,
-        transaction: mapTransaction(createdTransaction),
-      });
-
-      await interactionService.setInteraction(
-        userId,
-        createdTransaction.node_id,
-        {
-          attribute: 'lastReceivedTransactionId',
-          value: createdTransaction.id,
-        }
-      );
-    }
-
-    for (const createdUpload of createdUploads) {
-      this.debug(
-        `Created upload ${createdUpload.upload_id} for node ${createdUpload.node_id}`
-      );
-
-      eventBus.publish({
-        type: 'upload_created',
-        userId,
-        upload: mapUpload(createdUpload),
-      });
-    }
-
-    for (const createdDownload of createdDownloads) {
-      this.debug(
-        `Created download ${createdDownload.upload_id} for node ${createdDownload.node_id}`
-      );
-
-      eventBus.publish({
-        type: 'download_created',
-        userId,
-        download: mapDownload(createdDownload),
+        mutationId: createdMutation.id,
       });
     }
   }
@@ -352,7 +293,7 @@ class NodeService {
     const name = model.getName(nodeId, updatedAttributes);
     const text = model.getText(nodeId, updatedAttributes);
 
-    const { updatedNode, createdTransaction } = await workspaceDatabase
+    const { updatedNode, createdMutation } = await workspaceDatabase
       .transaction()
       .execute(async (trx) => {
         const updatedNode = await trx
@@ -368,24 +309,44 @@ class NodeService {
           .where('transaction_id', '=', node.transactionId)
           .executeTakeFirst();
 
-        if (updatedNode) {
-          const createdTransaction = await trx
-            .insertInto('transactions')
-            .returningAll()
-            .values({
-              id: transactionId,
-              node_id: nodeId,
-              root_id: node.rootId,
-              operation: 'update',
-              data: update,
-              created_at: updatedAt,
-              created_by: context.userId,
-              retry_count: 0,
-              status: 'pending',
-            })
-            .executeTakeFirst();
+        if (!updatedNode) {
+          return { updatedNode: undefined };
+        }
+        const createdTransaction = await trx
+          .insertInto('transactions')
+          .returningAll()
+          .values({
+            id: transactionId,
+            node_id: nodeId,
+            root_id: node.rootId,
+            operation: 'update',
+            data: update,
+            created_at: updatedAt,
+            created_by: context.userId,
+            version: 0n,
+          })
+          .executeTakeFirst();
 
-          return { updatedNode, createdTransaction };
+        if (!createdTransaction) {
+          throw new Error('Failed to create transaction');
+        }
+
+        const createdMutation = await trx
+          .insertInto('mutations')
+          .returningAll()
+          .values({
+            id: generateId(IdType.Mutation),
+            node_id: nodeId,
+            type: 'apply_update_transaction',
+            key: `transaction_${createdTransaction.id}`,
+            data: JSON.stringify(mapTransaction(createdTransaction)),
+            created_at: updatedAt,
+            retries: 0,
+          })
+          .executeTakeFirst();
+
+        if (!createdMutation) {
+          throw new Error('Failed to create mutation');
         }
 
         if (name !== undefined) {
@@ -411,8 +372,8 @@ class NodeService {
         }
 
         return {
-          updatedNode: undefined,
-          createdTransaction: undefined,
+          updatedNode,
+          createdMutation,
         };
       });
 
@@ -430,27 +391,16 @@ class NodeService {
       this.debug(`Failed to update node ${nodeId}`);
     }
 
-    if (createdTransaction) {
-      this.debug(
-        `Created transaction ${createdTransaction.id} for node ${nodeId}`
-      );
+    if (createdMutation) {
+      this.debug(`Created mutation ${createdMutation.id} for node ${nodeId}`);
 
       eventBus.publish({
-        type: 'transaction_created',
+        type: 'mutation_created',
         userId,
-        transaction: mapTransaction(createdTransaction),
+        mutationId: createdMutation.id,
       });
-
-      await interactionService.setInteraction(
-        userId,
-        createdTransaction.node_id,
-        {
-          attribute: 'lastReceivedTransactionId',
-          value: createdTransaction.id,
-        }
-      );
     } else {
-      this.debug(`Failed to create transaction for node ${nodeId}`);
+      this.debug(`Failed to create mutation for node ${nodeId}`);
     }
 
     if (updatedNode) {
@@ -486,7 +436,7 @@ class NodeService {
       throw new Error('Insufficient permissions');
     }
 
-    const { deletedNode, createdTransaction } = await workspaceDatabase
+    const { deletedNode, createdMutation } = await workspaceDatabase
       .transaction()
       .execute(async (trx) => {
         const deletedNode = await trx
@@ -496,7 +446,7 @@ class NodeService {
           .executeTakeFirst();
 
         if (!deletedNode) {
-          return { deletedNode: undefined, createdTransaction: undefined };
+          return { deletedNode: undefined };
         }
 
         await trx
@@ -533,12 +483,29 @@ class NodeService {
             data: null,
             created_at: new Date().toISOString(),
             created_by: context.userId,
-            retry_count: 0,
-            status: 'pending',
+            version: 0n,
           })
           .executeTakeFirst();
 
-        return { deletedNode, createdTransaction };
+        if (!createdTransaction) {
+          throw new Error('Failed to create transaction');
+        }
+
+        const createdMutation = await trx
+          .insertInto('mutations')
+          .returningAll()
+          .values({
+            id: generateId(IdType.Mutation),
+            node_id: nodeId,
+            type: 'apply_delete_transaction',
+            key: `transaction_${createdTransaction.id}`,
+            data: JSON.stringify(mapTransaction(createdTransaction)),
+            created_at: new Date().toISOString(),
+            retries: 0,
+          })
+          .executeTakeFirst();
+
+        return { deletedNode, createdMutation };
       });
 
     if (deletedNode) {
@@ -555,18 +522,16 @@ class NodeService {
       this.debug(`Failed to delete node ${nodeId}`);
     }
 
-    if (createdTransaction) {
-      this.debug(
-        `Created transaction ${createdTransaction.id} for node ${nodeId}`
-      );
+    if (createdMutation) {
+      this.debug(`Created mutation ${createdMutation.id} for node ${nodeId}`);
 
       eventBus.publish({
-        type: 'transaction_created',
+        type: 'mutation_created',
         userId,
-        transaction: mapTransaction(createdTransaction),
+        mutationId: createdMutation.id,
       });
     } else {
-      this.debug(`Failed to create transaction for node ${nodeId}`);
+      this.debug(`Failed to create mutation for node ${nodeId}`);
     }
   }
 
@@ -838,13 +803,12 @@ class NodeService {
     const version = BigInt(transaction.version);
     const existingTransaction = await workspaceDatabase
       .selectFrom('transactions')
-      .select(['id', 'status', 'version', 'server_created_at'])
+      .select(['id', 'version', 'server_created_at'])
       .where('id', '=', transaction.id)
       .executeTakeFirst();
 
     if (existingTransaction) {
       if (
-        existingTransaction.status === 'synced' &&
         existingTransaction.version === version &&
         existingTransaction.server_created_at === transaction.serverCreatedAt
       ) {
@@ -857,7 +821,6 @@ class NodeService {
       await workspaceDatabase
         .updateTable('transactions')
         .set({
-          status: 'synced',
           version,
           server_created_at: transaction.serverCreatedAt,
         })
@@ -908,8 +871,6 @@ class NodeService {
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
             created_by: transaction.createdBy,
-            retry_count: 0,
-            status: createdNode ? 'synced' : 'incomplete',
             version,
             server_created_at: transaction.serverCreatedAt,
           })
@@ -965,13 +926,12 @@ class NodeService {
     const version = BigInt(transaction.version);
     const existingTransaction = await workspaceDatabase
       .selectFrom('transactions')
-      .select(['id', 'status', 'version', 'server_created_at'])
+      .select(['id', 'version', 'server_created_at'])
       .where('id', '=', transaction.id)
       .executeTakeFirst();
 
     if (existingTransaction) {
       if (
-        existingTransaction.status === 'synced' &&
         existingTransaction.version === version &&
         existingTransaction.server_created_at === transaction.serverCreatedAt
       ) {
@@ -984,7 +944,6 @@ class NodeService {
       await workspaceDatabase
         .updateTable('transactions')
         .set({
-          status: 'synced',
           version,
           server_created_at: transaction.serverCreatedAt,
         })
@@ -1048,8 +1007,6 @@ class NodeService {
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
             created_by: transaction.createdBy,
-            retry_count: 0,
-            status: updatedNode ? 'synced' : 'incomplete',
             version,
             server_created_at: transaction.serverCreatedAt,
           })
@@ -1227,16 +1184,6 @@ class NodeService {
 
       await tx
         .deleteFrom('interactions')
-        .where('node_id', '=', transaction.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('uploads')
-        .where('node_id', '=', transaction.nodeId)
-        .execute();
-
-      await tx
-        .deleteFrom('downloads')
         .where('node_id', '=', transaction.nodeId)
         .execute();
     });

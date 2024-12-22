@@ -2,7 +2,6 @@ import { ChannelAttributes, channelModel } from './channel';
 import { ChatAttributes, chatModel } from './chat';
 import { NodeModel } from './core';
 import { DatabaseAttributes, databaseModel } from './database';
-import { FileAttributes, fileModel } from './file';
 import { FolderAttributes, folderModel } from './folder';
 import { MessageAttributes, messageModel } from './message';
 import { PageAttributes, pageModel } from './page';
@@ -44,11 +43,6 @@ export type DatabaseNode = NodeBase & {
   attributes: DatabaseAttributes;
 };
 
-export type FileNode = NodeBase & {
-  type: 'file';
-  attributes: FileAttributes;
-};
-
 export type FolderNode = NodeBase & {
   type: 'folder';
   attributes: FolderAttributes;
@@ -78,7 +72,6 @@ export type NodeType =
   | 'channel'
   | 'chat'
   | 'database'
-  | 'file'
   | 'folder'
   | 'message'
   | 'page'
@@ -90,7 +83,6 @@ export type NodeAttributes =
   | DatabaseAttributes
   | ChannelAttributes
   | ChatAttributes
-  | FileAttributes
   | FolderAttributes
   | MessageAttributes
   | PageAttributes
@@ -100,7 +92,6 @@ export type Node =
   | ChannelNode
   | ChatNode
   | DatabaseNode
-  | FileNode
   | FolderNode
   | MessageNode
   | PageNode
@@ -114,7 +105,6 @@ class Registry {
     this.models.set('channel', channelModel);
     this.models.set('chat', chatModel);
     this.models.set('database', databaseModel);
-    this.models.set('file', fileModel);
     this.models.set('folder', folderModel);
     this.models.set('message', messageModel);
     this.models.set('page', pageModel);

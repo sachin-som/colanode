@@ -1,11 +1,11 @@
-import { LocalTransaction, Node } from '@colanode/core';
+import { Node } from '@colanode/core';
 
 import { Account } from '@/shared/types/accounts';
 import { Interaction } from '@/shared/types/interactions';
-import { Download, Upload } from '@/shared/types/nodes';
 import { Server } from '@/shared/types/servers';
 import { Workspace } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
+import { File, FileState } from '@/shared/types/files';
 
 export type UserCreatedEvent = {
   type: 'user_created';
@@ -41,6 +41,42 @@ export type NodeDeletedEvent = {
   type: 'node_deleted';
   userId: string;
   node: Node;
+};
+
+export type FileCreatedEvent = {
+  type: 'file_created';
+  userId: string;
+  file: File;
+};
+
+export type FileUpdatedEvent = {
+  type: 'file_updated';
+  userId: string;
+  file: File;
+};
+
+export type FileDeletedEvent = {
+  type: 'file_deleted';
+  userId: string;
+  file: File;
+};
+
+export type FileStateCreatedEvent = {
+  type: 'file_state_created';
+  userId: string;
+  fileState: FileState;
+};
+
+export type FileStateUpdatedEvent = {
+  type: 'file_state_updated';
+  userId: string;
+  fileState: FileState;
+};
+
+export type FileStateDeletedEvent = {
+  type: 'file_state_deleted';
+  userId: string;
+  fileState: FileState;
 };
 
 export type AccountCreatedEvent = {
@@ -83,42 +119,6 @@ export type ServerUpdatedEvent = {
   server: Server;
 };
 
-export type DownloadCreatedEvent = {
-  type: 'download_created';
-  userId: string;
-  download: Download;
-};
-
-export type DownloadUpdatedEvent = {
-  type: 'download_updated';
-  userId: string;
-  download: Download;
-};
-
-export type DownloadDeletedEvent = {
-  type: 'download_deleted';
-  userId: string;
-  download: Download;
-};
-
-export type UploadCreatedEvent = {
-  type: 'upload_created';
-  userId: string;
-  upload: Upload;
-};
-
-export type UploadUpdatedEvent = {
-  type: 'upload_updated';
-  userId: string;
-  upload: Upload;
-};
-
-export type UploadDeletedEvent = {
-  type: 'upload_deleted';
-  userId: string;
-  upload: Upload;
-};
-
 export type QueryResultUpdatedEvent = {
   type: 'query_result_updated';
   id: string;
@@ -129,10 +129,10 @@ export type RadarDataUpdatedEvent = {
   type: 'radar_data_updated';
 };
 
-export type TransactionCreatedEvent = {
-  type: 'transaction_created';
+export type MutationCreatedEvent = {
+  type: 'mutation_created';
   userId: string;
-  transaction: LocalTransaction;
+  mutationId: string;
 };
 
 export type CollaborationCreatedEvent = {
@@ -185,15 +185,15 @@ export type Event =
   | WorkspaceDeletedEvent
   | ServerCreatedEvent
   | ServerUpdatedEvent
-  | DownloadCreatedEvent
-  | DownloadUpdatedEvent
-  | DownloadDeletedEvent
-  | UploadCreatedEvent
-  | UploadUpdatedEvent
-  | UploadDeletedEvent
+  | FileCreatedEvent
+  | FileUpdatedEvent
+  | FileDeletedEvent
+  | FileStateCreatedEvent
+  | FileStateUpdatedEvent
+  | FileStateDeletedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
-  | TransactionCreatedEvent
+  | MutationCreatedEvent
   | ServerAvailabilityChangedEvent
   | SocketConnectionOpenedEvent
   | CollaborationCreatedEvent

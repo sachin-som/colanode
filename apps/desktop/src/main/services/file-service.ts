@@ -3,7 +3,7 @@ import {
   CreateDownloadOutput,
   CreateUploadOutput,
   extractFileType,
-  FileAttributes,
+  ServerFile,
 } from '@colanode/core';
 import axios from 'axios';
 import mime from 'mime-types';
@@ -18,6 +18,8 @@ import { serverService } from '@/main/services/server-service';
 import {
   fetchWorkspaceCredentials,
   getWorkspaceFilesDirectoryPath,
+  mapFile,
+  mapFileState,
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
@@ -54,7 +56,6 @@ class FileService {
   public copyFileToWorkspace(
     filePath: string,
     fileId: string,
-    uploadId: string,
     fileExtension: string,
     userId: string
   ): void {
@@ -66,7 +67,7 @@ class FileService {
 
     const destinationFilePath = path.join(
       filesDir,
-      `${fileId}_${uploadId}${fileExtension}`
+      `${fileId}${fileExtension}`
     );
 
     this.debug(
@@ -123,9 +124,9 @@ class FileService {
       await databaseService.getWorkspaceDatabase(userId);
 
     const uploads = await workspaceDatabase
-      .selectFrom('uploads')
+      .selectFrom('file_states')
       .selectAll()
-      .where('progress', '=', 0)
+      .where('upload_status', '=', 'pending')
       .execute();
 
     if (uploads.length === 0) {
@@ -140,54 +141,40 @@ class FileService {
 
     const filesDir = getWorkspaceFilesDirectoryPath(userId);
     for (const upload of uploads) {
-      if (upload.retry_count >= 5) {
+      if (upload.upload_retries >= 5) {
         await workspaceDatabase
-          .deleteFrom('uploads')
-          .where('node_id', '=', upload.node_id)
+          .updateTable('file_states')
+          .set({
+            upload_status: 'failed',
+            updated_at: new Date().toISOString(),
+          })
+          .where('file_id', '=', upload.file_id)
           .execute();
 
         continue;
       }
 
       const file = await workspaceDatabase
-        .selectFrom('nodes')
+        .selectFrom('files')
         .selectAll()
-        .where('id', '=', upload.node_id)
+        .where('id', '=', upload.file_id)
         .executeTakeFirst();
 
       if (!file) {
         await workspaceDatabase
-          .deleteFrom('uploads')
-          .where('node_id', '=', upload.node_id)
+          .deleteFrom('file_states')
+          .where('file_id', '=', upload.file_id)
           .execute();
 
         continue;
       }
 
-      const transactions = await workspaceDatabase
-        .selectFrom('transactions')
-        .selectAll()
-        .where('node_id', '=', upload.node_id)
-        .where('status', '=', 'pending')
-        .execute();
-
-      if (transactions.length > 0) {
-        this.debug(
-          `Transactions found for node ${upload.node_id}, skipping upload until transactions are completed`
-        );
-        continue;
-      }
-
-      const attributes: FileAttributes = JSON.parse(file.attributes);
-      const filePath = path.join(
-        filesDir,
-        `${upload.node_id}_${upload.upload_id}${attributes.extension}`
-      );
+      const filePath = path.join(filesDir, `${file.id}${file.extension}`);
 
       if (!fs.existsSync(filePath)) {
         await workspaceDatabase
-          .deleteFrom('uploads')
-          .where('node_id', '=', upload.node_id)
+          .deleteFrom('file_states')
+          .where('file_id', '=', file.id)
           .execute();
 
         continue;
@@ -199,10 +186,9 @@ class FileService {
 
       try {
         const { data } = await httpClient.post<CreateUploadOutput>(
-          `/v1/workspaces/${credentials.workspaceId}/uploads`,
+          `/v1/workspaces/${credentials.workspaceId}/files`,
           {
             fileId: file.id,
-            uploadId: upload.upload_id,
           },
           {
             domain: credentials.serverDomain,
@@ -214,13 +200,13 @@ class FileService {
         const fileStream = fs.createReadStream(filePath);
         await axios.put(presignedUrl, fileStream, {
           headers: {
-            'Content-Type': attributes.mimeType,
-            'Content-Length': attributes.size,
+            'Content-Type': file.mime_type,
+            'Content-Length': file.size,
           },
         });
 
         const { status } = await httpClient.put<CompleteUploadOutput>(
-          `/v1/workspaces/${credentials.workspaceId}/uploads/${data.uploadId}`,
+          `/v1/workspaces/${credentials.workspaceId}/files/${file.id}`,
           {},
           {
             domain: credentials.serverDomain,
@@ -233,15 +219,19 @@ class FileService {
         }
 
         await workspaceDatabase
-          .deleteFrom('uploads')
-          .where('node_id', '=', upload.node_id)
+          .updateTable('file_states')
+          .set({
+            upload_status: 'completed',
+            upload_progress: 100,
+            updated_at: new Date().toISOString(),
+          })
+          .where('file_id', '=', file.id)
           .execute();
-      } catch (error) {
-        console.log('error', error);
+      } catch {
         await workspaceDatabase
-          .updateTable('uploads')
-          .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
-          .where('node_id', '=', upload.node_id)
+          .updateTable('file_states')
+          .set((eb) => ({ upload_retries: eb('upload_retries', '+', 1) }))
+          .where('file_id', '=', file.id)
           .execute();
       }
     }
@@ -252,9 +242,9 @@ class FileService {
       await databaseService.getWorkspaceDatabase(userId);
 
     const downloads = await workspaceDatabase
-      .selectFrom('downloads')
+      .selectFrom('file_states')
       .selectAll()
-      .where('progress', '=', 0)
+      .where('download_status', '=', 'pending')
       .execute();
 
     if (downloads.length === 0) {
@@ -274,60 +264,53 @@ class FileService {
 
     for (const download of downloads) {
       const file = await workspaceDatabase
-        .selectFrom('nodes')
+        .selectFrom('files')
         .selectAll()
-        .where('id', '=', download.node_id)
+        .where('id', '=', download.file_id)
         .executeTakeFirst();
 
       if (!file) {
-        await workspaceDatabase
-          .deleteFrom('downloads')
-          .where('node_id', '=', download.node_id)
-          .execute();
+        const deletedFileState = await workspaceDatabase
+          .deleteFrom('file_states')
+          .returningAll()
+          .where('file_id', '=', download.file_id)
+          .executeTakeFirst();
+
+        if (!deletedFileState) {
+          continue;
+        }
 
         eventBus.publish({
-          type: 'download_deleted',
+          type: 'file_state_deleted',
           userId,
-          download: {
-            nodeId: download.node_id,
-            uploadId: download.upload_id,
-            createdAt: download.created_at,
-            updatedAt: download.updated_at,
-            progress: download.progress,
-            retryCount: download.retry_count,
-          },
+          fileState: mapFileState(deletedFileState),
         });
 
         continue;
       }
 
-      const attributes: FileAttributes = JSON.parse(file.attributes);
-      const filePath = path.join(
-        filesDir,
-        `${download.node_id}_${download.upload_id}${attributes.extension}`
-      );
+      const filePath = path.join(filesDir, `${file.id}${file.extension}`);
 
       if (fs.existsSync(filePath)) {
-        await workspaceDatabase
-          .updateTable('downloads')
+        const updatedFileState = await workspaceDatabase
+          .updateTable('file_states')
+          .returningAll()
           .set({
-            progress: 100,
-            completed_at: new Date().toISOString(),
+            download_status: 'completed',
+            download_progress: 100,
+            updated_at: new Date().toISOString(),
           })
-          .where('node_id', '=', download.node_id)
-          .execute();
+          .where('file_id', '=', file.id)
+          .executeTakeFirst();
+
+        if (!updatedFileState) {
+          continue;
+        }
 
         eventBus.publish({
-          type: 'download_updated',
+          type: 'file_state_updated',
           userId,
-          download: {
-            nodeId: download.node_id,
-            uploadId: download.upload_id,
-            createdAt: download.created_at,
-            updatedAt: download.updated_at,
-            progress: 100,
-            retryCount: download.retry_count,
-          },
+          fileState: mapFileState(updatedFileState),
         });
 
         continue;
@@ -339,7 +322,7 @@ class FileService {
 
       try {
         const { data } = await httpClient.get<CreateDownloadOutput>(
-          `/v1/workspaces/${credentials.workspaceId}/downloads/${download.node_id}`,
+          `/v1/workspaces/${credentials.workspaceId}/downloads/${file.id}`,
           {
             domain: credentials.serverDomain,
             token: credentials.token,
@@ -354,44 +337,42 @@ class FileService {
             response.data.pipe(fileStream);
           });
 
-        await workspaceDatabase
-          .updateTable('downloads')
-          .set({ progress: 100 })
-          .where('node_id', '=', download.node_id)
-          .execute();
+        const updatedFileState = await workspaceDatabase
+          .updateTable('file_states')
+          .returningAll()
+          .set({
+            download_status: 'completed',
+            download_progress: 100,
+            updated_at: new Date().toISOString(),
+          })
+          .where('file_id', '=', file.id)
+          .executeTakeFirst();
+
+        if (!updatedFileState) {
+          continue;
+        }
 
         eventBus.publish({
-          type: 'download_updated',
+          type: 'file_state_updated',
           userId,
-          download: {
-            nodeId: download.node_id,
-            uploadId: download.upload_id,
-            createdAt: download.created_at,
-            updatedAt: download.updated_at,
-            progress: 100,
-            retryCount: download.retry_count,
-          },
+          fileState: mapFileState(updatedFileState),
         });
-      } catch (error) {
-        console.log('error', error);
+      } catch {
+        const updatedFileState = await workspaceDatabase
+          .updateTable('file_states')
+          .returningAll()
+          .set((eb) => ({ download_retries: eb('download_retries', '+', 1) }))
+          .where('file_id', '=', file.id)
+          .executeTakeFirst();
 
-        await workspaceDatabase
-          .updateTable('downloads')
-          .set((eb) => ({ retry_count: eb('retry_count', '+', 1) }))
-          .where('node_id', '=', download.node_id)
-          .execute();
+        if (!updatedFileState) {
+          continue;
+        }
 
         eventBus.publish({
-          type: 'download_updated',
+          type: 'file_state_updated',
           userId,
-          download: {
-            nodeId: download.node_id,
-            uploadId: download.upload_id,
-            createdAt: download.created_at,
-            updatedAt: download.updated_at,
-            progress: download.progress,
-            retryCount: download.retry_count + 1,
-          },
+          fileState: mapFileState(updatedFileState),
         });
       }
     }
@@ -418,22 +399,124 @@ class FileService {
       }
 
       const fileIds = Object.keys(fileIdMap);
-      const downloads = await workspaceDatabase
-        .selectFrom('downloads')
-        .select(['node_id'])
-        .where('node_id', 'in', fileIds)
+      const fileStates = await workspaceDatabase
+        .selectFrom('file_states')
+        .select(['file_id'])
+        .where('file_id', 'in', fileIds)
         .execute();
 
       for (const fileId of fileIds) {
-        if (!downloads.some((d) => d.node_id === fileId)) {
+        if (!fileStates.some((f) => f.file_id === fileId)) {
           const filePath = path.join(
             getWorkspaceFilesDirectoryPath(userId),
             fileIdMap[fileId]!
           );
           fs.rmSync(filePath, { force: true });
+
+          const deletedFileState = await workspaceDatabase
+            .deleteFrom('file_states')
+            .returningAll()
+            .where('file_id', '=', fileId)
+            .executeTakeFirst();
+
+          if (!deletedFileState) {
+            continue;
+          }
+
+          eventBus.publish({
+            type: 'file_state_deleted',
+            userId,
+            fileState: mapFileState(deletedFileState),
+          });
         }
       }
     }
+  }
+
+  public async syncServerFile(userId: string, file: ServerFile): Promise<void> {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const existingFile = await workspaceDatabase
+      .selectFrom('files')
+      .selectAll()
+      .where('id', '=', file.id)
+      .executeTakeFirst();
+
+    const version = BigInt(file.version);
+    if (existingFile) {
+      if (existingFile.version === version) {
+        this.debug(`Server file ${file.id} is already synced`);
+        return;
+      }
+
+      const updatedFile = await workspaceDatabase
+        .updateTable('files')
+        .returningAll()
+        .set({
+          name: file.name,
+          original_name: file.originalName,
+          mime_type: file.mimeType,
+          extension: file.extension,
+          size: file.size,
+          parent_id: file.parentId,
+          root_id: file.rootId,
+          status: file.status,
+          type: file.type,
+          updated_at: file.updatedAt,
+          updated_by: file.updatedBy,
+          version,
+        })
+        .where('id', '=', file.id)
+        .executeTakeFirst();
+
+      if (!updatedFile) {
+        return;
+      }
+
+      eventBus.publish({
+        type: 'file_updated',
+        userId,
+        file: mapFile(updatedFile),
+      });
+
+      this.debug(`Server file ${file.id} has been synced`);
+      return;
+    }
+
+    const createdFile = await workspaceDatabase
+      .insertInto('files')
+      .returningAll()
+      .values({
+        id: file.id,
+        version,
+        type: file.type,
+        parent_id: file.parentId,
+        root_id: file.rootId,
+        name: file.name,
+        original_name: file.originalName,
+        mime_type: file.mimeType,
+        extension: file.extension,
+        size: file.size,
+        created_at: file.createdAt,
+        created_by: file.createdBy,
+        updated_at: file.updatedAt,
+        updated_by: file.updatedBy,
+        status: file.status,
+      })
+      .executeTakeFirst();
+
+    if (!createdFile) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'file_created',
+      userId,
+      file: mapFile(createdFile),
+    });
+
+    this.debug(`Server file ${file.id} has been synced`);
   }
 }
 

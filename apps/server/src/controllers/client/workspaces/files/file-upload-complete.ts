@@ -1,34 +1,23 @@
 import { Request, Response } from 'express';
-import { extractFileType, UploadMetadata } from '@colanode/core';
 import { HeadObjectCommand } from '@aws-sdk/client-s3';
+import { FileStatus } from '@colanode/core';
 
 import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
-import { redis } from '@/data/redis';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
-import { nodeService } from '@/services/node-service';
+import { eventBus } from '@/lib/event-bus';
 
 export const fileUploadCompleteHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const workspaceId = req.params.workspaceId as string;
-  const uploadId = req.params.uploadId as string;
+  const fileId = req.params.fileId as string;
 
-  const metadataJson = await redis.get(uploadId);
-  if (!metadataJson) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Upload not found.',
-    });
-    return;
-  }
-
-  const metadata: UploadMetadata = JSON.parse(metadataJson);
   const file = await database
-    .selectFrom('nodes')
+    .selectFrom('files')
     .selectAll()
-    .where('id', '=', metadata.fileId)
+    .where('id', '=', fileId)
     .executeTakeFirst();
 
   if (!file) {
@@ -39,23 +28,31 @@ export const fileUploadCompleteHandler = async (
     return;
   }
 
-  if (file.attributes.type !== 'file') {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'File not found.',
+  if (file.created_by !== res.locals.user.id) {
+    res.status(403).json({
+      code: ApiError.Forbidden,
+      message: 'Forbidden.',
     });
     return;
   }
 
-  if (file.attributes.size !== metadata.size) {
+  if (file.workspace_id !== workspaceId) {
     res.status(400).json({
       code: ApiError.BadRequest,
-      message: 'Size mismatch.',
+      message: 'File does not belong to this workspace.',
     });
     return;
   }
 
-  const path = metadata.path;
+  if (file.status !== FileStatus.Pending) {
+    res.status(400).json({
+      code: ApiError.BadRequest,
+      message: 'File is not pending.',
+    });
+    return;
+  }
+
+  const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
   // check if the file exists in the bucket
   const command = new HeadObjectCommand({
     Bucket: BUCKET_NAMES.FILES,
@@ -66,7 +63,7 @@ export const fileUploadCompleteHandler = async (
     const headObject = await filesStorage.send(command);
 
     // Verify file size matches expected size
-    if (headObject.ContentLength !== metadata.size) {
+    if (headObject.ContentLength !== file.size) {
       res.status(400).json({
         code: ApiError.BadRequest,
         message: 'Uploaded file size does not match expected size',
@@ -75,7 +72,7 @@ export const fileUploadCompleteHandler = async (
     }
 
     // Verify mime type matches expected type
-    if (headObject.ContentType !== metadata.mimeType) {
+    if (headObject.ContentType !== file.mime_type) {
       res.status(400).json({
         code: ApiError.BadRequest,
         message: 'Uploaded file type does not match expected type',
@@ -90,33 +87,31 @@ export const fileUploadCompleteHandler = async (
     return;
   }
 
-  await database
-    .insertInto('uploads')
-    .values({
-      node_id: file.id,
-      upload_id: uploadId,
-      workspace_id: workspaceId,
-      path: metadata.path,
-      mime_type: metadata.mimeType,
-      size: metadata.size,
-      type: extractFileType(metadata.mimeType),
-      created_by: res.locals.user.id,
-      created_at: new Date(metadata.createdAt),
-      completed_at: new Date(),
+  const updatedFile = await database
+    .updateTable('files')
+    .returningAll()
+    .set({
+      status: FileStatus.Ready,
+      updated_by: res.locals.user.id,
+      updated_at: new Date(),
     })
-    .execute();
+    .where('id', '=', fileId)
+    .executeTakeFirst();
 
-  await nodeService.updateNode({
-    nodeId: file.id,
-    userId: res.locals.user.id,
-    workspaceId: workspaceId,
-    updater: (attributes) => ({
-      ...attributes,
-      uploadStatus: 'completed',
-      uploadId: metadata.uploadId,
-    }),
+  if (!updatedFile) {
+    res.status(500).json({
+      code: ApiError.InternalServerError,
+      message: 'Failed to update file status.',
+    });
+    return;
+  }
+
+  eventBus.publish({
+    type: 'file_updated',
+    fileId: updatedFile.id,
+    rootId: updatedFile.root_id,
+    workspaceId: updatedFile.workspace_id,
   });
 
-  await redis.del(uploadId);
   res.status(200).json({ success: true });
 };

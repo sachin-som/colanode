@@ -1,4 +1,4 @@
-import { FileNode, formatDate } from '@colanode/core';
+import { formatDate } from '@colanode/core';
 import React from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -6,9 +6,10 @@ import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { formatBytes } from '@/shared/lib/files';
+import { FileWithState } from '@/shared/types/files';
 
 interface FileSidebarProps {
-  file: FileNode;
+  file: FileWithState;
 }
 
 const FileMeta = ({ title, value }: { title: string; value: string }) => {
@@ -39,16 +40,16 @@ export const FileSidebar = ({ file }: FileSidebarProps) => {
         />
         <div
           className="line-clamp-3 break-words text-base font-medium"
-          title={file.attributes.name}
+          title={file.name}
         >
-          {file.attributes.name}
+          {file.name}
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <FileMeta title="Name" value={file.attributes.name} />
-        <FileMeta title="Type" value={file.attributes.mimeType} />
-        <FileMeta title="Size" value={formatBytes(file.attributes.size)} />
+        <FileMeta title="Name" value={file.name} />
+        <FileMeta title="Type" value={file.mimeType} />
+        <FileMeta title="Size" value={formatBytes(file.size)} />
         <FileMeta title="Created at" value={formatDate(file.createdAt)} />
 
         {user && (

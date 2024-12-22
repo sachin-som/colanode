@@ -10,12 +10,12 @@ export const FileBlock = ({ id }: FileBlockProps) => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({
-    type: 'node_get',
-    nodeId: id,
+    type: 'file_get',
+    id,
     userId: workspace.userId,
   });
 
-  if (!data || data.type !== 'file') {
+  if (!data) {
     return null;
   }
 

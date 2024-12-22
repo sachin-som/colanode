@@ -1,36 +1,36 @@
 import { databaseService } from '@/main/data/database-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapFile } from '@/main/utils';
-import { FileListQueryInput } from '@/shared/queries/files/file-list';
+import { FileGetQueryInput } from '@/shared/queries/files/file-get';
 import { Event } from '@/shared/types/events';
 import { FileWithState } from '@/shared/types/files';
 
-export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
+export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   public async handleQuery(
-    input: FileListQueryInput
-  ): Promise<FileWithState[]> {
-    return await this.fetchFiles(input);
+    input: FileGetQueryInput
+  ): Promise<FileWithState | null> {
+    return await this.fetchFile(input);
   }
 
   public async checkForChanges(
     event: Event,
-    input: FileListQueryInput,
-    output: FileWithState[]
-  ): Promise<ChangeCheckResult<FileListQueryInput>> {
+    input: FileGetQueryInput,
+    output: FileWithState | null
+  ): Promise<ChangeCheckResult<FileGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
       event.workspace.userId === input.userId
     ) {
       return {
         hasChanges: true,
-        result: [],
+        result: null,
       };
     }
 
     if (
       event.type === 'file_created' &&
       event.userId === input.userId &&
-      event.file.parentId === input.parentId
+      event.file.id === input.id
     ) {
       const output = await this.handleQuery(input);
       return {
@@ -42,44 +42,29 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
     if (
       event.type === 'file_updated' &&
       event.userId === input.userId &&
-      event.file.parentId === input.parentId
+      event.file.id === input.id
     ) {
-      const file = output.find((file) => file.id === event.file.id);
-      if (file) {
-        const newResult = output.map((file) => {
-          if (file.id === event.file.id) {
-            return {
-              ...event.file,
-              downloadProgress: file.downloadProgress,
-              downloadStatus: file.downloadStatus,
-              uploadProgress: file.uploadProgress,
-              uploadStatus: file.uploadStatus,
-            };
-          }
-
-          return file;
-        });
-
-        return {
-          hasChanges: true,
-          result: newResult,
-        };
-      }
+      return {
+        hasChanges: true,
+        result: {
+          ...event.file,
+          downloadProgress: output?.downloadProgress ?? 0,
+          downloadStatus: output?.downloadStatus ?? 'none',
+          uploadProgress: output?.uploadProgress ?? 0,
+          uploadStatus: output?.uploadStatus ?? 'none',
+        },
+      };
     }
 
     if (
       event.type === 'file_deleted' &&
       event.userId === input.userId &&
-      event.file.parentId === input.parentId
+      event.file.id === input.id
     ) {
-      const file = output.find((file) => file.id === event.file.id);
-      if (file) {
-        const output = await this.handleQuery(input);
-        return {
-          hasChanges: true,
-          result: output,
-        };
-      }
+      return {
+        hasChanges: true,
+        result: null,
+      };
     }
 
     return {
@@ -87,15 +72,14 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
     };
   }
 
-  private async fetchFiles(
-    input: FileListQueryInput
-  ): Promise<FileWithState[]> {
+  private async fetchFile(
+    input: FileGetQueryInput
+  ): Promise<FileWithState | null> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
-    const offset = (input.page - 1) * input.count;
-    const files = await workspaceDatabase
+    const file = await workspaceDatabase
       .selectFrom('files as f')
       .leftJoin('file_states as fs', 'f.id', 'fs.file_id')
       .select([
@@ -119,20 +103,21 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
         'fs.upload_status',
         'fs.upload_progress',
       ])
-      .where('f.parent_id', '=', input.parentId)
-      .orderBy('f.id', 'asc')
-      .limit(input.count)
-      .offset(offset)
-      .execute();
+      .where('f.id', '=', input.id)
+      .executeTakeFirst();
 
-    const filesWithState: FileWithState[] = files.map((file) => ({
+    if (!file) {
+      return null;
+    }
+
+    const fileWithState: FileWithState = {
       ...mapFile(file),
       downloadProgress: file.download_progress ?? 0,
       downloadStatus: file.download_status ?? 'none',
       uploadProgress: file.upload_progress ?? 0,
       uploadStatus: file.upload_status ?? 'none',
-    }));
+    };
 
-    return filesWithState;
+    return fileWithState;
   }
 }

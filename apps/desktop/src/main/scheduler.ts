@@ -8,8 +8,8 @@ import { JobHandler, JobInput, JobMap } from '@/main/jobs';
 import { SyncServersJobHandler } from '@/main/jobs/sync-servers';
 import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
 import { InitSyncConsumersJobHandler } from '@/main/jobs/init-sync-consumers';
-import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
-import { SyncPendingTransactionsJobHandler } from '@/main/jobs/sync-pending-transactions';
+// import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
+import { SyncPendingMutationsJobHandler } from '@/main/jobs/sync-pending-mutations';
 import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-interactions';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
@@ -27,8 +27,8 @@ export const jobHandlerMap: JobHandlerMap = {
   sync_servers: new SyncServersJobHandler(),
   sync_account: new SyncAccountJobHandler(),
   init_sync_consumers: new InitSyncConsumersJobHandler(),
-  revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
-  sync_pending_transactions: new SyncPendingTransactionsJobHandler(),
+  // revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
+  sync_pending_mutations: new SyncPendingMutationsJobHandler(),
   sync_pending_interactions: new SyncPendingInteractionsJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
@@ -228,7 +228,7 @@ class Scheduler {
     }
 
     this.schedule({
-      type: 'sync_pending_transactions',
+      type: 'sync_pending_mutations',
       userId,
     });
 
@@ -237,10 +237,10 @@ class Scheduler {
       userId,
     });
 
-    this.schedule({
-      type: 'revert_invalid_transactions',
-      userId,
-    });
+    // this.schedule({
+    //   type: 'revert_invalid_transactions',
+    //   userId,
+    // });
 
     this.schedule({
       type: 'init_sync_consumers',
@@ -287,7 +287,7 @@ class Scheduler {
     }
 
     if (
-      state.input.type === 'sync_pending_transactions' &&
+      state.input.type === 'sync_pending_mutations' &&
       state.input.userId === userId
     ) {
       return true;
@@ -300,12 +300,12 @@ class Scheduler {
       return true;
     }
 
-    if (
-      state.input.type === 'revert_invalid_transactions' &&
-      state.input.userId === userId
-    ) {
-      return true;
-    }
+    // if (
+    //   state.input.type === 'revert_invalid_transactions' &&
+    //   state.input.userId === userId
+    // ) {
+    //   return true;
+    // }
 
     if (state.input.type === 'upload_files' && state.input.userId === userId) {
       return true;
@@ -353,9 +353,9 @@ class Scheduler {
       this.deleteWorkspaceJobs(event.workspace.userId);
     } else if (event.type === 'socket_connection_opened') {
       this.scheduleAccountWorkspacesJobs(event.accountId);
-    } else if (event.type === 'transaction_created') {
+    } else if (event.type === 'mutation_created') {
       this.trigger({
-        type: 'sync_pending_transactions',
+        type: 'sync_pending_mutations',
         userId: event.userId,
       });
     } else if (event.type === 'interaction_event_created') {
@@ -363,7 +363,7 @@ class Scheduler {
         type: 'sync_pending_interactions',
         userId: event.userId,
       });
-    } else if (event.type === 'node_created' && event.node.type === 'file') {
+    } else if (event.type === 'file_state_created') {
       this.trigger({
         type: 'upload_files',
         userId: event.userId,
@@ -372,28 +372,9 @@ class Scheduler {
         type: 'download_files',
         userId: event.userId,
       });
-    } else if (event.type === 'node_updated' && event.node.type === 'file') {
-      this.trigger({
-        type: 'upload_files',
-        userId: event.userId,
-      });
-      this.trigger({
-        type: 'download_files',
-        userId: event.userId,
-      });
-    } else if (event.type === 'node_deleted' && event.node.type === 'file') {
+    } else if (event.type === 'file_deleted') {
       this.trigger({
         type: 'clean_deleted_files',
-        userId: event.userId,
-      });
-    } else if (event.type === 'download_created') {
-      this.trigger({
-        type: 'download_files',
-        userId: event.userId,
-      });
-    } else if (event.type === 'upload_created') {
-      this.trigger({
-        type: 'upload_files',
         userId: event.userId,
       });
     }

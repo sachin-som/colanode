@@ -1,4 +1,4 @@
-import { LocalTransaction, Node } from '@colanode/core';
+import { LocalTransaction, Mutation, Node } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 import {
   DeleteResult,
@@ -19,19 +19,20 @@ import {
   SelectWorkspace,
 } from '@/main/data/app/schema';
 import {
-  SelectDownload,
+  SelectFile,
+  SelectFileState,
   SelectInteraction,
+  SelectMutation,
   SelectNode,
   SelectTransaction,
-  SelectUpload,
   SelectUser,
   WorkspaceDatabaseSchema,
 } from '@/main/data/workspace/schema';
 import { Account } from '@/shared/types/accounts';
 import { Interaction } from '@/shared/types/interactions';
-import { Download, Upload } from '@/shared/types/nodes';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
+import { File, FileState } from '@/shared/types/files';
 import { Workspace, WorkspaceCredentials } from '@/shared/types/workspaces';
 
 export const appPath = app.getPath('userData');
@@ -230,6 +231,46 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
   throw new Error('Invalid transaction type');
 };
 
+export const mapMutation = (row: SelectMutation): Mutation => {
+  if (row.type === 'apply_create_transaction') {
+    return {
+      id: row.id,
+      type: 'apply_create_transaction',
+      data: JSON.parse(row.data),
+      createdAt: row.created_at,
+    };
+  }
+
+  if (row.type === 'apply_update_transaction') {
+    return {
+      id: row.id,
+      type: 'apply_update_transaction',
+      data: JSON.parse(row.data),
+      createdAt: row.created_at,
+    };
+  }
+
+  if (row.type === 'apply_delete_transaction') {
+    return {
+      id: row.id,
+      type: 'apply_delete_transaction',
+      data: JSON.parse(row.data),
+      createdAt: row.created_at,
+    };
+  }
+
+  if (row.type === 'create_file') {
+    return {
+      id: row.id,
+      type: 'create_file',
+      data: JSON.parse(row.data),
+      createdAt: row.created_at,
+    };
+  }
+
+  throw new Error('Invalid mutation type');
+};
+
 export const mapServer = (row: SelectServer): Server => {
   return {
     domain: row.domain,
@@ -242,24 +283,37 @@ export const mapServer = (row: SelectServer): Server => {
   };
 };
 
-export const mapUpload = (row: SelectUpload): Upload => {
+export const mapFile = (row: SelectFile): File => {
   return {
-    nodeId: row.node_id,
+    id: row.id,
+    type: row.type,
+    parentId: row.parent_id,
+    rootId: row.root_id,
+    name: row.name,
+    originalName: row.original_name,
+    extension: row.extension,
+    mimeType: row.mime_type,
+    size: row.size,
     createdAt: row.created_at,
+    createdBy: row.created_by,
     updatedAt: row.updated_at,
-    progress: row.progress,
-    retryCount: row.retry_count,
+    updatedBy: row.updated_by,
+    status: row.status,
+    version: row.version,
   };
 };
 
-export const mapDownload = (row: SelectDownload): Download => {
+export const mapFileState = (row: SelectFileState): FileState => {
   return {
-    nodeId: row.node_id,
-    uploadId: row.upload_id,
-    progress: row.progress,
+    fileId: row.file_id,
+    downloadProgress: row.download_progress,
+    downloadStatus: row.download_status,
+    downloadRetries: row.download_retries,
+    uploadProgress: row.upload_progress,
+    uploadStatus: row.upload_status,
+    uploadRetries: row.upload_retries,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    retryCount: row.retry_count,
   };
 };
 

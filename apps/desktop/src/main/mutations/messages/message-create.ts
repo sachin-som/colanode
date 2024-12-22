@@ -1,8 +1,7 @@
 import {
   Block,
   EditorNodeTypes,
-  extractFileType,
-  FileAttributes,
+  FileStatus,
   generateId,
   IdType,
   MessageAttributes,
@@ -18,6 +17,10 @@ import {
   MessageCreateMutationOutput,
 } from '@/shared/mutations/messages/message-create';
 import { MutationError } from '@/shared/mutations';
+import { CreateFile, CreateFileState } from '@/main/data/workspace/schema';
+import { databaseService } from '@/main/data/database-service';
+import { eventBus } from '@/shared/lib/event-bus';
+import { mapFile, mapFileState } from '@/main/utils';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -31,6 +34,8 @@ export class MessageCreateMutationHandler
     const messageId = generateId(IdType.Message);
     const createdAt = new Date().toISOString();
     const blocks = mapContentsToBlocks(messageId, messageContent, new Map());
+    const files: CreateFile[] = [];
+    const fileStates: CreateFileState[] = [];
 
     // check if there are nested nodes (files, pages, folders etc.)
     for (const block of blocks) {
@@ -45,8 +50,6 @@ export class MessageCreateMutationHandler
         }
 
         const fileId = generateId(IdType.File);
-        const uploadId = generateId(IdType.Upload);
-
         block.id = fileId;
         block.type = NodeTypes.File;
         block.attrs = null;
@@ -54,42 +57,35 @@ export class MessageCreateMutationHandler
         fileService.copyFileToWorkspace(
           path,
           fileId,
-          uploadId,
           metadata.extension,
           input.userId
         );
 
-        const fileAttributes: FileAttributes = {
-          type: 'file',
-          subtype: extractFileType(metadata.mimeType),
-          parentId: messageId,
-          name: metadata.name,
-          fileName: metadata.name,
-          mimeType: metadata.mimeType,
-          size: metadata.size,
-          extension: metadata.extension,
-          uploadId,
-          uploadStatus: 'pending',
-        };
-
-        inputs.push({
+        files.push({
           id: fileId,
-          attributes: fileAttributes,
-          download: {
-            node_id: fileId,
-            upload_id: uploadId,
-            created_at: createdAt,
-            progress: 100,
-            retry_count: 0,
-            completed_at: new Date().toISOString(),
-          },
-          upload: {
-            node_id: fileId,
-            upload_id: uploadId,
-            created_at: createdAt,
-            progress: 0,
-            retry_count: 0,
-          },
+          type: metadata.type,
+          status: FileStatus.Pending,
+          parent_id: messageId,
+          root_id: messageId,
+          name: metadata.name,
+          original_name: metadata.name,
+          mime_type: metadata.mimeType,
+          extension: metadata.extension,
+          size: metadata.size,
+          created_at: createdAt,
+          created_by: input.userId,
+          version: 0n,
+        });
+
+        fileStates.push({
+          file_id: fileId,
+          upload_status: 'pending',
+          upload_progress: 0,
+          upload_retries: 0,
+          download_status: 'pending',
+          download_progress: 0,
+          download_retries: 0,
+          created_at: createdAt,
         });
       }
     }
@@ -138,6 +134,57 @@ export class MessageCreateMutationHandler
     }
 
     await nodeService.createNode(input.userId, inputs);
+
+    if (files.length > 0) {
+      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+        input.userId
+      );
+
+      const { createdFiles, createdFileStates } = await workspaceDatabase
+        .transaction()
+        .execute(async (tx) => {
+          const createdFiles = await tx
+            .insertInto('files')
+            .returningAll()
+            .values(files)
+            .execute();
+
+          if (createdFiles.length !== files.length) {
+            throw new Error('Failed to create files.');
+          }
+
+          const createdFileStates = await tx
+            .insertInto('file_states')
+            .returningAll()
+            .values(fileStates)
+            .execute();
+
+          if (createdFileStates.length !== fileStates.length) {
+            throw new Error('Failed to create file states.');
+          }
+
+          return {
+            createdFiles,
+            createdFileStates,
+          };
+        });
+
+      for (const file of createdFiles) {
+        eventBus.publish({
+          type: 'file_created',
+          userId: input.userId,
+          file: mapFile(file),
+        });
+      }
+
+      for (const fileState of createdFileStates) {
+        eventBus.publish({
+          type: 'file_state_created',
+          userId: input.userId,
+          fileState: mapFileState(fileState),
+        });
+      }
+    }
 
     return {
       id: messageId,

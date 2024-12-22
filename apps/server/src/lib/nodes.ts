@@ -6,6 +6,7 @@ import {
   NodeRole,
   NodeType,
   ServerCollaboration,
+  ServerFile,
   ServerInteraction,
   ServerTransaction,
   ServerUser,
@@ -19,6 +20,7 @@ import {
   SelectCollaboration,
   SelectTransaction,
   SelectUser,
+  SelectFile,
 } from '@/data/schema';
 import { NodeCollaborator } from '@/types/nodes';
 
@@ -151,6 +153,29 @@ export const mapCollaboration = (
     deletedAt: collaboration.deleted_at?.toISOString() ?? null,
     deletedBy: collaboration.deleted_by ?? null,
     version: collaboration.version,
+  };
+};
+
+export const mapFile = (file: SelectFile): ServerFile => {
+  return {
+    id: file.id,
+    type: file.type,
+    parentId: file.parent_id,
+    rootId: file.root_id,
+    workspaceId: file.workspace_id,
+    name: file.name,
+    originalName: file.original_name,
+    mimeType: file.mime_type,
+    size: file.size,
+    extension: file.extension,
+    createdAt: file.created_at.toISOString(),
+    createdBy: file.created_by,
+    updatedAt: file.updated_at?.toISOString() ?? null,
+    updatedBy: file.updated_by ?? null,
+    deletedAt: file.deleted_at?.toISOString() ?? null,
+    deletedBy: file.deleted_by ?? null,
+    version: file.version.toString(),
+    status: file.status,
   };
 };
 

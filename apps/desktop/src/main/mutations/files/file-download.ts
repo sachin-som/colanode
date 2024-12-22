@@ -1,6 +1,6 @@
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapFileState } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationError } from '@/shared/mutations';
 import {
@@ -18,62 +18,65 @@ export class FileDownloadMutationHandler
       input.userId
     );
 
-    const node = await workspaceDatabase
-      .selectFrom('nodes')
+    const file = await workspaceDatabase
+      .selectFrom('files')
       .selectAll()
       .where('id', '=', input.fileId)
       .executeTakeFirst();
 
-    if (!node) {
+    if (!file) {
       throw new MutationError(
         'node_not_found',
         'The file you are trying to download does not exist.'
       );
     }
 
-    const file = mapNode(node);
-    if (file.attributes.type !== 'file') {
-      throw new MutationError(
-        'invalid_attributes',
-        'The node you are trying to download is not a file.'
-      );
-    }
-
-    const download = await workspaceDatabase
-      .selectFrom('downloads')
+    const existingFileState = await workspaceDatabase
+      .selectFrom('file_states')
       .selectAll()
-      .where('node_id', '=', input.fileId)
+      .where('file_id', '=', input.fileId)
       .executeTakeFirst();
 
-    if (download) {
+    if (
+      existingFileState &&
+      existingFileState.download_status === 'completed'
+    ) {
       return {
         success: true,
       };
     }
 
-    const createdAt = new Date();
-    await workspaceDatabase
-      .insertInto('downloads')
+    const fileState = await workspaceDatabase
+      .insertInto('file_states')
+      .returningAll()
       .values({
-        node_id: input.fileId,
-        upload_id: file.attributes.uploadId,
-        created_at: createdAt.toISOString(),
-        progress: 0,
-        retry_count: 0,
+        file_id: input.fileId,
+        download_status: 'pending',
+        download_progress: 0,
+        download_retries: 0,
+        upload_status: 'none',
+        upload_progress: 0,
+        upload_retries: 0,
+        created_at: new Date().toISOString(),
       })
-      .execute();
+      .onConflict((oc) =>
+        oc.doUpdateSet(() => ({
+          download_status: 'pending',
+          download_progress: 0,
+          download_retries: 0,
+          updated_at: new Date().toISOString(),
+        }))
+      )
+      .executeTakeFirst();
+
+    if (!fileState) {
+      throw new Error('Failed to create file state.');
+    }
 
     eventBus.publish({
-      type: 'download_created',
+      type: 'file_state_created',
       userId: input.userId,
-      download: {
-        nodeId: node.id,
-        uploadId: file.attributes.uploadId,
-        createdAt: createdAt.toISOString(),
-        updatedAt: null,
-        progress: 0,
-        retryCount: 0,
-      },
+      fileState: mapFileState(fileState),
     });
 
     return {

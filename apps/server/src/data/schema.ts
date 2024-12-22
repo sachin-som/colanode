@@ -1,4 +1,6 @@
 import {
+  FileStatus,
+  FileType,
   InteractionAttributes,
   NodeAttributes,
   NodeRole,
@@ -145,6 +147,31 @@ export type SelectTransaction = Selectable<TransactionTable>;
 export type CreateTransaction = Insertable<TransactionTable>;
 export type UpdateTransaction = Updateable<TransactionTable>;
 
+interface FileTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<FileType, FileType, FileType>;
+  parent_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  name: ColumnType<string, string, never>;
+  original_name: ColumnType<string, string, never>;
+  mime_type: ColumnType<string, string, never>;
+  extension: ColumnType<string, string, never>;
+  size: ColumnType<number, number, never>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
+  deleted_by: ColumnType<string | null, string | null, string | null>;
+  status: ColumnType<FileStatus, FileStatus, FileStatus>;
+  version: ColumnType<bigint, never, never>;
+}
+
+export type SelectFile = Selectable<FileTable>;
+export type CreateFile = Insertable<FileTable>;
+export type UpdateFile = Updateable<FileTable>;
+
 interface NodePathTable {
   ancestor_id: ColumnType<string, string, never>;
   descendant_id: ColumnType<string, string, never>;
@@ -155,23 +182,6 @@ interface NodePathTable {
 export type SelectNodePath = Selectable<NodePathTable>;
 export type CreateNodePath = Insertable<NodePathTable>;
 export type UpdateNodePath = Updateable<NodePathTable>;
-
-interface UploadTable {
-  node_id: ColumnType<string, string, never>;
-  upload_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  path: ColumnType<string, string, string>;
-  size: ColumnType<number, number, number>;
-  mime_type: ColumnType<string, string, string>;
-  type: ColumnType<string, string, string>;
-  created_by: ColumnType<string, string, never>;
-  created_at: ColumnType<Date, Date, never>;
-  completed_at: ColumnType<Date, Date, never>;
-}
-
-export type SelectUpload = Selectable<UploadTable>;
-export type CreateUpload = Insertable<UploadTable>;
-export type UpdateUpload = Updateable<UploadTable>;
 
 interface InteractionTable {
   user_id: ColumnType<string, string, never>;
@@ -201,7 +211,7 @@ export interface DatabaseSchema {
   nodes: NodeTable;
   transactions: TransactionTable;
   collaborations: CollaborationTable;
+  files: FileTable;
   node_paths: NodePathTable;
-  uploads: UploadTable;
   interactions: InteractionTable;
 }

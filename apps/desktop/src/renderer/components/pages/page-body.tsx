@@ -65,6 +65,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
     <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
       <Document
         nodeId={page.id}
+        rootId={page.rootId}
         content={page.attributes.content}
         transactionId={page.transactionId}
         canEdit={canEdit}

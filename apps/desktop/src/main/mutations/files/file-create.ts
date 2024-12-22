@@ -1,18 +1,20 @@
 import {
-  extractFileType,
-  FileAttributes,
+  CreateFileMutationData,
+  FileStatus,
   generateId,
   IdType,
 } from '@colanode/core';
 
 import { fileService } from '@/main/services/file-service';
-import { nodeService } from '@/main/services/node-service';
 import { MutationHandler } from '@/main/types';
 import {
   FileCreateMutationInput,
   FileCreateMutationOutput,
 } from '@/shared/mutations/files/file-create';
 import { MutationError } from '@/shared/mutations';
+import { databaseService } from '@/main/data/database-service';
+import { eventBus } from '@/shared/lib/event-bus';
+import { mapFile } from '@/main/utils';
 
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
@@ -28,47 +30,112 @@ export class FileCreateMutationHandler
       );
     }
 
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+      input.userId
+    );
+
     const fileId = generateId(IdType.File);
-    const uploadId = generateId(IdType.Upload);
 
     fileService.copyFileToWorkspace(
       input.filePath,
       fileId,
-      uploadId,
       metadata.extension,
       input.userId
     );
 
-    const attributes: FileAttributes = {
-      type: 'file',
-      subtype: extractFileType(metadata.mimeType),
+    const mutationData: CreateFileMutationData = {
+      id: fileId,
+      fileType: metadata.type,
       parentId: input.parentId,
+      rootId: input.rootId,
       name: metadata.name,
-      fileName: metadata.name,
+      originalName: metadata.name,
       extension: metadata.extension,
-      size: metadata.size,
       mimeType: metadata.mimeType,
-      uploadId,
-      uploadStatus: 'pending',
+      size: metadata.size,
+      createdAt: new Date().toISOString(),
     };
 
-    await nodeService.createNode(input.userId, {
-      id: fileId,
-      attributes,
-      upload: {
-        node_id: fileId,
-        created_at: new Date().toISOString(),
-        progress: 0,
-        retry_count: 0,
-        upload_id: uploadId,
-      },
-      download: {
-        node_id: fileId,
-        upload_id: uploadId,
-        created_at: new Date().toISOString(),
-        progress: 100,
-        retry_count: 0,
-        completed_at: new Date().toISOString(),
+    const createdFile = await workspaceDatabase
+      .transaction()
+      .execute(async (tx) => {
+        const createdFile = await tx
+          .insertInto('files')
+          .returningAll()
+          .values({
+            id: fileId,
+            type: metadata.type,
+            parent_id: input.parentId,
+            root_id: input.rootId,
+            name: metadata.name,
+            original_name: metadata.name,
+            mime_type: metadata.mimeType,
+            size: metadata.size,
+            extension: metadata.extension,
+            created_at: new Date().toISOString(),
+            created_by: input.userId,
+            status: FileStatus.Pending,
+            version: 0n,
+          })
+          .executeTakeFirst();
+
+        if (!createdFile) {
+          throw new Error('Failed to create file.');
+        }
+
+        await tx
+          .insertInto('file_states')
+          .values({
+            file_id: fileId,
+            created_at: new Date().toISOString(),
+            download_progress: 100,
+            download_status: 'completed',
+            download_retries: 0,
+            upload_progress: 0,
+            upload_status: 'pending',
+            upload_retries: 0,
+          })
+          .execute();
+
+        await tx
+          .insertInto('mutations')
+          .values({
+            id: generateId(IdType.Mutation),
+            type: 'create_file',
+            node_id: fileId,
+            key: `create_${fileId}`,
+            data: JSON.stringify(mutationData),
+            created_at: new Date().toISOString(),
+            retries: 0,
+          })
+          .execute();
+
+        return createdFile;
+      });
+
+    if (!createdFile) {
+      throw new Error('Failed to create file.');
+    }
+
+    eventBus.publish({
+      type: 'file_created',
+      userId: input.userId,
+      file: mapFile(createdFile),
+    });
+
+    eventBus.publish({
+      type: 'file_state_created',
+      userId: input.userId,
+      fileState: {
+        fileId: fileId,
+        downloadProgress: 100,
+        downloadStatus: 'completed',
+        downloadRetries: 0,
+        uploadProgress: 10,
+        uploadStatus: 'pending',
+        uploadRetries: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: null,
       },
     });
 

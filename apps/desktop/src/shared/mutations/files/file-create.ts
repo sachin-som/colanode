@@ -2,6 +2,7 @@ export type FileCreateMutationInput = {
   type: 'file_create';
   userId: string;
   parentId: string;
+  rootId: string;
   filePath: string;
 };
 

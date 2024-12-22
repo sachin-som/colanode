@@ -1,5 +1,14 @@
-import { InteractionAttribute, NodeType, WorkspaceRole } from '@colanode/core';
+import {
+  FileStatus,
+  FileType,
+  InteractionAttribute,
+  MutationType,
+  NodeType,
+  WorkspaceRole,
+} from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
+
+import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 
 interface UserTable {
   id: ColumnType<string, string, never>;
@@ -53,9 +62,7 @@ interface TransactionTable {
   created_at: ColumnType<string, string, never>;
   created_by: ColumnType<string, string, never>;
   server_created_at: ColumnType<string | null, string | null, string | null>;
-  retry_count: ColumnType<number, number, number>;
-  status: ColumnType<string, string, string>;
-  version: ColumnType<bigint | null, bigint | null, bigint | null>;
+  version: ColumnType<bigint, bigint, bigint>;
 }
 
 export type SelectTransaction = Selectable<TransactionTable>;
@@ -75,33 +82,6 @@ export type SelectCollaboration = Selectable<CollaborationTable>;
 export type CreateCollaboration = Insertable<CollaborationTable>;
 export type UpdateCollaboration = Updateable<CollaborationTable>;
 
-interface UploadTable {
-  node_id: ColumnType<string, string, never>;
-  upload_id: ColumnType<string, string, never>;
-  created_at: ColumnType<string, string, never>;
-  updated_at: ColumnType<string | null, string | null, string | null>;
-  progress: ColumnType<number, number, number>;
-  retry_count: ColumnType<number, number, number>;
-}
-
-export type SelectUpload = Selectable<UploadTable>;
-export type CreateUpload = Insertable<UploadTable>;
-export type UpdateUpload = Updateable<UploadTable>;
-
-interface DownloadTable {
-  node_id: ColumnType<string, string, never>;
-  upload_id: ColumnType<string, string, never>;
-  created_at: ColumnType<string, string, never>;
-  updated_at: ColumnType<string | null, string | null, string | null>;
-  completed_at: ColumnType<string | null, string | null, string | null>;
-  progress: ColumnType<number, number, number>;
-  retry_count: ColumnType<number, number, number>;
-}
-
-export type SelectDownload = Selectable<DownloadTable>;
-export type CreateDownload = Insertable<DownloadTable>;
-export type UpdateDownload = Updateable<DownloadTable>;
-
 interface InteractionTable {
   user_id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
@@ -119,6 +99,44 @@ export type SelectInteraction = Selectable<InteractionTable>;
 export type CreateInteraction = Insertable<InteractionTable>;
 export type UpdateInteraction = Updateable<InteractionTable>;
 
+interface FileTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<FileType, FileType, FileType>;
+  parent_id: ColumnType<string, string, string>;
+  root_id: ColumnType<string, string, string>;
+  name: ColumnType<string, string, string>;
+  original_name: ColumnType<string, string, string>;
+  mime_type: ColumnType<string, string, string>;
+  extension: ColumnType<string, string, string>;
+  size: ColumnType<number, number, number>;
+  created_at: ColumnType<string, string, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+  status: ColumnType<FileStatus, FileStatus, FileStatus>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectFile = Selectable<FileTable>;
+export type CreateFile = Insertable<FileTable>;
+export type UpdateFile = Updateable<FileTable>;
+
+interface FileStateTable {
+  file_id: ColumnType<string, string, never>;
+  download_status: ColumnType<DownloadStatus, DownloadStatus, DownloadStatus>;
+  download_progress: ColumnType<number, number, number>;
+  download_retries: ColumnType<number, number, number>;
+  upload_status: ColumnType<UploadStatus, UploadStatus, UploadStatus>;
+  upload_progress: ColumnType<number, number, number>;
+  upload_retries: ColumnType<number, number, number>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string>;
+}
+
+export type SelectFileState = Selectable<FileStateTable>;
+export type CreateFileState = Insertable<FileStateTable>;
+export type UpdateFileState = Updateable<FileStateTable>;
+
 interface InteractionEventTable {
   node_id: ColumnType<string, string, never>;
   attribute: ColumnType<InteractionAttribute, string, string>;
@@ -132,6 +150,20 @@ interface InteractionEventTable {
 export type SelectInteractionEvent = Selectable<InteractionEventTable>;
 export type CreateInteractionEvent = Insertable<InteractionEventTable>;
 export type UpdateInteractionEvent = Updateable<InteractionEventTable>;
+
+interface MutationTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<MutationType, MutationType, never>;
+  node_id: ColumnType<string, string, never>;
+  key: ColumnType<string, string, string>;
+  data: ColumnType<string, string, never>;
+  created_at: ColumnType<string, string, never>;
+  retries: ColumnType<number, number, number>;
+}
+
+export type SelectMutation = Selectable<MutationTable>;
+export type CreateMutation = Insertable<MutationTable>;
+export type UpdateMutation = Updateable<MutationTable>;
 
 interface NodeNameTable {
   id: ColumnType<string, string, never>;
@@ -164,10 +196,11 @@ export interface WorkspaceDatabaseSchema {
   transactions: TransactionTable;
   node_paths: NodePathTable;
   collaborations: CollaborationTable;
-  uploads: UploadTable;
-  downloads: DownloadTable;
   interactions: InteractionTable;
   interaction_events: InteractionEventTable;
+  files: FileTable;
+  file_states: FileStateTable;
+  mutations: MutationTable;
   node_names: NodeNameTable;
   node_texts: NodeTextTable;
   cursors: CursorTable;

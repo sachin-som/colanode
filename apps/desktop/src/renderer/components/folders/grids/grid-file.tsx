@@ -1,11 +1,10 @@
-import { FileNode } from '@colanode/core';
-
+import { FileWithState } from '@/shared/types/files';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { GridItem } from '@/renderer/components/folders/grids/grid-item';
 
 interface GridFileProps {
-  file: FileNode;
+  file: FileWithState;
 }
 
 export const GridFile = ({ file }: GridFileProps) => {
@@ -17,9 +16,9 @@ export const GridFile = ({ file }: GridFileProps) => {
         </div>
         <p
           className="line-clamp-2 w-full break-words text-center text-xs text-foreground/80"
-          title={file.attributes.name}
+          title={file.name}
         >
-          {file.attributes.name}
+          {file.name}
         </p>
       </GridItem>
     </FileContextMenu>

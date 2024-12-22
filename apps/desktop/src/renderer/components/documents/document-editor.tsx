@@ -64,6 +64,7 @@ import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
 
 interface DocumentEditorProps {
   documentId: string;
+  rootId: string;
   content: JSONContent;
   transactionId: string;
   canEdit: boolean;
@@ -73,6 +74,7 @@ interface DocumentEditorProps {
 
 export const DocumentEditor = ({
   documentId,
+  rootId,
   content,
   transactionId,
   canEdit,
@@ -141,6 +143,7 @@ export const DocumentEditor = ({
           context: {
             documentId,
             userId: workspace.userId,
+            rootId,
           },
         }),
         BoldMark,

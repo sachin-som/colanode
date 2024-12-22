@@ -38,6 +38,27 @@ export type CollaborationUpdatedEvent = {
   workspaceId: string;
 };
 
+export type FileCreatedEvent = {
+  type: 'file_created';
+  fileId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type FileUpdatedEvent = {
+  type: 'file_updated';
+  fileId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type FileDeletedEvent = {
+  type: 'file_deleted';
+  fileId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
 export type InteractionUpdatedEvent = {
   type: 'interaction_updated';
   userId: string;
@@ -99,4 +120,7 @@ export type Event =
   | WorkspaceCreatedEvent
   | WorkspaceUpdatedEvent
   | WorkspaceDeletedEvent
-  | DeviceDeletedEvent;
+  | DeviceDeletedEvent
+  | FileCreatedEvent
+  | FileUpdatedEvent
+  | FileDeletedEvent;

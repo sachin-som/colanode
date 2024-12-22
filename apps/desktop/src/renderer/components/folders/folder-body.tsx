@@ -100,11 +100,10 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
     mutate({
       input: {
         type: 'file_create',
-        accountId: workspace.accountId,
-        workspaceId: workspace.id,
         userId: workspace.userId,
         filePath,
         parentId: folder.id,
+        rootId: folder.rootId,
       },
       onError(error) {
         toast({

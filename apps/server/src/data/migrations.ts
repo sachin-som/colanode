@@ -103,8 +103,27 @@ const createUsersTable: Migration = {
         'account_id',
       ])
       .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_user_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('users_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_user_version
+      BEFORE UPDATE ON users
+      FOR EACH ROW
+      EXECUTE FUNCTION update_user_version();
+    `.execute(db);
   },
   down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_user_version ON users;
+      DROP FUNCTION IF EXISTS update_user_version();
+    `.execute(db);
+
     await db.schema.dropTable('users').execute();
     await sql`DROP SEQUENCE IF EXISTS users_version_sequence`.execute(db);
   },
@@ -206,8 +225,27 @@ const createCollaborationsTable: Migration = {
         'collaborator_id',
       ])
       .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_collaboration_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('collaborations_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_collaboration_version
+      BEFORE UPDATE ON collaborations
+      FOR EACH ROW
+      EXECUTE FUNCTION update_collaboration_version();
+    `.execute(db);
   },
   down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_collaboration_version ON collaborations;
+      DROP FUNCTION IF EXISTS update_collaboration_version();
+    `.execute(db);
+
     await db.schema.dropTable('collaborations').execute();
     await sql`DROP SEQUENCE IF EXISTS collaborations_version_sequence`.execute(
       db
@@ -249,8 +287,27 @@ const createFilesTable: Migration = {
         col.notNull().defaultTo(sql`nextval('files_version_sequence')`)
       )
       .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_file_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('files_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_file_version
+      BEFORE UPDATE ON files
+      FOR EACH ROW
+      EXECUTE FUNCTION update_file_version();
+    `.execute(db);
   },
   down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_file_version ON files;
+      DROP FUNCTION IF EXISTS update_file_version();
+    `.execute(db);
+
     await db.schema.dropTable('files').execute();
     await sql`DROP SEQUENCE IF EXISTS files_version_sequence`.execute(db);
   },

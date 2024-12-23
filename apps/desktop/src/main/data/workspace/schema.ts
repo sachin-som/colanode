@@ -2,6 +2,7 @@ import {
   FileStatus,
   FileType,
   InteractionAttribute,
+  MessageType,
   MutationType,
   NodeType,
   WorkspaceRole,
@@ -99,6 +100,37 @@ export type SelectInteraction = Selectable<InteractionTable>;
 export type CreateInteraction = Insertable<InteractionTable>;
 export type UpdateInteraction = Updateable<InteractionTable>;
 
+interface MessageTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<MessageType, MessageType, MessageType>;
+  parent_id: ColumnType<string, string, string>;
+  node_id: ColumnType<string, string, string>;
+  root_id: ColumnType<string, string, string>;
+  content: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectMessage = Selectable<MessageTable>;
+export type CreateMessage = Insertable<MessageTable>;
+export type UpdateMessage = Updateable<MessageTable>;
+
+interface MessageReactionTable {
+  message_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  reaction: ColumnType<string, string, string>;
+  root_id: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, never>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectMessageReaction = Selectable<MessageReactionTable>;
+export type CreateMessageReaction = Insertable<MessageReactionTable>;
+export type UpdateMessageReaction = Updateable<MessageReactionTable>;
+
 interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
@@ -155,7 +187,6 @@ interface MutationTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<MutationType, MutationType, never>;
   node_id: ColumnType<string, string, never>;
-  key: ColumnType<string, string, string>;
   data: ColumnType<string, string, never>;
   created_at: ColumnType<string, string, never>;
   retries: ColumnType<number, number, number>;
@@ -198,6 +229,8 @@ export interface WorkspaceDatabaseSchema {
   collaborations: CollaborationTable;
   interactions: InteractionTable;
   interaction_events: InteractionEventTable;
+  messages: MessageTable;
+  message_reactions: MessageReactionTable;
   files: FileTable;
   file_states: FileStateTable;
   mutations: MutationTable;

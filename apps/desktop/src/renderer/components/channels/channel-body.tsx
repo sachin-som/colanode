@@ -34,5 +34,11 @@ export const ChannelBody = ({ channel, role }: ChannelBodyProps) => {
     return () => clearInterval(interval);
   }, [channel.id, channel.type, channel.transactionId]);
 
-  return <Conversation conversationId={channel.id} role={role} />;
+  return (
+    <Conversation
+      conversationId={channel.id}
+      rootId={channel.rootId}
+      role={role}
+    />
+  );
 };

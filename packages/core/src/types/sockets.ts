@@ -1,0 +1,147 @@
+import { InteractionEvent } from './interactions';
+import {
+  ServerCollaboration,
+  ServerFile,
+  ServerInteraction,
+  ServerMessage,
+  ServerMessageReaction,
+  ServerTransaction,
+  ServerUser,
+} from './sync';
+
+export type TransactionsBatchMessage = {
+  type: 'transactions_batch';
+  userId: string;
+  rootId: string;
+  transactions: ServerTransaction[];
+};
+
+export type CollaborationsBatchMessage = {
+  type: 'collaborations_batch';
+  userId: string;
+  collaborations: ServerCollaboration[];
+};
+
+export type InteractionsBatchMessage = {
+  type: 'interactions_batch';
+  userId: string;
+  rootId: string;
+  interactions: ServerInteraction[];
+};
+
+export type UsersBatchMessage = {
+  type: 'users_batch';
+  userId: string;
+  users: ServerUser[];
+};
+
+export type FilesBatchMessage = {
+  type: 'files_batch';
+  userId: string;
+  rootId: string;
+  files: ServerFile[];
+};
+
+export type MessagesBatchMessage = {
+  type: 'messages_batch';
+  userId: string;
+  rootId: string;
+  messages: ServerMessage[];
+};
+
+export type MessageReactionsBatchMessage = {
+  type: 'message_reactions_batch';
+  userId: string;
+  rootId: string;
+  messageReactions: ServerMessageReaction[];
+};
+
+export type SyncInteractionsMessage = {
+  type: 'sync_interactions';
+  userId: string;
+  nodeId: string;
+  rootId: string;
+  events: InteractionEvent[];
+};
+
+export type ConsumeUsersMessage = {
+  type: 'consume_users';
+  userId: string;
+  cursor: string;
+};
+
+export type ConsumeCollaborationsMessage = {
+  type: 'consume_collaborations';
+  userId: string;
+  cursor: string;
+};
+
+export type ConsumeInteractionsMessage = {
+  type: 'consume_interactions';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type ConsumeTransactionsMessage = {
+  type: 'consume_transactions';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type ConsumeFilesMessage = {
+  type: 'consume_files';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type ConsumeMessagesMessage = {
+  type: 'consume_messages';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type ConsumeMessageReactionsMessage = {
+  type: 'consume_message_reactions';
+  userId: string;
+  rootId: string;
+  cursor: string;
+};
+
+export type AccountUpdatedMessage = {
+  type: 'account_updated';
+  accountId: string;
+};
+
+export type WorkspaceUpdatedMessage = {
+  type: 'workspace_updated';
+  workspaceId: string;
+};
+
+export type WorkspaceDeletedMessage = {
+  type: 'workspace_deleted';
+  accountId: string;
+};
+
+export type Message =
+  | TransactionsBatchMessage
+  | CollaborationsBatchMessage
+  | InteractionsBatchMessage
+  | UsersBatchMessage
+  | SyncInteractionsMessage
+  | ConsumeUsersMessage
+  | ConsumeCollaborationsMessage
+  | ConsumeInteractionsMessage
+  | ConsumeTransactionsMessage
+  | AccountUpdatedMessage
+  | WorkspaceUpdatedMessage
+  | WorkspaceDeletedMessage
+  | FilesBatchMessage
+  | ConsumeFilesMessage
+  | ConsumeMessagesMessage
+  | MessagesBatchMessage
+  | MessageReactionsBatchMessage
+  | ConsumeMessageReactionsMessage;

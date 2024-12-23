@@ -6,6 +6,7 @@ import { FileGetQueryHandler } from '@/main/queries/files/file-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
 import { IconsGetQueryHandler } from '@/main/queries/icons/icons-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
+import { MessageReactionsGetQueryHandler } from '@/main/queries/messages/message-reactions-get';
 import { NodeChildrenGetQueryHandler } from '@/main/queries/nodes/node-children-get';
 import { NodeGetQueryHandler } from '@/main/queries/nodes/node-get';
 import { NodeTreeGetQueryHandler } from '@/main/queries/nodes/node-tree-get';
@@ -29,6 +30,7 @@ type QueryHandlerMap = {
 export const queryHandlerMap: QueryHandlerMap = {
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
+  message_reactions_get: new MessageReactionsGetQueryHandler(),
   node_get: new NodeGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
   server_list: new ServerListQueryHandler(),

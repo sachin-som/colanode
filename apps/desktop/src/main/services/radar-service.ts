@@ -100,7 +100,6 @@ class RadarWorkspace {
           .on('parent_interactions.user_id', '=', this.workspace.userId)
       )
       .select(['node.id as node_id', 'node.parent_id as parent_id'])
-      .where('node.type', '=', 'message')
       .where('node.created_by', '!=', this.workspace.userId)
       .where('node_interactions.last_seen_at', 'is', null)
       .where('parent_interactions.last_seen_at', 'is not', null)
@@ -155,10 +154,6 @@ class RadarWorkspace {
       .executeTakeFirst();
 
     if (!node) {
-      return;
-    }
-
-    if (node.type !== 'message') {
       return;
     }
 

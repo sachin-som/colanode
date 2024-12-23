@@ -1,6 +1,7 @@
 import { InteractionAttributes } from './interactions';
 import { WorkspaceRole } from './workspaces';
 import { FileStatus, FileType } from './files';
+import { MessageContent, MessageType } from './messages';
 
 import { NodeRole } from '../registry/core';
 
@@ -148,5 +149,33 @@ export type ServerFile = {
   updatedBy: string | null;
   deletedAt: string | null;
   deletedBy: string | null;
+  version: string;
+};
+
+export type ServerMessage = {
+  id: string;
+  type: MessageType;
+  parentId: string;
+  nodeId: string;
+  rootId: string;
+  workspaceId: string;
+  content: MessageContent;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  deletedAt: string | null;
+  deletedBy: string | null;
+  version: string;
+};
+
+export type ServerMessageReaction = {
+  messageId: string;
+  collaboratorId: string;
+  reaction: string;
+  rootId: string;
+  workspaceId: string;
+  createdAt: string;
+  deletedAt: string | null;
   version: string;
 };

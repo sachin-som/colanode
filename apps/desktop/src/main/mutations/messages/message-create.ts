@@ -1,15 +1,16 @@
 import {
   Block,
+  CreateFileMutationData,
+  CreateMessageMutationData,
   EditorNodeTypes,
   FileStatus,
   generateId,
   IdType,
-  MessageAttributes,
+  MessageContent,
   NodeTypes,
 } from '@colanode/core';
 
 import { fileService } from '@/main/services/file-service';
-import { CreateNodeInput, nodeService } from '@/main/services/node-service';
 import { MutationHandler } from '@/main/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
@@ -17,10 +18,14 @@ import {
   MessageCreateMutationOutput,
 } from '@/shared/mutations/messages/message-create';
 import { MutationError } from '@/shared/mutations';
-import { CreateFile, CreateFileState } from '@/main/data/workspace/schema';
+import {
+  CreateFile,
+  CreateFileState,
+  CreateMutation,
+} from '@/main/data/workspace/schema';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile, mapFileState } from '@/main/utils';
+import { mapFile, mapFileState, mapMessage } from '@/main/utils';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -28,14 +33,18 @@ export class MessageCreateMutationHandler
   async handleMutation(
     input: MessageCreateMutationInput
   ): Promise<MessageCreateMutationOutput> {
-    const inputs: CreateNodeInput[] = [];
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+      input.userId
+    );
 
-    const messageContent = input.content.content ?? [];
+    const editorContent = input.content.content ?? [];
     const messageId = generateId(IdType.Message);
     const createdAt = new Date().toISOString();
-    const blocks = mapContentsToBlocks(messageId, messageContent, new Map());
+    const blocks = mapContentsToBlocks(messageId, editorContent, new Map());
+
     const files: CreateFile[] = [];
     const fileStates: CreateFileState[] = [];
+    const fileMutations: CreateMutation[] = [];
 
     // check if there are nested nodes (files, pages, folders etc.)
     for (const block of blocks) {
@@ -77,6 +86,28 @@ export class MessageCreateMutationHandler
           version: 0n,
         });
 
+        const mutationData: CreateFileMutationData = {
+          id: fileId,
+          type: metadata.type,
+          parentId: messageId,
+          rootId: input.rootId,
+          name: metadata.name,
+          originalName: metadata.name,
+          extension: metadata.extension,
+          mimeType: metadata.mimeType,
+          size: metadata.size,
+          createdAt: createdAt,
+        };
+
+        fileMutations.push({
+          id: generateId(IdType.Mutation),
+          type: 'create_file',
+          node_id: fileId,
+          data: JSON.stringify(mutationData),
+          created_at: createdAt,
+          retries: 0,
+        });
+
         fileStates.push({
           file_id: fileId,
           upload_status: 'pending',
@@ -98,51 +129,55 @@ export class MessageCreateMutationHandler
       {} as Record<string, Block>
     );
 
-    if (input.referenceId) {
-      const reference = await nodeService.fetchNode(
-        input.referenceId,
-        input.userId
-      );
+    const messageContent: MessageContent = {
+      blocks: blocksRecord,
+    };
 
-      if (!reference || reference.type !== 'message') {
-        throw new MutationError(
-          'node_not_found',
-          'Referenced message not found or has been deleted.'
-        );
-      }
+    const { createdMessage, createdFiles, createdFileStates } =
+      await workspaceDatabase.transaction().execute(async (tx) => {
+        const createdMessage = await tx
+          .insertInto('messages')
+          .returningAll()
+          .values({
+            id: messageId,
+            type: 'standard',
+            node_id: input.conversationId,
+            parent_id: input.conversationId,
+            root_id: input.rootId,
+            content: JSON.stringify(messageContent),
+            created_at: createdAt,
+            created_by: input.userId,
+            version: 0n,
+          })
+          .executeTakeFirst();
 
-      const messageAttributes: MessageAttributes = {
-        type: 'message',
-        subtype: 'reply',
-        parentId: input.conversationId,
-        referenceId: input.referenceId,
-        content: blocksRecord,
-        reactions: {},
-      };
+        if (!createdMessage) {
+          throw new Error('Failed to create message.');
+        }
 
-      inputs.unshift({ id: messageId, attributes: messageAttributes });
-    } else {
-      const messageAttributes: MessageAttributes = {
-        type: 'message',
-        subtype: 'standard',
-        parentId: input.conversationId,
-        content: blocksRecord,
-        reactions: {},
-      };
+        const createMessageMutationData: CreateMessageMutationData = {
+          id: messageId,
+          type: 'standard',
+          nodeId: input.conversationId,
+          parentId: input.conversationId,
+          rootId: input.rootId,
+          content: messageContent,
+          createdAt: createdAt,
+        };
 
-      inputs.unshift({ id: messageId, attributes: messageAttributes });
-    }
+        await tx
+          .insertInto('mutations')
+          .values({
+            id: generateId(IdType.Mutation),
+            type: 'create_message',
+            node_id: messageId,
+            data: JSON.stringify(createMessageMutationData),
+            created_at: createdAt,
+            retries: 0,
+          })
+          .execute();
 
-    await nodeService.createNode(input.userId, inputs);
-
-    if (files.length > 0) {
-      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-        input.userId
-      );
-
-      const { createdFiles, createdFileStates } = await workspaceDatabase
-        .transaction()
-        .execute(async (tx) => {
+        if (files.length > 0) {
           const createdFiles = await tx
             .insertInto('files')
             .returningAll()
@@ -152,6 +187,8 @@ export class MessageCreateMutationHandler
           if (createdFiles.length !== files.length) {
             throw new Error('Failed to create files.');
           }
+
+          await tx.insertInto('mutations').values(fileMutations).execute();
 
           const createdFileStates = await tx
             .insertInto('file_states')
@@ -166,9 +203,24 @@ export class MessageCreateMutationHandler
           return {
             createdFiles,
             createdFileStates,
+            createdMessage,
           };
-        });
+        }
 
+        return {
+          createdMessage,
+        };
+      });
+
+    if (createdMessage) {
+      eventBus.publish({
+        type: 'message_created',
+        userId: input.userId,
+        message: mapMessage(createdMessage),
+      });
+    }
+
+    if (createdFiles) {
       for (const file of createdFiles) {
         eventBus.publish({
           type: 'file_created',
@@ -176,7 +228,9 @@ export class MessageCreateMutationHandler
           file: mapFile(file),
         });
       }
+    }
 
+    if (createdFileStates) {
       for (const fileState of createdFileStates) {
         eventBus.publish({
           type: 'file_state_created',
@@ -185,6 +239,11 @@ export class MessageCreateMutationHandler
         });
       }
     }
+
+    eventBus.publish({
+      type: 'mutation_created',
+      userId: input.userId,
+    });
 
     return {
       id: messageId,

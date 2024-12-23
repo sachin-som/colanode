@@ -1,4 +1,5 @@
 import { FileType } from './files';
+import { MessageType } from './messages';
 import {
   LocalCreateTransaction,
   LocalDeleteTransaction,
@@ -27,7 +28,7 @@ export type MutationBase = {
 
 export type CreateFileMutationData = {
   id: string;
-  fileType: FileType;
+  type: FileType;
   parentId: string;
   rootId: string;
   name: string;
@@ -58,10 +59,52 @@ export type ApplyDeleteTransactionMutation = MutationBase & {
   data: LocalDeleteTransaction;
 };
 
+export type CreateMessageMutationData = {
+  id: string;
+  type: MessageType;
+  nodeId: string;
+  parentId: string;
+  content: unknown;
+  rootId: string;
+  createdAt: string;
+};
+
+export type CreateMessageMutation = MutationBase & {
+  type: 'create_message';
+  data: CreateMessageMutationData;
+};
+
+export type CreateMessageReactionMutationData = {
+  messageId: string;
+  reaction: string;
+  rootId: string;
+  createdAt: string;
+};
+
+export type CreateMessageReactionMutation = MutationBase & {
+  type: 'create_message_reaction';
+  data: CreateMessageReactionMutationData;
+};
+
+export type DeleteMessageReactionMutationData = {
+  messageId: string;
+  reaction: string;
+  rootId: string;
+  deletedAt: string;
+};
+
+export type DeleteMessageReactionMutation = MutationBase & {
+  type: 'delete_message_reaction';
+  data: DeleteMessageReactionMutationData;
+};
+
 export type Mutation =
   | CreateFileMutation
   | ApplyCreateTransactionMutation
   | ApplyUpdateTransactionMutation
-  | ApplyDeleteTransactionMutation;
+  | ApplyDeleteTransactionMutation
+  | CreateMessageMutation
+  | CreateMessageReactionMutation
+  | DeleteMessageReactionMutation;
 
 export type MutationType = Mutation['type'];

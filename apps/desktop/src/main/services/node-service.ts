@@ -161,7 +161,6 @@ class NodeService {
             id: generateId(IdType.Mutation),
             node_id: inputItem.id,
             type: 'apply_create_transaction',
-            key: `transaction_${createdTransaction.id}`,
             data: JSON.stringify(mapTransaction(createdTransaction)),
             created_at: createdAt,
             retries: 0,
@@ -208,7 +207,6 @@ class NodeService {
       eventBus.publish({
         type: 'mutation_created',
         userId,
-        mutationId: createdMutation.id,
       });
     }
   }
@@ -338,7 +336,6 @@ class NodeService {
             id: generateId(IdType.Mutation),
             node_id: nodeId,
             type: 'apply_update_transaction',
-            key: `transaction_${createdTransaction.id}`,
             data: JSON.stringify(mapTransaction(createdTransaction)),
             created_at: updatedAt,
             retries: 0,
@@ -397,7 +394,6 @@ class NodeService {
       eventBus.publish({
         type: 'mutation_created',
         userId,
-        mutationId: createdMutation.id,
       });
     } else {
       this.debug(`Failed to create mutation for node ${nodeId}`);
@@ -498,7 +494,6 @@ class NodeService {
             id: generateId(IdType.Mutation),
             node_id: nodeId,
             type: 'apply_delete_transaction',
-            key: `transaction_${createdTransaction.id}`,
             data: JSON.stringify(mapTransaction(createdTransaction)),
             created_at: new Date().toISOString(),
             retries: 0,
@@ -528,7 +523,6 @@ class NodeService {
       eventBus.publish({
         type: 'mutation_created',
         userId,
-        mutationId: createdMutation.id,
       });
     } else {
       this.debug(`Failed to create mutation for node ${nodeId}`);

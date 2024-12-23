@@ -1,5 +1,4 @@
-import { MessageNode } from '@colanode/core';
-
+import { MessageNode } from '@/shared/types/messages';
 import { NodeRenderer } from '@/renderer/editor/renderers/node';
 import { mapBlocksToContents } from '@/shared/lib/editor';
 
@@ -8,7 +7,7 @@ interface MessageContentProps {
 }
 
 export const MessageContent = ({ message }: MessageContentProps) => {
-  const nodeBlocks = Object.values(message.attributes.content ?? {});
+  const nodeBlocks = Object.values(message.content.blocks ?? {});
   const contents = mapBlocksToContents(message.id, nodeBlocks);
 
   return (

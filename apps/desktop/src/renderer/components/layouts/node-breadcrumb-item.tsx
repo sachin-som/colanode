@@ -4,7 +4,6 @@ import { ChannelBreadcrumbItem } from '@/renderer/components/channels/channel-br
 import { ChatBreadcrumbItem } from '@/renderer/components/chats/chat-breadcrumb-item';
 import { DatabaseBreadcrumbItem } from '@/renderer/components/databases/database-breadcrumb-item';
 import { FolderBreadcrumbItem } from '@/renderer/components/folders/folder-breadcrumb-item';
-import { MessageBreadcrumbItem } from '@/renderer/components/messages/message-breadcrumb-item';
 import { PageBreadcrumbItem } from '@/renderer/components/pages/page-breadcrumb-item';
 import { RecordBreadcrumbItem } from '@/renderer/components/records/record-breadcrumb-item';
 import { SpaceBreadcrumbItem } from '@/renderer/components/spaces/space-breadcrumb-item';
@@ -29,8 +28,6 @@ export const NodeBreadcrumbItem = ({ node }: NodeBreadcrumbItemProps) => {
       return <RecordBreadcrumbItem node={node} />;
     case 'folder':
       return <FolderBreadcrumbItem node={node} />;
-    case 'message':
-      return <MessageBreadcrumbItem node={node} />;
     default:
       return null;
   }

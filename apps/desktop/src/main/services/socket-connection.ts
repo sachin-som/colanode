@@ -84,6 +84,19 @@ export class SocketConnection {
           message.rootId
         );
         filesConsumer?.processFiles(message);
+      } else if (message.type === 'messages_batch') {
+        const messagesConsumer = syncService.getMessagesConsumer(
+          message.userId,
+          message.rootId
+        );
+        messagesConsumer?.processMessages(message);
+      } else if (message.type === 'message_reactions_batch') {
+        const messageReactionsConsumer =
+          syncService.getMessageReactionsConsumer(
+            message.userId,
+            message.rootId
+          );
+        messageReactionsConsumer?.processMessageReactions(message);
       } else if (message.type === 'account_updated') {
         scheduler.trigger({
           type: 'sync_account',

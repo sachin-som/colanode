@@ -5,11 +5,15 @@ import { CollaborationsConsumer } from '@/main/consumers/collaborations';
 import { InteractionsConsumer } from '@/main/consumers/interactions';
 import { FilesConsumer } from '@/main/consumers/files';
 import { createDebugger } from '@/main/debugger';
+import { MessagesConsumer } from '@/main/consumers/messages';
+import { MessageReactionsConsumer } from '@/main/consumers/message-reactions';
 
 export type NodeConsumersWrapper = {
   transactions: TransactionsConsumer;
   interactions: InteractionsConsumer;
   files: FilesConsumer;
+  messages: MessagesConsumer;
+  messageReactions: MessageReactionsConsumer;
 };
 
 export type ConsumersWrapper = {
@@ -87,10 +91,28 @@ class SyncService {
       );
       await filesConsumer.init();
 
+      const messagesConsumer = new MessagesConsumer(
+        userId,
+        accountId,
+        rootId,
+        workspaceDatabase
+      );
+      await messagesConsumer.init();
+
+      const messageReactionsConsumer = new MessageReactionsConsumer(
+        userId,
+        accountId,
+        rootId,
+        workspaceDatabase
+      );
+      await messageReactionsConsumer.init();
+
       consumers.nodes[rootId] = {
         transactions: transactionsConsumer,
         interactions: interactionsConsumer,
         files: filesConsumer,
+        messages: messagesConsumer,
+        messageReactions: messageReactionsConsumer,
       };
     }
 
@@ -131,6 +153,20 @@ class SyncService {
     rootId: string
   ): FilesConsumer | undefined {
     return this.users.get(userId)?.nodes[rootId]?.files;
+  }
+
+  public getMessagesConsumer(
+    userId: string,
+    rootId: string
+  ): MessagesConsumer | undefined {
+    return this.users.get(userId)?.nodes[rootId]?.messages;
+  }
+
+  public getMessageReactionsConsumer(
+    userId: string,
+    rootId: string
+  ): MessageReactionsConsumer | undefined {
+    return this.users.get(userId)?.nodes[rootId]?.messageReactions;
   }
 }
 

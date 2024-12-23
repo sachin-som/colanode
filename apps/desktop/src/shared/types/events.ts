@@ -1,5 +1,6 @@
 import { Node } from '@colanode/core';
 
+import { MessageNode, MessageReaction } from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
 import { Interaction } from '@/shared/types/interactions';
 import { Server } from '@/shared/types/servers';
@@ -41,6 +42,36 @@ export type NodeDeletedEvent = {
   type: 'node_deleted';
   userId: string;
   node: Node;
+};
+
+export type MessageCreatedEvent = {
+  type: 'message_created';
+  userId: string;
+  message: MessageNode;
+};
+
+export type MessageUpdatedEvent = {
+  type: 'message_updated';
+  userId: string;
+  message: MessageNode;
+};
+
+export type MessageDeletedEvent = {
+  type: 'message_deleted';
+  userId: string;
+  message: MessageNode;
+};
+
+export type MessageReactionCreatedEvent = {
+  type: 'message_reaction_created';
+  userId: string;
+  messageReaction: MessageReaction;
+};
+
+export type MessageReactionDeletedEvent = {
+  type: 'message_reaction_deleted';
+  userId: string;
+  messageReaction: MessageReaction;
 };
 
 export type FileCreatedEvent = {
@@ -132,7 +163,6 @@ export type RadarDataUpdatedEvent = {
 export type MutationCreatedEvent = {
   type: 'mutation_created';
   userId: string;
-  mutationId: string;
 };
 
 export type CollaborationCreatedEvent = {
@@ -177,6 +207,11 @@ export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
   | NodeDeletedEvent
+  | MessageCreatedEvent
+  | MessageUpdatedEvent
+  | MessageDeletedEvent
+  | MessageReactionCreatedEvent
+  | MessageReactionDeletedEvent
   | AccountCreatedEvent
   | AccountUpdatedEvent
   | AccountDeletedEvent

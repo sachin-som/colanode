@@ -2,6 +2,7 @@ export type MessageReactionCreateMutationInput = {
   type: 'message_reaction_create';
   userId: string;
   messageId: string;
+  rootId: string;
   reaction: string;
 };
 

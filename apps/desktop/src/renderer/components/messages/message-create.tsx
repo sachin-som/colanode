@@ -1,4 +1,3 @@
-import { MessageNode } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 import { Plus, Search, Send, Upload } from 'lucide-react';
 import React from 'react';
@@ -20,7 +19,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { editorHasContent } from '@/shared/lib/editor';
-
+import { MessageNode } from '@/shared/types/messages';
 export interface MessageCreateRefProps {
   setReplyTo: (replyTo: MessageNode) => void;
 }
@@ -71,6 +70,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
           content: content,
           userId: workspace.userId,
           referenceId: replyTo?.id,
+          rootId: conversation.rootId,
         },
         onSuccess: () => {
           setReplyTo(null);

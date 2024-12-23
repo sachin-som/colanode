@@ -8,6 +8,8 @@ import {
   ServerCollaboration,
   ServerFile,
   ServerInteraction,
+  ServerMessage,
+  ServerMessageReaction,
   ServerTransaction,
   ServerUser,
 } from '@colanode/core';
@@ -21,6 +23,8 @@ import {
   SelectTransaction,
   SelectUser,
   SelectFile,
+  SelectMessage,
+  SelectMessageReaction,
 } from '@/data/schema';
 import { NodeCollaborator } from '@/types/nodes';
 
@@ -176,6 +180,40 @@ export const mapFile = (file: SelectFile): ServerFile => {
     deletedBy: file.deleted_by ?? null,
     version: file.version.toString(),
     status: file.status,
+  };
+};
+
+export const mapMessage = (message: SelectMessage): ServerMessage => {
+  return {
+    id: message.id,
+    type: message.type,
+    nodeId: message.node_id,
+    parentId: message.parent_id,
+    rootId: message.root_id,
+    workspaceId: message.workspace_id,
+    content: JSON.parse(message.content),
+    createdAt: message.created_at.toISOString(),
+    createdBy: message.created_by,
+    updatedAt: message.updated_at?.toISOString() ?? null,
+    updatedBy: message.updated_by ?? null,
+    deletedAt: message.deleted_at?.toISOString() ?? null,
+    deletedBy: message.deleted_by ?? null,
+    version: message.version.toString(),
+  };
+};
+
+export const mapMessageReaction = (
+  messageReaction: SelectMessageReaction
+): ServerMessageReaction => {
+  return {
+    messageId: messageReaction.message_id,
+    collaboratorId: messageReaction.collaborator_id,
+    reaction: messageReaction.reaction,
+    rootId: messageReaction.root_id,
+    workspaceId: messageReaction.workspace_id,
+    createdAt: messageReaction.created_at.toISOString(),
+    deletedAt: messageReaction.deleted_at?.toISOString() ?? null,
+    version: messageReaction.version.toString(),
   };
 };
 

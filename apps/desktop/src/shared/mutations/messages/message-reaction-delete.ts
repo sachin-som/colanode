@@ -2,6 +2,7 @@ export type MessageReactionDeleteMutationInput = {
   type: 'message_reaction_delete';
   userId: string;
   messageId: string;
+  rootId: string;
   reaction: string;
 };
 

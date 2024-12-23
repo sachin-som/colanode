@@ -45,7 +45,7 @@ export class FileCreateMutationHandler
 
     const mutationData: CreateFileMutationData = {
       id: fileId,
-      fileType: metadata.type,
+      type: metadata.type,
       parentId: input.parentId,
       rootId: input.rootId,
       name: metadata.name,
@@ -103,7 +103,6 @@ export class FileCreateMutationHandler
             id: generateId(IdType.Mutation),
             type: 'create_file',
             node_id: fileId,
-            key: `create_${fileId}`,
             data: JSON.stringify(mutationData),
             created_at: new Date().toISOString(),
             retries: 0,

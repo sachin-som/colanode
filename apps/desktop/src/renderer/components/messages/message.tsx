@@ -1,4 +1,3 @@
-import { MessageNode } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
 import { MessageActions } from '@/renderer/components/messages/message-actions';
@@ -6,11 +5,10 @@ import { MessageAuthorAvatar } from '@/renderer/components/messages/message-auth
 import { MessageAuthorName } from '@/renderer/components/messages/message-author-name';
 import { MessageContent } from '@/renderer/components/messages/message-content';
 import { MessageReactions } from '@/renderer/components/messages/message-reactions';
-import { MessageReference } from '@/renderer/components/messages/message-reference';
 import { MessageTime } from '@/renderer/components/messages/message-time';
-import { useRadar } from '@/renderer/contexts/radar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-
+// import { useRadar } from '@/renderer/contexts/radar';
+// import { useWorkspace } from '@/renderer/contexts/workspace';
+import { MessageNode } from '@/shared/types/messages';
 interface MessageProps {
   message: MessageNode;
   previousMessage?: MessageNode | null;
@@ -35,8 +33,8 @@ const shouldDisplayAuthor = (
 };
 
 export const Message = ({ message, previousMessage }: MessageProps) => {
-  const workspace = useWorkspace();
-  const radar = useRadar();
+  // const workspace = useWorkspace();
+  // const radar = useRadar();
   const displayAuthor = shouldDisplayAuthor(message, previousMessage);
 
   return (
@@ -62,19 +60,19 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           rootMargin="50px"
           onChange={(inView) => {
             if (inView) {
-              radar.markAsSeen(
-                workspace.userId,
-                message.id,
-                message.type,
-                message.transactionId
-              );
+              // radar.markAsSeen(
+              //   workspace.userId,
+              //   message.id,
+              //   message.type,
+              //   message.transactionId
+              // );
             }
           }}
         >
           <MessageActions message={message} />
-          {message.attributes.subtype === 'reply' && (
-            <MessageReference messageId={message.attributes.referenceId} />
-          )}
+          {/* {message.type === 'reply' && (
+            <MessageReference messageId={message.referenceId} />
+          )} */}
           <MessageContent message={message} />
           <MessageReactions message={message} />
         </InView>

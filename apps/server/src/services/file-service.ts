@@ -45,7 +45,7 @@ class FileService {
       .returningAll()
       .values({
         id: mutation.data.id,
-        type: mutation.data.fileType,
+        type: mutation.data.type,
         parent_id: mutation.data.parentId,
         root_id: mutation.data.rootId,
         workspace_id: root.workspace_id,

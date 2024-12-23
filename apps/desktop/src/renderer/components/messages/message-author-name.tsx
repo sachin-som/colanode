@@ -1,5 +1,4 @@
-import { MessageNode } from '@colanode/core';
-
+import { MessageNode } from '@/shared/types/messages';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { cn } from '@/shared/lib/utils';

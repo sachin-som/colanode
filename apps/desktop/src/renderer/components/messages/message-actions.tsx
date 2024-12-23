@@ -1,4 +1,3 @@
-import { MessageNode } from '@colanode/core';
 import { MessagesSquare, Reply } from 'lucide-react';
 import React from 'react';
 
@@ -10,6 +9,7 @@ import { useConversation } from '@/renderer/contexts/conversation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { MessageNode } from '@/shared/types/messages';
 
 const MessageAction = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -49,6 +49,7 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
           messageId: message.id,
           userId: workspace.userId,
           reaction,
+          rootId: conversation.rootId,
         },
         onError(error) {
           toast({
@@ -92,6 +93,7 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
                 messageId: message.id,
                 userId: workspace.userId,
                 reaction,
+                rootId: conversation.rootId,
               },
               onError(error) {
                 toast({

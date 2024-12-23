@@ -17,10 +17,15 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface ConversationProps {
   conversationId: string;
+  rootId: string;
   role: NodeRole;
 }
 
-export const Conversation = ({ conversationId, role }: ConversationProps) => {
+export const Conversation = ({
+  conversationId,
+  rootId,
+  role,
+}: ConversationProps) => {
   const workspace = useWorkspace();
 
   const viewportRef = React.useRef<HTMLDivElement>(null);
@@ -79,6 +84,7 @@ export const Conversation = ({ conversationId, role }: ConversationProps) => {
       value={{
         id: conversationId,
         role,
+        rootId,
         canCreateMessage: isCollaborator,
         onReply: (message) => {
           if (messageCreateRef.current) {

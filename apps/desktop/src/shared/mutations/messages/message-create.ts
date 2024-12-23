@@ -4,6 +4,7 @@ export type MessageCreateMutationInput = {
   type: 'message_create';
   userId: string;
   conversationId: string;
+  rootId: string;
   content: JSONContent;
   referenceId?: string;
 };

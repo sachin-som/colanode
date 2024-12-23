@@ -6,6 +6,7 @@ import {
   NodeRole,
   NodeType,
   WorkspaceRole,
+  MessageType,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -147,6 +148,42 @@ export type SelectTransaction = Selectable<TransactionTable>;
 export type CreateTransaction = Insertable<TransactionTable>;
 export type UpdateTransaction = Updateable<TransactionTable>;
 
+interface MessageTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<MessageType, MessageType, MessageType>;
+  parent_id: ColumnType<string, string, never>;
+  node_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  content: ColumnType<string, string, never>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date>;
+  updated_by: ColumnType<string | null, string | null, string>;
+  deleted_at: ColumnType<Date | null, Date | null, Date>;
+  deleted_by: ColumnType<string | null, string | null, string>;
+  version: ColumnType<bigint, never, never>;
+}
+
+export type SelectMessage = Selectable<MessageTable>;
+export type CreateMessage = Insertable<MessageTable>;
+export type UpdateMessage = Updateable<MessageTable>;
+
+interface MessageReactionTable {
+  message_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  reaction: ColumnType<string, string, string>;
+  created_at: ColumnType<Date, Date, Date>;
+  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
+  version: ColumnType<bigint, never, never>;
+}
+
+export type SelectMessageReaction = Selectable<MessageReactionTable>;
+export type CreateMessageReaction = Insertable<MessageReactionTable>;
+export type UpdateMessageReaction = Updateable<MessageReactionTable>;
+
 interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
@@ -210,6 +247,8 @@ export interface DatabaseSchema {
   users: UserTable;
   nodes: NodeTable;
   transactions: TransactionTable;
+  messages: MessageTable;
+  message_reactions: MessageReactionTable;
   collaborations: CollaborationTable;
   files: FileTable;
   node_paths: NodePathTable;

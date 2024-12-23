@@ -34,5 +34,7 @@ export const ChatBody = ({ chat, role }: ChatBodyProps) => {
     return () => clearInterval(interval);
   }, [chat.id, chat.type, chat.transactionId]);
 
-  return <Conversation conversationId={chat.id} role={role} />;
+  return (
+    <Conversation conversationId={chat.id} rootId={chat.rootId} role={role} />
+  );
 };

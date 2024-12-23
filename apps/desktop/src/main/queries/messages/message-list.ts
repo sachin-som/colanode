@@ -1,11 +1,12 @@
-import { compareString, MessageNode } from '@colanode/core';
+import { compareString } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectNode } from '@/main/data/workspace/schema';
+import { SelectMessage } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapMessage } from '@/main/utils';
 import { MessageListQueryInput } from '@/shared/queries/messages/message-list';
 import { Event } from '@/shared/types/events';
+import { MessageNode } from '@/shared/types/messages';
 
 export class MessageListQueryHandler
   implements QueryHandler<MessageListQueryInput>
@@ -33,10 +34,9 @@ export class MessageListQueryHandler
     }
 
     if (
-      event.type === 'node_created' &&
+      event.type === 'message_created' &&
       event.userId === input.userId &&
-      event.node.type === 'message' &&
-      event.node.parentId === input.conversationId
+      event.message.parentId === input.conversationId
     ) {
       const newResult = await this.handleQuery(input);
 
@@ -47,16 +47,15 @@ export class MessageListQueryHandler
     }
 
     if (
-      event.type === 'node_updated' &&
+      event.type === 'message_updated' &&
       event.userId === input.userId &&
-      event.node.type === 'message' &&
-      event.node.parentId === input.conversationId
+      event.message.parentId === input.conversationId
     ) {
-      const message = output.find((message) => message.id === event.node.id);
+      const message = output.find((message) => message.id === event.message.id);
       if (message) {
         const newResult = output.map((message) => {
-          if (message.id === event.node.id) {
-            return event.node as MessageNode;
+          if (message.id === event.message.id) {
+            return event.message;
           }
           return message;
         });
@@ -69,12 +68,11 @@ export class MessageListQueryHandler
     }
 
     if (
-      event.type === 'node_deleted' &&
+      event.type === 'message_deleted' &&
       event.userId === input.userId &&
-      event.node.type === 'message' &&
-      event.node.parentId === input.conversationId
+      event.message.parentId === input.conversationId
     ) {
-      const message = output.find((message) => message.id === event.node.id);
+      const message = output.find((message) => message.id === event.message.id);
 
       if (message) {
         const newOutput = await this.handleQuery(input);
@@ -92,21 +90,16 @@ export class MessageListQueryHandler
 
   private async fetchMesssages(
     input: MessageListQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectMessage[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const offset = (input.page - 1) * input.count;
     const messages = await workspaceDatabase
-      .selectFrom('nodes')
+      .selectFrom('messages')
       .selectAll()
-      .where((eb) =>
-        eb.and([
-          eb('parent_id', '=', input.conversationId),
-          eb('type', '=', 'message'),
-        ])
-      )
+      .where('parent_id', '=', input.conversationId)
       .orderBy('id', 'desc')
       .limit(input.count)
       .offset(offset)
@@ -115,18 +108,8 @@ export class MessageListQueryHandler
     return messages;
   }
 
-  private buildMessages = (rows: SelectNode[]): MessageNode[] => {
-    const nodes = rows.map(mapNode);
-    const messageNodes: MessageNode[] = [];
-
-    for (const node of nodes) {
-      if (node.type !== 'message') {
-        continue;
-      }
-
-      messageNodes.push(node);
-    }
-
-    return messageNodes.sort((a, b) => compareString(a.id, b.id));
+  private buildMessages = (rows: SelectMessage[]): MessageNode[] => {
+    const messages = rows.map(mapMessage);
+    return messages.sort((a, b) => compareString(a.id, b.id));
   };
 }

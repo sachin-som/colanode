@@ -253,6 +253,116 @@ const createCollaborationsTable: Migration = {
   },
 };
 
+const createMessagesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS messages_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('messages')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('type', 'varchar(30)', (col) => col.notNull())
+      .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('content', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('updated_at', 'timestamptz')
+      .addColumn('updated_by', 'varchar(30)')
+      .addColumn('deleted_at', 'timestamptz')
+      .addColumn('deleted_by', 'varchar(30)')
+      .addColumn('version', 'bigint', (col) =>
+        col.notNull().defaultTo(sql`nextval('messages_version_sequence')`)
+      )
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_message_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('messages_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_message_version
+      BEFORE UPDATE ON messages
+      FOR EACH ROW
+      EXECUTE FUNCTION update_message_version();
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_message_version ON messages;
+      DROP FUNCTION IF EXISTS update_message_version();
+    `.execute(db);
+
+    await db.schema.dropTable('messages').execute();
+    await sql`DROP SEQUENCE IF EXISTS messages_version_sequence`.execute(db);
+  },
+};
+
+const createMessageReactionsTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS message_reactions_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('message_reactions')
+      .addColumn('message_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('reaction', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('deleted_at', 'timestamptz')
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('message_reactions_version_sequence')`)
+      )
+      .addPrimaryKeyConstraint('message_reactions_pkey', [
+        'message_id',
+        'collaborator_id',
+        'reaction',
+      ])
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_message_reaction_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('message_reactions_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_message_reaction_version ON message_reactions;
+      DROP FUNCTION IF EXISTS update_message_reaction_version();
+    `.execute(db);
+
+    await db.schema.dropTable('message_reactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS message_reactions_version_sequence`.execute(
+      db
+    );
+  },
+};
+
 const createFilesTable: Migration = {
   up: async (db) => {
     await sql`
@@ -446,8 +556,10 @@ export const databaseMigrations: Record<string, Migration> = {
   '00004_create_users_table': createUsersTable,
   '00005_create_nodes_table': createNodesTable,
   '00006_create_transactions_table': createTransactionsTable,
-  '00007_create_collaborations_table': createCollaborationsTable,
-  '00008_create_files_table': createFilesTable,
-  '00009_create_node_paths_table': createNodePathsTable,
-  '00010_create_interactions_table': createInteractionsTable,
+  '00007_create_messages_table': createMessagesTable,
+  '00008_create_message_reactions_table': createMessageReactionsTable,
+  '00009_create_files_table': createFilesTable,
+  '00010_create_collaborations_table': createCollaborationsTable,
+  '00011_create_node_paths_table': createNodePathsTable,
+  '00012_create_interactions_table': createInteractionsTable,
 };

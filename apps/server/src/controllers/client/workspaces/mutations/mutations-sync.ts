@@ -8,11 +8,15 @@ import {
   ApplyUpdateTransactionMutation,
   ApplyDeleteTransactionMutation,
   CreateFileMutation,
+  CreateMessageMutation,
+  CreateMessageReactionMutation,
+  DeleteMessageReactionMutation,
 } from '@colanode/core';
 
 import { SelectUser } from '@/data/schema';
 import { nodeService } from '@/services/node-service';
 import { fileService } from '@/services/file-service';
+import { messageService } from '@/services/message-service';
 
 export const mutationsSyncHandler = async (
   req: Request,
@@ -53,6 +57,12 @@ const handleMutation = async (
     return await handleDeleteTransaction(user, mutation);
   } else if (mutation.type === 'create_file') {
     return await handleCreateFile(user, mutation);
+  } else if (mutation.type === 'create_message') {
+    return await handleCreateMessage(user, mutation);
+  } else if (mutation.type === 'create_message_reaction') {
+    return await handleCreateMessageReaction(user, mutation);
+  } else if (mutation.type === 'delete_message_reaction') {
+    return await handleDeleteMessageReaction(user, mutation);
   } else {
     return 'error';
   }
@@ -120,5 +130,29 @@ const handleCreateFile = async (
   mutation: CreateFileMutation
 ): Promise<SyncMutationStatus> => {
   const output = await fileService.createFile(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleCreateMessage = async (
+  user: SelectUser,
+  mutation: CreateMessageMutation
+): Promise<SyncMutationStatus> => {
+  const output = await messageService.createMessage(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleCreateMessageReaction = async (
+  user: SelectUser,
+  mutation: CreateMessageReactionMutation
+): Promise<SyncMutationStatus> => {
+  const output = await messageService.createMessageReaction(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleDeleteMessageReaction = async (
+  user: SelectUser,
+  mutation: DeleteMessageReactionMutation
+): Promise<SyncMutationStatus> => {
+  const output = await messageService.deleteMessageReaction(user, mutation);
   return output ? 'success' : 'error';
 };

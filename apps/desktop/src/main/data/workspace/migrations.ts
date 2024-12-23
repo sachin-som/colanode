@@ -94,6 +94,50 @@ const createCollaborationsTable: Migration = {
   },
 };
 
+const createMessagesTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('messages')
+      .addColumn('id', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('type', 'text', (col) => col.notNull())
+      .addColumn('parent_id', 'text', (col) => col.notNull())
+      .addColumn('node_id', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('content', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('created_by', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('updated_by', 'text')
+      .addColumn('version', 'integer')
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('messages').execute();
+  },
+};
+
+const createMessageReactionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('message_reactions')
+      .addColumn('message_id', 'text', (col) => col.notNull())
+      .addColumn('collaborator_id', 'text', (col) => col.notNull())
+      .addColumn('reaction', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('version', 'integer', (col) => col.notNull())
+      .addPrimaryKeyConstraint('message_reactions_pkey', [
+        'message_id',
+        'collaborator_id',
+        'reaction',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('message_reactions').execute();
+  },
+};
+
 const createFilesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -147,7 +191,6 @@ const createMutationsTable: Migration = {
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('type', 'text', (col) => col.notNull())
       .addColumn('node_id', 'text', (col) => col.notNull())
-      .addColumn('key', 'text', (col) => col.notNull())
       .addColumn('data', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('retries', 'integer', (col) => col.notNull())
@@ -318,13 +361,15 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00002_create_nodes_table': createNodesTable,
   '00003_create_transactions_table': createTransactionsTable,
   '00004_create_collaborations_table': createCollaborationsTable,
-  '00005_create_files_table': createFilesTable,
-  '00006_create_file_states_table': createFileStatesTable,
-  '00007_create_interactions_table': createInteractionsTable,
-  '00008_create_interaction_events_table': createInteractionEventsTable,
-  '00009_create_mutations_table': createMutationsTable,
-  '00010_create_node_paths_table': createNodePathsTable,
-  '00011_create_node_names_table': createNodeNamesTable,
-  '00012_create_node_texts_table': createNodeTextsTable,
-  '00013_create_cursors_table': createCursorsTable,
+  '00005_create_messages_table': createMessagesTable,
+  '00006_create_message_reactions_table': createMessageReactionsTable,
+  '00007_create_files_table': createFilesTable,
+  '00008_create_file_states_table': createFileStatesTable,
+  '00009_create_interactions_table': createInteractionsTable,
+  '00010_create_interaction_events_table': createInteractionEventsTable,
+  '00011_create_mutations_table': createMutationsTable,
+  '00012_create_node_paths_table': createNodePathsTable,
+  '00013_create_node_names_table': createNodeNamesTable,
+  '00014_create_node_texts_table': createNodeTextsTable,
+  '00015_create_cursors_table': createCursorsTable,
 };

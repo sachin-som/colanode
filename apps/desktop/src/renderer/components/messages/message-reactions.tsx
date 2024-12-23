@@ -1,10 +1,10 @@
-import { MessageNode } from '@colanode/core';
-
+import { MessageNode } from '@/shared/types/messages';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { cn } from '@/shared/lib/utils';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface MessageReactionsProps {
   message: MessageNode;
@@ -14,14 +14,13 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
 
-  const reactionCounts = Object.entries(message.attributes.reactions ?? {})
-    .map(([reaction, users]) => ({
-      reaction,
-      count: users.length,
-      isReactedTo: users.includes(workspace.userId),
-    }))
-    .filter((reactionCount) => reactionCount.count > 0);
+  const { data } = useQuery({
+    type: 'message_reactions_get',
+    messageId: message.id,
+    userId: workspace.userId,
+  });
 
+  const reactionCounts = data ?? [];
   if (reactionCounts.length === 0) {
     return null;
   }
@@ -33,7 +32,7 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
           return null;
         }
 
-        const hasReacted = reaction.isReactedTo;
+        const hasReacted = reaction.reacted;
         return (
           <div
             key={reaction.reaction}
@@ -51,7 +50,7 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
                 reactionCounts.some(
                   (reactionCount) =>
                     reactionCount.reaction === reaction.reaction &&
-                    reactionCount.isReactedTo
+                    reactionCount.reacted
                 )
               ) {
                 mutate({
@@ -59,6 +58,7 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
                     type: 'message_reaction_delete',
                     messageId: message.id,
                     userId: workspace.userId,
+                    rootId: message.rootId,
                     reaction: reaction.reaction,
                   },
                   onError(error) {
@@ -75,6 +75,7 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
                     type: 'message_reaction_create',
                     messageId: message.id,
                     userId: workspace.userId,
+                    rootId: message.rootId,
                     reaction: reaction.reaction,
                   },
                   onError(error) {

@@ -24,6 +24,43 @@ export type NodeDeletedEvent = {
   workspaceId: string;
 };
 
+export type MessageCreatedEvent = {
+  type: 'message_created';
+  messageId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type MessageUpdatedEvent = {
+  type: 'message_updated';
+  messageId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type MessageDeletedEvent = {
+  type: 'message_deleted';
+  messageId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type MessageReactionCreatedEvent = {
+  type: 'message_reaction_created';
+  messageId: string;
+  collaboratorId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type MessageReactionDeletedEvent = {
+  type: 'message_reaction_deleted';
+  messageId: string;
+  collaboratorId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
 export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
   collaboratorId: string;
@@ -123,4 +160,9 @@ export type Event =
   | DeviceDeletedEvent
   | FileCreatedEvent
   | FileUpdatedEvent
-  | FileDeletedEvent;
+  | FileDeletedEvent
+  | MessageCreatedEvent
+  | MessageUpdatedEvent
+  | MessageDeletedEvent
+  | MessageReactionCreatedEvent
+  | MessageReactionDeletedEvent;

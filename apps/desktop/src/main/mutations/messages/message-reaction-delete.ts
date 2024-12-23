@@ -1,10 +1,17 @@
-import { nodeService } from '@/main/services/node-service';
+import {
+  DeleteMessageReactionMutation,
+  generateId,
+  IdType,
+} from '@colanode/core';
+
+import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
 import {
   MessageReactionDeleteMutationInput,
   MessageReactionDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-reaction-delete';
+import { mapMessageReaction } from '@/main/utils';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class MessageReactionDeleteMutationHandler
   implements MutationHandler<MessageReactionDeleteMutationInput>
@@ -12,46 +19,84 @@ export class MessageReactionDeleteMutationHandler
   async handleMutation(
     input: MessageReactionDeleteMutationInput
   ): Promise<MessageReactionDeleteMutationOutput> {
-    const result = await nodeService.updateNode(
-      input.messageId,
-      input.userId,
-      (attributes) => {
-        if (attributes.type !== 'message') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a message'
-          );
-        }
-
-        const reactionUsers = attributes.reactions[input.reaction] ?? [];
-        if (!reactionUsers.includes(input.userId)) {
-          return attributes;
-        }
-
-        const index = reactionUsers.indexOf(input.userId);
-        if (index === -1) {
-          return attributes;
-        }
-
-        reactionUsers.splice(index, 1);
-        attributes.reactions[input.reaction] = reactionUsers;
-        return attributes;
-      }
+    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
+      input.userId
     );
 
-    if (result === 'unauthorized') {
-      throw new MutationError(
-        'unauthorized',
-        "You don't have permission to react to this message."
-      );
+    const existingMessageReaction = await workspaceDatabase
+      .selectFrom('message_reactions')
+      .selectAll()
+      .where('message_id', '=', input.messageId)
+      .where('collaborator_id', '=', input.userId)
+      .where('reaction', '=', input.reaction)
+      .executeTakeFirst();
+
+    if (!existingMessageReaction) {
+      return {
+        success: true,
+      };
     }
 
-    if (result !== 'success') {
-      throw new MutationError(
-        'unknown',
-        'Something went wrong while deleting the reaction.'
-      );
+    const { deletedMessageReaction, createdMutation } = await workspaceDatabase
+      .transaction()
+      .execute(async (trx) => {
+        const deletedMessageReaction = await trx
+          .deleteFrom('message_reactions')
+          .where('message_id', '=', input.messageId)
+          .where('collaborator_id', '=', input.userId)
+          .where('reaction', '=', input.reaction)
+          .returningAll()
+          .executeTakeFirst();
+
+        if (!deletedMessageReaction) {
+          throw new Error('Failed to delete message reaction');
+        }
+
+        const mutation: DeleteMessageReactionMutation = {
+          id: generateId(IdType.Mutation),
+          createdAt: new Date().toISOString(),
+          type: 'delete_message_reaction',
+          data: {
+            messageId: input.messageId,
+            reaction: deletedMessageReaction.reaction,
+            rootId: input.rootId,
+            deletedAt: new Date().toISOString(),
+          },
+        };
+
+        const createdMutation = await trx
+          .insertInto('mutations')
+          .returningAll()
+          .values({
+            id: mutation.id,
+            type: mutation.type,
+            data: JSON.stringify(mutation.data),
+            created_at: mutation.createdAt,
+            node_id: input.messageId,
+            retries: 0,
+          })
+          .executeTakeFirst();
+
+        return {
+          deletedMessageReaction,
+          createdMutation,
+        };
+      });
+
+    if (!deletedMessageReaction || !createdMutation) {
+      throw new Error('Failed to delete message reaction');
     }
+
+    eventBus.publish({
+      type: 'mutation_created',
+      userId: input.userId,
+    });
+
+    eventBus.publish({
+      type: 'message_reaction_deleted',
+      userId: input.userId,
+      messageReaction: mapMessageReaction(deletedMessageReaction),
+    });
 
     return {
       success: true,

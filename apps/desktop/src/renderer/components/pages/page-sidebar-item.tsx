@@ -1,31 +1,31 @@
-import { PageNode } from '@colanode/core';
+import { PageEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { cn } from '@/shared/lib/utils';
 
 interface PageSidebarItemProps {
-  node: PageNode;
+  page: PageEntry;
 }
 
-export const PageSidebarItem = ({ node }: PageSidebarItemProps) => {
+export const PageSidebarItem = ({ page }: PageSidebarItemProps) => {
   const workspace = useWorkspace();
-  const isActive = workspace.isNodeActive(node.id);
+  const isActive = workspace.isEntryActive(page.id);
   const isUnread = false;
   const mentionsCount = 0;
 
   return (
     <button
-      key={node.id}
+      key={page.id}
       className={cn(
         'flex w-full items-center',
         isActive && 'bg-sidebar-accent'
       )}
     >
       <Avatar
-        id={node.id}
-        avatar={node.attributes.avatar}
-        name={node.attributes.name}
+        id={page.id}
+        avatar={page.attributes.avatar}
+        name={page.attributes.name}
         className="h-4 w-4"
       />
       <span
@@ -34,7 +34,7 @@ export const PageSidebarItem = ({ node }: PageSidebarItemProps) => {
           isUnread && 'font-bold'
         )}
       >
-        {node.attributes.name ?? 'Unnamed'}
+        {page.attributes.name ?? 'Unnamed'}
       </span>
       {mentionsCount > 0 && (
         <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">

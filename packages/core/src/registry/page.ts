@@ -2,7 +2,7 @@ import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 
 import { blockSchema } from './block';
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 
 import { extractText } from '../lib/blocks';
 
@@ -12,12 +12,12 @@ export const pageAttributesSchema = z.object({
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
   content: z.record(blockSchema),
-  collaborators: z.record(z.string(), nodeRoleEnum).nullable().optional(),
+  collaborators: z.record(z.string(), entryRoleEnum).nullable().optional(),
 });
 
 export type PageAttributes = z.infer<typeof pageAttributesSchema>;
 
-export const pageModel: NodeModel = {
+export const pageModel: EntryModel = {
   type: 'page',
   schema: pageAttributesSchema,
   getName: (_, attributes) => {

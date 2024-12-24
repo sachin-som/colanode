@@ -1,4 +1,4 @@
-import { ChannelNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { ChannelEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 
 import { ChannelForm } from '@/renderer/components/channels/channel-form';
 import {
@@ -13,8 +13,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface ChannelUpdateDialogProps {
-  channel: ChannelNode;
-  role: NodeRole;
+  channel: ChannelEntry;
+  role: EntryRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

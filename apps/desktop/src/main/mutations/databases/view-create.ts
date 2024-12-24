@@ -5,7 +5,7 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ViewCreateMutationInput,
@@ -20,7 +20,7 @@ export class ViewCreateMutationHandler
     input: ViewCreateMutationInput
   ): Promise<ViewCreateMutationOutput> {
     const id = generateId(IdType.View);
-    const result = await nodeService.updateNode(
+    const result = await entryService.updateEntry(
       input.databaseId,
       input.userId,
       (attributes) => {

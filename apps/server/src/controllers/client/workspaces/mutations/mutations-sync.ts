@@ -14,7 +14,7 @@ import {
 } from '@colanode/core';
 
 import { SelectUser } from '@/data/schema';
-import { nodeService } from '@/services/node-service';
+import { entryService } from '@/services/entry-service';
 import { fileService } from '@/services/file-service';
 import { messageService } from '@/services/message-service';
 
@@ -72,9 +72,9 @@ const handleCreateTransaction = async (
   user: SelectUser,
   mutation: ApplyCreateTransactionMutation
 ): Promise<SyncMutationStatus> => {
-  const output = await nodeService.applyCreateTransaction(user, {
+  const output = await entryService.applyCreateTransaction(user, {
     id: mutation.data.id,
-    nodeId: mutation.data.nodeId,
+    entryId: mutation.data.entryId,
     rootId: mutation.data.rootId,
     data: mutation.data.data,
     createdAt: new Date(mutation.data.createdAt),
@@ -91,9 +91,9 @@ const handleUpdateTransaction = async (
   user: SelectUser,
   mutation: ApplyUpdateTransactionMutation
 ): Promise<SyncMutationStatus> => {
-  const output = await nodeService.applyUpdateTransaction(user, {
+  const output = await entryService.applyUpdateTransaction(user, {
     id: mutation.data.id,
-    nodeId: mutation.data.nodeId,
+    entryId: mutation.data.entryId,
     rootId: mutation.data.rootId,
     userId: mutation.data.createdBy,
     data: mutation.data.data,
@@ -111,9 +111,9 @@ const handleDeleteTransaction = async (
   user: SelectUser,
   mutation: ApplyDeleteTransactionMutation
 ): Promise<SyncMutationStatus> => {
-  const output = await nodeService.applyDeleteTransaction(user, {
+  const output = await entryService.applyDeleteTransaction(user, {
     id: mutation.data.id,
-    nodeId: mutation.data.nodeId,
+    entryId: mutation.data.entryId,
     rootId: mutation.data.rootId,
     createdAt: new Date(mutation.data.createdAt),
   });

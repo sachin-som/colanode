@@ -1,4 +1,4 @@
-import { FolderNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { FolderEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 
 import { FolderForm } from '@/renderer/components/folders/folder-form';
 import {
@@ -13,8 +13,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface FolderUpdateDialogProps {
-  folder: FolderNode;
-  role: NodeRole;
+  folder: FolderEntry;
+  role: EntryRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

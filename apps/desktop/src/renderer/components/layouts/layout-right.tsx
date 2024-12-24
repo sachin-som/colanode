@@ -1,14 +1,14 @@
-import { NodeContainer } from '@/renderer/components/layouts/node-container';
+import { EntryContainer } from '@/renderer/components/layouts/entry-container';
 import { ContainerContext } from '@/renderer/contexts/container';
 
 interface LayoutRightProps {
-  nodeId: string;
+  entryId: string;
 }
 
-export const LayoutRight = ({ nodeId }: LayoutRightProps) => {
+export const LayoutRight = ({ entryId }: LayoutRightProps) => {
   return (
-    <ContainerContext.Provider value={{ nodeId, mode: 'panel' }}>
-      <NodeContainer nodeId={nodeId} />
+    <ContainerContext.Provider value={{ entryId, mode: 'panel' }}>
+      <EntryContainer entryId={entryId} />
     </ContainerContext.Provider>
   );
 };

@@ -2,8 +2,8 @@ import {
   Block,
   generateId,
   IdType,
-  NodeAttributes,
-  NodeRole,
+  EntryAttributes,
+  EntryRole,
   registry,
   generateNodeIndex,
   ViewAttributes,
@@ -101,12 +101,12 @@ export class NodeGenerator {
 
   private buildSpace(name: string, description: string, avatar: string) {
     const spaceId = generateId(IdType.Space);
-    const collaborators: Record<string, NodeRole> = {};
+    const collaborators: Record<string, EntryRole> = {};
     for (const user of this.users) {
       collaborators[user.userId] = 'admin';
     }
 
-    const spaceAttributes: NodeAttributes = {
+    const spaceAttributes: EntryAttributes = {
       type: 'space',
       name,
       description,
@@ -141,7 +141,7 @@ export class NodeGenerator {
     avatar: string
   ) {
     const channelId = generateId(IdType.Channel);
-    const channelAttributes: NodeAttributes = {
+    const channelAttributes: EntryAttributes = {
       type: 'channel',
       name,
       parentId,
@@ -171,7 +171,7 @@ export class NodeGenerator {
   private buildChat(user: User) {
     const mainUser = this.getMainUser();
     const chatId = generateId(IdType.Chat);
-    const chatAttributes: NodeAttributes = {
+    const chatAttributes: EntryAttributes = {
       type: 'chat',
       parentId: this.workspaceId,
       collaborators: {
@@ -209,7 +209,7 @@ export class NodeGenerator {
     avatar: string
   ) {
     const pageId = generateId(IdType.Page);
-    const pageAttributes: NodeAttributes = {
+    const pageAttributes: EntryAttributes = {
       type: 'page',
       name,
       parentId,
@@ -256,7 +256,7 @@ export class NodeGenerator {
       data: {
         id: messageId,
         type: 'standard',
-        nodeId: conversationId,
+        entryId: conversationId,
         parentId: conversationId,
         rootId,
         content: {
@@ -447,7 +447,7 @@ export class NodeGenerator {
       sorts: {},
     };
 
-    const databaseAttributes: NodeAttributes = {
+    const databaseAttributes: EntryAttributes = {
       type: 'database',
       parentId,
       name: 'Tasks',
@@ -702,7 +702,7 @@ export class NodeGenerator {
       sorts: {},
     };
 
-    const databaseAttributes: NodeAttributes = {
+    const databaseAttributes: EntryAttributes = {
       type: 'database',
       parentId,
       name: 'Clients',
@@ -848,7 +848,7 @@ export class NodeGenerator {
       sorts: {},
     };
 
-    const databaseAttributes: NodeAttributes = {
+    const databaseAttributes: EntryAttributes = {
       type: 'database',
       parentId,
       name: 'Meetings',
@@ -906,7 +906,7 @@ export class NodeGenerator {
     databaseAttributes: DatabaseAttributes
   ) {
     const recordId = generateId(IdType.Record);
-    const recordAttributes: NodeAttributes = {
+    const recordAttributes: EntryAttributes = {
       type: 'record',
       parentId: databaseId,
       databaseId,
@@ -956,9 +956,9 @@ export class NodeGenerator {
 
   private buildCreateTransaction(
     rootId: string,
-    nodeId: string,
+    entryId: string,
     userId: string,
-    attributes: NodeAttributes
+    attributes: EntryAttributes
   ): LocalCreateTransaction {
     const ydoc = new YDoc();
     const model = registry.getModel(attributes.type);
@@ -969,7 +969,7 @@ export class NodeGenerator {
       id: generateId(IdType.Transaction),
       operation: 'create',
       data: encodeState(update),
-      nodeId,
+      entryId,
       rootId,
       createdAt: new Date().toISOString(),
       createdBy: userId,

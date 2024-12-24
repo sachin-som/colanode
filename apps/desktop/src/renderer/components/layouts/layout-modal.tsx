@@ -1,7 +1,7 @@
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 
-import { NodeContainer } from '@/renderer/components/layouts/node-container';
+import { EntryContainer } from '@/renderer/components/layouts/entry-container';
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import { ContainerContext } from '@/renderer/contexts/container';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface LayoutModalProps {
-  nodeId: string;
+  entryId: string;
 }
 
-export const LayoutModal = ({ nodeId }: LayoutModalProps) => {
+export const LayoutModal = ({ entryId }: LayoutModalProps) => {
   const workspace = useWorkspace();
   const [open, setOpen] = React.useState(true);
 
@@ -38,8 +38,8 @@ export const LayoutModal = ({ nodeId }: LayoutModalProps) => {
         <VisuallyHidden>
           <DialogTitle>Modal</DialogTitle>
         </VisuallyHidden>
-        <ContainerContext.Provider value={{ nodeId, mode: 'modal' }}>
-          <NodeContainer nodeId={nodeId} />
+        <ContainerContext.Provider value={{ entryId, mode: 'modal' }}>
+          <EntryContainer entryId={entryId} />
         </ContainerContext.Provider>
       </DialogContent>
     </Dialog>

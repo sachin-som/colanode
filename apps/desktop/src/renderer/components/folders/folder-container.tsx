@@ -1,4 +1,4 @@
-import { extractNodeRole } from '@colanode/core';
+import { extractEntryRole } from '@colanode/core';
 
 import { FolderBody } from '@/renderer/components/folders/folder-body';
 import { FolderHeader } from '@/renderer/components/folders/folder-header';
@@ -6,15 +6,15 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface FolderContainerProps {
-  nodeId: string;
+  folderId: string;
 }
 
-export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
+export const FolderContainer = ({ folderId }: FolderContainerProps) => {
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    type: 'node_tree_get',
-    nodeId,
+    type: 'entry_tree_get',
+    entryId: folderId,
     userId: workspace.userId,
   });
 
@@ -22,9 +22,9 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
     return null;
   }
 
-  const nodes = data ?? [];
-  const folder = nodes.find((node) => node.id === nodeId);
-  const role = extractNodeRole(nodes, workspace.userId);
+  const entries = data ?? [];
+  const folder = entries.find((entry) => entry.id === folderId);
+  const role = extractEntryRole(entries, workspace.userId);
 
   if (!folder || folder.type !== 'folder' || !role) {
     return null;
@@ -32,7 +32,7 @@ export const FolderContainer = ({ nodeId }: FolderContainerProps) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <FolderHeader nodes={nodes} folder={folder} role={role} />
+      <FolderHeader entries={entries} folder={folder} role={role} />
       <FolderBody folder={folder} />
     </div>
   );

@@ -59,7 +59,7 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
   ): SynchronizerOutputMessage<SyncCollaborationsInput> {
     const items: SyncCollaborationData[] = unsyncedCollaborations.map(
       (collaboration) => ({
-        nodeId: collaboration.node_id,
+        entryId: collaboration.entry_id,
         workspaceId: collaboration.workspace_id,
         collaboratorId: collaboration.collaborator_id,
         role: collaboration.role,

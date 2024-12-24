@@ -1,4 +1,4 @@
-import { DatabaseNode, NodeRole } from '@colanode/core';
+import { DatabaseEntry, EntryRole } from '@colanode/core';
 import { useEffect } from 'react';
 
 import { Database } from '@/renderer/components/databases/database';
@@ -7,8 +7,8 @@ import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface DatabaseBodyProps {
-  database: DatabaseNode;
-  role: NodeRole;
+  database: DatabaseEntry;
+  role: EntryRole;
 }
 
 export const DatabaseBody = ({ database, role }: DatabaseBodyProps) => {

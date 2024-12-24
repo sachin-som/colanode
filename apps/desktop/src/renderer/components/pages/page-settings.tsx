@@ -1,8 +1,8 @@
-import { hasEditorAccess, NodeRole, PageNode } from '@colanode/core';
+import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
+import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
 import { PageDeleteDialog } from '@/renderer/components/pages/page-delete-dialog';
 import { PageUpdateDialog } from '@/renderer/components/pages/page-update-dialog';
 import {
@@ -15,8 +15,8 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface PageSettingsProps {
-  page: PageNode;
-  role: NodeRole;
+  page: PageEntry;
+  role: EntryRole;
 }
 
 export const PageSettings = ({ page, role }: PageSettingsProps) => {
@@ -84,7 +84,7 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <NodeCollaboratorAudit
+            <EntryCollaboratorAudit
               collaboratorId={page.createdBy}
               date={page.createdAt}
             />
@@ -94,7 +94,7 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <NodeCollaboratorAudit
+                <EntryCollaboratorAudit
                   collaboratorId={page.updatedBy}
                   date={page.updatedAt}
                 />
@@ -104,7 +104,7 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <PageDeleteDialog
-        nodeId={page.id}
+        pageId={page.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

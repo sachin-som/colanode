@@ -1,4 +1,4 @@
-import { NodeRole } from '../registry/core';
+import { EntryRole } from '../registry/core';
 
 export type SyncCollaborationsInput = {
   type: 'collaborations';
@@ -6,9 +6,9 @@ export type SyncCollaborationsInput = {
 
 export type SyncCollaborationData = {
   collaboratorId: string;
-  nodeId: string;
+  entryId: string;
   workspaceId: string;
-  role: NodeRole;
+  role: EntryRole;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;

@@ -1,6 +1,6 @@
 import { generateId, IdType, RecordAttributes } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   RecordCreateMutationInput,
@@ -23,7 +23,7 @@ export class RecordCreateMutationHandler
       content: {},
     };
 
-    await nodeService.createNode(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, { id, attributes });
 
     return {
       id: id,

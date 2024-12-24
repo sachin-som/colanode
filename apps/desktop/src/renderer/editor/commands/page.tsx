@@ -1,4 +1,3 @@
-import { NodeTypes } from '@colanode/core';
 import { FileText } from 'lucide-react';
 
 import { EditorCommand } from '@/shared/types/editor';
@@ -33,7 +32,7 @@ export const PageCommand: EditorCommand = {
       .focus()
       .deleteRange(range)
       .insertContent({
-        type: NodeTypes.Page,
+        type: 'page',
         attrs: {
           id: output.output.id,
         },

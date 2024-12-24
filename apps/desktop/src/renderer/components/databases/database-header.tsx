@@ -1,20 +1,19 @@
-import { DatabaseNode, Node, NodeRole } from '@colanode/core';
+import { DatabaseEntry, Entry, EntryRole } from '@colanode/core';
 
-import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { DatabaseSettings } from '@/renderer/components/databases/database-settings';
-import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
-import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
+import { EntryBreadcrumb } from '@/renderer/components/layouts/entry-breadcrumb';
+import { EntryFullscreenButton } from '@/renderer/components/layouts/entry-fullscreen-button';
 import { Header } from '@/renderer/components/ui/header';
 import { useContainer } from '@/renderer/contexts/container';
 
 interface DatabaseHeaderProps {
-  nodes: Node[];
-  database: DatabaseNode;
-  role: NodeRole;
+  entries: Entry[];
+  database: DatabaseEntry;
+  role: EntryRole;
 }
 
 export const DatabaseHeader = ({
-  nodes,
+  entries,
   database,
   role,
 }: DatabaseHeaderProps) => {
@@ -24,17 +23,12 @@ export const DatabaseHeader = ({
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
         <div className="flex-grow">
-          {container.mode === 'main' && <NodeBreadcrumb nodes={nodes} />}
+          {container.mode === 'main' && <EntryBreadcrumb entries={entries} />}
           {container.mode === 'modal' && (
-            <NodeFullscreenButton nodeId={database.id} />
+            <EntryFullscreenButton entryId={database.id} />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover
-            nodeId={database.id}
-            nodes={nodes}
-            role={role}
-          />
           <DatabaseSettings database={database} role={role} />
         </div>
       </div>

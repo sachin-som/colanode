@@ -1,4 +1,4 @@
-import { ChatNode } from '@colanode/core';
+import { ChatEntry } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -9,15 +9,15 @@ import { useQuery } from '@/renderer/hooks/use-query';
 import { cn } from '@/shared/lib/utils';
 
 interface ChatSidebarItemProps {
-  node: ChatNode;
+  chat: ChatEntry;
 }
 
-export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
+export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
 
   const userId =
-    Object.keys(node.attributes.collaborators).find(
+    Object.keys(chat.attributes.collaborators).find(
       (id) => id !== workspace.userId
     ) ?? '';
 
@@ -31,8 +31,8 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
     return null;
   }
 
-  const nodeReadState = radar.getChatState(workspace.userId, node.id);
-  const isActive = workspace.isNodeActive(node.id);
+  const nodeReadState = radar.getChatState(workspace.userId, chat.id);
+  const isActive = workspace.isEntryActive(chat.id);
   const unreadCount =
     nodeReadState.unseenMessagesCount + nodeReadState.mentionsCount;
 
@@ -43,9 +43,9 @@ export const ChatSidebarItem = ({ node }: ChatSidebarItemProps) => {
         if (inView) {
           radar.markAsSeen(
             workspace.userId,
-            node.id,
-            node.type,
-            node.transactionId
+            chat.id,
+            chat.type,
+            chat.transactionId
           );
         }
       }}

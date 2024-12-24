@@ -129,10 +129,10 @@ const createUsersTable: Migration = {
   },
 };
 
-const createNodesTable: Migration = {
+const createEntriesTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('nodes')
+      .createTable('entries')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('type', 'varchar(30)', (col) =>
         col.generatedAlwaysAs(sql`(attributes->>'type')::VARCHAR(30)`).stored()
@@ -154,7 +154,7 @@ const createNodesTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('nodes').execute();
+    await db.schema.dropTable('entries').execute();
   },
 };
 
@@ -172,7 +172,7 @@ const createTransactionsTable: Migration = {
     await db.schema
       .createTable('transactions')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('operation', 'varchar(30)', (col) => col.notNull())
@@ -206,7 +206,7 @@ const createCollaborationsTable: Migration = {
 
     await db.schema
       .createTable('collaborations')
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
@@ -220,7 +220,7 @@ const createCollaborationsTable: Migration = {
         col.notNull().defaultTo(sql`nextval('collaborations_version_sequence')`)
       )
       .addPrimaryKeyConstraint('collaborations_pkey', [
-        'node_id',
+        'entry_id',
         'collaborator_id',
       ])
       .execute();
@@ -268,7 +268,7 @@ const createMessagesTable: Migration = {
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('type', 'varchar(30)', (col) => col.notNull())
       .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('content', 'text', (col) => col.notNull())
@@ -378,6 +378,7 @@ const createFilesTable: Migration = {
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('type', 'varchar(30)', (col) => col.notNull())
       .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('name', 'varchar(256)', (col) => col.notNull())
@@ -422,56 +423,56 @@ const createFilesTable: Migration = {
   },
 };
 
-const createNodePathsTable: Migration = {
+const createEntryPathsTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('node_paths')
+      .createTable('entry_paths')
       .addColumn('ancestor_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade')
+        col.notNull().references('entries.id').onDelete('cascade')
       )
       .addColumn('descendant_id', 'varchar(30)', (col) =>
-        col.notNull().references('nodes.id').onDelete('cascade')
+        col.notNull().references('entries.id').onDelete('cascade')
       )
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('level', 'integer', (col) => col.notNull())
-      .addPrimaryKeyConstraint('node_paths_pkey', [
+      .addPrimaryKeyConstraint('entry_paths_pkey', [
         'ancestor_id',
         'descendant_id',
       ])
       .execute();
 
     await sql`
-      CREATE OR REPLACE FUNCTION fn_insert_node_path() RETURNS TRIGGER AS $$
+      CREATE OR REPLACE FUNCTION fn_insert_entry_path() RETURNS TRIGGER AS $$
       BEGIN
-        -- Insert direct path from the new node to itself
-        INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+        -- Insert direct path from the new entry to itself
+        INSERT INTO entry_paths (ancestor_id, descendant_id, workspace_id, level)
         VALUES (NEW.id, NEW.id, NEW.workspace_id, 0);
 
-        -- Insert paths from ancestors to the new node
-        INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+        -- Insert paths from ancestors to the new entry
+        INSERT INTO entry_paths (ancestor_id, descendant_id, workspace_id, level)
         SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
-        FROM node_paths
+        FROM entry_paths
         WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
 
         RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;
 
-      CREATE TRIGGER trg_insert_node_path
-      AFTER INSERT ON nodes
+      CREATE TRIGGER trg_insert_entry_path
+      AFTER INSERT ON entries
       FOR EACH ROW
-      EXECUTE FUNCTION fn_insert_node_path();
+      EXECUTE FUNCTION fn_insert_entry_path();
 
-      CREATE OR REPLACE FUNCTION fn_update_node_path() RETURNS TRIGGER AS $$
+      CREATE OR REPLACE FUNCTION fn_update_entry_path() RETURNS TRIGGER AS $$
       BEGIN
         IF OLD.parent_id IS DISTINCT FROM NEW.parent_id THEN
-          -- Delete old paths involving the updated node
-          DELETE FROM node_paths
+          -- Delete old paths involving the updated entry
+          DELETE FROM entry_paths
           WHERE descendant_id = NEW.id AND ancestor_id <> NEW.id;
 
-          INSERT INTO node_paths (ancestor_id, descendant_id, workspace_id, level)
+          INSERT INTO entry_paths (ancestor_id, descendant_id, workspace_id, level)
           SELECT ancestor_id, NEW.id, NEW.workspace_id, level + 1
-          FROM node_paths
+          FROM entry_paths
           WHERE descendant_id = NEW.parent_id AND ancestor_id <> NEW.id;
         END IF;
 
@@ -479,72 +480,20 @@ const createNodePathsTable: Migration = {
       END;
       $$ LANGUAGE plpgsql;
 
-      CREATE TRIGGER trg_update_node_path
-      AFTER UPDATE ON nodes
-      EXECUTE FUNCTION fn_update_node_path();
+      CREATE TRIGGER trg_update_entry_path
+      AFTER UPDATE ON entries
+      EXECUTE FUNCTION fn_update_entry_path();
     `.execute(db);
   },
   down: async (db) => {
     await sql`
-      DROP TRIGGER IF EXISTS trg_insert_node_path ON nodes;
-      DROP TRIGGER IF EXISTS trg_update_node_path ON nodes;
-      DROP FUNCTION IF EXISTS fn_insert_node_path();
-      DROP FUNCTION IF EXISTS fn_update_node_path();
+      DROP TRIGGER IF EXISTS trg_insert_entry_path ON entries;
+      DROP TRIGGER IF EXISTS trg_update_entry_path ON entries;
+      DROP FUNCTION IF EXISTS fn_insert_entry_path();
+      DROP FUNCTION IF EXISTS fn_update_entry_path();
     `.execute(db);
 
-    await db.schema.dropTable('node_paths').execute();
-  },
-};
-
-const createInteractionsTable: Migration = {
-  up: async (db) => {
-    await sql`
-      CREATE SEQUENCE IF NOT EXISTS interactions_version_seq
-      START WITH 1000000000
-      INCREMENT BY 1
-      NO MINVALUE
-      NO MAXVALUE
-      CACHE 1;
-    `.execute(db);
-
-    await db.schema
-      .createTable('interactions')
-      .addColumn('user_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('attributes', 'jsonb')
-      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('updated_at', 'timestamptz')
-      .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('server_updated_at', 'timestamptz')
-      .addColumn('version', 'bigint', (col) =>
-        col.notNull().defaultTo(sql`nextval('interactions_version_seq')`)
-      )
-      .addPrimaryKeyConstraint('interactions_pkey', ['user_id', 'node_id'])
-      .execute();
-
-    await sql`
-      CREATE OR REPLACE FUNCTION update_interaction_version() RETURNS TRIGGER AS $$
-      BEGIN
-        NEW.version = nextval('interactions_version_seq');
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
-
-      CREATE TRIGGER trg_update_interaction_version
-      BEFORE UPDATE ON interactions
-      FOR EACH ROW
-      EXECUTE FUNCTION update_interaction_version();
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TRIGGER IF EXISTS trg_update_interaction_version ON interactions;
-      DROP FUNCTION IF EXISTS update_interaction_version();
-      DROP SEQUENCE IF EXISTS interactions_version_seq;
-    `.execute(db);
-
-    await db.schema.dropTable('interactions').execute();
+    await db.schema.dropTable('entry_paths').execute();
   },
 };
 
@@ -553,12 +502,11 @@ export const databaseMigrations: Record<string, Migration> = {
   '00002_create_devices_table': createDevicesTable,
   '00003_create_workspaces_table': createWorkspacesTable,
   '00004_create_users_table': createUsersTable,
-  '00005_create_nodes_table': createNodesTable,
+  '00005_create_entries_table': createEntriesTable,
   '00006_create_transactions_table': createTransactionsTable,
   '00007_create_messages_table': createMessagesTable,
   '00008_create_message_reactions_table': createMessageReactionsTable,
   '00009_create_files_table': createFilesTable,
   '00010_create_collaborations_table': createCollaborationsTable,
-  '00011_create_node_paths_table': createNodePathsTable,
-  '00012_create_interactions_table': createInteractionsTable,
+  '00011_create_entry_paths_table': createEntryPathsTable,
 };

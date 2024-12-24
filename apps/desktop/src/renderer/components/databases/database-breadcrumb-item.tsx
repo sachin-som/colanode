@@ -1,23 +1,23 @@
-import { DatabaseNode } from '@colanode/core';
+import { DatabaseEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 
 interface DatabaseBreadcrumbItemProps {
-  node: DatabaseNode;
+  database: DatabaseEntry;
 }
 
 export const DatabaseBreadcrumbItem = ({
-  node,
+  database,
 }: DatabaseBreadcrumbItemProps) => {
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
-        id={node.id}
-        name={node.attributes.name}
-        avatar={node.attributes.avatar}
+        id={database.id}
+        name={database.attributes.name}
+        avatar={database.attributes.avatar}
       />
-      <span>{node.attributes.name}</span>
+      <span>{database.attributes.name}</span>
     </div>
   );
 };

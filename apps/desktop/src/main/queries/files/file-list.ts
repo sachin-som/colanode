@@ -103,6 +103,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
         'f.type',
         'f.parent_id',
         'f.root_id',
+        'f.entry_id',
         'f.name',
         'f.original_name',
         'f.mime_type',

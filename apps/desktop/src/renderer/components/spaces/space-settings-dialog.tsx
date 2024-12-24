@@ -1,9 +1,9 @@
-import { extractNodeRole, hasAdminAccess, SpaceNode } from '@colanode/core';
+import { extractEntryRole, hasAdminAccess, SpaceEntry } from '@colanode/core';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Info, Trash2, Users } from 'lucide-react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
+import { EntryCollaborators } from '@/renderer/components/collaborators/entry-collaborators';
 import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form';
 import { SpaceUpdateForm } from '@/renderer/components/spaces/space-update-form';
 import {
@@ -20,7 +20,7 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface SpaceSettingsDialogProps {
-  space: SpaceNode;
+  space: SpaceEntry;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: string;
@@ -33,7 +33,7 @@ export const SpaceSettingsDialog = ({
   defaultTab,
 }: SpaceSettingsDialogProps) => {
   const workspace = useWorkspace();
-  const role = extractNodeRole(space, workspace.userId);
+  const role = extractEntryRole(space, workspace.userId);
   if (!role) {
     return null;
   }
@@ -102,9 +102,9 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              <NodeCollaborators
-                nodeId={space.id}
-                nodes={[space]}
+              <EntryCollaborators
+                entryId={space.id}
+                entries={[space]}
                 role={role}
               />
             </TabsContent>

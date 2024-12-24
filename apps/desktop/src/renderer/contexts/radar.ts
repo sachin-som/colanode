@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { NodeType } from '@colanode/core';
+import { EntryType } from '@colanode/core';
 
 import {
   AccountReadState,
@@ -11,18 +11,18 @@ import {
 interface RadarContext {
   getAccountState: (accountId: string) => AccountReadState;
   getWorkspaceState: (userId: string) => WorkspaceReadState;
-  getChatState: (userId: string, nodeId: string) => ChatReadState;
-  getChannelState: (userId: string, nodeId: string) => ChannelReadState;
+  getChatState: (userId: string, entryId: string) => ChatReadState;
+  getChannelState: (userId: string, entryIdId: string) => ChannelReadState;
   markAsSeen: (
     userId: string,
-    nodeId: string,
-    nodeType: NodeType,
+    entryId: string,
+    entryType: EntryType,
     transactionId: string
   ) => void;
   markAsOpened: (
     userId: string,
-    nodeId: string,
-    nodeType: NodeType,
+    entryId: string,
+    entryType: EntryType,
     transactionId: string
   ) => void;
 }

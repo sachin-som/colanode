@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError } from '@/shared/mutations';
 import {
@@ -12,12 +12,12 @@ export class SpaceUpdateMutationHandler
   async handleMutation(
     input: SpaceUpdateMutationInput
   ): Promise<SpaceUpdateMutationOutput> {
-    const result = await nodeService.updateNode(
+    const result = await entryService.updateEntry(
       input.id,
       input.userId,
       (attributes) => {
         if (attributes.type !== 'space') {
-          throw new MutationError('invalid_attributes', 'Node is not a space');
+          throw new MutationError('invalid_attributes', 'Entry is not a space');
         }
 
         attributes.name = input.name;

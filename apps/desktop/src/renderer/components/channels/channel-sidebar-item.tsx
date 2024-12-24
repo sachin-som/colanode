@@ -1,4 +1,4 @@
-import { ChannelNode } from '@colanode/core';
+import { ChannelEntry } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -8,15 +8,15 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { cn } from '@/shared/lib/utils';
 
 interface ChannelSidebarItemProps {
-  node: ChannelNode;
+  channel: ChannelEntry;
 }
 
-export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
+export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
 
-  const isActive = workspace.isNodeActive(node.id);
-  const channelState = radar.getChannelState(workspace.userId, node.id);
+  const isActive = workspace.isEntryActive(channel.id);
+  const channelState = radar.getChannelState(workspace.userId, channel.id);
   const unreadCount = channelState.unseenMessagesCount;
   const mentionsCount = channelState.mentionsCount;
 
@@ -27,9 +27,9 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
         if (inView) {
           radar.markAsSeen(
             workspace.userId,
-            node.id,
-            node.type,
-            node.transactionId
+            channel.id,
+            channel.type,
+            channel.transactionId
           );
         }
       }}
@@ -39,9 +39,9 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
       )}
     >
       <Avatar
-        id={node.id}
-        avatar={node.attributes.avatar}
-        name={node.attributes.name}
+        id={channel.id}
+        avatar={channel.attributes.avatar}
+        name={channel.attributes.name}
         className="h-4 w-4"
       />
       <span
@@ -50,7 +50,7 @@ export const ChannelSidebarItem = ({ node }: ChannelSidebarItemProps) => {
           !isActive && unreadCount > 0 && 'font-semibold'
         )}
       >
-        {node.attributes.name ?? 'Unnamed'}
+        {channel.attributes.name ?? 'Unnamed'}
       </span>
       {!isActive && (
         <ReadStateIndicator

@@ -1,4 +1,4 @@
-import { hasEditorAccess, NodeRole, PageNode } from '@colanode/core';
+import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
 
 import { PageForm } from '@/renderer/components/pages/page-form';
 import {
@@ -13,8 +13,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface PageUpdateDialogProps {
-  page: PageNode;
-  role: NodeRole;
+  page: PageEntry;
+  role: EntryRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

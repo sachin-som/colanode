@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { hasEditorAccess, NodeRole, PageNode } from '@colanode/core';
+import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 
 import { Document } from '@/renderer/components/documents/document';
@@ -10,8 +10,8 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { useRadar } from '@/renderer/contexts/radar';
 
 interface PageBodyProps {
-  page: PageNode;
-  role: NodeRole;
+  page: PageEntry;
+  role: EntryRole;
 }
 
 export const PageBody = ({ page, role }: PageBodyProps) => {
@@ -64,7 +64,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
   return (
     <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
       <Document
-        nodeId={page.id}
+        entryId={page.id}
         rootId={page.rootId}
         content={page.attributes.content}
         transactionId={page.transactionId}

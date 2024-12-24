@@ -1,4 +1,4 @@
-import { ChatNode } from '@colanode/core';
+import { ChatEntry } from '@colanode/core';
 
 import { ChatCreatePopover } from '@/renderer/components/chats/chat-create-popover';
 import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
@@ -10,13 +10,13 @@ export const LayoutSidebarChats = () => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({
-    type: 'node_children_get',
+    type: 'entry_children_get',
     userId: workspace.userId,
-    nodeId: workspace.id,
+    entryId: workspace.id,
     types: ['chat'],
   });
 
-  const chats = data?.map((node) => node as ChatNode) ?? [];
+  const chats = data?.map((entry) => entry as ChatEntry) ?? [];
 
   return (
     <div className="group/sidebar-chats flex w-full min-w-0 flex-col p-2">
@@ -34,14 +34,14 @@ export const LayoutSidebarChats = () => {
             key={item.id}
             className={cn(
               'px-2 flex w-full items-center gap-2 overflow-hidden rounded-md text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-7',
-              workspace.isNodeActive(item.id) &&
+              workspace.isEntryActive(item.id) &&
                 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
             )}
             onClick={() => {
               workspace.openInMain(item.id);
             }}
           >
-            <ChatSidebarItem node={item} />
+            <ChatSidebarItem chat={item} />
           </button>
         ))}
       </div>

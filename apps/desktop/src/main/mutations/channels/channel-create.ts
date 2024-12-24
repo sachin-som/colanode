@@ -1,7 +1,7 @@
 import { ChannelAttributes, generateId, IdType } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChannelCreateMutationInput,
@@ -20,7 +20,7 @@ export class ChannelCreateMutationHandler
     );
 
     const space = await workspaceDatabase
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .selectAll()
       .where('id', '=', input.spaceId)
       .executeTakeFirst();
@@ -41,7 +41,7 @@ export class ChannelCreateMutationHandler
       collaborators: null,
     };
 
-    await nodeService.createNode(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, { id, attributes });
 
     return {
       id: id,

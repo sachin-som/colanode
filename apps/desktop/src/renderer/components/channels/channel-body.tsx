@@ -1,4 +1,4 @@
-import { ChannelNode, NodeRole } from '@colanode/core';
+import { ChannelEntry, EntryRole } from '@colanode/core';
 import { useEffect } from 'react';
 
 import { Conversation } from '@/renderer/components/messages/conversation';
@@ -6,8 +6,8 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useRadar } from '@/renderer/contexts/radar';
 
 interface ChannelBodyProps {
-  channel: ChannelNode;
-  role: NodeRole;
+  channel: ChannelEntry;
+  role: EntryRole;
 }
 
 export const ChannelBody = ({ channel, role }: ChannelBodyProps) => {

@@ -1,4 +1,4 @@
-import { RecordNode } from '@colanode/core';
+import { RecordEntry } from '@colanode/core';
 import isHotkey from 'is-hotkey';
 import { Maximize2 } from 'lucide-react';
 import React, { Fragment } from 'react';
@@ -53,7 +53,7 @@ const NameEditor = ({ initialValue, onSave, onCancel }: NameEditorProps) => {
 };
 
 interface TableViewNameCellProps {
-  record: RecordNode;
+  record: RecordEntry;
 }
 
 export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {

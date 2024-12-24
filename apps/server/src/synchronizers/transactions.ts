@@ -63,7 +63,7 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
           return {
             id: transaction.id,
             operation: 'create',
-            nodeId: transaction.node_id,
+            entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,
             data: encodeState(transaction.data),
@@ -78,7 +78,7 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
           return {
             id: transaction.id,
             operation: 'update',
-            nodeId: transaction.node_id,
+            entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,
             data: encodeState(transaction.data),
@@ -93,7 +93,7 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
           return {
             id: transaction.id,
             operation: 'delete',
-            nodeId: transaction.node_id,
+            entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,
             createdAt: transaction.created_at.toISOString(),

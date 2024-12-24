@@ -7,7 +7,7 @@ import {
 } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   SpaceCreateMutationInput,
@@ -66,7 +66,7 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await nodeService.createNode(input.userId, [
+    await entryService.createEntry(input.userId, [
       {
         id: spaceId,
         attributes: spaceAttributes,

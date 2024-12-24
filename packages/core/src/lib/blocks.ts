@@ -34,13 +34,13 @@ const collectText = (
 };
 
 export const extractText = (
-  nodeId: string,
+  entryId: string,
   blocks: Record<string, Block> | undefined | null
 ): string | null => {
   if (!blocks) {
     return null;
   }
 
-  const result = collectText(nodeId, blocks);
+  const result = collectText(entryId, blocks);
   return result.length > 0 ? result : null;
 };

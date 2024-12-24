@@ -1,4 +1,4 @@
-import { SpaceNode } from '@colanode/core';
+import { SpaceEntry } from '@colanode/core';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -22,7 +22,7 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface SpaceUpdateFormProps {
-  space: SpaceNode;
+  space: SpaceEntry;
 }
 
 const formSchema = z.object({

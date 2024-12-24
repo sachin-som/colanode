@@ -1,8 +1,8 @@
-import { hasEditorAccess, NodeRole, RecordNode } from '@colanode/core';
+import { hasEditorAccess, EntryRole, RecordEntry } from '@colanode/core';
 import { Copy, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
+import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
 import { RecordDeleteDialog } from '@/renderer/components/records/record-delete-dialog';
 import {
   DropdownMenu,
@@ -15,8 +15,8 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface RecordSettingsProps {
-  record: RecordNode;
-  role: NodeRole;
+  record: RecordEntry;
+  role: EntryRole;
 }
 
 export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
@@ -55,7 +55,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <NodeCollaboratorAudit
+            <EntryCollaboratorAudit
               collaboratorId={record.createdBy}
               date={record.createdAt}
             />
@@ -65,7 +65,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <NodeCollaboratorAudit
+                <EntryCollaboratorAudit
                   collaboratorId={record.updatedBy}
                   date={record.updatedAt}
                 />
@@ -75,7 +75,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <RecordDeleteDialog
-        nodeId={record.id}
+        entryId={record.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

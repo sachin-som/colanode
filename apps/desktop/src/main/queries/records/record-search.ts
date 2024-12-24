@@ -1,10 +1,10 @@
-import { NodeTypes, RecordNode } from '@colanode/core';
+import { RecordEntry } from '@colanode/core';
 import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectNode } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapEntry } from '@/main/utils';
 import { RecordSearchQueryInput } from '@/shared/queries/records/record-search';
 import { Event } from '@/shared/types/events';
 
@@ -13,19 +13,19 @@ export class RecordSearchQueryHandler
 {
   public async handleQuery(
     input: RecordSearchQueryInput
-  ): Promise<RecordNode[]> {
+  ): Promise<RecordEntry[]> {
     const rows =
       input.searchQuery.length > 0
         ? await this.searchRecords(input)
         : await this.fetchRecords(input);
 
-    return this.buildRecordNodes(rows);
+    return this.buildRecordEntries(rows);
   }
 
   public async checkForChanges(
     event: Event,
     input: RecordSearchQueryInput,
-    _: RecordNode[]
+    _: RecordEntry[]
   ): Promise<ChangeCheckResult<RecordSearchQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -38,10 +38,10 @@ export class RecordSearchQueryHandler
     }
 
     if (
-      event.type === 'node_created' &&
+      event.type === 'entry_created' &&
       event.userId === input.userId &&
-      event.node.type === 'record' &&
-      event.node.attributes.databaseId === input.databaseId
+      event.entry.type === 'record' &&
+      event.entry.attributes.databaseId === input.databaseId
     ) {
       const newResult = await this.handleQuery(input);
       return {
@@ -51,10 +51,10 @@ export class RecordSearchQueryHandler
     }
 
     if (
-      event.type === 'node_updated' &&
+      event.type === 'entry_updated' &&
       event.userId === input.userId &&
-      event.node.type === 'record' &&
-      event.node.attributes.databaseId === input.databaseId
+      event.entry.type === 'record' &&
+      event.entry.attributes.databaseId === input.databaseId
     ) {
       const newResult = await this.handleQuery(input);
       return {
@@ -64,10 +64,10 @@ export class RecordSearchQueryHandler
     }
 
     if (
-      event.type === 'node_deleted' &&
+      event.type === 'entry_deleted' &&
       event.userId === input.userId &&
-      event.node.type === 'record' &&
-      event.node.attributes.databaseId === input.databaseId
+      event.entry.type === 'record' &&
+      event.entry.attributes.databaseId === input.databaseId
     ) {
       const newResult = await this.handleQuery(input);
       return {
@@ -83,22 +83,22 @@ export class RecordSearchQueryHandler
 
   private async searchRecords(
     input: RecordSearchQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectEntry[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const exclude = input.exclude ?? [];
-    const query = sql<SelectNode>`
-      SELECT n.*
-      FROM nodes n
-      JOIN node_names nn ON n.id = nn.id
-      WHERE n.type = ${NodeTypes.Record}
-        AND n.parent_id = ${input.databaseId}
-        AND nn.name MATCH ${input.searchQuery + '*'}
+    const query = sql<SelectEntry>`
+      SELECT e.*
+      FROM entries e
+      JOIN entry_names en ON e.id = en.id
+      WHERE e.type = 'record'
+        AND e.parent_id = ${input.databaseId}
+        AND en.name MATCH ${input.searchQuery + '*'}
         ${
           exclude.length > 0
-            ? sql`AND n.id NOT IN (${sql.join(
+            ? sql`AND e.id NOT IN (${sql.join(
                 exclude.map((id) => sql`${id}`),
                 sql`, `
               )})`
@@ -112,14 +112,14 @@ export class RecordSearchQueryHandler
 
   private async fetchRecords(
     input: RecordSearchQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectEntry[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const exclude = input.exclude ?? [];
     return workspaceDatabase
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .where('type', '=', 'record')
       .where('parent_id', '=', input.databaseId)
       .where('id', 'not in', exclude)
@@ -127,7 +127,7 @@ export class RecordSearchQueryHandler
       .execute();
   }
 
-  private buildRecordNodes = (rows: SelectNode[]): RecordNode[] => {
-    return rows.map((row) => mapNode(row) as RecordNode);
+  private buildRecordEntries = (rows: SelectEntry[]): RecordEntry[] => {
+    return rows.map((row) => mapEntry(row) as RecordEntry);
   };
 }

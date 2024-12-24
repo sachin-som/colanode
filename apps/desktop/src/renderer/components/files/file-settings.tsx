@@ -10,10 +10,10 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface FileSettingsProps {
-  nodeId: string;
+  fileId: string;
 }
 
-export const FileSettings = ({ nodeId }: FileSettingsProps) => {
+export const FileSettings = ({ fileId }: FileSettingsProps) => {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   return (
     <React.Fragment>
@@ -38,7 +38,7 @@ export const FileSettings = ({ nodeId }: FileSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <FileDeleteDialog
-        nodeId={nodeId}
+        fileId={fileId}
         open={showDeleteModal}
         onOpenChange={setShowDeleteModal}
       />

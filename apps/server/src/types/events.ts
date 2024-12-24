@@ -1,25 +1,25 @@
-import { NodeType } from '@colanode/core';
+import { EntryType } from '@colanode/core';
 
-export type NodeCreatedEvent = {
-  type: 'node_created';
-  nodeId: string;
-  nodeType: NodeType;
+export type EntryCreatedEvent = {
+  type: 'entry_created';
+  entryId: string;
+  entryType: EntryType;
   rootId: string;
   workspaceId: string;
 };
 
-export type NodeUpdatedEvent = {
-  type: 'node_updated';
-  nodeId: string;
-  nodeType: NodeType;
+export type EntryUpdatedEvent = {
+  type: 'entry_updated';
+  entryId: string;
+  entryType: EntryType;
   rootId: string;
   workspaceId: string;
 };
 
-export type NodeDeletedEvent = {
-  type: 'node_deleted';
-  nodeId: string;
-  nodeType: NodeType;
+export type EntryDeletedEvent = {
+  type: 'entry_deleted';
+  entryId: string;
+  entryType: EntryType;
   rootId: string;
   workspaceId: string;
 };
@@ -64,14 +64,14 @@ export type MessageReactionDeletedEvent = {
 export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
   collaboratorId: string;
-  nodeId: string;
+  entryId: string;
   workspaceId: string;
 };
 
 export type CollaborationUpdatedEvent = {
   type: 'collaboration_updated';
   collaboratorId: string;
-  nodeId: string;
+  entryId: string;
   workspaceId: string;
 };
 
@@ -99,7 +99,7 @@ export type FileDeletedEvent = {
 export type InteractionUpdatedEvent = {
   type: 'interaction_updated';
   userId: string;
-  nodeId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
 };
@@ -145,9 +145,9 @@ export type DeviceDeletedEvent = {
 };
 
 export type Event =
-  | NodeCreatedEvent
-  | NodeUpdatedEvent
-  | NodeDeletedEvent
+  | EntryCreatedEvent
+  | EntryUpdatedEvent
+  | EntryDeletedEvent
   | CollaborationCreatedEvent
   | CollaborationUpdatedEvent
   | InteractionUpdatedEvent

@@ -3,13 +3,13 @@ import { createContext, useContext } from 'react';
 import { Workspace } from '@/shared/types/workspaces';
 
 interface WorkspaceContext extends Workspace {
-  openInMain: (nodeId: string) => void;
-  isNodeActive: (nodeId: string) => boolean;
-  openInModal: (nodeId: string) => void;
-  isModalActive: (nodeId: string) => boolean;
+  openInMain: (entryId: string) => void;
+  isEntryActive: (entryId: string) => boolean;
+  openInModal: (entryId: string) => void;
+  isModalActive: (entryId: string) => boolean;
   closeModal: () => void;
   closeMain: () => void;
-  closeNode: (nodeId: string) => void;
+  closeEntry: (entryId: string) => void;
   openSettings: () => void;
 }
 

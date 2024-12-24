@@ -1,19 +1,19 @@
 import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 
 export const folderAttributesSchema = z.object({
   type: z.literal('folder'),
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  collaborators: z.record(z.string(), nodeRoleEnum).nullable().optional(),
+  collaborators: z.record(z.string(), entryRoleEnum).nullable().optional(),
 });
 
 export type FolderAttributes = z.infer<typeof folderAttributesSchema>;
 
-export const folderModel: NodeModel = {
+export const folderModel: EntryModel = {
   type: 'folder',
   schema: folderAttributesSchema,
   getName: (_, attributes) => {

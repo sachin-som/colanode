@@ -6,7 +6,7 @@ export type SyncTransactionsInput = {
 export type SyncCreateTransactionData = {
   id: string;
   operation: 'create';
-  nodeId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
   data: string;
@@ -19,7 +19,7 @@ export type SyncCreateTransactionData = {
 export type SyncUpdateTransactionData = {
   id: string;
   operation: 'update';
-  nodeId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
   data: string;
@@ -32,7 +32,7 @@ export type SyncUpdateTransactionData = {
 export type SyncDeleteTransactionData = {
   id: string;
   operation: 'delete';
-  nodeId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
   createdAt: string;

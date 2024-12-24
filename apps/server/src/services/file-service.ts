@@ -1,13 +1,13 @@
 import {
   CreateFileMutation,
-  extractNodeRole,
+  extractEntryRole,
   FileStatus,
   hasCollaboratorAccess,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
-import { mapNode } from '@/lib/nodes';
+import { mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
 
 class FileService {
@@ -25,7 +25,7 @@ class FileService {
     }
 
     const root = await database
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .selectAll()
       .where('id', '=', mutation.data.rootId)
       .executeTakeFirst();
@@ -34,8 +34,8 @@ class FileService {
       return false;
     }
 
-    const rootNode = mapNode(root);
-    const role = extractNodeRole(rootNode, user.id);
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
     if (!hasCollaboratorAccess(role)) {
       return false;
     }
@@ -47,6 +47,7 @@ class FileService {
         id: mutation.data.id,
         type: mutation.data.type,
         parent_id: mutation.data.parentId,
+        entry_id: mutation.data.entryId,
         root_id: mutation.data.rootId,
         workspace_id: root.workspace_id,
         name: mutation.data.name,

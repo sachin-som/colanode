@@ -1,11 +1,11 @@
 import { SyncTransactionData, SyncTransactionsInput } from '@colanode/core';
 
 import { BaseSynchronizer } from '@/main/synchronizers/base';
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 
 export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsInput> {
   protected async process(data: SyncTransactionData): Promise<void> {
-    await nodeService.applyServerTransaction(this.userId, data);
+    await entryService.applyServerTransaction(this.userId, data);
   }
 
   protected get cursorKey(): string {

@@ -1,4 +1,3 @@
-import { NodeTypes } from '@colanode/core';
 import { Folder } from 'lucide-react';
 
 import { EditorCommand } from '@/shared/types/editor';
@@ -34,7 +33,7 @@ export const FolderCommand: EditorCommand = {
       .focus()
       .deleteRange(range)
       .insertContent({
-        type: NodeTypes.Folder,
+        type: 'folder',
         attrs: {
           id: output.output.id,
         },

@@ -1,5 +1,5 @@
 import {
-  extractNodeRole,
+  extractEntryRole,
   SelectFieldAttributes,
   SelectOptionAttributes,
   ViewFilterAttributes,
@@ -40,7 +40,8 @@ export const BoardViewColumnRecords = ({
   return (
     <div className="mt-3 flex flex-col gap-2">
       {records.map((record) => {
-        const role = extractNodeRole(record, workspace.userId) ?? database.role;
+        const role =
+          extractEntryRole(record, workspace.userId) ?? database.role;
 
         return (
           <RecordProvider key={record.id} record={record} role={role}>

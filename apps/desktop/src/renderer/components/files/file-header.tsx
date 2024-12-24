@@ -1,38 +1,32 @@
-import { Node, NodeRole } from '@colanode/core';
+import { Entry, EntryRole } from '@colanode/core';
 
-import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { FileSettings } from '@/renderer/components/files/file-settings';
-import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
-import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
+import { EntryBreadcrumb } from '@/renderer/components/layouts/entry-breadcrumb';
+import { EntryFullscreenButton } from '@/renderer/components/layouts/entry-fullscreen-button';
 import { Header } from '@/renderer/components/ui/header';
 import { useContainer } from '@/renderer/contexts/container';
 import { FileWithState } from '@/shared/types/files';
 
 interface FileHeaderProps {
-  nodes: Node[];
+  entries: Entry[];
   file: FileWithState;
-  role: NodeRole;
+  role: EntryRole;
 }
 
-export const FileHeader = ({ nodes, file, role }: FileHeaderProps) => {
+export const FileHeader = ({ entries, file }: FileHeaderProps) => {
   const container = useContainer();
 
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
         <div className="flex-grow">
-          {container.mode === 'main' && <NodeBreadcrumb nodes={nodes} />}
+          {container.mode === 'main' && <EntryBreadcrumb entries={entries} />}
           {container.mode === 'modal' && (
-            <NodeFullscreenButton nodeId={file.id} />
+            <EntryFullscreenButton entryId={file.id} />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover
-            nodeId={file.id}
-            nodes={nodes}
-            role={role}
-          />
-          <FileSettings nodeId={file.id} />
+          <FileSettings fileId={file.id} />
         </div>
       </div>
     </Header>

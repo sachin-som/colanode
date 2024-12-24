@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   RecordDeleteMutationInput,
@@ -11,7 +11,7 @@ export class RecordDeleteMutationHandler
   async handleMutation(
     input: RecordDeleteMutationInput
   ): Promise<RecordDeleteMutationOutput> {
-    await nodeService.deleteNode(input.recordId, input.userId);
+    await entryService.deleteEntry(input.recordId, input.userId);
 
     return {
       success: true,

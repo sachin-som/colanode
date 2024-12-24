@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 
 export const spaceAttributesSchema = z.object({
   type: z.literal('space'),
@@ -8,12 +8,12 @@ export const spaceAttributesSchema = z.object({
   parentId: z.string(),
   description: z.string().nullable(),
   avatar: z.string().nullable().optional(),
-  collaborators: z.record(z.string(), nodeRoleEnum),
+  collaborators: z.record(z.string(), entryRoleEnum),
 });
 
 export type SpaceAttributes = z.infer<typeof spaceAttributesSchema>;
 
-export const spaceModel: NodeModel = {
+export const spaceModel: EntryModel = {
   type: 'space',
   schema: spaceAttributesSchema,
   getName: (_, attributes) => {

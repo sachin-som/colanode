@@ -1,30 +1,30 @@
 import { z, ZodSchema } from 'zod';
 
 import {
-  extractNodeRole,
+  extractEntryRole,
   hasAdminAccess,
   hasCollaboratorAccess,
   hasEditorAccess,
   hasViewerAccess,
-} from '../lib/nodes';
+} from '../lib/entries';
 import { WorkspaceRole } from '../types/workspaces';
 
-import { Node, NodeAttributes } from './';
+import { Entry, EntryAttributes } from './';
 
-export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
-export const nodeRoleEnum = z.enum([
+export type EntryRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
+export const entryRoleEnum = z.enum([
   'admin',
   'editor',
   'collaborator',
   'viewer',
 ]);
 
-export class NodeMutationContext {
+export class EntryMutationContext {
   public accountId: string;
   public workspaceId: string;
   public userId: string;
-  public ancestors: Node[];
-  public nodeRole: NodeRole | null;
+  public ancestors: Entry[];
+  public entryRole: EntryRole | null;
   public workspaceRole: WorkspaceRole | null;
 
   constructor(
@@ -32,52 +32,52 @@ export class NodeMutationContext {
     workspaceId: string,
     userId: string,
     workspaceRole: WorkspaceRole | null,
-    ancestors: Node[]
+    ancestors: Entry[]
   ) {
     this.accountId = accountId;
     this.workspaceId = workspaceId;
     this.userId = userId;
     this.workspaceRole = workspaceRole;
     this.ancestors = ancestors;
-    this.nodeRole = extractNodeRole(ancestors, userId);
+    this.entryRole = extractEntryRole(ancestors, userId);
   }
 
   public hasAdminAccess = () => {
-    return hasAdminAccess(this.nodeRole);
+    return hasAdminAccess(this.entryRole);
   };
 
   public hasEditorAccess = () => {
-    return hasEditorAccess(this.nodeRole);
+    return hasEditorAccess(this.entryRole);
   };
 
   public hasCollaboratorAccess = () => {
-    return hasCollaboratorAccess(this.nodeRole);
+    return hasCollaboratorAccess(this.entryRole);
   };
 
   public hasViewerAccess = () => {
-    return hasViewerAccess(this.nodeRole);
+    return hasViewerAccess(this.entryRole);
   };
 }
 
-export interface NodeModel {
+export interface EntryModel {
   type: string;
   schema: ZodSchema;
   canCreate: (
-    context: NodeMutationContext,
-    attributes: NodeAttributes
+    context: EntryMutationContext,
+    attributes: EntryAttributes
   ) => Promise<boolean>;
   canUpdate: (
-    context: NodeMutationContext,
-    node: Node,
-    attributes: NodeAttributes
+    context: EntryMutationContext,
+    entry: Entry,
+    attributes: EntryAttributes
   ) => Promise<boolean>;
-  canDelete: (context: NodeMutationContext, node: Node) => Promise<boolean>;
+  canDelete: (context: EntryMutationContext, entry: Entry) => Promise<boolean>;
   getName: (
     id: string,
-    attributes: NodeAttributes
+    attributes: EntryAttributes
   ) => string | null | undefined;
   getText: (
     id: string,
-    attributes: NodeAttributes
+    attributes: EntryAttributes
   ) => string | null | undefined;
 }

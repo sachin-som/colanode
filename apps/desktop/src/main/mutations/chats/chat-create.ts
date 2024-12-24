@@ -1,8 +1,8 @@
-import { ChatAttributes, generateId, IdType, NodeTypes } from '@colanode/core';
+import { ChatAttributes, generateId, IdType } from '@colanode/core';
 import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChatCreateMutationInput,
@@ -25,8 +25,8 @@ export class ChatCreateMutationHandler
 
     const query = sql<ChatRow>`
       SELECT id
-      FROM nodes
-      WHERE type = ${NodeTypes.Chat}
+      FROM entries
+      WHERE type = 'chat'
       AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') is not null
       AND json_extract(attributes, '$.collaborators.${sql.raw(input.otherUserId)}') is not null
     `.compile(workspaceDatabase);
@@ -49,7 +49,7 @@ export class ChatCreateMutationHandler
       },
     };
 
-    await nodeService.createNode(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, { id, attributes });
 
     return {
       id,

@@ -15,11 +15,11 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface RecordDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nodeId: string;
+  entryId: string;
 }
 
 export const RecordDeleteDialog = ({
-  nodeId,
+  entryId,
   open,
   onOpenChange,
 }: RecordDeleteDialogProps) => {
@@ -47,12 +47,12 @@ export const RecordDeleteDialog = ({
               mutate({
                 input: {
                   type: 'record_delete',
-                  recordId: nodeId,
+                  recordId: entryId,
                   userId: workspace.userId,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeNode(nodeId);
+                  workspace.closeEntry(entryId);
                 },
                 onError(error) {
                   toast({

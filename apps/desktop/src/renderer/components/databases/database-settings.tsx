@@ -1,8 +1,8 @@
-import { DatabaseNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { DatabaseEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
+import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
 import { DatabaseDeleteDialog } from '@/renderer/components/databases/database-delete-dialog';
 import { DatabaseUpdateDialog } from '@/renderer/components/databases/database-update-dialog';
 import {
@@ -15,8 +15,8 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface DatabaseSettingsProps {
-  database: DatabaseNode;
-  role: NodeRole;
+  database: DatabaseEntry;
+  role: EntryRole;
 }
 
 export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
@@ -84,7 +84,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <NodeCollaboratorAudit
+            <EntryCollaboratorAudit
               collaboratorId={database.createdBy}
               date={database.createdAt}
             />
@@ -94,7 +94,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <NodeCollaboratorAudit
+                <EntryCollaboratorAudit
                   collaboratorId={database.updatedBy}
                   date={database.updatedAt}
                 />
@@ -104,7 +104,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <DatabaseDeleteDialog
-        nodeId={database.id}
+        entryId={database.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

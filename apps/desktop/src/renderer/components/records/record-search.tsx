@@ -1,4 +1,4 @@
-import { RecordNode } from '@colanode/core';
+import { RecordEntry } from '@colanode/core';
 import React from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -15,7 +15,7 @@ import { useQuery } from '@/renderer/hooks/use-query';
 
 interface RecordSearchProps {
   exclude?: string[];
-  onSelect: (record: RecordNode) => void;
+  onSelect: (record: RecordEntry) => void;
   databaseId: string;
 }
 

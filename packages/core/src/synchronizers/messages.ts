@@ -9,7 +9,7 @@ export type SyncMessageData = {
   id: string;
   type: MessageType;
   parentId: string;
-  nodeId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
   content: MessageContent;

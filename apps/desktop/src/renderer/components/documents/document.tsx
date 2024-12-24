@@ -5,7 +5,7 @@ import { DocumentEditor } from '@/renderer/components/documents/document-editor'
 import { mapBlocksToContents } from '@/shared/lib/editor';
 
 interface DocumentProps {
-  nodeId: string;
+  entryId: string;
   rootId: string;
   content?: Record<string, Block> | null;
   transactionId: string;
@@ -15,7 +15,7 @@ interface DocumentProps {
 }
 
 export const Document = ({
-  nodeId,
+  entryId,
   rootId,
   content,
   transactionId,
@@ -23,8 +23,8 @@ export const Document = ({
   onUpdate,
   autoFocus,
 }: DocumentProps) => {
-  const nodeBlocks = Object.values(content ?? {});
-  const contents = mapBlocksToContents(nodeId, nodeBlocks);
+  const entryBlocks = Object.values(content ?? {});
+  const contents = mapBlocksToContents(entryId, entryBlocks);
 
   if (!contents.length) {
     contents.push({
@@ -39,8 +39,8 @@ export const Document = ({
 
   return (
     <DocumentEditor
-      key={nodeId}
-      documentId={nodeId}
+      key={entryId}
+      documentId={entryId}
       rootId={rootId}
       content={tiptapContent}
       transactionId={transactionId}

@@ -1,5 +1,3 @@
-import { InteractionEvent } from './interactions';
-
 import { SynchronizerInput, SynchronizerMap } from '../synchronizers';
 
 export type SynchronizerInputMessage = {
@@ -20,14 +18,6 @@ export type SynchronizerOutputMessage<TInput extends SynchronizerInput> = {
   }[];
 };
 
-export type SyncInteractionsMessage = {
-  type: 'sync_interactions';
-  userId: string;
-  nodeId: string;
-  rootId: string;
-  events: InteractionEvent[];
-};
-
 export type AccountUpdatedMessage = {
   type: 'account_updated';
   accountId: string;
@@ -44,7 +34,6 @@ export type WorkspaceDeletedMessage = {
 };
 
 export type Message =
-  | SyncInteractionsMessage
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
   | WorkspaceDeletedMessage

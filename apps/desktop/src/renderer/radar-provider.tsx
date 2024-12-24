@@ -48,10 +48,10 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             hasUnseenChanges: false,
           };
         },
-        getChatState: (userId, nodeId) => {
+        getChatState: (userId, entryId) => {
           const workspaceState = radarData[userId];
           if (workspaceState) {
-            const chatState = workspaceState.nodeStates[nodeId];
+            const chatState = workspaceState.nodeStates[entryId];
             if (chatState && chatState.type === 'chat') {
               return chatState;
             }
@@ -59,15 +59,15 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
 
           return {
             type: 'chat',
-            nodeId,
+            chatId: entryId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };
         },
-        getChannelState: (userId, nodeId) => {
+        getChannelState: (userId, entryId) => {
           const workspaceState = radarData[userId];
           if (workspaceState) {
-            const channelState = workspaceState.nodeStates[nodeId];
+            const channelState = workspaceState.nodeStates[entryId];
             if (channelState && channelState.type === 'channel') {
               return channelState;
             }
@@ -75,28 +75,36 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
 
           return {
             type: 'channel',
-            nodeId,
+            channelId: entryId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };
         },
-        markAsSeen: (userId, nodeId, nodeType, transactionId) => {
-          window.colanode.executeMutation({
-            type: 'mark_node_as_seen',
-            nodeId,
-            nodeType,
-            transactionId,
-            userId,
-          });
+        markAsSeen: (userId, entryId, entryType, transactionId) => {
+          console.log('markAsSeen', userId, entryId, entryType, transactionId);
+          // window.colanode.executeMutation({
+          //   type: 'mark_entry_as_seen',
+          //   entryId,
+          //   entryType,
+          //   transactionId,
+          //   userId,
+          // });
         },
-        markAsOpened: (userId, nodeId, nodeType, transactionId) => {
-          window.colanode.executeMutation({
-            type: 'mark_node_as_opened',
-            nodeId,
-            nodeType,
-            transactionId,
+        markAsOpened: (userId, entryId, entryType, transactionId) => {
+          console.log(
+            'markAsOpened',
             userId,
-          });
+            entryId,
+            entryType,
+            transactionId
+          );
+          // window.colanode.executeMutation({
+          //   type: 'mark_entry_as_opened',
+          //   entryId,
+          //   entryType,
+          //   transactionId,
+          //   userId,
+          // });
         },
       }}
     >

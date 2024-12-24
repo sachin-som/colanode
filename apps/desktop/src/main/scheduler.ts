@@ -10,7 +10,6 @@ import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
 import { InitSynchronizersJobHandler } from '@/main/jobs/init-synchronizers';
 // import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
 import { SyncPendingMutationsJobHandler } from '@/main/jobs/sync-pending-mutations';
-import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-interactions';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
 import { UploadFilesJobHandler } from '@/main/jobs/upload-files';
@@ -29,7 +28,6 @@ export const jobHandlerMap: JobHandlerMap = {
   init_synchronizers: new InitSynchronizersJobHandler(),
   // revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
   sync_pending_mutations: new SyncPendingMutationsJobHandler(),
-  sync_pending_interactions: new SyncPendingInteractionsJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
   upload_files: new UploadFilesJobHandler(),
@@ -232,11 +230,6 @@ class Scheduler {
       userId,
     });
 
-    this.schedule({
-      type: 'sync_pending_interactions',
-      userId,
-    });
-
     // this.schedule({
     //   type: 'revert_invalid_transactions',
     //   userId,
@@ -287,13 +280,6 @@ class Scheduler {
 
     if (
       state.input.type === 'sync_pending_mutations' &&
-      state.input.userId === userId
-    ) {
-      return true;
-    }
-
-    if (
-      state.input.type === 'sync_pending_interactions' &&
       state.input.userId === userId
     ) {
       return true;
@@ -352,11 +338,6 @@ class Scheduler {
     } else if (event.type === 'mutation_created') {
       this.trigger({
         type: 'sync_pending_mutations',
-        userId: event.userId,
-      });
-    } else if (event.type === 'interaction_event_created') {
-      this.trigger({
-        type: 'sync_pending_interactions',
         userId: event.userId,
       });
     } else if (event.type === 'file_state_created') {

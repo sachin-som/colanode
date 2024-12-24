@@ -1,9 +1,9 @@
-import { compareString, DatabaseNode } from '@colanode/core';
+import { compareString, DatabaseEntry } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectNode } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapEntry } from '@/main/utils';
 import { DatabaseListQueryInput } from '@/shared/queries/databases/database-list';
 import { Event } from '@/shared/types/events';
 
@@ -12,7 +12,7 @@ export class DatabaseListQueryHandler
 {
   public async handleQuery(
     input: DatabaseListQueryInput
-  ): Promise<DatabaseNode[]> {
+  ): Promise<DatabaseEntry[]> {
     const databases = await this.fetchDatabases(input);
     return this.buildDatabases(databases);
   }
@@ -20,7 +20,7 @@ export class DatabaseListQueryHandler
   public async checkForChanges(
     event: Event,
     input: DatabaseListQueryInput,
-    output: DatabaseNode[]
+    output: DatabaseEntry[]
   ): Promise<ChangeCheckResult<DatabaseListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -33,9 +33,9 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'node_created' &&
+      event.type === 'entry_created' &&
       event.userId === input.userId &&
-      event.node.type === 'database'
+      event.entry.type === 'database'
     ) {
       const newResult = await this.handleQuery(input);
 
@@ -46,15 +46,17 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'node_updated' &&
+      event.type === 'entry_updated' &&
       event.userId === input.userId &&
-      event.node.type === 'database'
+      event.entry.type === 'database'
     ) {
-      const database = output.find((database) => database.id === event.node.id);
+      const database = output.find(
+        (database) => database.id === event.entry.id
+      );
       if (database) {
         const newResult = output.map((database) => {
-          if (database.id === event.node.id) {
-            return event.node as DatabaseNode;
+          if (database.id === event.entry.id) {
+            return event.entry as DatabaseEntry;
           }
           return database;
         });
@@ -67,11 +69,13 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'node_deleted' &&
+      event.type === 'entry_deleted' &&
       event.userId === input.userId &&
-      event.node.type === 'database'
+      event.entry.type === 'database'
     ) {
-      const database = output.find((database) => database.id === event.node.id);
+      const database = output.find(
+        (database) => database.id === event.entry.id
+      );
 
       if (database) {
         const newOutput = await this.handleQuery(input);
@@ -89,13 +93,13 @@ export class DatabaseListQueryHandler
 
   private async fetchDatabases(
     input: DatabaseListQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectEntry[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
 
     const databases = await workspaceDatabase
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .where('type', '=', 'database')
       .selectAll()
       .execute();
@@ -103,18 +107,18 @@ export class DatabaseListQueryHandler
     return databases;
   }
 
-  private buildDatabases = (rows: SelectNode[]): DatabaseNode[] => {
-    const nodes = rows.map(mapNode);
-    const databaseNodes: DatabaseNode[] = [];
+  private buildDatabases = (rows: SelectEntry[]): DatabaseEntry[] => {
+    const entries = rows.map(mapEntry);
+    const databaseEntries: DatabaseEntry[] = [];
 
-    for (const node of nodes) {
-      if (node.type !== 'database') {
+    for (const entry of entries) {
+      if (entry.type !== 'database') {
         continue;
       }
 
-      databaseNodes.push(node);
+      databaseEntries.push(entry);
     }
 
-    return databaseNodes.sort((a, b) => compareString(a.id, b.id));
+    return databaseEntries.sort((a, b) => compareString(a.id, b.id));
   };
 }

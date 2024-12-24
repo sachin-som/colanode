@@ -1,40 +1,40 @@
 export type ChannelReadState = {
   type: 'channel';
-  nodeId: string;
+  channelId: string;
   unseenMessagesCount: number;
   mentionsCount: number;
 };
 
 export type ChatReadState = {
   type: 'chat';
-  nodeId: string;
+  chatId: string;
   unseenMessagesCount: number;
   mentionsCount: number;
 };
 
 export type DatabaseReadState = {
   type: 'database';
-  nodeId: string;
+  databaseId: string;
   unseenRecordsCount: number;
 };
 
 export type RecordReadState = {
   type: 'record';
-  nodeId: string;
+  recordId: string;
   hasUnseenChanges: boolean;
   mentionsCount: number;
 };
 
 export type PageState = {
   type: 'page';
-  nodeId: string;
+  pageId: string;
   hasUnseenChanges: boolean;
   mentionsCount: number;
 };
 
 export type FolderState = {
   type: 'folder';
-  nodeId: string;
+  folderId: string;
   unseenFilesCount: number;
 };
 

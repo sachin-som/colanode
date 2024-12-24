@@ -1,21 +1,21 @@
-import { SpaceNode } from '@colanode/core';
+import { SpaceEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 
 interface SpaceBreadcrumbItemProps {
-  node: SpaceNode;
+  space: SpaceEntry;
 }
 
-export const SpaceBreadcrumbItem = ({ node }: SpaceBreadcrumbItemProps) => {
+export const SpaceBreadcrumbItem = ({ space }: SpaceBreadcrumbItemProps) => {
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
-        id={node.id}
-        name={node.attributes.name}
-        avatar={node.attributes.avatar}
+        id={space.id}
+        name={space.attributes.name}
+        avatar={space.attributes.avatar}
       />
-      <span>{node.attributes.name}</span>
+      <span>{space.attributes.name}</span>
     </div>
   );
 };

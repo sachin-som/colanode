@@ -1,4 +1,4 @@
-import { SpaceNode } from '@colanode/core';
+import { SpaceEntry } from '@colanode/core';
 
 import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-button';
 import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
@@ -11,13 +11,13 @@ export const LayoutSidebarSpaces = () => {
     workspace.role !== 'guest' && workspace.role !== 'none';
 
   const { data } = useQuery({
-    type: 'node_children_get',
+    type: 'entry_children_get',
     userId: workspace.userId,
-    nodeId: workspace.id,
+    entryId: workspace.id,
     types: ['space'],
   });
 
-  const spaces = data?.map((node) => node as SpaceNode) ?? [];
+  const spaces = data?.map((entry) => entry as SpaceEntry) ?? [];
 
   return (
     <div className="group/sidebar-spaces flex w-full min-w-0 flex-col p-2">
@@ -34,7 +34,7 @@ export const LayoutSidebarSpaces = () => {
 
       <div className="flex w-full min-w-0 flex-col gap-1">
         {spaces.map((space) => (
-          <SpaceSidebarItem node={space} key={space.id} />
+          <SpaceSidebarItem space={space} key={space.id} />
         ))}
       </div>
     </div>

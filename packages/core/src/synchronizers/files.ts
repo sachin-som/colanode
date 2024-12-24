@@ -9,6 +9,7 @@ export type SyncFileData = {
   id: string;
   type: FileType;
   parentId: string;
+  entryId: string;
   rootId: string;
   workspaceId: string;
   name: string;

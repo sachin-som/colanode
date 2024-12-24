@@ -1,4 +1,4 @@
-import { NodeRole } from '@colanode/core';
+import { EntryRole } from '@colanode/core';
 import { createContext, useContext } from 'react';
 
 import { MessageNode } from '@/shared/types/messages';
@@ -6,7 +6,7 @@ import { MessageNode } from '@/shared/types/messages';
 interface ConversationContext {
   id: string;
   rootId: string;
-  role: NodeRole;
+  role: EntryRole;
   canCreateMessage: boolean;
   onReply: (message: MessageNode) => void;
   onLastMessageIdChange: (id: string) => void;

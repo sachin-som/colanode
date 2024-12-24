@@ -2,13 +2,13 @@ import {
   CreateMessageMutation,
   CreateMessageReactionMutation,
   DeleteMessageReactionMutation,
-  extractNodeRole,
+  extractEntryRole,
   hasCollaboratorAccess,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
-import { mapNode } from '@/lib/nodes';
+import { mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
 
 class MessageService {
@@ -26,7 +26,7 @@ class MessageService {
     }
 
     const root = await database
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .selectAll()
       .where('id', '=', mutation.data.rootId)
       .executeTakeFirst();
@@ -35,8 +35,8 @@ class MessageService {
       return false;
     }
 
-    const rootNode = mapNode(root);
-    const role = extractNodeRole(rootNode, user.id);
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
     if (!hasCollaboratorAccess(role)) {
       return false;
     }
@@ -47,7 +47,7 @@ class MessageService {
       .values({
         id: mutation.data.id,
         type: mutation.data.type,
-        node_id: mutation.data.nodeId,
+        entry_id: mutation.data.entryId,
         parent_id: mutation.data.parentId,
         root_id: mutation.data.rootId,
         workspace_id: root.workspace_id,
@@ -86,7 +86,7 @@ class MessageService {
     }
 
     const root = await database
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .selectAll()
       .where('id', '=', message.root_id)
       .executeTakeFirst();
@@ -95,8 +95,8 @@ class MessageService {
       return false;
     }
 
-    const rootNode = mapNode(root);
-    const role = extractNodeRole(rootNode, user.id);
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
     if (!hasCollaboratorAccess(role)) {
       return false;
     }
@@ -150,7 +150,7 @@ class MessageService {
     }
 
     const root = await database
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .selectAll()
       .where('id', '=', message.root_id)
       .executeTakeFirst();
@@ -159,8 +159,8 @@ class MessageService {
       return false;
     }
 
-    const rootNode = mapNode(root);
-    const role = extractNodeRole(rootNode, user.id);
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
     if (!hasCollaboratorAccess(role)) {
       return false;
     }

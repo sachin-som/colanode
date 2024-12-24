@@ -1,18 +1,3 @@
-export const NodeTypes = {
-  User: 'user',
-  Space: 'space',
-  Workspace: 'workspace',
-  Page: 'page',
-  Channel: 'channel',
-  Chat: 'chat',
-  Message: 'message',
-  Database: 'database',
-  DatabaseReplica: 'databaseReplica',
-  Record: 'record',
-  Folder: 'folder',
-  File: 'file',
-};
-
 export const EditorNodeTypes = {
   Paragraph: 'paragraph',
   Heading1: 'heading1',
@@ -34,7 +19,7 @@ export const EditorNodeTypes = {
 
 export type SortDirection = 'asc' | 'desc';
 
-export const NodeRoles = {
+export const EntryRoles = {
   Admin: 'admin',
   Editor: 'editor',
   Collaborator: 'collaborator',

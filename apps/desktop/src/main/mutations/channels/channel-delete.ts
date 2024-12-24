@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChannelDeleteMutationInput,
@@ -11,7 +11,7 @@ export class ChannelDeleteMutationHandler
   async handleMutation(
     input: ChannelDeleteMutationInput
   ): Promise<ChannelDeleteMutationOutput> {
-    await nodeService.deleteNode(input.channelId, input.userId);
+    await entryService.deleteEntry(input.channelId, input.userId);
 
     return {
       success: true,

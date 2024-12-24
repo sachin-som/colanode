@@ -1,13 +1,13 @@
 import { ChannelAttributes, channelModel } from './channel';
 import { ChatAttributes, chatModel } from './chat';
-import { NodeModel } from './core';
+import { EntryModel } from './core';
 import { DatabaseAttributes, databaseModel } from './database';
 import { FolderAttributes, folderModel } from './folder';
 import { PageAttributes, pageModel } from './page';
 import { RecordAttributes, recordModel } from './record';
 import { SpaceAttributes, spaceModel } from './space';
 
-type NodeBase = {
+type EntryBase = {
   id: string;
   parentId: string;
   rootId: string;
@@ -18,60 +18,44 @@ type NodeBase = {
   transactionId: string;
 };
 
-export type CollaborationBase = {
-  userId: string;
-  nodeId: string;
-  type: NodeType;
-  createdAt: string;
-  createdBy: string | null;
-  removedAt: string | null;
-};
-
-export type ChannelNode = NodeBase & {
+export type ChannelEntry = EntryBase & {
   type: 'channel';
   attributes: ChannelAttributes;
 };
 
-export type ChatNode = NodeBase & {
+export type ChatEntry = EntryBase & {
   type: 'chat';
   attributes: ChatAttributes;
 };
 
-export type DatabaseNode = NodeBase & {
+export type DatabaseEntry = EntryBase & {
   type: 'database';
   attributes: DatabaseAttributes;
 };
 
-export type FolderNode = NodeBase & {
+export type FolderEntry = EntryBase & {
   type: 'folder';
   attributes: FolderAttributes;
 };
 
-export type PageNode = NodeBase & {
+export type PageEntry = EntryBase & {
   type: 'page';
   attributes: PageAttributes;
 };
 
-export type RecordNode = NodeBase & {
+export type RecordEntry = EntryBase & {
   type: 'record';
   attributes: RecordAttributes;
 };
 
-export type SpaceNode = NodeBase & {
+export type SpaceEntry = EntryBase & {
   type: 'space';
   attributes: SpaceAttributes;
 };
 
-export type NodeType =
-  | 'channel'
-  | 'chat'
-  | 'database'
-  | 'folder'
-  | 'page'
-  | 'record'
-  | 'space';
+export type EntryType = EntryAttributes['type'];
 
-export type NodeAttributes =
+export type EntryAttributes =
   | SpaceAttributes
   | DatabaseAttributes
   | ChannelAttributes
@@ -80,17 +64,17 @@ export type NodeAttributes =
   | PageAttributes
   | RecordAttributes;
 
-export type Node =
-  | ChannelNode
-  | ChatNode
-  | DatabaseNode
-  | FolderNode
-  | PageNode
-  | RecordNode
-  | SpaceNode;
+export type Entry =
+  | ChannelEntry
+  | ChatEntry
+  | DatabaseEntry
+  | FolderEntry
+  | PageEntry
+  | RecordEntry
+  | SpaceEntry;
 
 class Registry {
-  private models: Map<string, NodeModel> = new Map();
+  private models: Map<string, EntryModel> = new Map();
 
   constructor() {
     this.models.set('channel', channelModel);
@@ -102,7 +86,7 @@ class Registry {
     this.models.set('space', spaceModel);
   }
 
-  getModel(type: string): NodeModel {
+  getModel(type: string): EntryModel {
     const model = this.models.get(type);
     if (!model) {
       throw new Error(`Model for type ${type} not found`);

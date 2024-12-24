@@ -1,4 +1,4 @@
-import { ChatNode, NodeRole } from '@colanode/core';
+import { ChatEntry, EntryRole } from '@colanode/core';
 import { useEffect } from 'react';
 
 import { Conversation } from '@/renderer/components/messages/conversation';
@@ -6,8 +6,8 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useRadar } from '@/renderer/contexts/radar';
 
 interface ChatBodyProps {
-  chat: ChatNode;
-  role: NodeRole;
+  chat: ChatEntry;
+  role: EntryRole;
 }
 
 export const ChatBody = ({ chat, role }: ChatBodyProps) => {

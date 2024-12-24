@@ -1,4 +1,4 @@
-import { FolderNode } from '@colanode/core';
+import { FolderEntry } from '@colanode/core';
 import {
   Check,
   Filter,
@@ -56,7 +56,7 @@ export const folderLayouts: FolderLayout[] = [
 ];
 
 interface FolderBodyProps {
-  folder: FolderNode;
+  folder: FolderEntry;
 }
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {
@@ -103,6 +103,7 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
         userId: workspace.userId,
         filePath,
         parentId: folder.id,
+        entryId: folder.id,
         rootId: folder.rootId,
       },
       onError(error) {

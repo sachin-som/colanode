@@ -1,4 +1,4 @@
-import { extractNodeRole, isSameDay,RecordNode } from '@colanode/core';
+import { extractEntryRole, isSameDay, RecordEntry } from '@colanode/core';
 import { Plus } from 'lucide-react';
 
 import { CalendarViewRecordCard } from '@/renderer/components/databases/calendars/calendar-view-record-card';
@@ -10,7 +10,7 @@ import { cn } from '@/shared/lib/utils';
 interface CalendarViewDayProps {
   date: Date;
   month: Date;
-  records: RecordNode[];
+  records: RecordEntry[];
   onCreate?: () => void;
 }
 
@@ -49,7 +49,8 @@ export const CalendarViewDay = ({
         </p>
       </div>
       {records.map((record) => {
-        const role = extractNodeRole(record, workspace.userId) ?? database.role;
+        const role =
+          extractEntryRole(record, workspace.userId) ?? database.role;
 
         return (
           <RecordProvider key={record.id} record={record} role={role}>

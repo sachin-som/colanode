@@ -1,10 +1,10 @@
-import { ChannelNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { ChannelEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import { ChannelDeleteDialog } from '@/renderer/components/channels/channel-delete-dialog';
 import { ChannelUpdateDialog } from '@/renderer/components/channels/channel-update-dialog';
-import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
+import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,8 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface ChannelSettingsProps {
-  channel: ChannelNode;
-  role: NodeRole;
+  channel: ChannelEntry;
+  role: EntryRole;
 }
 
 export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
@@ -84,7 +84,7 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <NodeCollaboratorAudit
+            <EntryCollaboratorAudit
               collaboratorId={channel.createdBy}
               date={channel.createdAt}
             />
@@ -94,7 +94,7 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <NodeCollaboratorAudit
+                <EntryCollaboratorAudit
                   collaboratorId={channel.updatedBy}
                   date={channel.updatedAt}
                 />
@@ -104,7 +104,7 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <ChannelDeleteDialog
-        nodeId={channel.id}
+        channelId={channel.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

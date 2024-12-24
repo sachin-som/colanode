@@ -1,4 +1,4 @@
-import { Node } from '@colanode/core';
+import { Entry } from '@colanode/core';
 
 import { MessageNode, MessageReaction } from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
@@ -26,22 +26,22 @@ export type UserDeletedEvent = {
   user: User;
 };
 
-export type NodeCreatedEvent = {
-  type: 'node_created';
+export type EntryCreatedEvent = {
+  type: 'entry_created';
   userId: string;
-  node: Node;
+  entry: Entry;
 };
 
-export type NodeUpdatedEvent = {
-  type: 'node_updated';
+export type EntryUpdatedEvent = {
+  type: 'entry_updated';
   userId: string;
-  node: Node;
+  entry: Entry;
 };
 
-export type NodeDeletedEvent = {
-  type: 'node_deleted';
+export type EntryDeletedEvent = {
+  type: 'entry_deleted';
   userId: string;
-  node: Node;
+  entry: Entry;
 };
 
 export type MessageCreatedEvent = {
@@ -168,13 +168,13 @@ export type MutationCreatedEvent = {
 export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
   userId: string;
-  nodeId: string;
+  entryId: string;
 };
 
 export type CollaborationDeletedEvent = {
   type: 'collaboration_deleted';
   userId: string;
-  nodeId: string;
+  entryId: string;
 };
 
 export type ServerAvailabilityChangedEvent = {
@@ -191,7 +191,7 @@ export type SocketConnectionOpenedEvent = {
 export type InteractionEventCreatedEvent = {
   type: 'interaction_event_created';
   userId: string;
-  nodeId: string;
+  entryId: string;
 };
 
 export type InteractionUpdatedEvent = {
@@ -204,9 +204,9 @@ export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
   | UserDeletedEvent
-  | NodeCreatedEvent
-  | NodeUpdatedEvent
-  | NodeDeletedEvent
+  | EntryCreatedEvent
+  | EntryUpdatedEvent
+  | EntryDeletedEvent
   | MessageCreatedEvent
   | MessageUpdatedEvent
   | MessageDeletedEvent

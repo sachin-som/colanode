@@ -1,4 +1,4 @@
-// import { nodeService } from '@/main/services/node-service';
+// import { entryService } from '@/main/services/entry-service';
 // import { createDebugger } from '@/main/debugger';
 // import { databaseService } from '@/main/data/database-service';
 // import { JobHandler } from '@/main/jobs';
@@ -50,11 +50,11 @@
 //       const transaction = mapTransaction(transactionRow);
 
 //       if (transaction.operation === 'create') {
-//         await nodeService.revertCreateTransaction(input.userId, transaction);
+//         await entryService.revertCreateTransaction(input.userId, transaction);
 //       } else if (transaction.operation === 'update') {
-//         await nodeService.revertUpdateTransaction(input.userId, transaction);
+//         await entryService.revertUpdateTransaction(input.userId, transaction);
 //       } else if (transaction.operation === 'delete') {
-//         await nodeService.revertDeleteTransaction(input.userId, transaction);
+//         await entryService.revertDeleteTransaction(input.userId, transaction);
 //       }
 //     }
 //   }

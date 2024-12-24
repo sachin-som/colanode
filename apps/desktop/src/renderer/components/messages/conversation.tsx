@@ -1,7 +1,7 @@
 import {
   hasAdminAccess,
   hasCollaboratorAccess,
-  NodeRole,
+  EntryRole,
 } from '@colanode/core';
 import React from 'react';
 import { InView } from 'react-intersection-observer';
@@ -18,7 +18,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 interface ConversationProps {
   conversationId: string;
   rootId: string;
-  role: NodeRole;
+  role: EntryRole;
 }
 
 export const Conversation = ({

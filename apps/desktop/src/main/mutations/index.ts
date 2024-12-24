@@ -21,13 +21,11 @@ import { FileDownloadMutationHandler } from '@/main/mutations/files/file-downloa
 import { FolderCreateMutationHandler } from '@/main/mutations/folders/folder-create';
 import { FolderUpdateMutationHandler } from '@/main/mutations/folders/folder-update';
 import { FolderDeleteMutationHandler } from '@/main/mutations/folders/folder-delete';
-import { MarkNodeAsSeenMutationHandler } from '@/main/mutations/interactions/mark-node-as-seen';
-import { MarkNodeAsOpenedMutationHandler } from '@/main/mutations/interactions/mark-node-as-opened';
 import { MessageCreateMutationHandler } from '@/main/mutations/messages/message-create';
 import { MessageDeleteMutationHandler } from '@/main/mutations/messages/message-delete';
-import { NodeCollaboratorCreateMutationHandler } from '@/main/mutations/collaborators/node-collaborator-create';
-import { NodeCollaboratorDeleteMutationHandler } from '@/main/mutations/collaborators/node-collaborator-delete';
-import { NodeCollaboratorUpdateMutationHandler } from '@/main/mutations/collaborators/node-collaborator-update';
+import { EntryCollaboratorCreateMutationHandler } from '@/main/mutations/collaborators/entry-collaborator-create';
+import { EntryCollaboratorDeleteMutationHandler } from '@/main/mutations/collaborators/entry-collaborator-delete';
+import { EntryCollaboratorUpdateMutationHandler } from '@/main/mutations/collaborators/entry-collaborator-update';
 import { MessageReactionCreateMutationHandler } from '@/main/mutations/messages/message-reaction-create';
 import { MessageReactionDeleteMutationHandler } from '@/main/mutations/messages/message-reaction-delete';
 import { PageCreateMutationHandler } from '@/main/mutations/pages/page-create';
@@ -76,9 +74,9 @@ export const mutationHandlerMap: MutationHandlerMap = {
   message_create: new MessageCreateMutationHandler(),
   file_delete: new FileDeleteMutationHandler(),
   folder_delete: new FolderDeleteMutationHandler(),
-  node_collaborator_create: new NodeCollaboratorCreateMutationHandler(),
-  node_collaborator_delete: new NodeCollaboratorDeleteMutationHandler(),
-  node_collaborator_update: new NodeCollaboratorUpdateMutationHandler(),
+  entry_collaborator_create: new EntryCollaboratorCreateMutationHandler(),
+  entry_collaborator_delete: new EntryCollaboratorDeleteMutationHandler(),
+  entry_collaborator_update: new EntryCollaboratorUpdateMutationHandler(),
   page_create: new PageCreateMutationHandler(),
   page_delete: new PageDeleteMutationHandler(),
   page_content_update: new PageContentUpdateMutationHandler(),
@@ -109,8 +107,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   file_download: new FileDownloadMutationHandler(),
   space_update: new SpaceUpdateMutationHandler(),
   account_update: new AccountUpdateMutationHandler(),
-  mark_node_as_seen: new MarkNodeAsSeenMutationHandler(),
-  mark_node_as_opened: new MarkNodeAsOpenedMutationHandler(),
   view_update: new ViewUpdateMutationHandler(),
   view_delete: new ViewDeleteMutationHandler(),
   view_name_update: new ViewNameUpdateMutationHandler(),

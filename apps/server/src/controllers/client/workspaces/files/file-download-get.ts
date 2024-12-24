@@ -5,7 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
-import { fetchNodeRole } from '@/lib/nodes';
+import { fetchEntryRole } from '@/lib/entries';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
 
 export const fileDownloadGetHandler = async (
@@ -28,7 +28,7 @@ export const fileDownloadGetHandler = async (
     return;
   }
 
-  const role = await fetchNodeRole(file.root_id, res.locals.user.id);
+  const role = await fetchEntryRole(file.root_id, res.locals.user.id);
   if (role === null || !hasViewerAccess(role)) {
     res.status(403).json({
       code: ApiError.Forbidden,

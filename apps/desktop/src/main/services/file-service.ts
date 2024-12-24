@@ -495,6 +495,7 @@ class FileService {
         version,
         type: file.type,
         parent_id: file.parentId,
+        entry_id: file.entryId,
         root_id: file.rootId,
         name: file.name,
         original_name: file.originalName,

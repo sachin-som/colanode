@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError } from '@/shared/mutations';
 import {
@@ -12,7 +12,7 @@ export class SelectOptionUpdateMutationHandler
   async handleMutation(
     input: SelectOptionUpdateMutationInput
   ): Promise<SelectOptionUpdateMutationOutput> {
-    const result = await nodeService.updateNode(
+    const result = await entryService.updateEntry(
       input.databaseId,
       input.userId,
       (attributes) => {

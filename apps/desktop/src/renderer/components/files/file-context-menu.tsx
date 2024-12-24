@@ -48,7 +48,7 @@ export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
         </ContextMenuContent>
       </ContextMenu>
       <FileDeleteDialog
-        nodeId={id}
+        fileId={id}
         open={openDelete}
         onOpenChange={setOpenDelete}
       />

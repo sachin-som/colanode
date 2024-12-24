@@ -1,36 +1,30 @@
-import { Node, NodeRole,PageNode } from '@colanode/core';
+import { Entry, EntryRole, PageEntry } from '@colanode/core';
 
-import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
-import { NodeBreadcrumb } from '@/renderer/components/layouts/node-breadcrumb';
-import { NodeFullscreenButton } from '@/renderer/components/layouts/node-fullscreen-button';
+import { EntryBreadcrumb } from '@/renderer/components/layouts/entry-breadcrumb';
+import { EntryFullscreenButton } from '@/renderer/components/layouts/entry-fullscreen-button';
 import { PageSettings } from '@/renderer/components/pages/page-settings';
 import { Header } from '@/renderer/components/ui/header';
 import { useContainer } from '@/renderer/contexts/container';
 
 interface PageHeaderProps {
-  nodes: Node[];
-  page: PageNode;
-  role: NodeRole;
+  entries: Entry[];
+  page: PageEntry;
+  role: EntryRole;
 }
 
-export const PageHeader = ({ nodes, page, role }: PageHeaderProps) => {
+export const PageHeader = ({ entries, page, role }: PageHeaderProps) => {
   const container = useContainer();
 
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
         <div className="flex-grow">
-          <NodeBreadcrumb nodes={nodes} />
+          <EntryBreadcrumb entries={entries} />
           {container.mode === 'modal' && (
-            <NodeFullscreenButton nodeId={page.id} />
+            <EntryFullscreenButton entryId={page.id} />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <NodeCollaboratorsPopover
-            nodeId={page.id}
-            nodes={nodes}
-            role={role}
-          />
           <PageSettings page={page} role={role} />
         </div>
       </div>

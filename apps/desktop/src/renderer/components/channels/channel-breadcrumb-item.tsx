@@ -1,21 +1,23 @@
-import { ChannelNode } from '@colanode/core';
+import { ChannelEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 
 interface ChannelBreadcrumbItemProps {
-  node: ChannelNode;
+  channel: ChannelEntry;
 }
 
-export const ChannelBreadcrumbItem = ({ node }: ChannelBreadcrumbItemProps) => {
+export const ChannelBreadcrumbItem = ({
+  channel,
+}: ChannelBreadcrumbItemProps) => {
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
-        id={node.id}
-        name={node.attributes.name}
-        avatar={node.attributes.avatar}
+        id={channel.id}
+        name={channel.attributes.name}
+        avatar={channel.attributes.avatar}
       />
-      <span>{node.attributes.name}</span>
+      <span>{channel.attributes.name}</span>
     </div>
   );
 };

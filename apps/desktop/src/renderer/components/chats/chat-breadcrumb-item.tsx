@@ -1,17 +1,17 @@
-import { ChatNode } from '@colanode/core';
+import { ChatEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface ChatBreadcrumbItemProps {
-  node: ChatNode;
+  chat: ChatEntry;
 }
 
-export const ChatBreadcrumbItem = ({ node }: ChatBreadcrumbItemProps) => {
+export const ChatBreadcrumbItem = ({ chat }: ChatBreadcrumbItemProps) => {
   const workspace = useWorkspace();
   const userId =
-    Object.keys(node.attributes.collaborators).find(
+    Object.keys(chat.attributes.collaborators).find(
       (id) => id !== workspace.userId
     ) ?? '';
 

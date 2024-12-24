@@ -1,6 +1,6 @@
 import { FolderAttributes, generateId, IdType } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   FolderCreateMutationInput,
@@ -22,7 +22,7 @@ export class FolderCreateMutationHandler
       collaborators: {},
     };
 
-    await nodeService.createNode(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, { id, attributes });
 
     return {
       id: id,

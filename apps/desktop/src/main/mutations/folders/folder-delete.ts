@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   FolderDeleteMutationInput,
@@ -11,7 +11,7 @@ export class FolderDeleteMutationHandler
   async handleMutation(
     input: FolderDeleteMutationInput
   ): Promise<FolderDeleteMutationOutput> {
-    await nodeService.deleteNode(input.folderId, input.userId);
+    await entryService.deleteEntry(input.folderId, input.userId);
 
     return {
       success: true,

@@ -1,31 +1,31 @@
-import { DatabaseNode } from '@colanode/core';
+import { DatabaseEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { cn } from '@/shared/lib/utils';
 
 interface DatabaseSidebarItemProps {
-  node: DatabaseNode;
+  database: DatabaseEntry;
 }
 
-export const DatabaseSidebarItem = ({ node }: DatabaseSidebarItemProps) => {
+export const DatabaseSidebarItem = ({ database }: DatabaseSidebarItemProps) => {
   const workspace = useWorkspace();
-  const isActive = workspace.isNodeActive(node.id);
+  const isActive = workspace.isEntryActive(database.id);
   const isUnread = false;
   const mentionsCount = 0;
 
   return (
     <button
-      key={node.id}
+      key={database.id}
       className={cn(
         'flex w-full items-center',
         isActive && 'bg-sidebar-accent'
       )}
     >
       <Avatar
-        id={node.id}
-        avatar={node.attributes.avatar}
-        name={node.attributes.name}
+        id={database.id}
+        avatar={database.attributes.avatar}
+        name={database.attributes.name}
         className="h-4 w-4"
       />
       <span
@@ -34,7 +34,7 @@ export const DatabaseSidebarItem = ({ node }: DatabaseSidebarItemProps) => {
           isUnread && 'font-bold'
         )}
       >
-        {node.attributes.name ?? 'Unnamed'}
+        {database.attributes.name ?? 'Unnamed'}
       </span>
       {mentionsCount > 0 && (
         <span className="mr-1 rounded-md bg-sidebar-accent px-1 py-0.5 text-xs text-sidebar-accent-foreground">

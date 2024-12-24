@@ -7,9 +7,9 @@ import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-
 import { IconsGetQueryHandler } from '@/main/queries/icons/icons-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
 import { MessageReactionsGetQueryHandler } from '@/main/queries/messages/message-reactions-get';
-import { NodeChildrenGetQueryHandler } from '@/main/queries/nodes/node-children-get';
-import { NodeGetQueryHandler } from '@/main/queries/nodes/node-get';
-import { NodeTreeGetQueryHandler } from '@/main/queries/nodes/node-tree-get';
+import { EntryChildrenGetQueryHandler } from '@/main/queries/entries/entry-children-get';
+import { EntryGetQueryHandler } from '@/main/queries/entries/entry-get';
+import { EntryTreeGetQueryHandler } from '@/main/queries/entries/entry-tree-get';
 import { RadarDataGetQueryHandler } from '@/main/queries/interactions/radar-data-get';
 import { RecordListQueryHandler } from '@/main/queries/records/record-list';
 import { ServerListQueryHandler } from '@/main/queries/servers/server-list';
@@ -31,7 +31,7 @@ export const queryHandlerMap: QueryHandlerMap = {
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
   message_reactions_get: new MessageReactionsGetQueryHandler(),
-  node_get: new NodeGetQueryHandler(),
+  entry_get: new EntryGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
   server_list: new ServerListQueryHandler(),
   user_search: new UserSearchQueryHandler(),
@@ -40,8 +40,8 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_list: new FileListQueryHandler(),
   emojis_get: new EmojisGetQueryHandler(),
   icons_get: new IconsGetQueryHandler(),
-  node_tree_get: new NodeTreeGetQueryHandler(),
-  node_children_get: new NodeChildrenGetQueryHandler(),
+  entry_tree_get: new EntryTreeGetQueryHandler(),
+  entry_children_get: new EntryChildrenGetQueryHandler(),
   radar_data_get: new RadarDataGetQueryHandler(),
   file_metadata_get: new FileMetadataGetQueryHandler(),
   account_get: new AccountGetQueryHandler(),

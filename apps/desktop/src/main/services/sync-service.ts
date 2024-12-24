@@ -57,7 +57,7 @@ class SyncService {
       .execute();
 
     for (const collaboration of collaborations) {
-      const rootId = collaboration.node_id;
+      const rootId = collaboration.entry_id;
       if (collaboration.deleted_at) {
         this.removeRootNodeSynchronizers(userId, rootId);
       } else {

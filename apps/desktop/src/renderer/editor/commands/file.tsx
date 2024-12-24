@@ -1,4 +1,3 @@
-import { NodeTypes } from '@colanode/core';
 import { FilePlus } from 'lucide-react';
 
 import { EditorCommand } from '@/shared/types/editor';
@@ -40,6 +39,7 @@ export const FileCommand: EditorCommand = {
       userId,
       parentId: documentId,
       rootId,
+      entryId: documentId,
     });
 
     if (!output.success) {
@@ -51,7 +51,7 @@ export const FileCommand: EditorCommand = {
       .focus()
       .deleteRange(range)
       .insertContent({
-        type: NodeTypes.File,
+        type: 'file',
         attrs: {
           id: output.output.id,
         },

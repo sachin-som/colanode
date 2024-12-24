@@ -1,4 +1,4 @@
-import { DatabaseNode } from '@colanode/core';
+import { DatabaseEntry } from '@colanode/core';
 
 export type DatabaseListQueryInput = {
   type: 'database_list';
@@ -9,7 +9,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     database_list: {
       input: DatabaseListQueryInput;
-      output: DatabaseNode[];
+      output: DatabaseEntry[];
     };
   }
 }

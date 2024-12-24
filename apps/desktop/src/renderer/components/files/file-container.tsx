@@ -1,4 +1,4 @@
-import { extractNodeRole } from '@colanode/core';
+import { extractEntryRole } from '@colanode/core';
 
 import { FileBody } from '@/renderer/components/files/file-body';
 import { FileHeader } from '@/renderer/components/files/file-header';
@@ -6,22 +6,22 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface FileContainerProps {
-  nodeId: string;
+  fileId: string;
 }
 
-export const FileContainer = ({ nodeId }: FileContainerProps) => {
+export const FileContainer = ({ fileId }: FileContainerProps) => {
   const workspace = useWorkspace();
 
   const { data: file, isPending: isFilePending } = useQuery({
     type: 'file_get',
-    id: nodeId,
+    id: fileId,
     userId: workspace.userId,
   });
 
-  const { data: nodes, isPending: isNodesPending } = useQuery(
+  const { data: entries, isPending: isEntriesPending } = useQuery(
     {
-      type: 'node_tree_get',
-      nodeId: file?.parentId ?? '',
+      type: 'entry_tree_get',
+      entryId: file?.parentId ?? '',
       userId: workspace.userId,
     },
     {
@@ -29,18 +29,18 @@ export const FileContainer = ({ nodeId }: FileContainerProps) => {
     }
   );
 
-  if (isFilePending || isNodesPending) {
+  if (isFilePending || isEntriesPending) {
     return null;
   }
 
-  const role = extractNodeRole(nodes ?? [], workspace.userId);
+  const role = extractEntryRole(entries ?? [], workspace.userId);
   if (!file || !role) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <FileHeader nodes={nodes ?? []} file={file} role={role} />
+      <FileHeader entries={entries ?? []} file={file} role={role} />
       <FileBody file={file} />
     </div>
   );

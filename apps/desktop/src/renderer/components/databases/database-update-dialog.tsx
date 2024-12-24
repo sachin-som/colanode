@@ -1,4 +1,4 @@
-import { DatabaseNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { DatabaseEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 
 import { DatabaseForm } from '@/renderer/components/databases/database-form';
 import {
@@ -13,8 +13,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface DatabaseUpdateDialogProps {
-  database: DatabaseNode;
-  role: NodeRole;
+  database: DatabaseEntry;
+  role: EntryRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

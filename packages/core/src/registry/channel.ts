@@ -1,19 +1,19 @@
 import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 
 export const channelAttributesSchema = z.object({
   type: z.literal('channel'),
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  collaborators: z.record(z.string(), nodeRoleEnum).nullable().optional(),
+  collaborators: z.record(z.string(), entryRoleEnum).nullable().optional(),
 });
 
 export type ChannelAttributes = z.infer<typeof channelAttributesSchema>;
 
-export const channelModel: NodeModel = {
+export const channelModel: EntryModel = {
   type: 'channel',
   schema: channelAttributesSchema,
   getName: (_, attributes) => {

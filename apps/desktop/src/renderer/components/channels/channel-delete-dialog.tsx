@@ -15,11 +15,11 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface ChannelDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nodeId: string;
+  channelId: string;
 }
 
 export const ChannelDeleteDialog = ({
-  nodeId,
+  channelId,
   open,
   onOpenChange,
 }: ChannelDeleteDialogProps) => {
@@ -47,12 +47,12 @@ export const ChannelDeleteDialog = ({
               mutate({
                 input: {
                   type: 'channel_delete',
-                  channelId: nodeId,
+                  channelId,
                   userId: workspace.userId,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeNode(nodeId);
+                  workspace.closeEntry(channelId);
                 },
                 onError(error) {
                   toast({

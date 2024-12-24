@@ -15,11 +15,11 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface FolderDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nodeId: string;
+  entryId: string;
 }
 
 export const FolderDeleteDialog = ({
-  nodeId,
+  entryId,
   open,
   onOpenChange,
 }: FolderDeleteDialogProps) => {
@@ -47,12 +47,12 @@ export const FolderDeleteDialog = ({
               mutate({
                 input: {
                   type: 'folder_delete',
-                  folderId: nodeId,
+                  folderId: entryId,
                   userId: workspace.userId,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeNode(nodeId);
+                  workspace.closeEntry(entryId);
                 },
                 onError(error) {
                   toast({

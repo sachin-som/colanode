@@ -1,10 +1,9 @@
 import {
   FileStatus,
   FileType,
-  InteractionAttributes,
-  NodeAttributes,
-  NodeRole,
-  NodeType,
+  EntryAttributes,
+  EntryRole,
+  EntryType,
   WorkspaceRole,
   MessageType,
 } from '@colanode/core';
@@ -94,13 +93,13 @@ export type SelectUser = Selectable<UserTable>;
 export type CreateUser = Insertable<UserTable>;
 export type UpdateUser = Updateable<UserTable>;
 
-interface NodeTable {
+interface EntryTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<NodeType, never, never>;
+  type: ColumnType<EntryType, never, never>;
   parent_id: ColumnType<string, never, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  attributes: JSONColumnType<NodeAttributes, string | null, string | null>;
+  attributes: JSONColumnType<EntryAttributes, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   created_by: ColumnType<string, string, never>;
@@ -108,15 +107,15 @@ interface NodeTable {
   transaction_id: ColumnType<string, string, string>;
 }
 
-export type SelectNode = Selectable<NodeTable>;
-export type CreateNode = Insertable<NodeTable>;
-export type UpdateNode = Updateable<NodeTable>;
+export type SelectEntry = Selectable<EntryTable>;
+export type CreateEntry = Insertable<EntryTable>;
+export type UpdateEntry = Updateable<EntryTable>;
 
 interface CollaborationTable {
-  node_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  role: ColumnType<NodeRole, NodeRole, NodeRole>;
+  role: ColumnType<EntryRole, EntryRole, EntryRole>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
@@ -132,7 +131,7 @@ export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface TransactionTable {
   id: ColumnType<string, string, never>;
-  node_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   operation: ColumnType<string, string, never>;
@@ -151,7 +150,7 @@ interface MessageTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<MessageType, MessageType, MessageType>;
   parent_id: ColumnType<string, string, never>;
-  node_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   content: ColumnType<string, string, never>;
@@ -187,6 +186,7 @@ interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
   parent_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   name: ColumnType<string, string, never>;
@@ -208,48 +208,27 @@ export type SelectFile = Selectable<FileTable>;
 export type CreateFile = Insertable<FileTable>;
 export type UpdateFile = Updateable<FileTable>;
 
-interface NodePathTable {
+interface EntryPathTable {
   ancestor_id: ColumnType<string, string, never>;
   descendant_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   level: ColumnType<number, number, number>;
 }
 
-export type SelectNodePath = Selectable<NodePathTable>;
-export type CreateNodePath = Insertable<NodePathTable>;
-export type UpdateNodePath = Updateable<NodePathTable>;
-
-interface InteractionTable {
-  user_id: ColumnType<string, string, never>;
-  node_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  attributes: JSONColumnType<
-    InteractionAttributes,
-    string | null,
-    string | null
-  >;
-  created_at: ColumnType<Date, Date, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date>;
-  server_created_at: ColumnType<Date, Date, never>;
-  server_updated_at: ColumnType<Date | null, Date | null, Date>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectInteraction = Selectable<InteractionTable>;
-export type CreateInteraction = Insertable<InteractionTable>;
-export type UpdateInteraction = Updateable<InteractionTable>;
+export type SelectEntryPath = Selectable<EntryPathTable>;
+export type CreateEntryPath = Insertable<EntryPathTable>;
+export type UpdateEntryPath = Updateable<EntryPathTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
   workspaces: WorkspaceTable;
   users: UserTable;
-  nodes: NodeTable;
+  entries: EntryTable;
   transactions: TransactionTable;
   messages: MessageTable;
   message_reactions: MessageReactionTable;
   collaborations: CollaborationTable;
   files: FileTable;
-  node_paths: NodePathTable;
-  interactions: InteractionTable;
+  entry_paths: EntryPathTable;
 }

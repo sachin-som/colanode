@@ -12,9 +12,9 @@ export const Layout = ({ main, modal }: LayoutProps) => {
     <div className="w-screen min-w-screen h-screen min-h-screen flex flex-row">
       <LayoutSidebar />
       <main className="h-full max-h-screen w-full min-w-128 flex-grow overflow-hidden bg-white">
-        {main && <LayoutMain nodeId={main} />}
+        {main && <LayoutMain entryId={main} />}
       </main>
-      {modal && <LayoutModal nodeId={modal} />}
+      {modal && <LayoutModal entryId={modal} />}
     </div>
   );
 };

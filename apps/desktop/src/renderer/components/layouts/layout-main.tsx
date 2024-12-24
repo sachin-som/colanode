@@ -1,14 +1,14 @@
-import { NodeContainer } from '@/renderer/components/layouts/node-container';
+import { EntryContainer } from '@/renderer/components/layouts/entry-container';
 import { ContainerContext } from '@/renderer/contexts/container';
 
 interface LayoutMainProps {
-  nodeId: string;
+  entryId: string;
 }
 
-export const LayoutMain = ({ nodeId }: LayoutMainProps) => {
+export const LayoutMain = ({ entryId }: LayoutMainProps) => {
   return (
-    <ContainerContext.Provider value={{ nodeId, mode: 'main' }}>
-      <NodeContainer nodeId={nodeId} />
+    <ContainerContext.Provider value={{ entryId, mode: 'main' }}>
+      <EntryContainer entryId={entryId} />
     </ContainerContext.Provider>
   );
 };

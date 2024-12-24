@@ -1,4 +1,4 @@
-import { hasEditorAccess, NodeRole, RecordNode } from '@colanode/core';
+import { hasEditorAccess, EntryRole, RecordEntry } from '@colanode/core';
 import React from 'react';
 
 import { RecordContext } from '@/renderer/contexts/record';
@@ -11,8 +11,8 @@ export const RecordProvider = ({
   role,
   children,
 }: {
-  record: RecordNode;
-  role: NodeRole;
+  record: RecordEntry;
+  role: EntryRole;
   children: React.ReactNode;
 }) => {
   const workspace = useWorkspace();

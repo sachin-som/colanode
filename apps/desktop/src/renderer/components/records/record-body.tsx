@@ -1,8 +1,8 @@
 import {
-  DatabaseNode,
+  DatabaseEntry,
   hasEditorAccess,
-  NodeRole,
-  RecordNode,
+  EntryRole,
+  RecordEntry,
 } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 import { useCallback, useEffect } from 'react';
@@ -19,10 +19,10 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { useRadar } from '@/renderer/contexts/radar';
 
 interface RecordBodyProps {
-  record: RecordNode;
-  recordRole: NodeRole;
-  database: DatabaseNode;
-  databaseRole: NodeRole;
+  record: RecordEntry;
+  recordRole: EntryRole;
+  database: DatabaseEntry;
+  databaseRole: EntryRole;
 }
 
 export const RecordBody = ({
@@ -87,7 +87,7 @@ export const RecordBody = ({
         </RecordProvider>
         <Separator className="my-4 w-full" />
         <Document
-          nodeId={record.id}
+          entryId={record.id}
           rootId={record.rootId}
           content={record.attributes.content}
           transactionId={record.transactionId}

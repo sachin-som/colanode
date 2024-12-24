@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
+import { EntryModel } from './core';
 import { blockSchema } from './block';
-import { NodeModel } from './core';
 import { fieldValueSchema } from './fields';
 
 import { extractText } from '../lib/blocks';
@@ -18,7 +18,7 @@ export const recordAttributesSchema = z.object({
 
 export type RecordAttributes = z.infer<typeof recordAttributesSchema>;
 
-export const recordModel: NodeModel = {
+export const recordModel: EntryModel = {
   type: 'record',
   schema: recordAttributesSchema,
   getName: (_, attributes) => {

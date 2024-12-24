@@ -15,11 +15,11 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface PageDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nodeId: string;
+  pageId: string;
 }
 
 export const PageDeleteDialog = ({
-  nodeId,
+  pageId,
   open,
   onOpenChange,
 }: PageDeleteDialogProps) => {
@@ -47,12 +47,12 @@ export const PageDeleteDialog = ({
               mutate({
                 input: {
                   type: 'page_delete',
-                  pageId: nodeId,
+                  pageId,
                   userId: workspace.userId,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeNode(nodeId);
+                  workspace.closeEntry(pageId);
                 },
                 onError(error) {
                   toast({

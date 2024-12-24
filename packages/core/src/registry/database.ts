@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 import { fieldAttributesSchema } from './fields';
 
 export const viewFieldAttributesSchema = z.object({
@@ -73,7 +73,7 @@ export const databaseAttributesSchema = z.object({
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  collaborators: z.record(z.string(), nodeRoleEnum).nullable().optional(),
+  collaborators: z.record(z.string(), entryRoleEnum).nullable().optional(),
   fields: z.record(z.string(), fieldAttributesSchema),
   views: z.record(z.string(), viewAttributesSchema),
 });
@@ -81,7 +81,7 @@ export const databaseAttributesSchema = z.object({
 export type DatabaseAttributes = z.infer<typeof databaseAttributesSchema>;
 export type ViewType = 'table' | 'board' | 'calendar';
 
-export const databaseModel: NodeModel = {
+export const databaseModel: EntryModel = {
   type: 'database',
   schema: databaseAttributesSchema,
   getName: (_, attributes) => {

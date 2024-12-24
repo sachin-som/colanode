@@ -12,7 +12,7 @@ class CollaborationService {
     collaboration: SyncCollaborationData
   ) {
     this.debug(
-      `Applying server collaboration: ${collaboration.nodeId} for user ${userId}`
+      `Applying server collaboration: ${collaboration.entryId} for user ${userId}`
     );
 
     const workspaceDatabase =
@@ -21,7 +21,7 @@ class CollaborationService {
     await workspaceDatabase
       .insertInto('collaborations')
       .values({
-        node_id: collaboration.nodeId,
+        entry_id: collaboration.entryId,
         role: collaboration.role,
         created_at: collaboration.createdAt,
         updated_at: collaboration.updatedAt,
@@ -30,7 +30,7 @@ class CollaborationService {
       })
       .onConflict((oc) =>
         oc
-          .columns(['node_id'])
+          .columns(['entry_id'])
           .doUpdateSet({
             role: collaboration.role,
             version: BigInt(collaboration.version),
@@ -44,36 +44,26 @@ class CollaborationService {
     if (collaboration.deletedAt) {
       await workspaceDatabase.transaction().execute(async (tx) => {
         await tx
-          .deleteFrom('nodes')
-          .where('id', '=', collaboration.nodeId)
+          .deleteFrom('entries')
+          .where('id', '=', collaboration.entryId)
           .execute();
 
         await tx
           .deleteFrom('transactions')
-          .where('node_id', '=', collaboration.nodeId)
-          .execute();
-
-        await tx
-          .deleteFrom('interaction_events')
-          .where('node_id', '=', collaboration.nodeId)
-          .execute();
-
-        await tx
-          .deleteFrom('interactions')
-          .where('node_id', '=', collaboration.nodeId)
+          .where('entry_id', '=', collaboration.entryId)
           .execute();
       });
 
       eventBus.publish({
         type: 'collaboration_deleted',
         userId,
-        nodeId: collaboration.nodeId,
+        entryId: collaboration.entryId,
       });
     } else {
       eventBus.publish({
         type: 'collaboration_created',
         userId,
-        nodeId: collaboration.nodeId,
+        entryId: collaboration.entryId,
       });
     }
   }

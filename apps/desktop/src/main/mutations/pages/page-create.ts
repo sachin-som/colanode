@@ -1,6 +1,6 @@
 import { generateId, IdType, PageAttributes } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   PageCreateMutationInput,
@@ -22,7 +22,7 @@ export class PageCreateMutationHandler
       content: {},
     };
 
-    await nodeService.createNode(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, { id, attributes });
 
     return {
       id: id,

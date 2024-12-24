@@ -1,4 +1,4 @@
-import { extractNodeRole } from '@colanode/core';
+import { extractEntryRole } from '@colanode/core';
 
 import { DatabaseBody } from '@/renderer/components/databases/database-body';
 import { DatabaseHeader } from '@/renderer/components/databases/database-header';
@@ -6,14 +6,14 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface DatabaseContainerProps {
-  nodeId: string;
+  databaseId: string;
 }
 
-export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
+export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    type: 'node_tree_get',
-    nodeId,
+    type: 'entry_tree_get',
+    entryId: databaseId,
     userId: workspace.userId,
   });
 
@@ -21,9 +21,9 @@ export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
     return null;
   }
 
-  const nodes = data ?? [];
-  const database = nodes.find((node) => node.id === nodeId);
-  const role = extractNodeRole(nodes, workspace.userId);
+  const entries = data ?? [];
+  const database = entries.find((entry) => entry.id === databaseId);
+  const role = extractEntryRole(entries, workspace.userId);
 
   if (!database || database.type !== 'database' || !role) {
     return null;
@@ -31,7 +31,7 @@ export const DatabaseContainer = ({ nodeId }: DatabaseContainerProps) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <DatabaseHeader nodes={nodes} database={database} role={role} />
+      <DatabaseHeader entries={entries} database={database} role={role} />
       <DatabaseBody database={database} role={role} />
     </div>
   );

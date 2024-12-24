@@ -1,16 +1,15 @@
 import {
   BooleanFieldAttributes,
   CreatedAtFieldAttributes,
-  DatabaseNode,
+  DatabaseEntry,
   DateFieldAttributes,
   EmailFieldAttributes,
   FieldAttributes,
   isStringArray,
   MultiSelectFieldAttributes,
-  NodeTypes,
   NumberFieldAttributes,
   PhoneFieldAttributes,
-  RecordNode,
+  RecordEntry,
   SelectFieldAttributes,
   TextFieldAttributes,
   UrlFieldAttributes,
@@ -21,16 +20,18 @@ import {
 import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectNode } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapNode } from '@/main/utils';
+import { mapEntry } from '@/main/utils';
 import { RecordListQueryInput } from '@/shared/queries/records/record-list';
 import { Event } from '@/shared/types/events';
 
 export class RecordListQueryHandler
   implements QueryHandler<RecordListQueryInput>
 {
-  public async handleQuery(input: RecordListQueryInput): Promise<RecordNode[]> {
+  public async handleQuery(
+    input: RecordListQueryInput
+  ): Promise<RecordEntry[]> {
     const rows = await this.fetchRecords(input);
     return this.buildRecords(rows);
   }
@@ -38,7 +39,7 @@ export class RecordListQueryHandler
   public async checkForChanges(
     event: Event,
     input: RecordListQueryInput,
-    output: RecordNode[]
+    output: RecordEntry[]
   ): Promise<ChangeCheckResult<RecordListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -51,9 +52,9 @@ export class RecordListQueryHandler
     }
 
     if (
-      event.type === 'node_created' &&
+      event.type === 'entry_created' &&
       event.userId === input.userId &&
-      event.node.type === 'record'
+      event.entry.type === 'record'
     ) {
       const newResult = await this.handleQuery(input);
       return {
@@ -62,10 +63,10 @@ export class RecordListQueryHandler
       };
     }
 
-    if (event.type === 'node_updated' && event.userId === input.userId) {
+    if (event.type === 'entry_updated' && event.userId === input.userId) {
       if (
-        event.node.type === 'record' &&
-        event.node.attributes.databaseId === input.databaseId
+        event.entry.type === 'record' &&
+        event.entry.attributes.databaseId === input.databaseId
       ) {
         if (input.filters.length > 0 || input.sorts.length > 0) {
           const newResult = await this.handleQuery(input);
@@ -75,11 +76,11 @@ export class RecordListQueryHandler
           };
         }
 
-        const record = output.find((record) => record.id === event.node.id);
+        const record = output.find((record) => record.id === event.entry.id);
         if (record) {
           const newResult = output.map((record) => {
-            if (record.id === event.node.id) {
-              return event.node as RecordNode;
+            if (record.id === event.entry.id) {
+              return event.entry as RecordEntry;
             }
             return record;
           });
@@ -92,8 +93,8 @@ export class RecordListQueryHandler
       }
 
       if (
-        event.node.type === 'database' &&
-        event.node.id === input.databaseId
+        event.entry.type === 'database' &&
+        event.entry.id === input.databaseId
       ) {
         const newResult = await this.handleQuery(input);
         return {
@@ -103,10 +104,10 @@ export class RecordListQueryHandler
       }
     }
 
-    if (event.type === 'node_deleted' && event.userId === input.userId) {
+    if (event.type === 'entry_deleted' && event.userId === input.userId) {
       if (
-        event.node.type === 'record' &&
-        event.node.attributes.databaseId === input.databaseId
+        event.entry.type === 'record' &&
+        event.entry.attributes.databaseId === input.databaseId
       ) {
         const newResult = await this.handleQuery(input);
         return {
@@ -116,8 +117,8 @@ export class RecordListQueryHandler
       }
 
       if (
-        event.node.type === 'database' &&
-        event.node.id === input.databaseId
+        event.entry.type === 'database' &&
+        event.entry.id === input.databaseId
       ) {
         return {
           hasChanges: true,
@@ -133,7 +134,7 @@ export class RecordListQueryHandler
 
   private async fetchRecords(
     input: RecordListQueryInput
-  ): Promise<SelectNode[]> {
+  ): Promise<SelectEntry[]> {
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
@@ -146,10 +147,10 @@ export class RecordListQueryHandler
 
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."id" ASC'}`;
     const offset = (input.page - 1) * input.count;
-    const query = sql<SelectNode>`
-        SELECT n.*
-        FROM nodes n
-        WHERE n.parent_id = ${input.databaseId} AND n.type = ${NodeTypes.Record} ${sql.raw(filterQuery)}
+    const query = sql<SelectEntry>`
+        SELECT e.*
+        FROM entries e
+        WHERE e.parent_id = ${input.databaseId} AND e.type = 'record' ${sql.raw(filterQuery)}
         ${sql.raw(orderByQuery)}
         LIMIT ${sql.lit(input.count)}
         OFFSET ${sql.lit(offset)}
@@ -159,30 +160,30 @@ export class RecordListQueryHandler
     return result.rows;
   }
 
-  private buildRecords = (rows: SelectNode[]): RecordNode[] => {
-    const nodes = rows.map(mapNode);
-    const recordNodes: RecordNode[] = [];
+  private buildRecords = (rows: SelectEntry[]): RecordEntry[] => {
+    const entries = rows.map(mapEntry);
+    const recordEntries: RecordEntry[] = [];
 
-    for (const node of nodes) {
-      if (node.type !== 'record') {
+    for (const entry of entries) {
+      if (entry.type !== 'record') {
         continue;
       }
 
-      recordNodes.push(node);
+      recordEntries.push(entry);
     }
 
-    return recordNodes;
+    return recordEntries;
   };
 
   private async fetchDatabase(
     userId: string,
     databaseId: string
-  ): Promise<DatabaseNode> {
+  ): Promise<DatabaseEntry> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
     const row = await workspaceDatabase
-      .selectFrom('nodes')
+      .selectFrom('entries')
       .where('id', '=', databaseId)
       .selectAll()
       .executeTakeFirst();
@@ -191,7 +192,7 @@ export class RecordListQueryHandler
       throw new Error('Database not found');
     }
 
-    const database = mapNode(row) as DatabaseNode;
+    const database = mapEntry(row) as DatabaseEntry;
     return database;
   }
 

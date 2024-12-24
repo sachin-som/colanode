@@ -6,7 +6,6 @@ import {
   WorkspaceStatus,
 } from '@colanode/core';
 
-import { interactionService } from '@/services/interaction-service';
 import { createLogger } from '@/lib/logger';
 import { RequestAccount } from '@/types/api';
 import { database } from '@/data/database';
@@ -73,8 +72,6 @@ export class SocketConnection {
 
     if (message.type === 'synchronizer_input') {
       this.handleSynchronizerInput(message);
-    } else if (message.type === 'sync_interactions') {
-      interactionService.syncLocalInteractions(this.account.id, message);
     }
   }
 
@@ -238,7 +235,7 @@ export class SocketConnection {
         continue;
       }
 
-      rootIds.add(collaboration.node_id);
+      rootIds.add(collaboration.entry_id);
     }
 
     const socketUser: SocketUser = {
@@ -298,7 +295,7 @@ export class SocketConnection {
       return;
     }
 
-    user.rootIds.add(event.nodeId);
+    user.rootIds.add(event.entryId);
   }
 
   private async handleCollaborationUpdatedEvent(
@@ -313,13 +310,13 @@ export class SocketConnection {
       .selectFrom('collaborations')
       .selectAll()
       .where('collaborator_id', '=', event.collaboratorId)
-      .where('node_id', '=', event.nodeId)
+      .where('entry_id', '=', event.entryId)
       .executeTakeFirst();
 
     if (!collaboration || collaboration.deleted_at) {
-      user.rootIds.delete(event.nodeId);
+      user.rootIds.delete(event.entryId);
     } else {
-      user.rootIds.add(event.nodeId);
+      user.rootIds.add(event.entryId);
     }
   }
 }

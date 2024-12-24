@@ -15,11 +15,11 @@ import { toast } from '@/renderer/hooks/use-toast';
 interface DatabaseDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nodeId: string;
+  entryId: string;
 }
 
 export const DatabaseDeleteDialog = ({
-  nodeId,
+  entryId,
   open,
   onOpenChange,
 }: DatabaseDeleteDialogProps) => {
@@ -47,12 +47,12 @@ export const DatabaseDeleteDialog = ({
               mutate({
                 input: {
                   type: 'database_delete',
-                  databaseId: nodeId,
+                  databaseId: entryId,
                   userId: workspace.userId,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeNode(nodeId);
+                  workspace.closeEntry(entryId);
                 },
                 onError(error) {
                   toast({

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 interface ContainerContext {
-  nodeId: string;
+  entryId: string;
   mode: 'main' | 'modal' | 'panel';
 }
 

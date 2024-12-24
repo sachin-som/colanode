@@ -1,5 +1,5 @@
 import {
-  RecordNode,
+  RecordEntry,
   ViewFilterAttributes,
   ViewSortAttributes,
 } from '@colanode/core';
@@ -18,7 +18,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     record_list: {
       input: RecordListQueryInput;
-      output: RecordNode[];
+      output: RecordEntry[];
     };
   }
 }

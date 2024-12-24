@@ -1,8 +1,8 @@
 import {
-  DatabaseNode,
+  DatabaseEntry,
   hasCollaboratorAccess,
   hasEditorAccess,
-  NodeRole,
+  EntryRole,
 } from '@colanode/core';
 import React from 'react';
 
@@ -12,8 +12,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface DatabaseProps {
-  database: DatabaseNode;
-  role: NodeRole;
+  database: DatabaseEntry;
+  role: EntryRole;
   children: React.ReactNode;
 }
 

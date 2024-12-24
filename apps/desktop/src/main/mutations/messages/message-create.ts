@@ -7,7 +7,6 @@ import {
   generateId,
   IdType,
   MessageContent,
-  NodeTypes,
 } from '@colanode/core';
 
 import { fileService } from '@/main/services/file-service';
@@ -60,7 +59,7 @@ export class MessageCreateMutationHandler
 
         const fileId = generateId(IdType.File);
         block.id = fileId;
-        block.type = NodeTypes.File;
+        block.type = 'file';
         block.attrs = null;
 
         fileService.copyFileToWorkspace(
@@ -75,7 +74,8 @@ export class MessageCreateMutationHandler
           type: metadata.type,
           status: FileStatus.Pending,
           parent_id: messageId,
-          root_id: messageId,
+          entry_id: input.conversationId,
+          root_id: input.rootId,
           name: metadata.name,
           original_name: metadata.name,
           mime_type: metadata.mimeType,
@@ -90,6 +90,7 @@ export class MessageCreateMutationHandler
           id: fileId,
           type: metadata.type,
           parentId: messageId,
+          entryId: input.conversationId,
           rootId: input.rootId,
           name: metadata.name,
           originalName: metadata.name,
@@ -141,7 +142,7 @@ export class MessageCreateMutationHandler
           .values({
             id: messageId,
             type: 'standard',
-            node_id: input.conversationId,
+            entry_id: input.conversationId,
             parent_id: input.conversationId,
             root_id: input.rootId,
             content: JSON.stringify(messageContent),
@@ -158,7 +159,7 @@ export class MessageCreateMutationHandler
         const createMessageMutationData: CreateMessageMutationData = {
           id: messageId,
           type: 'standard',
-          nodeId: input.conversationId,
+          entryId: input.conversationId,
           parentId: input.conversationId,
           rootId: input.rootId,
           content: messageContent,

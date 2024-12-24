@@ -6,7 +6,7 @@ import {
   generateNodeIndex,
   isStringArray,
   MultiSelectFieldAttributes,
-  RecordNode,
+  RecordEntry,
   SelectFieldAttributes,
   ViewFieldAttributes,
   ViewFieldFilterAttributes,
@@ -509,18 +509,18 @@ export const getFieldFilterOperators = (
 };
 
 export const filterRecords = (
-  records: RecordNode[],
+  records: RecordEntry[],
   filter: ViewFilterAttributes,
   field: FieldAttributes,
   currentUserId: string
-): RecordNode[] => {
+): RecordEntry[] => {
   return records.filter((record) =>
     recordMatchesFilter(record, filter, field, currentUserId)
   );
 };
 
 const recordMatchesFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFilterAttributes,
   field: FieldAttributes,
   currentUserId: string
@@ -562,7 +562,7 @@ const recordMatchesFilter = (
 };
 
 const recordMatchesBooleanFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -586,7 +586,7 @@ const recordMatchesBooleanFilter = (
 };
 
 const recordMatchesCollaboratorFilter = (
-  _: RecordNode,
+  _: RecordEntry,
   __: ViewFieldFilterAttributes,
   ___: FieldAttributes
 ) => {
@@ -594,7 +594,7 @@ const recordMatchesCollaboratorFilter = (
 };
 
 const recordMatchesCreatedAtFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes
 ) => {
   if (!filter.value) return false;
@@ -628,7 +628,7 @@ const recordMatchesCreatedAtFilter = (
 };
 
 const recordMatchesCreatedByFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   currentUserId: string
 ) => {
@@ -661,7 +661,7 @@ const recordMatchesCreatedByFilter = (
 };
 
 const recordMatchesDateFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -707,7 +707,7 @@ const recordMatchesDateFilter = (
 };
 
 const recordMatchesEmailFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -749,7 +749,7 @@ const recordMatchesEmailFilter = (
 };
 
 const recordMatchesFileFilter = (
-  _: RecordNode,
+  _: RecordEntry,
   __: ViewFieldFilterAttributes,
   ___: FieldAttributes
 ) => {
@@ -757,7 +757,7 @@ const recordMatchesFileFilter = (
 };
 
 const recordMatchesMultiSelectFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -788,7 +788,7 @@ const recordMatchesMultiSelectFilter = (
 };
 
 const recordMatchesNumberFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -834,7 +834,7 @@ const recordMatchesNumberFilter = (
 };
 
 const recordMatchesPhoneFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -876,7 +876,7 @@ const recordMatchesPhoneFilter = (
 };
 
 const recordMatchesSelectFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -911,7 +911,7 @@ const recordMatchesSelectFilter = (
 };
 
 const recordMatchesTextFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
@@ -953,7 +953,7 @@ const recordMatchesTextFilter = (
 };
 
 const recordMatchesUrlFilter = (
-  record: RecordNode,
+  record: RecordEntry,
   filter: ViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {

@@ -1,153 +1,152 @@
-import {
-  InteractionAttributes,
-  InteractionEvent,
-  mergeInteractionAttributes,
-  SyncInteractionsMessage,
-} from '@colanode/core';
+// import {
+//   InteractionAttributes,
+//   InteractionEvent,
+//   mergeInteractionAttributes,
+// } from '@colanode/core';
 
-import { database } from '@/data/database';
-import { eventBus } from '@/lib/event-bus';
+// import { database } from '@/data/database';
 
-const UPDATE_RETRIES_COUNT = 10;
+// const UPDATE_RETRIES_COUNT = 10;
 
-class InteractionService {
-  public async syncLocalInteractions(
-    accountId: string,
-    message: SyncInteractionsMessage
-  ) {
-    const user = await database
-      .selectFrom('users')
-      .selectAll()
-      .where('id', '=', message.userId)
-      .executeTakeFirst();
+// class InteractionService {
+//   public async syncLocalInteractions(
+//     accountId: string,
+//     message: SyncInteractionsMessage
+//   ) {
+//     const user = await database
+//       .selectFrom('users')
+//       .selectAll()
+//       .where('id', '=', message.userId)
+//       .executeTakeFirst();
 
-    if (!user || user.account_id !== accountId) {
-      return false;
-    }
+//     if (!user || user.account_id !== accountId) {
+//       return false;
+//     }
 
-    for (let i = 0; i < UPDATE_RETRIES_COUNT; i++) {
-      const synced = await this.trySyncInteraction(user.workspace_id, message);
+//     for (let i = 0; i < UPDATE_RETRIES_COUNT; i++) {
+//       const synced = await this.trySyncInteraction(user.workspace_id, message);
 
-      if (synced) {
-        return true;
-      }
-    }
+//       if (synced) {
+//         return true;
+//       }
+//     }
 
-    return false;
-  }
+//     return false;
+//   }
 
-  private async trySyncInteraction(
-    workspaceId: string,
-    message: SyncInteractionsMessage
-  ): Promise<boolean> {
-    if (message.events.length === 0) {
-      return true;
-    }
+//   private async trySyncInteraction(
+//     _: string,
+//     __: SyncInteractionsMessage
+//   ): Promise<boolean> {
+//     return true;
+//     // if (message.events.length === 0) {
+//     //   return true;
+//     // }
 
-    const firstEvent = message.events[0];
-    if (!firstEvent) {
-      return true;
-    }
+//     // const firstEvent = message.events[0];
+//     // if (!firstEvent) {
+//     //   return true;
+//     // }
 
-    const lastEvent = message.events[message.events.length - 1];
-    if (!lastEvent) {
-      return true;
-    }
+//     // const lastEvent = message.events[message.events.length - 1];
+//     // if (!lastEvent) {
+//     //   return true;
+//     // }
 
-    const interaction = await database
-      .selectFrom('interactions')
-      .selectAll()
-      .where('user_id', '=', message.userId)
-      .where('node_id', '=', message.nodeId)
-      .executeTakeFirst();
+//     // const interaction = await database
+//     //   .selectFrom('interactions')
+//     //   .selectAll()
+//     //   .where('user_id', '=', message.userId)
+//     //   .where('node_id', '=', message.nodeId)
+//     //   .executeTakeFirst();
 
-    const attributes = this.buildInteractionAttributes(
-      interaction?.attributes,
-      message.events
-    );
+//     // const attributes = this.buildInteractionAttributes(
+//     //   interaction?.attributes,
+//     //   message.events
+//     // );
 
-    if (!attributes) {
-      return true;
-    }
+//     // if (!attributes) {
+//     //   return true;
+//     // }
 
-    if (interaction) {
-      const updatedInteraction = await database
-        .updateTable('interactions')
-        .returningAll()
-        .set({
-          attributes: JSON.stringify(attributes),
-          updated_at: new Date(lastEvent.createdAt),
-          server_updated_at: new Date(),
-        })
-        .where('user_id', '=', message.userId)
-        .where('node_id', '=', message.nodeId)
-        .where('version', '=', interaction.version)
-        .executeTakeFirst();
+//     // if (interaction) {
+//     //   const updatedInteraction = await database
+//     //     .updateTable('interactions')
+//     //     .returningAll()
+//     //     .set({
+//     //       attributes: JSON.stringify(attributes),
+//     //       updated_at: new Date(lastEvent.createdAt),
+//     //       server_updated_at: new Date(),
+//     //     })
+//     //     .where('user_id', '=', message.userId)
+//     //     .where('node_id', '=', message.nodeId)
+//     //     .where('version', '=', interaction.version)
+//     //     .executeTakeFirst();
 
-      if (updatedInteraction) {
-        eventBus.publish({
-          type: 'interaction_updated',
-          userId: message.userId,
-          nodeId: message.nodeId,
-          rootId: message.rootId,
-          workspaceId,
-        });
+//     //   if (updatedInteraction) {
+//     //     eventBus.publish({
+//     //       type: 'interaction_updated',
+//     //       userId: message.userId,
+//     //       nodeId: message.nodeId,
+//     //       rootId: message.rootId,
+//     //       workspaceId,
+//     //     });
 
-        return true;
-      }
-    }
+//     //     return true;
+//     //   }
+//     // }
 
-    const createdInteraction = await database
-      .insertInto('interactions')
-      .returningAll()
-      .values({
-        user_id: message.userId,
-        node_id: message.nodeId,
-        workspace_id: workspaceId,
-        attributes: JSON.stringify(attributes),
-        created_at: new Date(firstEvent.createdAt),
-        server_created_at: new Date(),
-      })
-      .onConflict((oc) => oc.columns(['user_id', 'node_id']).doNothing())
-      .executeTakeFirst();
+//     // const createdInteraction = await database
+//     //   .insertInto('interactions')
+//     //   .returningAll()
+//     //   .values({
+//     //     user_id: message.userId,
+//     //     node_id: message.nodeId,
+//     //     workspace_id: workspaceId,
+//     //     attributes: JSON.stringify(attributes),
+//     //     created_at: new Date(firstEvent.createdAt),
+//     //     server_created_at: new Date(),
+//     //   })
+//     //   .onConflict((oc) => oc.columns(['user_id', 'node_id']).doNothing())
+//     //   .executeTakeFirst();
 
-    if (createdInteraction) {
-      eventBus.publish({
-        type: 'interaction_updated',
-        userId: message.userId,
-        nodeId: message.nodeId,
-        rootId: message.rootId,
-        workspaceId,
-      });
+//     // if (createdInteraction) {
+//     //   eventBus.publish({
+//     //     type: 'interaction_updated',
+//     //     userId: message.userId,
+//     //     nodeId: message.nodeId,
+//     //     rootId: message.rootId,
+//     //     workspaceId,
+//     //   });
 
-      return true;
-    }
+//     //   return true;
+//     // }
 
-    return false;
-  }
+//     // return false;
+//   }
 
-  private buildInteractionAttributes(
-    attributes: InteractionAttributes | undefined,
-    events: InteractionEvent[]
-  ): InteractionAttributes | null {
-    if (events.length === 0) {
-      return null;
-    }
+//   private buildInteractionAttributes(
+//     attributes: InteractionAttributes | undefined,
+//     events: InteractionEvent[]
+//   ): InteractionAttributes | null {
+//     if (events.length === 0) {
+//       return null;
+//     }
 
-    let result = { ...attributes };
-    for (const event of events) {
-      const merged = mergeInteractionAttributes(
-        result,
-        event.attribute,
-        event.value
-      );
-      if (merged) {
-        result = merged;
-      }
-    }
+//     let result = { ...attributes };
+//     for (const event of events) {
+//       const merged = mergeInteractionAttributes(
+//         result,
+//         event.attribute,
+//         event.value
+//       );
+//       if (merged) {
+//         result = merged;
+//       }
+//     }
 
-    return result;
-  }
-}
+//     return result;
+//   }
+// }
 
-export const interactionService = new InteractionService();
+// export const interactionService = new InteractionService();

@@ -1,4 +1,4 @@
-import { compareString, SpaceNode } from '@colanode/core';
+import { compareString, SpaceEntry } from '@colanode/core';
 import {
   ChevronRight,
   Database,
@@ -15,7 +15,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { ChannelCreateDialog } from '@/renderer/components/channels/channel-create-dialog';
 import { DatabaseCreateDialog } from '@/renderer/components/databases/database-create-dialog';
 import { FolderCreateDialog } from '@/renderer/components/folders/folder-create-dialog';
-import { NodeSidebarItem } from '@/renderer/components/layouts/node-sidebar-item';
+import { EntrySidebarItem } from '@/renderer/components/layouts/entry-sidebar-item';
 import { PageCreateDialog } from '@/renderer/components/pages/page-create-dialog';
 import { SpaceSettingsDialog } from '@/renderer/components/spaces/space-settings-dialog';
 import {
@@ -41,15 +41,15 @@ interface SettingsState {
 }
 
 interface SpaceSidebarItemProps {
-  node: SpaceNode;
+  space: SpaceEntry;
 }
 
-export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
+export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({
-    type: 'node_children_get',
-    nodeId: node.id,
+    type: 'entry_children_get',
+    entryId: space.id,
     userId: workspace.userId,
     types: ['page', 'channel', 'database', 'folder'],
   });
@@ -67,7 +67,7 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
   return (
     <React.Fragment>
       <Collapsible
-        key={node.id}
+        key={space.id}
         asChild
         defaultOpen={true}
         className="group/sidebar-space"
@@ -77,13 +77,13 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
             <CollapsibleTrigger asChild>
               <button className="group/space-button flex items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm flex-1">
                 <Avatar
-                  id={node.id}
-                  avatar={node.attributes.avatar}
-                  name={node.attributes.name}
+                  id={space.id}
+                  avatar={space.attributes.avatar}
+                  name={space.attributes.name}
                   className="size-4 group-hover/space-button:hidden"
                 />
                 <ChevronRight className="hidden size-4 transition-transform duration-200 group-hover/space-button:block group-data-[state=open]/sidebar-space:rotate-90" />
-                <span>{node.attributes.name}</span>
+                <span>{space.attributes.name}</span>
               </button>
             </CollapsibleTrigger>
             <DropdownMenu>
@@ -94,7 +94,7 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="ml-1 w-72">
                 <DropdownMenuLabel>
-                  {node.attributes.name ?? 'Unnamed'}
+                  {space.attributes.name ?? 'Unnamed'}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setOpenCreatePage(true)}>
@@ -159,11 +159,11 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
                   <div
                     className={cn(
                       'text-sm flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                      workspace.isNodeActive(child.id) &&
+                      workspace.isEntryActive(child.id) &&
                         'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
                     )}
                   >
-                    <NodeSidebarItem node={child} />
+                    <EntrySidebarItem entry={child} />
                   </div>
                 </li>
               ))}
@@ -173,35 +173,35 @@ export const SpaceSidebarItem = ({ node }: SpaceSidebarItemProps) => {
       </Collapsible>
       {openCreateChannel && (
         <ChannelCreateDialog
-          spaceId={node.id}
+          spaceId={space.id}
           open={openCreateChannel}
           onOpenChange={setOpenCreateChannel}
         />
       )}
       {openCreatePage && (
         <PageCreateDialog
-          spaceId={node.id}
+          spaceId={space.id}
           open={openCreatePage}
           onOpenChange={setOpenCreatePage}
         />
       )}
       {openCreateDatabase && (
         <DatabaseCreateDialog
-          spaceId={node.id}
+          spaceId={space.id}
           open={openCreateDatabase}
           onOpenChange={setOpenCreateDatabase}
         />
       )}
       {openCreateFolder && (
         <FolderCreateDialog
-          spaceId={node.id}
+          spaceId={space.id}
           open={openCreateFolder}
           onOpenChange={setOpenCreateFolder}
         />
       )}
       {settingsState.open && (
         <SpaceSettingsDialog
-          space={node}
+          space={space}
           open={settingsState.open}
           onOpenChange={(open) =>
             setSettingsState({ open, tab: settingsState.tab })

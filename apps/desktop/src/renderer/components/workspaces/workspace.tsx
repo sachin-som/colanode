@@ -33,16 +33,16 @@ export const Workspace = () => {
     <WorkspaceContext.Provider
       value={{
         ...workspace,
-        openInMain(nodeId) {
+        openInMain(entryId) {
           setSearchParams((prev) => {
-            prev.set('main', nodeId);
-            if (nodeId === modal) {
+            prev.set('main', entryId);
+            if (entryId === modal) {
               prev.delete('modal');
             }
             return prev;
           });
         },
-        isNodeActive(id) {
+        isEntryActive(id) {
           return id === main;
         },
         isModalActive(id) {
@@ -66,7 +66,7 @@ export const Workspace = () => {
             return prev;
           });
         },
-        closeNode(id) {
+        closeEntry(id) {
           if (id === main) {
             setSearchParams((prev) => {
               prev.delete('main');

@@ -13,13 +13,13 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface FileDeleteDialogProps {
-  nodeId: string;
+  fileId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const FileDeleteDialog = ({
-  nodeId,
+  fileId,
   open,
   onOpenChange,
 }: FileDeleteDialogProps) => {
@@ -47,7 +47,7 @@ export const FileDeleteDialog = ({
               mutate({
                 input: {
                   type: 'file_delete',
-                  fileId: nodeId,
+                  fileId: fileId,
                   userId: workspace.userId,
                 },
                 onSuccess() {

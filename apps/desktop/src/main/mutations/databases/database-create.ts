@@ -5,7 +5,7 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   DatabaseCreateMutationInput,
@@ -50,7 +50,7 @@ export class DatabaseCreateMutationHandler
       },
     };
 
-    await nodeService.createNode(input.userId, {
+    await entryService.createEntry(input.userId, {
       id: databaseId,
       attributes,
     });

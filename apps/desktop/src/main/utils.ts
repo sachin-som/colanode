@@ -1,4 +1,4 @@
-import { LocalTransaction, Mutation, Node } from '@colanode/core';
+import { LocalTransaction, Mutation, Entry } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 import {
   DeleteResult,
@@ -21,17 +21,15 @@ import {
 import {
   SelectFile,
   SelectFileState,
-  SelectInteraction,
   SelectMessage,
   SelectMessageReaction,
   SelectMutation,
-  SelectNode,
+  SelectEntry,
   SelectTransaction,
   SelectUser,
   WorkspaceDatabaseSchema,
 } from '@/main/data/workspace/schema';
 import { Account } from '@/shared/types/accounts';
-import { Interaction } from '@/shared/types/interactions';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
 import { File, FileState } from '@/shared/types/files';
@@ -88,22 +86,22 @@ export const hasDeleteChanges = (result: DeleteResult[]): boolean => {
   return result.some((r) => r.numDeletedRows && r.numDeletedRows > 0n);
 };
 
-export const fetchNodeAncestors = (
+export const fetchEntryAncestors = (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
-  nodeId: string
-): Promise<SelectNode[]> => {
+  entryId: string
+): Promise<SelectEntry[]> => {
   return database
-    .selectFrom('nodes')
+    .selectFrom('entries')
     .selectAll()
     .where(
       'id',
       'in',
       database
-        .selectFrom('node_paths')
+        .selectFrom('entry_paths')
         .select('ancestor_id')
-        .where('descendant_id', '=', nodeId)
+        .where('descendant_id', '=', entryId)
     )
     .execute();
 };
@@ -154,7 +152,7 @@ export const mapUser = (row: SelectUser): User => {
   };
 };
 
-export const mapNode = (row: SelectNode): Node => {
+export const mapEntry = (row: SelectEntry): Entry => {
   return {
     id: row.id,
     type: row.type,
@@ -199,7 +197,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
   if (row.operation === 'create' && row.data) {
     return {
       id: row.id,
-      nodeId: row.node_id,
+      entryId: row.entry_id,
       rootId: row.root_id,
       operation: 'create',
       data: encodeState(row.data),
@@ -211,7 +209,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
   if (row.operation === 'update' && row.data) {
     return {
       id: row.id,
-      nodeId: row.node_id,
+      entryId: row.entry_id,
       rootId: row.root_id,
       operation: 'update',
       data: encodeState(row.data),
@@ -223,7 +221,7 @@ export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
   if (row.operation === 'delete') {
     return {
       id: row.id,
-      nodeId: row.node_id,
+      entryId: row.entry_id,
       rootId: row.root_id,
       operation: 'delete',
       createdAt: row.created_at,
@@ -313,22 +311,5 @@ export const mapFileState = (row: SelectFileState): FileState => {
     uploadRetries: row.upload_retries,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
-};
-
-export const mapInteraction = (row: SelectInteraction): Interaction => {
-  return {
-    userId: row.user_id,
-    nodeId: row.node_id,
-    attributes: JSON.parse(row.attributes),
-    createdAt: new Date(row.created_at),
-    updatedAt: row.updated_at ? new Date(row.updated_at) : null,
-    serverCreatedAt: row.server_created_at
-      ? new Date(row.server_created_at)
-      : null,
-    serverUpdatedAt: row.server_updated_at
-      ? new Date(row.server_updated_at)
-      : null,
-    version: row.version ? BigInt(row.version) : null,
   };
 };

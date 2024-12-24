@@ -1,6 +1,6 @@
 import { Block } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
@@ -15,7 +15,7 @@ export class RecordContentUpdateMutationHandler
   async handleMutation(
     input: RecordContentUpdateMutationInput
   ): Promise<RecordContentUpdateMutationOutput> {
-    const result = await nodeService.updateNode(
+    const result = await entryService.updateEntry(
       input.recordId,
       input.userId,
       (attributes) => {

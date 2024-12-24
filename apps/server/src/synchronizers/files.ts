@@ -60,6 +60,7 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       id: file.id,
       type: file.type,
       parentId: file.parent_id,
+      entryId: file.entry_id,
       rootId: file.root_id,
       workspaceId: file.workspace_id,
       name: file.name,

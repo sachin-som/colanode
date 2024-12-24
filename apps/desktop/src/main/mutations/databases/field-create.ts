@@ -7,7 +7,7 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   FieldCreateMutationInput,
@@ -29,7 +29,7 @@ export class FieldCreateMutationHandler
         );
       }
 
-      const relationDatabase = await nodeService.fetchNode(
+      const relationDatabase = await entryService.fetchEntry(
         input.relationDatabaseId,
         input.userId
       );
@@ -43,7 +43,7 @@ export class FieldCreateMutationHandler
     }
 
     const fieldId = generateId(IdType.Field);
-    const result = await nodeService.updateNode(
+    const result = await entryService.updateEntry(
       input.databaseId,
       input.userId,
       (attributes) => {

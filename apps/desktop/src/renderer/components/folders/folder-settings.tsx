@@ -1,8 +1,8 @@
-import { FolderNode, hasEditorAccess, NodeRole } from '@colanode/core';
+import { FolderEntry, hasEditorAccess, EntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
+import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
 import { FolderDeleteDialog } from '@/renderer/components/folders/folder-delete-dialog';
 import { FolderUpdateDialog } from '@/renderer/components/folders/folder-update-dialog';
 import {
@@ -15,8 +15,8 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface FolderSettingsProps {
-  folder: FolderNode;
-  role: NodeRole;
+  folder: FolderEntry;
+  role: EntryRole;
 }
 
 export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
@@ -84,7 +84,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <NodeCollaboratorAudit
+            <EntryCollaboratorAudit
               collaboratorId={folder.createdBy}
               date={folder.createdAt}
             />
@@ -94,7 +94,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <NodeCollaboratorAudit
+                <EntryCollaboratorAudit
                   collaboratorId={folder.updatedBy}
                   date={folder.updatedAt}
                 />
@@ -104,7 +104,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <FolderDeleteDialog
-        nodeId={folder.id}
+        entryId={folder.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

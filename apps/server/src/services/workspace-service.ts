@@ -9,8 +9,8 @@ import {
 
 import { database } from '@/data/database';
 import { SelectAccount } from '@/data/schema';
-import { mapNode } from '@/lib/nodes';
-import { nodeService } from '@/services/node-service';
+import { mapEntry } from '@/lib/entries';
+import { entryService } from '@/services/entry-service';
 import { eventBus } from '@/lib/event-bus';
 
 class WorkspaceService {
@@ -63,8 +63,8 @@ class WorkspaceService {
       throw new Error('Failed to create workspace user.');
     }
 
-    const createSpaceNodeOutput = await nodeService.createNode({
-      nodeId: spaceId,
+    const createSpaceEntryOutput = await entryService.createEntry({
+      entryId: spaceId,
       rootId: spaceId,
       attributes: {
         type: 'space',
@@ -80,10 +80,10 @@ class WorkspaceService {
       ancestors: [],
     });
 
-    if (createSpaceNodeOutput) {
-      const spaceNode = mapNode(createSpaceNodeOutput.node);
-      await nodeService.createNode({
-        nodeId: generateId(IdType.Page),
+    if (createSpaceEntryOutput) {
+      const spaceEntry = mapEntry(createSpaceEntryOutput.entry);
+      await entryService.createEntry({
+        entryId: generateId(IdType.Page),
         rootId: spaceId,
         attributes: {
           type: 'page',
@@ -93,11 +93,11 @@ class WorkspaceService {
         },
         userId: userId,
         workspaceId: workspaceId,
-        ancestors: [spaceNode],
+        ancestors: [spaceEntry],
       });
 
-      await nodeService.createNode({
-        nodeId: generateId(IdType.Channel),
+      await entryService.createEntry({
+        entryId: generateId(IdType.Channel),
         rootId: spaceId,
         attributes: {
           type: 'channel',
@@ -106,7 +106,7 @@ class WorkspaceService {
         },
         userId: userId,
         workspaceId: workspaceId,
-        ancestors: [spaceNode],
+        ancestors: [spaceEntry],
       });
     }
 

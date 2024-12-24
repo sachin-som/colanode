@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   PageDeleteMutationInput,
@@ -11,7 +11,7 @@ export class PageDeleteMutationHandler
   async handleMutation(
     input: PageDeleteMutationInput
   ): Promise<PageDeleteMutationOutput> {
-    await nodeService.deleteNode(input.pageId, input.userId);
+    await entryService.deleteEntry(input.pageId, input.userId);
 
     return {
       success: true,

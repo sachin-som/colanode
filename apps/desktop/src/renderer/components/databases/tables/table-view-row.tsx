@@ -1,4 +1,4 @@
-import { extractNodeRole, RecordNode } from '@colanode/core';
+import { extractEntryRole, RecordEntry } from '@colanode/core';
 
 import { TableViewNameCell } from '@/renderer/components/databases/tables/table-view-name-cell';
 import { RecordFieldValue } from '@/renderer/components/records/record-field-value';
@@ -9,14 +9,14 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface TableViewRowProps {
   index: number;
-  record: RecordNode;
+  record: RecordEntry;
 }
 
 export const TableViewRow = ({ index, record }: TableViewRowProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
   const view = useView();
-  const role = extractNodeRole(record, workspace.userId) ?? database.role;
+  const role = extractEntryRole(record, workspace.userId) ?? database.role;
 
   return (
     <RecordProvider record={record} role={role}>

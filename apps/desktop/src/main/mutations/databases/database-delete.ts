@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   DatabaseDeleteMutationInput,
@@ -11,7 +11,7 @@ export class DatabaseDeleteMutationHandler
   async handleMutation(
     input: DatabaseDeleteMutationInput
   ): Promise<DatabaseDeleteMutationOutput> {
-    await nodeService.deleteNode(input.databaseId, input.userId);
+    await entryService.deleteEntry(input.databaseId, input.userId);
 
     return {
       success: true,

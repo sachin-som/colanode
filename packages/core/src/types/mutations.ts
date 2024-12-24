@@ -30,6 +30,7 @@ export type CreateFileMutationData = {
   id: string;
   type: FileType;
   parentId: string;
+  entryId: string;
   rootId: string;
   name: string;
   originalName: string;
@@ -62,7 +63,7 @@ export type ApplyDeleteTransactionMutation = MutationBase & {
 export type CreateMessageMutationData = {
   id: string;
   type: MessageType;
-  nodeId: string;
+  entryId: string;
   parentId: string;
   content: MessageContent;
   rootId: string;

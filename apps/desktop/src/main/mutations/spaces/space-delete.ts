@@ -1,4 +1,4 @@
-import { nodeService } from '@/main/services/node-service';
+import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   SpaceDeleteMutationInput,
@@ -11,7 +11,7 @@ export class SpaceDeleteMutationHandler
   async handleMutation(
     input: SpaceDeleteMutationInput
   ): Promise<SpaceDeleteMutationOutput> {
-    await nodeService.deleteNode(input.spaceId, input.userId);
+    await entryService.deleteEntry(input.spaceId, input.userId);
 
     return {
       success: true,

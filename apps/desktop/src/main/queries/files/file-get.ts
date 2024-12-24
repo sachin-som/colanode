@@ -86,6 +86,7 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
         'f.id',
         'f.type',
         'f.parent_id',
+        'f.entry_id',
         'f.root_id',
         'f.name',
         'f.original_name',

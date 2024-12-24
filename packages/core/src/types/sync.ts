@@ -1,5 +1,3 @@
-import { InteractionAttributes } from './interactions';
-
 export type LocalTransaction =
   | LocalCreateTransaction
   | LocalUpdateTransaction
@@ -7,7 +5,7 @@ export type LocalTransaction =
 
 export type LocalCreateTransaction = {
   id: string;
-  nodeId: string;
+  entryId: string;
   rootId: string;
   operation: 'create';
   data: string;
@@ -17,7 +15,7 @@ export type LocalCreateTransaction = {
 
 export type LocalUpdateTransaction = {
   id: string;
-  nodeId: string;
+  entryId: string;
   rootId: string;
   operation: 'update';
   data: string;
@@ -27,21 +25,9 @@ export type LocalUpdateTransaction = {
 
 export type LocalDeleteTransaction = {
   id: string;
-  nodeId: string;
+  entryId: string;
   rootId: string;
   operation: 'delete';
   createdAt: string;
   createdBy: string;
-};
-
-export type ServerInteraction = {
-  userId: string;
-  nodeId: string;
-  workspaceId: string;
-  attributes: InteractionAttributes;
-  createdAt: string;
-  updatedAt: string | null;
-  serverCreatedAt: string;
-  serverUpdatedAt: string | null;
-  version: string;
 };

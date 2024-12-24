@@ -1,10 +1,5 @@
-import {
-  compareDate,
-  getIdType,
-  IdType,
-  InteractionAttributes,
-} from '@colanode/core';
-import { Kysely, sql } from 'kysely';
+import { IdType } from '@colanode/core';
+import { Kysely } from 'kysely';
 
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { mapWorkspace } from '@/main/utils';
@@ -55,7 +50,7 @@ class RadarWorkspace {
         if (!nodeState) {
           nodeState = {
             type: 'channel',
-            nodeId: unreadMessage.parentId,
+            channelId: unreadMessage.parentId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };
@@ -71,7 +66,7 @@ class RadarWorkspace {
         if (!nodeState) {
           nodeState = {
             type: 'chat',
-            nodeId: unreadMessage.parentId,
+            chatId: unreadMessage.parentId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };
@@ -87,106 +82,93 @@ class RadarWorkspace {
   }
 
   public async init(): Promise<void> {
-    const unreadMessagesRows = await this.workspaceDatabase
-      .selectFrom('nodes as node')
-      .innerJoin('interactions as node_interactions', (join) =>
-        join
-          .onRef('node.id', '=', 'node_interactions.node_id')
-          .on('node_interactions.user_id', '=', this.workspace.userId)
-      )
-      .innerJoin('interactions as parent_interactions', (join) =>
-        join
-          .onRef('node.parent_id', '=', 'parent_interactions.node_id')
-          .on('parent_interactions.user_id', '=', this.workspace.userId)
-      )
-      .select(['node.id as node_id', 'node.parent_id as parent_id'])
-      .where('node.created_by', '!=', this.workspace.userId)
-      .where('node_interactions.last_seen_at', 'is', null)
-      .where('parent_interactions.last_seen_at', 'is not', null)
-      .whereRef(
-        'node.created_at',
-        '>=',
-        sql`json_extract(parent_interactions.attributes, '$.firstSeenAt')`
-      )
-      .execute();
-
-    for (const unreadMessageRow of unreadMessagesRows) {
-      this.unreadMessages.set(unreadMessageRow.node_id, {
-        messageId: unreadMessageRow.node_id,
-        parentId: unreadMessageRow.parent_id,
-        parentIdType: getIdType(unreadMessageRow.parent_id),
-      });
-    }
+    // const unreadMessagesRows = await this.workspaceDatabase
+    //   .selectFrom('entries as entry')
+    //   .innerJoin('interactions as entry_interactions', (join) =>
+    //     join
+    //       .onRef('entry.id', '=', 'entry_interactions.entry_id')
+    //       .on('entry_interactions.user_id', '=', this.workspace.userId)
+    //   )
+    //   .innerJoin('interactions as parent_interactions', (join) =>
+    //     join
+    //       .onRef('node.parent_id', '=', 'parent_interactions.node_id')
+    //       .on('parent_interactions.user_id', '=', this.workspace.userId)
+    //   )
+    //   .select(['node.id as node_id', 'node.parent_id as parent_id'])
+    //   .where('node.created_by', '!=', this.workspace.userId)
+    //   .where('node_interactions.last_seen_at', 'is', null)
+    //   .where('parent_interactions.last_seen_at', 'is not', null)
+    //   .whereRef(
+    //     'node.created_at',
+    //     '>=',
+    //     sql`json_extract(parent_interactions.attributes, '$.firstSeenAt')`
+    //   )
+    //   .execute();
+    // for (const unreadMessageRow of unreadMessagesRows) {
+    //   this.unreadMessages.set(unreadMessageRow.node_id, {
+    //     messageId: unreadMessageRow.node_id,
+    //     parentId: unreadMessageRow.parent_id,
+    //     parentIdType: getIdType(unreadMessageRow.parent_id),
+    //   });
+    // }
   }
 
   public async handleInteractionUpdated(
-    event: InteractionUpdatedEvent
+    _: InteractionUpdatedEvent
   ): Promise<void> {
-    const interaction = event.interaction;
-    if (
-      event.userId !== this.workspace.userId ||
-      interaction.userId !== this.workspace.userId
-    ) {
-      return;
-    }
-
-    if (interaction.attributes.lastSeenAt) {
-      const unreadMessage = this.unreadMessages.get(interaction.nodeId);
-      if (unreadMessage) {
-        this.unreadMessages.delete(interaction.nodeId);
-
-        eventBus.publish({
-          type: 'radar_data_updated',
-        });
-      }
-
-      return;
-    }
-
-    if (this.unreadMessages.has(interaction.nodeId)) {
-      return;
-    }
-
-    const node = await this.workspaceDatabase
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', interaction.nodeId)
-      .executeTakeFirst();
-
-    if (!node) {
-      return;
-    }
-
-    const parentInteraction = await this.workspaceDatabase
-      .selectFrom('interactions')
-      .selectAll()
-      .where('node_id', '=', node.parent_id)
-      .executeTakeFirst();
-
-    if (!parentInteraction || !parentInteraction.last_seen_at) {
-      return;
-    }
-
-    const parentInteractionAttributes: InteractionAttributes = JSON.parse(
-      parentInteraction.attributes
-    );
-
-    if (
-      !parentInteractionAttributes.firstSeenAt ||
-      compareDate(parentInteractionAttributes.firstSeenAt, node.created_at) > 0
-    ) {
-      return;
-    }
-
-    this.unreadMessages.set(interaction.nodeId, {
-      messageId: interaction.nodeId,
-      parentId: node.parent_id,
-      parentIdType: getIdType(node.parent_id),
-    });
-
-    eventBus.publish({
-      type: 'radar_data_updated',
-    });
+    // const interaction = event.interaction;
+    // if (
+    //   event.userId !== this.workspace.userId ||
+    //   interaction.userId !== this.workspace.userId
+    // ) {
+    //   return;
+    // }
+    // if (interaction.attributes.lastSeenAt) {
+    //   const unreadMessage = this.unreadMessages.get(interaction.nodeId);
+    //   if (unreadMessage) {
+    //     this.unreadMessages.delete(interaction.nodeId);
+    //     eventBus.publish({
+    //       type: 'radar_data_updated',
+    //     });
+    //   }
+    //   return;
+    // }
+    // if (this.unreadMessages.has(interaction.nodeId)) {
+    //   return;
+    // }
+    // const node = await this.workspaceDatabase
+    //   .selectFrom('nodes')
+    //   .selectAll()
+    //   .where('id', '=', interaction.nodeId)
+    //   .executeTakeFirst();
+    // if (!node) {
+    //   return;
+    // }
+    // const parentInteraction = await this.workspaceDatabase
+    //   .selectFrom('interactions')
+    //   .selectAll()
+    //   .where('node_id', '=', node.parent_id)
+    //   .executeTakeFirst();
+    // if (!parentInteraction || !parentInteraction.last_seen_at) {
+    //   return;
+    // }
+    // const parentInteractionAttributes: InteractionAttributes = JSON.parse(
+    //   parentInteraction.attributes
+    // );
+    // if (
+    //   !parentInteractionAttributes.firstSeenAt ||
+    //   compareDate(parentInteractionAttributes.firstSeenAt, node.created_at) > 0
+    // ) {
+    //   return;
+    // }
+    // this.unreadMessages.set(interaction.nodeId, {
+    //   messageId: interaction.nodeId,
+    //   parentId: node.parent_id,
+    //   parentIdType: getIdType(node.parent_id),
+    // });
+    // eventBus.publish({
+    //   type: 'radar_data_updated',
+    // });
   }
 }
 

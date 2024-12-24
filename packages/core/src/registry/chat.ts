@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
-import { NodeModel, nodeRoleEnum } from './core';
+import { EntryModel, entryRoleEnum } from './core';
 
 export const chatAttributesSchema = z.object({
   type: z.literal('chat'),
   parentId: z.string(),
-  collaborators: z.record(z.string(), nodeRoleEnum),
+  collaborators: z.record(z.string(), entryRoleEnum),
 });
 
 export type ChatAttributes = z.infer<typeof chatAttributesSchema>;
 
-export const chatModel: NodeModel = {
+export const chatModel: EntryModel = {
   type: 'chat',
   schema: chatAttributesSchema,
   getName: () => {

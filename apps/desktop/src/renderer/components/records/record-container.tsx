@@ -1,4 +1,4 @@
-import { extractNodeRole } from '@colanode/core';
+import { extractEntryRole } from '@colanode/core';
 
 import { RecordBody } from '@/renderer/components/records/record-body';
 import { RecordHeader } from '@/renderer/components/records/record-header';
@@ -6,14 +6,14 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface RecordContainerProps {
-  nodeId: string;
+  recordId: string;
 }
 
-export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
+export const RecordContainer = ({ recordId }: RecordContainerProps) => {
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
-    type: 'node_tree_get',
-    nodeId,
+    type: 'entry_tree_get',
+    entryId: recordId,
     userId: workspace.userId,
   });
 
@@ -21,28 +21,28 @@ export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
     return null;
   }
 
-  const nodes = data ?? [];
-  const record = nodes.find((node) => node.id === nodeId);
+  const entries = data ?? [];
+  const record = entries.find((entry) => entry.id === recordId);
   if (!record || record.type !== 'record') {
     return null;
   }
 
-  const databaseIndex = nodes.findIndex(
-    (node) => node.id === record.attributes.databaseId
+  const databaseIndex = entries.findIndex(
+    (entry) => entry.id === record.attributes.databaseId
   );
   if (databaseIndex === -1) {
     return null;
   }
 
-  const database = nodes[databaseIndex];
+  const database = entries[databaseIndex];
   if (!database || database.type !== 'database') {
     return null;
   }
 
-  const databaseAncestors = nodes.slice(0, databaseIndex);
+  const databaseAncestors = entries.slice(0, databaseIndex);
 
-  const recordRole = extractNodeRole(nodes, workspace.userId);
-  const databaseRole = extractNodeRole(
+  const recordRole = extractEntryRole(entries, workspace.userId);
+  const databaseRole = extractEntryRole(
     [...databaseAncestors, database],
     workspace.userId
   );
@@ -53,7 +53,7 @@ export const RecordContainer = ({ nodeId }: RecordContainerProps) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <RecordHeader nodes={nodes} record={record} role={recordRole} />
+      <RecordHeader entries={entries} record={record} role={recordRole} />
       <RecordBody
         record={record}
         recordRole={recordRole}

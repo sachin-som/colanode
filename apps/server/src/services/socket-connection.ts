@@ -1,14 +1,9 @@
 import { WebSocket } from 'ws';
 import {
   Message,
+  SynchronizerInput,
+  SynchronizerInputMessage,
   WorkspaceStatus,
-  ConsumeUsersMessage,
-  ConsumeCollaborationsMessage,
-  ConsumeTransactionsMessage,
-  ConsumeInteractionsMessage,
-  ConsumeFilesMessage,
-  ConsumeMessagesMessage,
-  ConsumeMessageReactionsMessage,
 } from '@colanode/core';
 
 import { interactionService } from '@/services/interaction-service';
@@ -17,36 +12,25 @@ import { RequestAccount } from '@/types/api';
 import { database } from '@/data/database';
 import {
   AccountUpdatedEvent,
+  CollaborationCreatedEvent,
+  CollaborationUpdatedEvent,
   Event,
   WorkspaceDeletedEvent,
   WorkspaceUpdatedEvent,
 } from '@/types/events';
 import { ConnectedUser } from '@/types/users';
-import { UsersConsumer } from '@/consumers/users';
-import { CollaborationsConsumer } from '@/consumers/collaborations';
-import { TransactionsConsumer } from '@/consumers/transactions';
-import { InteractionsConsumer } from '@/consumers/interactions';
-import { FilesConsumer } from '@/consumers/files';
-import { MessagesConsumer } from '@/consumers/messages';
-import { MessageReactionsConsumer } from '@/consumers/message-reactions';
-
-type NodeConsumersWrapper = {
-  transactions: TransactionsConsumer;
-  interactions: InteractionsConsumer;
-  files: FilesConsumer;
-  messages: MessagesConsumer;
-  messageReactions: MessageReactionsConsumer;
-};
-
-type ConsumersWrapper = {
-  users: UsersConsumer;
-  collaborations: CollaborationsConsumer;
-  nodes: Map<string, NodeConsumersWrapper>;
-};
+import { BaseSynchronizer } from '@/synchronizers/base';
+import { UserSynchronizer } from '@/synchronizers/users';
+import { CollaborationSynchronizer } from '@/synchronizers/collaborations';
+import { FileSynchronizer } from '@/synchronizers/files';
+import { MessageSynchronizer } from '@/synchronizers/messages';
+import { MessageReactionSynchronizer } from '@/synchronizers/message-reactions';
+import { TransactionSynchronizer } from '@/synchronizers/transactions';
 
 type SocketUser = {
   user: ConnectedUser;
-  consumers: ConsumersWrapper;
+  rootIds: Set<string>;
+  synchronizers: Map<string, BaseSynchronizer<SynchronizerInput>>;
 };
 
 export class SocketConnection {
@@ -84,53 +68,43 @@ export class SocketConnection {
     this.socket.close();
   }
 
-  public handleEvent(event: Event) {
+  private async handleMessage(message: Message) {
+    this.logger.trace(message, `Socket message from ${this.account.id}`);
+
+    if (message.type === 'synchronizer_input') {
+      this.handleSynchronizerInput(message);
+    } else if (message.type === 'sync_interactions') {
+      interactionService.syncLocalInteractions(this.account.id, message);
+    }
+  }
+
+  public async handleEvent(event: Event) {
     if (event.type === 'account_updated') {
       this.handleAccountUpdatedEvent(event);
     } else if (event.type === 'workspace_updated') {
       this.handleWorkspaceUpdatedEvent(event);
     } else if (event.type === 'workspace_deleted') {
       this.handleWorkspaceDeletedEvent(event);
-    } else {
-      for (const user of this.users.values()) {
-        user.consumers.users.processEvent(event);
-        user.consumers.collaborations.processEvent(event);
-        for (const node of user.consumers.nodes.values()) {
-          node.transactions.processEvent(event);
-          node.interactions.processEvent(event);
-          node.files.processEvent(event);
-          node.messages.processEvent(event);
-          node.messageReactions.processEvent(event);
+    } else if (event.type === 'collaboration_created') {
+      this.handleCollaborationCreatedEvent(event);
+    } else if (event.type === 'collaboration_updated') {
+      this.handleCollaborationUpdatedEvent(event);
+    }
+
+    for (const user of this.users.values()) {
+      for (const synchronizer of user.synchronizers.values()) {
+        const output = await synchronizer.fetchDataFromEvent(event);
+        if (output) {
+          user.synchronizers.delete(synchronizer.id);
+          this.sendMessage(output);
         }
       }
     }
   }
 
-  private async handleMessage(message: Message) {
-    this.logger.trace(message, `Socket message from ${this.account.id}`);
-
-    if (message.type === 'consume_users') {
-      this.handleConsumeUsers(message);
-    } else if (message.type === 'consume_collaborations') {
-      this.handleConsumeCollaborations(message);
-    } else if (message.type === 'consume_transactions') {
-      this.handleConsumeTransactions(message);
-    } else if (message.type === 'consume_interactions') {
-      this.handleConsumeInteractions(message);
-    } else if (message.type === 'consume_files') {
-      this.handleConsumeFiles(message);
-    } else if (message.type === 'consume_messages') {
-      this.handleConsumeMessages(message);
-    } else if (message.type === 'consume_message_reactions') {
-      this.handleConsumeMessageReactions(message);
-    } else if (message.type === 'sync_interactions') {
-      interactionService.syncLocalInteractions(this.account.id, message);
-    }
-  }
-
-  private async handleConsumeUsers(message: ConsumeUsersMessage) {
+  private async handleSynchronizerInput(message: SynchronizerInputMessage) {
     this.logger.info(
-      `Consume users from ${this.account.id} and user ${message.userId}`
+      `Synchronizer input from ${this.account.id} and user ${message.userId} and input ${message.input}`
     );
 
     const user = await this.getOrCreateUser(message.userId);
@@ -138,169 +112,68 @@ export class SocketConnection {
       return;
     }
 
-    await user.consumers.users.consume(message);
-  }
-
-  private async handleConsumeCollaborations(
-    message: ConsumeCollaborationsMessage
-  ) {
-    this.logger.info(
-      `Consume collaborations from ${this.account.id} and user ${message.userId}`
-    );
-
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
+    const synchronizer = this.buildSynchronizer(message, user);
+    if (synchronizer === null) {
       return;
     }
 
-    await user.consumers.collaborations.consume(message);
-  }
-
-  private async handleConsumeTransactions(message: ConsumeTransactionsMessage) {
-    this.logger.info(
-      `Consume transactions from ${this.account.id} and user ${message.userId}`
-    );
-
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
+    const output = await synchronizer.fetchData();
+    if (output === null) {
+      user.synchronizers.set(synchronizer.id, synchronizer);
       return;
     }
 
-    let nodeConsumers = user.consumers.nodes.get(message.rootId);
-    if (!nodeConsumers) {
-      nodeConsumers = {
-        transactions: new TransactionsConsumer(user.user, message.rootId),
-        interactions: new InteractionsConsumer(user.user, message.rootId),
-        files: new FilesConsumer(user.user, message.rootId),
-        messages: new MessagesConsumer(user.user, message.rootId),
-        messageReactions: new MessageReactionsConsumer(
-          user.user,
-          message.rootId
-        ),
-      };
-
-      user.consumers.nodes.set(message.rootId, nodeConsumers);
-    }
-
-    await nodeConsumers.transactions.consume(message);
+    this.sendMessage(output);
   }
 
-  private async handleConsumeInteractions(message: ConsumeInteractionsMessage) {
-    this.logger.info(
-      `Consume interactions from ${this.account.id} and user ${message.userId}`
-    );
+  private buildSynchronizer(
+    message: SynchronizerInputMessage,
+    user: SocketUser
+  ): BaseSynchronizer<SynchronizerInput> | null {
+    const cursor = BigInt(message.cursor);
+    if (message.input.type === 'users') {
+      return new UserSynchronizer(message.id, user.user, message.input, cursor);
+    } else if (message.input.type === 'collaborations') {
+      return new CollaborationSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'files') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
 
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
-      return;
+      return new FileSynchronizer(message.id, user.user, message.input, cursor);
+    } else if (message.input.type === 'messages') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
+
+      return new MessageSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'message_reactions') {
+      return new MessageReactionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'transactions') {
+      return new TransactionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
     }
 
-    let nodeConsumers = user.consumers.nodes.get(message.rootId);
-    if (!nodeConsumers) {
-      nodeConsumers = {
-        transactions: new TransactionsConsumer(user.user, message.rootId),
-        interactions: new InteractionsConsumer(user.user, message.rootId),
-        files: new FilesConsumer(user.user, message.rootId),
-        messages: new MessagesConsumer(user.user, message.rootId),
-        messageReactions: new MessageReactionsConsumer(
-          user.user,
-          message.rootId
-        ),
-      };
-
-      user.consumers.nodes.set(message.rootId, nodeConsumers);
-    }
-
-    await nodeConsumers.interactions.consume(message);
-  }
-
-  private async handleConsumeFiles(message: ConsumeFilesMessage) {
-    this.logger.info(
-      `Consume files from ${this.account.id} and user ${message.userId}`
-    );
-
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
-      return;
-    }
-
-    let nodeConsumers = user.consumers.nodes.get(message.rootId);
-    if (!nodeConsumers) {
-      nodeConsumers = {
-        transactions: new TransactionsConsumer(user.user, message.rootId),
-        interactions: new InteractionsConsumer(user.user, message.rootId),
-        files: new FilesConsumer(user.user, message.rootId),
-        messages: new MessagesConsumer(user.user, message.rootId),
-        messageReactions: new MessageReactionsConsumer(
-          user.user,
-          message.rootId
-        ),
-      };
-
-      user.consumers.nodes.set(message.rootId, nodeConsumers);
-    }
-
-    await nodeConsumers.files.consume(message);
-  }
-
-  private async handleConsumeMessages(message: ConsumeMessagesMessage) {
-    this.logger.info(
-      `Consume messages from ${this.account.id} and user ${message.userId}`
-    );
-
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
-      return;
-    }
-
-    let nodeConsumers = user.consumers.nodes.get(message.rootId);
-    if (!nodeConsumers) {
-      nodeConsumers = {
-        transactions: new TransactionsConsumer(user.user, message.rootId),
-        interactions: new InteractionsConsumer(user.user, message.rootId),
-        files: new FilesConsumer(user.user, message.rootId),
-        messages: new MessagesConsumer(user.user, message.rootId),
-        messageReactions: new MessageReactionsConsumer(
-          user.user,
-          message.rootId
-        ),
-      };
-
-      user.consumers.nodes.set(message.rootId, nodeConsumers);
-    }
-
-    await nodeConsumers.messages.consume(message);
-  }
-
-  private async handleConsumeMessageReactions(
-    message: ConsumeMessageReactionsMessage
-  ) {
-    this.logger.info(
-      `Consume message reactions from ${this.account.id} and user ${message.userId}`
-    );
-
-    const user = await this.getOrCreateUser(message.userId);
-    if (user === null) {
-      return;
-    }
-
-    let nodeConsumers = user.consumers.nodes.get(message.rootId);
-    if (!nodeConsumers) {
-      nodeConsumers = {
-        transactions: new TransactionsConsumer(user.user, message.rootId),
-        interactions: new InteractionsConsumer(user.user, message.rootId),
-        files: new FilesConsumer(user.user, message.rootId),
-        messages: new MessagesConsumer(user.user, message.rootId),
-        messageReactions: new MessageReactionsConsumer(
-          user.user,
-          message.rootId
-        ),
-      };
-
-      user.consumers.nodes.set(message.rootId, nodeConsumers);
-    }
-
-    await nodeConsumers.messageReactions.consume(message);
+    return null;
   }
 
   private async getOrCreateUser(userId: string): Promise<SocketUser | null> {
@@ -340,6 +213,12 @@ export class SocketConnection {
       return null;
     }
 
+    const collaborations = await database
+      .selectFrom('collaborations')
+      .selectAll()
+      .where('collaborator_id', '=', userId)
+      .execute();
+
     const addedSocketUser = this.users.get(userId);
     if (addedSocketUser) {
       return addedSocketUser;
@@ -351,24 +230,25 @@ export class SocketConnection {
       workspaceId: user.workspace_id,
       accountId: this.account.id,
       deviceId: this.account.deviceId,
-      sendMessage: this.sendMessage.bind(this),
     };
 
-    const usersConsumer = new UsersConsumer(connectedUser);
-    const collaborationsConsumer = new CollaborationsConsumer(connectedUser);
-    const nodesConsumers = new Map<string, NodeConsumersWrapper>();
+    const rootIds = new Set<string>();
+    for (const collaboration of collaborations) {
+      if (collaboration.deleted_at) {
+        continue;
+      }
 
-    const newSocketUser: SocketUser = {
+      rootIds.add(collaboration.node_id);
+    }
+
+    const socketUser: SocketUser = {
       user: connectedUser,
-      consumers: {
-        users: usersConsumer,
-        collaborations: collaborationsConsumer,
-        nodes: nodesConsumers,
-      },
+      rootIds,
+      synchronizers: new Map(),
     };
 
-    this.users.set(userId, newSocketUser);
-    return newSocketUser;
+    this.users.set(userId, socketUser);
+    return socketUser;
   }
 
   private handleAccountUpdatedEvent(event: AccountUpdatedEvent) {
@@ -410,5 +290,36 @@ export class SocketConnection {
       type: 'workspace_deleted',
       accountId: this.account.id,
     });
+  }
+
+  private handleCollaborationCreatedEvent(event: CollaborationCreatedEvent) {
+    const user = this.users.get(event.collaboratorId);
+    if (!user) {
+      return;
+    }
+
+    user.rootIds.add(event.nodeId);
+  }
+
+  private async handleCollaborationUpdatedEvent(
+    event: CollaborationUpdatedEvent
+  ) {
+    const user = this.users.get(event.collaboratorId);
+    if (!user) {
+      return;
+    }
+
+    const collaboration = await database
+      .selectFrom('collaborations')
+      .selectAll()
+      .where('collaborator_id', '=', event.collaboratorId)
+      .where('node_id', '=', event.nodeId)
+      .executeTakeFirst();
+
+    if (!collaboration || collaboration.deleted_at) {
+      user.rootIds.delete(event.nodeId);
+    } else {
+      user.rootIds.add(event.nodeId);
+    }
   }
 }

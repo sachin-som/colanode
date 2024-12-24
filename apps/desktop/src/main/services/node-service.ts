@@ -8,10 +8,10 @@ import {
   NodeAttributes,
   NodeMutationContext,
   registry,
-  ServerCreateTransaction,
-  ServerDeleteTransaction,
-  ServerTransaction,
-  ServerUpdateTransaction,
+  SyncCreateTransactionData,
+  SyncDeleteTransactionData,
+  SyncTransactionData,
+  SyncUpdateTransactionData,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
@@ -531,7 +531,7 @@ class NodeService {
 
   public async applyServerTransaction(
     userId: string,
-    transaction: ServerTransaction
+    transaction: SyncTransactionData
   ) {
     if (transaction.operation === 'create') {
       await this.applyServerCreateTransaction(userId, transaction);
@@ -545,7 +545,7 @@ class NodeService {
   public async replaceTransactions(
     userId: string,
     nodeId: string,
-    transactions: ServerTransaction[],
+    transactions: SyncTransactionData[],
     transactionCursor: bigint
   ): Promise<boolean> {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
@@ -567,7 +567,7 @@ class NodeService {
   public async tryReplaceTransactions(
     userId: string,
     nodeId: string,
-    transactions: ServerTransaction[],
+    transactions: SyncTransactionData[],
     transactionCursor: bigint
   ): Promise<boolean | null> {
     const workspaceDatabase =
@@ -785,7 +785,7 @@ class NodeService {
 
   private async applyServerCreateTransaction(
     userId: string,
-    transaction: ServerCreateTransaction
+    transaction: SyncCreateTransactionData
   ) {
     this.debug(
       `Applying server create transaction ${transaction.id} for node ${transaction.nodeId}`
@@ -912,7 +912,7 @@ class NodeService {
 
   private async applyServerUpdateTransaction(
     userId: string,
-    transaction: ServerUpdateTransaction
+    transaction: SyncUpdateTransactionData
   ) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
@@ -1062,7 +1062,7 @@ class NodeService {
 
   private async applyServerDeleteTransaction(
     userId: string,
-    transaction: ServerDeleteTransaction
+    transaction: SyncDeleteTransactionData
   ) {
     this.debug(
       `Applying server delete transaction ${transaction.id} for node ${transaction.nodeId}`

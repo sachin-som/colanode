@@ -27,3 +27,4 @@ export * from './types/workspaces';
 export * from './lib/blocks';
 export * from './types/mutations';
 export * from './types/messages';
+export * from './synchronizers';

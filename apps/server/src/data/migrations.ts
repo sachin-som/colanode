@@ -208,7 +208,6 @@ const createCollaborationsTable: Migration = {
       .createTable('collaborations')
       .addColumn('node_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())

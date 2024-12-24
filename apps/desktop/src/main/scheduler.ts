@@ -7,7 +7,7 @@ import { createDebugger } from '@/main/debugger';
 import { JobHandler, JobInput, JobMap } from '@/main/jobs';
 import { SyncServersJobHandler } from '@/main/jobs/sync-servers';
 import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
-import { InitSyncConsumersJobHandler } from '@/main/jobs/init-sync-consumers';
+import { InitSynchronizersJobHandler } from '@/main/jobs/init-synchronizers';
 // import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
 import { SyncPendingMutationsJobHandler } from '@/main/jobs/sync-pending-mutations';
 import { SyncPendingInteractionsJobHandler } from '@/main/jobs/sync-pending-interactions';
@@ -26,7 +26,7 @@ type JobHandlerMap = {
 export const jobHandlerMap: JobHandlerMap = {
   sync_servers: new SyncServersJobHandler(),
   sync_account: new SyncAccountJobHandler(),
-  init_sync_consumers: new InitSyncConsumersJobHandler(),
+  init_synchronizers: new InitSynchronizersJobHandler(),
   // revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
   sync_pending_mutations: new SyncPendingMutationsJobHandler(),
   sync_pending_interactions: new SyncPendingInteractionsJobHandler(),
@@ -218,15 +218,15 @@ class Scheduler {
       .execute();
 
     for (const workspace of workspaces) {
-      this.scheduleWorkspaceJobs(accountId, workspace.user_id);
+      if (!socketService.isConnected(accountId)) {
+        return;
+      }
+
+      this.scheduleWorkspaceJobs(workspace.user_id);
     }
   }
 
-  private scheduleWorkspaceJobs(accountId: string, userId: string) {
-    if (!socketService.isConnected(accountId)) {
-      return;
-    }
-
+  private scheduleWorkspaceJobs(userId: string) {
     this.schedule({
       type: 'sync_pending_mutations',
       userId,
@@ -243,9 +243,8 @@ class Scheduler {
     // });
 
     this.schedule({
-      type: 'init_sync_consumers',
+      type: 'init_synchronizers',
       userId,
-      accountId,
     });
 
     this.schedule({
@@ -280,7 +279,7 @@ class Scheduler {
 
   private isWorkspaceJob(state: JobState, userId: string) {
     if (
-      state.input.type === 'init_sync_consumers' &&
+      state.input.type === 'init_synchronizers' &&
       state.input.userId === userId
     ) {
       return true;
@@ -345,10 +344,7 @@ class Scheduler {
       });
       this.deleteAccountJobs(event.account.id);
     } else if (event.type === 'workspace_created') {
-      this.scheduleWorkspaceJobs(
-        event.workspace.accountId,
-        event.workspace.userId
-      );
+      this.scheduleWorkspaceJobs(event.workspace.userId);
     } else if (event.type === 'workspace_deleted') {
       this.deleteWorkspaceJobs(event.workspace.userId);
     } else if (event.type === 'socket_connection_opened') {
@@ -375,6 +371,11 @@ class Scheduler {
     } else if (event.type === 'file_deleted') {
       this.trigger({
         type: 'clean_deleted_files',
+        userId: event.userId,
+      });
+    } else if (event.type === 'collaboration_created') {
+      this.trigger({
+        type: 'init_synchronizers',
         userId: event.userId,
       });
     }

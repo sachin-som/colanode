@@ -1,59 +1,55 @@
+import { SynchronizerInput, SynchronizerOutputMessage } from '@colanode/core';
+import { Kysely } from 'kysely';
+
 import { databaseService } from '@/main/data/database-service';
-import { UsersConsumer } from '@/main/consumers/users';
-import { TransactionsConsumer } from '@/main/consumers/transactions';
-import { CollaborationsConsumer } from '@/main/consumers/collaborations';
-import { InteractionsConsumer } from '@/main/consumers/interactions';
-import { FilesConsumer } from '@/main/consumers/files';
+import { BaseSynchronizer } from '@/main/synchronizers/base';
 import { createDebugger } from '@/main/debugger';
-import { MessagesConsumer } from '@/main/consumers/messages';
-import { MessageReactionsConsumer } from '@/main/consumers/message-reactions';
-
-export type NodeConsumersWrapper = {
-  transactions: TransactionsConsumer;
-  interactions: InteractionsConsumer;
-  files: FilesConsumer;
-  messages: MessagesConsumer;
-  messageReactions: MessageReactionsConsumer;
-};
-
-export type ConsumersWrapper = {
-  users: UsersConsumer;
-  collaborations: CollaborationsConsumer;
-  nodes: Record<string, NodeConsumersWrapper>;
-};
+import { UserSynchronizer } from '@/main/synchronizers/users';
+import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
+import { CollaborationSynchronizer } from '@/main/synchronizers/collaborations';
+import { TransactionSynchronizer } from '@/main/synchronizers/transactions';
+import { MessageSynchronizer } from '@/main/synchronizers/messages';
+import { MessageReactionSynchronizer } from '@/main/synchronizers/message-reactions';
+import { FileSynchronizer } from '@/main/synchronizers/files';
 
 class SyncService {
   private readonly debug = createDebugger('service:sync');
-  private readonly users: Map<string, ConsumersWrapper> = new Map();
+  private readonly synchronizers: Map<
+    string,
+    BaseSynchronizer<SynchronizerInput>
+  > = new Map();
 
-  public async initUserConsumers(accountId: string, userId: string) {
+  public async initSynchronizers(userId: string) {
+    const workspace = await databaseService.appDatabase
+      .selectFrom('workspaces')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+
+    if (!workspace) {
+      return;
+    }
+
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    let consumers = this.users.get(userId);
-    if (!consumers) {
-      const usersConsumer = new UsersConsumer(
-        userId,
-        accountId,
-        workspaceDatabase
-      );
-      await usersConsumer.init();
+    await this.initSynchronizer(
+      userId,
+      workspace.account_id,
+      workspaceDatabase,
+      {
+        type: 'users',
+      }
+    );
 
-      const collaborationsConsumer = new CollaborationsConsumer(
-        userId,
-        accountId,
-        workspaceDatabase
-      );
-      await collaborationsConsumer.init();
-
-      consumers = {
-        users: usersConsumer,
-        collaborations: collaborationsConsumer,
-        nodes: {},
-      };
-
-      this.users.set(userId, consumers);
-    }
+    await this.initSynchronizer(
+      userId,
+      workspace.account_id,
+      workspaceDatabase,
+      {
+        type: 'collaborations',
+      }
+    );
 
     const collaborations = await workspaceDatabase
       .selectFrom('collaborations')
@@ -62,111 +58,179 @@ class SyncService {
 
     for (const collaboration of collaborations) {
       const rootId = collaboration.node_id;
+      if (collaboration.deleted_at) {
+        this.removeRootNodeSynchronizers(userId, rootId);
+      } else {
+        await this.initRootNodeSynchronizers(
+          userId,
+          workspace.account_id,
+          rootId,
+          workspaceDatabase
+        );
+      }
+    }
+  }
 
-      if (consumers.nodes[rootId]) {
+  public processSyncMessage(
+    message: SynchronizerOutputMessage<SynchronizerInput>
+  ) {
+    const synchronizer = this.synchronizers.get(message.id);
+    if (!synchronizer) {
+      return;
+    }
+
+    synchronizer.sync(message);
+  }
+
+  private async initSynchronizer(
+    userId: string,
+    accountId: string,
+    workspaceDatabase: Kysely<WorkspaceDatabaseSchema>,
+    input: SynchronizerInput
+  ) {
+    this.debug('Initializing synchronizer', input);
+    const synchronizer = this.buildSynchronizer(
+      userId,
+      accountId,
+      workspaceDatabase,
+      input
+    );
+
+    if (!synchronizer) {
+      return;
+    }
+
+    const existingSynchronizer = this.synchronizers.get(synchronizer.id);
+    if (existingSynchronizer) {
+      this.debug(
+        'Synchronizer already exists, pinging',
+        existingSynchronizer.id
+      );
+      existingSynchronizer.ping();
+      return;
+    }
+
+    this.synchronizers.set(synchronizer.id, synchronizer);
+    await synchronizer.init();
+  }
+
+  private buildSynchronizer(
+    userId: string,
+    accountId: string,
+    workspaceDatabase: Kysely<WorkspaceDatabaseSchema>,
+    input: SynchronizerInput
+  ): BaseSynchronizer<SynchronizerInput> | null {
+    if (input.type === 'users') {
+      return new UserSynchronizer(userId, accountId, input, workspaceDatabase);
+    }
+
+    if (input.type === 'collaborations') {
+      return new CollaborationSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'files') {
+      return new FileSynchronizer(userId, accountId, input, workspaceDatabase);
+    }
+
+    if (input.type === 'messages') {
+      return new MessageSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'message_reactions') {
+      return new MessageReactionSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'transactions') {
+      return new TransactionSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    return null;
+  }
+
+  private async initRootNodeSynchronizers(
+    userId: string,
+    accountId: string,
+    rootId: string,
+    workspaceDatabase: Kysely<WorkspaceDatabaseSchema>
+  ) {
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'transactions',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'messages',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'message_reactions',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'files',
+      rootId,
+    });
+  }
+
+  private removeRootNodeSynchronizers(userId: string, rootId: string) {
+    const keys = Array.from(this.synchronizers.keys());
+
+    for (const key of keys) {
+      const synchronizer = this.synchronizers.get(key);
+      if (!synchronizer) {
         continue;
       }
 
-      const transactionsConsumer = new TransactionsConsumer(
-        userId,
-        accountId,
-        rootId,
-        workspaceDatabase
-      );
-      await transactionsConsumer.init();
+      if (
+        synchronizer.input.type === 'transactions' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
 
-      const interactionsConsumer = new InteractionsConsumer(
-        userId,
-        accountId,
-        rootId,
-        workspaceDatabase
-      );
-      await interactionsConsumer.init();
+      if (
+        synchronizer.input.type === 'messages' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
 
-      const filesConsumer = new FilesConsumer(
-        userId,
-        accountId,
-        rootId,
-        workspaceDatabase
-      );
-      await filesConsumer.init();
+      if (
+        synchronizer.input.type === 'message_reactions' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
 
-      const messagesConsumer = new MessagesConsumer(
-        userId,
-        accountId,
-        rootId,
-        workspaceDatabase
-      );
-      await messagesConsumer.init();
-
-      const messageReactionsConsumer = new MessageReactionsConsumer(
-        userId,
-        accountId,
-        rootId,
-        workspaceDatabase
-      );
-      await messageReactionsConsumer.init();
-
-      consumers.nodes[rootId] = {
-        transactions: transactionsConsumer,
-        interactions: interactionsConsumer,
-        files: filesConsumer,
-        messages: messagesConsumer,
-        messageReactions: messageReactionsConsumer,
-      };
-    }
-
-    // check for deleted collaborations and remove them from the consumers
-    for (const nodeId of Object.keys(consumers.nodes)) {
-      if (!collaborations.some((c) => c.node_id === nodeId)) {
-        delete consumers.nodes[nodeId];
+      if (
+        synchronizer.input.type === 'files' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
       }
     }
-  }
-
-  public getUsersConsumer(userId: string): UsersConsumer | undefined {
-    return this.users.get(userId)?.users;
-  }
-
-  public getCollaborationsConsumer(
-    userId: string
-  ): CollaborationsConsumer | undefined {
-    return this.users.get(userId)?.collaborations;
-  }
-
-  public getTransactionsConsumer(
-    userId: string,
-    rootId: string
-  ): TransactionsConsumer | undefined {
-    return this.users.get(userId)?.nodes[rootId]?.transactions;
-  }
-
-  public getInteractionsConsumer(
-    userId: string,
-    rootId: string
-  ): InteractionsConsumer | undefined {
-    return this.users.get(userId)?.nodes[rootId]?.interactions;
-  }
-
-  public getFilesConsumer(
-    userId: string,
-    rootId: string
-  ): FilesConsumer | undefined {
-    return this.users.get(userId)?.nodes[rootId]?.files;
-  }
-
-  public getMessagesConsumer(
-    userId: string,
-    rootId: string
-  ): MessagesConsumer | undefined {
-    return this.users.get(userId)?.nodes[rootId]?.messages;
-  }
-
-  public getMessageReactionsConsumer(
-    userId: string,
-    rootId: string
-  ): MessageReactionsConsumer | undefined {
-    return this.users.get(userId)?.nodes[rootId]?.messageReactions;
   }
 }
 

@@ -1,5 +1,3 @@
-import { ServerTransaction } from './sync';
-
 import { NodeAttributes } from '../registry';
 
 export type NodeOutput = {
@@ -14,8 +12,4 @@ export type NodeOutput = {
   updatedAt?: string | null;
   updatedBy?: string | null;
   transactionId: string;
-};
-
-export type GetTransactionsOutput = {
-  transactions: ServerTransaction[];
 };

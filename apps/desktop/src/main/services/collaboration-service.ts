@@ -1,4 +1,4 @@
-import { ServerCollaboration } from '@colanode/core';
+import { SyncCollaborationData } from '@colanode/core';
 
 import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
@@ -9,7 +9,7 @@ class CollaborationService {
 
   public async syncServerCollaboration(
     userId: string,
-    collaboration: ServerCollaboration
+    collaboration: SyncCollaborationData
   ) {
     this.debug(
       `Applying server collaboration: ${collaboration.nodeId} for user ${userId}`

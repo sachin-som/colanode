@@ -1,9 +1,9 @@
-import { ServerUser } from '@colanode/core';
+import { SyncUserData } from '@colanode/core';
 
-import { databaseService } from '../data/database-service';
+import { databaseService } from '@/main/data/database-service';
 
 class UserService {
-  public async syncServerUser(userId: string, user: ServerUser) {
+  public async syncServerUser(userId: string, user: SyncUserData) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 

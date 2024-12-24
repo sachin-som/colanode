@@ -1,4 +1,4 @@
-import { ServerMessage, ServerMessageReaction } from '@colanode/core';
+import { SyncMessageData, SyncMessageReactionData } from '@colanode/core';
 
 import { mapMessage, mapMessageReaction } from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
@@ -8,7 +8,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 class MessageService {
   private readonly debug = createDebugger('service:message');
 
-  public async syncServerMessage(userId: string, message: ServerMessage) {
+  public async syncServerMessage(userId: string, message: SyncMessageData) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
@@ -86,7 +86,7 @@ class MessageService {
 
   public async syncServerMessageReaction(
     userId: string,
-    messageReaction: ServerMessageReaction
+    messageReaction: SyncMessageReactionData
   ) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);

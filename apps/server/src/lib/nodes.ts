@@ -5,27 +5,11 @@ import {
   NodeOutput,
   NodeRole,
   NodeType,
-  ServerCollaboration,
-  ServerFile,
   ServerInteraction,
-  ServerMessage,
-  ServerMessageReaction,
-  ServerTransaction,
-  ServerUser,
 } from '@colanode/core';
-import { encodeState } from '@colanode/crdt';
 
 import { database } from '@/data/database';
-import {
-  SelectInteraction,
-  SelectNode,
-  SelectCollaboration,
-  SelectTransaction,
-  SelectUser,
-  SelectFile,
-  SelectMessage,
-  SelectMessageReaction,
-} from '@/data/schema';
+import { SelectInteraction, SelectNode } from '@/data/schema';
 import { NodeCollaborator } from '@/types/nodes';
 
 export const mapNodeOutput = (node: SelectNode): NodeOutput => {
@@ -59,56 +43,6 @@ export const mapNode = (node: SelectNode): Node => {
   } as Node;
 };
 
-export const mapTransaction = (
-  transaction: SelectTransaction
-): ServerTransaction => {
-  if (transaction.operation === 'create' && transaction.data) {
-    return {
-      id: transaction.id,
-      operation: 'create',
-      nodeId: transaction.node_id,
-      rootId: transaction.root_id,
-      workspaceId: transaction.workspace_id,
-      data: encodeState(transaction.data),
-      createdAt: transaction.created_at.toISOString(),
-      createdBy: transaction.created_by,
-      serverCreatedAt: transaction.server_created_at.toISOString(),
-      version: transaction.version.toString(),
-    };
-  }
-
-  if (transaction.operation === 'update' && transaction.data) {
-    return {
-      id: transaction.id,
-      operation: 'update',
-      nodeId: transaction.node_id,
-      rootId: transaction.root_id,
-      workspaceId: transaction.workspace_id,
-      data: encodeState(transaction.data),
-      createdAt: transaction.created_at.toISOString(),
-      createdBy: transaction.created_by,
-      serverCreatedAt: transaction.server_created_at.toISOString(),
-      version: transaction.version.toString(),
-    };
-  }
-
-  if (transaction.operation === 'delete') {
-    return {
-      id: transaction.id,
-      operation: 'delete',
-      nodeId: transaction.node_id,
-      rootId: transaction.root_id,
-      workspaceId: transaction.workspace_id,
-      createdAt: transaction.created_at.toISOString(),
-      createdBy: transaction.created_by,
-      serverCreatedAt: transaction.server_created_at.toISOString(),
-      version: transaction.version.toString(),
-    };
-  }
-
-  throw new Error('Unknown transaction type');
-};
-
 export const mapInteraction = (
   interaction: SelectInteraction
 ): ServerInteraction => {
@@ -122,98 +56,6 @@ export const mapInteraction = (
     serverCreatedAt: interaction.server_created_at.toISOString(),
     serverUpdatedAt: interaction.server_updated_at?.toISOString() ?? null,
     version: interaction.version.toString(),
-  };
-};
-
-export const mapUser = (user: SelectUser): ServerUser => {
-  return {
-    id: user.id,
-    workspaceId: user.workspace_id,
-    email: user.email,
-    role: user.role,
-    name: user.name,
-    avatar: user.avatar,
-    customName: user.custom_name,
-    customAvatar: user.custom_avatar,
-    createdAt: user.created_at.toISOString(),
-    updatedAt: user.updated_at?.toISOString() ?? null,
-    version: user.version.toString(),
-  };
-};
-
-export const mapCollaboration = (
-  collaboration: SelectCollaboration
-): ServerCollaboration => {
-  return {
-    nodeId: collaboration.node_id,
-    rootId: collaboration.root_id,
-    workspaceId: collaboration.workspace_id,
-    collaboratorId: collaboration.collaborator_id,
-    role: collaboration.role,
-    createdBy: collaboration.created_by,
-    updatedBy: collaboration.updated_by,
-    createdAt: collaboration.created_at.toISOString(),
-    updatedAt: collaboration.updated_at?.toISOString() ?? null,
-    deletedAt: collaboration.deleted_at?.toISOString() ?? null,
-    deletedBy: collaboration.deleted_by ?? null,
-    version: collaboration.version,
-  };
-};
-
-export const mapFile = (file: SelectFile): ServerFile => {
-  return {
-    id: file.id,
-    type: file.type,
-    parentId: file.parent_id,
-    rootId: file.root_id,
-    workspaceId: file.workspace_id,
-    name: file.name,
-    originalName: file.original_name,
-    mimeType: file.mime_type,
-    size: file.size,
-    extension: file.extension,
-    createdAt: file.created_at.toISOString(),
-    createdBy: file.created_by,
-    updatedAt: file.updated_at?.toISOString() ?? null,
-    updatedBy: file.updated_by ?? null,
-    deletedAt: file.deleted_at?.toISOString() ?? null,
-    deletedBy: file.deleted_by ?? null,
-    version: file.version.toString(),
-    status: file.status,
-  };
-};
-
-export const mapMessage = (message: SelectMessage): ServerMessage => {
-  return {
-    id: message.id,
-    type: message.type,
-    nodeId: message.node_id,
-    parentId: message.parent_id,
-    rootId: message.root_id,
-    workspaceId: message.workspace_id,
-    content: JSON.parse(message.content),
-    createdAt: message.created_at.toISOString(),
-    createdBy: message.created_by,
-    updatedAt: message.updated_at?.toISOString() ?? null,
-    updatedBy: message.updated_by ?? null,
-    deletedAt: message.deleted_at?.toISOString() ?? null,
-    deletedBy: message.deleted_by ?? null,
-    version: message.version.toString(),
-  };
-};
-
-export const mapMessageReaction = (
-  messageReaction: SelectMessageReaction
-): ServerMessageReaction => {
-  return {
-    messageId: messageReaction.message_id,
-    collaboratorId: messageReaction.collaborator_id,
-    reaction: messageReaction.reaction,
-    rootId: messageReaction.root_id,
-    workspaceId: messageReaction.workspace_id,
-    createdAt: messageReaction.created_at.toISOString(),
-    deletedAt: messageReaction.deleted_at?.toISOString() ?? null,
-    version: messageReaction.version.toString(),
   };
 };
 

@@ -115,7 +115,6 @@ export type UpdateNode = Updateable<NodeTable>;
 interface CollaborationTable {
   node_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   role: ColumnType<NodeRole, NodeRole, NodeRole>;
   created_at: ColumnType<Date, Date, never>;

@@ -667,7 +667,6 @@ class NodeService {
     ).map(([userId, role]) => ({
       collaborator_id: userId,
       node_id: node.id,
-      root_id: node.root_id,
       workspace_id: node.workspace_id,
       role,
       created_at: new Date(),
@@ -733,7 +732,6 @@ class NodeService {
         .values({
           collaborator_id: collaboratorId,
           node_id: nodeId,
-          root_id: rootId,
           workspace_id: workspaceId,
           role,
           created_at: new Date(),

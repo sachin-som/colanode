@@ -1,59 +1,23 @@
 import { InteractionEvent } from './interactions';
-import {
-  ServerCollaboration,
-  ServerFile,
-  ServerInteraction,
-  ServerMessage,
-  ServerMessageReaction,
-  ServerTransaction,
-  ServerUser,
-} from './sync';
 
-export type TransactionsBatchMessage = {
-  type: 'transactions_batch';
+import { SynchronizerInput, SynchronizerMap } from '../synchronizers';
+
+export type SynchronizerInputMessage = {
+  type: 'synchronizer_input';
   userId: string;
-  rootId: string;
-  transactions: ServerTransaction[];
+  id: string;
+  input: SynchronizerInput;
+  cursor: string;
 };
 
-export type CollaborationsBatchMessage = {
-  type: 'collaborations_batch';
+export type SynchronizerOutputMessage<TInput extends SynchronizerInput> = {
+  type: 'synchronizer_output';
   userId: string;
-  collaborations: ServerCollaboration[];
-};
-
-export type InteractionsBatchMessage = {
-  type: 'interactions_batch';
-  userId: string;
-  rootId: string;
-  interactions: ServerInteraction[];
-};
-
-export type UsersBatchMessage = {
-  type: 'users_batch';
-  userId: string;
-  users: ServerUser[];
-};
-
-export type FilesBatchMessage = {
-  type: 'files_batch';
-  userId: string;
-  rootId: string;
-  files: ServerFile[];
-};
-
-export type MessagesBatchMessage = {
-  type: 'messages_batch';
-  userId: string;
-  rootId: string;
-  messages: ServerMessage[];
-};
-
-export type MessageReactionsBatchMessage = {
-  type: 'message_reactions_batch';
-  userId: string;
-  rootId: string;
-  messageReactions: ServerMessageReaction[];
+  id: string;
+  items: {
+    cursor: string;
+    data: SynchronizerMap[TInput['type']]['data'];
+  }[];
 };
 
 export type SyncInteractionsMessage = {
@@ -62,53 +26,6 @@ export type SyncInteractionsMessage = {
   nodeId: string;
   rootId: string;
   events: InteractionEvent[];
-};
-
-export type ConsumeUsersMessage = {
-  type: 'consume_users';
-  userId: string;
-  cursor: string;
-};
-
-export type ConsumeCollaborationsMessage = {
-  type: 'consume_collaborations';
-  userId: string;
-  cursor: string;
-};
-
-export type ConsumeInteractionsMessage = {
-  type: 'consume_interactions';
-  userId: string;
-  rootId: string;
-  cursor: string;
-};
-
-export type ConsumeTransactionsMessage = {
-  type: 'consume_transactions';
-  userId: string;
-  rootId: string;
-  cursor: string;
-};
-
-export type ConsumeFilesMessage = {
-  type: 'consume_files';
-  userId: string;
-  rootId: string;
-  cursor: string;
-};
-
-export type ConsumeMessagesMessage = {
-  type: 'consume_messages';
-  userId: string;
-  rootId: string;
-  cursor: string;
-};
-
-export type ConsumeMessageReactionsMessage = {
-  type: 'consume_message_reactions';
-  userId: string;
-  rootId: string;
-  cursor: string;
 };
 
 export type AccountUpdatedMessage = {
@@ -127,21 +44,9 @@ export type WorkspaceDeletedMessage = {
 };
 
 export type Message =
-  | TransactionsBatchMessage
-  | CollaborationsBatchMessage
-  | InteractionsBatchMessage
-  | UsersBatchMessage
   | SyncInteractionsMessage
-  | ConsumeUsersMessage
-  | ConsumeCollaborationsMessage
-  | ConsumeInteractionsMessage
-  | ConsumeTransactionsMessage
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
   | WorkspaceDeletedMessage
-  | FilesBatchMessage
-  | ConsumeFilesMessage
-  | ConsumeMessagesMessage
-  | MessagesBatchMessage
-  | MessageReactionsBatchMessage
-  | ConsumeMessageReactionsMessage;
+  | SynchronizerInputMessage
+  | SynchronizerOutputMessage<SynchronizerInput>;

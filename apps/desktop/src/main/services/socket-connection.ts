@@ -58,45 +58,8 @@ export class SocketConnection {
         `Received message of type ${message.type} for account ${this.account.id}`
       );
 
-      if (message.type === 'transactions_batch') {
-        const transactionsConsumer = syncService.getTransactionsConsumer(
-          message.userId,
-          message.rootId
-        );
-        transactionsConsumer?.processTransactions(message);
-      } else if (message.type === 'collaborations_batch') {
-        const collaborationsConsumer = syncService.getCollaborationsConsumer(
-          message.userId
-        );
-        collaborationsConsumer?.processCollaborations(message);
-      } else if (message.type === 'interactions_batch') {
-        const interactionsConsumer = syncService.getInteractionsConsumer(
-          message.userId,
-          message.rootId
-        );
-        interactionsConsumer?.processInteractions(message);
-      } else if (message.type === 'users_batch') {
-        const usersConsumer = syncService.getUsersConsumer(message.userId);
-        usersConsumer?.processUsers(message);
-      } else if (message.type === 'files_batch') {
-        const filesConsumer = syncService.getFilesConsumer(
-          message.userId,
-          message.rootId
-        );
-        filesConsumer?.processFiles(message);
-      } else if (message.type === 'messages_batch') {
-        const messagesConsumer = syncService.getMessagesConsumer(
-          message.userId,
-          message.rootId
-        );
-        messagesConsumer?.processMessages(message);
-      } else if (message.type === 'message_reactions_batch') {
-        const messageReactionsConsumer =
-          syncService.getMessageReactionsConsumer(
-            message.userId,
-            message.rootId
-          );
-        messageReactionsConsumer?.processMessageReactions(message);
+      if (message.type === 'synchronizer_output') {
+        syncService.processSyncMessage(message);
       } else if (message.type === 'account_updated') {
         scheduler.trigger({
           type: 'sync_account',

@@ -3,7 +3,7 @@ import {
   CreateDownloadOutput,
   CreateUploadOutput,
   extractFileType,
-  ServerFile,
+  SyncFileData,
 } from '@colanode/core';
 import axios from 'axios';
 import mime from 'mime-types';
@@ -433,7 +433,10 @@ class FileService {
     }
   }
 
-  public async syncServerFile(userId: string, file: ServerFile): Promise<void> {
+  public async syncServerFile(
+    userId: string,
+    file: SyncFileData
+  ): Promise<void> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 

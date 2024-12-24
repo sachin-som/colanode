@@ -127,26 +127,26 @@ const inviteAccountsToWorkspace = async (
   );
 };
 
-const sendTransactions = async (user: User, workspaceId: string) => {
-  const url = `${SERVER_DOMAIN}/client/v1/workspaces/${workspaceId}/transactions`;
+const sendMutations = async (user: User, workspaceId: string) => {
+  const url = `${SERVER_DOMAIN}/client/v1/workspaces/${workspaceId}/mutations`;
   const batchSize = 100;
-  const totalBatches = Math.ceil(user.transactions.length / batchSize);
+  const totalBatches = Math.ceil(user.mutations.length / batchSize);
   let currentBatch = 1;
 
   // Create a copy of the transactions array to modify
-  const remainingTransactions = [...user.transactions];
+  const remainingMutations = [...user.mutations];
 
-  while (remainingTransactions.length > 0) {
-    const batch = remainingTransactions.splice(0, batchSize);
+  while (remainingMutations.length > 0) {
+    const batch = remainingMutations.splice(0, batchSize);
 
     console.log(
-      `Sending batch ${currentBatch} of ${totalBatches} transactions for user ${user.login.account.email}`
+      `Sending batch ${currentBatch} of ${totalBatches} mutations for user ${user.login.account.email}`
     );
 
     await axios.post(
       url,
       {
-        transactions: batch,
+        mutations: batch,
       },
       {
         headers: { Authorization: `Bearer ${user.login.token}` },
@@ -184,7 +184,7 @@ const seed = async () => {
   users.push({
     login: mainAccount,
     userId: workspace.user.id,
-    transactions: [],
+    mutations: [],
   });
 
   const otherAccounts = fakerAccounts.slice(1);
@@ -203,7 +203,7 @@ const seed = async () => {
     users.push({
       login: account,
       userId: accountWorkspace.user.id,
-      transactions: [],
+      mutations: [],
     });
   }
 
@@ -211,10 +211,10 @@ const seed = async () => {
   const nodeGenerator = new NodeGenerator(workspace.id, users);
   nodeGenerator.generate();
 
-  console.log('Sending transactions');
+  console.log('Sending mutations');
   for (const user of users) {
-    console.log('Sending transactions for user', user.login.account.email);
-    await sendTransactions(user, workspace.id);
+    console.log('Sending mutations for user', user.login.account.email);
+    await sendMutations(user, workspace.id);
   }
 
   console.log('Done');

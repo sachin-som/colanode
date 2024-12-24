@@ -44,6 +44,7 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
       .selectFrom('collaborations')
       .selectAll()
       .where('workspace_id', '=', this.user.workspaceId)
+      .where('collaborator_id', '=', this.user.userId)
       .where('version', '>', this.cursor)
       .orderBy('version', 'asc')
       .limit(50)

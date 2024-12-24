@@ -1,5 +1,5 @@
 import { FileType } from './files';
-import { MessageType } from './messages';
+import { MessageContent, MessageType } from './messages';
 import {
   LocalCreateTransaction,
   LocalDeleteTransaction,
@@ -64,7 +64,7 @@ export type CreateMessageMutationData = {
   type: MessageType;
   nodeId: string;
   parentId: string;
-  content: unknown;
+  content: MessageContent;
   rootId: string;
   createdAt: string;
 };

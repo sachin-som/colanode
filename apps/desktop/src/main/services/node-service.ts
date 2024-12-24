@@ -23,7 +23,6 @@ import {
   SelectNode,
   SelectTransaction,
 } from '@/main/data/workspace/schema';
-import { interactionService } from '@/main/services/interaction-service';
 import { fetchNodeAncestors, mapNode, mapTransaction } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 
@@ -903,11 +902,6 @@ class NodeService {
       userId,
       node: mapNode(createdNode),
     });
-
-    await interactionService.setInteraction(userId, createdNode.id, {
-      attribute: 'lastReceivedTransactionId',
-      value: transaction.id,
-    });
   }
 
   private async applyServerUpdateTransaction(
@@ -1052,11 +1046,6 @@ class NodeService {
       type: 'node_updated',
       userId,
       node: mapNode(updatedNode),
-    });
-
-    await interactionService.setInteraction(userId, updatedNode.id, {
-      attribute: 'lastReceivedTransactionId',
-      value: transaction.id,
     });
   }
 

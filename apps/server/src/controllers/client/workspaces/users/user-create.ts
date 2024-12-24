@@ -10,7 +10,6 @@ import {
 
 import { database } from '@/data/database';
 import { ApiError } from '@/types/api';
-import { fetchNode } from '@/lib/nodes';
 import { getNameFromEmail } from '@/lib/utils';
 import { SelectUser } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
@@ -43,15 +42,6 @@ export const userCreateHandler = async (
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',
-    });
-    return;
-  }
-
-  const workspaceNodeRow = await fetchNode(workspaceId);
-  if (!workspaceNodeRow) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
-      message: 'Something went wrong.',
     });
     return;
   }

@@ -1,4 +1,4 @@
-import { LocalTransaction, LoginOutput } from '@colanode/core';
+import { LoginOutput, Mutation } from '@colanode/core';
 
 export type FakerAccount = {
   name: string;
@@ -10,5 +10,5 @@ export type FakerAccount = {
 export type User = {
   login: LoginOutput;
   userId: string;
-  transactions: LocalTransaction[];
+  mutations: Mutation[];
 };

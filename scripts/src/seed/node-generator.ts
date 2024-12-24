@@ -21,8 +21,8 @@ import { faker } from '@faker-js/faker';
 
 import { User } from './types';
 
-const MESSAGES_PER_CONVERSATION = 1000;
-const RECORDS_PER_DATABASE = 5000;
+const MESSAGES_PER_CONVERSATION = 2000;
+const RECORDS_PER_DATABASE = 0;
 
 export class NodeGenerator {
   constructor(
@@ -51,7 +51,12 @@ export class NodeGenerator {
       '01je8kh202et2bagv8phg219cbem'
     );
     this.buildPage(spaceId, 'Guide', spaceId, '01je8kh202et2bagv8phg219cdem');
-    this.buildChannel('Announcements', spaceId, '01je8kh1zvyrbp8fgt59t2cy8pem');
+    this.buildChannel(
+      spaceId,
+      'Announcements',
+      spaceId,
+      '01je8kh1zvyrbp8fgt59t2cy8pem'
+    );
   }
 
   private buildProductSpace() {
@@ -60,8 +65,18 @@ export class NodeGenerator {
       'The product space',
       '01je8kh20sp99fzn32cf9mf3pyem'
     );
-    this.buildChannel('Discussions', spaceId, '01je8kh1j5m7v8bk06ara5txq5em');
-    this.buildChannel('Alerts', spaceId, '01je8kh1yv79yfr5dsvy19g696em');
+    this.buildChannel(
+      spaceId,
+      'Discussions',
+      spaceId,
+      '01je8kh1j5m7v8bk06ara5txq5em'
+    );
+    this.buildChannel(
+      spaceId,
+      'Alerts',
+      spaceId,
+      '01je8kh1yv79yfr5dsvy19g696em'
+    );
     this.buildPage(spaceId, 'Roadmap', spaceId, '01je8kh1yyqmcxbdf67bgsc0wqem');
     this.buildTasksDatabase(spaceId, spaceId);
   }
@@ -119,19 +134,24 @@ export class NodeGenerator {
     return spaceId;
   }
 
-  private buildChannel(name: string, spaceId: string, avatar: string) {
+  private buildChannel(
+    rootId: string,
+    name: string,
+    parentId: string,
+    avatar: string
+  ) {
     const channelId = generateId(IdType.Channel);
     const channelAttributes: NodeAttributes = {
       type: 'channel',
       name,
-      parentId: spaceId,
+      parentId,
       avatar,
     };
 
     const user = this.getMainUser();
     const createTransaction = this.buildCreateTransaction(
+      rootId,
       channelId,
-      spaceId,
       user.userId,
       channelAttributes
     );
@@ -145,12 +165,7 @@ export class NodeGenerator {
 
     user.mutations.push(mutation);
 
-    this.buidMessages(
-      spaceId,
-      channelId,
-      MESSAGES_PER_CONVERSATION,
-      this.users
-    );
+    this.buidMessages(rootId, channelId, MESSAGES_PER_CONVERSATION, this.users);
   }
 
   private buildChat(user: User) {
@@ -455,8 +470,8 @@ export class NodeGenerator {
 
     const user = this.getMainUser();
     const createTransaction = this.buildCreateTransaction(
-      databaseId,
       rootId,
+      databaseId,
       user.userId,
       databaseAttributes
     );
@@ -710,8 +725,8 @@ export class NodeGenerator {
 
     const user = this.getMainUser();
     const createTransaction = this.buildCreateTransaction(
-      databaseId,
       rootId,
+      databaseId,
       user.userId,
       databaseAttributes
     );
@@ -851,8 +866,8 @@ export class NodeGenerator {
 
     const user = this.getMainUser();
     const createTransaction = this.buildCreateTransaction(
-      databaseId,
       rootId,
+      databaseId,
       user.userId,
       databaseAttributes
     );
@@ -910,8 +925,8 @@ export class NodeGenerator {
 
     const user = this.getRandomUser(this.users);
     const createTransaction = this.buildCreateTransaction(
-      recordId,
       rootId,
+      recordId,
       user.userId,
       recordAttributes
     );
@@ -940,8 +955,8 @@ export class NodeGenerator {
   }
 
   private buildCreateTransaction(
-    nodeId: string,
     rootId: string,
+    nodeId: string,
     userId: string,
     attributes: NodeAttributes
   ): LocalCreateTransaction {

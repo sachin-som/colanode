@@ -163,8 +163,6 @@ const deleteChildren = async (
       // }
 
       for (const entry of descendants) {
-        logger.trace(`Publishing entry deleted event for ${entry.id}`);
-
         eventBus.publish({
           type: 'entry_deleted',
           entryId: entry.id,

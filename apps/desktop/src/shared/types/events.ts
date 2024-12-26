@@ -7,7 +7,6 @@ import {
   MessageReaction,
 } from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
-import { Interaction } from '@/shared/types/interactions';
 import { Server } from '@/shared/types/servers';
 import { Workspace } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
@@ -211,18 +210,6 @@ export type SocketConnectionOpenedEvent = {
   accountId: string;
 };
 
-export type InteractionEventCreatedEvent = {
-  type: 'interaction_event_created';
-  userId: string;
-  entryId: string;
-};
-
-export type InteractionUpdatedEvent = {
-  type: 'interaction_updated';
-  userId: string;
-  interaction: Interaction;
-};
-
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -258,6 +245,4 @@ export type Event =
   | ServerAvailabilityChangedEvent
   | SocketConnectionOpenedEvent
   | CollaborationCreatedEvent
-  | CollaborationDeletedEvent
-  | InteractionEventCreatedEvent
-  | InteractionUpdatedEvent;
+  | CollaborationDeletedEvent;

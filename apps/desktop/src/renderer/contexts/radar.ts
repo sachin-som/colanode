@@ -1,5 +1,4 @@
 import { createContext, useContext } from 'react';
-import { EntryType } from '@colanode/core';
 
 import {
   AccountReadState,
@@ -13,18 +12,11 @@ interface RadarContext {
   getWorkspaceState: (userId: string) => WorkspaceReadState;
   getChatState: (userId: string, entryId: string) => ChatReadState;
   getChannelState: (userId: string, entryIdId: string) => ChannelReadState;
-  markAsSeen: (
-    userId: string,
-    entryId: string,
-    entryType: EntryType,
-    transactionId: string
-  ) => void;
-  markAsOpened: (
-    userId: string,
-    entryId: string,
-    entryType: EntryType,
-    transactionId: string
-  ) => void;
+  markMessageAsSeen: (userId: string, messageId: string) => void;
+  markFileAsSeen: (userId: string, fileId: string) => void;
+  markFileAsOpened: (userId: string, fileId: string) => void;
+  markEntryAsSeen: (userId: string, entryId: string) => void;
+  markEntryAsOpened: (userId: string, entryId: string) => void;
 }
 
 export const RadarContext = createContext<RadarContext>({} as RadarContext);

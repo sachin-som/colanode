@@ -1,12 +1,17 @@
 import { Entry } from '@colanode/core';
 
-import { MessageNode, MessageReaction } from '@/shared/types/messages';
+import { EntryInteraction } from '@/shared/types/entries';
+import {
+  MessageInteraction,
+  MessageNode,
+  MessageReaction,
+} from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
 import { Interaction } from '@/shared/types/interactions';
 import { Server } from '@/shared/types/servers';
 import { Workspace } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
-import { File, FileState } from '@/shared/types/files';
+import { File, FileInteraction, FileState } from '@/shared/types/files';
 
 export type UserCreatedEvent = {
   type: 'user_created';
@@ -44,6 +49,12 @@ export type EntryDeletedEvent = {
   entry: Entry;
 };
 
+export type EntryInteractionUpdatedEvent = {
+  type: 'entry_interaction_updated';
+  userId: string;
+  entryInteraction: EntryInteraction;
+};
+
 export type MessageCreatedEvent = {
   type: 'message_created';
   userId: string;
@@ -72,6 +83,12 @@ export type MessageReactionDeletedEvent = {
   type: 'message_reaction_deleted';
   userId: string;
   messageReaction: MessageReaction;
+};
+
+export type MessageInteractionUpdatedEvent = {
+  type: 'message_interaction_updated';
+  userId: string;
+  messageInteraction: MessageInteraction;
 };
 
 export type FileCreatedEvent = {
@@ -108,6 +125,12 @@ export type FileStateDeletedEvent = {
   type: 'file_state_deleted';
   userId: string;
   fileState: FileState;
+};
+
+export type FileInteractionUpdatedEvent = {
+  type: 'file_interaction_updated';
+  userId: string;
+  fileInteraction: FileInteraction;
 };
 
 export type AccountCreatedEvent = {
@@ -207,11 +230,13 @@ export type Event =
   | EntryCreatedEvent
   | EntryUpdatedEvent
   | EntryDeletedEvent
+  | EntryInteractionUpdatedEvent
   | MessageCreatedEvent
   | MessageUpdatedEvent
   | MessageDeletedEvent
   | MessageReactionCreatedEvent
   | MessageReactionDeletedEvent
+  | MessageInteractionUpdatedEvent
   | AccountCreatedEvent
   | AccountUpdatedEvent
   | AccountDeletedEvent
@@ -226,6 +251,7 @@ export type Event =
   | FileStateCreatedEvent
   | FileStateUpdatedEvent
   | FileStateDeletedEvent
+  | FileInteractionUpdatedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
   | MutationCreatedEvent

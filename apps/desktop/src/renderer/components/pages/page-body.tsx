@@ -42,20 +42,10 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
   );
 
   useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      page.id,
-      page.type,
-      page.transactionId
-    );
+    radar.markEntryAsOpened(workspace.userId, page.id);
 
     const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        page.id,
-        page.type,
-        page.transactionId
-      );
+      radar.markEntryAsOpened(workspace.userId, page.id);
     }, 60000);
 
     return () => clearInterval(interval);

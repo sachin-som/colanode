@@ -11,6 +11,9 @@ import { TransactionSynchronizer } from '@/main/synchronizers/transactions';
 import { MessageSynchronizer } from '@/main/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/main/synchronizers/message-reactions';
 import { FileSynchronizer } from '@/main/synchronizers/files';
+import { EntryInteractionSynchronizer } from '@/main/synchronizers/entry-interactions';
+import { FileInteractionSynchronizer } from '@/main/synchronizers/file-interactions';
+import { MessageInteractionSynchronizer } from '@/main/synchronizers/message-interactions';
 
 class SyncService {
   private readonly debug = createDebugger('service:sync');
@@ -164,6 +167,33 @@ class SyncService {
       );
     }
 
+    if (input.type === 'entry_interactions') {
+      return new EntryInteractionSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'file_interactions') {
+      return new FileInteractionSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'message_interactions') {
+      return new MessageInteractionSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
     return null;
   }
 
@@ -190,6 +220,21 @@ class SyncService {
 
     await this.initSynchronizer(userId, accountId, workspaceDatabase, {
       type: 'files',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'entry_interactions',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'file_interactions',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'message_interactions',
       rootId,
     });
   }
@@ -226,6 +271,27 @@ class SyncService {
 
       if (
         synchronizer.input.type === 'files' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
+
+      if (
+        synchronizer.input.type === 'entry_interactions' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
+
+      if (
+        synchronizer.input.type === 'file_interactions' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      }
+
+      if (
+        synchronizer.input.type === 'message_interactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);

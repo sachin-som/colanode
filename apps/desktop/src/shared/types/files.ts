@@ -48,3 +48,14 @@ export type FileWithState = File & {
   uploadProgress: number;
   uploadStatus: UploadStatus;
 };
+
+export type FileInteraction = {
+  fileId: string;
+  collaboratorId: string;
+  rootId: string;
+  lastSeenAt: string | null;
+  firstSeenAt: string | null;
+  lastOpenedAt: string | null;
+  firstOpenedAt: string | null;
+  version: bigint;
+};

@@ -1,6 +1,14 @@
-import { SyncMessageData, SyncMessageReactionData } from '@colanode/core';
+import {
+  SyncMessageData,
+  SyncMessageInteractionData,
+  SyncMessageReactionData,
+} from '@colanode/core';
 
-import { mapMessage, mapMessageReaction } from '@/main/utils';
+import {
+  mapMessage,
+  mapMessageInteraction,
+  mapMessageReaction,
+} from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
 import { createDebugger } from '@/main/debugger';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -154,6 +162,66 @@ class MessageService {
 
     this.debug(
       `Server message reaction for message ${messageReaction.messageId} has been synced`
+    );
+  }
+
+  public async syncServerMessageInteraction(
+    userId: string,
+    messageInteraction: SyncMessageInteractionData
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const existingMessageInteraction = await workspaceDatabase
+      .selectFrom('message_interactions')
+      .selectAll()
+      .where('message_id', '=', messageInteraction.messageId)
+      .executeTakeFirst();
+
+    const version = BigInt(messageInteraction.version);
+    if (existingMessageInteraction) {
+      if (existingMessageInteraction.version === version) {
+        this.debug(
+          `Server message interaction for message ${messageInteraction.messageId} is already synced`
+        );
+        return;
+      }
+    }
+
+    const createdMessageInteraction = await workspaceDatabase
+      .insertInto('message_interactions')
+      .returningAll()
+      .values({
+        message_id: messageInteraction.messageId,
+        collaborator_id: messageInteraction.collaboratorId,
+        root_id: messageInteraction.rootId,
+        seen_at: messageInteraction.seenAt,
+        last_opened_at: messageInteraction.lastOpenedAt,
+        first_opened_at: messageInteraction.firstOpenedAt,
+        version,
+      })
+      .onConflict((b) =>
+        b.columns(['message_id', 'collaborator_id']).doUpdateSet({
+          seen_at: messageInteraction.seenAt,
+          last_opened_at: messageInteraction.lastOpenedAt,
+          first_opened_at: messageInteraction.firstOpenedAt,
+          version,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdMessageInteraction) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'message_interaction_updated',
+      userId,
+      messageInteraction: mapMessageInteraction(createdMessageInteraction),
+    });
+
+    this.debug(
+      `Server message interaction for message ${messageInteraction.messageId} has been synced`
     );
   }
 }

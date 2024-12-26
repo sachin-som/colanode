@@ -60,20 +60,10 @@ export const RecordBody = ({
   );
 
   useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      record.id,
-      record.type,
-      record.transactionId
-    );
+    radar.markEntryAsOpened(workspace.userId, record.id);
 
     const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        record.id,
-        record.type,
-        record.transactionId
-      );
+      radar.markEntryAsOpened(workspace.userId, record.id);
     }, 60000);
 
     return () => clearInterval(interval);

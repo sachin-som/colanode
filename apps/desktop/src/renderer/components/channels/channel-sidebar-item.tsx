@@ -25,12 +25,7 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markAsSeen(
-            workspace.userId,
-            channel.id,
-            channel.type,
-            channel.transactionId
-          );
+          radar.markEntryAsSeen(workspace.userId, channel.id);
         }
       }}
       className={cn(

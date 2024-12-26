@@ -12,6 +12,7 @@ import {
   SyncDeleteTransactionData,
   SyncTransactionData,
   SyncUpdateTransactionData,
+  SyncEntryInteractionData,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
@@ -23,7 +24,12 @@ import {
   SelectEntry,
   SelectTransaction,
 } from '@/main/data/workspace/schema';
-import { fetchEntryAncestors, mapEntry, mapTransaction } from '@/main/utils';
+import {
+  fetchEntryAncestors,
+  mapEntry,
+  mapEntryInteraction,
+  mapTransaction,
+} from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 
 const UPDATE_RETRIES_LIMIT = 20;
@@ -1296,7 +1302,69 @@ class EntryService {
       .execute();
   }
 
-  async fetchWorkspace(userId: string): Promise<SelectWorkspace> {
+  public async syncServerEntryInteraction(
+    userId: string,
+    entryInteraction: SyncEntryInteractionData
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const existingEntryInteraction = await workspaceDatabase
+      .selectFrom('entry_interactions')
+      .selectAll()
+      .where('entry_id', '=', entryInteraction.entryId)
+      .executeTakeFirst();
+
+    const version = BigInt(entryInteraction.version);
+    if (existingEntryInteraction) {
+      if (existingEntryInteraction.version === version) {
+        this.debug(
+          `Server entry interaction for entry ${entryInteraction.entryId} is already synced`
+        );
+        return;
+      }
+    }
+
+    const createdEntryInteraction = await workspaceDatabase
+      .insertInto('entry_interactions')
+      .returningAll()
+      .values({
+        entry_id: entryInteraction.entryId,
+        root_id: entryInteraction.rootId,
+        collaborator_id: entryInteraction.collaboratorId,
+        first_seen_at: entryInteraction.firstSeenAt,
+        last_seen_at: entryInteraction.lastSeenAt,
+        last_opened_at: entryInteraction.lastOpenedAt,
+        first_opened_at: entryInteraction.firstOpenedAt,
+        version,
+      })
+      .onConflict((b) =>
+        b.columns(['entry_id', 'collaborator_id']).doUpdateSet({
+          last_seen_at: entryInteraction.lastSeenAt,
+          first_seen_at: entryInteraction.firstSeenAt,
+          last_opened_at: entryInteraction.lastOpenedAt,
+          first_opened_at: entryInteraction.firstOpenedAt,
+          version,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdEntryInteraction) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'entry_interaction_updated',
+      userId,
+      entryInteraction: mapEntryInteraction(createdEntryInteraction),
+    });
+
+    this.debug(
+      `Server entry interaction for entry ${entryInteraction.entryId} has been synced`
+    );
+  }
+
+  private async fetchWorkspace(userId: string): Promise<SelectWorkspace> {
     const workspace = await databaseService.appDatabase
       .selectFrom('workspaces')
       .selectAll()

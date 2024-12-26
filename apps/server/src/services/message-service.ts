@@ -4,6 +4,8 @@ import {
   DeleteMessageReactionMutation,
   extractEntryRole,
   hasCollaboratorAccess,
+  hasViewerAccess,
+  MarkMessageSeenMutation,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
@@ -185,6 +187,83 @@ class MessageService {
       collaboratorId: user.id,
       rootId: root.id,
       workspaceId: root.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async markMessageAsSeen(
+    user: SelectUser,
+    mutation: MarkMessageSeenMutation
+  ): Promise<boolean> {
+    const message = await database
+      .selectFrom('messages')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.messageId)
+      .executeTakeFirst();
+
+    if (!message) {
+      return false;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', message.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasViewerAccess(role)) {
+      return false;
+    }
+
+    const existingInteraction = await database
+      .selectFrom('message_interactions')
+      .selectAll()
+      .where('message_id', '=', mutation.data.messageId)
+      .where('collaborator_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (
+      existingInteraction &&
+      existingInteraction.seen_at !== null &&
+      existingInteraction.seen_at <= new Date(mutation.data.seenAt)
+    ) {
+      return true;
+    }
+
+    const createdInteraction = await database
+      .insertInto('message_interactions')
+      .returningAll()
+      .values({
+        message_id: mutation.data.messageId,
+        collaborator_id: user.id,
+        seen_at: new Date(mutation.data.seenAt),
+        root_id: root.id,
+        workspace_id: root.workspace_id,
+      })
+      .onConflict((b) =>
+        b.columns(['message_id', 'collaborator_id']).doUpdateSet({
+          seen_at: new Date(mutation.data.seenAt),
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdInteraction) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'message_interaction_updated',
+      messageId: createdInteraction.message_id,
+      collaboratorId: createdInteraction.collaborator_id,
+      rootId: createdInteraction.root_id,
+      workspaceId: createdInteraction.workspace_id,
     });
 
     return true;

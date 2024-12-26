@@ -3,6 +3,9 @@ import {
   extractEntryRole,
   FileStatus,
   hasCollaboratorAccess,
+  hasViewerAccess,
+  MarkFileOpenedMutation,
+  MarkFileSeenMutation,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
@@ -70,6 +73,168 @@ class FileService {
       fileId: createdFile.id,
       rootId: createdFile.root_id,
       workspaceId: createdFile.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async markFileAsSeen(
+    user: SelectUser,
+    mutation: MarkFileSeenMutation
+  ): Promise<boolean> {
+    const file = await database
+      .selectFrom('files')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.fileId)
+      .executeTakeFirst();
+
+    if (!file) {
+      return false;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', file.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasViewerAccess(role)) {
+      return false;
+    }
+
+    const existingInteraction = await database
+      .selectFrom('file_interactions')
+      .selectAll()
+      .where('file_id', '=', mutation.data.fileId)
+      .where('collaborator_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (
+      existingInteraction &&
+      existingInteraction.last_seen_at !== null &&
+      existingInteraction.last_seen_at <= new Date(mutation.data.seenAt)
+    ) {
+      return true;
+    }
+
+    const lastSeenAt = new Date(mutation.data.seenAt);
+    const firstSeenAt = existingInteraction?.first_seen_at ?? lastSeenAt;
+    const createdInteraction = await database
+      .insertInto('file_interactions')
+      .returningAll()
+      .values({
+        file_id: mutation.data.fileId,
+        collaborator_id: user.id,
+        first_seen_at: firstSeenAt,
+        last_seen_at: lastSeenAt,
+        root_id: root.id,
+        workspace_id: root.workspace_id,
+      })
+      .onConflict((b) =>
+        b.columns(['file_id', 'collaborator_id']).doUpdateSet({
+          last_seen_at: lastSeenAt,
+          first_seen_at: firstSeenAt,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdInteraction) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'file_interaction_updated',
+      fileId: createdInteraction.file_id,
+      collaboratorId: createdInteraction.collaborator_id,
+      rootId: createdInteraction.root_id,
+      workspaceId: createdInteraction.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async markFileAsOpened(
+    user: SelectUser,
+    mutation: MarkFileOpenedMutation
+  ): Promise<boolean> {
+    const file = await database
+      .selectFrom('files')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.fileId)
+      .executeTakeFirst();
+
+    if (!file) {
+      return false;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', file.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasViewerAccess(role)) {
+      return false;
+    }
+
+    const existingInteraction = await database
+      .selectFrom('file_interactions')
+      .selectAll()
+      .where('file_id', '=', mutation.data.fileId)
+      .where('collaborator_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (
+      existingInteraction &&
+      existingInteraction.last_opened_at !== null &&
+      existingInteraction.last_opened_at <= new Date(mutation.data.openedAt)
+    ) {
+      return true;
+    }
+
+    const lastOpenedAt = new Date(mutation.data.openedAt);
+    const firstOpenedAt = existingInteraction?.first_opened_at ?? lastOpenedAt;
+    const createdInteraction = await database
+      .insertInto('file_interactions')
+      .returningAll()
+      .values({
+        file_id: mutation.data.fileId,
+        collaborator_id: user.id,
+        first_opened_at: firstOpenedAt,
+        last_opened_at: lastOpenedAt,
+        root_id: root.id,
+        workspace_id: root.workspace_id,
+      })
+      .onConflict((b) =>
+        b.columns(['file_id', 'collaborator_id']).doUpdateSet({
+          last_opened_at: lastOpenedAt,
+          first_opened_at: firstOpenedAt,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdInteraction) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'file_interaction_updated',
+      fileId: createdInteraction.file_id,
+      collaboratorId: createdInteraction.collaborator_id,
+      rootId: createdInteraction.root_id,
+      workspaceId: createdInteraction.workspace_id,
     });
 
     return true;

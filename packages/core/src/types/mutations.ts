@@ -87,6 +87,17 @@ export type CreateMessageReactionMutation = MutationBase & {
   data: CreateMessageReactionMutationData;
 };
 
+export type MarkMessageSeenMutationData = {
+  messageId: string;
+  collaboratorId: string;
+  seenAt: string;
+};
+
+export type MarkMessageSeenMutation = MutationBase & {
+  type: 'mark_message_seen';
+  data: MarkMessageSeenMutationData;
+};
+
 export type DeleteMessageReactionMutationData = {
   messageId: string;
   reaction: string;
@@ -99,6 +110,50 @@ export type DeleteMessageReactionMutation = MutationBase & {
   data: DeleteMessageReactionMutationData;
 };
 
+export type MarkFileSeenMutationData = {
+  fileId: string;
+  collaboratorId: string;
+  seenAt: string;
+};
+
+export type MarkFileSeenMutation = MutationBase & {
+  type: 'mark_file_seen';
+  data: MarkFileSeenMutationData;
+};
+
+export type MarkFileOpenedMutationData = {
+  fileId: string;
+  collaboratorId: string;
+  openedAt: string;
+};
+
+export type MarkFileOpenedMutation = MutationBase & {
+  type: 'mark_file_opened';
+  data: MarkFileOpenedMutationData;
+};
+
+export type MarkEntrySeenMutationData = {
+  entryId: string;
+  collaboratorId: string;
+  seenAt: string;
+};
+
+export type MarkEntrySeenMutation = MutationBase & {
+  type: 'mark_entry_seen';
+  data: MarkEntrySeenMutationData;
+};
+
+export type MarkEntryOpenedMutationData = {
+  entryId: string;
+  collaboratorId: string;
+  openedAt: string;
+};
+
+export type MarkEntryOpenedMutation = MutationBase & {
+  type: 'mark_entry_opened';
+  data: MarkEntryOpenedMutationData;
+};
+
 export type Mutation =
   | CreateFileMutation
   | ApplyCreateTransactionMutation
@@ -106,6 +161,11 @@ export type Mutation =
   | ApplyDeleteTransactionMutation
   | CreateMessageMutation
   | CreateMessageReactionMutation
-  | DeleteMessageReactionMutation;
+  | DeleteMessageReactionMutation
+  | MarkMessageSeenMutation
+  | MarkFileSeenMutation
+  | MarkFileOpenedMutation
+  | MarkEntrySeenMutation
+  | MarkEntryOpenedMutation;
 
 export type MutationType = Mutation['type'];

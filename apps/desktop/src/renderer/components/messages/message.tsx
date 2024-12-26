@@ -6,8 +6,8 @@ import { MessageAuthorName } from '@/renderer/components/messages/message-author
 import { MessageContent } from '@/renderer/components/messages/message-content';
 import { MessageReactions } from '@/renderer/components/messages/message-reactions';
 import { MessageTime } from '@/renderer/components/messages/message-time';
-// import { useRadar } from '@/renderer/contexts/radar';
-// import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useRadar } from '@/renderer/contexts/radar';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessageNode } from '@/shared/types/messages';
 interface MessageProps {
   message: MessageNode;
@@ -33,8 +33,8 @@ const shouldDisplayAuthor = (
 };
 
 export const Message = ({ message, previousMessage }: MessageProps) => {
-  // const workspace = useWorkspace();
-  // const radar = useRadar();
+  const workspace = useWorkspace();
+  const radar = useRadar();
   const displayAuthor = shouldDisplayAuthor(message, previousMessage);
 
   return (
@@ -60,12 +60,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           rootMargin="50px"
           onChange={(inView) => {
             if (inView) {
-              // radar.markAsSeen(
-              //   workspace.userId,
-              //   message.id,
-              //   message.type,
-              //   message.transactionId
-              // );
+              radar.markMessageAsSeen(workspace.userId, message.id);
             }
           }}
         >

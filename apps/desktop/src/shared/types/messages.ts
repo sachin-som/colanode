@@ -26,3 +26,12 @@ export type MessageReactionsCount = {
   count: number;
   reacted: boolean;
 };
+
+export type MessageInteraction = {
+  messageId: string;
+  collaboratorId: string;
+  rootId: string;
+  seenAt: string | null;
+  lastOpenedAt: string | null;
+  version: bigint;
+};

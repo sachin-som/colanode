@@ -119,20 +119,10 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
   };
 
   useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      folder.id,
-      folder.type,
-      folder.transactionId
-    );
+    radar.markEntryAsOpened(workspace.userId, folder.id);
 
     const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        folder.id,
-        folder.type,
-        folder.transactionId
-      );
+      radar.markEntryAsOpened(workspace.userId, folder.id);
     }, 60000);
 
     return () => clearInterval(interval);

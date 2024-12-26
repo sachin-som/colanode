@@ -16,20 +16,10 @@ export const DatabaseBody = ({ database, role }: DatabaseBodyProps) => {
   const radar = useRadar();
 
   useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      database.id,
-      database.type,
-      database.transactionId
-    );
+    radar.markEntryAsOpened(workspace.userId, database.id);
 
     const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        database.id,
-        database.type,
-        database.transactionId
-      );
+      radar.markEntryAsOpened(workspace.userId, database.id);
     }, 60000);
 
     return () => clearInterval(interval);

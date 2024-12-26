@@ -252,6 +252,65 @@ const createCollaborationsTable: Migration = {
   },
 };
 
+const createEntryInteractionsTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS entry_interactions_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('entry_interactions')
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('first_seen_at', 'timestamptz')
+      .addColumn('last_seen_at', 'timestamptz')
+      .addColumn('first_opened_at', 'timestamptz')
+      .addColumn('last_opened_at', 'timestamptz')
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('entry_interactions_version_sequence')`)
+      )
+      .addPrimaryKeyConstraint('entry_interactions_pkey', [
+        'entry_id',
+        'collaborator_id',
+      ])
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_entry_interaction_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('entry_interactions_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_entry_interaction_version
+      BEFORE UPDATE ON entry_interactions
+      FOR EACH ROW
+      EXECUTE FUNCTION update_entry_interaction_version();
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_entry_interaction_version ON entry_interactions;
+      DROP FUNCTION IF EXISTS update_entry_interaction_version();
+    `.execute(db);
+
+    await db.schema.dropTable('entry_interactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS entry_interactions_version_sequence`.execute(
+      db
+    );
+  },
+};
+
 const createMessagesTable: Migration = {
   up: async (db) => {
     await sql`
@@ -362,6 +421,64 @@ const createMessageReactionsTable: Migration = {
   },
 };
 
+const createMessageInteractionsTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS message_interactions_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('message_interactions')
+      .addColumn('message_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('seen_at', 'timestamptz')
+      .addColumn('first_opened_at', 'timestamptz')
+      .addColumn('last_opened_at', 'timestamptz')
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('message_interactions_version_sequence')`)
+      )
+      .addPrimaryKeyConstraint('message_interactions_pkey', [
+        'message_id',
+        'collaborator_id',
+      ])
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_message_interaction_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('message_interactions_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_message_interaction_version
+      BEFORE UPDATE ON message_interactions
+      FOR EACH ROW
+      EXECUTE FUNCTION update_message_interaction_version();
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_message_interaction_version ON message_interactions;
+      DROP FUNCTION IF EXISTS update_message_interaction_version();
+    `.execute(db);
+
+    await db.schema.dropTable('message_interactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS message_interactions_version_sequence`.execute(
+      db
+    );
+  },
+};
+
 const createFilesTable: Migration = {
   up: async (db) => {
     await sql`
@@ -420,6 +537,65 @@ const createFilesTable: Migration = {
 
     await db.schema.dropTable('files').execute();
     await sql`DROP SEQUENCE IF EXISTS files_version_sequence`.execute(db);
+  },
+};
+
+const createFileInteractionsTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS file_interactions_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('file_interactions')
+      .addColumn('file_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('first_seen_at', 'timestamptz')
+      .addColumn('last_seen_at', 'timestamptz')
+      .addColumn('first_opened_at', 'timestamptz')
+      .addColumn('last_opened_at', 'timestamptz')
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('file_interactions_version_sequence')`)
+      )
+      .addPrimaryKeyConstraint('file_interactions_pkey', [
+        'file_id',
+        'collaborator_id',
+      ])
+      .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_file_interaction_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('file_interactions_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_file_interaction_version
+      BEFORE UPDATE ON file_interactions
+      FOR EACH ROW
+      EXECUTE FUNCTION update_file_interaction_version();
+    `.execute(db);
+  },
+  down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_file_interaction_version ON file_interactions;
+      DROP FUNCTION IF EXISTS update_file_interaction_version();
+    `.execute(db);
+
+    await db.schema.dropTable('file_interactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS file_interactions_version_sequence`.execute(
+      db
+    );
   },
 };
 
@@ -504,9 +680,12 @@ export const databaseMigrations: Record<string, Migration> = {
   '00004_create_users_table': createUsersTable,
   '00005_create_entries_table': createEntriesTable,
   '00006_create_transactions_table': createTransactionsTable,
-  '00007_create_messages_table': createMessagesTable,
-  '00008_create_message_reactions_table': createMessageReactionsTable,
-  '00009_create_files_table': createFilesTable,
-  '00010_create_collaborations_table': createCollaborationsTable,
-  '00011_create_entry_paths_table': createEntryPathsTable,
+  '00007_create_entry_interactions_table': createEntryInteractionsTable,
+  '00008_create_messages_table': createMessagesTable,
+  '00009_create_message_reactions_table': createMessageReactionsTable,
+  '00010_create_message_interactions_table': createMessageInteractionsTable,
+  '00011_create_files_table': createFilesTable,
+  '00012_create_file_interactions_table': createFileInteractionsTable,
+  '00013_create_collaborations_table': createCollaborationsTable,
+  '00014_create_entry_paths_table': createEntryPathsTable,
 };

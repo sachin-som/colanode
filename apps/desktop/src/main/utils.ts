@@ -28,13 +28,21 @@ import {
   SelectTransaction,
   SelectUser,
   WorkspaceDatabaseSchema,
+  SelectMessageInteraction,
+  SelectFileInteraction,
+  SelectEntryInteraction,
 } from '@/main/data/workspace/schema';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
-import { File, FileState } from '@/shared/types/files';
+import { File, FileInteraction, FileState } from '@/shared/types/files';
 import { Workspace, WorkspaceCredentials } from '@/shared/types/workspaces';
-import { MessageNode, MessageReaction } from '@/shared/types/messages';
+import {
+  MessageInteraction,
+  MessageNode,
+  MessageReaction,
+} from '@/shared/types/messages';
+import { EntryInteraction } from '@/shared/types/entries';
 
 export const appPath = app.getPath('userData');
 
@@ -280,6 +288,19 @@ export const mapMessageReaction = (
   };
 };
 
+export const mapMessageInteraction = (
+  row: SelectMessageInteraction
+): MessageInteraction => {
+  return {
+    messageId: row.message_id,
+    collaboratorId: row.collaborator_id,
+    rootId: row.root_id,
+    seenAt: row.seen_at,
+    lastOpenedAt: row.last_opened_at,
+    version: row.version,
+  };
+};
+
 export const mapFile = (row: SelectFile): File => {
   return {
     id: row.id,
@@ -311,5 +332,35 @@ export const mapFileState = (row: SelectFileState): FileState => {
     uploadRetries: row.upload_retries,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+};
+
+export const mapFileInteraction = (
+  row: SelectFileInteraction
+): FileInteraction => {
+  return {
+    fileId: row.file_id,
+    collaboratorId: row.collaborator_id,
+    rootId: row.root_id,
+    lastSeenAt: row.last_seen_at,
+    firstSeenAt: row.first_seen_at,
+    lastOpenedAt: row.last_opened_at,
+    firstOpenedAt: row.first_opened_at,
+    version: row.version,
+  };
+};
+
+export const mapEntryInteraction = (
+  row: SelectEntryInteraction
+): EntryInteraction => {
+  return {
+    entryId: row.entry_id,
+    collaboratorId: row.collaborator_id,
+    rootId: row.root_id,
+    lastSeenAt: row.last_seen_at,
+    firstSeenAt: row.first_seen_at,
+    lastOpenedAt: row.last_opened_at,
+    firstOpenedAt: row.first_opened_at,
+    version: row.version,
   };
 };

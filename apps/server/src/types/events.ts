@@ -24,6 +24,14 @@ export type EntryDeletedEvent = {
   workspaceId: string;
 };
 
+export type EntryInteractionUpdatedEvent = {
+  type: 'entry_interaction_updated';
+  entryId: string;
+  collaboratorId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
 export type MessageCreatedEvent = {
   type: 'message_created';
   messageId: string;
@@ -55,6 +63,14 @@ export type MessageReactionCreatedEvent = {
 
 export type MessageReactionDeletedEvent = {
   type: 'message_reaction_deleted';
+  messageId: string;
+  collaboratorId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
+export type MessageInteractionUpdatedEvent = {
+  type: 'message_interaction_updated';
   messageId: string;
   collaboratorId: string;
   rootId: string;
@@ -96,10 +112,10 @@ export type FileDeletedEvent = {
   workspaceId: string;
 };
 
-export type InteractionUpdatedEvent = {
-  type: 'interaction_updated';
-  userId: string;
-  entryId: string;
+export type FileInteractionUpdatedEvent = {
+  type: 'file_interaction_updated';
+  fileId: string;
+  collaboratorId: string;
   rootId: string;
   workspaceId: string;
 };
@@ -150,7 +166,7 @@ export type Event =
   | EntryDeletedEvent
   | CollaborationCreatedEvent
   | CollaborationUpdatedEvent
-  | InteractionUpdatedEvent
+  | EntryInteractionUpdatedEvent
   | UserCreatedEvent
   | UserUpdatedEvent
   | AccountUpdatedEvent
@@ -161,8 +177,10 @@ export type Event =
   | FileCreatedEvent
   | FileUpdatedEvent
   | FileDeletedEvent
+  | FileInteractionUpdatedEvent
   | MessageCreatedEvent
   | MessageUpdatedEvent
   | MessageDeletedEvent
   | MessageReactionCreatedEvent
-  | MessageReactionDeletedEvent;
+  | MessageReactionDeletedEvent
+  | MessageInteractionUpdatedEvent;

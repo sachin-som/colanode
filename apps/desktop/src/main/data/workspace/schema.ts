@@ -69,6 +69,21 @@ export type SelectTransaction = Selectable<TransactionTable>;
 export type CreateTransaction = Insertable<TransactionTable>;
 export type UpdateTransaction = Updateable<TransactionTable>;
 
+interface EntryInteractionTable {
+  entry_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  first_seen_at: ColumnType<string | null, string | null, string | null>;
+  last_seen_at: ColumnType<string | null, string | null, string | null>;
+  first_opened_at: ColumnType<string | null, string | null, string | null>;
+  last_opened_at: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectEntryInteraction = Selectable<EntryInteractionTable>;
+export type CreateEntryInteraction = Insertable<EntryInteractionTable>;
+export type UpdateEntryInteraction = Updateable<EntryInteractionTable>;
+
 interface CollaborationTable {
   entry_id: ColumnType<string, string, never>;
   role: ColumnType<string, string, string>;
@@ -113,6 +128,20 @@ export type SelectMessageReaction = Selectable<MessageReactionTable>;
 export type CreateMessageReaction = Insertable<MessageReactionTable>;
 export type UpdateMessageReaction = Updateable<MessageReactionTable>;
 
+interface MessageInteractionTable {
+  message_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, string>;
+  seen_at: ColumnType<string | null, string | null, string | null>;
+  first_opened_at: ColumnType<string | null, string | null, string | null>;
+  last_opened_at: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectMessageInteraction = Selectable<MessageInteractionTable>;
+export type CreateMessageInteraction = Insertable<MessageInteractionTable>;
+export type UpdateMessageInteraction = Updateable<MessageInteractionTable>;
+
 interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
@@ -151,6 +180,21 @@ interface FileStateTable {
 export type SelectFileState = Selectable<FileStateTable>;
 export type CreateFileState = Insertable<FileStateTable>;
 export type UpdateFileState = Updateable<FileStateTable>;
+
+interface FileInteractionTable {
+  file_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, string>;
+  first_seen_at: ColumnType<string | null, string | null, string | null>;
+  last_seen_at: ColumnType<string | null, string | null, string | null>;
+  first_opened_at: ColumnType<string | null, string | null, string | null>;
+  last_opened_at: ColumnType<string | null, string | null, string | null>;
+  version: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectFileInteraction = Selectable<FileInteractionTable>;
+export type CreateFileInteraction = Insertable<FileInteractionTable>;
+export type UpdateFileInteraction = Updateable<FileInteractionTable>;
 
 interface MutationTable {
   id: ColumnType<string, string, never>;
@@ -193,13 +237,16 @@ interface CursorTable {
 export interface WorkspaceDatabaseSchema {
   users: UserTable;
   entries: EntryTable;
+  entry_interactions: EntryInteractionTable;
   transactions: TransactionTable;
   entry_paths: EntryPathTable;
   collaborations: CollaborationTable;
   messages: MessageTable;
   message_reactions: MessageReactionTable;
+  message_interactions: MessageInteractionTable;
   files: FileTable;
   file_states: FileStateTable;
+  file_interactions: FileInteractionTable;
   mutations: MutationTable;
   node_names: NodeNameTable;
   node_texts: NodeTextTable;

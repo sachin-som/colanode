@@ -4,6 +4,7 @@ import {
   CreateUploadOutput,
   extractFileType,
   SyncFileData,
+  SyncFileInteractionData,
 } from '@colanode/core';
 import axios from 'axios';
 import mime from 'mime-types';
@@ -19,6 +20,7 @@ import {
   fetchWorkspaceCredentials,
   getWorkspaceFilesDirectoryPath,
   mapFile,
+  mapFileInteraction,
   mapFileState,
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -521,6 +523,68 @@ class FileService {
     });
 
     this.debug(`Server file ${file.id} has been synced`);
+  }
+
+  public async syncServerFileInteraction(
+    userId: string,
+    fileInteraction: SyncFileInteractionData
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const existingFileInteraction = await workspaceDatabase
+      .selectFrom('file_interactions')
+      .selectAll()
+      .where('file_id', '=', fileInteraction.fileId)
+      .executeTakeFirst();
+
+    const version = BigInt(fileInteraction.version);
+    if (existingFileInteraction) {
+      if (existingFileInteraction.version === version) {
+        this.debug(
+          `Server file interaction for file ${fileInteraction.fileId} is already synced`
+        );
+        return;
+      }
+    }
+
+    const createdFileInteraction = await workspaceDatabase
+      .insertInto('file_interactions')
+      .returningAll()
+      .values({
+        file_id: fileInteraction.fileId,
+        root_id: fileInteraction.rootId,
+        collaborator_id: fileInteraction.collaboratorId,
+        first_seen_at: fileInteraction.firstSeenAt,
+        last_seen_at: fileInteraction.lastSeenAt,
+        last_opened_at: fileInteraction.lastOpenedAt,
+        first_opened_at: fileInteraction.firstOpenedAt,
+        version,
+      })
+      .onConflict((b) =>
+        b.columns(['file_id', 'collaborator_id']).doUpdateSet({
+          last_seen_at: fileInteraction.lastSeenAt,
+          first_seen_at: fileInteraction.firstSeenAt,
+          last_opened_at: fileInteraction.lastOpenedAt,
+          first_opened_at: fileInteraction.firstOpenedAt,
+          version,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdFileInteraction) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'file_interaction_updated',
+      userId,
+      fileInteraction: mapFileInteraction(createdFileInteraction),
+    });
+
+    this.debug(
+      `Server file interaction for file ${fileInteraction.fileId} has been synced`
+    );
   }
 }
 

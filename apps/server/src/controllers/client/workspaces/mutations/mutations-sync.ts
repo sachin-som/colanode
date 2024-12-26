@@ -11,6 +11,11 @@ import {
   CreateMessageMutation,
   CreateMessageReactionMutation,
   DeleteMessageReactionMutation,
+  MarkEntrySeenMutation,
+  MarkEntryOpenedMutation,
+  MarkMessageSeenMutation,
+  MarkFileSeenMutation,
+  MarkFileOpenedMutation,
 } from '@colanode/core';
 
 import { SelectUser } from '@/data/schema';
@@ -63,6 +68,16 @@ const handleMutation = async (
     return await handleCreateMessageReaction(user, mutation);
   } else if (mutation.type === 'delete_message_reaction') {
     return await handleDeleteMessageReaction(user, mutation);
+  } else if (mutation.type === 'mark_entry_seen') {
+    return await handleMarkEntrySeenMutation(user, mutation);
+  } else if (mutation.type === 'mark_entry_opened') {
+    return await handleMarkEntryOpenedMutation(user, mutation);
+  } else if (mutation.type === 'mark_message_seen') {
+    return await handleMarkMessageSeenMutation(user, mutation);
+  } else if (mutation.type === 'mark_file_seen') {
+    return await handleMarkFileSeenMutation(user, mutation);
+  } else if (mutation.type === 'mark_file_opened') {
+    return await markFileOpenedMutation(user, mutation);
   } else {
     return 'error';
   }
@@ -154,5 +169,45 @@ const handleDeleteMessageReaction = async (
   mutation: DeleteMessageReactionMutation
 ): Promise<SyncMutationStatus> => {
   const output = await messageService.deleteMessageReaction(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleMarkEntrySeenMutation = async (
+  user: SelectUser,
+  mutation: MarkEntrySeenMutation
+): Promise<SyncMutationStatus> => {
+  const output = await entryService.markEntryAsSeen(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleMarkEntryOpenedMutation = async (
+  user: SelectUser,
+  mutation: MarkEntryOpenedMutation
+): Promise<SyncMutationStatus> => {
+  const output = await entryService.markEntryAsOpened(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleMarkMessageSeenMutation = async (
+  user: SelectUser,
+  mutation: MarkMessageSeenMutation
+): Promise<SyncMutationStatus> => {
+  const output = await messageService.markMessageAsSeen(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleMarkFileSeenMutation = async (
+  user: SelectUser,
+  mutation: MarkFileSeenMutation
+): Promise<SyncMutationStatus> => {
+  const output = await fileService.markFileAsSeen(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const markFileOpenedMutation = async (
+  user: SelectUser,
+  mutation: MarkFileOpenedMutation
+): Promise<SyncMutationStatus> => {
+  const output = await fileService.markFileAsOpened(user, mutation);
   return output ? 'success' : 'error';
 };

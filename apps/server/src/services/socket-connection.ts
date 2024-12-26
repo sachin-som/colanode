@@ -25,6 +25,9 @@ import { FileSynchronizer } from '@/synchronizers/files';
 import { MessageSynchronizer } from '@/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/synchronizers/message-reactions';
 import { TransactionSynchronizer } from '@/synchronizers/transactions';
+import { MessageInteractionSynchronizer } from '@/synchronizers/message-interactions';
+import { EntryInteractionSynchronizer } from '@/synchronizers/entry-interactions';
+import { FileInteractionSynchronizer } from '@/synchronizers/file-interactions';
 
 type SocketUser = {
   user: ConnectedUser;
@@ -163,6 +166,39 @@ export class SocketConnection {
       );
     } else if (message.input.type === 'transactions') {
       return new TransactionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'message_interactions') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
+
+      return new MessageInteractionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'entry_interactions') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
+
+      return new EntryInteractionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'file_interactions') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
+
+      return new FileInteractionSynchronizer(
         message.id,
         user.user,
         message.input,

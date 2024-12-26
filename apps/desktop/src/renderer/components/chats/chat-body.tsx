@@ -15,20 +15,10 @@ export const ChatBody = ({ chat, role }: ChatBodyProps) => {
   const radar = useRadar();
 
   useEffect(() => {
-    radar.markAsOpened(
-      workspace.userId,
-      chat.id,
-      chat.type,
-      chat.transactionId
-    );
+    radar.markEntryAsOpened(workspace.userId, chat.id);
 
     const interval = setInterval(() => {
-      radar.markAsOpened(
-        workspace.userId,
-        chat.id,
-        chat.type,
-        chat.transactionId
-      );
+      radar.markEntryAsOpened(workspace.userId, chat.id);
     }, 60000);
 
     return () => clearInterval(interval);

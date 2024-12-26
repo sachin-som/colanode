@@ -41,12 +41,7 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markAsSeen(
-            workspace.userId,
-            chat.id,
-            chat.type,
-            chat.transactionId
-          );
+          radar.markEntryAsSeen(workspace.userId, chat.id);
         }
       }}
       className={cn(

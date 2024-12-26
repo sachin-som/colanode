@@ -77,6 +77,29 @@ const createTransactionsTable: Migration = {
   },
 };
 
+const createEntryInteractionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('entry_interactions')
+      .addColumn('entry_id', 'text', (col) => col.notNull())
+      .addColumn('collaborator_id', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('first_seen_at', 'text')
+      .addColumn('last_seen_at', 'text')
+      .addColumn('first_opened_at', 'text')
+      .addColumn('last_opened_at', 'text')
+      .addColumn('version', 'integer', (col) => col.notNull())
+      .addPrimaryKeyConstraint('entry_interactions_pkey', [
+        'entry_id',
+        'collaborator_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('entry_interactions').execute();
+  },
+};
+
 const createCollaborationsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -138,6 +161,28 @@ const createMessageReactionsTable: Migration = {
   },
 };
 
+const createMessageInteractionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('message_interactions')
+      .addColumn('message_id', 'text', (col) => col.notNull())
+      .addColumn('collaborator_id', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('seen_at', 'text')
+      .addColumn('first_opened_at', 'text')
+      .addColumn('last_opened_at', 'text')
+      .addColumn('version', 'integer', (col) => col.notNull())
+      .addPrimaryKeyConstraint('message_interactions_pkey', [
+        'message_id',
+        'collaborator_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('message_interactions').execute();
+  },
+};
+
 const createFilesTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -182,6 +227,28 @@ const createFileStatesTable: Migration = {
   },
   down: async (db) => {
     await db.schema.dropTable('file_states').execute();
+  },
+};
+
+const createFileInteractionsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('file_interactions')
+      .addColumn('file_id', 'text', (col) => col.notNull())
+      .addColumn('collaborator_id', 'text', (col) => col.notNull())
+      .addColumn('root_id', 'text', (col) => col.notNull())
+      .addColumn('seen_at', 'text')
+      .addColumn('first_opened_at', 'text')
+      .addColumn('last_opened_at', 'text')
+      .addColumn('version', 'integer', (col) => col.notNull())
+      .addPrimaryKeyConstraint('file_interactions_pkey', [
+        'file_id',
+        'collaborator_id',
+      ])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('file_interactions').execute();
   },
 };
 
@@ -308,15 +375,18 @@ const createCursorsTable: Migration = {
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_users_table': createUsersTable,
   '00002_create_entries_table': createEntriesTable,
-  '00003_create_transactions_table': createTransactionsTable,
-  '00004_create_collaborations_table': createCollaborationsTable,
-  '00005_create_messages_table': createMessagesTable,
-  '00006_create_message_reactions_table': createMessageReactionsTable,
-  '00007_create_files_table': createFilesTable,
-  '00008_create_file_states_table': createFileStatesTable,
-  '00009_create_mutations_table': createMutationsTable,
-  '00010_create_entry_paths_table': createEntryPathsTable,
-  '00011_create_node_names_table': createNodeNamesTable,
-  '00012_create_node_texts_table': createNodeTextsTable,
-  '00013_create_cursors_table': createCursorsTable,
+  '00003_create_entry_interactions_table': createEntryInteractionsTable,
+  '00004_create_transactions_table': createTransactionsTable,
+  '00005_create_collaborations_table': createCollaborationsTable,
+  '00006_create_messages_table': createMessagesTable,
+  '00007_create_message_reactions_table': createMessageReactionsTable,
+  '00008_create_message_interactions_table': createMessageInteractionsTable,
+  '00009_create_files_table': createFilesTable,
+  '00010_create_file_states_table': createFileStatesTable,
+  '00011_create_file_interactions_table': createFileInteractionsTable,
+  '00012_create_mutations_table': createMutationsTable,
+  '00013_create_entry_paths_table': createEntryPathsTable,
+  '00014_create_node_names_table': createNodeNamesTable,
+  '00015_create_node_texts_table': createNodeTextsTable,
+  '00016_create_cursors_table': createCursorsTable,
 };

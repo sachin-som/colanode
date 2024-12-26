@@ -80,31 +80,40 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
-        markAsSeen: (userId, entryId, entryType, transactionId) => {
-          console.log('markAsSeen', userId, entryId, entryType, transactionId);
-          // window.colanode.executeMutation({
-          //   type: 'mark_entry_as_seen',
-          //   entryId,
-          //   entryType,
-          //   transactionId,
-          //   userId,
-          // });
-        },
-        markAsOpened: (userId, entryId, entryType, transactionId) => {
-          console.log(
-            'markAsOpened',
+        markMessageAsSeen: (userId, messageId) => {
+          window.colanode.executeMutation({
+            type: 'message_mark_seen',
+            messageId,
             userId,
+          });
+        },
+        markFileAsSeen: (userId, fileId) => {
+          window.colanode.executeMutation({
+            type: 'file_mark_seen',
+            fileId,
+            userId,
+          });
+        },
+        markFileAsOpened: (userId, fileId) => {
+          window.colanode.executeMutation({
+            type: 'file_mark_opened',
+            fileId,
+            userId,
+          });
+        },
+        markEntryAsSeen: (userId, entryId) => {
+          window.colanode.executeMutation({
+            type: 'entry_mark_seen',
             entryId,
-            entryType,
-            transactionId
-          );
-          // window.colanode.executeMutation({
-          //   type: 'mark_entry_as_opened',
-          //   entryId,
-          //   entryType,
-          //   transactionId,
-          //   userId,
-          // });
+            userId,
+          });
+        },
+        markEntryAsOpened: (userId, entryId) => {
+          window.colanode.executeMutation({
+            type: 'entry_mark_opened',
+            entryId,
+            userId,
+          });
         },
       }}
     >

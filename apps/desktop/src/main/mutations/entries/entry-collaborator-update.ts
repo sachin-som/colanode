@@ -5,7 +5,7 @@ import { MutationHandler } from '@/main/types';
 import {
   EntryCollaboratorUpdateMutationInput,
   EntryCollaboratorUpdateMutationOutput,
-} from '@/shared/mutations/collaborators/entry-collaborator-update';
+} from '@/shared/mutations/entries/entry-collaborator-update';
 import { MutationError } from '@/shared/mutations';
 
 export class EntryCollaboratorUpdateMutationHandler

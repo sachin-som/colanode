@@ -5,7 +5,7 @@ import { MutationHandler } from '@/main/types';
 import {
   EntryCollaboratorDeleteMutationInput,
   EntryCollaboratorDeleteMutationOutput,
-} from '@/shared/mutations/collaborators/entry-collaborator-delete';
+} from '@/shared/mutations/entries/entry-collaborator-delete';
 import { MutationError } from '@/shared/mutations';
 
 export class EntryCollaboratorDeleteMutationHandler

@@ -6,6 +6,10 @@ import {
   EntryMutationContext,
   EntryRole,
   registry,
+  MarkEntrySeenMutation,
+  MarkEntryOpenedMutation,
+  extractEntryRole,
+  hasViewerAccess,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { Transaction } from 'kysely';
@@ -655,6 +659,168 @@ class EntryService {
       entry: deletedEntry,
       transaction: createdTransaction,
     };
+  }
+
+  public async markEntryAsSeen(
+    user: SelectUser,
+    mutation: MarkEntrySeenMutation
+  ): Promise<boolean> {
+    const entry = await database
+      .selectFrom('entries')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.entryId)
+      .executeTakeFirst();
+
+    if (!entry) {
+      return false;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', entry.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasViewerAccess(role)) {
+      return false;
+    }
+
+    const existingInteraction = await database
+      .selectFrom('entry_interactions')
+      .selectAll()
+      .where('entry_id', '=', mutation.data.entryId)
+      .where('collaborator_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (
+      existingInteraction &&
+      existingInteraction.last_seen_at !== null &&
+      existingInteraction.last_seen_at <= new Date(mutation.data.seenAt)
+    ) {
+      return true;
+    }
+
+    const lastSeenAt = new Date(mutation.data.seenAt);
+    const firstSeenAt = existingInteraction?.first_seen_at ?? lastSeenAt;
+    const createdInteraction = await database
+      .insertInto('entry_interactions')
+      .returningAll()
+      .values({
+        entry_id: mutation.data.entryId,
+        collaborator_id: user.id,
+        first_seen_at: firstSeenAt,
+        last_seen_at: lastSeenAt,
+        root_id: root.id,
+        workspace_id: root.workspace_id,
+      })
+      .onConflict((b) =>
+        b.columns(['entry_id', 'collaborator_id']).doUpdateSet({
+          last_seen_at: lastSeenAt,
+          first_seen_at: firstSeenAt,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdInteraction) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'entry_interaction_updated',
+      entryId: createdInteraction.entry_id,
+      collaboratorId: createdInteraction.collaborator_id,
+      rootId: createdInteraction.root_id,
+      workspaceId: createdInteraction.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async markEntryAsOpened(
+    user: SelectUser,
+    mutation: MarkEntryOpenedMutation
+  ): Promise<boolean> {
+    const entry = await database
+      .selectFrom('entries')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.entryId)
+      .executeTakeFirst();
+
+    if (!entry) {
+      return false;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', entry.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasViewerAccess(role)) {
+      return false;
+    }
+
+    const existingInteraction = await database
+      .selectFrom('entry_interactions')
+      .selectAll()
+      .where('entry_id', '=', mutation.data.entryId)
+      .where('collaborator_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (
+      existingInteraction &&
+      existingInteraction.last_opened_at !== null &&
+      existingInteraction.last_opened_at <= new Date(mutation.data.openedAt)
+    ) {
+      return true;
+    }
+
+    const lastOpenedAt = new Date(mutation.data.openedAt);
+    const firstOpenedAt = existingInteraction?.first_opened_at ?? lastOpenedAt;
+    const createdInteraction = await database
+      .insertInto('entry_interactions')
+      .returningAll()
+      .values({
+        entry_id: mutation.data.entryId,
+        collaborator_id: user.id,
+        first_opened_at: firstOpenedAt,
+        last_opened_at: lastOpenedAt,
+        root_id: root.id,
+        workspace_id: root.workspace_id,
+      })
+      .onConflict((b) =>
+        b.columns(['entry_id', 'collaborator_id']).doUpdateSet({
+          last_opened_at: lastOpenedAt,
+          first_opened_at: firstOpenedAt,
+        })
+      )
+      .executeTakeFirst();
+
+    if (!createdInteraction) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'entry_interaction_updated',
+      entryId: createdInteraction.entry_id,
+      collaboratorId: createdInteraction.collaborator_id,
+      rootId: createdInteraction.root_id,
+      workspaceId: createdInteraction.workspace_id,
+    });
+
+    return true;
   }
 
   private async applyDatabaseCreateTransaction(

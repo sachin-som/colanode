@@ -66,7 +66,6 @@ class AccountService {
     if (status >= 400 && status < 500) {
       this.debug(`Account ${account.email} is not valid, logging out...`);
       await this.logoutAccount(account);
-      socketService.removeConnection(account.id);
       return;
     }
 
@@ -233,6 +232,8 @@ class AccountService {
         created_at: new Date().toISOString(),
       })
       .execute();
+
+    socketService.removeConnection(account.id);
 
     return true;
   }

@@ -79,6 +79,7 @@ class Scheduler {
     const id = sha256(JSON.stringify(input));
 
     if (this.states.has(id)) {
+      this.trigger(input);
       return;
     }
 
@@ -216,15 +217,23 @@ class Scheduler {
       .execute();
 
     for (const workspace of workspaces) {
-      if (!socketService.isConnected(accountId)) {
-        return;
-      }
-
-      this.scheduleWorkspaceJobs(workspace.user_id);
+      this.scheduleWorkspaceJobs(accountId, workspace.user_id);
     }
   }
 
-  private scheduleWorkspaceJobs(userId: string) {
+  private scheduleWorkspaceJobs(accountId: string, userId: string) {
+    this.debug(
+      `Scheduling workspace jobs for account: ${accountId}, user: ${userId}`
+    );
+
+    const isSocketConnected = socketService.isConnected(accountId);
+    if (!isSocketConnected) {
+      this.debug(
+        `Socket is not connected for account: ${accountId}, skipping scheduling`
+      );
+      return;
+    }
+
     this.schedule({
       type: 'sync_pending_mutations',
       userId,
@@ -330,7 +339,10 @@ class Scheduler {
       });
       this.deleteAccountJobs(event.account.id);
     } else if (event.type === 'workspace_created') {
-      this.scheduleWorkspaceJobs(event.workspace.userId);
+      this.scheduleWorkspaceJobs(
+        event.workspace.accountId,
+        event.workspace.userId
+      );
     } else if (event.type === 'workspace_deleted') {
       this.deleteWorkspaceJobs(event.workspace.userId);
     } else if (event.type === 'socket_connection_opened') {

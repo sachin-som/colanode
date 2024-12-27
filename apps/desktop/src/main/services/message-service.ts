@@ -21,6 +21,41 @@ class MessageService {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
+    if (message.deletedAt) {
+      const deletedMessage = await workspaceDatabase
+        .deleteFrom('messages')
+        .returningAll()
+        .where('id', '=', message.id)
+        .executeTakeFirst();
+
+      if (!deletedMessage) {
+        return;
+      }
+
+      await workspaceDatabase
+        .deleteFrom('message_reactions')
+        .where('message_id', '=', message.id)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('message_interactions')
+        .where('message_id', '=', message.id)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('texts')
+        .where('id', '=', message.id)
+        .execute();
+
+      eventBus.publish({
+        type: 'message_deleted',
+        userId,
+        message: mapMessage(deletedMessage),
+      });
+
+      return;
+    }
+
     const existingMessage = await workspaceDatabase
       .selectFrom('messages')
       .selectAll()

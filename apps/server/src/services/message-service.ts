@@ -1,6 +1,7 @@
 import {
   CreateMessageMutation,
   CreateMessageReactionMutation,
+  DeleteMessageMutation,
   DeleteMessageReactionMutation,
   extractEntryRole,
   hasCollaboratorAccess,
@@ -68,6 +69,60 @@ class MessageService {
       messageId: createdMessage.id,
       rootId: createdMessage.root_id,
       workspaceId: createdMessage.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async deleteMessage(
+    user: SelectUser,
+    mutation: DeleteMessageMutation
+  ): Promise<boolean> {
+    const message = await database
+      .selectFrom('messages')
+      .select(['id', 'root_id', 'workspace_id'])
+      .where('id', '=', mutation.data.id)
+      .executeTakeFirst();
+
+    if (!message) {
+      return true;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', message.root_id)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasCollaboratorAccess(role)) {
+      return false;
+    }
+
+    const deletedMessage = await database
+      .updateTable('messages')
+      .returningAll()
+      .set({
+        deleted_at: new Date(mutation.data.deletedAt),
+        deleted_by: user.id,
+      })
+      .where('id', '=', mutation.data.id)
+      .executeTakeFirst();
+
+    if (!deletedMessage) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'message_deleted',
+      messageId: deletedMessage.id,
+      rootId: deletedMessage.root_id,
+      workspaceId: deletedMessage.workspace_id,
     });
 
     return true;

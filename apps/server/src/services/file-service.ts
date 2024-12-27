@@ -1,5 +1,6 @@
 import {
   CreateFileMutation,
+  DeleteFileMutation,
   extractEntryRole,
   FileStatus,
   hasCollaboratorAccess,
@@ -73,6 +74,60 @@ class FileService {
       fileId: createdFile.id,
       rootId: createdFile.root_id,
       workspaceId: createdFile.workspace_id,
+    });
+
+    return true;
+  }
+
+  public async deleteFile(
+    user: SelectUser,
+    mutation: DeleteFileMutation
+  ): Promise<boolean> {
+    const file = await database
+      .selectFrom('files')
+      .selectAll()
+      .where('id', '=', mutation.data.id)
+      .executeTakeFirst();
+
+    if (!file) {
+      return true;
+    }
+
+    const root = await database
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', mutation.data.rootId)
+      .executeTakeFirst();
+
+    if (!root) {
+      return false;
+    }
+
+    const rootEntry = mapEntry(root);
+    const role = extractEntryRole(rootEntry, user.id);
+    if (!hasCollaboratorAccess(role)) {
+      return false;
+    }
+
+    const deletedFile = await database
+      .updateTable('files')
+      .returningAll()
+      .set({
+        deleted_at: new Date(mutation.data.deletedAt),
+        deleted_by: user.id,
+      })
+      .where('id', '=', mutation.data.id)
+      .executeTakeFirst();
+
+    if (!deletedFile) {
+      return false;
+    }
+
+    eventBus.publish({
+      type: 'file_deleted',
+      fileId: deletedFile.id,
+      rootId: deletedFile.root_id,
+      workspaceId: deletedFile.workspace_id,
     });
 
     return true;

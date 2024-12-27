@@ -442,6 +442,46 @@ class FileService {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
+    if (file.deletedAt) {
+      const deletedFile = await workspaceDatabase
+        .deleteFrom('files')
+        .returningAll()
+        .where('id', '=', file.id)
+        .executeTakeFirst();
+
+      if (!deletedFile) {
+        return;
+      }
+
+      await workspaceDatabase
+        .deleteFrom('file_interactions')
+        .where('file_id', '=', file.id)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('file_states')
+        .where('file_id', '=', file.id)
+        .execute();
+
+      // if the file exists in the workspace, we need to delete it
+      const filePath = path.join(
+        getWorkspaceFilesDirectoryPath(userId),
+        `${file.id}${file.extension}`
+      );
+
+      if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath, { force: true });
+      }
+
+      eventBus.publish({
+        type: 'file_deleted',
+        userId,
+        file: mapFile(deletedFile),
+      });
+
+      return;
+    }
+
     const existingFile = await workspaceDatabase
       .selectFrom('files')
       .selectAll()

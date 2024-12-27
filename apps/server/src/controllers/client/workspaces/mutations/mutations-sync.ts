@@ -16,6 +16,8 @@ import {
   MarkMessageSeenMutation,
   MarkFileSeenMutation,
   MarkFileOpenedMutation,
+  DeleteFileMutation,
+  DeleteMessageMutation,
 } from '@colanode/core';
 
 import { SelectUser } from '@/data/schema';
@@ -62,8 +64,12 @@ const handleMutation = async (
     return await handleDeleteTransaction(user, mutation);
   } else if (mutation.type === 'create_file') {
     return await handleCreateFile(user, mutation);
+  } else if (mutation.type === 'delete_file') {
+    return await handleDeleteFile(user, mutation);
   } else if (mutation.type === 'create_message') {
     return await handleCreateMessage(user, mutation);
+  } else if (mutation.type === 'delete_message') {
+    return await handleDeleteMessage(user, mutation);
   } else if (mutation.type === 'create_message_reaction') {
     return await handleCreateMessageReaction(user, mutation);
   } else if (mutation.type === 'delete_message_reaction') {
@@ -148,11 +154,27 @@ const handleCreateFile = async (
   return output ? 'success' : 'error';
 };
 
+const handleDeleteFile = async (
+  user: SelectUser,
+  mutation: DeleteFileMutation
+): Promise<SyncMutationStatus> => {
+  const output = await fileService.deleteFile(user, mutation);
+  return output ? 'success' : 'error';
+};
+
 const handleCreateMessage = async (
   user: SelectUser,
   mutation: CreateMessageMutation
 ): Promise<SyncMutationStatus> => {
   const output = await messageService.createMessage(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleDeleteMessage = async (
+  user: SelectUser,
+  mutation: DeleteMessageMutation
+): Promise<SyncMutationStatus> => {
+  const output = await messageService.deleteMessage(user, mutation);
   return output ? 'success' : 'error';
 };
 

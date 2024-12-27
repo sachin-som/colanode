@@ -45,6 +45,17 @@ export type CreateFileMutation = MutationBase & {
   data: CreateFileMutationData;
 };
 
+export type DeleteFileMutationData = {
+  id: string;
+  rootId: string;
+  deletedAt: string;
+};
+
+export type DeleteFileMutation = MutationBase & {
+  type: 'delete_file';
+  data: DeleteFileMutationData;
+};
+
 export type ApplyCreateTransactionMutation = MutationBase & {
   type: 'apply_create_transaction';
   data: LocalCreateTransaction;
@@ -73,6 +84,17 @@ export type CreateMessageMutationData = {
 export type CreateMessageMutation = MutationBase & {
   type: 'create_message';
   data: CreateMessageMutationData;
+};
+
+export type DeleteMessageMutationData = {
+  id: string;
+  rootId: string;
+  deletedAt: string;
+};
+
+export type DeleteMessageMutation = MutationBase & {
+  type: 'delete_message';
+  data: DeleteMessageMutationData;
 };
 
 export type CreateMessageReactionMutationData = {
@@ -156,10 +178,12 @@ export type MarkEntryOpenedMutation = MutationBase & {
 
 export type Mutation =
   | CreateFileMutation
+  | DeleteFileMutation
   | ApplyCreateTransactionMutation
   | ApplyUpdateTransactionMutation
   | ApplyDeleteTransactionMutation
   | CreateMessageMutation
+  | DeleteMessageMutation
   | CreateMessageReactionMutation
   | DeleteMessageReactionMutation
   | MarkMessageSeenMutation

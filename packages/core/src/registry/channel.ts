@@ -16,15 +16,16 @@ export type ChannelAttributes = z.infer<typeof channelAttributesSchema>;
 export const channelModel: EntryModel = {
   type: 'channel',
   schema: channelAttributesSchema,
-  getName: (_, attributes) => {
+  getText: (id, attributes) => {
     if (attributes.type !== 'channel') {
       return undefined;
     }
 
-    return attributes.name;
-  },
-  getText: () => {
-    return undefined;
+    return {
+      id,
+      name: attributes.name,
+      text: null,
+    };
   },
   canCreate: async (context, attributes) => {
     if (attributes.type !== 'channel') {

@@ -16,15 +16,16 @@ export type FolderAttributes = z.infer<typeof folderAttributesSchema>;
 export const folderModel: EntryModel = {
   type: 'folder',
   schema: folderAttributesSchema,
-  getName: (_, attributes) => {
+  getText: (id, attributes) => {
     if (attributes.type !== 'folder') {
       return undefined;
     }
 
-    return attributes.name;
-  },
-  getText: () => {
-    return undefined;
+    return {
+      id,
+      name: attributes.name,
+      text: null,
+    };
   },
   canCreate: async (context, attributes) => {
     if (attributes.type !== 'folder') {

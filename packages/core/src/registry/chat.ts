@@ -13,9 +13,6 @@ export type ChatAttributes = z.infer<typeof chatAttributesSchema>;
 export const chatModel: EntryModel = {
   type: 'chat',
   schema: chatAttributesSchema,
-  getName: () => {
-    return undefined;
-  },
   getText: () => {
     return undefined;
   },

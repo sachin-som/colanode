@@ -19,6 +19,12 @@ export const entryRoleEnum = z.enum([
   'viewer',
 ]);
 
+export type EntryText = {
+  id: string;
+  name: string | null;
+  text: string | null;
+};
+
 export class EntryMutationContext {
   public accountId: string;
   public workspaceId: string;
@@ -72,12 +78,8 @@ export interface EntryModel {
     attributes: EntryAttributes
   ) => Promise<boolean>;
   canDelete: (context: EntryMutationContext, entry: Entry) => Promise<boolean>;
-  getName: (
-    id: string,
-    attributes: EntryAttributes
-  ) => string | null | undefined;
   getText: (
     id: string,
     attributes: EntryAttributes
-  ) => string | null | undefined;
+  ) => EntryText | undefined | null;
 }

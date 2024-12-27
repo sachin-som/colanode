@@ -84,15 +84,16 @@ export type ViewType = 'table' | 'board' | 'calendar';
 export const databaseModel: EntryModel = {
   type: 'database',
   schema: databaseAttributesSchema,
-  getName: (_, attributes) => {
+  getText: (id, attributes) => {
     if (attributes.type !== 'database') {
       return undefined;
     }
 
-    return attributes.name;
-  },
-  getText: () => {
-    return undefined;
+    return {
+      id,
+      name: attributes.name,
+      text: null,
+    };
   },
   canCreate: async (context, attributes) => {
     if (attributes.type !== 'database') {

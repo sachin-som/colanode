@@ -209,23 +209,15 @@ export type SelectMutation = Selectable<MutationTable>;
 export type CreateMutation = Insertable<MutationTable>;
 export type UpdateMutation = Updateable<MutationTable>;
 
-interface NodeNameTable {
+interface TextTable {
   id: ColumnType<string, string, never>;
-  name: ColumnType<string, string, string>;
+  name: ColumnType<string | null, string | null, string | null>;
+  text: ColumnType<string | null, string | null, string | null>;
 }
 
-export type SelectNodeName = Selectable<NodeNameTable>;
-export type CreateNodeName = Insertable<NodeNameTable>;
-export type UpdateNodeName = Updateable<NodeNameTable>;
-
-interface NodeTextTable {
-  id: ColumnType<string, string, never>;
-  text: ColumnType<string, string, string>;
-}
-
-export type SelectNodeText = Selectable<NodeTextTable>;
-export type CreateNodeText = Insertable<NodeTextTable>;
-export type UpdateNodeText = Updateable<NodeTextTable>;
+export type SelectText = Selectable<TextTable>;
+export type CreateText = Insertable<TextTable>;
+export type UpdateText = Updateable<TextTable>;
 
 interface CursorTable {
   key: ColumnType<string, string, never>;
@@ -248,7 +240,6 @@ export interface WorkspaceDatabaseSchema {
   file_states: FileStateTable;
   file_interactions: FileInteractionTable;
   mutations: MutationTable;
-  node_names: NodeNameTable;
-  node_texts: NodeTextTable;
+  texts: TextTable;
   cursors: CursorTable;
 }

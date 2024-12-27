@@ -21,19 +21,16 @@ export type RecordAttributes = z.infer<typeof recordAttributesSchema>;
 export const recordModel: EntryModel = {
   type: 'record',
   schema: recordAttributesSchema,
-  getName: (_, attributes) => {
-    if (attributes.type !== 'record') {
-      return undefined;
-    }
-
-    return attributes.name;
-  },
   getText: (id, attributes) => {
     if (attributes.type !== 'record') {
       return undefined;
     }
 
-    return extractText(id, attributes.content);
+    return {
+      id,
+      name: attributes.name,
+      text: extractText(id, attributes.content),
+    };
   },
   canCreate: async (context, attributes) => {
     if (attributes.type !== 'record') {

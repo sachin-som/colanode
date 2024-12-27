@@ -331,28 +331,15 @@ const createEntryPathsTable: Migration = {
   },
 };
 
-const createNodeNamesTable: Migration = {
+const createTextsTable: Migration = {
   up: async (db) => {
     await sql`
-      CREATE VIRTUAL TABLE node_names USING fts5(id UNINDEXED, name);
+      CREATE VIRTUAL TABLE texts USING fts5(id UNINDEXED, name, text);
     `.execute(db);
   },
   down: async (db) => {
     await sql`
-      DROP TABLE IF EXISTS node_names;
-    `.execute(db);
-  },
-};
-
-const createNodeTextsTable: Migration = {
-  up: async (db) => {
-    await sql`
-      CREATE VIRTUAL TABLE node_texts USING fts5(id UNINDEXED, text);
-    `.execute(db);
-  },
-  down: async (db) => {
-    await sql`
-      DROP TABLE IF EXISTS node_texts;
+      DROP TABLE IF EXISTS texts;
     `.execute(db);
   },
 };
@@ -386,7 +373,6 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00011_create_file_interactions_table': createFileInteractionsTable,
   '00012_create_mutations_table': createMutationsTable,
   '00013_create_entry_paths_table': createEntryPathsTable,
-  '00014_create_node_names_table': createNodeNamesTable,
-  '00015_create_node_texts_table': createNodeTextsTable,
-  '00016_create_cursors_table': createCursorsTable,
+  '00014_create_texts_table': createTextsTable,
+  '00015_create_cursors_table': createCursorsTable,
 };

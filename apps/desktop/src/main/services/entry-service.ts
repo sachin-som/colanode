@@ -120,8 +120,6 @@ class EntryService {
 
         const createdAt = new Date().toISOString();
         const transactionId = generateId(IdType.Transaction);
-
-        const name = model.getName(inputItem.id, inputItem.attributes);
         const text = model.getText(inputItem.id, inputItem.attributes);
 
         const createdEntry = await transaction
@@ -181,17 +179,10 @@ class EntryService {
 
         createdMutations.push(mutation);
 
-        if (name) {
-          await transaction
-            .insertInto('node_names')
-            .values({ id: inputItem.id, name })
-            .execute();
-        }
-
         if (text) {
           await transaction
-            .insertInto('node_texts')
-            .values({ id: inputItem.id, text })
+            .insertInto('texts')
+            .values({ id: inputItem.id, name: text.name, text: text.text })
             .execute();
         }
       }
@@ -296,7 +287,6 @@ class EntryService {
     }
 
     const update = ydoc.updateAttributes(model.schema, updatedAttributes);
-    const name = model.getName(entryId, updatedAttributes);
     const text = model.getText(entryId, updatedAttributes);
 
     const { updatedEntry, createdMutation } = await workspaceDatabase
@@ -354,31 +344,14 @@ class EntryService {
           throw new Error('Failed to create mutation');
         }
 
-        if (name !== undefined) {
-          await trx
-            .deleteFrom('node_names')
-            .where('id', '=', entryId)
-            .execute();
-        }
-
-        if (name) {
-          await trx
-            .insertInto('node_names')
-            .values({ id: entryId, name })
-            .execute();
-        }
-
         if (text !== undefined) {
-          await trx
-            .deleteFrom('node_texts')
-            .where('id', '=', entryId)
-            .execute();
+          await trx.deleteFrom('texts').where('id', '=', entryId).execute();
         }
 
         if (text) {
           await trx
-            .insertInto('node_texts')
-            .values({ id: entryId, text })
+            .insertInto('texts')
+            .values({ id: entryId, name: text.name, text: text.text })
             .execute();
         }
 
@@ -469,8 +442,7 @@ class EntryService {
           .where('entry_id', '=', entryId)
           .execute();
 
-        await trx.deleteFrom('node_names').where('id', '=', entryId).execute();
-        await trx.deleteFrom('node_texts').where('id', '=', entryId).execute();
+        await trx.deleteFrom('texts').where('id', '=', entryId).execute();
 
         const createdTransaction = await trx
           .insertInto('transactions')
@@ -608,7 +580,6 @@ class EntryService {
     }
 
     const attributesJson = JSON.stringify(attributes);
-    const name = model.getName(entryId, attributes);
     const text = model.getText(entryId, attributes);
 
     const existingEntry = await workspaceDatabase
@@ -671,26 +642,14 @@ class EntryService {
             )
             .execute();
 
-          await trx
-            .deleteFrom('node_names')
-            .where('id', '=', entryId)
-            .execute();
-          await trx
-            .deleteFrom('node_texts')
-            .where('id', '=', entryId)
-            .execute();
-
-          if (name) {
-            await trx
-              .insertInto('node_names')
-              .values({ id: entryId, name })
-              .execute();
+          if (text !== undefined) {
+            await trx.deleteFrom('texts').where('id', '=', entryId).execute();
           }
 
           if (text) {
             await trx
-              .insertInto('node_texts')
-              .values({ id: entryId, text })
+              .insertInto('texts')
+              .values({ id: entryId, name: text.name, text: text.text })
               .execute();
           }
         });
@@ -762,20 +721,14 @@ class EntryService {
           )
           .execute();
 
-        await trx.deleteFrom('node_names').where('id', '=', entryId).execute();
-        await trx.deleteFrom('node_texts').where('id', '=', entryId).execute();
-
-        if (name) {
-          await trx
-            .insertInto('node_names')
-            .values({ id: entryId, name })
-            .execute();
+        if (text !== undefined) {
+          await trx.deleteFrom('texts').where('id', '=', entryId).execute();
         }
 
         if (text) {
           await trx
-            .insertInto('node_texts')
-            .values({ id: entryId, text })
+            .insertInto('texts')
+            .values({ id: entryId, name: text.name, text: text.text })
             .execute();
         }
       });
@@ -846,7 +799,6 @@ class EntryService {
       return;
     }
 
-    const name = model.getName(transaction.entryId, attributes);
     const text = model.getText(transaction.entryId, attributes);
 
     const { createdEntry } = await workspaceDatabase
@@ -880,17 +832,14 @@ class EntryService {
           })
           .execute();
 
-        if (name) {
-          await trx
-            .insertInto('node_names')
-            .values({ id: transaction.entryId, name })
-            .execute();
-        }
-
         if (text) {
           await trx
-            .insertInto('node_texts')
-            .values({ id: transaction.entryId, text })
+            .insertInto('texts')
+            .values({
+              id: transaction.entryId,
+              name: text.name,
+              text: text.text,
+            })
             .execute();
         }
 
@@ -977,8 +926,6 @@ class EntryService {
 
     ydoc.applyUpdate(transaction.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
-
-    const name = model.getName(transaction.entryId, attributes);
     const text = model.getText(transaction.entryId, attributes);
 
     const { updatedEntry } = await workspaceDatabase
@@ -1011,31 +958,21 @@ class EntryService {
           })
           .execute();
 
-        if (name !== undefined) {
-          await trx
-            .deleteFrom('node_names')
-            .where('id', '=', transaction.entryId)
-            .execute();
-        }
-
-        if (name) {
-          await trx
-            .insertInto('node_names')
-            .values({ id: transaction.entryId, name })
-            .execute();
-        }
-
         if (text !== undefined) {
           await trx
-            .deleteFrom('node_texts')
+            .deleteFrom('texts')
             .where('id', '=', transaction.entryId)
             .execute();
         }
 
         if (text) {
           await trx
-            .insertInto('node_texts')
-            .values({ id: transaction.entryId, text })
+            .insertInto('texts')
+            .values({
+              id: transaction.entryId,
+              name: text.name,
+              text: text.text,
+            })
             .execute();
         }
 
@@ -1097,12 +1034,7 @@ class EntryService {
         .execute();
 
       await trx
-        .deleteFrom('node_names')
-        .where('id', '=', transaction.entryId)
-        .execute();
-
-      await trx
-        .deleteFrom('node_texts')
+        .deleteFrom('texts')
         .where('id', '=', transaction.entryId)
         .execute();
     });

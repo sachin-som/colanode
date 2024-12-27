@@ -75,9 +75,9 @@ export class UserSearchQueryHandler
     const query = sql<SelectUser>`
       SELECT u.*
       FROM users u
-      JOIN node_names nn ON u.id = nn.id
+      JOIN texts t ON u.id = t.id
       WHERE u.id != ${input.userId}
-        AND nn.name MATCH ${input.searchQuery + '*'}
+        AND t.name MATCH ${input.searchQuery + '*'}
         ${
           exclude.length > 0
             ? sql`AND u.id NOT IN (${sql.join(

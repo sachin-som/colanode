@@ -37,6 +37,16 @@ class UserService {
           .where('version', '<', BigInt(user.version))
       )
       .execute();
+
+    await workspaceDatabase
+      .deleteFrom('texts')
+      .where('id', '=', user.id)
+      .execute();
+
+    await workspaceDatabase
+      .insertInto('texts')
+      .values({ id: user.id, name: user.name, text: null })
+      .execute();
   }
 }
 

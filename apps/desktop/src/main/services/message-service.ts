@@ -1,4 +1,5 @@
 import {
+  extractText,
   SyncMessageData,
   SyncMessageInteractionData,
   SyncMessageReactionData,
@@ -51,6 +52,20 @@ class MessageService {
         return;
       }
 
+      await workspaceDatabase
+        .deleteFrom('texts')
+        .where('id', '=', message.id)
+        .execute();
+
+      await workspaceDatabase
+        .insertInto('texts')
+        .values({
+          id: message.id,
+          name: null,
+          text: extractText(message.id, message.content.blocks),
+        })
+        .execute();
+
       eventBus.publish({
         type: 'message_updated',
         userId,
@@ -82,6 +97,15 @@ class MessageService {
     if (!createdMessage) {
       return;
     }
+
+    await workspaceDatabase
+      .insertInto('texts')
+      .values({
+        id: message.id,
+        name: null,
+        text: extractText(message.id, message.content.blocks),
+      })
+      .execute();
 
     eventBus.publish({
       type: 'message_created',

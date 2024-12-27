@@ -20,19 +20,16 @@ export type PageAttributes = z.infer<typeof pageAttributesSchema>;
 export const pageModel: EntryModel = {
   type: 'page',
   schema: pageAttributesSchema,
-  getName: (_, attributes) => {
-    if (attributes.type !== 'page') {
-      return undefined;
-    }
-
-    return attributes.name;
-  },
   getText: (id, attributes) => {
     if (attributes.type !== 'page') {
       return undefined;
     }
 
-    return extractText(id, attributes.content);
+    return {
+      id,
+      name: attributes.name,
+      text: extractText(id, attributes.content),
+    };
   },
   canCreate: async (context, attributes) => {
     if (attributes.type !== 'page') {

@@ -14,6 +14,7 @@ import { FileSynchronizer } from '@/main/synchronizers/files';
 import { EntryInteractionSynchronizer } from '@/main/synchronizers/entry-interactions';
 import { FileInteractionSynchronizer } from '@/main/synchronizers/file-interactions';
 import { MessageInteractionSynchronizer } from '@/main/synchronizers/message-interactions';
+import { eventBus } from '@/shared/lib/event-bus';
 
 class SyncService {
   private readonly debug = createDebugger('service:sync');
@@ -21,6 +22,18 @@ class SyncService {
     string,
     BaseSynchronizer<SynchronizerInput>
   > = new Map();
+
+  constructor() {
+    eventBus.subscribe((event) => {
+      if (event.type === 'workspace_deleted') {
+        this.removeWorkspaceSynchronizers(event.workspace.userId);
+      } else if (event.type === 'account_deleted') {
+        this.removeAccountSynchronizers(event.account.id);
+      } else if (event.type === 'collaboration_deleted') {
+        this.removeRootNodeSynchronizers(event.userId, event.entryId);
+      }
+    });
+  }
 
   public async initSynchronizers(userId: string) {
     const workspace = await databaseService.appDatabase
@@ -294,6 +307,36 @@ class SyncService {
         synchronizer.input.type === 'message_interactions' &&
         synchronizer.input.rootId === rootId
       ) {
+        this.synchronizers.delete(key);
+      }
+    }
+  }
+
+  private removeWorkspaceSynchronizers(userId: string) {
+    const keys = Array.from(this.synchronizers.keys());
+
+    for (const key of keys) {
+      const synchronizer = this.synchronizers.get(key);
+      if (!synchronizer) {
+        continue;
+      }
+
+      if (synchronizer.userId === userId) {
+        this.synchronizers.delete(key);
+      }
+    }
+  }
+
+  private removeAccountSynchronizers(accountId: string) {
+    const keys = Array.from(this.synchronizers.keys());
+
+    for (const key of keys) {
+      const synchronizer = this.synchronizers.get(key);
+      if (!synchronizer) {
+        continue;
+      }
+
+      if (synchronizer.accountId === accountId) {
         this.synchronizers.delete(key);
       }
     }

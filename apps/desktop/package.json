@@ -3,6 +3,7 @@
   "name": "@colanode/desktop",
   "productName": "Colanode",
   "version": "1.0.0",
+  "author": "Colanode",
   "description": "Colanode desktop application",
   "main": ".vite/build/main.js",
   "scripts": {

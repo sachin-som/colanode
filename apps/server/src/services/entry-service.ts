@@ -20,7 +20,7 @@ import { database } from '@/data/database';
 import {
   CreateEntry,
   CreateCollaboration,
-  CreateTransaction,
+  CreateEntryTransaction,
   DatabaseSchema,
   SelectUser,
   SelectCollaboration,
@@ -79,7 +79,7 @@ class EntryService {
       transaction_id: transactionId,
     };
 
-    const createTransaction: CreateTransaction = {
+    const createTransaction: CreateEntryTransaction = {
       id: transactionId,
       root_id: input.rootId,
       entry_id: input.entryId,
@@ -156,7 +156,7 @@ class EntryService {
     }
 
     const previousTransactions = await database
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', input.entryId)
       .orderBy('id', 'asc')
@@ -216,7 +216,7 @@ class EntryService {
         }
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: transactionId,
@@ -331,7 +331,7 @@ class EntryService {
       transaction_id: input.id,
     };
 
-    const createTransaction: CreateTransaction = {
+    const createTransaction: CreateEntryTransaction = {
       id: input.id,
       entry_id: input.entryId,
       root_id: input.rootId,
@@ -411,7 +411,7 @@ class EntryService {
     }
 
     const previousTransactions = await database
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', input.entryId)
       .orderBy('version', 'asc')
@@ -477,7 +477,7 @@ class EntryService {
         }
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: input.id,
@@ -592,12 +592,12 @@ class EntryService {
         }
 
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', '=', input.entryId)
           .execute();
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: input.id,
@@ -826,7 +826,7 @@ class EntryService {
   private async applyDatabaseCreateTransaction(
     attributes: EntryAttributes,
     entry: CreateEntry,
-    transaction: CreateTransaction
+    transaction: CreateEntryTransaction
   ) {
     const collaborationsToCreate: CreateCollaboration[] = Object.entries(
       extractEntryCollaborators(attributes)
@@ -851,7 +851,7 @@ class EntryService {
       }
 
       const createdTransaction = await trx
-        .insertInto('transactions')
+        .insertInto('entry_transactions')
         .returningAll()
         .values(transaction)
         .executeTakeFirst();

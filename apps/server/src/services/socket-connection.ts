@@ -24,7 +24,7 @@ import { CollaborationSynchronizer } from '@/synchronizers/collaborations';
 import { FileSynchronizer } from '@/synchronizers/files';
 import { MessageSynchronizer } from '@/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/synchronizers/message-reactions';
-import { TransactionSynchronizer } from '@/synchronizers/transactions';
+import { EntryTransactionSynchronizer } from '@/synchronizers/entry-transactions';
 import { MessageInteractionSynchronizer } from '@/synchronizers/message-interactions';
 import { EntryInteractionSynchronizer } from '@/synchronizers/entry-interactions';
 import { FileInteractionSynchronizer } from '@/synchronizers/file-interactions';
@@ -164,8 +164,8 @@ export class SocketConnection {
         message.input,
         cursor
       );
-    } else if (message.input.type === 'transactions') {
-      return new TransactionSynchronizer(
+    } else if (message.input.type === 'entry_transactions') {
+      return new EntryTransactionSynchronizer(
         message.id,
         user.user,
         message.input,

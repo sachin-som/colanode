@@ -1,6 +1,6 @@
 import { Entry, EntryAttributes } from '@colanode/core';
 
-import { SelectEntry, SelectTransaction } from '@/data/schema';
+import { SelectEntry, SelectEntryTransaction } from '@/data/schema';
 
 export type EntryCollaborator = {
   entryId: string;
@@ -19,7 +19,7 @@ export type CreateEntryInput = {
 
 export type CreateEntryOutput = {
   entry: SelectEntry;
-  transaction: SelectTransaction;
+  transaction: SelectEntryTransaction;
 };
 
 export type UpdateEntryInput = {
@@ -31,7 +31,7 @@ export type UpdateEntryInput = {
 
 export type UpdateEntryOutput = {
   entry: SelectEntry;
-  transaction: SelectTransaction;
+  transaction: SelectEntryTransaction;
 };
 
 export type ApplyCreateTransactionInput = {
@@ -44,7 +44,7 @@ export type ApplyCreateTransactionInput = {
 
 export type ApplyCreateTransactionOutput = {
   entry: SelectEntry;
-  transaction: SelectTransaction;
+  transaction: SelectEntryTransaction;
 };
 
 export type ApplyUpdateTransactionInput = {
@@ -58,7 +58,7 @@ export type ApplyUpdateTransactionInput = {
 
 export type ApplyUpdateTransactionOutput = {
   entry: SelectEntry;
-  transaction: SelectTransaction;
+  transaction: SelectEntryTransaction;
 };
 
 export type ApplyDeleteTransactionInput = {
@@ -70,5 +70,5 @@ export type ApplyDeleteTransactionInput = {
 
 export type ApplyDeleteTransactionOutput = {
   entry: SelectEntry;
-  transaction: SelectTransaction;
+  transaction: SelectEntryTransaction;
 };

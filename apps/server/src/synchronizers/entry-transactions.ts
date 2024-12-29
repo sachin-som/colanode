@@ -1,17 +1,17 @@
 import {
   SynchronizerOutputMessage,
-  SyncTransactionsInput,
-  SyncTransactionData,
+  SyncEntryTransactionsInput,
+  SyncEntryTransactionData,
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
 import { BaseSynchronizer } from '@/synchronizers/base';
 import { Event } from '@/types/events';
 import { database } from '@/data/database';
-import { SelectTransaction } from '@/data/schema';
+import { SelectEntryTransaction } from '@/data/schema';
 
-export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsInput> {
-  public async fetchData(): Promise<SynchronizerOutputMessage<SyncTransactionsInput> | null> {
+export class EntryTransactionSynchronizer extends BaseSynchronizer<SyncEntryTransactionsInput> {
+  public async fetchData(): Promise<SynchronizerOutputMessage<SyncEntryTransactionsInput> | null> {
     const transactions = await this.fetchTransactions();
     if (transactions.length === 0) {
       return null;
@@ -22,7 +22,7 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
 
   public async fetchDataFromEvent(
     event: Event
-  ): Promise<SynchronizerOutputMessage<SyncTransactionsInput> | null> {
+  ): Promise<SynchronizerOutputMessage<SyncEntryTransactionsInput> | null> {
     if (!this.shouldFetch(event)) {
       return null;
     }
@@ -42,7 +42,7 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
 
     this.status = 'fetching';
     const transactions = await database
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('root_id', '=', this.input.rootId)
       .where('version', '>', this.cursor)
@@ -55,9 +55,9 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
   }
 
   private buildMessage(
-    unsyncedTransactions: SelectTransaction[]
-  ): SynchronizerOutputMessage<SyncTransactionsInput> {
-    const items: SyncTransactionData[] = unsyncedTransactions.map(
+    unsyncedTransactions: SelectEntryTransaction[]
+  ): SynchronizerOutputMessage<SyncEntryTransactionsInput> {
+    const items: SyncEntryTransactionData[] = unsyncedTransactions.map(
       (transaction) => {
         if (transaction.operation === 'create' && transaction.data) {
           return {
@@ -119,24 +119,15 @@ export class TransactionSynchronizer extends BaseSynchronizer<SyncTransactionsIn
   }
 
   private shouldFetch(event: Event) {
-    if (
-      event.type === 'message_created' &&
-      event.rootId === this.input.rootId
-    ) {
+    if (event.type === 'entry_created' && event.rootId === this.input.rootId) {
       return true;
     }
 
-    if (
-      event.type === 'message_updated' &&
-      event.rootId === this.input.rootId
-    ) {
+    if (event.type === 'entry_updated' && event.rootId === this.input.rootId) {
       return true;
     }
 
-    if (
-      event.type === 'message_deleted' &&
-      event.rootId === this.input.rootId
-    ) {
+    if (event.type === 'entry_deleted' && event.rootId === this.input.rootId) {
       return true;
     }
 

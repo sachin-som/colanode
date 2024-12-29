@@ -129,7 +129,7 @@ export type SelectCollaboration = Selectable<CollaborationTable>;
 export type CreateCollaboration = Insertable<CollaborationTable>;
 export type UpdateCollaboration = Updateable<CollaborationTable>;
 
-interface TransactionTable {
+interface EntryTransactionTable {
   id: ColumnType<string, string, never>;
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
@@ -142,9 +142,9 @@ interface TransactionTable {
   version: ColumnType<bigint, never, never>;
 }
 
-export type SelectTransaction = Selectable<TransactionTable>;
-export type CreateTransaction = Insertable<TransactionTable>;
-export type UpdateTransaction = Updateable<TransactionTable>;
+export type SelectEntryTransaction = Selectable<EntryTransactionTable>;
+export type CreateEntryTransaction = Insertable<EntryTransactionTable>;
+export type UpdateEntryTransaction = Updateable<EntryTransactionTable>;
 
 interface EntryInteractionTable {
   entry_id: ColumnType<string, string, never>;
@@ -272,7 +272,7 @@ export interface DatabaseSchema {
   workspaces: WorkspaceTable;
   users: UserTable;
   entries: EntryTable;
-  transactions: TransactionTable;
+  entry_transactions: EntryTransactionTable;
   entry_interactions: EntryInteractionTable;
   collaborations: CollaborationTable;
   messages: MessageTable;

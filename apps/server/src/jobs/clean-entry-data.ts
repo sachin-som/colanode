@@ -2,7 +2,7 @@ import { generateId, IdType } from '@colanode/core';
 // import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 import { database } from '@/data/database';
-import { CreateTransaction } from '@/data/schema';
+import { CreateEntryTransaction } from '@/data/schema';
 import { JobHandler } from '@/types/jobs';
 // import { filesStorage, BUCKET_NAMES } from '@/data/storage';
 import { eventBus } from '@/lib/event-bus';
@@ -32,7 +32,7 @@ export const cleanEntryDataHandler: JobHandler<CleanEntryDataInput> = async (
   logger.trace(`Cleaning entry data for ${input.entryId}`);
 
   const deleteTransactions = await database
-    .selectFrom('transactions')
+    .selectFrom('entry_transactions')
     .selectAll()
     .where('entry_id', '=', input.entryId)
     .execute();
@@ -101,7 +101,7 @@ const deleteChildren = async (
       //     : [];
 
       const entryIds: string[] = descendants.map((d) => d.id);
-      const transactionsToCreate: CreateTransaction[] = descendants.map(
+      const transactionsToCreate: CreateEntryTransaction[] = descendants.map(
         (descendant) => ({
           id: generateId(IdType.Transaction),
           entry_id: descendant.id,
@@ -117,12 +117,12 @@ const deleteChildren = async (
 
       await database.transaction().execute(async (trx) => {
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', 'in', entryIds)
           .execute();
 
         const createdTransactions = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values(transactionsToCreate)
           .execute();

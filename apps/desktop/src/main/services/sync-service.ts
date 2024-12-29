@@ -7,7 +7,7 @@ import { createDebugger } from '@/main/debugger';
 import { UserSynchronizer } from '@/main/synchronizers/users';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { CollaborationSynchronizer } from '@/main/synchronizers/collaborations';
-import { TransactionSynchronizer } from '@/main/synchronizers/transactions';
+import { EntryTransactionSynchronizer } from '@/main/synchronizers/entry-transactions';
 import { MessageSynchronizer } from '@/main/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/main/synchronizers/message-reactions';
 import { FileSynchronizer } from '@/main/synchronizers/files';
@@ -171,8 +171,8 @@ class SyncService {
       );
     }
 
-    if (input.type === 'transactions') {
-      return new TransactionSynchronizer(
+    if (input.type === 'entry_transactions') {
+      return new EntryTransactionSynchronizer(
         userId,
         accountId,
         input,
@@ -217,7 +217,7 @@ class SyncService {
     workspaceDatabase: Kysely<WorkspaceDatabaseSchema>
   ) {
     await this.initSynchronizer(userId, accountId, workspaceDatabase, {
-      type: 'transactions',
+      type: 'entry_transactions',
       rootId,
     });
 
@@ -262,7 +262,7 @@ class SyncService {
       }
 
       if (
-        synchronizer.input.type === 'transactions' &&
+        synchronizer.input.type === 'entry_transactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);

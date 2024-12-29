@@ -25,7 +25,7 @@ import {
   SelectMessageReaction,
   SelectMutation,
   SelectEntry,
-  SelectTransaction,
+  SelectEntryTransaction,
   SelectUser,
   WorkspaceDatabaseSchema,
   SelectMessageInteraction,
@@ -201,7 +201,9 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   };
 };
 
-export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
+export const mapEntryTransaction = (
+  row: SelectEntryTransaction
+): LocalTransaction => {
   if (row.operation === 'create' && row.data) {
     return {
       id: row.id,

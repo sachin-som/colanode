@@ -8,11 +8,11 @@ import {
   EntryAttributes,
   EntryMutationContext,
   registry,
-  SyncCreateTransactionData,
-  SyncDeleteTransactionData,
-  SyncTransactionData,
-  SyncUpdateTransactionData,
+  SyncCreateEntryTransactionData,
+  SyncDeleteEntryTransactionData,
   SyncEntryInteractionData,
+  SyncEntryTransactionData,
+  SyncUpdateEntryTransactionData,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
@@ -22,13 +22,13 @@ import { databaseService } from '@/main/data/database-service';
 import {
   SelectMutation,
   SelectEntry,
-  SelectTransaction,
+  SelectEntryTransaction,
 } from '@/main/data/workspace/schema';
 import {
   fetchEntryAncestors,
   mapEntry,
   mapEntryInteraction,
-  mapTransaction,
+  mapEntryTransaction,
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 
@@ -142,7 +142,7 @@ class EntryService {
         createdEntries.push(createdEntry);
 
         const createdTransaction = await transaction
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: transactionId,
@@ -167,7 +167,7 @@ class EntryService {
             id: generateId(IdType.Mutation),
             node_id: inputItem.id,
             type: 'apply_create_transaction',
-            data: JSON.stringify(mapTransaction(createdTransaction)),
+            data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: createdAt,
             retries: 0,
           })
@@ -273,7 +273,7 @@ class EntryService {
 
     const ydoc = new YDoc();
     const previousTransactions = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .where('entry_id', '=', entryId)
       .selectAll()
       .execute();
@@ -309,7 +309,7 @@ class EntryService {
           return { updatedEntry: undefined };
         }
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: transactionId,
@@ -334,7 +334,7 @@ class EntryService {
             id: generateId(IdType.Mutation),
             node_id: entryId,
             type: 'apply_update_transaction',
-            data: JSON.stringify(mapTransaction(createdTransaction)),
+            data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: updatedAt,
             retries: 0,
           })
@@ -433,7 +433,7 @@ class EntryService {
         }
 
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', '=', entryId)
           .execute();
 
@@ -445,7 +445,7 @@ class EntryService {
         await trx.deleteFrom('texts').where('id', '=', entryId).execute();
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: generateId(IdType.Transaction),
@@ -470,7 +470,7 @@ class EntryService {
             id: generateId(IdType.Mutation),
             node_id: entryId,
             type: 'apply_delete_transaction',
-            data: JSON.stringify(mapTransaction(createdTransaction)),
+            data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: new Date().toISOString(),
             retries: 0,
           })
@@ -507,7 +507,7 @@ class EntryService {
 
   public async applyServerTransaction(
     userId: string,
-    transaction: SyncTransactionData
+    transaction: SyncEntryTransactionData
   ) {
     if (transaction.operation === 'create') {
       await this.applyServerCreateTransaction(userId, transaction);
@@ -521,7 +521,7 @@ class EntryService {
   public async replaceTransactions(
     userId: string,
     entryId: string,
-    transactions: SyncTransactionData[],
+    transactions: SyncEntryTransactionData[],
     transactionCursor: bigint
   ): Promise<boolean> {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
@@ -543,7 +543,7 @@ class EntryService {
   public async tryReplaceTransactions(
     userId: string,
     entryId: string,
-    transactions: SyncTransactionData[],
+    transactions: SyncEntryTransactionData[],
     transactionCursor: bigint
   ): Promise<boolean | null> {
     const workspaceDatabase =
@@ -616,12 +616,12 @@ class EntryService {
           }
 
           await trx
-            .deleteFrom('transactions')
+            .deleteFrom('entry_transactions')
             .where('entry_id', '=', entryId)
             .execute();
 
           await trx
-            .insertInto('transactions')
+            .insertInto('entry_transactions')
             .values(
               transactions.map((t) => ({
                 id: t.id,
@@ -697,12 +697,12 @@ class EntryService {
         }
 
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', '=', entryId)
           .execute();
 
         await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .values(
             transactions.map((t) => ({
               id: t.id,
@@ -748,7 +748,7 @@ class EntryService {
 
   private async applyServerCreateTransaction(
     userId: string,
-    transaction: SyncCreateTransactionData
+    transaction: SyncCreateEntryTransactionData
   ) {
     this.debug(
       `Applying server create transaction ${transaction.id} for entry ${transaction.entryId}`
@@ -759,7 +759,7 @@ class EntryService {
 
     const version = BigInt(transaction.version);
     const existingTransaction = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .select(['id', 'version', 'server_created_at'])
       .where('id', '=', transaction.id)
       .executeTakeFirst();
@@ -776,7 +776,7 @@ class EntryService {
       }
 
       await workspaceDatabase
-        .updateTable('transactions')
+        .updateTable('entry_transactions')
         .set({
           version,
           server_created_at: transaction.serverCreatedAt,
@@ -818,7 +818,7 @@ class EntryService {
           .executeTakeFirst();
 
         await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .values({
             id: transaction.id,
             entry_id: transaction.entryId,
@@ -866,14 +866,14 @@ class EntryService {
 
   private async applyServerUpdateTransaction(
     userId: string,
-    transaction: SyncUpdateTransactionData
+    transaction: SyncUpdateEntryTransactionData
   ) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
     const version = BigInt(transaction.version);
     const existingTransaction = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .select(['id', 'version', 'server_created_at'])
       .where('id', '=', transaction.id)
       .executeTakeFirst();
@@ -890,7 +890,7 @@ class EntryService {
       }
 
       await workspaceDatabase
-        .updateTable('transactions')
+        .updateTable('entry_transactions')
         .set({
           version,
           server_created_at: transaction.serverCreatedAt,
@@ -910,7 +910,7 @@ class EntryService {
     }
 
     const previousTransactions = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', transaction.entryId)
       .orderBy('id', 'asc')
@@ -944,7 +944,7 @@ class EntryService {
           .executeTakeFirst();
 
         await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .values({
             id: transaction.id,
             entry_id: transaction.entryId,
@@ -999,7 +999,7 @@ class EntryService {
 
   private async applyServerDeleteTransaction(
     userId: string,
-    transaction: SyncDeleteTransactionData
+    transaction: SyncDeleteEntryTransactionData
   ) {
     this.debug(
       `Applying server delete transaction ${transaction.id} for entry ${transaction.entryId}`
@@ -1024,7 +1024,7 @@ class EntryService {
         .where('id', '=', transaction.entryId)
         .execute();
       await trx
-        .deleteFrom('transactions')
+        .deleteFrom('entry_transactions')
         .where('entry_id', '=', transaction.entryId)
         .execute();
 
@@ -1068,7 +1068,7 @@ class EntryService {
     }
 
     const transactionRow = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('id', '=', transaction.id)
       .executeTakeFirst();
@@ -1084,7 +1084,7 @@ class EntryService {
         .execute();
 
       await tx
-        .deleteFrom('transactions')
+        .deleteFrom('entry_transactions')
         .where('id', '=', transaction.id)
         .execute();
 
@@ -1132,7 +1132,7 @@ class EntryService {
     }
 
     const transactionRow = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('id', '=', transaction.id)
       .executeTakeFirst();
@@ -1142,7 +1142,7 @@ class EntryService {
     }
 
     const previousTransactions = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', transaction.entryId)
       .orderBy('id', 'asc')
@@ -1155,7 +1155,7 @@ class EntryService {
 
     const ydoc = new YDoc();
 
-    let lastTransaction: SelectTransaction | undefined;
+    let lastTransaction: SelectEntryTransaction | undefined;
     for (const previousTransaction of previousTransactions) {
       if (previousTransaction.id === transaction.id) {
         continue;
@@ -1193,7 +1193,7 @@ class EntryService {
         }
 
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('id', '=', transaction.id)
           .execute();
       });
@@ -1219,7 +1219,7 @@ class EntryService {
       await databaseService.getWorkspaceDatabase(userId);
 
     const transactionRow = await workspaceDatabase
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('id', '=', transaction.id)
       .executeTakeFirst();
@@ -1229,7 +1229,7 @@ class EntryService {
     }
 
     await workspaceDatabase
-      .deleteFrom('transactions')
+      .deleteFrom('entry_transactions')
       .where('id', '=', transaction.id)
       .execute();
   }

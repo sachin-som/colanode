@@ -49,7 +49,7 @@ class CollaborationService {
           .execute();
 
         await tx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', '=', collaboration.entryId)
           .execute();
       });

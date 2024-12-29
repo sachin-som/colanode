@@ -158,10 +158,10 @@ const createEntriesTable: Migration = {
   },
 };
 
-const createTransactionsTable: Migration = {
+const createEntryTransactionsTable: Migration = {
   up: async (db) => {
     await sql`
-      CREATE SEQUENCE IF NOT EXISTS transactions_version_sequence
+      CREATE SEQUENCE IF NOT EXISTS entry_transactions_version_sequence
       START WITH 1000000000
       INCREMENT BY 1
       NO MINVALUE
@@ -170,7 +170,7 @@ const createTransactionsTable: Migration = {
     `.execute(db);
 
     await db.schema
-      .createTable('transactions')
+      .createTable('entry_transactions')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
@@ -181,13 +181,15 @@ const createTransactionsTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('version', 'bigint', (col) =>
-        col.notNull().defaultTo(sql`nextval('transactions_version_sequence')`)
+        col
+          .notNull()
+          .defaultTo(sql`nextval('entry_transactions_version_sequence')`)
       )
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('transactions').execute();
-    await sql`DROP SEQUENCE IF EXISTS transactions_version_sequence`.execute(
+    await db.schema.dropTable('entry_transactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS entry_transactions_version_sequence`.execute(
       db
     );
   },
@@ -679,7 +681,7 @@ export const databaseMigrations: Record<string, Migration> = {
   '00003_create_workspaces_table': createWorkspacesTable,
   '00004_create_users_table': createUsersTable,
   '00005_create_entries_table': createEntriesTable,
-  '00006_create_transactions_table': createTransactionsTable,
+  '00006_create_entry_transactions_table': createEntryTransactionsTable,
   '00007_create_entry_interactions_table': createEntryInteractionsTable,
   '00008_create_messages_table': createMessagesTable,
   '00009_create_message_reactions_table': createMessageReactionsTable,

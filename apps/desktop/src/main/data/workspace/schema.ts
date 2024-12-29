@@ -53,7 +53,7 @@ interface EntryPathTable {
 
 export type SelectEntryPath = Selectable<EntryPathTable>;
 
-interface TransactionTable {
+interface EntryTransactionTable {
   id: ColumnType<string, string, never>;
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
@@ -65,9 +65,9 @@ interface TransactionTable {
   version: ColumnType<bigint, bigint, bigint>;
 }
 
-export type SelectTransaction = Selectable<TransactionTable>;
-export type CreateTransaction = Insertable<TransactionTable>;
-export type UpdateTransaction = Updateable<TransactionTable>;
+export type SelectEntryTransaction = Selectable<EntryTransactionTable>;
+export type CreateEntryTransaction = Insertable<EntryTransactionTable>;
+export type UpdateEntryTransaction = Updateable<EntryTransactionTable>;
 
 interface EntryInteractionTable {
   entry_id: ColumnType<string, string, never>;
@@ -230,7 +230,7 @@ export interface WorkspaceDatabaseSchema {
   users: UserTable;
   entries: EntryTable;
   entry_interactions: EntryInteractionTable;
-  transactions: TransactionTable;
+  entry_transactions: EntryTransactionTable;
   entry_paths: EntryPathTable;
   collaborations: CollaborationTable;
   messages: MessageTable;

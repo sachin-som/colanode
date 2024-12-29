@@ -1,5 +1,5 @@
 export * from './messages';
-export * from './transactions';
+export * from './entry-transactions';
 export * from './users';
 export * from './files';
 export * from './message-reactions';

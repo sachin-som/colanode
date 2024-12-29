@@ -104,15 +104,35 @@ class MessageService {
       return false;
     }
 
-    const deletedMessage = await database
-      .updateTable('messages')
-      .returningAll()
-      .set({
-        deleted_at: new Date(mutation.data.deletedAt),
-        deleted_by: user.id,
-      })
-      .where('id', '=', mutation.data.id)
-      .executeTakeFirst();
+    const deletedMessage = await database.transaction().execute(async (tx) => {
+      const deletedMessage = await tx
+        .deleteFrom('messages')
+        .returningAll()
+        .where('id', '=', mutation.data.id)
+        .executeTakeFirst();
+
+      if (!deletedMessage) {
+        return null;
+      }
+
+      await tx
+        .deleteFrom('message_interactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .insertInto('message_tombstones')
+        .values({
+          id: deletedMessage.id,
+          root_id: deletedMessage.root_id,
+          workspace_id: deletedMessage.workspace_id,
+          deleted_at: new Date(mutation.data.deletedAt),
+          deleted_by: user.id,
+        })
+        .executeTakeFirst();
+
+      return deletedMessage;
+    });
 
     if (!deletedMessage) {
       return false;

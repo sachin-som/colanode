@@ -8,11 +8,13 @@ import {
   MarkFileOpenedMutation,
   MarkFileSeenMutation,
 } from '@colanode/core';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
+import { filesStorage, BUCKET_NAMES } from '@/data/storage';
 
 class FileService {
   public async createFile(
@@ -109,19 +111,47 @@ class FileService {
       return false;
     }
 
-    const deletedFile = await database
-      .updateTable('files')
-      .returningAll()
-      .set({
-        deleted_at: new Date(mutation.data.deletedAt),
-        deleted_by: user.id,
-      })
-      .where('id', '=', mutation.data.id)
-      .executeTakeFirst();
+    const deletedFile = await database.transaction().execute(async (tx) => {
+      const deletedFile = await tx
+        .deleteFrom('files')
+        .returningAll()
+        .where('id', '=', mutation.data.id)
+        .executeTakeFirst();
+
+      if (!deletedFile) {
+        return null;
+      }
+
+      await tx
+        .deleteFrom('file_interactions')
+        .where('file_id', '=', deletedFile.id)
+        .execute();
+
+      await tx
+        .insertInto('file_tombstones')
+        .values({
+          id: deletedFile.id,
+          root_id: deletedFile.root_id,
+          workspace_id: deletedFile.workspace_id,
+          deleted_at: new Date(mutation.data.deletedAt),
+          deleted_by: user.id,
+        })
+        .executeTakeFirst();
+
+      return deletedFile;
+    });
 
     if (!deletedFile) {
       return false;
     }
+
+    const path = `files/${deletedFile.workspace_id}/${deletedFile.id}${deletedFile.extension}`;
+    const command = new DeleteObjectCommand({
+      Bucket: BUCKET_NAMES.FILES,
+      Key: path,
+    });
+
+    await filesStorage.send(command);
 
     eventBus.publish({
       type: 'file_deleted',

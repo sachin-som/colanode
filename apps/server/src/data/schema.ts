@@ -162,6 +162,17 @@ export type SelectEntryInteraction = Selectable<EntryInteractionTable>;
 export type CreateEntryInteraction = Insertable<EntryInteractionTable>;
 export type UpdateEntryInteraction = Updateable<EntryInteractionTable>;
 
+interface EntryPathTable {
+  ancestor_id: ColumnType<string, string, never>;
+  descendant_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  level: ColumnType<number, number, number>;
+}
+
+export type SelectEntryPath = Selectable<EntryPathTable>;
+export type CreateEntryPath = Insertable<EntryPathTable>;
+export type UpdateEntryPath = Updateable<EntryPathTable>;
+
 interface MessageTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<MessageType, MessageType, MessageType>;
@@ -174,8 +185,6 @@ interface MessageTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   updated_by: ColumnType<string | null, string | null, string>;
-  deleted_at: ColumnType<Date | null, Date | null, Date>;
-  deleted_by: ColumnType<string | null, string | null, string>;
   version: ColumnType<bigint, never, never>;
 }
 
@@ -213,6 +222,19 @@ export type SelectMessageInteraction = Selectable<MessageInteractionTable>;
 export type CreateMessageInteraction = Insertable<MessageInteractionTable>;
 export type UpdateMessageInteraction = Updateable<MessageInteractionTable>;
 
+interface MessageTombstoneTable {
+  id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  deleted_at: ColumnType<Date, Date, Date>;
+  deleted_by: ColumnType<string, string, never>;
+  version: ColumnType<bigint, never, never>;
+}
+
+export type SelectMessageTombstone = Selectable<MessageTombstoneTable>;
+export type CreateMessageTombstone = Insertable<MessageTombstoneTable>;
+export type UpdateMessageTombstone = Updateable<MessageTombstoneTable>;
+
 interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
@@ -229,8 +251,6 @@ interface FileTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
-  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
-  deleted_by: ColumnType<string | null, string | null, string | null>;
   status: ColumnType<FileStatus, FileStatus, FileStatus>;
   version: ColumnType<bigint, never, never>;
 }
@@ -255,16 +275,18 @@ export type SelectFileInteraction = Selectable<FileInteractionTable>;
 export type CreateFileInteraction = Insertable<FileInteractionTable>;
 export type UpdateFileInteraction = Updateable<FileInteractionTable>;
 
-interface EntryPathTable {
-  ancestor_id: ColumnType<string, string, never>;
-  descendant_id: ColumnType<string, string, never>;
+interface FileTombstoneTable {
+  id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  level: ColumnType<number, number, number>;
+  deleted_at: ColumnType<Date, Date, Date>;
+  deleted_by: ColumnType<string, string, never>;
+  version: ColumnType<bigint, never, never>;
 }
 
-export type SelectEntryPath = Selectable<EntryPathTable>;
-export type CreateEntryPath = Insertable<EntryPathTable>;
-export type UpdateEntryPath = Updateable<EntryPathTable>;
+export type SelectFileTombstone = Selectable<FileTombstoneTable>;
+export type CreateFileTombstone = Insertable<FileTombstoneTable>;
+export type UpdateFileTombstone = Updateable<FileTombstoneTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
@@ -274,11 +296,13 @@ export interface DatabaseSchema {
   entries: EntryTable;
   entry_transactions: EntryTransactionTable;
   entry_interactions: EntryInteractionTable;
-  collaborations: CollaborationTable;
+  entry_paths: EntryPathTable;
   messages: MessageTable;
   message_reactions: MessageReactionTable;
   message_interactions: MessageInteractionTable;
+  message_tombstones: MessageTombstoneTable;
   files: FileTable;
   file_interactions: FileInteractionTable;
-  entry_paths: EntryPathTable;
+  file_tombstones: FileTombstoneTable;
+  collaborations: CollaborationTable;
 }

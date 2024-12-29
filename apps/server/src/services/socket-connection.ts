@@ -28,6 +28,8 @@ import { EntryTransactionSynchronizer } from '@/synchronizers/entry-transactions
 import { MessageInteractionSynchronizer } from '@/synchronizers/message-interactions';
 import { EntryInteractionSynchronizer } from '@/synchronizers/entry-interactions';
 import { FileInteractionSynchronizer } from '@/synchronizers/file-interactions';
+import { FileTombstoneSynchronizer } from '@/synchronizers/file-tombstones';
+import { MessageTombstoneSynchronizer } from '@/synchronizers/message-tombstones';
 
 type SocketUser = {
   user: ConnectedUser;
@@ -199,6 +201,20 @@ export class SocketConnection {
       }
 
       return new FileInteractionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'file_tombstones') {
+      return new FileTombstoneSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'message_tombstones') {
+      return new MessageTombstoneSynchronizer(
         message.id,
         user.user,
         message.input,

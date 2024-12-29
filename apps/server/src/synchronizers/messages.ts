@@ -68,8 +68,6 @@ export class MessageSynchronizer extends BaseSynchronizer<SyncMessagesInput> {
       createdBy: message.created_by,
       updatedAt: message.updated_at?.toISOString() ?? null,
       updatedBy: message.updated_by ?? null,
-      deletedAt: message.deleted_at?.toISOString() ?? null,
-      deletedBy: message.deleted_by ?? null,
       version: message.version.toString(),
     }));
 

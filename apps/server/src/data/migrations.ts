@@ -337,8 +337,6 @@ const createMessagesTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
-      .addColumn('deleted_at', 'timestamptz')
-      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('version', 'bigint', (col) =>
         col.notNull().defaultTo(sql`nextval('messages_version_sequence')`)
       )
@@ -481,6 +479,39 @@ const createMessageInteractionsTable: Migration = {
   },
 };
 
+const createMessageTombstonesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS message_tombstones_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('message_tombstones')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('deleted_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('deleted_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('message_tombstones_version_sequence')`)
+      )
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('message_tombstones').execute();
+    await sql`DROP SEQUENCE IF EXISTS message_tombstones_version_sequence`.execute(
+      db
+    );
+  },
+};
+
 const createFilesTable: Migration = {
   up: async (db) => {
     await sql`
@@ -509,8 +540,6 @@ const createFilesTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
-      .addColumn('deleted_at', 'timestamptz')
-      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version', 'bigint', (col) =>
         col.notNull().defaultTo(sql`nextval('files_version_sequence')`)
@@ -601,6 +630,39 @@ const createFileInteractionsTable: Migration = {
   },
 };
 
+const createFileTombstonesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS file_tombstones_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('file_tombstones')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('deleted_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('deleted_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('file_tombstones_version_sequence')`)
+      )
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropTable('file_tombstones').execute();
+    await sql`DROP SEQUENCE IF EXISTS file_tombstones_version_sequence`.execute(
+      db
+    );
+  },
+};
+
 const createEntryPathsTable: Migration = {
   up: async (db) => {
     await db.schema
@@ -683,11 +745,13 @@ export const databaseMigrations: Record<string, Migration> = {
   '00005_create_entries_table': createEntriesTable,
   '00006_create_entry_transactions_table': createEntryTransactionsTable,
   '00007_create_entry_interactions_table': createEntryInteractionsTable,
-  '00008_create_messages_table': createMessagesTable,
-  '00009_create_message_reactions_table': createMessageReactionsTable,
-  '00010_create_message_interactions_table': createMessageInteractionsTable,
-  '00011_create_files_table': createFilesTable,
-  '00012_create_file_interactions_table': createFileInteractionsTable,
-  '00013_create_collaborations_table': createCollaborationsTable,
-  '00014_create_entry_paths_table': createEntryPathsTable,
+  '00008_create_entry_paths_table': createEntryPathsTable,
+  '00009_create_messages_table': createMessagesTable,
+  '00010_create_message_reactions_table': createMessageReactionsTable,
+  '00011_create_message_interactions_table': createMessageInteractionsTable,
+  '00012_create_message_tombstones_table': createMessageTombstonesTable,
+  '00013_create_files_table': createFilesTable,
+  '00014_create_file_interactions_table': createFileInteractionsTable,
+  '00015_create_file_tombstones_table': createFileTombstonesTable,
+  '00016_create_collaborations_table': createCollaborationsTable,
 };

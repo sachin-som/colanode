@@ -41,11 +41,14 @@ export class MessageReactionDeleteMutationHandler
       .transaction()
       .execute(async (trx) => {
         const deletedMessageReaction = await trx
-          .deleteFrom('message_reactions')
+          .updateTable('message_reactions')
+          .returningAll()
+          .set({
+            deleted_at: new Date().toISOString(),
+          })
           .where('message_id', '=', input.messageId)
           .where('collaborator_id', '=', input.userId)
           .where('reaction', '=', input.reaction)
-          .returningAll()
           .executeTakeFirst();
 
         if (!deletedMessageReaction) {

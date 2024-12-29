@@ -108,6 +108,7 @@ interface MessageTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   version: ColumnType<bigint, bigint, bigint>;
 }
 
@@ -121,6 +122,7 @@ interface MessageReactionTable {
   reaction: ColumnType<string, string, string>;
   root_id: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   version: ColumnType<bigint, bigint, bigint>;
 }
 
@@ -157,6 +159,7 @@ interface FileTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   status: ColumnType<FileStatus, FileStatus, FileStatus>;
   version: ColumnType<bigint, bigint, bigint>;
 }

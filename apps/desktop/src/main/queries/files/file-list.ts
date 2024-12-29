@@ -113,6 +113,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
         'f.created_by',
         'f.updated_at',
         'f.updated_by',
+        'f.deleted_at',
         'f.status',
         'f.version',
         'fs.download_status',
@@ -121,6 +122,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
         'fs.upload_progress',
       ])
       .where('f.parent_id', '=', input.parentId)
+      .where('f.deleted_at', 'is', null)
       .orderBy('f.id', 'asc')
       .limit(input.count)
       .offset(offset)

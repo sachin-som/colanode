@@ -40,7 +40,10 @@ export class MessageDeleteMutationHandler
 
     await workspaceDatabase.transaction().execute(async (tx) => {
       await tx
-        .deleteFrom('messages')
+        .updateTable('messages')
+        .set({
+          deleted_at: deletedAt,
+        })
         .where('id', '=', input.messageId)
         .execute();
 

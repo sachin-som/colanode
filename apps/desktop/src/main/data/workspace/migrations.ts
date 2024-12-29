@@ -131,6 +131,7 @@ const createMessagesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('updated_by', 'text')
+      .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer')
       .execute();
   },
@@ -148,6 +149,7 @@ const createMessageReactionsTable: Migration = {
       .addColumn('reaction', 'text', (col) => col.notNull())
       .addColumn('root_id', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer', (col) => col.notNull())
       .addPrimaryKeyConstraint('message_reactions_pkey', [
         'message_id',
@@ -201,6 +203,7 @@ const createFilesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('updated_by', 'text')
+      .addColumn('deleted_at', 'text')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version', 'integer')
       .execute();

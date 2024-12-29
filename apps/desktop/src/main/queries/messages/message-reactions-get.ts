@@ -86,7 +86,7 @@ export class MessageReactionsGetQueryHandler
           ELSE 0 
         END) as reacted
       FROM message_reactions
-      WHERE message_id = ${input.messageId}
+      WHERE message_id = ${input.messageId} AND deleted_at IS NULL
       GROUP BY reaction
     `.execute(workspaceDatabase);
 

@@ -1,10 +1,13 @@
 import {
+  CreateMessageReactionMutationData,
+  DeleteMessageReactionMutationData,
   extractText,
   SyncMessageData,
   SyncMessageInteractionData,
   SyncMessageReactionData,
 } from '@colanode/core';
 
+import { fileService } from '@/main/services/file-service';
 import {
   mapMessage,
   mapMessageInteraction,
@@ -282,6 +285,126 @@ class MessageService {
     this.debug(
       `Server message interaction for message ${messageInteraction.messageId} has been synced`
     );
+  }
+
+  public async revertMessageCreation(userId: string, messageId: string) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const deletedMessage = await workspaceDatabase
+      .deleteFrom('messages')
+      .returningAll()
+      .where('id', '=', messageId)
+      .executeTakeFirst();
+
+    if (!deletedMessage) {
+      return;
+    }
+
+    await workspaceDatabase
+      .deleteFrom('message_reactions')
+      .where('message_id', '=', messageId)
+      .execute();
+
+    await workspaceDatabase
+      .deleteFrom('message_interactions')
+      .where('message_id', '=', messageId)
+      .execute();
+
+    eventBus.publish({
+      type: 'message_deleted',
+      userId,
+      message: mapMessage(deletedMessage),
+    });
+
+    const files = await workspaceDatabase
+      .selectFrom('files')
+      .selectAll()
+      .where('parent_id', '=', messageId)
+      .execute();
+
+    for (const file of files) {
+      await fileService.revertFileCreation(userId, file.id);
+    }
+  }
+
+  public async revertMessageDeletion(userId: string, messageId: string) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const deletedMessage = await workspaceDatabase
+      .updateTable('messages')
+      .returningAll()
+      .set({
+        deleted_at: null,
+      })
+      .where('id', '=', messageId)
+      .executeTakeFirst();
+
+    if (!deletedMessage) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'message_created',
+      userId,
+      message: mapMessage(deletedMessage),
+    });
+  }
+
+  public async revertMessageReactionCreation(
+    userId: string,
+    messageReaction: CreateMessageReactionMutationData
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const deletedMessageReaction = await workspaceDatabase
+      .deleteFrom('message_reactions')
+      .returningAll()
+      .where('message_id', '=', messageReaction.messageId)
+      .where('collaborator_id', '=', userId)
+      .where('reaction', '=', messageReaction.reaction)
+      .executeTakeFirst();
+
+    if (!deletedMessageReaction) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'message_reaction_deleted',
+      userId,
+      messageReaction: mapMessageReaction(deletedMessageReaction),
+    });
+  }
+
+  public async revertMessageReactionDeletion(
+    userId: string,
+    messageReaction: DeleteMessageReactionMutationData
+  ) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const createdMessageReaction = await workspaceDatabase
+      .updateTable('message_reactions')
+      .returningAll()
+      .set({
+        deleted_at: null,
+      })
+      .where('message_id', '=', messageReaction.messageId)
+      .where('collaborator_id', '=', userId)
+      .where('reaction', '=', messageReaction.reaction)
+      .executeTakeFirst();
+
+    if (!createdMessageReaction) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'message_reaction_created',
+      userId,
+      messageReaction: mapMessageReaction(createdMessageReaction),
+    });
   }
 }
 

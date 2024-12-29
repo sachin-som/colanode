@@ -308,6 +308,7 @@ class EntryService {
         if (!updatedEntry) {
           return { updatedEntry: undefined };
         }
+
         const createdTransaction = await trx
           .insertInto('entry_transactions')
           .returningAll()
@@ -432,16 +433,6 @@ class EntryService {
           return { deletedEntry: undefined };
         }
 
-        await trx
-          .deleteFrom('entry_transactions')
-          .where('entry_id', '=', entryId)
-          .execute();
-
-        await trx
-          .deleteFrom('collaborations')
-          .where('entry_id', '=', entryId)
-          .execute();
-
         await trx.deleteFrom('texts').where('id', '=', entryId).execute();
 
         const createdTransaction = await trx
@@ -516,234 +507,6 @@ class EntryService {
     } else if (transaction.operation === 'delete') {
       await this.applyServerDeleteTransaction(userId, transaction);
     }
-  }
-
-  public async replaceTransactions(
-    userId: string,
-    entryId: string,
-    transactions: SyncEntryTransactionData[],
-    transactionCursor: bigint
-  ): Promise<boolean> {
-    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-      const result = await this.tryReplaceTransactions(
-        userId,
-        entryId,
-        transactions,
-        transactionCursor
-      );
-
-      if (result !== null) {
-        return result;
-      }
-    }
-
-    return false;
-  }
-
-  public async tryReplaceTransactions(
-    userId: string,
-    entryId: string,
-    transactions: SyncEntryTransactionData[],
-    transactionCursor: bigint
-  ): Promise<boolean | null> {
-    const workspaceDatabase =
-      await databaseService.getWorkspaceDatabase(userId);
-
-    const firstTransaction = transactions[0];
-    if (!firstTransaction || firstTransaction.operation !== 'create') {
-      return false;
-    }
-
-    if (transactionCursor < BigInt(firstTransaction.version)) {
-      return false;
-    }
-
-    const lastTransaction = transactions[transactions.length - 1];
-    if (!lastTransaction) {
-      return false;
-    }
-
-    const ydoc = new YDoc();
-    for (const transaction of transactions) {
-      if (transaction.operation === 'delete') {
-        await this.applyServerDeleteTransaction(userId, transaction);
-        return true;
-      }
-
-      ydoc.applyUpdate(transaction.data);
-    }
-
-    const attributes = ydoc.getAttributes<EntryAttributes>();
-    const model = registry.getModel(attributes.type);
-    if (!model) {
-      return false;
-    }
-
-    const attributesJson = JSON.stringify(attributes);
-    const text = model.getText(entryId, attributes);
-
-    const existingEntry = await workspaceDatabase
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', entryId)
-      .executeTakeFirst();
-
-    if (existingEntry) {
-      const updatedEntry = await workspaceDatabase
-        .transaction()
-        .execute(async (trx) => {
-          const updatedEntry = await trx
-            .updateTable('entries')
-            .returningAll()
-            .set({
-              attributes: attributesJson,
-              updated_at:
-                firstTransaction.id !== lastTransaction.id
-                  ? lastTransaction.createdAt
-                  : null,
-              updated_by:
-                firstTransaction.id !== lastTransaction.id
-                  ? lastTransaction.createdBy
-                  : null,
-              transaction_id: lastTransaction.id,
-            })
-            .where('id', '=', entryId)
-            .where('transaction_id', '=', existingEntry.transaction_id)
-            .executeTakeFirst();
-
-          if (!updatedEntry) {
-            return undefined;
-          }
-
-          await trx
-            .deleteFrom('entry_transactions')
-            .where('entry_id', '=', entryId)
-            .execute();
-
-          await trx
-            .insertInto('entry_transactions')
-            .values(
-              transactions.map((t) => ({
-                id: t.id,
-                entry_id: t.entryId,
-                root_id: t.rootId,
-                operation: t.operation,
-                data:
-                  t.operation !== 'delete' && t.data
-                    ? decodeState(t.data)
-                    : null,
-                created_at: t.createdAt,
-                created_by: t.createdBy,
-                retry_count: 0,
-                status: 'synced',
-                version: BigInt(t.version),
-                server_created_at: t.serverCreatedAt,
-              }))
-            )
-            .execute();
-
-          if (text !== undefined) {
-            await trx.deleteFrom('texts').where('id', '=', entryId).execute();
-          }
-
-          if (text) {
-            await trx
-              .insertInto('texts')
-              .values({ id: entryId, name: text.name, text: text.text })
-              .execute();
-          }
-        });
-
-      if (updatedEntry) {
-        eventBus.publish({
-          type: 'entry_updated',
-          userId,
-          entry: mapEntry(updatedEntry),
-        });
-
-        return true;
-      }
-
-      return null;
-    }
-
-    const createdEntry = await workspaceDatabase
-      .transaction()
-      .execute(async (trx) => {
-        const createdEntry = await trx
-          .insertInto('entries')
-          .returningAll()
-          .values({
-            id: entryId,
-            root_id: firstTransaction.rootId,
-            attributes: attributesJson,
-            created_at: firstTransaction.createdAt,
-            created_by: firstTransaction.createdBy,
-            updated_at:
-              firstTransaction.id !== lastTransaction.id
-                ? lastTransaction.createdAt
-                : null,
-            updated_by:
-              firstTransaction.id !== lastTransaction.id
-                ? lastTransaction.createdBy
-                : null,
-            transaction_id: lastTransaction.id,
-          })
-          .onConflict((b) => b.doNothing())
-          .executeTakeFirst();
-
-        if (!createdEntry) {
-          return undefined;
-        }
-
-        await trx
-          .deleteFrom('entry_transactions')
-          .where('entry_id', '=', entryId)
-          .execute();
-
-        await trx
-          .insertInto('entry_transactions')
-          .values(
-            transactions.map((t) => ({
-              id: t.id,
-              entry_id: t.entryId,
-              root_id: t.rootId,
-              operation: t.operation,
-              data:
-                t.operation !== 'delete' && t.data ? decodeState(t.data) : null,
-              created_at: t.createdAt,
-              created_by: t.createdBy,
-              retry_count: 0,
-              status: 'synced',
-              version: BigInt(t.version),
-              server_created_at: t.serverCreatedAt,
-            }))
-          )
-          .execute();
-
-        if (text !== undefined) {
-          await trx.deleteFrom('texts').where('id', '=', entryId).execute();
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({ id: entryId, name: text.name, text: text.text })
-            .execute();
-        }
-      });
-
-    if (createdEntry) {
-      eventBus.publish({
-        type: 'entry_created',
-        userId,
-        entry: mapEntry(createdEntry),
-      });
-
-      return true;
-    }
-
-    return null;
   }
 
   private async applyServerCreateTransaction(
@@ -904,11 +667,6 @@ class EntryService {
       return;
     }
 
-    const model = registry.getModel(transaction.entryId);
-    if (!model) {
-      return;
-    }
-
     const previousTransactions = await workspaceDatabase
       .selectFrom('entry_transactions')
       .selectAll()
@@ -926,6 +684,12 @@ class EntryService {
 
     ydoc.applyUpdate(transaction.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
+
+    const model = registry.getModel(attributes.type);
+    if (!model) {
+      return;
+    }
+
     const text = model.getText(transaction.entryId, attributes);
 
     const { updatedEntry } = await workspaceDatabase
@@ -1008,45 +772,45 @@ class EntryService {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    const entry = await workspaceDatabase
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', transaction.entryId)
-      .executeTakeFirst();
+    const { deletedEntry } = await workspaceDatabase
+      .transaction()
+      .execute(async (trx) => {
+        const deletedEntry = await trx
+          .deleteFrom('entries')
+          .returningAll()
+          .where('id', '=', transaction.entryId)
+          .executeTakeFirst();
 
-    if (!entry) {
-      return;
-    }
+        await trx
+          .deleteFrom('entry_transactions')
+          .where('entry_id', '=', transaction.entryId)
+          .execute();
 
-    await workspaceDatabase.transaction().execute(async (trx) => {
-      await trx
-        .deleteFrom('entries')
-        .where('id', '=', transaction.entryId)
-        .execute();
-      await trx
-        .deleteFrom('entry_transactions')
-        .where('entry_id', '=', transaction.entryId)
-        .execute();
+        await trx
+          .deleteFrom('entry_interactions')
+          .where('entry_id', '=', transaction.entryId)
+          .execute();
 
-      await trx
-        .deleteFrom('collaborations')
-        .where('entry_id', '=', transaction.entryId)
-        .execute();
+        await trx
+          .deleteFrom('texts')
+          .where('id', '=', transaction.entryId)
+          .execute();
 
-      await trx
-        .deleteFrom('texts')
-        .where('id', '=', transaction.entryId)
-        .execute();
-    });
+        return { deletedEntry };
+      });
 
     this.debug(
-      `Deleted entry ${entry.id} with type ${entry.type} with transaction ${transaction.id}`
+      `Deleted entry ${transaction.entryId} with transaction ${transaction.id}`
     );
+
+    if (!deletedEntry) {
+      return;
+    }
 
     eventBus.publish({
       type: 'entry_deleted',
       userId,
-      entry: mapEntry(entry),
+      entry: mapEntry(deletedEntry),
     });
   }
 
@@ -1089,8 +853,13 @@ class EntryService {
         .execute();
 
       await tx
-        .deleteFrom('collaborations')
+        .deleteFrom('entry_interactions')
         .where('entry_id', '=', transaction.entryId)
+        .execute();
+
+      await tx
+        .deleteFrom('texts')
+        .where('id', '=', transaction.entryId)
         .execute();
     });
 
@@ -1128,6 +897,22 @@ class EntryService {
       .executeTakeFirst();
 
     if (!entry) {
+      // Make sure we don't have any data left behind
+      await workspaceDatabase
+        .deleteFrom('entry_transactions')
+        .where('id', '=', transaction.id)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('entry_interactions')
+        .where('entry_id', '=', transaction.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('texts')
+        .where('id', '=', transaction.entryId)
+        .execute();
+
       return true;
     }
 
@@ -1228,10 +1013,108 @@ class EntryService {
       return;
     }
 
-    await workspaceDatabase
-      .deleteFrom('entry_transactions')
-      .where('id', '=', transaction.id)
+    const previousTransactions = await workspaceDatabase
+      .selectFrom('entry_transactions')
+      .selectAll()
+      .where('entry_id', '=', transaction.entryId)
+      .orderBy('id', 'asc')
       .execute();
+
+    const ydoc = new YDoc();
+
+    let lastTransaction: SelectEntryTransaction | undefined;
+    for (const previousTransaction of previousTransactions) {
+      if (previousTransaction.id === transaction.id) {
+        continue;
+      }
+
+      if (previousTransaction.data) {
+        ydoc.applyUpdate(previousTransaction.data);
+      }
+
+      lastTransaction = previousTransaction;
+    }
+
+    if (!lastTransaction) {
+      return true;
+    }
+
+    const attributes = ydoc.getAttributes<EntryAttributes>();
+    const model = registry.getModel(attributes.type);
+    if (!model) {
+      return true;
+    }
+
+    const text = model.getText(transaction.entryId, attributes);
+
+    const createdEntry = await workspaceDatabase
+      .transaction()
+      .execute(async (trx) => {
+        const createdEntry = await trx
+          .insertInto('entries')
+          .returningAll()
+          .values({
+            id: transaction.entryId,
+            root_id: transaction.rootId,
+            created_at: lastTransaction.created_at,
+            created_by: lastTransaction.created_by,
+            attributes: JSON.stringify(attributes),
+            updated_at: lastTransaction.created_at,
+            updated_by: lastTransaction.created_by,
+            transaction_id: lastTransaction.id,
+          })
+          .onConflict((b) =>
+            b
+              .columns(['id'])
+              .doUpdateSet({
+                attributes: JSON.stringify(attributes),
+                updated_at: lastTransaction.created_at,
+                updated_by: lastTransaction.created_by,
+                transaction_id: lastTransaction.id,
+              })
+              .where('transaction_id', '=', transaction.id)
+          )
+          .executeTakeFirst();
+
+        if (!createdEntry) {
+          return undefined;
+        }
+
+        await trx
+          .deleteFrom('entry_transactions')
+          .where('id', '=', transaction.id)
+          .execute();
+
+        if (text !== undefined) {
+          await trx
+            .deleteFrom('texts')
+            .where('id', '=', transaction.entryId)
+            .execute();
+        }
+
+        if (text) {
+          await trx
+            .insertInto('texts')
+            .values({
+              id: transaction.entryId,
+              name: text.name,
+              text: text.text,
+            })
+            .execute();
+        }
+      });
+
+    if (createdEntry) {
+      eventBus.publish({
+        type: 'entry_created',
+        userId,
+        entry: mapEntry(createdEntry),
+      });
+
+      return true;
+    }
+
+    return false;
   }
 
   public async syncServerEntryInteraction(

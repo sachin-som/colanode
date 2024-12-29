@@ -39,7 +39,13 @@ export class FileDeleteMutationHandler
     };
 
     await workspaceDatabase.transaction().execute(async (tx) => {
-      await tx.deleteFrom('files').where('id', '=', input.fileId).execute();
+      await tx
+        .updateTable('files')
+        .set({
+          deleted_at: deletedAt,
+        })
+        .where('id', '=', input.fileId)
+        .execute();
 
       await tx
         .insertInto('mutations')

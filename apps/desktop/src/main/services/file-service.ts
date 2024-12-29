@@ -626,6 +626,71 @@ class FileService {
       `Server file interaction for file ${fileInteraction.fileId} has been synced`
     );
   }
+
+  public async revertFileCreation(userId: string, fileId: string) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const deletedFile = await workspaceDatabase
+      .deleteFrom('files')
+      .returningAll()
+      .where('id', '=', fileId)
+      .executeTakeFirst();
+
+    if (!deletedFile) {
+      return;
+    }
+
+    await workspaceDatabase
+      .deleteFrom('file_states')
+      .returningAll()
+      .where('file_id', '=', fileId)
+      .executeTakeFirst();
+
+    await workspaceDatabase
+      .deleteFrom('file_interactions')
+      .where('file_id', '=', fileId)
+      .execute();
+
+    const filePath = path.join(
+      getWorkspaceFilesDirectoryPath(userId),
+      `${fileId}${deletedFile.extension}`
+    );
+
+    if (fs.existsSync(filePath)) {
+      fs.rmSync(filePath, { force: true });
+    }
+
+    eventBus.publish({
+      type: 'file_deleted',
+      userId,
+      file: mapFile(deletedFile),
+    });
+  }
+
+  public async revertFileDeletion(userId: string, fileId: string) {
+    const workspaceDatabase =
+      await databaseService.getWorkspaceDatabase(userId);
+
+    const deletedFile = await workspaceDatabase
+      .updateTable('files')
+      .returningAll()
+      .set({
+        deleted_at: null,
+      })
+      .where('id', '=', fileId)
+      .executeTakeFirst();
+
+    if (!deletedFile) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'file_created',
+      userId,
+      file: mapFile(deletedFile),
+    });
+  }
 }
 
 export const fileService = new FileService();

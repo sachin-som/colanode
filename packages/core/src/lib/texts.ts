@@ -19,6 +19,15 @@ export const extractEntryText = (
       text: extractBlockTexts(id, attributes.content),
     };
   }
+
+  if (attributes.type === 'record') {
+    return {
+      id,
+      name: attributes.name,
+      text: extractBlockTexts(id, attributes.content),
+    };
+  }
+
   return undefined;
 };
 

@@ -1,8 +1,4 @@
-import {
-  hasAdminAccess,
-  hasCollaboratorAccess,
-  EntryRole,
-} from '@colanode/core';
+import { EntryRole, hasEntryRole } from '@colanode/core';
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 
@@ -76,8 +72,8 @@ export const Conversation = ({
     }
   };
 
-  const isAdmin = hasAdminAccess(role);
-  const isCollaborator = hasCollaboratorAccess(role);
+  const isAdmin = hasEntryRole(role, 'admin');
+  const canCreateMessage = hasEntryRole(role, 'commenter');
 
   return (
     <ConversationContext.Provider
@@ -85,7 +81,7 @@ export const Conversation = ({
         id: conversationId,
         role,
         rootId,
-        canCreateMessage: isCollaborator,
+        canCreateMessage,
         onReply: (message) => {
           if (messageCreateRef.current) {
             messageCreateRef.current.setReplyTo(message);

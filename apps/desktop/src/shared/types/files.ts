@@ -13,6 +13,7 @@ export type File = {
   id: string;
   type: FileType;
   parentId: string;
+  entryId: string;
   rootId: string;
   name: string;
   originalName: string;

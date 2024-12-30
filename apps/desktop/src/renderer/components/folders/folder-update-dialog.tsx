@@ -1,4 +1,4 @@
-import { FolderEntry, hasEditorAccess, EntryRole } from '@colanode/core';
+import { EntryRole, FolderEntry, hasEntryRole } from '@colanode/core';
 
 import { FolderForm } from '@/renderer/components/folders/folder-form';
 import {
@@ -27,7 +27,7 @@ export const FolderUpdateDialog = ({
 }: FolderUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,4 +1,9 @@
-import { DeleteMessageMutationData, generateId, IdType } from '@colanode/core';
+import {
+  canDeleteMessage,
+  DeleteMessageMutationData,
+  generateId,
+  IdType,
+} from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +12,8 @@ import {
   MessageDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapMessage } from '@/main/utils';
+import { fetchEntry, fetchUser, mapEntry, mapMessage } from '@/main/utils';
+import { MutationError } from '@/shared/mutations';
 
 export class MessageDeleteMutationHandler
   implements MutationHandler<MessageDeleteMutationInput>
@@ -29,6 +35,41 @@ export class MessageDeleteMutationHandler
       return {
         success: true,
       };
+    }
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError('user_not_found', 'User not found.');
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, message.entry_id);
+    if (!entry) {
+      throw new MutationError('entry_not_found', 'Conversation not found.');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, message.root_id);
+    if (!root) {
+      throw new MutationError('entry_not_found', 'Conversation not found.');
+    }
+
+    if (
+      !canDeleteMessage({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        'unauthorized',
+        'You are not allowed to delete this message.'
+      );
     }
 
     const deletedAt = new Date().toISOString();

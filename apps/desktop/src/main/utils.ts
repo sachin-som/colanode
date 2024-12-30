@@ -114,6 +114,32 @@ export const fetchEntryAncestors = (
     .execute();
 };
 
+export const fetchEntry = (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  entryId: string
+): Promise<SelectEntry | undefined> => {
+  return database
+    .selectFrom('entries')
+    .selectAll()
+    .where('id', '=', entryId)
+    .executeTakeFirst();
+};
+
+export const fetchUser = (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  userId: string
+): Promise<SelectUser | undefined> => {
+  return database
+    .selectFrom('users')
+    .selectAll()
+    .where('id', '=', userId)
+    .executeTakeFirst();
+};
+
 export const fetchWorkspaceCredentials = async (
   userId: string
 ): Promise<WorkspaceCredentials | null> => {
@@ -308,6 +334,7 @@ export const mapFile = (row: SelectFile): File => {
     id: row.id,
     type: row.type,
     parentId: row.parent_id,
+    entryId: row.entry_id,
     rootId: row.root_id,
     name: row.name,
     originalName: row.original_name,

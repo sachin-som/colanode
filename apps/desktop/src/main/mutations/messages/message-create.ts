@@ -1,5 +1,6 @@
 import {
   Block,
+  canCreateMessage,
   CreateFileMutationData,
   CreateMessageMutationData,
   EditorNodeTypes,
@@ -24,7 +25,14 @@ import {
 } from '@/main/data/workspace/schema';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile, mapFileState, mapMessage } from '@/main/utils';
+import {
+  fetchEntry,
+  fetchUser,
+  mapEntry,
+  mapFile,
+  mapFileState,
+  mapMessage,
+} from '@/main/utils';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -35,6 +43,37 @@ export class MessageCreateMutationHandler
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError('user_not_found', 'User not found.');
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, input.conversationId);
+    if (!entry) {
+      throw new MutationError('entry_not_found', 'Conversation not found.');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    if (!root) {
+      throw new MutationError('entry_not_found', 'Conversation not found.');
+    }
+
+    if (
+      !canCreateMessage({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+      })
+    ) {
+      throw new MutationError(
+        'unauthorized',
+        'You are not allowed to create a message in this conversation.'
+      );
+    }
 
     const editorContent = input.content.content ?? [];
     const messageId = generateId(IdType.Message);

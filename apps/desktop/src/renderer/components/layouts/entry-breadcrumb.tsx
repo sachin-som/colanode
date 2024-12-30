@@ -16,15 +16,28 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useQuery } from '@/renderer/hooks/use-query';
 
 interface EntryBreadcrumbProps {
-  entries: Entry[];
+  entry: Entry;
 }
 
 const isClickable = (type: EntryType) => type !== 'space';
 
-export const EntryBreadcrumb = ({ entries }: EntryBreadcrumbProps) => {
+export const EntryBreadcrumb = ({ entry }: EntryBreadcrumbProps) => {
   const workspace = useWorkspace();
+  const { data } = useQuery(
+    {
+      type: 'entry_tree_get',
+      entryId: entry.id,
+      userId: workspace.userId,
+    },
+    {
+      enabled: entry.type !== 'chat',
+    }
+  );
+
+  const entries = data?.length ? data : [entry];
 
   // Show ellipsis if we have more than 3 nodes (first + last two)
   const showEllipsis = entries.length > 3;

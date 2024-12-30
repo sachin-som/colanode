@@ -38,7 +38,6 @@ export class ChannelCreateMutationHandler
       name: input.name,
       avatar: input.avatar,
       parentId: input.spaceId,
-      collaborators: null,
     };
 
     await entryService.createEntry(input.userId, { id, attributes });

@@ -4,28 +4,27 @@ import {
   LocalCreateTransaction,
   LocalDeleteTransaction,
   LocalUpdateTransaction,
-  Entry,
   EntryAttributes,
-  EntryMutationContext,
-  registry,
   SyncCreateEntryTransactionData,
   SyncDeleteEntryTransactionData,
   SyncEntryInteractionData,
   SyncEntryTransactionData,
   SyncUpdateEntryTransactionData,
+  extractEntryText,
+  canDeleteEntry,
+  canUpdateEntry,
+  entryAttributesSchema,
+  Entry,
+  canCreateEntry,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
 import { createDebugger } from '@/main/debugger';
-import { SelectWorkspace } from '@/main/data/app/schema';
 import { databaseService } from '@/main/data/database-service';
+import { SelectEntryTransaction } from '@/main/data/workspace/schema';
 import {
-  SelectMutation,
-  SelectEntry,
-  SelectEntryTransaction,
-} from '@/main/data/workspace/schema';
-import {
-  fetchEntryAncestors,
+  fetchEntry,
+  fetchUser,
   mapEntry,
   mapEntryInteraction,
   mapEntryTransaction,
@@ -49,88 +48,71 @@ export type UpdateEntryResult =
 class EntryService {
   private readonly debug = createDebugger('service:entry');
 
-  public async fetchEntry(
-    entryId: string,
-    userId: string
-  ): Promise<Entry | null> {
+  public async createEntry(userId: string, input: CreateEntryInput) {
+    this.debug(`Creating ${Array.isArray(input) ? 'entries' : 'entry'}`);
+
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    const entryRow = await workspaceDatabase
-      .selectFrom('entries')
-      .where('id', '=', entryId)
-      .selectAll()
-      .executeTakeFirst();
-
-    if (!entryRow) {
-      return null;
+    const user = await fetchUser(workspaceDatabase, userId);
+    if (!user) {
+      throw new Error('User not found');
     }
 
-    return mapEntry(entryRow);
-  }
+    let root: Entry | null = null;
+    const parent = await fetchEntry(
+      workspaceDatabase,
+      input.attributes.parentId
+    );
 
-  public async createEntry(
-    userId: string,
-    input: CreateEntryInput | CreateEntryInput[]
-  ) {
-    this.debug(`Creating ${Array.isArray(input) ? 'entries' : 'entry'}`);
-    const workspace = await this.fetchWorkspace(userId);
-
-    const inputs = Array.isArray(input) ? input : [input];
-    const createdEntries: SelectEntry[] = [];
-    const createdMutations: SelectMutation[] = [];
-
-    const workspaceDatabase =
-      await databaseService.getWorkspaceDatabase(userId);
-
-    await workspaceDatabase.transaction().execute(async (transaction) => {
-      for (const inputItem of inputs) {
-        const model = registry.getModel(inputItem.attributes.type);
-        if (!model.schema.safeParse(inputItem.attributes).success) {
-          throw new Error('Invalid attributes');
+    if (parent) {
+      if (parent.id === parent.root_id) {
+        root = mapEntry(parent);
+      } else {
+        const rootRow = await fetchEntry(workspaceDatabase, parent.root_id);
+        if (rootRow) {
+          root = mapEntry(rootRow);
         }
+      }
+    }
 
-        let ancestors: Entry[] = [];
-        if (inputItem.attributes.parentId) {
-          const ancestorRows = await fetchEntryAncestors(
-            transaction,
-            inputItem.attributes.parentId
-          );
-          ancestors = ancestorRows.map(mapEntry);
-        }
+    if (
+      !canCreateEntry(
+        {
+          user: {
+            userId,
+            role: user.role,
+          },
+          root: root,
+        },
+        input.attributes
+      )
+    ) {
+      throw new Error('Insufficient permissions');
+    }
 
-        const rootId = ancestors[0]?.id ?? inputItem.id;
-        const context = new EntryMutationContext(
-          workspace.account_id,
-          workspace.workspace_id,
-          userId,
-          workspace.role,
-          ancestors
-        );
+    const ydoc = new YDoc();
+    const update = ydoc.updateAttributes(
+      entryAttributesSchema,
+      input.attributes
+    );
 
-        if (!model.canCreate(context, inputItem.attributes)) {
-          throw new Error('Insufficient permissions');
-        }
+    const createdAt = new Date().toISOString();
+    const transactionId = generateId(IdType.Transaction);
+    const text = extractEntryText(input.id, input.attributes);
 
-        const ydoc = new YDoc();
-        const update = ydoc.updateAttributes(
-          model.schema,
-          inputItem.attributes
-        );
-
-        const createdAt = new Date().toISOString();
-        const transactionId = generateId(IdType.Transaction);
-        const text = model.getText(inputItem.id, inputItem.attributes);
-
-        const createdEntry = await transaction
+    const { createdEntry, createdMutation } = await workspaceDatabase
+      .transaction()
+      .execute(async (trx) => {
+        const createdEntry = await trx
           .insertInto('entries')
           .returningAll()
           .values({
-            id: inputItem.id,
-            root_id: rootId,
-            attributes: JSON.stringify(inputItem.attributes),
+            id: input.id,
+            root_id: root?.id ?? input.id,
+            attributes: JSON.stringify(input.attributes),
             created_at: createdAt,
-            created_by: context.userId,
+            created_by: userId,
             transaction_id: transactionId,
           })
           .executeTakeFirst();
@@ -139,19 +121,17 @@ class EntryService {
           throw new Error('Failed to create entry');
         }
 
-        createdEntries.push(createdEntry);
-
-        const createdTransaction = await transaction
+        const createdTransaction = await trx
           .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: transactionId,
-            entry_id: inputItem.id,
-            root_id: rootId,
+            entry_id: input.id,
+            root_id: root?.id ?? input.id,
             operation: 'create',
             data: update,
             created_at: createdAt,
-            created_by: context.userId,
+            created_by: userId,
             version: 0n,
           })
           .executeTakeFirst();
@@ -160,12 +140,12 @@ class EntryService {
           throw new Error('Failed to create transaction');
         }
 
-        const mutation = await transaction
+        const createdMutation = await trx
           .insertInto('mutations')
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            node_id: inputItem.id,
+            node_id: input.id,
             type: 'apply_create_transaction',
             data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: createdAt,
@@ -173,41 +153,47 @@ class EntryService {
           })
           .executeTakeFirst();
 
-        if (!mutation) {
+        if (!createdMutation) {
           throw new Error('Failed to create mutation');
         }
 
-        createdMutations.push(mutation);
-
         if (text) {
-          await transaction
+          await trx
             .insertInto('texts')
-            .values({ id: inputItem.id, name: text.name, text: text.text })
+            .values({ id: input.id, name: text.name, text: text.text })
             .execute();
         }
-      }
+
+        return {
+          createdEntry,
+          createdMutation,
+        };
+      });
+
+    if (!createdEntry) {
+      throw new Error('Failed to create entry');
+    }
+
+    this.debug(
+      `Created entry ${createdEntry.id} with type ${createdEntry.type}`
+    );
+
+    eventBus.publish({
+      type: 'entry_created',
+      userId,
+      entry: mapEntry(createdEntry),
     });
 
-    for (const createdEntry of createdEntries) {
-      this.debug(
-        `Created entry ${createdEntry.id} with type ${createdEntry.type}`
-      );
-
-      eventBus.publish({
-        type: 'entry_created',
-        userId,
-        entry: mapEntry(createdEntry),
-      });
+    if (!createdMutation) {
+      throw new Error('Failed to create mutation');
     }
 
-    for (const createdMutation of createdMutations) {
-      this.debug(`Created mutation ${createdMutation.id}`);
+    this.debug(`Created mutation ${createdMutation.id}`);
 
-      eventBus.publish({
-        type: 'mutation_created',
-        userId,
-      });
-    }
+    eventBus.publish({
+      type: 'mutation_created',
+      userId,
+    });
   }
 
   public async updateEntry(
@@ -232,44 +218,28 @@ class EntryService {
   ): Promise<UpdateEntryResult | null> {
     this.debug(`Updating entry ${entryId}`);
 
-    const workspace = await this.fetchWorkspace(userId);
-
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    const ancestorRows = await fetchEntryAncestors(workspaceDatabase, entryId);
-    const entryRow = ancestorRows.find((ancestor) => ancestor.id === entryId);
+    const entryRow = await fetchEntry(workspaceDatabase, entryId);
     if (!entryRow) {
       return 'not_found';
     }
 
-    const ancestors = ancestorRows.map(mapEntry);
-    const entry = mapEntry(entryRow);
-
-    if (!entry) {
+    const user = await fetchUser(workspaceDatabase, userId);
+    if (!user) {
       return 'not_found';
     }
 
-    const context = new EntryMutationContext(
-      workspace.account_id,
-      workspace.workspace_id,
-      userId,
-      workspace.role,
-      ancestors
-    );
+    const root = await fetchEntry(workspaceDatabase, entryRow.root_id);
+    if (!root) {
+      return 'not_found';
+    }
 
+    const entry = mapEntry(entryRow);
     const transactionId = generateId(IdType.Transaction);
     const updatedAt = new Date().toISOString();
     const updatedAttributes = updater(entry.attributes);
-
-    const model = registry.getModel(entry.type);
-    if (!model.schema.safeParse(updatedAttributes).success) {
-      return 'invalid_attributes';
-    }
-
-    if (!model.canUpdate(context, entry, updatedAttributes)) {
-      return 'unauthorized';
-    }
 
     const ydoc = new YDoc();
     const previousTransactions = await workspaceDatabase
@@ -286,8 +256,28 @@ class EntryService {
       ydoc.applyUpdate(previousTransaction.data);
     }
 
-    const update = ydoc.updateAttributes(model.schema, updatedAttributes);
-    const text = model.getText(entryId, updatedAttributes);
+    const update = ydoc.updateAttributes(
+      entryAttributesSchema,
+      updatedAttributes
+    );
+
+    if (
+      !canUpdateEntry(
+        {
+          user: {
+            userId,
+            role: user.role,
+          },
+          root: mapEntry(root),
+          entry: entry,
+        },
+        updatedAttributes
+      )
+    ) {
+      return 'unauthorized';
+    }
+
+    const text = extractEntryText(entryId, updatedAttributes);
 
     const { updatedEntry, createdMutation } = await workspaceDatabase
       .transaction()
@@ -298,7 +288,7 @@ class EntryService {
           .set({
             attributes: JSON.stringify(ydoc.getAttributes()),
             updated_at: updatedAt,
-            updated_by: context.userId,
+            updated_by: userId,
             transaction_id: transactionId,
           })
           .where('id', '=', entryId)
@@ -319,7 +309,7 @@ class EntryService {
             operation: 'update',
             data: update,
             created_at: updatedAt,
-            created_by: context.userId,
+            created_by: userId,
             version: 0n,
           })
           .executeTakeFirst();
@@ -395,28 +385,34 @@ class EntryService {
   }
 
   public async deleteEntry(entryId: string, userId: string) {
-    const workspace = await this.fetchWorkspace(userId);
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    const ancestorRows = await fetchEntryAncestors(workspaceDatabase, entryId);
-    const ancestors = ancestorRows.map(mapEntry);
+    const user = await fetchUser(workspaceDatabase, userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    const entry = ancestors.find((ancestor) => ancestor.id === entryId);
+    const root = await fetchEntry(workspaceDatabase, entryId);
+    if (!root) {
+      throw new Error('Entry not found');
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, entryId);
     if (!entry) {
       throw new Error('Entry not found');
     }
 
-    const model = registry.getModel(entry.type);
-    const context = new EntryMutationContext(
-      workspace.account_id,
-      workspace.workspace_id,
-      userId,
-      workspace.role,
-      ancestors
-    );
-
-    if (!model.canDelete(context, entry)) {
+    if (
+      !canDeleteEntry({
+        user: {
+          userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+      })
+    ) {
       throw new Error('Insufficient permissions');
     }
 
@@ -441,11 +437,11 @@ class EntryService {
           .values({
             id: generateId(IdType.Transaction),
             entry_id: entryId,
-            root_id: entry.rootId,
+            root_id: root.root_id,
             operation: 'delete',
             data: null,
             created_at: new Date().toISOString(),
-            created_by: context.userId,
+            created_by: userId,
             version: 0n,
           })
           .executeTakeFirst();
@@ -556,13 +552,7 @@ class EntryService {
     const ydoc = new YDoc();
     ydoc.applyUpdate(transaction.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
-
-    const model = registry.getModel(attributes.type);
-    if (!model) {
-      return;
-    }
-
-    const text = model.getText(transaction.entryId, attributes);
+    const text = extractEntryText(transaction.entryId, attributes);
 
     const { createdEntry } = await workspaceDatabase
       .transaction()
@@ -684,13 +674,7 @@ class EntryService {
 
     ydoc.applyUpdate(transaction.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
-
-    const model = registry.getModel(attributes.type);
-    if (!model) {
-      return;
-    }
-
-    const text = model.getText(transaction.entryId, attributes);
+    const text = extractEntryText(transaction.entryId, attributes);
 
     const { updatedEntry } = await workspaceDatabase
       .transaction()
@@ -933,13 +917,7 @@ class EntryService {
       .orderBy('id', 'asc')
       .execute();
 
-    const model = registry.getModel(entry.type);
-    if (!model) {
-      return true;
-    }
-
     const ydoc = new YDoc();
-
     let lastTransaction: SelectEntryTransaction | undefined;
     for (const previousTransaction of previousTransactions) {
       if (previousTransaction.id === transaction.id) {
@@ -956,6 +934,9 @@ class EntryService {
     if (!lastTransaction) {
       return true;
     }
+
+    const attributes = ydoc.getAttributes<EntryAttributes>();
+    const text = extractEntryText(transaction.entryId, attributes);
 
     const updatedEntry = await workspaceDatabase
       .transaction()
@@ -975,6 +956,24 @@ class EntryService {
 
         if (!updatedEntry) {
           return undefined;
+        }
+
+        if (text !== undefined) {
+          await trx
+            .deleteFrom('texts')
+            .where('id', '=', transaction.entryId)
+            .execute();
+        }
+
+        if (text) {
+          await trx
+            .insertInto('texts')
+            .values({
+              id: transaction.entryId,
+              name: text.name,
+              text: text.text,
+            })
+            .execute();
         }
 
         await trx
@@ -1040,12 +1039,7 @@ class EntryService {
     }
 
     const attributes = ydoc.getAttributes<EntryAttributes>();
-    const model = registry.getModel(attributes.type);
-    if (!model) {
-      return true;
-    }
-
-    const text = model.getText(transaction.entryId, attributes);
+    const text = extractEntryText(transaction.entryId, attributes);
 
     const createdEntry = await workspaceDatabase
       .transaction()
@@ -1177,20 +1171,6 @@ class EntryService {
     this.debug(
       `Server entry interaction for entry ${entryInteraction.entryId} has been synced`
     );
-  }
-
-  private async fetchWorkspace(userId: string): Promise<SelectWorkspace> {
-    const workspace = await databaseService.appDatabase
-      .selectFrom('workspaces')
-      .selectAll()
-      .where('user_id', '=', userId)
-      .executeTakeFirst();
-
-    if (!workspace) {
-      throw new Error('Workspace not found');
-    }
-
-    return workspace;
   }
 }
 

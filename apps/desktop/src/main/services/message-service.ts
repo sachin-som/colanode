@@ -1,7 +1,7 @@
 import {
   CreateMessageReactionMutationData,
   DeleteMessageReactionMutationData,
-  extractText,
+  extractMessageText,
   SyncMessageData,
   SyncMessageInteractionData,
   SyncMessageReactionData,
@@ -61,14 +61,17 @@ class MessageService {
         .where('id', '=', message.id)
         .execute();
 
-      await workspaceDatabase
-        .insertInto('texts')
-        .values({
-          id: message.id,
-          name: null,
-          text: extractText(message.id, message.content.blocks),
-        })
-        .execute();
+      const text = extractMessageText(message.id, message.content);
+      if (text) {
+        await workspaceDatabase
+          .insertInto('texts')
+          .values({
+            id: message.id,
+            name: null,
+            text: text.text,
+          })
+          .execute();
+      }
 
       eventBus.publish({
         type: 'message_updated',
@@ -102,14 +105,17 @@ class MessageService {
       return;
     }
 
-    await workspaceDatabase
-      .insertInto('texts')
-      .values({
-        id: message.id,
-        name: null,
-        text: extractText(message.id, message.content.blocks),
-      })
-      .execute();
+    const text = extractMessageText(message.id, message.content);
+    if (text) {
+      await workspaceDatabase
+        .insertInto('texts')
+        .values({
+          id: message.id,
+          name: null,
+          text: text.text,
+        })
+        .execute();
+    }
 
     eventBus.publish({
       type: 'message_created',

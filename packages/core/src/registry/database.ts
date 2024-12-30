@@ -1,7 +1,5 @@
-import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 
-import { EntryModel, entryRoleEnum } from './core';
 import { fieldAttributesSchema } from './fields';
 
 export const viewFieldAttributesSchema = z.object({
@@ -73,52 +71,9 @@ export const databaseAttributesSchema = z.object({
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  collaborators: z.record(z.string(), entryRoleEnum).nullable().optional(),
   fields: z.record(z.string(), fieldAttributesSchema),
   views: z.record(z.string(), viewAttributesSchema),
 });
 
 export type DatabaseAttributes = z.infer<typeof databaseAttributesSchema>;
 export type ViewType = 'table' | 'board' | 'calendar';
-
-export const databaseModel: EntryModel = {
-  type: 'database',
-  schema: databaseAttributesSchema,
-  getText: (id, attributes) => {
-    if (attributes.type !== 'database') {
-      return undefined;
-    }
-
-    return {
-      id,
-      name: attributes.name,
-      text: null,
-    };
-  },
-  canCreate: async (context, attributes) => {
-    if (attributes.type !== 'database') {
-      return false;
-    }
-
-    const collaboratorIds = Object.keys(attributes.collaborators ?? {});
-    if (collaboratorIds.length > 0 && !context.hasAdminAccess()) {
-      return false;
-    }
-
-    return context.hasEditorAccess();
-  },
-  canUpdate: async (context, node, attributes) => {
-    if (attributes.type !== 'database' || node.type !== 'database') {
-      return false;
-    }
-
-    if (!isEqual(node.attributes.collaborators, attributes.collaborators)) {
-      return context.hasAdminAccess();
-    }
-
-    return context.hasEditorAccess();
-  },
-  canDelete: async (context, _) => {
-    return context.hasEditorAccess();
-  },
-};

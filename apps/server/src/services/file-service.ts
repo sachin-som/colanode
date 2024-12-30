@@ -1,10 +1,11 @@
 import {
+  canCreateFile,
+  canDeleteFile,
   CreateFileMutation,
   DeleteFileMutation,
   extractEntryRole,
   FileStatus,
-  hasCollaboratorAccess,
-  hasViewerAccess,
+  hasEntryRole,
   MarkFileOpenedMutation,
   MarkFileSeenMutation,
 } from '@colanode/core';
@@ -12,7 +13,7 @@ import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
-import { mapEntry } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
 import { filesStorage, BUCKET_NAMES } from '@/data/storage';
 
@@ -30,19 +31,30 @@ class FileService {
       return true;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', mutation.data.rootId)
-      .executeTakeFirst();
+    const entry = await fetchEntry(mutation.data.entryId);
+    if (!entry) {
+      return false;
+    }
 
+    const root = await fetchEntry(mutation.data.rootId);
     if (!root) {
       return false;
     }
 
-    const rootEntry = mapEntry(root);
-    const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
+    if (
+      !canCreateFile({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        file: {
+          id: mutation.data.id,
+          parentId: mutation.data.parentId,
+        },
+      })
+    ) {
       return false;
     }
 
@@ -95,19 +107,31 @@ class FileService {
       return true;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', mutation.data.rootId)
-      .executeTakeFirst();
+    const entry = await fetchEntry(file.entry_id);
+    if (!entry) {
+      return false;
+    }
 
+    const root = await fetchEntry(file.root_id);
     if (!root) {
       return false;
     }
 
-    const rootEntry = mapEntry(root);
-    const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
+    if (
+      !canDeleteFile({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        file: {
+          id: mutation.data.id,
+          parentId: file.parent_id,
+          createdBy: file.created_by,
+        },
+      })
+    ) {
       return false;
     }
 
@@ -177,19 +201,14 @@ class FileService {
       return false;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', file.root_id)
-      .executeTakeFirst();
-
+    const root = await fetchEntry(file.root_id);
     if (!root) {
       return false;
     }
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasViewerAccess(role)) {
+    if (!role || !hasEntryRole(role, 'viewer')) {
       return false;
     }
 
@@ -250,7 +269,7 @@ class FileService {
   ): Promise<boolean> {
     const file = await database
       .selectFrom('files')
-      .select(['id', 'root_id', 'workspace_id'])
+      .select(['id', 'entry_id', 'root_id', 'workspace_id'])
       .where('id', '=', mutation.data.fileId)
       .executeTakeFirst();
 
@@ -258,19 +277,14 @@ class FileService {
       return false;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', file.root_id)
-      .executeTakeFirst();
-
+    const root = await fetchEntry(file.root_id);
     if (!root) {
       return false;
     }
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasViewerAccess(role)) {
+    if (!role || !hasEntryRole(role, 'viewer')) {
       return false;
     }
 

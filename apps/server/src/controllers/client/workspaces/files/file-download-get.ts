@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateDownloadOutput, hasViewerAccess } from '@colanode/core';
+import { CreateDownloadOutput, hasEntryRole } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -29,7 +29,7 @@ export const fileDownloadGetHandler = async (
   }
 
   const role = await fetchEntryRole(file.root_id, res.locals.user.id);
-  if (role === null || !hasViewerAccess(role)) {
+  if (role === null || !hasEntryRole(role, 'viewer')) {
     res.status(403).json({
       code: ApiError.Forbidden,
       message: 'Forbidden.',

@@ -1,4 +1,9 @@
-import { DeleteFileMutationData, generateId, IdType } from '@colanode/core';
+import {
+  canDeleteFile,
+  DeleteFileMutationData,
+  generateId,
+  IdType,
+} from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +12,8 @@ import {
   FileDeleteMutationOutput,
 } from '@/shared/mutations/files/file-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile } from '@/main/utils';
+import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
+import { MutationError } from '@/shared/mutations';
 
 export class FileDeleteMutationHandler
   implements MutationHandler<FileDeleteMutationInput>
@@ -26,9 +32,46 @@ export class FileDeleteMutationHandler
       .executeTakeFirst();
 
     if (!file) {
-      return {
-        success: true,
-      };
+      throw new MutationError(
+        'file_not_found',
+        'File could not be found or has been already deleted.'
+      );
+    }
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError('user_not_found', 'User not found.');
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, file.root_id);
+    if (!entry) {
+      throw new MutationError('entry_not_found', 'Entry not found.');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, entry.root_id);
+    if (!root) {
+      throw new MutationError('entry_not_found', 'Entry not found.');
+    }
+
+    if (
+      !canDeleteFile({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        file: {
+          id: input.fileId,
+          parentId: file.parent_id,
+          createdBy: file.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        'unauthorized',
+        'You are not allowed to delete this file.'
+      );
     }
 
     const deletedAt = new Date().toISOString();

@@ -14,6 +14,8 @@ import {
   FieldCreateMutationOutput,
 } from '@/shared/mutations/databases/field-create';
 import { MutationError } from '@/shared/mutations';
+import { databaseService } from '@/main/data/database-service';
+import { fetchEntry } from '@/main/utils';
 
 export class FieldCreateMutationHandler
   implements MutationHandler<FieldCreateMutationInput>
@@ -29,9 +31,13 @@ export class FieldCreateMutationHandler
         );
       }
 
-      const relationDatabase = await entryService.fetchEntry(
-        input.relationDatabaseId,
+      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
         input.userId
+      );
+
+      const relationDatabase = await fetchEntry(
+        workspaceDatabase,
+        input.relationDatabaseId
       );
 
       if (!relationDatabase || relationDatabase.type !== 'database') {

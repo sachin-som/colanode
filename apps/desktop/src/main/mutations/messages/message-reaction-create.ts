@@ -1,4 +1,5 @@
 import {
+  canCreateMessageReaction,
   CreateMessageReactionMutation,
   generateId,
   IdType,
@@ -11,7 +12,13 @@ import {
   MessageReactionCreateMutationOutput,
 } from '@/shared/mutations/messages/message-reaction-create';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapMessageReaction } from '@/main/utils';
+import {
+  fetchEntry,
+  fetchUser,
+  mapEntry,
+  mapMessageReaction,
+} from '@/main/utils';
+import { MutationError } from '@/shared/mutations';
 
 export class MessageReactionCreateMutationHandler
   implements MutationHandler<MessageReactionCreateMutationInput>
@@ -22,6 +29,16 @@ export class MessageReactionCreateMutationHandler
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
+
+    const message = await workspaceDatabase
+      .selectFrom('messages')
+      .selectAll()
+      .where('id', '=', input.messageId)
+      .executeTakeFirst();
+
+    if (!message) {
+      throw new MutationError('message_not_found', 'Message not found.');
+    }
 
     const existingMessageReaction = await workspaceDatabase
       .selectFrom('message_reactions')
@@ -35,6 +52,35 @@ export class MessageReactionCreateMutationHandler
       return {
         success: true,
       };
+    }
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError('user_not_found', 'User not found.');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    if (!root) {
+      throw new MutationError('entry_not_found', 'Conversation not found.');
+    }
+
+    if (
+      !canCreateMessageReaction({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        'unauthorized',
+        'You are not allowed to react to this message.'
+      );
     }
 
     const { createdMessageReaction, createdMutation } = await workspaceDatabase

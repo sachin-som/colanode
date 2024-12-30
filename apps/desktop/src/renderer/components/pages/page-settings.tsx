@@ -1,4 +1,4 @@
-import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
+import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -23,8 +23,8 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEditorAccess(role);
-  const canDelete = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
+  const canDelete = hasEntryRole(role, 'editor');
 
   return (
     <React.Fragment>

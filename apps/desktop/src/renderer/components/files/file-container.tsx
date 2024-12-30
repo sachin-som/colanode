@@ -12,16 +12,16 @@ interface FileContainerProps {
 export const FileContainer = ({ fileId }: FileContainerProps) => {
   const workspace = useWorkspace();
 
-  const { data: file, isPending: isFilePending } = useQuery({
+  const { data: file, isPending: isPendingFile } = useQuery({
     type: 'file_get',
     id: fileId,
     userId: workspace.userId,
   });
 
-  const { data: entries, isPending: isEntriesPending } = useQuery(
+  const { data: entry, isPending: isPendingEntry } = useQuery(
     {
-      type: 'entry_tree_get',
-      entryId: file?.parentId ?? '',
+      type: 'entry_get',
+      entryId: file?.entryId ?? '',
       userId: workspace.userId,
     },
     {
@@ -29,18 +29,33 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
     }
   );
 
-  if (isFilePending || isEntriesPending) {
+  const { data: root, isPending: isPendingRoot } = useQuery(
+    {
+      type: 'entry_get',
+      entryId: file?.rootId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!file,
+    }
+  );
+
+  if (isPendingFile || isPendingEntry || isPendingRoot) {
     return null;
   }
 
-  const role = extractEntryRole(entries ?? [], workspace.userId);
-  if (!file || !role) {
+  if (!file || !entry || !root) {
+    return null;
+  }
+
+  const role = extractEntryRole(root, workspace.userId);
+  if (!role) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <FileHeader entries={entries ?? []} file={file} role={role} />
+      <FileHeader file={file} role={role} entry={entry} />
       <FileBody file={file} />
     </div>
   );

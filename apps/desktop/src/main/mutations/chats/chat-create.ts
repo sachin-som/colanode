@@ -44,8 +44,8 @@ export class ChatCreateMutationHandler
       type: 'chat',
       parentId: input.workspaceId,
       collaborators: {
-        [input.userId]: 'collaborator',
-        [input.otherUserId]: 'collaborator',
+        [input.userId]: 'admin',
+        [input.otherUserId]: 'admin',
       },
     };
 

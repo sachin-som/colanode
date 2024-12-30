@@ -1,4 +1,4 @@
-import { hasEditorAccess, EntryRole, RecordEntry } from '@colanode/core';
+import { EntryRole, RecordEntry, hasEntryRole } from '@colanode/core';
 import { Copy, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -23,7 +23,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
   const workspace = useWorkspace();
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
   const canDelete =
-    record.createdBy === workspace.userId || hasEditorAccess(role);
+    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
 
   return (
     <React.Fragment>

@@ -1,4 +1,4 @@
-import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
+import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
 
 import { PageForm } from '@/renderer/components/pages/page-form';
 import {
@@ -27,7 +27,7 @@ export const PageUpdateDialog = ({
 }: PageUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

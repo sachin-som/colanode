@@ -1,4 +1,4 @@
-import { ChannelEntry, hasEditorAccess, EntryRole } from '@colanode/core';
+import { ChannelEntry, EntryRole, hasEntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -23,8 +23,8 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEditorAccess(role);
-  const canDelete = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
+  const canDelete = hasEntryRole(role, 'editor');
 
   return (
     <React.Fragment>

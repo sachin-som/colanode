@@ -1,4 +1,4 @@
-import { FolderEntry } from '@colanode/core';
+import { EntryRole, FolderEntry } from '@colanode/core';
 import {
   Check,
   Filter,
@@ -57,6 +57,7 @@ export const folderLayouts: FolderLayout[] = [
 
 interface FolderBodyProps {
   folder: FolderEntry;
+  role: EntryRole;
 }
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {

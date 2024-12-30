@@ -1,4 +1,5 @@
 import {
+  canCreateFile,
   CreateFileMutationData,
   FileStatus,
   generateId,
@@ -14,7 +15,7 @@ import {
 import { MutationError } from '@/shared/mutations';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile } from '@/main/utils';
+import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
 
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
@@ -34,7 +35,41 @@ export class FileCreateMutationHandler
       input.userId
     );
 
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError('user_not_found', 'User not found.');
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, input.entryId);
+    if (!entry) {
+      throw new MutationError('entry_not_found', 'Entry not found.');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    if (!root) {
+      throw new MutationError('entry_not_found', 'Entry not found.');
+    }
+
     const fileId = generateId(IdType.File);
+    if (
+      !canCreateFile({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        file: {
+          id: fileId,
+          parentId: input.parentId,
+        },
+      })
+    ) {
+      throw new MutationError(
+        'unauthorized',
+        'You are not allowed to upload a file in this entry.'
+      );
+    }
 
     fileService.copyFileToWorkspace(
       input.filePath,

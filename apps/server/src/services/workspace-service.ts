@@ -70,7 +70,7 @@ class WorkspaceService {
         type: 'space',
         name: 'Home',
         description: 'This is your home space.',
-        parentId: workspaceId,
+        parentId: spaceId,
         collaborators: {
           [userId]: 'admin',
         },

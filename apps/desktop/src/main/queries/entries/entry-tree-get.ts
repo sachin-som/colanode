@@ -96,9 +96,11 @@ export class EntryTreeGetQueryHandler
 
     while (entry) {
       result.unshift(entry);
-      entry = rows.find((row) => row.id === entry?.parent_id);
+      entry = rows.find(
+        (row) => row.id !== entry?.id && row.id === entry?.parent_id
+      );
 
-      if (!entry || entry.id === entry.parent_id) {
+      if (!entry) {
         break;
       }
     }

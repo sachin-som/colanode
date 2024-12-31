@@ -24,7 +24,7 @@ export const LayoutSidebarChats = () => {
         <div className="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">
           Chats
         </div>
-        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center p-0">
+        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100 flex items-center justify-center p-0">
           <ChatCreatePopover />
         </div>
       </div>

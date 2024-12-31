@@ -301,10 +301,6 @@ class EntryService {
     input: ApplyCreateTransactionInput
   ): Promise<ApplyCreateTransactionOutput | null> {
     const root = await fetchEntry(input.rootId);
-    if (!root) {
-      return null;
-    }
-
     const ydoc = new YDoc();
     ydoc.applyUpdate(input.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
@@ -316,7 +312,7 @@ class EntryService {
             userId: user.id,
             role: user.role,
           },
-          root: mapEntry(root),
+          root: root ? mapEntry(root) : null,
         },
         attributes
       )

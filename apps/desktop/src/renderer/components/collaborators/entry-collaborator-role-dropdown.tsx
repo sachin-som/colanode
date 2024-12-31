@@ -43,8 +43,8 @@ const roles: EntryCollaboratorRole[] = [
 ];
 
 interface EntryCollaboratorRoleDropdownProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: EntryRole;
+  onChange: (value: EntryRole) => void;
   canEdit: boolean;
 }
 

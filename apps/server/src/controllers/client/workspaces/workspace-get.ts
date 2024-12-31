@@ -1,8 +1,8 @@
-import { WorkspaceRole, WorkspaceOutput } from '@colanode/core';
+import { WorkspaceRole, WorkspaceOutput, ApiErrorCode } from '@colanode/core';
 import { Request, Response } from 'express';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const workspaceGetHandler = async (
   req: Request,
@@ -17,11 +17,10 @@ export const workspaceGetHandler = async (
     .executeTakeFirst();
 
   if (!workspace) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.WorkspaceNotFound,
       message: 'Workspace not found.',
     });
-    return;
   }
 
   const user = await database
@@ -32,11 +31,10 @@ export const workspaceGetHandler = async (
     .executeTakeFirst();
 
   if (!user) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.WorkspaceNoAccess,
+      message: 'You do not have access to this workspace.',
     });
-    return;
   }
 
   const output: WorkspaceOutput = {
@@ -52,5 +50,5 @@ export const workspaceGetHandler = async (
     },
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

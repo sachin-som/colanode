@@ -8,6 +8,7 @@ import {
   UserRoleUpdateMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-user-role-update';
 import { MutationError } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 export class UserRoleUpdateMutationHandler
   implements MutationHandler<UserRoleUpdateMutationInput>
@@ -51,19 +52,24 @@ export class UserRoleUpdateMutationHandler
       );
     }
 
-    await httpClient.put<UserRoleUpdateOutput>(
-      `/v1/workspaces/${workspace.workspace_id}/users/${input.userToUpdateId}`,
-      {
-        role: input.role,
-      },
-      {
-        domain: server.domain,
-        token: account.token,
-      }
-    );
+    try {
+      await httpClient.put<UserRoleUpdateOutput>(
+        `/v1/workspaces/${workspace.workspace_id}/users/${input.userToUpdateId}`,
+        {
+          role: input.role,
+        },
+        {
+          domain: server.domain,
+          token: account.token,
+        }
+      );
 
-    return {
-      success: true,
-    };
+      return {
+        success: true,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError('api_error', apiError.message);
+    }
   }
 }

@@ -8,8 +8,9 @@ import {
   EmailRegisterMutationInput,
   EmailRegisterMutationOutput,
 } from '@/shared/mutations/accounts/email-register';
-import { Account } from '@/shared/types/accounts';
 import { MutationError } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
+import { mapAccount, mapWorkspace } from '@/main/utils';
 
 export class EmailRegisterMutationHandler
   implements MutationHandler<EmailRegisterMutationInput>
@@ -30,104 +31,96 @@ export class EmailRegisterMutationHandler
       );
     }
 
-    const { data } = await httpClient.post<LoginOutput>(
-      '/v1/accounts/register/email',
-      {
-        name: input.name,
-        email: input.email,
-        password: input.password,
-      },
-      {
-        domain: server.domain,
-      }
-    );
+    try {
+      const { data } = await httpClient.post<LoginOutput>(
+        '/v1/accounts/register/email',
+        {
+          name: input.name,
+          email: input.email,
+          password: input.password,
+        },
+        {
+          domain: server.domain,
+        }
+      );
 
-    let account: Account | undefined;
-    await databaseService.appDatabase.transaction().execute(async (trx) => {
-      const createdAccount = await trx
-        .insertInto('accounts')
-        .returningAll()
-        .values({
-          id: data.account.id,
-          name: data.account.name,
-          avatar: data.account.avatar,
-          device_id: data.deviceId,
-          email: data.account.email,
-          token: data.token,
-          server: server.domain,
-          status: 'active',
-        })
-        .executeTakeFirst();
+      const { createdAccount, createdWorkspaces } =
+        await databaseService.appDatabase.transaction().execute(async (trx) => {
+          const createdAccount = await trx
+            .insertInto('accounts')
+            .returningAll()
+            .values({
+              id: data.account.id,
+              name: data.account.name,
+              avatar: data.account.avatar,
+              device_id: data.deviceId,
+              email: data.account.email,
+              token: data.token,
+              server: server.domain,
+              status: 'active',
+            })
+            .executeTakeFirst();
+
+          if (!createdAccount) {
+            throw new MutationError(
+              'account_login_failed',
+              'Failed to login with email and password! Please try again.'
+            );
+          }
+
+          if (data.workspaces.length === 0) {
+            return { createdAccount, createdWorkspaces: [] };
+          }
+
+          const createdWorkspaces = await trx
+            .insertInto('workspaces')
+            .returningAll()
+            .values(
+              data.workspaces.map((workspace) => ({
+                workspace_id: workspace.id,
+                name: workspace.name,
+                account_id: data.account.id,
+                avatar: workspace.avatar,
+                role: workspace.user.role,
+                description: workspace.description,
+                user_id: workspace.user.id,
+                version_id: workspace.versionId,
+              }))
+            )
+            .execute();
+
+          return { createdAccount, createdWorkspaces };
+        });
 
       if (!createdAccount) {
-        throw new Error(
-          'Failed to create account! Please try again with a different email.'
+        throw new MutationError(
+          'account_login_failed',
+          'Failed to login with email and password! Please try again.'
         );
       }
 
-      account = {
-        id: createdAccount.id,
-        name: createdAccount.name,
-        email: createdAccount.email,
-        avatar: createdAccount.avatar,
-        deviceId: data.deviceId,
-        token: data.token,
-        status: 'active',
-        server: server.domain,
+      const account = mapAccount(createdAccount);
+      eventBus.publish({
+        type: 'account_created',
+        account,
+      });
+
+      if (createdWorkspaces.length > 0) {
+        for (const workspace of createdWorkspaces) {
+          eventBus.publish({
+            type: 'workspace_created',
+            workspace: mapWorkspace(workspace),
+          });
+        }
+      }
+
+      return {
+        account,
+        workspaces: data.workspaces,
       };
-
-      if (data.workspaces.length === 0) {
-        return;
-      }
-
-      await trx
-        .insertInto('workspaces')
-        .values(
-          data.workspaces.map((workspace) => ({
-            workspace_id: workspace.id,
-            name: workspace.name,
-            account_id: data.account.id,
-            avatar: workspace.avatar,
-            role: workspace.user.role,
-            description: workspace.description,
-            user_id: workspace.user.id,
-            version_id: workspace.versionId,
-          }))
-        )
-        .execute();
-    });
-
-    if (!account) {
-      throw new MutationError(
-        'account_register_failed',
-        'Failed to create account! Please try again with a different email.'
-      );
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError('api_error', apiError.message);
     }
-
-    eventBus.publish({
-      type: 'account_created',
-      account,
-    });
-
-    if (data.workspaces.length > 0) {
-      for (const workspace of data.workspaces) {
-        eventBus.publish({
-          type: 'workspace_created',
-          workspace: {
-            id: workspace.id,
-            name: workspace.name,
-            versionId: workspace.versionId,
-            accountId: workspace.user.accountId,
-            role: workspace.user.role,
-            userId: workspace.user.id,
-          },
-        });
-      }
-    }
-
-    return {
-      account,
-      workspaces: data.workspaces,
-    };
   }
 }

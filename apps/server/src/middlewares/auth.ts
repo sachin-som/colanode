@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response, RequestHandler } from 'express';
+import { ApiErrorCode } from '@colanode/core';
 
 import { verifyToken } from '@/lib/tokens';
-import { ApiError } from '@/types/api';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const authMiddleware: RequestHandler = async (
   req: Request,
@@ -11,20 +12,18 @@ export const authMiddleware: RequestHandler = async (
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Access Denied: No Token Provided!',
+    return ResponseBuilder.unauthorized(res, {
+      code: ApiErrorCode.TokenMissing,
+      message: 'No token provided',
     });
-    return;
   }
 
   const result = await verifyToken(token);
   if (!result.authenticated) {
-    res.status(400).json({
-      code: ApiError.Unauthorized,
-      message: 'Invalid Token',
+    return ResponseBuilder.unauthorized(res, {
+      code: ApiErrorCode.TokenInvalid,
+      message: 'Token is invalid or expired',
     });
-    return;
   }
 
   res.locals.account = result.account;

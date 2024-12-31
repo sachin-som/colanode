@@ -1,6 +1,5 @@
 import { isAxiosError } from 'axios';
-
-import { ApiErrorOutput } from '@/shared/types/errors';
+import { ApiErrorCode, ApiErrorOutput } from '@colanode/core';
 
 export const parseApiError = (error: unknown): ApiErrorOutput => {
   if (isAxiosError(error) && error.response) {
@@ -14,35 +13,35 @@ export const parseApiError = (error: unknown): ApiErrorOutput => {
 
     if (error.response.status === 401) {
       return {
-        code: 'UNAUTHORIZED',
+        code: ApiErrorCode.Unauthorized,
         message: 'You are not authorized to perform this action',
       };
     }
 
     if (error.response.status === 403) {
       return {
-        code: 'FORBIDDEN',
+        code: ApiErrorCode.Forbidden,
         message: 'You are forbidden from performing this action',
       };
     }
 
     if (error.response.status === 404) {
       return {
-        code: 'NOT_FOUND',
+        code: ApiErrorCode.NotFound,
         message: 'Resource not found',
       };
     }
 
     if (error.response.status === 400) {
       return {
-        code: 'BAD_REQUEST',
+        code: ApiErrorCode.BadRequest,
         message: 'Bad request',
       };
     }
   }
 
   return {
-    code: 'UNKNOWN',
+    code: ApiErrorCode.Unknown,
     message: 'An unknown error occurred',
   };
 };

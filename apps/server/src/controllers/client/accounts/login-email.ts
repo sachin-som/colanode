@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { AccountStatus, EmailLoginInput } from '@colanode/core';
+import { AccountStatus, EmailLoginInput, ApiErrorCode } from '@colanode/core';
 import bcrypt from 'bcrypt';
 import { sha256 } from 'js-sha256';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { accountService } from '@/services/account-service';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const loginWithEmailHandler = async (
   req: Request,
@@ -20,28 +20,18 @@ export const loginWithEmailHandler = async (
     .selectAll()
     .executeTakeFirst();
 
-  if (!account) {
-    res.status(400).json({
-      code: ApiError.EmailOrPasswordIncorrect,
-      message: 'Invalid credentials.',
+  if (!account || !account.password) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.EmailOrPasswordIncorrect,
+      message: 'Invalid email or password.',
     });
-    return;
   }
 
   if (account.status === AccountStatus.Pending) {
-    res.status(400).json({
-      code: ApiError.UserPendingActivation,
-      message: 'User is pending activation.',
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountPendingActivation,
+      message: 'Account is not activated yet. Register or use another email.',
     });
-    return;
-  }
-
-  if (!account.password) {
-    res.status(400).json({
-      code: ApiError.EmailOrPasswordIncorrect,
-      message: 'Invalid credentials.',
-    });
-    return;
   }
 
   const preHashedPassword = sha256(input.password);
@@ -51,13 +41,12 @@ export const loginWithEmailHandler = async (
   );
 
   if (!passwordMatch) {
-    res.status(400).json({
-      code: ApiError.EmailOrPasswordIncorrect,
-      message: 'Invalid credentials.',
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.EmailOrPasswordIncorrect,
+      message: 'Invalid email or password.',
     });
-    return;
   }
 
   const output = await accountService.buildLoginOutput(account);
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

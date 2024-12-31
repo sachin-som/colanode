@@ -5,13 +5,13 @@ import {
   GoogleLoginInput,
   GoogleUserInfo,
   IdType,
+  ApiErrorCode,
 } from '@colanode/core';
 import axios from 'axios';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { accountService } from '@/services/account-service';
-
+import { ResponseBuilder } from '@/lib/response-builder';
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 
 export const loginWithGoogleHandler = async (
@@ -23,21 +23,19 @@ export const loginWithGoogleHandler = async (
   const userInfoResponse = await axios.get(url);
 
   if (userInfoResponse.status !== 200) {
-    res.status(400).json({
-      code: ApiError.GoogleAuthFailed,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.GoogleAuthFailed,
       message: 'Failed to authenticate with Google.',
     });
-    return;
   }
 
   const googleUser: GoogleUserInfo = userInfoResponse.data;
 
   if (!googleUser) {
-    res.status(400).json({
-      code: ApiError.GoogleAuthFailed,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.GoogleAuthFailed,
       message: 'Failed to authenticate with Google.',
     });
-    return;
   }
 
   const existingAccount = await database
@@ -64,7 +62,7 @@ export const loginWithGoogleHandler = async (
     }
 
     const output = await accountService.buildLoginOutput(existingAccount);
-    res.status(200).json(output);
+    return ResponseBuilder.success(res, output);
   }
 
   const newAccount = await database
@@ -81,13 +79,12 @@ export const loginWithGoogleHandler = async (
     .executeTakeFirst();
 
   if (!newAccount) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountCreationFailed,
       message: 'Failed to create account.',
     });
-    return;
   }
 
   const output = await accountService.buildLoginOutput(newAccount);
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

@@ -8,6 +8,7 @@ import {
   UsersInviteMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-users-invite';
 import { MutationError } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 export class UsersInviteMutationHandler
   implements MutationHandler<UsersInviteMutationInput>
@@ -51,20 +52,25 @@ export class UsersInviteMutationHandler
       );
     }
 
-    await httpClient.post<UsersInviteOutput>(
-      `/v1/workspaces/${workspace.workspace_id}/users`,
-      {
-        emails: input.emails,
-        role: input.role,
-      },
-      {
-        domain: server.domain,
-        token: account.token,
-      }
-    );
+    try {
+      await httpClient.post<UsersInviteOutput>(
+        `/v1/workspaces/${workspace.workspace_id}/users`,
+        {
+          emails: input.emails,
+          role: input.role,
+        },
+        {
+          domain: server.domain,
+          token: account.token,
+        }
+      );
 
-    return {
-      success: true,
-    };
+      return {
+        success: true,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError('api_error', apiError.message);
+    }
   }
 }

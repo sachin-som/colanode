@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { ApiErrorCode } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const workspaceDeleteHandler = async (
   req: Request,
@@ -11,11 +12,11 @@ export const workspaceDeleteHandler = async (
   const workspaceId = req.params.workspaceId as string;
 
   if (res.locals.user.role !== 'owner') {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.WorkspaceDeleteNotAllowed,
+      message:
+        'You are not allowed to delete this workspace. Only owners can delete workspaces.',
     });
-    return;
   }
 
   await database
@@ -28,7 +29,7 @@ export const workspaceDeleteHandler = async (
     workspaceId: workspaceId,
   });
 
-  res.status(200).json({
+  return ResponseBuilder.success(res, {
     id: res.locals.workspace.id,
   });
 };

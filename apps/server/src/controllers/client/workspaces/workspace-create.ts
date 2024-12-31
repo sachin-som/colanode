@@ -1,9 +1,9 @@
-import { WorkspaceCreateInput } from '@colanode/core';
+import { WorkspaceCreateInput, ApiErrorCode } from '@colanode/core';
 import { Request, Response } from 'express';
 
 import { workspaceService } from '@/services/workspace-service';
-import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const workspaceCreateHandler = async (
   req: Request,
@@ -12,11 +12,10 @@ export const workspaceCreateHandler = async (
   const input: WorkspaceCreateInput = req.body;
 
   if (!input.name) {
-    res.status(400).json({
-      code: ApiError.MissingRequiredFields,
-      message: 'Missing required fields.',
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.WorkspaceNameRequired,
+      message: 'Workspace name is required.',
     });
-    return;
   }
 
   const account = await database
@@ -26,13 +25,12 @@ export const workspaceCreateHandler = async (
     .executeTakeFirst();
 
   if (!account) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountNotFound,
       message: 'Account not found.',
     });
-    return;
   }
 
   const output = await workspaceService.createWorkspace(account, input);
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

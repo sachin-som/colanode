@@ -54,4 +54,5 @@ export type MutationErrorCode =
   | 'invalid_server_domain'
   | 'server_already_exists'
   | 'workspace_not_found'
-  | 'relation_database_not_found';
+  | 'relation_database_not_found'
+  | 'api_error';

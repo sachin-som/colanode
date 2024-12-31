@@ -29,3 +29,4 @@ export * from './synchronizers';
 export * from './lib/entries';
 export * from './lib/texts';
 export * from './lib/permissions';
+export * from './types/api';

@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { generateId, IdType } from '@colanode/core';
+import { ApiErrorCode, generateId, IdType } from '@colanode/core';
 import multer from 'multer';
 
 import path from 'path';
 
 import { avatarStorage, BUCKET_NAMES } from '@/data/storage';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 const storage = multer.memoryStorage();
 const uploadMulter = multer({
@@ -35,8 +36,10 @@ export const avatarUploadHandler = async (
 ): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No file uploaded' });
-      return;
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.AvatarFileNotUploaded,
+        message: 'Avatar file not uploaded as part of request',
+      });
     }
 
     // Resize image to a maximum of 500x500 pixels while keeping aspect ratio, and convert to JPEG using Sharp
@@ -58,9 +61,11 @@ export const avatarUploadHandler = async (
     });
 
     await avatarStorage.send(command);
-    res.json({ success: true, id: avatarId });
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    res.status(500).json({ error: 'Failed to upload avatar' });
+    return ResponseBuilder.success(res, { success: true, id: avatarId });
+  } catch {
+    return ResponseBuilder.internalError(res, {
+      code: ApiErrorCode.AvatarUploadFailed,
+      message: 'Failed to upload avatar',
+    });
   }
 };

@@ -10,6 +10,7 @@ import {
   AvatarUploadMutationOutput,
 } from '@/shared/mutations/avatars/avatar-upload';
 import { MutationError } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 interface AvatarUploadResponse {
   id: string;
@@ -35,24 +36,29 @@ export class AvatarUploadMutationHandler
       );
     }
 
-    const filePath = input.filePath;
-    const fileStream = fs.createReadStream(filePath);
+    try {
+      const filePath = input.filePath;
+      const fileStream = fs.createReadStream(filePath);
 
-    const formData = new FormData();
-    formData.append('avatar', fileStream);
+      const formData = new FormData();
+      formData.append('avatar', fileStream);
 
-    const { data } = await httpClient.post<AvatarUploadResponse>(
-      '/v1/avatars',
-      formData,
-      {
-        domain: credentials.domain,
-        token: credentials.token,
-        headers: formData.getHeaders(),
-      }
-    );
+      const { data } = await httpClient.post<AvatarUploadResponse>(
+        '/v1/avatars',
+        formData,
+        {
+          domain: credentials.domain,
+          token: credentials.token,
+          headers: formData.getHeaders(),
+        }
+      );
 
-    return {
-      id: data.id,
-    };
+      return {
+        id: data.id,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError('api_error', apiError.message);
+    }
   }
 }

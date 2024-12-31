@@ -9,6 +9,7 @@ import {
   AccountUpdateMutationOutput,
 } from '@/shared/mutations/accounts/account-update';
 import { MutationError } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 export class AccountUpdateMutationHandler
   implements MutationHandler<AccountUpdateMutationInput>
@@ -42,51 +43,56 @@ export class AccountUpdateMutationHandler
       );
     }
 
-    const { data } = await httpClient.put<AccountUpdateOutput>(
-      `/v1/accounts/${input.id}`,
-      {
-        name: input.name,
-        avatar: input.avatar,
-      },
-      {
-        domain: server.domain,
-        token: account.token,
-      }
-    );
-
-    const updatedAccount = await databaseService.appDatabase
-      .updateTable('accounts')
-      .set({
-        name: data.name,
-        avatar: data.avatar,
-      })
-      .where('id', '=', input.id)
-      .returningAll()
-      .executeTakeFirst();
-
-    if (!updatedAccount) {
-      throw new MutationError(
-        'account_not_found',
-        'Account not found or has been logged out already. Try closing the app and opening it again.'
+    try {
+      const { data } = await httpClient.put<AccountUpdateOutput>(
+        `/v1/accounts/${input.id}`,
+        {
+          name: input.name,
+          avatar: input.avatar,
+        },
+        {
+          domain: server.domain,
+          token: account.token,
+        }
       );
+
+      const updatedAccount = await databaseService.appDatabase
+        .updateTable('accounts')
+        .set({
+          name: data.name,
+          avatar: data.avatar,
+        })
+        .where('id', '=', input.id)
+        .returningAll()
+        .executeTakeFirst();
+
+      if (!updatedAccount) {
+        throw new MutationError(
+          'account_not_found',
+          'Account not found or has been logged out already. Try closing the app and opening it again.'
+        );
+      }
+
+      eventBus.publish({
+        type: 'account_updated',
+        account: {
+          id: updatedAccount.id,
+          name: updatedAccount.name,
+          email: updatedAccount.email,
+          token: updatedAccount.token,
+          avatar: updatedAccount.avatar,
+          deviceId: updatedAccount.device_id,
+          server: updatedAccount.server,
+          status: updatedAccount.status,
+        },
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError('api_error', apiError.message);
     }
-
-    eventBus.publish({
-      type: 'account_updated',
-      account: {
-        id: updatedAccount.id,
-        name: updatedAccount.name,
-        email: updatedAccount.email,
-        token: updatedAccount.token,
-        avatar: updatedAccount.avatar,
-        deviceId: updatedAccount.device_id,
-        server: updatedAccount.server,
-        status: updatedAccount.status,
-      },
-    });
-
-    return {
-      success: true,
-    };
   }
 }

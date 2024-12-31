@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { database } from '@/data/database';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const logoutHandler = async (
   req: Request,
@@ -20,5 +21,5 @@ export const logoutHandler = async (
     deviceId: account.deviceId,
   });
 
-  res.status(200).end();
+  return ResponseBuilder.success(res, {});
 };

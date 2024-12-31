@@ -4,14 +4,15 @@ import {
   EmailRegisterInput,
   generateId,
   IdType,
+  ApiErrorCode,
 } from '@colanode/core';
 import bcrypt from 'bcrypt';
 import { sha256 } from 'js-sha256';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { SelectAccount } from '@/data/schema';
 import { accountService } from '@/services/account-service';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 const SaltRounds = 10;
 
@@ -35,11 +36,10 @@ export const registerWithEmailHandler = async (
   let account: SelectAccount | null | undefined = null;
   if (existingAccount) {
     if (existingAccount.status !== AccountStatus.Pending) {
-      res.status(400).json({
-        code: ApiError.EmailAlreadyExists,
-        message: 'Email already exists.',
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.EmailAlreadyExists,
+        message: 'Email already exists. Login or use another email.',
       });
-      return;
     }
 
     account = await database
@@ -69,13 +69,12 @@ export const registerWithEmailHandler = async (
   }
 
   if (!account) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountCreationFailed,
       message: 'Failed to create account.',
     });
-    return;
   }
 
   const output = await accountService.buildLoginOutput(account);
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

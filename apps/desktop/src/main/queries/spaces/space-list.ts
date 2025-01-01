@@ -92,6 +92,7 @@ export class SpaceListQueryHandler
     const rows = await workspaceDatabase
       .selectFrom('entries')
       .selectAll()
+      .where('parent_id', 'is', null)
       .where('type', '=', 'space')
       .execute();
 

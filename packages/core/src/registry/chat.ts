@@ -4,7 +4,6 @@ import { entryRoleEnum } from './core';
 
 export const chatAttributesSchema = z.object({
   type: z.literal('chat'),
-  parentId: z.string(),
   collaborators: z.record(z.string(), entryRoleEnum),
 });
 

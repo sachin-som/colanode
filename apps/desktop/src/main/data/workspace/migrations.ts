@@ -37,7 +37,6 @@ const createEntriesTable: Migration = {
         col
           .generatedAlwaysAs(sql`json_extract(attributes, '$.parentId')`)
           .stored()
-          .notNull()
       )
       .addColumn('root_id', 'text', (col) => col.notNull())
       .addColumn('attributes', 'text', (col) => col.notNull())
@@ -48,9 +47,11 @@ const createEntriesTable: Migration = {
       .addColumn('transaction_id', 'text', (col) => col.notNull())
       .execute();
 
-    await sql`
-      CREATE INDEX IF NOT EXISTS "entries_parent_id_type_index" ON "entries" ("parent_id", "type");
-    `.execute(db);
+    await db.schema
+      .createIndex('entries_parent_id_type_index')
+      .on('entries')
+      .columns(['parent_id', 'type'])
+      .execute();
   },
   down: async (db) => {
     await db.schema.dropTable('entries').execute();
@@ -134,6 +135,12 @@ const createMessagesTable: Migration = {
       .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer')
       .execute();
+
+    await db.schema
+      .createIndex('messages_parent_id_index')
+      .on('messages')
+      .columns(['parent_id'])
+      .execute();
   },
   down: async (db) => {
     await db.schema.dropTable('messages').execute();
@@ -206,6 +213,12 @@ const createFilesTable: Migration = {
       .addColumn('deleted_at', 'text')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version', 'integer')
+      .execute();
+
+    await db.schema
+      .createIndex('files_parent_id_index')
+      .on('files')
+      .columns(['parent_id'])
       .execute();
   },
   down: async (db) => {

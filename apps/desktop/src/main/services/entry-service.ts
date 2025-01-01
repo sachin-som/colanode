@@ -36,6 +36,7 @@ const UPDATE_RETRIES_LIMIT = 20;
 export type CreateEntryInput = {
   id: string;
   attributes: EntryAttributes;
+  parentId: string | null;
 };
 
 export type UpdateEntryResult =
@@ -60,18 +61,18 @@ class EntryService {
     }
 
     let root: Entry | null = null;
-    const parent = await fetchEntry(
-      workspaceDatabase,
-      input.attributes.parentId
-    );
 
-    if (parent) {
-      if (parent.id === parent.root_id) {
-        root = mapEntry(parent);
-      } else {
-        const rootRow = await fetchEntry(workspaceDatabase, parent.root_id);
-        if (rootRow) {
-          root = mapEntry(rootRow);
+    if (input.parentId) {
+      const parent = await fetchEntry(workspaceDatabase, input.parentId);
+
+      if (parent) {
+        if (parent.id === parent.root_id) {
+          root = mapEntry(parent);
+        } else {
+          const rootRow = await fetchEntry(workspaceDatabase, parent.root_id);
+          if (rootRow) {
+            root = mapEntry(rootRow);
+          }
         }
       }
     }

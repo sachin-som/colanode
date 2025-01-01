@@ -154,7 +154,6 @@ const createEntriesTable: Migration = {
         col
           .generatedAlwaysAs(sql`(attributes->>'parentId')::VARCHAR(30)`)
           .stored()
-          .notNull()
       )
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())

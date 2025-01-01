@@ -42,14 +42,17 @@ export class ChatCreateMutationHandler
     const id = generateId(IdType.Chat);
     const attributes: ChatAttributes = {
       type: 'chat',
-      parentId: id,
       collaborators: {
         [input.userId]: 'admin',
         [input.otherUserId]: 'admin',
       },
     };
 
-    await entryService.createEntry(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, {
+      id,
+      attributes,
+      parentId: null,
+    });
 
     return {
       id,

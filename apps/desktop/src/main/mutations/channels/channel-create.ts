@@ -40,7 +40,11 @@ export class ChannelCreateMutationHandler
       parentId: input.spaceId,
     };
 
-    await entryService.createEntry(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, {
+      id,
+      attributes,
+      parentId: input.spaceId,
+    });
 
     return {
       id: id,

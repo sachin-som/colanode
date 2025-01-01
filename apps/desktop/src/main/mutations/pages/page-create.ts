@@ -22,7 +22,11 @@ export class PageCreateMutationHandler
       content: {},
     };
 
-    await entryService.createEntry(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, {
+      id,
+      attributes,
+      parentId: input.parentId,
+    });
 
     return {
       id: id,

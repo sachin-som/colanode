@@ -95,7 +95,7 @@ export type UpdateUser = Updateable<UserTable>;
 interface EntryTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<EntryType, never, never>;
-  parent_id: ColumnType<string, never, never>;
+  parent_id: ColumnType<string | null, never, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   attributes: JSONColumnType<EntryAttributes, string | null, string | null>;

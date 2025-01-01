@@ -3,13 +3,15 @@ import {
   generateId,
   IdType,
   EntryAttributes,
-  EntryMutationContext,
   EntryRole,
-  registry,
   MarkEntrySeenMutation,
   MarkEntryOpenedMutation,
   extractEntryRole,
-  hasViewerAccess,
+  hasEntryRole,
+  entryAttributesSchema,
+  canCreateEntry,
+  canUpdateEntry,
+  canDeleteEntry,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { Transaction } from 'kysely';
@@ -20,13 +22,13 @@ import { database } from '@/data/database';
 import {
   CreateEntry,
   CreateCollaboration,
-  CreateTransaction,
+  CreateEntryTransaction,
   DatabaseSchema,
   SelectUser,
   SelectCollaboration,
 } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
-import { fetchEntryAncestors, mapEntry } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { createLogger } from '@/lib/logger';
 import {
   ApplyCreateTransactionInput,
@@ -60,9 +62,11 @@ class EntryService {
   public async createEntry(
     input: CreateEntryInput
   ): Promise<CreateEntryOutput | null> {
-    const model = registry.getModel(input.attributes.type);
     const ydoc = new YDoc();
-    const update = ydoc.updateAttributes(model.schema, input.attributes);
+    const update = ydoc.updateAttributes(
+      entryAttributesSchema,
+      input.attributes
+    );
     const attributes = ydoc.getAttributes<EntryAttributes>();
     const attributesJson = JSON.stringify(attributes);
 
@@ -79,7 +83,7 @@ class EntryService {
       transaction_id: transactionId,
     };
 
-    const createTransaction: CreateTransaction = {
+    const createTransaction: CreateEntryTransaction = {
       id: transactionId,
       root_id: input.rootId,
       entry_id: input.entryId,
@@ -152,16 +156,14 @@ class EntryService {
   private async tryUpdateEntry(
     input: UpdateEntryInput
   ): Promise<UpdateResult<UpdateEntryOutput>> {
-    const ancestorRows = await fetchEntryAncestors(input.entryId);
-    const ancestors = ancestorRows.map(mapEntry);
-
-    const entry = ancestors.find((ancestor) => ancestor.id === input.entryId);
-    if (!entry) {
+    const entryRow = await fetchEntry(input.entryId);
+    if (!entryRow) {
       return { type: 'error', output: null };
     }
 
+    const entry = mapEntry(entryRow);
     const previousTransactions = await database
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', input.entryId)
       .orderBy('id', 'asc')
@@ -182,8 +184,10 @@ class EntryService {
       return { type: 'error', output: null };
     }
 
-    const model = registry.getModel(updatedAttributes.type);
-    const update = ydoc.updateAttributes(model.schema, updatedAttributes);
+    const update = ydoc.updateAttributes(
+      entryAttributesSchema,
+      updatedAttributes
+    );
 
     const attributes = ydoc.getAttributes<EntryAttributes>();
     const attributesJson = JSON.stringify(attributes);
@@ -221,7 +225,7 @@ class EntryService {
         }
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: transactionId,
@@ -244,7 +248,6 @@ class EntryService {
           await this.applyCollaboratorUpdates(
             trx,
             input.entryId,
-            entry.rootId,
             input.userId,
             input.workspaceId,
             collaboratorChanges
@@ -305,29 +308,23 @@ class EntryService {
     user: SelectUser,
     input: ApplyCreateTransactionInput
   ): Promise<ApplyCreateTransactionOutput | null> {
+    const root = await fetchEntry(input.rootId);
     const ydoc = new YDoc();
     ydoc.applyUpdate(input.data);
     const attributes = ydoc.getAttributes<EntryAttributes>();
 
-    const ancestorRows = attributes.parentId
-      ? await fetchEntryAncestors(attributes.parentId)
-      : [];
-
-    const ancestors = ancestorRows.map(mapEntry);
-    const context = new EntryMutationContext(
-      user.account_id,
-      user.workspace_id,
-      user.id,
-      user.role,
-      ancestors
-    );
-
-    const model = registry.getModel(attributes.type);
-    if (!model.schema.safeParse(attributes).success) {
-      return null;
-    }
-
-    if (!model.canCreate(context, attributes)) {
+    if (
+      !canCreateEntry(
+        {
+          user: {
+            userId: user.id,
+            role: user.role,
+          },
+          root: root ? mapEntry(root) : null,
+        },
+        attributes
+      )
+    ) {
       return null;
     }
 
@@ -335,22 +332,22 @@ class EntryService {
       id: input.entryId,
       root_id: input.rootId,
       attributes: JSON.stringify(attributes),
-      workspace_id: context.workspaceId,
+      workspace_id: user.workspace_id,
       created_at: input.createdAt,
-      created_by: context.userId,
+      created_by: user.id,
       transaction_id: input.id,
     };
 
-    const createTransaction: CreateTransaction = {
+    const createTransaction: CreateEntryTransaction = {
       id: input.id,
       entry_id: input.entryId,
       root_id: input.rootId,
-      workspace_id: context.workspaceId,
+      workspace_id: user.workspace_id,
       operation: 'create',
       data:
         typeof input.data === 'string' ? decodeState(input.data) : input.data,
       created_at: input.createdAt,
-      created_by: context.userId,
+      created_by: user.id,
       server_created_at: new Date(),
     };
 
@@ -367,7 +364,7 @@ class EntryService {
         entryId: input.entryId,
         entryType: attributes.type,
         rootId: input.rootId,
-        workspaceId: context.workspaceId,
+        workspaceId: user.workspace_id,
       });
 
       for (const createdCollaboration of createdCollaborations) {
@@ -375,7 +372,7 @@ class EntryService {
           type: 'collaboration_created',
           collaboratorId: createdCollaboration.collaborator_id,
           entryId: input.entryId,
-          workspaceId: context.workspaceId,
+          workspaceId: user.workspace_id,
         });
       }
 
@@ -412,16 +409,18 @@ class EntryService {
     user: SelectUser,
     input: ApplyUpdateTransactionInput
   ): Promise<UpdateResult<ApplyUpdateTransactionOutput>> {
-    const ancestorRows = await fetchEntryAncestors(input.entryId);
-    const ancestors = ancestorRows.map(mapEntry);
+    const root = await fetchEntry(input.rootId);
+    if (!root) {
+      return { type: 'error', output: null };
+    }
 
-    const entry = ancestors.find((ancestor) => ancestor.id === input.entryId);
+    const entry = await fetchEntry(input.entryId);
     if (!entry) {
       return { type: 'error', output: null };
     }
 
     const previousTransactions = await database
-      .selectFrom('transactions')
+      .selectFrom('entry_transactions')
       .selectAll()
       .where('entry_id', '=', input.entryId)
       .orderBy('version', 'asc')
@@ -440,20 +439,20 @@ class EntryService {
 
     const attributes = ydoc.getAttributes<EntryAttributes>();
     const attributesJson = JSON.stringify(attributes);
-    const model = registry.getModel(attributes.type);
-    if (!model.schema.safeParse(attributes).success) {
-      return { type: 'error', output: null };
-    }
 
-    const context = new EntryMutationContext(
-      user.account_id,
-      user.workspace_id,
-      user.id,
-      user.role,
-      ancestors
-    );
-
-    if (!model.canUpdate(context, entry, attributes)) {
+    if (
+      !canUpdateEntry(
+        {
+          user: {
+            userId: user.id,
+            role: user.role,
+          },
+          root: mapEntry(root),
+          entry: mapEntry(entry),
+        },
+        attributes
+      )
+    ) {
       return { type: 'error', output: null };
     }
 
@@ -479,7 +478,7 @@ class EntryService {
             transaction_id: input.id,
           })
           .where('id', '=', input.entryId)
-          .where('transaction_id', '=', entry.transactionId)
+          .where('transaction_id', '=', entry.transaction_id)
           .executeTakeFirst();
 
         if (!updatedEntry) {
@@ -487,13 +486,13 @@ class EntryService {
         }
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: input.id,
             entry_id: input.entryId,
             root_id: input.rootId,
-            workspace_id: context.workspaceId,
+            workspace_id: user.workspace_id,
             operation: 'update',
             data:
               typeof input.data === 'string'
@@ -513,9 +512,8 @@ class EntryService {
           await this.applyCollaboratorUpdates(
             trx,
             input.entryId,
-            input.rootId,
             input.userId,
-            context.workspaceId,
+            user.workspace_id,
             collaboratorChanges
           );
 
@@ -531,8 +529,8 @@ class EntryService {
         type: 'entry_updated',
         entryId: input.entryId,
         entryType: entry.type,
-        rootId: entry.rootId,
-        workspaceId: context.workspaceId,
+        rootId: entry.root_id,
+        workspaceId: user.workspace_id,
       });
 
       for (const createdCollaboration of createdCollaborations) {
@@ -540,7 +538,7 @@ class EntryService {
           type: 'collaboration_created',
           collaboratorId: createdCollaboration.collaborator_id,
           entryId: input.entryId,
-          workspaceId: context.workspaceId,
+          workspaceId: user.workspace_id,
         });
       }
 
@@ -549,7 +547,7 @@ class EntryService {
           type: 'collaboration_updated',
           collaboratorId: updatedCollaboration.collaborator_id,
           entryId: input.entryId,
-          workspaceId: context.workspaceId,
+          workspaceId: user.workspace_id,
         });
       }
 
@@ -569,23 +567,26 @@ class EntryService {
     user: SelectUser,
     input: ApplyDeleteTransactionInput
   ): Promise<ApplyDeleteTransactionOutput | null> {
-    const ancestorRows = await fetchEntryAncestors(input.entryId);
-    const ancestors = ancestorRows.map(mapEntry);
-    const entry = ancestors.find((ancestor) => ancestor.id === input.entryId);
+    const entry = await fetchEntry(input.entryId);
     if (!entry) {
       return null;
     }
 
-    const model = registry.getModel(entry.attributes.type);
-    const context = new EntryMutationContext(
-      user.account_id,
-      user.workspace_id,
-      user.id,
-      user.role,
-      ancestors
-    );
+    const root = await fetchEntry(entry.root_id);
+    if (!root) {
+      return null;
+    }
 
-    if (!model.canDelete(context, entry)) {
+    if (
+      !canDeleteEntry({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+      })
+    ) {
       return null;
     }
 
@@ -602,12 +603,12 @@ class EntryService {
         }
 
         await trx
-          .deleteFrom('transactions')
+          .deleteFrom('entry_transactions')
           .where('entry_id', '=', input.entryId)
           .execute();
 
         const createdTransaction = await trx
-          .insertInto('transactions')
+          .insertInto('entry_transactions')
           .returningAll()
           .values({
             id: input.id,
@@ -646,7 +647,7 @@ class EntryService {
       type: 'entry_deleted',
       entryId: input.entryId,
       entryType: entry.type,
-      rootId: entry.rootId,
+      rootId: entry.root_id,
       workspaceId: user.workspace_id,
     });
 
@@ -697,7 +698,7 @@ class EntryService {
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasViewerAccess(role)) {
+    if (!role || !hasEntryRole(role, 'viewer')) {
       return false;
     }
 
@@ -778,7 +779,7 @@ class EntryService {
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasViewerAccess(role)) {
+    if (!role || !hasEntryRole(role, 'viewer')) {
       return false;
     }
 
@@ -836,7 +837,7 @@ class EntryService {
   private async applyDatabaseCreateTransaction(
     attributes: EntryAttributes,
     entry: CreateEntry,
-    transaction: CreateTransaction
+    transaction: CreateEntryTransaction
   ) {
     const collaborationsToCreate: CreateCollaboration[] = Object.entries(
       extractEntryCollaborators(attributes)
@@ -861,7 +862,7 @@ class EntryService {
       }
 
       const createdTransaction = await trx
-        .insertInto('transactions')
+        .insertInto('entry_transactions')
         .returningAll()
         .values(transaction)
         .executeTakeFirst();
@@ -891,7 +892,6 @@ class EntryService {
   private async applyCollaboratorUpdates(
     transaction: Transaction<DatabaseSchema>,
     entryId: string,
-    rootId: string,
     userId: string,
     workspaceId: string,
     updateResult: CollaboratorChangeResult

@@ -1,4 +1,4 @@
-import { extractEntryRole } from '@colanode/core';
+import { ChannelEntry, extractEntryRole } from '@colanode/core';
 
 import { ChannelBody } from '@/renderer/components/channels/channel-body';
 import { ChannelHeader } from '@/renderer/components/channels/channel-header';
@@ -11,27 +11,41 @@ interface ChannelContainerProps {
 
 export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'entry_tree_get',
+
+  const { data: entry, isPending: isPendingEntry } = useQuery({
+    type: 'entry_get',
     entryId: channelId,
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  const channel = entry as ChannelEntry;
+  const { data: root, isPending: isPendingRoot } = useQuery(
+    {
+      type: 'entry_get',
+      entryId: channel?.rootId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!channel?.rootId,
+    }
+  );
+
+  if (isPendingEntry || isPendingRoot) {
     return null;
   }
 
-  const entries = data ?? [];
-  const channel = entries.find((entry) => entry.id === channelId);
-  const role = extractEntryRole(entries, workspace.userId);
+  if (!channel || !root) {
+    return null;
+  }
 
-  if (!channel || channel.type !== 'channel' || !role) {
+  const role = extractEntryRole(root, workspace.userId);
+  if (!role) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <ChannelHeader entries={entries} channel={channel} role={role} />
+      <ChannelHeader channel={channel} role={role} />
       <ChannelBody channel={channel} role={role} />
     </div>
   );

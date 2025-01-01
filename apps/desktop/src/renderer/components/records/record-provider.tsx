@@ -1,4 +1,4 @@
-import { hasEditorAccess, EntryRole, RecordEntry } from '@colanode/core';
+import { EntryRole, RecordEntry, hasEntryRole } from '@colanode/core';
 import React from 'react';
 
 import { RecordContext } from '@/renderer/contexts/record';
@@ -19,7 +19,7 @@ export const RecordProvider = ({
   const { mutate } = useMutation();
 
   const canEdit =
-    record.createdBy === workspace.userId || hasEditorAccess(role);
+    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
 
   return (
     <RecordContext.Provider

@@ -28,7 +28,6 @@ export type WorkspaceOutput = {
   name: string;
   description?: string | null;
   avatar?: string | null;
-  versionId: string;
   user: WorkspaceUserOutput;
 };
 

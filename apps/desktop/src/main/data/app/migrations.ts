@@ -71,7 +71,6 @@ const createWorkspacesTable: Migration = {
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('description', 'text')
       .addColumn('avatar', 'text')
-      .addColumn('version_id', 'text', (col) => col.notNull())
       .addColumn('role', 'text', (col) => col.notNull())
       .execute();
   },

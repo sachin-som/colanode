@@ -8,7 +8,8 @@ import {
   WorkspaceCreateMutationInput,
   WorkspaceCreateMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>
@@ -23,7 +24,10 @@ export class WorkspaceCreateMutationHandler
       .executeTakeFirst();
 
     if (!account) {
-      throw new MutationError('account_not_found', 'Account not found!');
+      throw new MutationError(
+        MutationErrorCode.AccountNotFound,
+        'Account not found or has been logged out.'
+      );
     }
 
     const server = await databaseService.appDatabase
@@ -34,61 +38,67 @@ export class WorkspaceCreateMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         'The server associated with this account was not found.'
       );
     }
 
-    const { data } = await httpClient.post<WorkspaceOutput>(
-      `/v1/workspaces`,
-      {
-        name: input.name,
-        description: input.description,
-        avatar: input.avatar,
-      },
-      {
-        domain: server.domain,
-        token: account.token,
+    try {
+      const { data } = await httpClient.post<WorkspaceOutput>(
+        `/v1/workspaces`,
+        {
+          name: input.name,
+          description: input.description,
+          avatar: input.avatar,
+        },
+        {
+          domain: server.domain,
+          token: account.token,
+        }
+      );
+
+      const createdWorkspace = await databaseService.appDatabase
+        .insertInto('workspaces')
+        .returningAll()
+        .values({
+          workspace_id: data.id ?? data.id,
+          account_id: data.user.accountId,
+          name: data.name,
+          description: data.description,
+          avatar: data.avatar,
+          role: data.user.role,
+          user_id: data.user.id,
+        })
+        .onConflict((cb) => cb.doNothing())
+        .executeTakeFirst();
+
+      if (!createdWorkspace) {
+        throw new MutationError(
+          MutationErrorCode.WorkspaceNotCreated,
+          'Something went wrong updating the workspace. Please try again later.'
+        );
       }
-    );
 
-    const createdWorkspace = await databaseService.appDatabase
-      .insertInto('workspaces')
-      .returningAll()
-      .values({
-        workspace_id: data.id ?? data.id,
-        account_id: data.user.accountId,
-        name: data.name,
-        description: data.description,
-        avatar: data.avatar,
-        role: data.user.role,
-        user_id: data.user.id,
-        version_id: data.versionId,
-      })
-      .onConflict((cb) => cb.doNothing())
-      .executeTakeFirst();
+      eventBus.publish({
+        type: 'workspace_created',
+        workspace: {
+          id: createdWorkspace.workspace_id,
+          userId: createdWorkspace.user_id,
+          name: createdWorkspace.name,
+          accountId: createdWorkspace.account_id,
+          role: createdWorkspace.role,
+          avatar: createdWorkspace.avatar,
+          description: createdWorkspace.description,
+        },
+      });
 
-    if (!createdWorkspace) {
-      throw new MutationError('unknown', 'Failed to create workspace!');
-    }
-
-    eventBus.publish({
-      type: 'workspace_created',
-      workspace: {
+      return {
         id: createdWorkspace.workspace_id,
         userId: createdWorkspace.user_id,
-        name: createdWorkspace.name,
-        versionId: createdWorkspace.version_id,
-        accountId: createdWorkspace.account_id,
-        role: createdWorkspace.role,
-        avatar: createdWorkspace.avatar,
-        description: createdWorkspace.description,
-      },
-    });
-
-    return {
-      id: createdWorkspace.workspace_id,
-      userId: createdWorkspace.user_id,
-    };
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
+    }
   }
 }

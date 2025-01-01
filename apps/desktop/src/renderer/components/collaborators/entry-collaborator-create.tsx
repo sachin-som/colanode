@@ -1,4 +1,5 @@
 import React from 'react';
+import { EntryRole } from '@colanode/core';
 
 import { User } from '@/shared/types/users';
 import { EntryCollaboratorRoleDropdown } from '@/renderer/components/collaborators/entry-collaborator-role-dropdown';
@@ -22,7 +23,7 @@ export const EntryCollaboratorCreate = ({
   const { mutate, isPending } = useMutation();
 
   const [users, setUsers] = React.useState<User[]>([]);
-  const [role, setRole] = React.useState('collaborator');
+  const [role, setRole] = React.useState<EntryRole>('editor');
 
   return (
     <div className="flex flex-col gap-2">

@@ -1,4 +1,4 @@
-import { extractEntryRole, hasAdminAccess, SpaceEntry } from '@colanode/core';
+import { extractEntryRole, SpaceEntry, hasEntryRole } from '@colanode/core';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Info, Trash2, Users } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export const SpaceSettingsDialog = ({
     return null;
   }
 
-  const canDelete = hasAdminAccess(role);
+  const canDelete = hasEntryRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

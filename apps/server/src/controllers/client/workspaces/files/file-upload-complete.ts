@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { HeadObjectCommand } from '@aws-sdk/client-s3';
-import { FileStatus } from '@colanode/core';
+import { FileStatus, ApiErrorCode } from '@colanode/core';
 
-import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const fileUploadCompleteHandler = async (
   req: Request,
@@ -21,35 +21,37 @@ export const fileUploadCompleteHandler = async (
     .executeTakeFirst();
 
   if (!file) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
     });
-    return;
   }
 
   if (file.created_by !== res.locals.user.id) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.FileOwnerMismatch,
+      message: 'You cannot complete this file upload.',
     });
-    return;
   }
 
   if (file.workspace_id !== workspaceId) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.WorkspaceMismatch,
       message: 'File does not belong to this workspace.',
     });
-    return;
   }
 
-  if (file.status !== FileStatus.Pending) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'File is not pending.',
+  if (file.status === FileStatus.Ready) {
+    return ResponseBuilder.success(res, {
+      success: true,
     });
-    return;
+  }
+
+  if (file.status === FileStatus.Error) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileError,
+      message: 'File has failed to upload.',
+    });
   }
 
   const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
@@ -64,27 +66,24 @@ export const fileUploadCompleteHandler = async (
 
     // Verify file size matches expected size
     if (headObject.ContentLength !== file.size) {
-      res.status(400).json({
-        code: ApiError.BadRequest,
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.FileSizeMismatch,
         message: 'Uploaded file size does not match expected size',
       });
-      return;
     }
 
     // Verify mime type matches expected type
     if (headObject.ContentType !== file.mime_type) {
-      res.status(400).json({
-        code: ApiError.BadRequest,
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.FileMimeTypeMismatch,
         message: 'Uploaded file type does not match expected type',
       });
-      return;
     }
   } catch {
-    res.status(400).json({
-      code: ApiError.BadRequest,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileError,
       message: 'File upload verification failed',
     });
-    return;
   }
 
   const updatedFile = await database
@@ -99,11 +98,10 @@ export const fileUploadCompleteHandler = async (
     .executeTakeFirst();
 
   if (!updatedFile) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
-      message: 'Failed to update file status.',
+    return ResponseBuilder.internalError(res, {
+      code: ApiErrorCode.FileUploadCompleteFailed,
+      message: 'Failed to complete file upload.',
     });
-    return;
   }
 
   eventBus.publish({
@@ -113,5 +111,7 @@ export const fileUploadCompleteHandler = async (
     workspaceId: updatedFile.workspace_id,
   });
 
-  res.status(200).json({ success: true });
+  return ResponseBuilder.success(res, {
+    success: true,
+  });
 };

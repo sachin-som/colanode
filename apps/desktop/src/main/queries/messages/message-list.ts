@@ -100,6 +100,7 @@ export class MessageListQueryHandler
       .selectFrom('messages')
       .selectAll()
       .where('parent_id', '=', input.conversationId)
+      .where('deleted_at', 'is', null)
       .orderBy('id', 'desc')
       .limit(input.count)
       .offset(offset)

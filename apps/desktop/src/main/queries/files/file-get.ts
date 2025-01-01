@@ -97,6 +97,7 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
         'f.created_by',
         'f.updated_at',
         'f.updated_by',
+        'f.deleted_at',
         'f.status',
         'f.version',
         'fs.download_status',
@@ -105,9 +106,10 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
         'fs.upload_progress',
       ])
       .where('f.id', '=', input.id)
+      .where('f.deleted_at', 'is', null)
       .executeTakeFirst();
 
-    if (!file) {
+    if (!file || file.deleted_at) {
       return null;
     }
 

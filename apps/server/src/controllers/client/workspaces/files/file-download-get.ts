@@ -1,12 +1,17 @@
 import { Request, Response } from 'express';
-import { CreateDownloadOutput, hasViewerAccess } from '@colanode/core';
+import {
+  CreateDownloadOutput,
+  hasEntryRole,
+  ApiErrorCode,
+  extractEntryRole,
+} from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
-import { fetchEntryRole } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const fileDownloadGetHandler = async (
   req: Request,
@@ -21,20 +26,26 @@ export const fileDownloadGetHandler = async (
     .executeTakeFirst();
 
   if (!file) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
     });
-    return;
   }
 
-  const role = await fetchEntryRole(file.root_id, res.locals.user.id);
-  if (role === null || !hasViewerAccess(role)) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+  const root = await fetchEntry(file.root_id);
+  if (!root) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.RootNotFound,
+      message: 'Root not found.',
     });
-    return;
+  }
+
+  const role = extractEntryRole(mapEntry(root), res.locals.user.id);
+  if (role === null || !hasEntryRole(role, 'viewer')) {
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.FileNoAccess,
+      message: 'You do not have access to this file.',
+    });
   }
 
   //generate presigned url for download
@@ -52,5 +63,5 @@ export const fileDownloadGetHandler = async (
     url: presignedUrl,
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

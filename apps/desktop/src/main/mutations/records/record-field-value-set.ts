@@ -1,6 +1,8 @@
+import { RecordAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   RecordFieldValueSetMutationInput,
   RecordFieldValueSetMutationOutput,
@@ -12,14 +14,10 @@ export class RecordFieldValueSetMutationHandler
   async handleMutation(
     input: RecordFieldValueSetMutationInput
   ): Promise<RecordFieldValueSetMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<RecordAttributes>(
       input.recordId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'record') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         attributes.fields[input.fieldId] = input.value;
         return attributes;
       }
@@ -27,14 +25,14 @@ export class RecordFieldValueSetMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.RecordUpdateForbidden,
         "You don't have permission to set this field value."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.RecordUpdateFailed,
         'Something went wrong while setting the field value.'
       );
     }

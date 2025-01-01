@@ -9,7 +9,8 @@ import {
   AvatarUploadMutationInput,
   AvatarUploadMutationOutput,
 } from '@/shared/mutations/avatars/avatar-upload';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 interface AvatarUploadResponse {
   id: string;
@@ -30,29 +31,34 @@ export class AvatarUploadMutationHandler
 
     if (!credentials) {
       throw new MutationError(
-        'account_not_found',
+        MutationErrorCode.AccountNotFound,
         'Account not found or has been logged out already. Try closing the app and opening it again.'
       );
     }
 
-    const filePath = input.filePath;
-    const fileStream = fs.createReadStream(filePath);
+    try {
+      const filePath = input.filePath;
+      const fileStream = fs.createReadStream(filePath);
 
-    const formData = new FormData();
-    formData.append('avatar', fileStream);
+      const formData = new FormData();
+      formData.append('avatar', fileStream);
 
-    const { data } = await httpClient.post<AvatarUploadResponse>(
-      '/v1/avatars',
-      formData,
-      {
-        domain: credentials.domain,
-        token: credentials.token,
-        headers: formData.getHeaders(),
-      }
-    );
+      const { data } = await httpClient.post<AvatarUploadResponse>(
+        '/v1/avatars',
+        formData,
+        {
+          domain: credentials.domain,
+          token: credentials.token,
+          headers: formData.getHeaders(),
+        }
+      );
 
-    return {
-      id: data.id,
-    };
+      return {
+        id: data.id,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
+    }
   }
 }

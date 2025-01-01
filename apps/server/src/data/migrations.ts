@@ -40,8 +40,15 @@ const createDevicesTable: Migration = {
       .addColumn('last_online_at', 'timestamptz')
       .addColumn('last_active_at', 'timestamptz')
       .execute();
+
+    await db.schema
+      .createIndex('devices_account_id_idx')
+      .on('devices')
+      .column('account_id')
+      .execute();
   },
   down: async (db) => {
+    await db.schema.dropIndex('devices_account_id_idx').execute();
     await db.schema.dropTable('devices').execute();
   },
 };
@@ -60,7 +67,6 @@ const createWorkspacesTable: Migration = {
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
       .addColumn('status', 'integer', (col) => col.notNull())
-      .addColumn('version_id', 'varchar(30)', (col) => col.notNull())
       .execute();
   },
   down: async (db) => {
@@ -104,6 +110,12 @@ const createUsersTable: Migration = {
       ])
       .execute();
 
+    await db.schema
+      .createIndex('users_workspace_id_version_idx')
+      .on('users')
+      .columns(['workspace_id', 'version'])
+      .execute();
+
     await sql`
       CREATE OR REPLACE FUNCTION update_user_version() RETURNS TRIGGER AS $$
       BEGIN
@@ -124,6 +136,7 @@ const createUsersTable: Migration = {
       DROP FUNCTION IF EXISTS update_user_version();
     `.execute(db);
 
+    await db.schema.dropIndex('users_workspace_id_version_idx').execute();
     await db.schema.dropTable('users').execute();
     await sql`DROP SEQUENCE IF EXISTS users_version_sequence`.execute(db);
   },
@@ -158,10 +171,10 @@ const createEntriesTable: Migration = {
   },
 };
 
-const createTransactionsTable: Migration = {
+const createEntryTransactionsTable: Migration = {
   up: async (db) => {
     await sql`
-      CREATE SEQUENCE IF NOT EXISTS transactions_version_sequence
+      CREATE SEQUENCE IF NOT EXISTS entry_transactions_version_sequence
       START WITH 1000000000
       INCREMENT BY 1
       NO MINVALUE
@@ -170,7 +183,7 @@ const createTransactionsTable: Migration = {
     `.execute(db);
 
     await db.schema
-      .createTable('transactions')
+      .createTable('entry_transactions')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
@@ -181,13 +194,32 @@ const createTransactionsTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('server_created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('version', 'bigint', (col) =>
-        col.notNull().defaultTo(sql`nextval('transactions_version_sequence')`)
+        col
+          .notNull()
+          .defaultTo(sql`nextval('entry_transactions_version_sequence')`)
       )
+      .execute();
+
+    await db.schema
+      .createIndex('entry_transactions_entry_id_idx')
+      .on('entry_transactions')
+      .column('entry_id')
+      .execute();
+
+    await db.schema
+      .createIndex('entry_transactions_root_id_version_idx')
+      .on('entry_transactions')
+      .columns(['root_id', 'version'])
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('transactions').execute();
-    await sql`DROP SEQUENCE IF EXISTS transactions_version_sequence`.execute(
+    await db.schema.dropIndex('entry_transactions_entry_id_idx').execute();
+    await db.schema
+      .dropIndex('entry_transactions_root_id_version_idx')
+      .execute();
+
+    await db.schema.dropTable('entry_transactions').execute();
+    await sql`DROP SEQUENCE IF EXISTS entry_transactions_version_sequence`.execute(
       db
     );
   },
@@ -225,6 +257,12 @@ const createCollaborationsTable: Migration = {
       ])
       .execute();
 
+    await db.schema
+      .createIndex('collaborations_collaborator_version_idx')
+      .on('collaborations')
+      .columns(['collaborator_id', 'version'])
+      .execute();
+
     await sql`
       CREATE OR REPLACE FUNCTION update_collaboration_version() RETURNS TRIGGER AS $$
       BEGIN
@@ -244,6 +282,10 @@ const createCollaborationsTable: Migration = {
       DROP TRIGGER IF EXISTS trg_update_collaboration_version ON collaborations;
       DROP FUNCTION IF EXISTS update_collaboration_version();
     `.execute(db);
+
+    await db.schema
+      .dropIndex('collaborations_collaborator_version_idx')
+      .execute();
 
     await db.schema.dropTable('collaborations').execute();
     await sql`DROP SEQUENCE IF EXISTS collaborations_version_sequence`.execute(
@@ -297,12 +339,22 @@ const createEntryInteractionsTable: Migration = {
       FOR EACH ROW
       EXECUTE FUNCTION update_entry_interaction_version();
     `.execute(db);
+
+    await db.schema
+      .createIndex('entry_interactions_root_id_version_idx')
+      .on('entry_interactions')
+      .columns(['root_id', 'version'])
+      .execute();
   },
   down: async (db) => {
     await sql`
       DROP TRIGGER IF EXISTS trg_update_entry_interaction_version ON entry_interactions;
       DROP FUNCTION IF EXISTS update_entry_interaction_version();
     `.execute(db);
+
+    await db.schema
+      .dropIndex('entry_interactions_root_id_version_idx')
+      .execute();
 
     await db.schema.dropTable('entry_interactions').execute();
     await sql`DROP SEQUENCE IF EXISTS entry_interactions_version_sequence`.execute(
@@ -335,11 +387,15 @@ const createMessagesTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
-      .addColumn('deleted_at', 'timestamptz')
-      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('version', 'bigint', (col) =>
         col.notNull().defaultTo(sql`nextval('messages_version_sequence')`)
       )
+      .execute();
+
+    await db.schema
+      .createIndex('messages_root_id_version_idx')
+      .on('messages')
+      .columns(['root_id', 'version'])
       .execute();
 
     await sql`
@@ -362,6 +418,7 @@ const createMessagesTable: Migration = {
       DROP FUNCTION IF EXISTS update_message_version();
     `.execute(db);
 
+    await db.schema.dropIndex('messages_root_id_version_idx').execute();
     await db.schema.dropTable('messages').execute();
     await sql`DROP SEQUENCE IF EXISTS messages_version_sequence`.execute(db);
   },
@@ -399,6 +456,12 @@ const createMessageReactionsTable: Migration = {
       ])
       .execute();
 
+    await db.schema
+      .createIndex('message_reactions_root_id_version_idx')
+      .on('message_reactions')
+      .columns(['root_id', 'version'])
+      .execute();
+
     await sql`
       CREATE OR REPLACE FUNCTION update_message_reaction_version() RETURNS TRIGGER AS $$
       BEGIN
@@ -413,6 +476,10 @@ const createMessageReactionsTable: Migration = {
       DROP TRIGGER IF EXISTS trg_update_message_reaction_version ON message_reactions;
       DROP FUNCTION IF EXISTS update_message_reaction_version();
     `.execute(db);
+
+    await db.schema
+      .dropIndex('message_reactions_root_id_version_idx')
+      .execute();
 
     await db.schema.dropTable('message_reactions').execute();
     await sql`DROP SEQUENCE IF EXISTS message_reactions_version_sequence`.execute(
@@ -452,6 +519,12 @@ const createMessageInteractionsTable: Migration = {
       ])
       .execute();
 
+    await db.schema
+      .createIndex('message_interactions_root_id_version_idx')
+      .on('message_interactions')
+      .columns(['root_id', 'version'])
+      .execute();
+
     await sql`
       CREATE OR REPLACE FUNCTION update_message_interaction_version() RETURNS TRIGGER AS $$
       BEGIN
@@ -472,8 +545,55 @@ const createMessageInteractionsTable: Migration = {
       DROP FUNCTION IF EXISTS update_message_interaction_version();
     `.execute(db);
 
+    await db.schema
+      .dropIndex('message_interactions_root_id_version_idx')
+      .execute();
+
     await db.schema.dropTable('message_interactions').execute();
     await sql`DROP SEQUENCE IF EXISTS message_interactions_version_sequence`.execute(
+      db
+    );
+  },
+};
+
+const createMessageTombstonesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS message_tombstones_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('message_tombstones')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('deleted_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('deleted_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('message_tombstones_version_sequence')`)
+      )
+      .execute();
+
+    await db.schema
+      .createIndex('message_tombstones_root_id_version_idx')
+      .on('message_tombstones')
+      .columns(['root_id', 'version'])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema
+      .dropIndex('message_tombstones_root_id_version_idx')
+      .execute();
+
+    await db.schema.dropTable('message_tombstones').execute();
+    await sql`DROP SEQUENCE IF EXISTS message_tombstones_version_sequence`.execute(
       db
     );
   },
@@ -507,12 +627,16 @@ const createFilesTable: Migration = {
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .addColumn('updated_by', 'varchar(30)')
-      .addColumn('deleted_at', 'timestamptz')
-      .addColumn('deleted_by', 'varchar(30)')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version', 'bigint', (col) =>
         col.notNull().defaultTo(sql`nextval('files_version_sequence')`)
       )
+      .execute();
+
+    await db.schema
+      .createIndex('files_root_id_version_idx')
+      .on('files')
+      .columns(['root_id', 'version'])
       .execute();
 
     await sql`
@@ -535,6 +659,7 @@ const createFilesTable: Migration = {
       DROP FUNCTION IF EXISTS update_file_version();
     `.execute(db);
 
+    await db.schema.dropIndex('files_root_id_version_idx').execute();
     await db.schema.dropTable('files').execute();
     await sql`DROP SEQUENCE IF EXISTS files_version_sequence`.execute(db);
   },
@@ -572,6 +697,12 @@ const createFileInteractionsTable: Migration = {
       ])
       .execute();
 
+    await db.schema
+      .createIndex('file_interactions_root_id_version_idx')
+      .on('file_interactions')
+      .columns(['root_id', 'version'])
+      .execute();
+
     await sql`
       CREATE OR REPLACE FUNCTION update_file_interaction_version() RETURNS TRIGGER AS $$
       BEGIN
@@ -592,8 +723,52 @@ const createFileInteractionsTable: Migration = {
       DROP FUNCTION IF EXISTS update_file_interaction_version();
     `.execute(db);
 
+    await db.schema
+      .dropIndex('file_interactions_root_id_version_idx')
+      .execute();
+
     await db.schema.dropTable('file_interactions').execute();
     await sql`DROP SEQUENCE IF EXISTS file_interactions_version_sequence`.execute(
+      db
+    );
+  },
+};
+
+const createFileTombstonesTable: Migration = {
+  up: async (db) => {
+    await sql`
+      CREATE SEQUENCE IF NOT EXISTS file_tombstones_version_sequence
+      START WITH 1000000000
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+    `.execute(db);
+
+    await db.schema
+      .createTable('file_tombstones')
+      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('deleted_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('deleted_by', 'varchar(30)', (col) => col.notNull())
+      .addColumn('version', 'bigint', (col) =>
+        col
+          .notNull()
+          .defaultTo(sql`nextval('file_tombstones_version_sequence')`)
+      )
+      .execute();
+
+    await db.schema
+      .createIndex('file_tombstones_root_id_version_idx')
+      .on('file_tombstones')
+      .columns(['root_id', 'version'])
+      .execute();
+  },
+  down: async (db) => {
+    await db.schema.dropIndex('file_tombstones_root_id_version_idx').execute();
+    await db.schema.dropTable('file_tombstones').execute();
+    await sql`DROP SEQUENCE IF EXISTS file_tombstones_version_sequence`.execute(
       db
     );
   },
@@ -715,14 +890,16 @@ export const databaseMigrations: Record<string, Migration> = {
   '00003_create_workspaces_table': createWorkspacesTable,
   '00004_create_users_table': createUsersTable,
   '00005_create_entries_table': createEntriesTable,
-  '00006_create_transactions_table': createTransactionsTable,
+  '00006_create_entry_transactions_table': createEntryTransactionsTable,
   '00007_create_entry_interactions_table': createEntryInteractionsTable,
-  '00008_create_messages_table': createMessagesTable,
-  '00009_create_message_reactions_table': createMessageReactionsTable,
-  '00010_create_message_interactions_table': createMessageInteractionsTable,
-  '00011_create_files_table': createFilesTable,
-  '00012_create_file_interactions_table': createFileInteractionsTable,
-  '00013_create_collaborations_table': createCollaborationsTable,
-  '00014_create_entry_paths_table': createEntryPathsTable,
-  '00015_create_ai_embeddings_table': createAIEmbeddingsTable,
+  '00008_create_entry_paths_table': createEntryPathsTable,
+  '00009_create_messages_table': createMessagesTable,
+  '00010_create_message_reactions_table': createMessageReactionsTable,
+  '00011_create_message_interactions_table': createMessageInteractionsTable,
+  '00012_create_message_tombstones_table': createMessageTombstonesTable,
+  '00013_create_files_table': createFilesTable,
+  '00014_create_file_interactions_table': createFileInteractionsTable,
+  '00015_create_file_tombstones_table': createFileTombstonesTable,
+  '00016_create_collaborations_table': createCollaborationsTable,
+  '00017_create_ai_embeddings_table': createAIEmbeddingsTable,
 };

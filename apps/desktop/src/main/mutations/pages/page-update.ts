@@ -1,6 +1,8 @@
+import { PageAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   PageUpdateMutationInput,
   PageUpdateMutationOutput,
@@ -12,14 +14,10 @@ export class PageUpdateMutationHandler
   async handleMutation(
     input: PageUpdateMutationInput
   ): Promise<PageUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<PageAttributes>(
       input.pageId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'page') {
-          throw new MutationError('invalid_attributes', 'Node is not a page');
-        }
-
         attributes.name = input.name;
         attributes.avatar = input.avatar;
 
@@ -29,15 +27,15 @@ export class PageUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.PageUpdateForbidden,
         "You don't have permission to update this page."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
-        'Something went wrong while updating the page.'
+        MutationErrorCode.PageUpdateFailed,
+        'Something went wrong while updating the page. Please try again later.'
       );
     }
 

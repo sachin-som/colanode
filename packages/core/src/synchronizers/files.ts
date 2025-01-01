@@ -22,8 +22,6 @@ export type SyncFileData = {
   createdBy: string;
   updatedAt: string | null;
   updatedBy: string | null;
-  deletedAt: string | null;
-  deletedBy: string | null;
   version: string;
 };
 

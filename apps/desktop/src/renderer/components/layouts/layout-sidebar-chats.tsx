@@ -1,5 +1,3 @@
-import { ChatEntry } from '@colanode/core';
-
 import { ChatCreatePopover } from '@/renderer/components/chats/chat-create-popover';
 import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -10,13 +8,14 @@ export const LayoutSidebarChats = () => {
   const workspace = useWorkspace();
 
   const { data } = useQuery({
-    type: 'entry_children_get',
+    type: 'chat_list',
     userId: workspace.userId,
-    entryId: workspace.id,
-    types: ['chat'],
+    parentId: workspace.id,
+    page: 0,
+    count: 100,
   });
 
-  const chats = data?.map((entry) => entry as ChatEntry) ?? [];
+  const chats = data ?? [];
 
   return (
     <div className="group/sidebar-chats flex w-full min-w-0 flex-col p-2">
@@ -24,7 +23,7 @@ export const LayoutSidebarChats = () => {
         <div className="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">
           Chats
         </div>
-        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center p-0">
+        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100 flex items-center justify-center p-0">
           <ChatCreatePopover />
         </div>
       </div>

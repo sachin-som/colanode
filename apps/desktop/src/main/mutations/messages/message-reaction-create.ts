@@ -1,4 +1,5 @@
 import {
+  canCreateMessageReaction,
   CreateMessageReactionMutation,
   generateId,
   IdType,
@@ -11,7 +12,13 @@ import {
   MessageReactionCreateMutationOutput,
 } from '@/shared/mutations/messages/message-reaction-create';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapMessageReaction } from '@/main/utils';
+import {
+  fetchEntry,
+  fetchUser,
+  mapEntry,
+  mapMessageReaction,
+} from '@/main/utils';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class MessageReactionCreateMutationHandler
   implements MutationHandler<MessageReactionCreateMutationInput>
@@ -22,6 +29,19 @@ export class MessageReactionCreateMutationHandler
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
+
+    const message = await workspaceDatabase
+      .selectFrom('messages')
+      .selectAll()
+      .where('id', '=', input.messageId)
+      .executeTakeFirst();
+
+    if (!message) {
+      throw new MutationError(
+        MutationErrorCode.MessageNotFound,
+        'Message not found or has been deleted.'
+      );
+    }
 
     const existingMessageReaction = await workspaceDatabase
       .selectFrom('message_reactions')
@@ -35,6 +55,41 @@ export class MessageReactionCreateMutationHandler
       return {
         success: true,
       };
+    }
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
+    }
+
+    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    if (!root) {
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
+    }
+
+    if (
+      !canCreateMessageReaction({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        MutationErrorCode.MessageReactionCreateForbidden,
+        "You don't have permission to react to this message."
+      );
     }
 
     const { createdMessageReaction, createdMutation } = await workspaceDatabase

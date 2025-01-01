@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
-import { CreateUploadInput, CreateUploadOutput } from '@colanode/core';
+import {
+  CreateUploadInput,
+  CreateUploadOutput,
+  ApiErrorCode,
+} from '@colanode/core';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const fileUploadInitHandler = async (
   req: Request,
@@ -21,19 +25,17 @@ export const fileUploadInitHandler = async (
     .executeTakeFirst();
 
   if (!file) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
     });
-    return;
   }
 
   if (file.created_by !== res.locals.user.id) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.FileOwnerMismatch,
+      message: 'You do not have access to this file.',
     });
-    return;
   }
 
   //generate presigned url for upload
@@ -54,5 +56,5 @@ export const fileUploadInitHandler = async (
     url: presignedUrl,
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

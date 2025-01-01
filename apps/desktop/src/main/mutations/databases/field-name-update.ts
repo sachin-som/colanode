@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FieldNameUpdateMutationInput,
   FieldNameUpdateMutationOutput,
@@ -12,18 +14,14 @@ export class FieldNameUpdateMutationHandler
   async handleMutation(
     input: FieldNameUpdateMutationInput
   ): Promise<FieldNameUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         const field = attributes.fields[input.fieldId];
         if (!field) {
           throw new MutationError(
-            'field_not_found',
+            MutationErrorCode.FieldNotFound,
             'The field you are trying to update does not exist.'
           );
         }
@@ -35,14 +33,14 @@ export class FieldNameUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.FieldUpdateForbidden,
         "You don't have permission to update this field."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.FieldUpdateFailed,
         'Something went wrong while updating the field.'
       );
     }

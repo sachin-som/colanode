@@ -1,7 +1,8 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
+import { ApiErrorCode } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const workspaceMiddleware: RequestHandler = async (
   req: Request,
@@ -18,11 +19,10 @@ export const workspaceMiddleware: RequestHandler = async (
     .executeTakeFirst();
 
   if (!user) {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.WorkspaceNoAccess,
+      message: 'You do not have access to this workspace.',
     });
-    return;
   }
 
   res.locals.user = user;

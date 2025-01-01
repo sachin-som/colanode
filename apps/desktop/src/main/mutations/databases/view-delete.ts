@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewDeleteMutationInput,
   ViewDeleteMutationOutput,
@@ -12,20 +14,13 @@ export class ViewDeleteMutationHandler
   async handleMutation(
     input: ViewDeleteMutationInput
   ): Promise<ViewDeleteMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         if (!attributes.views[input.viewId]) {
           throw new MutationError(
-            'view_not_found',
+            MutationErrorCode.ViewNotFound,
             'The view you are trying to delete does not exist.'
           );
         }
@@ -37,14 +32,14 @@ export class ViewDeleteMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.ViewDeleteForbidden,
         "You don't have permission to delete this view."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.ViewDeleteFailed,
         'Something went wrong while deleting the view.'
       );
     }

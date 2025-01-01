@@ -6,7 +6,7 @@ import {
   EntryCollaboratorCreateMutationInput,
   EntryCollaboratorCreateMutationOutput,
 } from '@/shared/mutations/entries/entry-collaborator-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class EntryCollaboratorCreateMutationHandler
   implements MutationHandler<EntryCollaboratorCreateMutationInput>
@@ -27,14 +27,14 @@ export class EntryCollaboratorCreateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.EntryCollaboratorCreateForbidden,
         "You don't have permission to add collaborators to this entry."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.EntryCollaboratorCreateFailed,
         'Something went wrong while adding collaborators to the entry.'
       );
     }

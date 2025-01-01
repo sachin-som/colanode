@@ -43,7 +43,6 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
     const collaborations = await database
       .selectFrom('collaborations')
       .selectAll()
-      .where('workspace_id', '=', this.user.workspaceId)
       .where('collaborator_id', '=', this.user.userId)
       .where('version', '>', this.cursor)
       .orderBy('version', 'asc')

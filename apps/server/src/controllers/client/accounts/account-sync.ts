@@ -3,10 +3,11 @@ import {
   AccountSyncOutput,
   WorkspaceOutput,
   WorkspaceRole,
+  ApiErrorCode,
 } from '@colanode/core';
 
-import { ApiError } from '@/types/api';
 import { database } from '@/data/database';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const accountSyncHandler = async (
   _: Request,
@@ -19,11 +20,10 @@ export const accountSyncHandler = async (
     .executeTakeFirst();
 
   if (!account) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Account not found.',
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.AccountNotFound,
+      message: 'Account not found. Check your token.',
     });
-    return;
   }
 
   const workspaceOutputs: WorkspaceOutput[] = [];
@@ -51,7 +51,6 @@ export const accountSyncHandler = async (
       workspaceOutputs.push({
         id: workspace.id,
         name: workspace.name,
-        versionId: workspace.version_id,
         avatar: workspace.avatar,
         description: workspace.description,
         user: {
@@ -73,5 +72,5 @@ export const accountSyncHandler = async (
     workspaces: workspaceOutputs,
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

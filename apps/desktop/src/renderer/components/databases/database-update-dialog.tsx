@@ -1,4 +1,4 @@
-import { DatabaseEntry, hasEditorAccess, EntryRole } from '@colanode/core';
+import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
 
 import { DatabaseForm } from '@/renderer/components/databases/database-form';
 import {
@@ -27,7 +27,7 @@ export const DatabaseUpdateDialog = ({
 }: DatabaseUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

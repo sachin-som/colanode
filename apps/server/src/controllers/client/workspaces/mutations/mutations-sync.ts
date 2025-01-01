@@ -24,6 +24,7 @@ import { SelectUser } from '@/data/schema';
 import { entryService } from '@/services/entry-service';
 import { fileService } from '@/services/file-service';
 import { messageService } from '@/services/message-service';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const mutationsSyncHandler = async (
   req: Request,
@@ -48,8 +49,7 @@ export const mutationsSyncHandler = async (
     }
   }
 
-  console.log('executed mutations', results);
-  res.status(200).json({ results });
+  return ResponseBuilder.success(res, { results });
 };
 
 const handleMutation = async (

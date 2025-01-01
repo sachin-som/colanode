@@ -7,7 +7,8 @@ import {
   UsersInviteMutationInput,
   UsersInviteMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-users-invite';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 export class UsersInviteMutationHandler
   implements MutationHandler<UsersInviteMutationInput>
@@ -22,7 +23,10 @@ export class UsersInviteMutationHandler
       .executeTakeFirst();
 
     if (!workspace) {
-      throw new MutationError('workspace_not_found', 'Workspace not found');
+      throw new MutationError(
+        MutationErrorCode.WorkspaceNotFound,
+        'Workspace was not found or has been deleted.'
+      );
     }
 
     const account = await databaseService.appDatabase
@@ -33,8 +37,8 @@ export class UsersInviteMutationHandler
 
     if (!account) {
       throw new MutationError(
-        'account_not_found',
-        'The account associated with this workspace was not found.'
+        MutationErrorCode.AccountNotFound,
+        'The account associated with this workspace was not found or has been logged out.'
       );
     }
 
@@ -46,25 +50,30 @@ export class UsersInviteMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         'The server associated with this account was not found.'
       );
     }
 
-    await httpClient.post<UsersInviteOutput>(
-      `/v1/workspaces/${workspace.workspace_id}/users`,
-      {
-        emails: input.emails,
-        role: input.role,
-      },
-      {
-        domain: server.domain,
-        token: account.token,
-      }
-    );
+    try {
+      await httpClient.post<UsersInviteOutput>(
+        `/v1/workspaces/${workspace.workspace_id}/users`,
+        {
+          emails: input.emails,
+          role: input.role,
+        },
+        {
+          domain: server.domain,
+          token: account.token,
+        }
+      );
 
-    return {
-      success: true,
-    };
+      return {
+        success: true,
+      };
+    } catch (error) {
+      const apiError = parseApiError(error);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
+    }
   }
 }

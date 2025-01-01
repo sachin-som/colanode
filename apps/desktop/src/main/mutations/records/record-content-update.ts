@@ -1,4 +1,4 @@
-import { Block } from '@colanode/core';
+import { Block, RecordAttributes } from '@colanode/core';
 
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +7,7 @@ import {
   RecordContentUpdateMutationInput,
   RecordContentUpdateMutationOutput,
 } from '@/shared/mutations/records/record-content-update';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class RecordContentUpdateMutationHandler
   implements MutationHandler<RecordContentUpdateMutationInput>
@@ -15,14 +15,10 @@ export class RecordContentUpdateMutationHandler
   async handleMutation(
     input: RecordContentUpdateMutationInput
   ): Promise<RecordContentUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<RecordAttributes>(
       input.recordId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'record') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         const blocksMap = new Map<string, Block>();
         if (attributes.content) {
           for (const [key, value] of Object.entries(attributes.content)) {
@@ -50,15 +46,15 @@ export class RecordContentUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.RecordUpdateForbidden,
         "You don't have permission to update this record."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
-        'Something went wrong while updating the record content.'
+        MutationErrorCode.RecordUpdateFailed,
+        'Something went wrong while updating the record content. Please try again later.'
       );
     }
 

@@ -37,7 +37,6 @@ interface WorkspaceTable {
   name: ColumnType<string, string, string>;
   description: ColumnType<string | null, string | null, string | null>;
   avatar: ColumnType<string | null, string | null, string | null>;
-  version_id: ColumnType<string, string, string>;
   role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
 }
 

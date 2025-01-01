@@ -1,5 +1,6 @@
 import {
   Block,
+  canCreateMessage,
   CreateFileMutationData,
   CreateMessageMutationData,
   EditorNodeTypes,
@@ -16,7 +17,7 @@ import {
   MessageCreateMutationInput,
   MessageCreateMutationOutput,
 } from '@/shared/mutations/messages/message-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   CreateFile,
   CreateFileState,
@@ -24,7 +25,14 @@ import {
 } from '@/main/data/workspace/schema';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile, mapFileState, mapMessage } from '@/main/utils';
+import {
+  fetchEntry,
+  fetchUser,
+  mapEntry,
+  mapFile,
+  mapFileState,
+  mapMessage,
+} from '@/main/utils';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -35,6 +43,46 @@ export class MessageCreateMutationHandler
     const workspaceDatabase = await databaseService.getWorkspaceDatabase(
       input.userId
     );
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, input.conversationId);
+    if (!entry) {
+      throw new MutationError(
+        MutationErrorCode.EntryNotFound,
+        'There was an error while fetching the conversation. Please make sure you have access to this conversation.'
+      );
+    }
+
+    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    if (!root) {
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
+    }
+
+    if (
+      !canCreateMessage({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+      })
+    ) {
+      throw new MutationError(
+        MutationErrorCode.MessageCreateForbidden,
+        'You are not allowed to create a message in this conversation.'
+      );
+    }
 
     const editorContent = input.content.content ?? [];
     const messageId = generateId(IdType.Message);
@@ -52,8 +100,8 @@ export class MessageCreateMutationHandler
         const metadata = fileService.getFileMetadata(path);
         if (!metadata) {
           throw new MutationError(
-            'invalid_file',
-            'File attachment is invalid or could not be read.'
+            MutationErrorCode.FileInvalid,
+            'The file attachment is invalid or could not be read.'
           );
         }
 

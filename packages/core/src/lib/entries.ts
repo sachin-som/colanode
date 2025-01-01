@@ -46,27 +46,6 @@ export const extractEntryRole = (
   return role;
 };
 
-export const hasAdminAccess = (role: EntryRole | null): boolean => {
-  return role === 'admin';
-};
-
-export const hasEditorAccess = (role: EntryRole | null): boolean => {
-  return role === 'admin' || role === 'editor';
-};
-
-export const hasCollaboratorAccess = (role: EntryRole | null): boolean => {
-  return role === 'admin' || role === 'editor' || role === 'collaborator';
-};
-
-export const hasViewerAccess = (role: EntryRole | null): boolean => {
-  return (
-    role === 'admin' ||
-    role === 'editor' ||
-    role === 'collaborator' ||
-    role === 'viewer'
-  );
-};
-
 export const generateNodeIndex = (
   previous?: string | null,
   next?: string | null

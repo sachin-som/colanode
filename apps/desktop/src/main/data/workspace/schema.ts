@@ -53,7 +53,7 @@ interface EntryPathTable {
 
 export type SelectEntryPath = Selectable<EntryPathTable>;
 
-interface TransactionTable {
+interface EntryTransactionTable {
   id: ColumnType<string, string, never>;
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
@@ -65,9 +65,9 @@ interface TransactionTable {
   version: ColumnType<bigint, bigint, bigint>;
 }
 
-export type SelectTransaction = Selectable<TransactionTable>;
-export type CreateTransaction = Insertable<TransactionTable>;
-export type UpdateTransaction = Updateable<TransactionTable>;
+export type SelectEntryTransaction = Selectable<EntryTransactionTable>;
+export type CreateEntryTransaction = Insertable<EntryTransactionTable>;
+export type UpdateEntryTransaction = Updateable<EntryTransactionTable>;
 
 interface EntryInteractionTable {
   entry_id: ColumnType<string, string, never>;
@@ -108,6 +108,7 @@ interface MessageTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   version: ColumnType<bigint, bigint, bigint>;
 }
 
@@ -121,6 +122,7 @@ interface MessageReactionTable {
   reaction: ColumnType<string, string, string>;
   root_id: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   version: ColumnType<bigint, bigint, bigint>;
 }
 
@@ -157,6 +159,7 @@ interface FileTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
+  deleted_at: ColumnType<string | null, never, string | null>;
   status: ColumnType<FileStatus, FileStatus, FileStatus>;
   version: ColumnType<bigint, bigint, bigint>;
 }
@@ -230,7 +233,7 @@ export interface WorkspaceDatabaseSchema {
   users: UserTable;
   entries: EntryTable;
   entry_interactions: EntryInteractionTable;
-  transactions: TransactionTable;
+  entry_transactions: EntryTransactionTable;
   entry_paths: EntryPathTable;
   collaborations: CollaborationTable;
   messages: MessageTable;

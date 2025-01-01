@@ -18,7 +18,7 @@ export const ChatHeader = ({ chat, role }: ChatHeaderProps) => {
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
         <div className="flex-grow">
-          <EntryBreadcrumb entries={[chat]} />
+          <EntryBreadcrumb entry={chat} />
           {container.mode === 'modal' && (
             <EntryFullscreenButton entryId={chat.id} />
           )}

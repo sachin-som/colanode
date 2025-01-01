@@ -1,4 +1,4 @@
-import { Block } from '@colanode/core';
+import { Block, PageAttributes } from '@colanode/core';
 
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +7,7 @@ import {
   PageContentUpdateMutationInput,
   PageContentUpdateMutationOutput,
 } from '@/shared/mutations/pages/page-content-update';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class PageContentUpdateMutationHandler
   implements MutationHandler<PageContentUpdateMutationInput>
@@ -15,14 +15,10 @@ export class PageContentUpdateMutationHandler
   async handleMutation(
     input: PageContentUpdateMutationInput
   ): Promise<PageContentUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<PageAttributes>(
       input.pageId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'page') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         const blocksMap = new Map<string, Block>();
         if (attributes.content) {
           for (const [key, value] of Object.entries(attributes.content)) {
@@ -50,14 +46,14 @@ export class PageContentUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.PageUpdateForbidden,
         "You don't have permission to update this page."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.PageUpdateFailed,
         'Something went wrong while updating the page content.'
       );
     }

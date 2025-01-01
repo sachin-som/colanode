@@ -25,7 +25,7 @@ import {
   SelectMessageReaction,
   SelectMutation,
   SelectEntry,
-  SelectTransaction,
+  SelectEntryTransaction,
   SelectUser,
   WorkspaceDatabaseSchema,
   SelectMessageInteraction,
@@ -114,6 +114,32 @@ export const fetchEntryAncestors = (
     .execute();
 };
 
+export const fetchEntry = (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  entryId: string
+): Promise<SelectEntry | undefined> => {
+  return database
+    .selectFrom('entries')
+    .selectAll()
+    .where('id', '=', entryId)
+    .executeTakeFirst();
+};
+
+export const fetchUser = (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  userId: string
+): Promise<SelectUser | undefined> => {
+  return database
+    .selectFrom('users')
+    .selectAll()
+    .where('id', '=', userId)
+    .executeTakeFirst();
+};
+
 export const fetchWorkspaceCredentials = async (
   userId: string
 ): Promise<WorkspaceCredentials | null> => {
@@ -192,7 +218,6 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   return {
     id: row.workspace_id,
     name: row.name,
-    versionId: row.version_id,
     accountId: row.account_id,
     role: row.role,
     userId: row.user_id,
@@ -201,7 +226,9 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   };
 };
 
-export const mapTransaction = (row: SelectTransaction): LocalTransaction => {
+export const mapEntryTransaction = (
+  row: SelectEntryTransaction
+): LocalTransaction => {
   if (row.operation === 'create' && row.data) {
     return {
       id: row.id,
@@ -306,6 +333,7 @@ export const mapFile = (row: SelectFile): File => {
     id: row.id,
     type: row.type,
     parentId: row.parent_id,
+    entryId: row.entry_id,
     rootId: row.root_id,
     name: row.name,
     originalName: row.original_name,

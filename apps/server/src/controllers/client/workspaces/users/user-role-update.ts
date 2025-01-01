@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { UserRoleUpdateInput } from '@colanode/core';
+import { UserRoleUpdateInput, ApiErrorCode } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { SelectUser } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const userRoleUpdateHandler = async (
   req: Request,
@@ -15,11 +15,10 @@ export const userRoleUpdateHandler = async (
   const user: SelectUser = res.locals.user;
 
   if (user.role !== 'owner' && user.role !== 'admin') {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.UserUpdateNoAccess,
+      message: 'You do not have access to update users to this workspace.',
     });
-    return;
   }
 
   const userToUpdate = await database
@@ -29,11 +28,10 @@ export const userRoleUpdateHandler = async (
     .executeTakeFirst();
 
   if (!userToUpdate) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'NotFound.',
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.UserNotFound,
+      message: 'User not found.',
     });
-    return;
   }
 
   await database
@@ -53,7 +51,7 @@ export const userRoleUpdateHandler = async (
     workspaceId: userToUpdate.workspace_id,
   });
 
-  res.status(200).json({
+  return ResponseBuilder.success(res, {
     success: true,
   });
 };

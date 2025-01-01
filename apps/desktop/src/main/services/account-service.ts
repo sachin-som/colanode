@@ -123,7 +123,6 @@ class AccountService {
             avatar: workspace.avatar,
             description: workspace.description,
             role: workspace.user.role,
-            version_id: workspace.versionId,
           })
           .returningAll()
           .executeTakeFirst();
@@ -153,7 +152,6 @@ class AccountService {
             avatar: workspace.avatar,
             description: workspace.description,
             role: workspace.user.role,
-            version_id: workspace.versionId,
           })
           .where('user_id', '=', currentWorkspace.user_id)
           .executeTakeFirst();

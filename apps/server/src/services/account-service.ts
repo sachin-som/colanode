@@ -38,7 +38,6 @@ class AccountService {
         workspaceOutputs.push({
           id: workspace.id,
           name: workspace.name,
-          versionId: workspace.version_id,
           avatar: workspace.avatar,
           description: workspace.description,
           user: {

@@ -72,8 +72,6 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       createdBy: file.created_by,
       updatedAt: file.updated_at?.toISOString() ?? null,
       updatedBy: file.updated_by ?? null,
-      deletedAt: file.deleted_at?.toISOString() ?? null,
-      deletedBy: file.deleted_by ?? null,
       version: file.version.toString(),
       status: file.status,
     }));

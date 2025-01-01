@@ -1,4 +1,4 @@
-import { DatabaseEntry, hasEditorAccess, EntryRole } from '@colanode/core';
+import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -23,8 +23,8 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEditorAccess(role);
-  const canDelete = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
+  const canDelete = hasEntryRole(role, 'admin');
 
   return (
     <React.Fragment>

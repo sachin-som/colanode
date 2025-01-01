@@ -3,6 +3,7 @@ import { mutationHandlerMap } from '@/main/mutations';
 import { MutationHandler } from '@/main/types';
 import {
   MutationError,
+  MutationErrorCode,
   MutationInput,
   MutationResult,
 } from '@/shared/mutations';
@@ -41,7 +42,7 @@ class MutationService {
       return {
         success: false,
         error: {
-          code: 'unknown',
+          code: MutationErrorCode.Unknown,
           message: 'Something went wrong trying to execute the mutation.',
         },
       };

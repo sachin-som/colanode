@@ -8,7 +8,7 @@ import { JobHandler, JobInput, JobMap } from '@/main/jobs';
 import { SyncServersJobHandler } from '@/main/jobs/sync-servers';
 import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
 import { InitSynchronizersJobHandler } from '@/main/jobs/init-synchronizers';
-// import { RevertInvalidTransactionsJobHandler } from '@/main/jobs/revert-invalid-transactions';
+import { RevertInvalidMutationsJobHandler } from '@/main/jobs/revert-invalid-mutations';
 import { SyncPendingMutationsJobHandler } from '@/main/jobs/sync-pending-mutations';
 import { SyncDeletedTokensJobHandler } from '@/main/jobs/sync-deleted-tokens';
 import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
@@ -26,7 +26,7 @@ export const jobHandlerMap: JobHandlerMap = {
   sync_servers: new SyncServersJobHandler(),
   sync_account: new SyncAccountJobHandler(),
   init_synchronizers: new InitSynchronizersJobHandler(),
-  // revert_invalid_transactions: new RevertInvalidTransactionsJobHandler(),
+  revert_invalid_mutations: new RevertInvalidMutationsJobHandler(),
   sync_pending_mutations: new SyncPendingMutationsJobHandler(),
   sync_deleted_tokens: new SyncDeletedTokensJobHandler(),
   connect_socket: new ConnectSocketJobHandler(),
@@ -239,10 +239,10 @@ class Scheduler {
       userId,
     });
 
-    // this.schedule({
-    //   type: 'revert_invalid_transactions',
-    //   userId,
-    // });
+    this.schedule({
+      type: 'revert_invalid_mutations',
+      userId,
+    });
 
     this.schedule({
       type: 'init_synchronizers',
@@ -294,12 +294,12 @@ class Scheduler {
       return true;
     }
 
-    // if (
-    //   state.input.type === 'revert_invalid_transactions' &&
-    //   state.input.userId === userId
-    // ) {
-    //   return true;
-    // }
+    if (
+      state.input.type === 'revert_invalid_mutations' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
 
     if (state.input.type === 'upload_files' && state.input.userId === userId) {
       return true;

@@ -1,4 +1,9 @@
-import { DeleteFileMutationData, generateId, IdType } from '@colanode/core';
+import {
+  canDeleteFile,
+  DeleteFileMutationData,
+  generateId,
+  IdType,
+} from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +12,8 @@ import {
   FileDeleteMutationOutput,
 } from '@/shared/mutations/files/file-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFile } from '@/main/utils';
+import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class FileDeleteMutationHandler
   implements MutationHandler<FileDeleteMutationInput>
@@ -26,9 +32,55 @@ export class FileDeleteMutationHandler
       .executeTakeFirst();
 
     if (!file) {
-      return {
-        success: true,
-      };
+      throw new MutationError(
+        MutationErrorCode.FileNotFound,
+        'File could not be found or has been already deleted.'
+      );
+    }
+
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, file.root_id);
+    if (!entry) {
+      throw new MutationError(
+        MutationErrorCode.EntryNotFound,
+        'There was an error while fetching the entry. Please make sure you have access to this entry.'
+      );
+    }
+
+    const root = await fetchEntry(workspaceDatabase, entry.root_id);
+    if (!root) {
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
+    }
+
+    if (
+      !canDeleteFile({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        file: {
+          id: input.fileId,
+          parentId: file.parent_id,
+          createdBy: file.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        MutationErrorCode.FileDeleteForbidden,
+        'You are not allowed to delete this file.'
+      );
     }
 
     const deletedAt = new Date().toISOString();
@@ -39,7 +91,13 @@ export class FileDeleteMutationHandler
     };
 
     await workspaceDatabase.transaction().execute(async (tx) => {
-      await tx.deleteFrom('files').where('id', '=', input.fileId).execute();
+      await tx
+        .updateTable('files')
+        .set({
+          deleted_at: deletedAt,
+        })
+        .where('id', '=', input.fileId)
+        .execute();
 
       await tx
         .insertInto('mutations')

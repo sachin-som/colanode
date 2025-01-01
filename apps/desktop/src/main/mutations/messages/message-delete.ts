@@ -1,4 +1,9 @@
-import { DeleteMessageMutationData, generateId, IdType } from '@colanode/core';
+import {
+  canDeleteMessage,
+  DeleteMessageMutationData,
+  generateId,
+  IdType,
+} from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -7,7 +12,8 @@ import {
   MessageDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapMessage } from '@/main/utils';
+import { fetchEntry, fetchUser, mapEntry, mapMessage } from '@/main/utils';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class MessageDeleteMutationHandler
   implements MutationHandler<MessageDeleteMutationInput>
@@ -31,6 +37,50 @@ export class MessageDeleteMutationHandler
       };
     }
 
+    const user = await fetchUser(workspaceDatabase, input.userId);
+    if (!user) {
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
+    }
+
+    const entry = await fetchEntry(workspaceDatabase, message.entry_id);
+    if (!entry) {
+      throw new MutationError(
+        MutationErrorCode.EntryNotFound,
+        'There was an error while fetching the conversation. Please make sure you have access to this conversation.'
+      );
+    }
+
+    const root = await fetchEntry(workspaceDatabase, message.root_id);
+    if (!root) {
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
+    }
+
+    if (
+      !canDeleteMessage({
+        user: {
+          userId: input.userId,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
+      })
+    ) {
+      throw new MutationError(
+        MutationErrorCode.MessageDeleteForbidden,
+        'You are not allowed to delete this message.'
+      );
+    }
+
     const deletedAt = new Date().toISOString();
     const deleteMessageMutationData: DeleteMessageMutationData = {
       id: input.messageId,
@@ -40,7 +90,10 @@ export class MessageDeleteMutationHandler
 
     await workspaceDatabase.transaction().execute(async (tx) => {
       await tx
-        .deleteFrom('messages')
+        .updateTable('messages')
+        .set({
+          deleted_at: deletedAt,
+        })
         .where('id', '=', input.messageId)
         .execute();
 

@@ -5,7 +5,6 @@ export type Workspace = {
   name: string;
   description?: string | null;
   avatar?: string | null;
-  versionId: string;
   accountId: string;
   role: WorkspaceRole;
   userId: string;

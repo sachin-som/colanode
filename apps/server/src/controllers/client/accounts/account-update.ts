@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
-import { AccountUpdateInput, AccountUpdateOutput } from '@colanode/core';
+import {
+  AccountUpdateInput,
+  AccountUpdateOutput,
+  ApiErrorCode,
+} from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const accountUpdateHandler = async (
   req: Request,
@@ -13,11 +17,11 @@ export const accountUpdateHandler = async (
   const input: AccountUpdateInput = req.body;
 
   if (accountId !== res.locals.account.id) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'Invalid account id.',
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountMismatch,
+      message:
+        'The provided account id does not match the account id in the token. Make sure you are using the correct account token.',
     });
-    return;
   }
 
   const account = await database
@@ -27,55 +31,72 @@ export const accountUpdateHandler = async (
     .executeTakeFirst();
 
   if (!account) {
-    res.status(404).json({
-      code: ApiError.ResourceNotFound,
-      message: 'Account not found.',
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.AccountNotFound,
+      message: 'Account not found or has been deleted.',
     });
-    return;
   }
 
   const nameChanged = account.name !== input.name;
   const avatarChanged = account.avatar !== input.avatar;
 
   if (!nameChanged && !avatarChanged) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'Nothing to update.',
-    });
-    return;
-  }
-
-  await database
-    .updateTable('accounts')
-    .set({
+    const output: AccountUpdateOutput = {
+      id: account.id,
       name: input.name,
       avatar: input.avatar,
-      updated_at: new Date(),
-    })
-    .where('id', '=', account.id)
-    .execute();
+    };
 
-  const users = await database
-    .selectFrom('users')
-    .select(['id', 'workspace_id'])
-    .where('account_id', '=', account.id)
-    .execute();
+    return ResponseBuilder.success(res, output);
+  }
 
-  if (users.length > 0) {
-    const userIds = users.map((u) => u.id);
+  const { updatedAccount, updatedUsers } = await database
+    .transaction()
+    .execute(async (tx) => {
+      const updatedAccount = await tx
+        .updateTable('accounts')
+        .returningAll()
+        .set({
+          name: input.name,
+          avatar: input.avatar,
+          updated_at: new Date(),
+        })
+        .where('id', '=', account.id)
+        .executeTakeFirst();
 
-    await database
-      .updateTable('users')
-      .set({
-        name: input.name,
-        avatar: input.avatar,
-        updated_at: new Date(),
-        updated_by: account.id,
-      })
-      .where('id', 'in', userIds)
-      .execute();
+      if (!updatedAccount) {
+        throw new Error('Account not found or has been deleted.');
+      }
 
-    for (const user of users) {
+      const updatedUsers = await tx
+        .updateTable('users')
+        .returningAll()
+        .set({
+          name: input.name,
+          avatar: input.avatar,
+          updated_at: new Date(),
+          updated_by: account.id,
+        })
+        .where('account_id', '=', account.id)
+        .execute();
+
+      return { updatedAccount, updatedUsers };
+    });
+
+  if (!updatedAccount) {
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.AccountNotFound,
+      message: 'Account not found or has been deleted.',
+    });
+  }
+
+  eventBus.publish({
+    type: 'account_updated',
+    accountId: account.id,
+  });
+
+  if (updatedUsers.length > 0) {
+    for (const user of updatedUsers) {
       eventBus.publish({
         type: 'user_updated',
         userId: user.id,
@@ -85,16 +106,11 @@ export const accountUpdateHandler = async (
     }
   }
 
-  eventBus.publish({
-    type: 'account_updated',
-    accountId: account.id,
-  });
-
   const output: AccountUpdateOutput = {
     id: account.id,
     name: input.name,
     avatar: input.avatar,
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

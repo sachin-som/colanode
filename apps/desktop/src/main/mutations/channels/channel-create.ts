@@ -7,7 +7,7 @@ import {
   ChannelCreateMutationInput,
   ChannelCreateMutationOutput,
 } from '@/shared/mutations/channels/channel-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class ChannelCreateMutationHandler
   implements MutationHandler<ChannelCreateMutationInput>
@@ -27,7 +27,7 @@ export class ChannelCreateMutationHandler
 
     if (!space) {
       throw new MutationError(
-        'space_not_found',
+        MutationErrorCode.SpaceNotFound,
         'Space not found or has been deleted.'
       );
     }
@@ -38,7 +38,6 @@ export class ChannelCreateMutationHandler
       name: input.name,
       avatar: input.avatar,
       parentId: input.spaceId,
-      collaborators: null,
     };
 
     await entryService.createEntry(input.userId, { id, attributes });

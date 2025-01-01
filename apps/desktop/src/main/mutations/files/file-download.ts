@@ -2,7 +2,7 @@ import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { mapFileState } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FileDownloadMutationInput,
   FileDownloadMutationOutput,
@@ -26,7 +26,7 @@ export class FileDownloadMutationHandler
 
     if (!file) {
       throw new MutationError(
-        'node_not_found',
+        MutationErrorCode.FileNotFound,
         'The file you are trying to download does not exist.'
       );
     }

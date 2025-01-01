@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { EntryModel, entryRoleEnum } from './core';
+import { entryRoleEnum } from './core';
 
 export const spaceAttributesSchema = z.object({
   type: z.literal('space'),
@@ -12,32 +12,3 @@ export const spaceAttributesSchema = z.object({
 });
 
 export type SpaceAttributes = z.infer<typeof spaceAttributesSchema>;
-
-export const spaceModel: EntryModel = {
-  type: 'space',
-  schema: spaceAttributesSchema,
-  getText: (id, attributes) => {
-    if (attributes.type !== 'space') {
-      return undefined;
-    }
-
-    return {
-      id,
-      name: attributes.name,
-      text: null,
-    };
-  },
-  canCreate: async (context, __) => {
-    if (context.workspaceRole === 'guest' || context.workspaceRole === 'none') {
-      return false;
-    }
-
-    return true;
-  },
-  canUpdate: async (context, _, __) => {
-    return context.hasAdminAccess();
-  },
-  canDelete: async (context, _) => {
-    return context.hasAdminAccess();
-  },
-};

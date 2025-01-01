@@ -1,4 +1,4 @@
-import { extractEntryRole } from '@colanode/core';
+import { extractEntryRole, PageEntry } from '@colanode/core';
 
 import { PageBody } from '@/renderer/components/pages/page-body';
 import { PageHeader } from '@/renderer/components/pages/page-header';
@@ -11,27 +11,41 @@ interface PageContainerProps {
 
 export const PageContainer = ({ pageId }: PageContainerProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'entry_tree_get',
+
+  const { data: entry, isPending: isPendingEntry } = useQuery({
+    type: 'entry_get',
     entryId: pageId,
     userId: workspace.userId,
   });
 
-  if (isPending) {
+  const page = entry as PageEntry;
+
+  const { data: root, isPending: isPendingRoot } = useQuery(
+    {
+      type: 'entry_get',
+      entryId: page?.rootId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!page?.rootId,
+    }
+  );
+
+  if (isPendingEntry || isPendingRoot) {
     return null;
   }
 
-  const entries = data ?? [];
-  const page = entries.find((entry) => entry.id === pageId);
-  const role = extractEntryRole(entries, workspace.userId);
-
-  if (!page || page.type !== 'page' || !role) {
+  if (!page || !root) {
     return null;
   }
 
+  const role = extractEntryRole(root, workspace.userId);
+  if (!role) {
+    return null;
+  }
   return (
     <div className="flex h-full w-full flex-col">
-      <PageHeader entries={entries} page={page} role={role} />
+      <PageHeader page={page} role={role} />
       <PageBody page={page} role={role} />
     </div>
   );

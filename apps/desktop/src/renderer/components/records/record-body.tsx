@@ -1,7 +1,7 @@
 import {
   DatabaseEntry,
-  hasEditorAccess,
   EntryRole,
+  hasEntryRole,
   RecordEntry,
 } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
@@ -20,23 +20,17 @@ import { useRadar } from '@/renderer/contexts/radar';
 
 interface RecordBodyProps {
   record: RecordEntry;
-  recordRole: EntryRole;
   database: DatabaseEntry;
-  databaseRole: EntryRole;
+  role: EntryRole;
 }
 
-export const RecordBody = ({
-  record,
-  recordRole,
-  database,
-  databaseRole,
-}: RecordBodyProps) => {
+export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
   const { mutate } = useMutation();
 
   const canEdit =
-    record.createdBy === workspace.userId || hasEditorAccess(recordRole);
+    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
 
   const handleUpdate = useCallback(
     (content: JSONContent) => {
@@ -70,9 +64,9 @@ export const RecordBody = ({
   }, [record.id, record.type, record.transactionId]);
 
   return (
-    <Database database={database} role={databaseRole}>
+    <Database database={database} role={role}>
       <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
-        <RecordProvider record={record} role={recordRole}>
+        <RecordProvider record={record} role={role}>
           <RecordAttributes />
         </RecordProvider>
         <Separator className="my-4 w-full" />

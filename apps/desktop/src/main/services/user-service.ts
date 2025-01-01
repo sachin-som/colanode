@@ -1,14 +1,17 @@
 import { SyncUserData } from '@colanode/core';
 
+import { mapUser } from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
+import { eventBus } from '@/shared/lib/event-bus';
 
 class UserService {
   public async syncServerUser(userId: string, user: SyncUserData) {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
-    await workspaceDatabase
+    const createdUser = await workspaceDatabase
       .insertInto('users')
+      .returningAll()
       .values({
         id: user.id,
         email: user.email,
@@ -36,7 +39,7 @@ class UserService {
           })
           .where('version', '<', BigInt(user.version))
       )
-      .execute();
+      .executeTakeFirst();
 
     await workspaceDatabase
       .deleteFrom('texts')
@@ -47,6 +50,14 @@ class UserService {
       .insertInto('texts')
       .values({ id: user.id, name: user.name, text: null })
       .execute();
+
+    if (createdUser) {
+      eventBus.publish({
+        type: 'user_created',
+        userId: userId,
+        user: mapUser(createdUser),
+      });
+    }
   }
 }
 

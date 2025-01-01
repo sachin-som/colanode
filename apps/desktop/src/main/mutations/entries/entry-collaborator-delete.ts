@@ -6,7 +6,7 @@ import {
   EntryCollaboratorDeleteMutationInput,
   EntryCollaboratorDeleteMutationOutput,
 } from '@/shared/mutations/entries/entry-collaborator-delete';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class EntryCollaboratorDeleteMutationHandler
   implements MutationHandler<EntryCollaboratorDeleteMutationInput>
@@ -25,14 +25,14 @@ export class EntryCollaboratorDeleteMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.EntryCollaboratorDeleteForbidden,
         "You don't have permission to remove collaborators from this node."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.EntryCollaboratorDeleteFailed,
         'Something went wrong while removing collaborators from the node.'
       );
     }

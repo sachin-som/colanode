@@ -1,5 +1,6 @@
 import {
   compareString,
+  DatabaseAttributes,
   generateId,
   generateNodeIndex,
   IdType,
@@ -11,7 +12,7 @@ import {
   SelectOptionCreateMutationInput,
   SelectOptionCreateMutationOutput,
 } from '@/shared/mutations/databases/select-option-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class SelectOptionCreateMutationHandler
   implements MutationHandler<SelectOptionCreateMutationInput>
@@ -20,28 +21,21 @@ export class SelectOptionCreateMutationHandler
     input: SelectOptionCreateMutationInput
   ): Promise<SelectOptionCreateMutationOutput> {
     const id = generateId(IdType.SelectOption);
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         const field = attributes.fields[input.fieldId];
         if (!field) {
           throw new MutationError(
-            'field_not_found',
+            MutationErrorCode.FieldNotFound,
             'The field you are trying to create a select option in does not exist.'
           );
         }
 
         if (field.type !== 'select' && field.type !== 'multiSelect') {
           throw new MutationError(
-            'invalid_field_type',
+            MutationErrorCode.FieldTypeInvalid,
             'The field you are trying to create a select option in is not a "Select" or "Multi-Select" field.'
           );
         }
@@ -69,14 +63,14 @@ export class SelectOptionCreateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.SelectOptionCreateForbidden,
         "You don't have permission to create a select option in this field."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.SelectOptionCreateFailed,
         'Something went wrong while creating the select option.'
       );
     }

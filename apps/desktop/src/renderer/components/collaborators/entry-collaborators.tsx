@@ -1,8 +1,8 @@
 import {
-  hasAdminAccess,
   Entry,
   EntryRole,
   extractEntryName,
+  hasEntryRole,
 } from '@colanode/core';
 import React from 'react';
 
@@ -30,7 +30,7 @@ export const EntryCollaborators = ({
     (collaborator) => collaborator.collaboratorId
   );
 
-  const isAdmin = hasAdminAccess(role);
+  const isAdmin = hasEntryRole(role, 'admin');
   const ancestors = entries.filter((entry) => entry.id !== entryId);
 
   return (

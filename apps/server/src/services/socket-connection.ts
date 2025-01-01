@@ -24,10 +24,12 @@ import { CollaborationSynchronizer } from '@/synchronizers/collaborations';
 import { FileSynchronizer } from '@/synchronizers/files';
 import { MessageSynchronizer } from '@/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/synchronizers/message-reactions';
-import { TransactionSynchronizer } from '@/synchronizers/transactions';
+import { EntryTransactionSynchronizer } from '@/synchronizers/entry-transactions';
 import { MessageInteractionSynchronizer } from '@/synchronizers/message-interactions';
 import { EntryInteractionSynchronizer } from '@/synchronizers/entry-interactions';
 import { FileInteractionSynchronizer } from '@/synchronizers/file-interactions';
+import { FileTombstoneSynchronizer } from '@/synchronizers/file-tombstones';
+import { MessageTombstoneSynchronizer } from '@/synchronizers/message-tombstones';
 
 type SocketUser = {
   user: ConnectedUser;
@@ -164,8 +166,8 @@ export class SocketConnection {
         message.input,
         cursor
       );
-    } else if (message.input.type === 'transactions') {
-      return new TransactionSynchronizer(
+    } else if (message.input.type === 'entry_transactions') {
+      return new EntryTransactionSynchronizer(
         message.id,
         user.user,
         message.input,
@@ -199,6 +201,20 @@ export class SocketConnection {
       }
 
       return new FileInteractionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'file_tombstones') {
+      return new FileTombstoneSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'message_tombstones') {
+      return new MessageTombstoneSynchronizer(
         message.id,
         user.user,
         message.input,

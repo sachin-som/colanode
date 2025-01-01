@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { ApiErrorCode } from '@colanode/core';
 
 import { Readable } from 'stream';
 
 import { avatarStorage, BUCKET_NAMES } from '@/data/storage';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const avatarDownloadHandler = async (
   req: Request,
@@ -18,17 +20,24 @@ export const avatarDownloadHandler = async (
 
     const avatarResponse = await avatarStorage.send(command);
     if (!avatarResponse.Body) {
-      res.status(404).json({ error: 'Avatar not found' });
-      return;
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.AvatarNotFound,
+        message: 'Avatar not found',
+      });
     }
 
     if (avatarResponse.Body instanceof Readable) {
       avatarResponse.Body.pipe(res);
     } else {
-      res.status(404).json({ error: 'Avatar not found' });
+      return ResponseBuilder.badRequest(res, {
+        code: ApiErrorCode.AvatarNotFound,
+        message: 'Avatar not found',
+      });
     }
-  } catch (error) {
-    console.error('Error downloading avatar:', error);
-    res.status(500).json({ error: 'Failed to download avatar' });
+  } catch {
+    return ResponseBuilder.internalError(res, {
+      code: ApiErrorCode.AvatarDownloadFailed,
+      message: 'Failed to download avatar',
+    });
   }
 };

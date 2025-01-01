@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
-import { WorkspaceOutput, WorkspaceUpdateInput } from '@colanode/core';
+import {
+  WorkspaceOutput,
+  WorkspaceUpdateInput,
+  ApiErrorCode,
+} from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const workspaceUpdateHandler = async (
   req: Request,
@@ -13,11 +17,11 @@ export const workspaceUpdateHandler = async (
   const input: WorkspaceUpdateInput = req.body;
 
   if (res.locals.user.role !== 'owner') {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.WorkspaceUpdateNotAllowed,
+      message:
+        'You are not allowed to update this workspace. Only owners can update workspaces.',
     });
-    return;
   }
 
   const updatedWorkspace = await database
@@ -34,11 +38,10 @@ export const workspaceUpdateHandler = async (
     .executeTakeFirst();
 
   if (!updatedWorkspace) {
-    res.status(500).json({
-      code: ApiError.InternalServerError,
-      message: 'Internal server error.',
+    return ResponseBuilder.internalError(res, {
+      code: ApiErrorCode.WorkspaceUpdateFailed,
+      message: 'Failed to update workspace.',
     });
-    return;
   }
 
   eventBus.publish({
@@ -51,7 +54,6 @@ export const workspaceUpdateHandler = async (
     name: updatedWorkspace.name,
     description: updatedWorkspace.description,
     avatar: updatedWorkspace.avatar,
-    versionId: updatedWorkspace.version_id,
     user: {
       id: res.locals.user.id,
       accountId: res.locals.user.account_id,
@@ -59,5 +61,5 @@ export const workspaceUpdateHandler = async (
     },
   };
 
-  res.status(200).json(output);
+  return ResponseBuilder.success(res, output);
 };

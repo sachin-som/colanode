@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { hasEditorAccess, EntryRole, PageEntry } from '@colanode/core';
+import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 
 import { Document } from '@/renderer/components/documents/document';
@@ -18,7 +18,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
   const { mutate } = useMutation();
-  const canEdit = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
 
   const handleUpdate = useCallback(
     (content: JSONContent) => {

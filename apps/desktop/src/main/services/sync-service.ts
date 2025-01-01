@@ -7,13 +7,15 @@ import { createDebugger } from '@/main/debugger';
 import { UserSynchronizer } from '@/main/synchronizers/users';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { CollaborationSynchronizer } from '@/main/synchronizers/collaborations';
-import { TransactionSynchronizer } from '@/main/synchronizers/transactions';
+import { EntryTransactionSynchronizer } from '@/main/synchronizers/entry-transactions';
 import { MessageSynchronizer } from '@/main/synchronizers/messages';
 import { MessageReactionSynchronizer } from '@/main/synchronizers/message-reactions';
 import { FileSynchronizer } from '@/main/synchronizers/files';
 import { EntryInteractionSynchronizer } from '@/main/synchronizers/entry-interactions';
 import { FileInteractionSynchronizer } from '@/main/synchronizers/file-interactions';
 import { MessageInteractionSynchronizer } from '@/main/synchronizers/message-interactions';
+import { FileTombstoneSynchronizer } from '@/main/synchronizers/file-tombstones';
+import { MessageTombstoneSynchronizer } from '@/main/synchronizers/message-tombstones';
 import { eventBus } from '@/shared/lib/event-bus';
 
 class SyncService {
@@ -171,8 +173,8 @@ class SyncService {
       );
     }
 
-    if (input.type === 'transactions') {
-      return new TransactionSynchronizer(
+    if (input.type === 'entry_transactions') {
+      return new EntryTransactionSynchronizer(
         userId,
         accountId,
         input,
@@ -207,6 +209,24 @@ class SyncService {
       );
     }
 
+    if (input.type === 'file_tombstones') {
+      return new FileTombstoneSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
+    if (input.type === 'message_tombstones') {
+      return new MessageTombstoneSynchronizer(
+        userId,
+        accountId,
+        input,
+        workspaceDatabase
+      );
+    }
+
     return null;
   }
 
@@ -217,7 +237,7 @@ class SyncService {
     workspaceDatabase: Kysely<WorkspaceDatabaseSchema>
   ) {
     await this.initSynchronizer(userId, accountId, workspaceDatabase, {
-      type: 'transactions',
+      type: 'entry_transactions',
       rootId,
     });
 
@@ -250,6 +270,16 @@ class SyncService {
       type: 'message_interactions',
       rootId,
     });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'file_tombstones',
+      rootId,
+    });
+
+    await this.initSynchronizer(userId, accountId, workspaceDatabase, {
+      type: 'message_tombstones',
+      rootId,
+    });
   }
 
   private removeRootNodeSynchronizers(userId: string, rootId: string) {
@@ -262,49 +292,47 @@ class SyncService {
       }
 
       if (
-        synchronizer.input.type === 'transactions' &&
+        synchronizer.input.type === 'entry_transactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'messages' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'message_reactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'files' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'entry_interactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'file_interactions' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);
-      }
-
-      if (
+      } else if (
         synchronizer.input.type === 'message_interactions' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      } else if (
+        synchronizer.input.type === 'file_tombstones' &&
+        synchronizer.input.rootId === rootId
+      ) {
+        this.synchronizers.delete(key);
+      } else if (
+        synchronizer.input.type === 'message_tombstones' &&
         synchronizer.input.rootId === rootId
       ) {
         this.synchronizers.delete(key);

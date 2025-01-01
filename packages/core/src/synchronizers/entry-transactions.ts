@@ -1,9 +1,9 @@
-export type SyncTransactionsInput = {
-  type: 'transactions';
+export type SyncEntryTransactionsInput = {
+  type: 'entry_transactions';
   rootId: string;
 };
 
-export type SyncCreateTransactionData = {
+export type SyncCreateEntryTransactionData = {
   id: string;
   operation: 'create';
   entryId: string;
@@ -16,7 +16,7 @@ export type SyncCreateTransactionData = {
   version: string;
 };
 
-export type SyncUpdateTransactionData = {
+export type SyncUpdateEntryTransactionData = {
   id: string;
   operation: 'update';
   entryId: string;
@@ -29,7 +29,7 @@ export type SyncUpdateTransactionData = {
   version: string;
 };
 
-export type SyncDeleteTransactionData = {
+export type SyncDeleteEntryTransactionData = {
   id: string;
   operation: 'delete';
   entryId: string;
@@ -41,16 +41,16 @@ export type SyncDeleteTransactionData = {
   version: string;
 };
 
-export type SyncTransactionData =
-  | SyncCreateTransactionData
-  | SyncUpdateTransactionData
-  | SyncDeleteTransactionData;
+export type SyncEntryTransactionData =
+  | SyncCreateEntryTransactionData
+  | SyncUpdateEntryTransactionData
+  | SyncDeleteEntryTransactionData;
 
 declare module '@colanode/core' {
   interface SynchronizerMap {
-    transactions: {
-      input: SyncTransactionsInput;
-      data: SyncTransactionData;
+    entry_transactions: {
+      input: SyncEntryTransactionsInput;
+      data: SyncEntryTransactionData;
     };
   }
 }

@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   SelectOptionDeleteMutationInput,
   SelectOptionDeleteMutationOutput,
@@ -12,42 +14,35 @@ export class SelectOptionDeleteMutationHandler
   async handleMutation(
     input: SelectOptionDeleteMutationInput
   ): Promise<SelectOptionDeleteMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         const field = attributes.fields[input.fieldId];
         if (!field) {
           throw new MutationError(
-            'field_not_found',
+            MutationErrorCode.FieldNotFound,
             'The field you are trying to delete a select option from does not exist.'
           );
         }
 
         if (field.type !== 'select' && field.type !== 'multiSelect') {
           throw new MutationError(
-            'invalid_field_type',
+            MutationErrorCode.FieldTypeInvalid,
             'The field you are trying to delete a select option from is not a "Select" or "Multi-Select" field.'
           );
         }
 
         if (!field.options) {
           throw new MutationError(
-            'select_option_not_found',
+            MutationErrorCode.SelectOptionNotFound,
             'The field you are trying to delete a select option from does not have any select options.'
           );
         }
 
         if (!field.options[input.optionId]) {
           throw new MutationError(
-            'select_option_not_found',
+            MutationErrorCode.SelectOptionNotFound,
             'The select option you are trying to delete does not exist.'
           );
         }
@@ -60,14 +55,14 @@ export class SelectOptionDeleteMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.SelectOptionDeleteForbidden,
         "You don't have permission to delete this select option."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.SelectOptionDeleteFailed,
         'Something went wrong while deleting the select option.'
       );
     }

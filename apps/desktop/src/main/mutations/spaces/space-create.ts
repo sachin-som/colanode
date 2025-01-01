@@ -13,7 +13,7 @@ import {
   SpaceCreateMutationInput,
   SpaceCreateMutationOutput,
 } from '@/shared/mutations/spaces/space-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class SpaceCreateMutationHandler
   implements MutationHandler<SpaceCreateMutationInput>
@@ -28,12 +28,15 @@ export class SpaceCreateMutationHandler
       .executeTakeFirst();
 
     if (!workspace) {
-      throw new MutationError('workspace_not_found', 'Workspace not found');
+      throw new MutationError(
+        MutationErrorCode.WorkspaceNotFound,
+        'Workspace was not found or has been deleted.'
+      );
     }
 
     if (workspace.role === 'guest' || workspace.role === 'none') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.SpaceCreateForbidden,
         "You don't have permission to create spaces in this workspace."
       );
     }
@@ -45,10 +48,15 @@ export class SpaceCreateMutationHandler
       collaborators: {
         [input.userId]: 'admin',
       },
-      parentId: input.workspaceId,
+      parentId: spaceId,
       description: input.description,
       avatar: null,
     };
+
+    await entryService.createEntry(input.userId, {
+      id: spaceId,
+      attributes: spaceAttributes,
+    });
 
     const pageId = generateId(IdType.Page);
     const pageAttributes: PageAttributes = {
@@ -59,6 +67,11 @@ export class SpaceCreateMutationHandler
       collaborators: {},
     };
 
+    await entryService.createEntry(input.userId, {
+      id: pageId,
+      attributes: pageAttributes,
+    });
+
     const channelId = generateId(IdType.Channel);
     const channelAttributes: ChannelAttributes = {
       type: 'channel',
@@ -66,20 +79,10 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await entryService.createEntry(input.userId, [
-      {
-        id: spaceId,
-        attributes: spaceAttributes,
-      },
-      {
-        id: pageId,
-        attributes: pageAttributes,
-      },
-      {
-        id: channelId,
-        attributes: channelAttributes,
-      },
-    ]);
+    await entryService.createEntry(input.userId, {
+      id: channelId,
+      attributes: channelAttributes,
+    });
 
     return {
       id: spaceId,

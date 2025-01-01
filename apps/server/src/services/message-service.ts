@@ -1,17 +1,19 @@
 import {
+  canCreateMessage,
+  canCreateMessageReaction,
+  canDeleteMessage,
   CreateMessageMutation,
   CreateMessageReactionMutation,
   DeleteMessageMutation,
   DeleteMessageReactionMutation,
   extractEntryRole,
-  hasCollaboratorAccess,
-  hasViewerAccess,
+  hasEntryRole,
   MarkMessageSeenMutation,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
-import { mapEntry } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
 import { jobService } from '@/services/job-service';
 
@@ -29,19 +31,23 @@ class MessageService {
       return true;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', mutation.data.rootId)
-      .executeTakeFirst();
+    const root = await fetchEntry(mutation.data.rootId);
+    const entry = await fetchEntry(mutation.data.entryId);
 
-    if (!root) {
+    if (!root || !entry) {
       return false;
     }
 
-    const rootEntry = mapEntry(root);
-    const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
+    if (
+      !canCreateMessage({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+      })
+    ) {
       return false;
     }
 
@@ -88,7 +94,7 @@ class MessageService {
   ): Promise<boolean> {
     const message = await database
       .selectFrom('messages')
-      .select(['id', 'root_id', 'workspace_id'])
+      .select(['id', 'entry_id', 'root_id', 'workspace_id', 'created_by'])
       .where('id', '=', mutation.data.id)
       .executeTakeFirst();
 
@@ -96,31 +102,59 @@ class MessageService {
       return true;
     }
 
-    const root = await database
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', message.root_id)
-      .executeTakeFirst();
+    const root = await fetchEntry(message.root_id);
+    const entry = await fetchEntry(message.entry_id);
 
-    if (!root) {
+    if (!root || !entry) {
       return false;
     }
 
-    const rootEntry = mapEntry(root);
-    const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
-      return false;
-    }
-
-    const deletedMessage = await database
-      .updateTable('messages')
-      .returningAll()
-      .set({
-        deleted_at: new Date(mutation.data.deletedAt),
-        deleted_by: user.id,
+    if (
+      !canDeleteMessage({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        entry: mapEntry(entry),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
       })
-      .where('id', '=', mutation.data.id)
-      .executeTakeFirst();
+    ) {
+      return false;
+    }
+
+    const deletedMessage = await database.transaction().execute(async (tx) => {
+      const deletedMessage = await tx
+        .deleteFrom('messages')
+        .returningAll()
+        .where('id', '=', mutation.data.id)
+        .executeTakeFirst();
+
+      if (!deletedMessage) {
+        return null;
+      }
+
+      await tx
+        .deleteFrom('message_interactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .insertInto('message_tombstones')
+        .values({
+          id: deletedMessage.id,
+          root_id: deletedMessage.root_id,
+          workspace_id: deletedMessage.workspace_id,
+          deleted_at: new Date(mutation.data.deletedAt),
+          deleted_by: user.id,
+        })
+        .executeTakeFirst();
+
+      return deletedMessage;
+    });
 
     if (!deletedMessage) {
       return false;
@@ -142,7 +176,7 @@ class MessageService {
   ): Promise<boolean> {
     const message = await database
       .selectFrom('messages')
-      .select(['id', 'root_id', 'workspace_id'])
+      .select(['id', 'root_id', 'workspace_id', 'created_by'])
       .where('id', '=', mutation.data.messageId)
       .executeTakeFirst();
 
@@ -160,9 +194,19 @@ class MessageService {
       return false;
     }
 
-    const rootEntry = mapEntry(root);
-    const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
+    if (
+      !canCreateMessageReaction({
+        user: {
+          userId: user.id,
+          role: user.role,
+        },
+        root: mapEntry(root),
+        message: {
+          id: message.id,
+          createdBy: message.created_by,
+        },
+      })
+    ) {
       return false;
     }
 
@@ -226,7 +270,7 @@ class MessageService {
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasCollaboratorAccess(role)) {
+    if (!role || !hasEntryRole(role, 'commenter')) {
       return false;
     }
 
@@ -281,7 +325,7 @@ class MessageService {
 
     const rootEntry = mapEntry(root);
     const role = extractEntryRole(rootEntry, user.id);
-    if (!hasViewerAccess(role)) {
+    if (!role || !hasEntryRole(role, 'viewer')) {
       return false;
     }
 

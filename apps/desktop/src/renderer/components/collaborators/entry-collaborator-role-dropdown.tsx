@@ -1,4 +1,5 @@
 import { Check, ChevronDown } from 'lucide-react';
+import { EntryRole } from '@colanode/core';
 
 import {
   DropdownMenu,
@@ -9,7 +10,7 @@ import {
 
 interface EntryCollaboratorRole {
   name: string;
-  value: string;
+  value: EntryRole;
   description: string;
   enabled: boolean;
 }
@@ -28,9 +29,9 @@ const roles: EntryCollaboratorRole[] = [
     enabled: true,
   },
   {
-    name: 'Collaborator',
-    value: 'collaborator',
-    description: 'Can contribute in content',
+    name: 'Commenter',
+    value: 'commenter',
+    description: 'Can message or comment on content',
     enabled: true,
   },
   {
@@ -42,8 +43,8 @@ const roles: EntryCollaboratorRole[] = [
 ];
 
 interface EntryCollaboratorRoleDropdownProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: EntryRole;
+  onChange: (value: EntryRole) => void;
   canEdit: boolean;
 }
 

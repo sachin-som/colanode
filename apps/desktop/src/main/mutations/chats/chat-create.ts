@@ -42,10 +42,10 @@ export class ChatCreateMutationHandler
     const id = generateId(IdType.Chat);
     const attributes: ChatAttributes = {
       type: 'chat',
-      parentId: input.workspaceId,
+      parentId: id,
       collaborators: {
-        [input.userId]: 'collaborator',
-        [input.otherUserId]: 'collaborator',
+        [input.userId]: 'admin',
+        [input.otherUserId]: 'admin',
       },
     };
 

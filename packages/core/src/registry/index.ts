@@ -1,11 +1,12 @@
-import { ChannelAttributes, channelModel } from './channel';
-import { ChatAttributes, chatModel } from './chat';
-import { EntryModel } from './core';
-import { DatabaseAttributes, databaseModel } from './database';
-import { FolderAttributes, folderModel } from './folder';
-import { PageAttributes, pageModel } from './page';
-import { RecordAttributes, recordModel } from './record';
-import { SpaceAttributes, spaceModel } from './space';
+import { z } from 'zod';
+
+import { ChannelAttributes, channelAttributesSchema } from './channel';
+import { ChatAttributes, chatAttributesSchema } from './chat';
+import { DatabaseAttributes, databaseAttributesSchema } from './database';
+import { FolderAttributes, folderAttributesSchema } from './folder';
+import { PageAttributes, pageAttributesSchema } from './page';
+import { RecordAttributes, recordAttributesSchema } from './record';
+import { SpaceAttributes, spaceAttributesSchema } from './space';
 
 type EntryBase = {
   id: string;
@@ -73,27 +74,12 @@ export type Entry =
   | RecordEntry
   | SpaceEntry;
 
-class Registry {
-  private models: Map<string, EntryModel> = new Map();
-
-  constructor() {
-    this.models.set('channel', channelModel);
-    this.models.set('chat', chatModel);
-    this.models.set('database', databaseModel);
-    this.models.set('folder', folderModel);
-    this.models.set('page', pageModel);
-    this.models.set('record', recordModel);
-    this.models.set('space', spaceModel);
-  }
-
-  getModel(type: string): EntryModel {
-    const model = this.models.get(type);
-    if (!model) {
-      throw new Error(`Model for type ${type} not found`);
-    }
-
-    return model;
-  }
-}
-
-export const registry = new Registry();
+export const entryAttributesSchema = z.discriminatedUnion('type', [
+  channelAttributesSchema,
+  chatAttributesSchema,
+  databaseAttributesSchema,
+  folderAttributesSchema,
+  pageAttributesSchema,
+  recordAttributesSchema,
+  spaceAttributesSchema,
+]);

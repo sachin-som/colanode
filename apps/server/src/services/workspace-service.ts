@@ -33,7 +33,6 @@ class WorkspaceService {
         created_at: date,
         created_by: account.id,
         status: WorkspaceStatus.Active,
-        version_id: generateId(IdType.Version),
       })
       .returningAll()
       .executeTakeFirst();
@@ -70,7 +69,7 @@ class WorkspaceService {
         type: 'space',
         name: 'Home',
         description: 'This is your home space.',
-        parentId: workspaceId,
+        parentId: spaceId,
         collaborators: {
           [userId]: 'admin',
         },
@@ -127,7 +126,6 @@ class WorkspaceService {
       name: workspace.name,
       description: workspace.description,
       avatar: workspace.avatar,
-      versionId: workspace.version_id,
       user: {
         id: user.id,
         accountId: user.account_id,

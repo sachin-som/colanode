@@ -57,10 +57,10 @@ const createEntriesTable: Migration = {
   },
 };
 
-const createTransactionsTable: Migration = {
+const createEntryTransactionsTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('transactions')
+      .createTable('entry_transactions')
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('entry_id', 'text', (col) => col.notNull())
       .addColumn('root_id', 'text', (col) => col.notNull())
@@ -73,7 +73,7 @@ const createTransactionsTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('transactions').execute();
+    await db.schema.dropTable('entry_transactions').execute();
   },
 };
 
@@ -131,6 +131,7 @@ const createMessagesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('updated_by', 'text')
+      .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer')
       .execute();
   },
@@ -148,6 +149,7 @@ const createMessageReactionsTable: Migration = {
       .addColumn('reaction', 'text', (col) => col.notNull())
       .addColumn('root_id', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('deleted_at', 'text')
       .addColumn('version', 'integer', (col) => col.notNull())
       .addPrimaryKeyConstraint('message_reactions_pkey', [
         'message_id',
@@ -201,6 +203,7 @@ const createFilesTable: Migration = {
       .addColumn('created_by', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
       .addColumn('updated_by', 'text')
+      .addColumn('deleted_at', 'text')
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('version', 'integer')
       .execute();
@@ -363,7 +366,7 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001_create_users_table': createUsersTable,
   '00002_create_entries_table': createEntriesTable,
   '00003_create_entry_interactions_table': createEntryInteractionsTable,
-  '00004_create_transactions_table': createTransactionsTable,
+  '00004_create_entry_transactions_table': createEntryTransactionsTable,
   '00005_create_collaborations_table': createCollaborationsTable,
   '00006_create_messages_table': createMessagesTable,
   '00007_create_message_reactions_table': createMessageReactionsTable,

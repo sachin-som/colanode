@@ -8,25 +8,25 @@ import { useContainer } from '@/renderer/contexts/container';
 import { FileWithState } from '@/shared/types/files';
 
 interface FileHeaderProps {
-  entries: Entry[];
   file: FileWithState;
+  entry: Entry;
   role: EntryRole;
 }
 
-export const FileHeader = ({ entries, file }: FileHeaderProps) => {
+export const FileHeader = ({ file, entry, role }: FileHeaderProps) => {
   const container = useContainer();
 
   return (
     <Header>
       <div className="flex w-full items-center gap-2 px-4">
         <div className="flex-grow">
-          {container.mode === 'main' && <EntryBreadcrumb entries={entries} />}
+          {container.mode === 'main' && <EntryBreadcrumb entry={entry} />}
           {container.mode === 'modal' && (
             <EntryFullscreenButton entryId={file.id} />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <FileSettings fileId={file.id} />
+          <FileSettings file={file} role={role} entry={entry} />
         </div>
       </div>
     </Header>

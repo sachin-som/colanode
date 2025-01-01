@@ -1,9 +1,4 @@
-import {
-  DatabaseEntry,
-  hasCollaboratorAccess,
-  hasEditorAccess,
-  EntryRole,
-} from '@colanode/core';
+import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
 import React from 'react';
 
 import { DatabaseContext } from '@/renderer/contexts/database';
@@ -21,8 +16,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
-  const canEdit = hasEditorAccess(role);
-  const canCreateRecord = hasCollaboratorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
+  const canCreateRecord = hasEntryRole(role, 'editor');
 
   return (
     <DatabaseContext.Provider

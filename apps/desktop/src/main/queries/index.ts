@@ -20,6 +20,8 @@ import { UserListQueryHandler } from '@/main/queries/users/user-list';
 import { DatabaseListQueryHandler } from '@/main/queries/databases/database-list';
 import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { UserGetQueryHandler } from '@/main/queries/users/user-get';
+import { SpaceListQueryHandler } from '@/main/queries/spaces/space-list';
+import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
 import { QueryHandler } from '@/main/types';
 import { QueryMap } from '@/shared/queries';
 
@@ -50,4 +52,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   record_search: new RecordSearchQueryHandler(),
   user_get: new UserGetQueryHandler(),
   file_get: new FileGetQueryHandler(),
+  chat_list: new ChatListQueryHandler(),
+  space_list: new SpaceListQueryHandler(),
 };

@@ -1,4 +1,4 @@
-import { ChannelEntry, hasEditorAccess, EntryRole } from '@colanode/core';
+import { ChannelEntry, EntryRole, hasEntryRole } from '@colanode/core';
 
 import { ChannelForm } from '@/renderer/components/channels/channel-form';
 import {
@@ -27,7 +27,7 @@ export const ChannelUpdateDialog = ({
 }: ChannelUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEditorAccess(role);
+  const canEdit = hasEntryRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

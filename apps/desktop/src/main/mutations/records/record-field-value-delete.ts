@@ -1,6 +1,8 @@
+import { RecordAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   RecordFieldValueDeleteMutationInput,
   RecordFieldValueDeleteMutationOutput,
@@ -12,14 +14,10 @@ export class RecordFieldValueDeleteMutationHandler
   async handleMutation(
     input: RecordFieldValueDeleteMutationInput
   ): Promise<RecordFieldValueDeleteMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<RecordAttributes>(
       input.recordId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'record') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         delete attributes.fields[input.fieldId];
         return attributes;
       }
@@ -27,15 +25,15 @@ export class RecordFieldValueDeleteMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.RecordUpdateForbidden,
         "You don't have permission to delete this field value."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
-        'Something went wrong while deleting the field value.'
+        MutationErrorCode.RecordUpdateFailed,
+        'Something went wrong while deleting the field value. Please try again later.'
       );
     }
 

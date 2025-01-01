@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
   AccountStatus,
+  ApiErrorCode,
   generateId,
   IdType,
   UserInviteResult,
@@ -9,10 +10,10 @@ import {
 } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { ApiError } from '@/types/api';
 import { getNameFromEmail } from '@/lib/utils';
-import { SelectUser } from '@/data/schema';
+import { SelectAccount, SelectUser } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
+import { ResponseBuilder } from '@/lib/response-builder';
 
 export const userCreateHandler = async (
   req: Request,
@@ -23,55 +24,22 @@ export const userCreateHandler = async (
   const user: SelectUser = res.locals.user;
 
   if (!input.emails || input.emails.length === 0) {
-    res.status(400).json({
-      code: ApiError.BadRequest,
-      message: 'BadRequest.',
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.UserEmailRequired,
+      message: 'User email is required.',
     });
-    return;
-  }
-
-  if (!res.locals.account) {
-    res.status(401).json({
-      code: ApiError.Unauthorized,
-      message: 'Unauthorized.',
-    });
-    return;
   }
 
   if (user.role !== 'owner' && user.role !== 'admin') {
-    res.status(403).json({
-      code: ApiError.Forbidden,
-      message: 'Forbidden.',
+    return ResponseBuilder.forbidden(res, {
+      code: ApiErrorCode.UserInviteNoAccess,
+      message: 'You do not have access to invite users to this workspace.',
     });
-    return;
   }
 
   const results: UserInviteResult[] = [];
   for (const email of input.emails) {
-    let account = await database
-      .selectFrom('accounts')
-      .select(['id', 'name', 'email', 'avatar'])
-      .where('email', '=', email)
-      .executeTakeFirst();
-
-    if (!account) {
-      account = await database
-        .insertInto('accounts')
-        .returning(['id', 'name', 'email', 'avatar'])
-        .values({
-          id: generateId(IdType.Account),
-          name: getNameFromEmail(email),
-          email: email,
-          avatar: null,
-          attrs: null,
-          password: null,
-          status: AccountStatus.Pending,
-          created_at: new Date(),
-          updated_at: null,
-        })
-        .executeTakeFirst();
-    }
-
+    const account = await getOrCreateAccount(email);
     if (!account) {
       results.push({
         email: email,
@@ -133,7 +101,39 @@ export const userCreateHandler = async (
     });
   }
 
-  res.status(200).json({
+  return ResponseBuilder.success(res, {
     results: results,
   });
+};
+
+const getOrCreateAccount = async (
+  email: string
+): Promise<SelectAccount | undefined> => {
+  const account = await database
+    .selectFrom('accounts')
+    .selectAll()
+    .where('email', '=', email)
+    .executeTakeFirst();
+
+  if (account) {
+    return account;
+  }
+
+  const createdAccount = await database
+    .insertInto('accounts')
+    .returningAll()
+    .values({
+      id: generateId(IdType.Account),
+      name: getNameFromEmail(email),
+      email: email,
+      avatar: null,
+      attrs: null,
+      password: null,
+      status: AccountStatus.Pending,
+      created_at: new Date(),
+      updated_at: null,
+    })
+    .executeTakeFirst();
+
+  return createdAccount;
 };

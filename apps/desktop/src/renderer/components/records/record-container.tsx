@@ -1,4 +1,4 @@
-import { extractEntryRole } from '@colanode/core';
+import { DatabaseEntry, extractEntryRole, RecordEntry } from '@colanode/core';
 
 import { RecordBody } from '@/renderer/components/records/record-body';
 import { RecordHeader } from '@/renderer/components/records/record-header';
@@ -11,55 +11,56 @@ interface RecordContainerProps {
 
 export const RecordContainer = ({ recordId }: RecordContainerProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'entry_tree_get',
+
+  const { data: entry, isPending: isPendingEntry } = useQuery({
+    type: 'entry_get',
     entryId: recordId,
     userId: workspace.userId,
   });
 
-  if (isPending) {
-    return null;
-  }
+  const record = entry as RecordEntry;
 
-  const entries = data ?? [];
-  const record = entries.find((entry) => entry.id === recordId);
-  if (!record || record.type !== 'record') {
-    return null;
-  }
-
-  const databaseIndex = entries.findIndex(
-    (entry) => entry.id === record.attributes.databaseId
-  );
-  if (databaseIndex === -1) {
-    return null;
-  }
-
-  const database = entries[databaseIndex];
-  if (!database || database.type !== 'database') {
-    return null;
-  }
-
-  const databaseAncestors = entries.slice(0, databaseIndex);
-
-  const recordRole = extractEntryRole(entries, workspace.userId);
-  const databaseRole = extractEntryRole(
-    [...databaseAncestors, database],
-    workspace.userId
+  const { data: root, isPending: isPendingRoot } = useQuery(
+    {
+      type: 'entry_get',
+      entryId: record?.rootId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!record?.rootId,
+    }
   );
 
-  if (!recordRole || !databaseRole) {
+  const { data: databaseEntry, isPending: isPendingDatabase } = useQuery(
+    {
+      type: 'entry_get',
+      entryId: record?.attributes.databaseId ?? '',
+      userId: workspace.userId,
+    },
+    {
+      enabled: !!record?.attributes.databaseId,
+    }
+  );
+
+  const database = databaseEntry as DatabaseEntry;
+
+  if (isPendingEntry || isPendingRoot || isPendingDatabase) {
+    return null;
+  }
+
+  if (!record || !root || !database) {
+    return null;
+  }
+
+  const role = extractEntryRole(root, workspace.userId);
+  if (!role) {
     return null;
   }
 
   return (
     <div className="flex h-full w-full flex-col">
-      <RecordHeader entries={entries} record={record} role={recordRole} />
-      <RecordBody
-        record={record}
-        recordRole={recordRole}
-        database={database}
-        databaseRole={databaseRole}
-      />
+      <RecordHeader record={record} role={role} />
+      <RecordBody record={record} database={database} role={role} />
     </div>
   );
 };

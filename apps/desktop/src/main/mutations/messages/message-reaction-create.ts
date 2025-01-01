@@ -18,7 +18,7 @@ import {
   mapEntry,
   mapMessageReaction,
 } from '@/main/utils';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class MessageReactionCreateMutationHandler
   implements MutationHandler<MessageReactionCreateMutationInput>
@@ -37,7 +37,10 @@ export class MessageReactionCreateMutationHandler
       .executeTakeFirst();
 
     if (!message) {
-      throw new MutationError('message_not_found', 'Message not found.');
+      throw new MutationError(
+        MutationErrorCode.MessageNotFound,
+        'Message not found or has been deleted.'
+      );
     }
 
     const existingMessageReaction = await workspaceDatabase
@@ -56,12 +59,18 @@ export class MessageReactionCreateMutationHandler
 
     const user = await fetchUser(workspaceDatabase, input.userId);
     if (!user) {
-      throw new MutationError('user_not_found', 'User not found.');
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
     }
 
     const root = await fetchEntry(workspaceDatabase, input.rootId);
     if (!root) {
-      throw new MutationError('entry_not_found', 'Conversation not found.');
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
     }
 
     if (
@@ -78,8 +87,8 @@ export class MessageReactionCreateMutationHandler
       })
     ) {
       throw new MutationError(
-        'unauthorized',
-        'You are not allowed to react to this message.'
+        MutationErrorCode.MessageReactionCreateForbidden,
+        "You don't have permission to react to this message."
       );
     }
 

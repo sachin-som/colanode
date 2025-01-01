@@ -8,7 +8,7 @@ import {
   EmailRegisterMutationInput,
   EmailRegisterMutationOutput,
 } from '@/shared/mutations/accounts/email-register';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 import { mapAccount, mapWorkspace } from '@/main/utils';
 
@@ -26,7 +26,7 @@ export class EmailRegisterMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         `Server ${input.server} was not found! Try using a different server.`
       );
     }
@@ -63,8 +63,8 @@ export class EmailRegisterMutationHandler
 
           if (!createdAccount) {
             throw new MutationError(
-              'account_login_failed',
-              'Failed to login with email and password! Please try again.'
+              MutationErrorCode.AccountRegisterFailed,
+              'Failed to register with email and password! Please try again.'
             );
           }
 
@@ -94,8 +94,8 @@ export class EmailRegisterMutationHandler
 
       if (!createdAccount) {
         throw new MutationError(
-          'account_login_failed',
-          'Failed to login with email and password! Please try again.'
+          MutationErrorCode.AccountRegisterFailed,
+          'Failed to register with email and password! Please try again.'
         );
       }
 
@@ -120,7 +120,7 @@ export class EmailRegisterMutationHandler
       };
     } catch (error) {
       const apiError = parseApiError(error);
-      throw new MutationError('api_error', apiError.message);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
     }
   }
 }

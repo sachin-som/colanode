@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   DatabaseUpdateMutationInput,
   DatabaseUpdateMutationOutput,
@@ -12,17 +14,10 @@ export class DatabaseUpdateMutationHandler
   async handleMutation(
     input: DatabaseUpdateMutationInput
   ): Promise<DatabaseUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         attributes.name = input.name;
         attributes.avatar = input.avatar;
 
@@ -32,14 +27,14 @@ export class DatabaseUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.DatabaseUpdateForbidden,
         "You don't have permission to update this database."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.DatabaseUpdateFailed,
         'Something went wrong while updating the database.'
       );
     }

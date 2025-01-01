@@ -1,6 +1,8 @@
+import { ChannelAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ChannelUpdateMutationInput,
   ChannelUpdateMutationOutput,
@@ -12,17 +14,10 @@ export class ChannelUpdateMutationHandler
   async handleMutation(
     input: ChannelUpdateMutationInput
   ): Promise<ChannelUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<ChannelAttributes>(
       input.channelId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'channel') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Something went wrong while updating the channel.'
-          );
-        }
-
         attributes.name = input.name;
         attributes.avatar = input.avatar;
 
@@ -32,21 +27,21 @@ export class ChannelUpdateMutationHandler
 
     if (result === 'not_found') {
       throw new MutationError(
-        'channel_not_found',
+        MutationErrorCode.ChannelNotFound,
         'Channel not found or has been deleted.'
       );
     }
 
     if (result === 'invalid_attributes') {
       throw new MutationError(
-        'invalid_attributes',
+        MutationErrorCode.ChannelUpdateFailed,
         'Something went wrong while updating the channel.'
       );
     }
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.ChannelUpdateForbidden,
         "You don't have permission to update this channel."
       );
     }
@@ -58,7 +53,7 @@ export class ChannelUpdateMutationHandler
     }
 
     throw new MutationError(
-      'unknown',
+      MutationErrorCode.Unknown,
       'Something went wrong while updating the channel.'
     );
   }

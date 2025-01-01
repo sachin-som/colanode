@@ -1,6 +1,8 @@
+import { SpaceAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   SpaceUpdateMutationInput,
   SpaceUpdateMutationOutput,
@@ -12,14 +14,10 @@ export class SpaceUpdateMutationHandler
   async handleMutation(
     input: SpaceUpdateMutationInput
   ): Promise<SpaceUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<SpaceAttributes>(
       input.id,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'space') {
-          throw new MutationError('invalid_attributes', 'Entry is not a space');
-        }
-
         attributes.name = input.name;
         attributes.description = input.description;
         attributes.avatar = input.avatar;
@@ -30,15 +28,15 @@ export class SpaceUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.SpaceUpdateForbidden,
         "You don't have permission to update this space."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
-        'Something went wrong while updating the space.'
+        MutationErrorCode.SpaceUpdateFailed,
+        'Something went wrong while updating the space. Please try again later.'
       );
     }
 

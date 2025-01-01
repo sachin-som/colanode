@@ -17,7 +17,7 @@ import {
   MessageCreateMutationInput,
   MessageCreateMutationOutput,
 } from '@/shared/mutations/messages/message-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   CreateFile,
   CreateFileState,
@@ -46,17 +46,26 @@ export class MessageCreateMutationHandler
 
     const user = await fetchUser(workspaceDatabase, input.userId);
     if (!user) {
-      throw new MutationError('user_not_found', 'User not found.');
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
     }
 
     const entry = await fetchEntry(workspaceDatabase, input.conversationId);
     if (!entry) {
-      throw new MutationError('entry_not_found', 'Conversation not found.');
+      throw new MutationError(
+        MutationErrorCode.EntryNotFound,
+        'There was an error while fetching the conversation. Please make sure you have access to this conversation.'
+      );
     }
 
     const root = await fetchEntry(workspaceDatabase, input.rootId);
     if (!root) {
-      throw new MutationError('entry_not_found', 'Conversation not found.');
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
     }
 
     if (
@@ -70,7 +79,7 @@ export class MessageCreateMutationHandler
       })
     ) {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.MessageCreateForbidden,
         'You are not allowed to create a message in this conversation.'
       );
     }
@@ -91,8 +100,8 @@ export class MessageCreateMutationHandler
         const metadata = fileService.getFileMetadata(path);
         if (!metadata) {
           throw new MutationError(
-            'invalid_file',
-            'File attachment is invalid or could not be read.'
+            MutationErrorCode.FileInvalid,
+            'The file attachment is invalid or could not be read.'
           );
         }
 

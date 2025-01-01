@@ -8,7 +8,7 @@ import {
   AccountUpdateMutationInput,
   AccountUpdateMutationOutput,
 } from '@/shared/mutations/accounts/account-update';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 
 export class AccountUpdateMutationHandler
@@ -25,7 +25,7 @@ export class AccountUpdateMutationHandler
 
     if (!account) {
       throw new MutationError(
-        'account_not_found',
+        MutationErrorCode.AccountNotFound,
         'Account not found or has been logged out already. Try closing the app and opening it again.'
       );
     }
@@ -38,7 +38,7 @@ export class AccountUpdateMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         `The server ${account.server} associated with this account was not found. Try closing the app and opening it again.`
       );
     }
@@ -68,7 +68,7 @@ export class AccountUpdateMutationHandler
 
       if (!updatedAccount) {
         throw new MutationError(
-          'account_not_found',
+          MutationErrorCode.AccountNotFound,
           'Account not found or has been logged out already. Try closing the app and opening it again.'
         );
       }
@@ -92,7 +92,7 @@ export class AccountUpdateMutationHandler
       };
     } catch (error) {
       const apiError = parseApiError(error);
-      throw new MutationError('api_error', apiError.message);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
     }
   }
 }

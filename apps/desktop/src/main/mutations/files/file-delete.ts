@@ -13,7 +13,7 @@ import {
 } from '@/shared/mutations/files/file-delete';
 import { eventBus } from '@/shared/lib/event-bus';
 import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class FileDeleteMutationHandler
   implements MutationHandler<FileDeleteMutationInput>
@@ -33,24 +33,33 @@ export class FileDeleteMutationHandler
 
     if (!file) {
       throw new MutationError(
-        'file_not_found',
+        MutationErrorCode.FileNotFound,
         'File could not be found or has been already deleted.'
       );
     }
 
     const user = await fetchUser(workspaceDatabase, input.userId);
     if (!user) {
-      throw new MutationError('user_not_found', 'User not found.');
+      throw new MutationError(
+        MutationErrorCode.UserNotFound,
+        'There was an error while fetching the user. Please make sure you are logged in.'
+      );
     }
 
     const entry = await fetchEntry(workspaceDatabase, file.root_id);
     if (!entry) {
-      throw new MutationError('entry_not_found', 'Entry not found.');
+      throw new MutationError(
+        MutationErrorCode.EntryNotFound,
+        'There was an error while fetching the entry. Please make sure you have access to this entry.'
+      );
     }
 
     const root = await fetchEntry(workspaceDatabase, entry.root_id);
     if (!root) {
-      throw new MutationError('entry_not_found', 'Entry not found.');
+      throw new MutationError(
+        MutationErrorCode.RootNotFound,
+        'There was an error while fetching the root. Please make sure you have access to this root.'
+      );
     }
 
     if (
@@ -69,7 +78,7 @@ export class FileDeleteMutationHandler
       })
     ) {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.FileDeleteForbidden,
         'You are not allowed to delete this file.'
       );
     }

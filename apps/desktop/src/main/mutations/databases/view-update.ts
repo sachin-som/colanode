@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewUpdateMutationInput,
   ViewUpdateMutationOutput,
@@ -12,20 +14,13 @@ export class ViewUpdateMutationHandler
   async handleMutation(
     input: ViewUpdateMutationInput
   ): Promise<ViewUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         if (!attributes.views[input.view.id]) {
           throw new MutationError(
-            'view_not_found',
+            MutationErrorCode.ViewNotFound,
             'The view you are trying to update does not exist.'
           );
         }
@@ -37,14 +32,14 @@ export class ViewUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.ViewUpdateForbidden,
         "You don't have permission to update this view."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.ViewUpdateFailed,
         'Something went wrong while updating the view.'
       );
     }

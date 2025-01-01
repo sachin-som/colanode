@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   SelectOptionUpdateMutationInput,
   SelectOptionUpdateMutationOutput,
@@ -12,28 +14,21 @@ export class SelectOptionUpdateMutationHandler
   async handleMutation(
     input: SelectOptionUpdateMutationInput
   ): Promise<SelectOptionUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError(
-            'invalid_attributes',
-            'Node is not a database'
-          );
-        }
-
         const field = attributes.fields[input.fieldId];
         if (!field) {
           throw new MutationError(
-            'field_not_found',
+            MutationErrorCode.FieldNotFound,
             'The field you are trying to update a select option in does not exist.'
           );
         }
 
         if (field.type !== 'select' && field.type !== 'multiSelect') {
           throw new MutationError(
-            'invalid_field_type',
+            MutationErrorCode.FieldTypeInvalid,
             'The field you are trying to update a select option in is not a "Select" or "Multi-Select" field.'
           );
         }
@@ -45,7 +40,7 @@ export class SelectOptionUpdateMutationHandler
         const option = field.options[input.optionId];
         if (!option) {
           throw new MutationError(
-            'select_option_not_found',
+            MutationErrorCode.SelectOptionNotFound,
             'The select option you are trying to update does not exist.'
           );
         }
@@ -58,14 +53,14 @@ export class SelectOptionUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.SelectOptionUpdateForbidden,
         "You don't have permission to update this select option."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.SelectOptionUpdateFailed,
         'Something went wrong while updating the select option.'
       );
     }

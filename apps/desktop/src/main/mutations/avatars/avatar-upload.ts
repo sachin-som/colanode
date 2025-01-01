@@ -9,7 +9,7 @@ import {
   AvatarUploadMutationInput,
   AvatarUploadMutationOutput,
 } from '@/shared/mutations/avatars/avatar-upload';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 
 interface AvatarUploadResponse {
@@ -31,7 +31,7 @@ export class AvatarUploadMutationHandler
 
     if (!credentials) {
       throw new MutationError(
-        'account_not_found',
+        MutationErrorCode.AccountNotFound,
         'Account not found or has been logged out already. Try closing the app and opening it again.'
       );
     }
@@ -58,7 +58,7 @@ export class AvatarUploadMutationHandler
       };
     } catch (error) {
       const apiError = parseApiError(error);
-      throw new MutationError('api_error', apiError.message);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
     }
   }
 }

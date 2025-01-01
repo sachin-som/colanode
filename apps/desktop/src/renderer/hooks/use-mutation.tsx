@@ -2,6 +2,7 @@ import React from 'react';
 
 import {
   MutationError,
+  MutationErrorCode,
   MutationErrorData,
   MutationInput,
   MutationMap,
@@ -32,7 +33,7 @@ export const useMutation = () => {
           options.onError?.(error);
         } else {
           options.onError?.({
-            code: 'unknown',
+            code: MutationErrorCode.Unknown,
             message: 'Something went wrong trying to execute the mutation.',
           });
         }

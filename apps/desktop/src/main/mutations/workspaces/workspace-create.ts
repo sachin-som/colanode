@@ -8,7 +8,7 @@ import {
   WorkspaceCreateMutationInput,
   WorkspaceCreateMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-create';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 
 export class WorkspaceCreateMutationHandler
@@ -24,7 +24,10 @@ export class WorkspaceCreateMutationHandler
       .executeTakeFirst();
 
     if (!account) {
-      throw new MutationError('account_not_found', 'Account not found!');
+      throw new MutationError(
+        MutationErrorCode.AccountNotFound,
+        'Account not found or has been logged out.'
+      );
     }
 
     const server = await databaseService.appDatabase
@@ -35,7 +38,7 @@ export class WorkspaceCreateMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         'The server associated with this account was not found.'
       );
     }
@@ -71,7 +74,10 @@ export class WorkspaceCreateMutationHandler
         .executeTakeFirst();
 
       if (!createdWorkspace) {
-        throw new MutationError('unknown', 'Failed to create workspace!');
+        throw new MutationError(
+          MutationErrorCode.WorkspaceNotCreated,
+          'Something went wrong updating the workspace. Please try again later.'
+        );
       }
 
       eventBus.publish({
@@ -94,7 +100,7 @@ export class WorkspaceCreateMutationHandler
       };
     } catch (error) {
       const apiError = parseApiError(error);
-      throw new MutationError('api_error', apiError.message);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
     }
   }
 }

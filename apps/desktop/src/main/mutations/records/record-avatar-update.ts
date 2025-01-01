@@ -1,6 +1,8 @@
+import { RecordAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   RecordAvatarUpdateMutationInput,
   RecordAvatarUpdateMutationOutput,
@@ -12,14 +14,10 @@ export class RecordAvatarUpdateMutationHandler
   async handleMutation(
     input: RecordAvatarUpdateMutationInput
   ): Promise<RecordAvatarUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<RecordAttributes>(
       input.recordId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'record') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         attributes.avatar = input.avatar;
         return attributes;
       }
@@ -27,7 +25,7 @@ export class RecordAvatarUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.RecordUpdateForbidden,
         "You don't have permission to update this record."
       );
     }

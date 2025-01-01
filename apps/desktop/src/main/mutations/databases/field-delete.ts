@@ -1,6 +1,8 @@
+import { DatabaseAttributes } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FieldDeleteMutationInput,
   FieldDeleteMutationOutput,
@@ -12,17 +14,13 @@ export class FieldDeleteMutationHandler
   async handleMutation(
     input: FieldDeleteMutationInput
   ): Promise<FieldDeleteMutationOutput> {
-    const result = await entryService.updateEntry(
+    const result = await entryService.updateEntry<DatabaseAttributes>(
       input.databaseId,
       input.userId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new MutationError('invalid_attributes', 'Invalid node type');
-        }
-
         if (!attributes.fields[input.fieldId]) {
           throw new MutationError(
-            'field_not_found',
+            MutationErrorCode.FieldNotFound,
             'The field you are trying to delete does not exist.'
           );
         }
@@ -35,14 +33,14 @@ export class FieldDeleteMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.FieldDeleteForbidden,
         "You don't have permission to delete this field."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.FieldDeleteFailed,
         'Something went wrong while deleting the field.'
       );
     }

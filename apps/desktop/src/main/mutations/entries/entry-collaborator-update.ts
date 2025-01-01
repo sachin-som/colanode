@@ -6,7 +6,7 @@ import {
   EntryCollaboratorUpdateMutationInput,
   EntryCollaboratorUpdateMutationOutput,
 } from '@/shared/mutations/entries/entry-collaborator-update';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 export class EntryCollaboratorUpdateMutationHandler
   implements MutationHandler<EntryCollaboratorUpdateMutationInput>
@@ -25,14 +25,14 @@ export class EntryCollaboratorUpdateMutationHandler
 
     if (result === 'unauthorized') {
       throw new MutationError(
-        'unauthorized',
+        MutationErrorCode.EntryCollaboratorUpdateForbidden,
         "You don't have permission to update collaborators for this entry."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
-        'unknown',
+        MutationErrorCode.EntryCollaboratorUpdateFailed,
         'Something went wrong while updating collaborators for the entry.'
       );
     }

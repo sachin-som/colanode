@@ -7,7 +7,7 @@ import {
   UsersInviteMutationInput,
   UsersInviteMutationOutput,
 } from '@/shared/mutations/workspaces/workspace-users-invite';
-import { MutationError } from '@/shared/mutations';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 
 export class UsersInviteMutationHandler
@@ -23,7 +23,10 @@ export class UsersInviteMutationHandler
       .executeTakeFirst();
 
     if (!workspace) {
-      throw new MutationError('workspace_not_found', 'Workspace not found');
+      throw new MutationError(
+        MutationErrorCode.WorkspaceNotFound,
+        'Workspace was not found or has been deleted.'
+      );
     }
 
     const account = await databaseService.appDatabase
@@ -34,8 +37,8 @@ export class UsersInviteMutationHandler
 
     if (!account) {
       throw new MutationError(
-        'account_not_found',
-        'The account associated with this workspace was not found.'
+        MutationErrorCode.AccountNotFound,
+        'The account associated with this workspace was not found or has been logged out.'
       );
     }
 
@@ -47,7 +50,7 @@ export class UsersInviteMutationHandler
 
     if (!server) {
       throw new MutationError(
-        'server_not_found',
+        MutationErrorCode.ServerNotFound,
         'The server associated with this account was not found.'
       );
     }
@@ -70,7 +73,7 @@ export class UsersInviteMutationHandler
       };
     } catch (error) {
       const apiError = parseApiError(error);
-      throw new MutationError('api_error', apiError.message);
+      throw new MutationError(MutationErrorCode.ApiError, apiError.message);
     }
   }
 }

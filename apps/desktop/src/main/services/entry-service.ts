@@ -196,10 +196,10 @@ class EntryService {
     });
   }
 
-  public async updateEntry(
+  public async updateEntry<T extends EntryAttributes>(
     entryId: string,
     userId: string,
-    updater: (attributes: EntryAttributes) => EntryAttributes
+    updater: (attributes: T) => T
   ): Promise<UpdateEntryResult> {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
       const result = await this.tryUpdateEntry(entryId, userId, updater);
@@ -211,10 +211,10 @@ class EntryService {
     return 'failed';
   }
 
-  private async tryUpdateEntry(
+  private async tryUpdateEntry<T extends EntryAttributes>(
     entryId: string,
     userId: string,
-    updater: (attributes: EntryAttributes) => EntryAttributes
+    updater: (attributes: T) => T
   ): Promise<UpdateEntryResult | null> {
     this.debug(`Updating entry ${entryId}`);
 
@@ -239,7 +239,7 @@ class EntryService {
     const entry = mapEntry(entryRow);
     const transactionId = generateId(IdType.Transaction);
     const updatedAt = new Date().toISOString();
-    const updatedAttributes = updater(entry.attributes);
+    const updatedAttributes = updater(entry.attributes as T);
 
     const ydoc = new YDoc();
     const previousTransactions = await workspaceDatabase

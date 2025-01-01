@@ -83,7 +83,6 @@ export class EmailLoginMutationHandler
                 role: workspace.user.role,
                 description: workspace.description,
                 user_id: workspace.user.id,
-                version_id: workspace.versionId,
               }))
             )
             .execute();

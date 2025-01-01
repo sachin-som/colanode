@@ -35,6 +35,7 @@ export enum ApiErrorCode {
   UserNotFound = 'user_not_found',
   TokenMissing = 'token_missing',
   TokenInvalid = 'token_invalid',
+  RootNotFound = 'root_not_found',
 
   Unauthorized = 'unauthorized',
   Forbidden = 'forbidden',

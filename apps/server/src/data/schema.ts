@@ -64,7 +64,6 @@ interface WorkspaceTable {
   created_by: ColumnType<string, string, never>;
   updated_by: ColumnType<string | null, string | null, string>;
   status: ColumnType<number, number, number>;
-  version_id: ColumnType<string, string, string>;
 }
 
 export type SelectWorkspace = Selectable<WorkspaceTable>;

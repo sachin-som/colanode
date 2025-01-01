@@ -3,12 +3,13 @@ import {
   CreateDownloadOutput,
   hasEntryRole,
   ApiErrorCode,
+  extractEntryRole,
 } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { database } from '@/data/database';
-import { fetchEntryRole } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { BUCKET_NAMES, filesStorage } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
 
@@ -31,7 +32,15 @@ export const fileDownloadGetHandler = async (
     });
   }
 
-  const role = await fetchEntryRole(file.root_id, res.locals.user.id);
+  const root = await fetchEntry(file.root_id);
+  if (!root) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.RootNotFound,
+      message: 'Root not found.',
+    });
+  }
+
+  const role = extractEntryRole(mapEntry(root), res.locals.user.id);
   if (role === null || !hasEntryRole(role, 'viewer')) {
     return ResponseBuilder.forbidden(res, {
       code: ApiErrorCode.FileNoAccess,

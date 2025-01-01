@@ -218,7 +218,6 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   return {
     id: row.workspace_id,
     name: row.name,
-    versionId: row.version_id,
     accountId: row.account_id,
     role: row.role,
     userId: row.user_id,

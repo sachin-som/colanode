@@ -68,7 +68,6 @@ export class WorkspaceCreateMutationHandler
           avatar: data.avatar,
           role: data.user.role,
           user_id: data.user.id,
-          version_id: data.versionId,
         })
         .onConflict((cb) => cb.doNothing())
         .executeTakeFirst();
@@ -86,7 +85,6 @@ export class WorkspaceCreateMutationHandler
           id: createdWorkspace.workspace_id,
           userId: createdWorkspace.user_id,
           name: createdWorkspace.name,
-          versionId: createdWorkspace.version_id,
           accountId: createdWorkspace.account_id,
           role: createdWorkspace.role,
           avatar: createdWorkspace.avatar,

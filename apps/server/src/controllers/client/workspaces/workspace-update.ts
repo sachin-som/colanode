@@ -54,7 +54,6 @@ export const workspaceUpdateHandler = async (
     name: updatedWorkspace.name,
     description: updatedWorkspace.description,
     avatar: updatedWorkspace.avatar,
-    versionId: updatedWorkspace.version_id,
     user: {
       id: res.locals.user.id,
       accountId: res.locals.user.account_id,

@@ -42,7 +42,6 @@ export const workspaceGetHandler = async (
     name: workspace.name,
     description: workspace.description,
     avatar: workspace.avatar,
-    versionId: workspace.version_id,
     user: {
       id: user.id,
       accountId: user.account_id,

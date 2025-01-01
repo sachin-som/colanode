@@ -1,15 +1,7 @@
-import {
-  extractEntryCollaborators,
-  extractEntryRole,
-  Entry,
-  EntryOutput,
-  EntryRole,
-  EntryType,
-} from '@colanode/core';
+import { Entry, EntryOutput, EntryType } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { SelectEntry } from '@/data/schema';
-import { EntryCollaborator } from '@/types/entries';
 
 export const mapEntryOutput = (entry: SelectEntry): EntryOutput => {
   return {
@@ -79,38 +71,4 @@ export const fetchEntryDescendants = async (
     .execute();
 
   return result.map((row) => row.descendant_id);
-};
-
-export const fetchEntryCollaborators = async (
-  entryId: string
-): Promise<EntryCollaborator[]> => {
-  const ancestors = await fetchEntryAncestors(entryId);
-  const collaboratorsMap = new Map<string, string>();
-
-  for (const ancestor of ancestors) {
-    const collaborators = extractEntryCollaborators(ancestor.attributes);
-    for (const [collaboratorId, role] of Object.entries(collaborators)) {
-      collaboratorsMap.set(collaboratorId, role);
-    }
-  }
-
-  return Array.from(collaboratorsMap.entries()).map(
-    ([collaboratorId, role]) => ({
-      entryId: entryId,
-      collaboratorId: collaboratorId,
-      role: role,
-    })
-  );
-};
-
-export const fetchEntryRole = async (
-  entryId: string,
-  collaboratorId: string
-): Promise<EntryRole | null> => {
-  const ancestors = await fetchEntryAncestors(entryId);
-  if (ancestors.length === 0) {
-    return null;
-  }
-
-  return extractEntryRole(ancestors.map(mapEntry), collaboratorId);
 };

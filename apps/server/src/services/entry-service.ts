@@ -28,7 +28,7 @@ import {
   SelectCollaboration,
 } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
-import { fetchEntry, fetchEntryAncestors, mapEntry } from '@/lib/entries';
+import { fetchEntry, mapEntry } from '@/lib/entries';
 import { createLogger } from '@/lib/logger';
 import {
   ApplyCreateTransactionInput,
@@ -151,14 +151,12 @@ class EntryService {
   private async tryUpdateEntry(
     input: UpdateEntryInput
   ): Promise<UpdateResult<UpdateEntryOutput>> {
-    const ancestorRows = await fetchEntryAncestors(input.entryId);
-    const ancestors = ancestorRows.map(mapEntry);
-
-    const entry = ancestors.find((ancestor) => ancestor.id === input.entryId);
-    if (!entry) {
+    const entryRow = await fetchEntry(input.entryId);
+    if (!entryRow) {
       return { type: 'error', output: null };
     }
 
+    const entry = mapEntry(entryRow);
     const previousTransactions = await database
       .selectFrom('entry_transactions')
       .selectAll()

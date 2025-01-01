@@ -64,7 +64,6 @@ export class WorkspaceUpdateMutationHandler
           description: data.description,
           avatar: data.avatar,
           role: data.role,
-          version_id: data.versionId,
         })
         .where((eb) =>
           eb.and([
@@ -87,7 +86,6 @@ export class WorkspaceUpdateMutationHandler
           id: updatedWorkspace.workspace_id,
           userId: updatedWorkspace.user_id,
           name: updatedWorkspace.name,
-          versionId: updatedWorkspace.version_id,
           accountId: updatedWorkspace.account_id,
           role: updatedWorkspace.role,
         },

@@ -322,5 +322,4 @@ export interface DatabaseSchema {
   file_tombstones: FileTombstoneTable;
   collaborations: CollaborationTable;
   ai_embeddings: AIEmbeddingsTable;
-
 }

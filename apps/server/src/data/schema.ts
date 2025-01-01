@@ -266,6 +266,24 @@ export type SelectEntryPath = Selectable<EntryPathTable>;
 export type CreateEntryPath = Insertable<EntryPathTable>;
 export type UpdateEntryPath = Updateable<EntryPathTable>;
 
+interface AIEmbeddingsTable {
+  id: ColumnType<string, string, never>;
+  entity_id: ColumnType<string, string, never>;
+  entity_type: ColumnType<string, string, never>;
+  content: ColumnType<string, string, string>;
+  embedding: ColumnType<number[], number[], number[]>;
+  fts: ColumnType<never, never, never>;
+  metadata: ColumnType<string | null, string | null, string | null>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+
+export type SelectAIEmbedding = Selectable<AIEmbeddingsTable>;
+export type CreateAIEmbedding = Insertable<AIEmbeddingsTable>;
+export type UpdateAIEmbedding = Updateable<AIEmbeddingsTable>;
+
+
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
@@ -281,4 +299,5 @@ export interface DatabaseSchema {
   files: FileTable;
   file_interactions: FileInteractionTable;
   entry_paths: EntryPathTable;
+  ai_embeddings: AIEmbeddingsTable
 }

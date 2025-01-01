@@ -116,6 +116,11 @@ class EntryService {
         });
       }
 
+      await jobService.addJob({
+        type: 'embed_entry',
+        entryId: input.entryId,
+      });
+
       return {
         entry: createdEntry,
         transaction: createdTransaction,
@@ -278,6 +283,11 @@ class EntryService {
           workspaceId: input.workspaceId,
         });
       }
+
+      await jobService.addJob({
+        type: 'embed_entry',
+        entryId: input.entryId,
+      });
 
       return {
         type: 'success',

@@ -13,6 +13,7 @@ import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
+import { jobService } from '@/services/job-service';
 
 class MessageService {
   public async createMessage(
@@ -63,6 +64,13 @@ class MessageService {
     if (!createdMessage) {
       return false;
     }
+
+    await jobService.addJob(
+      {
+        type: 'embed_message',
+        messageId: createdMessage.id,
+      }
+    );
 
     eventBus.publish({
       type: 'message_created',

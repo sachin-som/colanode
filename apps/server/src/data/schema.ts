@@ -319,5 +319,8 @@ export interface DatabaseSchema {
   message_tombstones: MessageTombstoneTable;
   files: FileTable;
   file_interactions: FileInteractionTable;
-  entry_paths: EntryPathTable;
+  file_tombstones: FileTombstoneTable;
+  collaborations: CollaborationTable;
+  ai_embeddings: AIEmbeddingsTable;
+
 }

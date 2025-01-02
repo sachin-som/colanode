@@ -18,7 +18,7 @@ declare module '@/main/jobs' {
 
 export class ConnectSocketJobHandler implements JobHandler<ConnectSocketInput> {
   public triggerDebounce = 0;
-  public interval = 1000 * 60;
+  public interval = 1000 * 30;
 
   private readonly debug = createDebugger('job:connect-socket');
 

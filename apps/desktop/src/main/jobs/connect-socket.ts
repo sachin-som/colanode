@@ -18,7 +18,7 @@ declare module '@/main/jobs' {
 
 export class ConnectSocketJobHandler implements JobHandler<ConnectSocketInput> {
   public triggerDebounce = 0;
-  public interval = 1000 * 60;
+  public interval = 1000 * 30;
 
   private readonly debug = createDebugger('job:connect-socket');
 
@@ -34,7 +34,7 @@ export class ConnectSocketJobHandler implements JobHandler<ConnectSocketInput> {
       return;
     }
 
-    this.debug(`Connecting to socket for account ${account.email}`);
+    this.debug(`Checking connection to socket for account ${account.email}`);
     socketService.checkConnection(account);
   }
 }

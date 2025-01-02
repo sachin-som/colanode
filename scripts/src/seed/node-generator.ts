@@ -4,7 +4,6 @@ import {
   IdType,
   EntryAttributes,
   EntryRole,
-  registry,
   generateNodeIndex,
   ViewAttributes,
   FieldAttributes,
@@ -15,6 +14,7 @@ import {
   ApplyCreateTransactionMutation,
   LocalCreateTransaction,
   CreateMessageMutation,
+  entryAttributesSchema,
 } from '@colanode/core';
 import { encodeState, YDoc } from '@colanode/crdt';
 import { faker } from '@faker-js/faker';
@@ -22,7 +22,7 @@ import { faker } from '@faker-js/faker';
 import { User } from './types';
 
 const MESSAGES_PER_CONVERSATION = 2000;
-const RECORDS_PER_DATABASE = 0;
+const RECORDS_PER_DATABASE = 2000;
 
 export class NodeGenerator {
   constructor(
@@ -110,7 +110,6 @@ export class NodeGenerator {
       type: 'space',
       name,
       description,
-      parentId: this.workspaceId,
       collaborators,
       avatar,
     };
@@ -173,7 +172,6 @@ export class NodeGenerator {
     const chatId = generateId(IdType.Chat);
     const chatAttributes: EntryAttributes = {
       type: 'chat',
-      parentId: this.workspaceId,
       collaborators: {
         [mainUser.userId]: 'admin',
         [user.userId]: 'admin',
@@ -961,9 +959,7 @@ export class NodeGenerator {
     attributes: EntryAttributes
   ): LocalCreateTransaction {
     const ydoc = new YDoc();
-    const model = registry.getModel(attributes.type);
-
-    const update = ydoc.updateAttributes(model.schema, attributes);
+    const update = ydoc.updateAttributes(entryAttributesSchema, attributes);
 
     return {
       id: generateId(IdType.Transaction),

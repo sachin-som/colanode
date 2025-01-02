@@ -42,17 +42,45 @@ class CollaborationService {
       .execute();
 
     if (collaboration.deletedAt) {
-      await workspaceDatabase.transaction().execute(async (tx) => {
-        await tx
-          .deleteFrom('entries')
-          .where('id', '=', collaboration.entryId)
-          .execute();
+      await workspaceDatabase
+        .deleteFrom('entries')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
 
-        await tx
-          .deleteFrom('entry_transactions')
-          .where('entry_id', '=', collaboration.entryId)
-          .execute();
-      });
+      await workspaceDatabase
+        .deleteFrom('entry_transactions')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('entry_interactions')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('messages')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('message_reactions')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('message_interactions')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('files')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
+
+      await workspaceDatabase
+        .deleteFrom('file_interactions')
+        .where('root_id', '=', collaboration.entryId)
+        .execute();
 
       eventBus.publish({
         type: 'collaboration_deleted',

@@ -69,7 +69,6 @@ class WorkspaceService {
         type: 'space',
         name: 'Home',
         description: 'This is your home space.',
-        parentId: spaceId,
         collaborators: {
           [userId]: 'admin',
         },

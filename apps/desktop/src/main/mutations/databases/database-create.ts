@@ -53,6 +53,7 @@ export class DatabaseCreateMutationHandler
     await entryService.createEntry(input.userId, {
       id: databaseId,
       attributes,
+      parentId: input.spaceId,
     });
 
     return {

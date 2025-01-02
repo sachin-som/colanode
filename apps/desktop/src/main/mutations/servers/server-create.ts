@@ -43,8 +43,12 @@ export class ServerCreateMutationHandler
 
 const parseDomain = (domain: string): string => {
   try {
-    // Try to parse as URL first
-    const url = new URL(domain.toLowerCase());
+    const lowerCaseDomain = domain.toLowerCase();
+    const urlString = lowerCaseDomain.startsWith('http')
+      ? lowerCaseDomain
+      : `http://${lowerCaseDomain}`;
+
+    const url = new URL(urlString);
     return url.host; // host includes domain + port if present
   } catch {
     // If not a valid URL, treat as domain directly

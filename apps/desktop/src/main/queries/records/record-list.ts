@@ -145,7 +145,7 @@ export class RecordListQueryHandler
       database.attributes.fields
     );
 
-    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."id" ASC'}`;
+    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'e."id" ASC'}`;
     const offset = (input.page - 1) * input.count;
     const query = sql<SelectEntry>`
         SELECT e.*
@@ -265,11 +265,11 @@ export class RecordListQueryHandler
     field: BooleanFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_true') {
-      return `json_extract(n.attributes, '$.fields.${field.id}.value') = true`;
+      return `json_extract(e.attributes, '$.fields.${field.id}.value') = true`;
     }
 
     if (filter.operator === 'is_false') {
-      return `(json_extract(n.attributes, '$.fields.${field.id}.value') = false OR json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL)`;
+      return `(json_extract(e.attributes, '$.fields.${field.id}.value') = false OR json_extract(e.attributes, '$.fields.${field.id}.value') IS NULL)`;
     }
 
     return null;
@@ -325,7 +325,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} ${value}`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} ${value}`;
   };
 
   private buildTextFilterQuery = (
@@ -383,7 +383,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildEmailFilterQuery = (
@@ -441,7 +441,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildPhoneFilterQuery = (
@@ -499,7 +499,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildUrlFilterQuery = (
@@ -557,7 +557,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildSelectFilterQuery = (
@@ -583,9 +583,9 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `json_extract(n.attributes, '$.fields.${field.id}.value') IN (${values})`;
+        return `json_extract(e.attributes, '$.fields.${field.id}.value') IN (${values})`;
       case 'is_not_in':
-        return `json_extract(n.attributes, '$.fields.${field.id}.value') NOT IN (${values})`;
+        return `json_extract(e.attributes, '$.fields.${field.id}.value') NOT IN (${values})`;
       default:
         return null;
     }
@@ -596,11 +596,11 @@ export class RecordListQueryHandler
     field: MultiSelectFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
-      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) = 0`;
+      return `json_extract(e.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(e.attributes, '$.fields.${field.id}.value')) = 0`;
     }
 
     if (filter.operator === 'is_not_empty') {
-      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NOT NULL AND json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) > 0`;
+      return `json_extract(e.attributes, '$.fields.${field.id}.value') IS NOT NULL AND json_array_length(json_extract(e.attributes, '$.fields.${field.id}.value')) > 0`;
     }
 
     if (!isStringArray(filter.value)) {
@@ -614,9 +614,9 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
+        return `EXISTS (SELECT 1 FROM json_each(json_extract(e.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       case 'is_not_in':
-        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
+        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(e.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       default:
         return null;
     }
@@ -677,7 +677,7 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `DATE(json_extract(n.attributes, '$.fields.${field.id}.value')) ${operator} '${dateString}'`;
+    return `DATE(json_extract(e.attributes, '$.fields.${field.id}.value')) ${operator} '${dateString}'`;
   };
 
   private buildCreatedAtFilterQuery = (
@@ -685,11 +685,11 @@ export class RecordListQueryHandler
     _: CreatedAtFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
-      return `n.created_at IS NULL`;
+      return `e.created_at IS NULL`;
     }
 
     if (filter.operator === 'is_not_empty') {
-      return `n.created_at IS NOT NULL`;
+      return `e.created_at IS NOT NULL`;
     }
 
     if (filter.value === null) {
@@ -735,15 +735,15 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `DATE(n.created_at) ${operator} '${dateString}'`;
+    return `DATE(e.created_at) ${operator} '${dateString}'`;
   };
 
   private buildIsEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NULL`;
+    return `json_extract(e.attributes, '$.fields.${fieldId}.value') IS NULL`;
   };
 
   private buildIsNotEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NOT NULL`;
+    return `json_extract(e.attributes, '$.fields.${fieldId}.value') IS NOT NULL`;
   };
 
   private joinIds = (ids: string[]): string => {
@@ -770,13 +770,13 @@ export class RecordListQueryHandler
     }
 
     if (field.type === 'createdAt') {
-      return `n.created_at ${sort.direction}`;
+      return `e.created_at ${sort.direction}`;
     }
 
     if (field.type === 'createdBy') {
-      return `n.created_by_id ${sort.direction}`;
+      return `e.created_by_id ${sort.direction}`;
     }
 
-    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${sort.direction}`;
+    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${sort.direction}`;
   };
 }

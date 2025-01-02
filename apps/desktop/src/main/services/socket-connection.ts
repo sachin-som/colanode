@@ -28,7 +28,8 @@ export class SocketConnection {
   public init(): void {
     this.debug(`Initializing socket connection for account ${this.account.id}`);
 
-    if (this.isConnected()) {
+    if (this.socket && this.isConnected()) {
+      this.socket.ping();
       return;
     }
 
@@ -120,11 +121,13 @@ export class SocketConnection {
     if (this.socket) {
       this.debug(`Closing socket connection for account ${this.account.id}`);
       this.socket.close();
+      this.socket = null;
     }
   }
 
   public checkConnection(): void {
     if (this.isConnected()) {
+      this.socket?.ping();
       return;
     }
 

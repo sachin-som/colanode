@@ -23,7 +23,11 @@ export class RecordCreateMutationHandler
       content: {},
     };
 
-    await entryService.createEntry(input.userId, { id, attributes });
+    await entryService.createEntry(input.userId, {
+      id,
+      attributes,
+      parentId: input.databaseId,
+    });
 
     return {
       id: id,

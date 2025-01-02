@@ -48,7 +48,6 @@ export class SpaceCreateMutationHandler
       collaborators: {
         [input.userId]: 'admin',
       },
-      parentId: spaceId,
       description: input.description,
       avatar: null,
     };
@@ -56,6 +55,7 @@ export class SpaceCreateMutationHandler
     await entryService.createEntry(input.userId, {
       id: spaceId,
       attributes: spaceAttributes,
+      parentId: null,
     });
 
     const pageId = generateId(IdType.Page);
@@ -70,6 +70,7 @@ export class SpaceCreateMutationHandler
     await entryService.createEntry(input.userId, {
       id: pageId,
       attributes: pageAttributes,
+      parentId: spaceId,
     });
 
     const channelId = generateId(IdType.Channel);
@@ -82,6 +83,7 @@ export class SpaceCreateMutationHandler
     await entryService.createEntry(input.userId, {
       id: channelId,
       attributes: channelAttributes,
+      parentId: spaceId,
     });
 
     return {

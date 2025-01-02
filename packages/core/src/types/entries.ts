@@ -3,7 +3,7 @@ import { EntryAttributes } from '../registry';
 export type EntryOutput = {
   id: string;
   workspaceId: string;
-  parentId: string;
+  parentId: string | null;
   type: string;
   attributes: EntryAttributes;
   state: string;

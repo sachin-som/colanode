@@ -10,7 +10,7 @@ import { SpaceAttributes, spaceAttributesSchema } from './space';
 
 type EntryBase = {
   id: string;
-  parentId: string;
+  parentId: string | null;
   rootId: string;
   createdAt: string;
   createdBy: string;

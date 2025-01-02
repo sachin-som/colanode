@@ -90,6 +90,7 @@ export class ChatListQueryHandler implements QueryHandler<ChatListQueryInput> {
     const rows = await workspaceDatabase
       .selectFrom('entries')
       .selectAll()
+      .where('parent_id', 'is', null)
       .where('type', '=', 'chat')
       .execute();
 

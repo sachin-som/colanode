@@ -193,8 +193,8 @@ class RadarWorkspace {
 
     this.unreadMessages.set(message.id, {
       messageId: message.id,
-      parentId: message.rootId,
-      parentIdType: getIdType(message.rootId),
+      parentId: message.parentId,
+      parentIdType: getIdType(message.parentId),
     });
 
     eventBus.publish({

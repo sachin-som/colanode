@@ -4,6 +4,7 @@ import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import path from 'path';
 
 import { metadataService } from '@/main/services/metadata-service';
+import { notificationService } from '@/main/services/notification-service';
 import { WindowSize } from '@/shared/types/metadata';
 import { createDebugger } from '@/main/debugger';
 import { scheduler } from '@/main/scheduler';
@@ -31,6 +32,7 @@ if (started) {
 
 const createWindow = async () => {
   await scheduler.init();
+  notificationService.checkBadge();
 
   // Create the browser window.
   let windowSize = await metadataService.get<WindowSize>('window_size');

@@ -3,6 +3,7 @@ export const aiSettings = {
     apiKey: process.env.OPENAI_API_KEY || '',
     embeddingModel: 'text-embedding-3-large',
     embeddingDimensions: 2000,
+    embeddingBatchSize: 50,
   },
 
   chunking: {

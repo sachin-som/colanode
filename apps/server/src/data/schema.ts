@@ -287,10 +287,12 @@ export type SelectFileTombstone = Selectable<FileTombstoneTable>;
 export type CreateFileTombstone = Insertable<FileTombstoneTable>;
 export type UpdateFileTombstone = Updateable<FileTombstoneTable>;
 
-interface AIEmbeddingsTable {
-  id: ColumnType<string, string, never>;
-  entity_id: ColumnType<string, string, never>;
-  entity_type: ColumnType<string, string, never>;
+interface EntryEmbeddingTable {
+  entry_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  parent_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
   content: ColumnType<string, string, string>;
   embedding: ColumnType<number[], number[], number[]>;
   fts: ColumnType<never, never, never>;
@@ -299,10 +301,27 @@ interface AIEmbeddingsTable {
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
 }
 
-export type SelectAIEmbedding = Selectable<AIEmbeddingsTable>;
-export type CreateAIEmbedding = Insertable<AIEmbeddingsTable>;
-export type UpdateAIEmbedding = Updateable<AIEmbeddingsTable>;
+export type SelectEntryEmbedding = Selectable<EntryEmbeddingTable>;
+export type CreateEntryEmbedding = Insertable<EntryEmbeddingTable>;
+export type UpdateEntryEmbedding = Updateable<EntryEmbeddingTable>;
 
+interface MessageEmbeddingTable {
+  message_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  parent_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  content: ColumnType<string, string, string>;
+  embedding: ColumnType<number[], number[], number[]>;
+  fts: ColumnType<never, never, never>;
+  metadata: ColumnType<string | null, string | null, string | null>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectMessageEmbedding = Selectable<MessageEmbeddingTable>;
+export type CreateMessageEmbedding = Insertable<MessageEmbeddingTable>;
+export type UpdateMessageEmbedding = Updateable<MessageEmbeddingTable>;
 
 export interface DatabaseSchema {
   accounts: AccountTable;
@@ -321,5 +340,6 @@ export interface DatabaseSchema {
   file_interactions: FileInteractionTable;
   file_tombstones: FileTombstoneTable;
   collaborations: CollaborationTable;
-  ai_embeddings: AIEmbeddingsTable;
+  entry_embeddings: EntryEmbeddingTable;
+  message_embeddings: MessageEmbeddingTable;
 }

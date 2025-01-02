@@ -848,13 +848,15 @@ const createEntryPathsTable: Migration = {
   },
 };
 
-const createAIEmbeddingsTable: Migration = {
+const createMessageEmbeddingsTable: Migration = {
   up: async (db) => {
     await db.schema
-      .createTable('ai_embeddings')
-      .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('entity_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('entity_type', 'varchar(30)', (col) => col.notNull())
+      .createTable('message_embeddings')
+      .addColumn('message_id', 'varchar(30)', (col) => col.notNull()) 
+      .addColumn('chunk', 'integer', (col) => col.notNull())
+      .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('content', 'text', (col) => col.notNull())
       .addColumn('embedding', sql`vector(2000)`, (col) => col.notNull())
       .addColumn('fts', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED`)
@@ -864,8 +866,8 @@ const createAIEmbeddingsTable: Migration = {
       .execute();
 
     await sql`
-      CREATE INDEX ai_embeddings_embedding_idx
-        ON ai_embeddings
+      CREATE INDEX message_embeddings_embedding_idx
+        ON message_embeddings
         USING hnsw(embedding vector_cosine_ops)
         WITH (
           m = 16,            
@@ -874,13 +876,51 @@ const createAIEmbeddingsTable: Migration = {
     `.execute(db);
 
     await sql`
-      CREATE INDEX ai_embeddings_fts_idx
-        ON ai_embeddings
+      CREATE INDEX message_embeddings_fts_idx
+        ON message_embeddings
         USING GIN (fts);
     `.execute(db);
   },
   down: async (db) => {
-    await db.schema.dropTable('ai_embeddings').execute();
+    await db.schema.dropTable('message_embeddings').execute();
+  },
+};
+
+const createEntryEmbeddingsTable: Migration = {
+  up: async (db) => {
+    await db.schema
+      .createTable('entry_embeddings')
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('chunk', 'integer', (col) => col.notNull())
+      .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('content', 'text', (col) => col.notNull())
+      .addColumn('embedding', sql`vector(2000)`, (col) => col.notNull())
+      .addColumn('fts', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED`)
+      .addColumn('metadata', 'jsonb')
+      .addColumn('created_at', 'timestamptz', (col) => col.notNull())
+      .addColumn('updated_at', 'timestamptz')
+      .execute();
+
+    await sql`
+      CREATE INDEX entry_embeddings_embedding_idx
+        ON entry_embeddings
+        USING hnsw(embedding vector_cosine_ops)
+        WITH (
+          m = 16,            
+          ef_construction = 64  
+        );
+    `.execute(db);
+
+    await sql`
+      CREATE INDEX entry_embeddings_fts_idx
+        ON entry_embeddings
+        USING GIN (fts);
+    `.execute(db);
+  },
+  down: async (db) => {
+    await db.schema.dropTable('entry_embeddings').execute();
   },
 };
 
@@ -901,5 +941,6 @@ export const databaseMigrations: Record<string, Migration> = {
   '00014_create_file_interactions_table': createFileInteractionsTable,
   '00015_create_file_tombstones_table': createFileTombstonesTable,
   '00016_create_collaborations_table': createCollaborationsTable,
-  '00017_create_ai_embeddings_table': createAIEmbeddingsTable,
+  '00017_create_entry_embeddings_table': createEntryEmbeddingsTable,
+  '00018_create_message_embeddings_table': createMessageEmbeddingsTable,
 };

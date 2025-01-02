@@ -282,7 +282,7 @@ class SyncService {
     });
   }
 
-  private removeRootNodeSynchronizers(userId: string, rootId: string) {
+  private async removeRootNodeSynchronizers(userId: string, rootId: string) {
     const keys = Array.from(this.synchronizers.keys());
 
     for (const key of keys) {
@@ -291,56 +291,20 @@ class SyncService {
         continue;
       }
 
-      if (
-        synchronizer.input.type === 'entry_transactions' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'messages' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'message_reactions' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'files' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'entry_interactions' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'file_interactions' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'message_interactions' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'file_tombstones' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
-      } else if (
-        synchronizer.input.type === 'message_tombstones' &&
-        synchronizer.input.rootId === rootId
-      ) {
-        this.synchronizers.delete(key);
+      if (synchronizer.userId !== userId) {
+        continue;
       }
+
+      if (!this.isRootNodeSynchronizer(synchronizer, rootId)) {
+        continue;
+      }
+
+      await synchronizer.delete();
+      this.synchronizers.delete(key);
     }
   }
 
-  private removeWorkspaceSynchronizers(userId: string) {
+  private async removeWorkspaceSynchronizers(userId: string) {
     const keys = Array.from(this.synchronizers.keys());
 
     for (const key of keys) {
@@ -350,12 +314,13 @@ class SyncService {
       }
 
       if (synchronizer.userId === userId) {
+        await synchronizer.delete();
         this.synchronizers.delete(key);
       }
     }
   }
 
-  private removeAccountSynchronizers(accountId: string) {
+  private async removeAccountSynchronizers(accountId: string) {
     const keys = Array.from(this.synchronizers.keys());
 
     for (const key of keys) {
@@ -365,9 +330,80 @@ class SyncService {
       }
 
       if (synchronizer.accountId === accountId) {
+        await synchronizer.delete();
         this.synchronizers.delete(key);
       }
     }
+  }
+
+  private isRootNodeSynchronizer(
+    synchronizer: BaseSynchronizer<SynchronizerInput>,
+    rootId: string
+  ) {
+    if (
+      synchronizer.input.type === 'entry_transactions' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'entry_interactions' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'messages' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'message_reactions' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'message_interactions' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'message_tombstones' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'files' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'file_interactions' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    if (
+      synchronizer.input.type === 'file_tombstones' &&
+      synchronizer.input.rootId === rootId
+    ) {
+      return true;
+    }
+
+    return false;
   }
 }
 

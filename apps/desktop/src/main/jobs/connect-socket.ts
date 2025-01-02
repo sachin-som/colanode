@@ -34,7 +34,7 @@ export class ConnectSocketJobHandler implements JobHandler<ConnectSocketInput> {
       return;
     }
 
-    this.debug(`Connecting to socket for account ${account.email}`);
+    this.debug(`Checking connection to socket for account ${account.email}`);
     socketService.checkConnection(account);
   }
 }

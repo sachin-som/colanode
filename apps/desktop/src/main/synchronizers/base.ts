@@ -129,6 +129,13 @@ export abstract class BaseSynchronizer<TInput extends SynchronizerInput> {
       .execute();
   }
 
+  public async delete() {
+    await this.database
+      .deleteFrom('cursors')
+      .where('key', '=', this.cursorKey)
+      .execute();
+  }
+
   private generateId(userId: string, input: TInput) {
     const idObj = {
       userId,

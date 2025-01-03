@@ -394,14 +394,14 @@ class EntryService {
       throw new Error('User not found');
     }
 
-    const root = await fetchEntry(workspaceDatabase, entryId);
-    if (!root) {
-      throw new Error('Entry not found');
-    }
-
     const entry = await fetchEntry(workspaceDatabase, entryId);
     if (!entry) {
       throw new Error('Entry not found');
+    }
+
+    const root = await fetchEntry(workspaceDatabase, entry.root_id);
+    if (!root) {
+      throw new Error('Root not found');
     }
 
     if (

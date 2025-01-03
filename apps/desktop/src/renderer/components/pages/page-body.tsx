@@ -21,13 +21,14 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
   const canEdit = hasEntryRole(role, 'editor');
 
   const handleUpdate = useCallback(
-    (content: JSONContent) => {
+    (before: JSONContent, after: JSONContent) => {
       mutate({
         input: {
           type: 'page_content_update',
           userId: workspace.userId,
           pageId: page.id,
-          content,
+          before,
+          after,
         },
         onError(error) {
           toast({

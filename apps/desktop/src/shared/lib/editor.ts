@@ -21,10 +21,10 @@ const leafBlockTypes = new Set([
 export const mapContentsToBlocks = (
   parentId: string,
   contents: JSONContent[],
-  blocksMap: Map<string, Block>
+  indexMap: Map<string, string>
 ): Block[] => {
   const blocks: Block[] = [];
-  mapAndPushContentsToBlocks(contents, parentId, blocks, blocksMap);
+  mapAndPushContentsToBlocks(contents, parentId, blocks, indexMap);
   validateBlocksIndexes(blocks);
   return blocks;
 };
@@ -33,13 +33,13 @@ const mapAndPushContentsToBlocks = (
   contents: JSONContent[] | null | undefined,
   parentId: string,
   blocks: Block[],
-  blocksMap: Map<string, Block>
+  indexMap: Map<string, string>
 ): void => {
   if (!contents) {
     return;
   }
   contents.map((content) => {
-    mapAndPushContentToBlock(content, parentId, blocks, blocksMap);
+    mapAndPushContentToBlock(content, parentId, blocks, indexMap);
   });
 };
 
@@ -47,14 +47,14 @@ const mapAndPushContentToBlock = (
   content: JSONContent,
   parentId: string,
   blocks: Block[],
-  blocksMap: Map<string, Block>
+  indexMap: Map<string, string>
 ): void => {
   if (!content.type) {
     throw new Error('Invalid content type');
   }
 
   const id = getIdFromContent(content);
-  const index = blocksMap.get(id)?.index;
+  const index = indexMap.get(id);
   const attrs =
     (content.attrs &&
       Object.entries(content.attrs).filter(([key]) => key !== 'id')) ??
@@ -75,7 +75,7 @@ const mapAndPushContentToBlock = (
   });
 
   if (!isLeafBlock && content.content) {
-    mapAndPushContentsToBlocks(content.content, id, blocks, blocksMap);
+    mapAndPushContentsToBlocks(content.content, id, blocks, indexMap);
   }
 };
 

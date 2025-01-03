@@ -1,4 +1,5 @@
-import { Block, PageAttributes } from '@colanode/core';
+import { PageAttributes } from '@colanode/core';
+import { isEqual } from 'lodash-es';
 
 import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
@@ -19,27 +20,47 @@ export class PageContentUpdateMutationHandler
       input.pageId,
       input.userId,
       (attributes) => {
-        const blocksMap = new Map<string, Block>();
+        const indexMap = new Map<string, string>();
         if (attributes.content) {
           for (const [key, value] of Object.entries(attributes.content)) {
-            blocksMap.set(key, value);
+            indexMap.set(key, value.index);
           }
         }
 
-        const blocks = mapContentsToBlocks(
+        const beforeBlocks = mapContentsToBlocks(
           input.pageId,
-          input.content.content ?? [],
-          blocksMap
+          input.before.content ?? [],
+          indexMap
         );
 
-        attributes.content = blocks.reduce(
-          (acc, block) => {
-            acc[block.id] = block;
-            return acc;
-          },
-          {} as Record<string, Block>
+        const afterBlocks = mapContentsToBlocks(
+          input.pageId,
+          input.after.content ?? [],
+          indexMap
         );
 
+        const content = attributes.content ?? {};
+        for (const afterBlock of afterBlocks) {
+          const beforeBlock = beforeBlocks.find(
+            (block) => block.id === afterBlock.id
+          );
+
+          if (!isEqual(beforeBlock, afterBlock)) {
+            content[afterBlock.id] = afterBlock;
+          }
+        }
+
+        for (const beforeBlock of beforeBlocks) {
+          const afterBlock = afterBlocks.find(
+            (block) => block.id === beforeBlock.id
+          );
+
+          if (!afterBlock) {
+            delete content[beforeBlock.id];
+          }
+        }
+
+        attributes.content = content;
         return attributes;
       }
     );

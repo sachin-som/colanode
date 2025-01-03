@@ -4,7 +4,8 @@ export type PageContentUpdateMutationInput = {
   type: 'page_content_update';
   userId: string;
   pageId: string;
-  content: JSONContent;
+  before: JSONContent;
+  after: JSONContent;
 };
 
 export type PageContentUpdateMutationOutput = {

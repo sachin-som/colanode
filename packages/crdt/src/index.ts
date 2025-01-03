@@ -108,7 +108,11 @@ export class YDoc {
   ) {
     for (const [key, value] of Object.entries(attributes)) {
       if (value === null) {
-        yMap.set(key, null);
+        const currentValue = yMap.get(key);
+        if (currentValue !== null) {
+          yMap.set(key, null);
+        }
+
         continue;
       }
 
@@ -191,8 +195,12 @@ export class YDoc {
       const item = value[i];
 
       if (item === null) {
-        yArray.delete(i, 1);
-        yArray.insert(i, [null]);
+        const currentItem = yArray.get(i);
+        if (currentItem !== null) {
+          yArray.delete(i, 1);
+          yArray.insert(i, [null]);
+        }
+
         continue;
       }
 
@@ -264,7 +272,11 @@ export class YDoc {
     const valueSchema = this.extractType(schemaField.valueSchema, record);
     for (const [key, value] of Object.entries(record)) {
       if (value === null) {
-        yMap.set(key, null);
+        const currentValue = yMap.get(key);
+        if (currentValue !== null) {
+          yMap.set(key, null);
+        }
+
         continue;
       }
 

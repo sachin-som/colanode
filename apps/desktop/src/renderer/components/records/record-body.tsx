@@ -33,13 +33,14 @@ export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
     record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
 
   const handleUpdate = useCallback(
-    (content: JSONContent) => {
+    (before: JSONContent, after: JSONContent) => {
       mutate({
         input: {
           type: 'record_content_update',
           userId: workspace.userId,
           recordId: record.id,
-          content,
+          before,
+          after,
         },
         onError(error) {
           toast({

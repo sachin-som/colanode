@@ -68,7 +68,7 @@ interface DocumentEditorProps {
   content: JSONContent;
   transactionId: string;
   canEdit: boolean;
-  onUpdate: (content: JSONContent) => void;
+  onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
 }
 
@@ -85,11 +85,18 @@ export const DocumentEditor = ({
 
   const hasPendingChanges = React.useRef(false);
   const transactionIdRef = React.useRef(transactionId);
+  const contentRef = React.useRef(content);
+
   const debouncedSave = React.useMemo(
     () =>
       debounce((content: JSONContent) => {
+        const before = contentRef.current;
+        const after = content;
+
+        contentRef.current = content;
         hasPendingChanges.current = false;
-        onUpdate(content);
+
+        onUpdate(before, after);
       }, 500),
     [onUpdate]
   );
@@ -196,6 +203,7 @@ export const DocumentEditor = ({
     }
 
     transactionIdRef.current = transactionId;
+    contentRef.current = content;
   }, [content, transactionId]);
 
   return (

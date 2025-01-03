@@ -10,7 +10,7 @@ interface DocumentProps {
   content?: Record<string, Block> | null;
   transactionId: string;
   canEdit: boolean;
-  onUpdate: (content: JSONContent) => void;
+  onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
 }
 

@@ -4,7 +4,8 @@ export type RecordContentUpdateMutationInput = {
   type: 'record_content_update';
   userId: string;
   recordId: string;
-  content: JSONContent;
+  before: JSONContent;
+  after: JSONContent;
 };
 
 export type RecordContentUpdateMutationOutput = {

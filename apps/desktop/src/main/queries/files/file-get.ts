@@ -67,6 +67,42 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
       };
     }
 
+    if (event.type === 'file_state_created') {
+      if (output === null) {
+        const newResult = await this.fetchFile(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+
+      return {
+        hasChanges: true,
+        result: {
+          ...output,
+          ...event.fileState,
+        },
+      };
+    }
+
+    if (event.type === 'file_state_updated') {
+      if (output === null) {
+        const newResult = await this.fetchFile(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+
+      return {
+        hasChanges: true,
+        result: {
+          ...output,
+          ...event.fileState,
+        },
+      };
+    }
+
     return {
       hasChanges: false,
     };

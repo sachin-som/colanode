@@ -4,17 +4,19 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { FileWithState } from '@/shared/types/files';
+import { formatBytes } from '@/shared/lib/files';
 
 interface FileDownloadProps {
-  id: string;
-  downloadProgress: number | null | undefined;
+  file: FileWithState;
 }
 
-export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {
+export const FileDownload = ({ file }: FileDownloadProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
-  const isDownloading = typeof downloadProgress === 'number';
+  const isDownloading = file.downloadStatus === 'pending';
+
   return (
     <div className="flex h-full w-full items-center justify-center">
       {isDownloading ? (
@@ -33,7 +35,7 @@ export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {
               input: {
                 type: 'file_download',
                 userId: workspace.userId,
-                fileId: id,
+                fileId: file.id,
               },
               onError(error) {
                 toast({
@@ -48,6 +50,9 @@ export const FileDownload = ({ id, downloadProgress }: FileDownloadProps) => {
           <Download className="size-8" />
           <p className="text-sm">
             File is not downloaded in your device. Click to download.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatBytes(file.size)} - {file.mimeType}
           </p>
         </div>
       )}

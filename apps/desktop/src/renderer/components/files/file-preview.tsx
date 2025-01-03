@@ -16,9 +16,7 @@ export const FilePreview = ({ file }: FilePreviewProps) => {
   const workspace = useWorkspace();
 
   if (file.downloadProgress !== 100) {
-    return (
-      <FileDownload id={file.id} downloadProgress={file.downloadProgress} />
-    );
+    return <FileDownload file={file} />;
   }
 
   const url = getFileUrl(workspace.userId, file.id, file.extension);

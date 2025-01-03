@@ -82,6 +82,46 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
       }
     }
 
+    if (event.type === 'file_state_created') {
+      const file = output.find((file) => file.id === event.fileState.fileId);
+      if (file) {
+        const newResult = output.map((file) => {
+          if (file.id === event.fileState.fileId) {
+            return {
+              ...file,
+              ...event.fileState,
+            };
+          }
+          return file;
+        });
+
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+    }
+
+    if (event.type === 'file_state_updated') {
+      const file = output.find((file) => file.id === event.fileState.fileId);
+      if (file) {
+        const newResult = output.map((file) => {
+          if (file.id === event.fileState.fileId) {
+            return {
+              ...file,
+              ...event.fileState,
+            };
+          }
+          return file;
+        });
+
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+    }
+
     return {
       hasChanges: false,
     };

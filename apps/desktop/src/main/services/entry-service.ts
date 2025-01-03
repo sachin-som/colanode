@@ -622,6 +622,22 @@ class EntryService {
     userId: string,
     transaction: SyncUpdateEntryTransactionData
   ) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
+      const result = await this.tryApplyServerUpdateTransaction(
+        userId,
+        transaction
+      );
+
+      if (result) {
+        return;
+      }
+    }
+  }
+
+  private async tryApplyServerUpdateTransaction(
+    userId: string,
+    transaction: SyncUpdateEntryTransactionData
+  ): Promise<boolean> {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
@@ -640,7 +656,7 @@ class EntryService {
         this.debug(
           `Server update transaction ${transaction.id} for entry ${transaction.entryId} is already synced`
         );
-        return;
+        return true;
       }
 
       await workspaceDatabase
@@ -655,7 +671,17 @@ class EntryService {
       this.debug(
         `Server update transaction ${transaction.id} for entry ${transaction.entryId} has been synced`
       );
-      return;
+      return true;
+    }
+
+    const entry = await workspaceDatabase
+      .selectFrom('entries')
+      .selectAll()
+      .where('id', '=', transaction.entryId)
+      .executeTakeFirst();
+
+    if (!entry) {
+      return false;
     }
 
     const previousTransactions = await workspaceDatabase
@@ -690,7 +716,12 @@ class EntryService {
             transaction_id: transaction.id,
           })
           .where('id', '=', transaction.entryId)
+          .where('transaction_id', '=', entry.transaction_id)
           .executeTakeFirst();
+
+        if (!updatedEntry) {
+          return { updatedEntry: undefined };
+        }
 
         await trx
           .insertInto('entry_transactions')
@@ -732,7 +763,7 @@ class EntryService {
       this.debug(
         `Server update transaction ${transaction.id} for entry ${transaction.entryId} is incomplete`
       );
-      return;
+      return false;
     }
 
     this.debug(
@@ -744,6 +775,8 @@ class EntryService {
       userId,
       entry: mapEntry(updatedEntry),
     });
+
+    return true;
   }
 
   private async applyServerDeleteTransaction(

@@ -847,11 +847,20 @@ const createEntryPathsTable: Migration = {
   },
 };
 
+const createVectorExtension: Migration = {
+  up: async (db) => {
+    await sql`CREATE EXTENSION IF NOT EXISTS vector`.execute(db);
+  },
+  down: async (db) => {
+    await sql`DROP EXTENSION IF EXISTS vector`.execute(db);
+  },
+};
+
 const createMessageEmbeddingsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('message_embeddings')
-      .addColumn('message_id', 'varchar(30)', (col) => col.notNull()) 
+      .addColumn('message_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('chunk', 'integer', (col) => col.notNull())
       .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
@@ -859,7 +868,10 @@ const createMessageEmbeddingsTable: Migration = {
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
       .addColumn('embedding_vector', sql`vector(2000)`, (col) => col.notNull())
-      .addColumn('search_vector', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`)
+      .addColumn(
+        'search_vector',
+        sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`
+      )
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .execute();
@@ -896,7 +908,10 @@ const createEntryEmbeddingsTable: Migration = {
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
       .addColumn('embedding_vector', sql`vector(2000)`, (col) => col.notNull())
-      .addColumn('search_vector', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`)
+      .addColumn(
+        'search_vector',
+        sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`
+      )
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .execute();
@@ -939,6 +954,7 @@ export const databaseMigrations: Record<string, Migration> = {
   '00014_create_file_interactions_table': createFileInteractionsTable,
   '00015_create_file_tombstones_table': createFileTombstonesTable,
   '00016_create_collaborations_table': createCollaborationsTable,
-  '00017_create_entry_embeddings_table': createEntryEmbeddingsTable,
-  '00018_create_message_embeddings_table': createMessageEmbeddingsTable,
+  '00017_create_vector_extension': createVectorExtension,
+  '00018_create_entry_embeddings_table': createEntryEmbeddingsTable,
+  '00019_create_message_embeddings_table': createMessageEmbeddingsTable,
 };

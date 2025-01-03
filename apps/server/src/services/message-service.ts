@@ -15,6 +15,7 @@ import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { fetchEntry, mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
+import { jobService } from '@/services/job-service';
 
 class MessageService {
   public async createMessage(
@@ -69,6 +70,11 @@ class MessageService {
     if (!createdMessage) {
       return false;
     }
+
+    await jobService.addJob({
+      type: 'embed_message',
+      messageId: createdMessage.id,
+    });
 
     eventBus.publish({
       type: 'message_created',
@@ -131,6 +137,16 @@ class MessageService {
 
       await tx
         .deleteFrom('message_interactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .deleteFrom('message_reactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .deleteFrom('message_embeddings')
         .where('message_id', '=', deletedMessage.id)
         .execute();
 

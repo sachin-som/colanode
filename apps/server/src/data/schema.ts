@@ -287,6 +287,41 @@ export type SelectFileTombstone = Selectable<FileTombstoneTable>;
 export type CreateFileTombstone = Insertable<FileTombstoneTable>;
 export type UpdateFileTombstone = Updateable<FileTombstoneTable>;
 
+interface EntryEmbeddingTable {
+  entry_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  parent_id: ColumnType<string | null, string | null, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectEntryEmbedding = Selectable<EntryEmbeddingTable>;
+export type CreateEntryEmbedding = Insertable<EntryEmbeddingTable>;
+export type UpdateEntryEmbedding = Updateable<EntryEmbeddingTable>;
+
+interface MessageEmbeddingTable {
+  message_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  parent_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectMessageEmbedding = Selectable<MessageEmbeddingTable>;
+export type CreateMessageEmbedding = Insertable<MessageEmbeddingTable>;
+export type UpdateMessageEmbedding = Updateable<MessageEmbeddingTable>;
+
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
@@ -304,4 +339,6 @@ export interface DatabaseSchema {
   file_interactions: FileInteractionTable;
   file_tombstones: FileTombstoneTable;
   collaborations: CollaborationTable;
+  entry_embeddings: EntryEmbeddingTable;
+  message_embeddings: MessageEmbeddingTable;
 }

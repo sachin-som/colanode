@@ -119,6 +119,17 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
         }
 
         await trx.deleteFrom('entries').where('id', 'in', entryIds).execute();
+
+        await trx
+          .deleteFrom('entry_interactions')
+          .where('entry_id', 'in', entryIds)
+          .execute();
+
+        await trx
+          .deleteFrom('entry_embeddings')
+          .where('entry_id', 'in', entryIds)
+          .execute();
+
         await trx
           .updateTable('collaborations')
           .set({
@@ -192,6 +203,11 @@ const deleteMessages = async (entryIds: string[], userId: string) => {
 
         await trx
           .deleteFrom('message_interactions')
+          .where('message_id', 'in', messageIds)
+          .execute();
+
+        await trx
+          .deleteFrom('message_embeddings')
           .where('message_id', 'in', messageIds)
           .execute();
 

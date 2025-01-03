@@ -290,13 +290,12 @@ export type UpdateFileTombstone = Updateable<FileTombstoneTable>;
 interface EntryEmbeddingTable {
   entry_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
-  parent_id: ColumnType<string, string, never>;
+  parent_id: ColumnType<string | null, string | null, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  content: ColumnType<string, string, string>;
-  embedding: ColumnType<number[], number[], number[]>;
-  fts: ColumnType<never, never, never>;
-  metadata: ColumnType<string | null, string | null, string | null>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
 }
@@ -309,12 +308,12 @@ interface MessageEmbeddingTable {
   message_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
   parent_id: ColumnType<string, string, never>;
+  entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  content: ColumnType<string, string, string>;
-  embedding: ColumnType<number[], number[], number[]>;
-  fts: ColumnType<never, never, never>;
-  metadata: ColumnType<string | null, string | null, string | null>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
   created_at: ColumnType<Date, Date, never>;
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
 }

@@ -42,6 +42,7 @@ import {
   UpdateEntryInput,
   UpdateEntryOutput,
 } from '@/types/entries';
+import { aiSettings } from '@/lib/ai-settings';
 
 const UPDATE_RETRIES_LIMIT = 10;
 
@@ -120,10 +121,7 @@ class EntryService {
         });
       }
 
-      await jobService.addJob({
-        type: 'embed_entry',
-        entryId: input.entryId,
-      });
+      await this.scheduleEntryEmbedding(input.entryId);
 
       return {
         entry: createdEntry,
@@ -287,10 +285,7 @@ class EntryService {
         });
       }
 
-      await jobService.addJob({
-        type: 'embed_entry',
-        entryId: input.entryId,
-      });
+      await this.scheduleEntryEmbedding(input.entryId);
 
       return {
         type: 'success',
@@ -375,6 +370,8 @@ class EntryService {
           workspaceId: user.workspace_id,
         });
       }
+
+      await this.scheduleEntryEmbedding(input.entryId);
 
       return {
         entry: createdEntry,
@@ -550,6 +547,8 @@ class EntryService {
           workspaceId: user.workspace_id,
         });
       }
+
+      await this.scheduleEntryEmbedding(input.entryId);
 
       return {
         type: 'success',
@@ -1013,6 +1012,19 @@ class EntryService {
       updatedCollaborators,
       removedCollaborators,
     };
+  }
+
+  private async scheduleEntryEmbedding(entryId: string) {
+    await jobService.addJob(
+      {
+        type: 'embed_entry',
+        entryId,
+      },
+      {
+        jobId: `embed_entry:${entryId}`,
+        delay: aiSettings.embedDelay,
+      }
+    );
   }
 }
 

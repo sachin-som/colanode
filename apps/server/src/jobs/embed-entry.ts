@@ -4,6 +4,7 @@ import { database } from '@/data/database';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { aiSettings } from '@/lib/ai-settings';
 import { extractEntryText } from '@colanode/core';
+import { CreateEntryEmbedding } from '@/data/schema';
 
 export type EmbedEntryInput = {
   type: 'embed_entry';
@@ -18,9 +19,11 @@ declare module '@/types/jobs' {
   }
 }
 
-export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (
-  input
-) => {
+export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (input) => {
+  if (!aiSettings.enabled) {
+    return;
+  }
+
   const { entryId } = input;
 
   const entry = await database
@@ -30,11 +33,20 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (
     .executeTakeFirst();
 
   if (!entry) {
-    throw new Error(`Entry ${entryId} not found`);
+    return;
   }
 
   const textResult = extractEntryText(entryId, entry.attributes);
-  if (!textResult?.text) {
+  if (textResult === undefined) {
+    return;
+  }
+
+  if (textResult.text === null || textResult.text === '') {
+    await database
+      .deleteFrom('entry_embeddings')
+      .where('entry_id', '=', entryId)
+      .execute();
+
     return;
   }
 
@@ -49,20 +61,11 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (
 
   const existingEmbeddings = await database
     .selectFrom('entry_embeddings')
-    .select(['chunk', 'content'])
+    .select(['chunk', 'text'])
     .where('entry_id', '=', entryId)
     .execute();
 
-  const embeddingsToCreateOrUpdate: {
-    entry_id: string;
-    chunk: number;
-    parent_id: string;
-    root_id: string;
-    workspace_id: string;
-    content: string;
-    embedding: number[];
-    metadata: string | null;
-  }[] = [];
+  const embeddingsToCreateOrUpdate: CreateEntryEmbedding[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -70,11 +73,9 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (
       continue;
     }
 
-    const existingEmbedding = existingEmbeddings.find(
-      (e) => e.chunk === i
-    );
+    const existingEmbedding = existingEmbeddings.find((e) => e.chunk === i);
 
-    if (existingEmbedding && existingEmbedding.content === chunk) {
+    if (existingEmbedding && existingEmbedding.text === chunk) {
       continue;
     }
 
@@ -84,52 +85,40 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (
       parent_id: entry.parent_id,
       root_id: entry.root_id,
       workspace_id: entry.workspace_id,
-      content: chunk,
-      embedding: [],
-      metadata: null,
+      text: chunk,
+      embedding_vector: [],
+      created_at: new Date(),
     });
   }
 
   const batchSize = aiSettings.openai.embeddingBatchSize;
   for (let i = 0; i < embeddingsToCreateOrUpdate.length; i += batchSize) {
     const batch = embeddingsToCreateOrUpdate.slice(i, i + batchSize);
-    const textsToEmbed = batch.map((item) => item.content);
+    const textsToEmbed = batch.map((item) => item.text);
     const embeddingVectors = await embeddings.embedDocuments(textsToEmbed);
 
     for (let j = 0; j < batch.length; j++) {
       const vector = embeddingVectors[j];
       const batchItem = batch[j];
       if (vector && batchItem) {
-        batchItem.embedding = vector;
+        batchItem.embedding_vector = vector;
       }
     }
   }
 
-  for (const item of embeddingsToCreateOrUpdate) {
-    if (item.embedding.length === 0) continue;
-
-    await database
-      .insertInto('entry_embeddings')
-      .values({
-        entry_id: item.entry_id,
-        chunk: item.chunk,
-        parent_id: item.parent_id,
-        root_id: item.root_id,
-        workspace_id: item.workspace_id,
-        content: item.content,
-        embedding: item.embedding,
-        metadata: item.metadata,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .onConflict((oc) =>
-        oc.columns(['entry_id', 'chunk']).doUpdateSet({
-          content: item.content,
-          embedding: item.embedding,
-          metadata: item.metadata,
-          updated_at: new Date(),
-        })
-      )
-      .execute();
+  if (embeddingsToCreateOrUpdate.length == 0) {
+    return;
   }
+
+  await database
+    .insertInto('entry_embeddings')
+    .values(embeddingsToCreateOrUpdate)
+    .onConflict((oc) =>
+      oc.columns(['entry_id', 'chunk']).doUpdateSet((eb) => ({
+        text: eb.ref('excluded.text'),
+        embedding_vector: eb.ref('excluded.embedding_vector'),
+        updated_at: new Date(),
+      }))
+    )
+    .execute();
 };

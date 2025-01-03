@@ -854,20 +854,20 @@ const createMessageEmbeddingsTable: Migration = {
       .addColumn('message_id', 'varchar(30)', (col) => col.notNull()) 
       .addColumn('chunk', 'integer', (col) => col.notNull())
       .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('content', 'text', (col) => col.notNull())
-      .addColumn('embedding', sql`vector(2000)`, (col) => col.notNull())
-      .addColumn('fts', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED`)
-      .addColumn('metadata', 'jsonb')
+      .addColumn('text', 'text', (col) => col.notNull())
+      .addColumn('embedding_vector', sql`vector(2000)`, (col) => col.notNull())
+      .addColumn('search_vector', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`)
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .execute();
 
     await sql`
-      CREATE INDEX message_embeddings_embedding_idx
+      CREATE INDEX message_embeddings_embedding_vector_idx
         ON message_embeddings
-        USING hnsw(embedding vector_cosine_ops)
+        USING hnsw(embedding_vector vector_cosine_ops)
         WITH (
           m = 16,            
           ef_construction = 64  
@@ -875,9 +875,9 @@ const createMessageEmbeddingsTable: Migration = {
     `.execute(db);
 
     await sql`
-      CREATE INDEX message_embeddings_fts_idx
+      CREATE INDEX message_embeddings_search_vector_idx
         ON message_embeddings
-        USING GIN (fts);
+        USING GIN (search_vector);
     `.execute(db);
   },
   down: async (db) => {
@@ -891,21 +891,20 @@ const createEntryEmbeddingsTable: Migration = {
       .createTable('entry_embeddings')
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('chunk', 'integer', (col) => col.notNull())
-      .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
+      .addColumn('parent_id', 'varchar(30)')
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('content', 'text', (col) => col.notNull())
-      .addColumn('embedding', sql`vector(2000)`, (col) => col.notNull())
-      .addColumn('fts', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED`)
-      .addColumn('metadata', 'jsonb')
+      .addColumn('text', 'text', (col) => col.notNull())
+      .addColumn('embedding_vector', sql`vector(2000)`, (col) => col.notNull())
+      .addColumn('search_vector', sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`)
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')
       .execute();
 
     await sql`
-      CREATE INDEX entry_embeddings_embedding_idx
+      CREATE INDEX entry_embeddings_embedding_vector_idx
         ON entry_embeddings
-        USING hnsw(embedding vector_cosine_ops)
+        USING hnsw(embedding_vector vector_cosine_ops)
         WITH (
           m = 16,            
           ef_construction = 64  
@@ -913,9 +912,9 @@ const createEntryEmbeddingsTable: Migration = {
     `.execute(db);
 
     await sql`
-      CREATE INDEX entry_embeddings_fts_idx
+      CREATE INDEX entry_embeddings_search_vector_idx
         ON entry_embeddings
-        USING GIN (fts);
+        USING GIN (search_vector);
     `.execute(db);
   },
   down: async (db) => {

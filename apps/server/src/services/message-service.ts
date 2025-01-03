@@ -71,12 +71,10 @@ class MessageService {
       return false;
     }
 
-    await jobService.addJob(
-      {
-        type: 'embed_message',
-        messageId: createdMessage.id,
-      }
-    );
+    await jobService.addJob({
+      type: 'embed_message',
+      messageId: createdMessage.id,
+    });
 
     eventBus.publish({
       type: 'message_created',
@@ -139,6 +137,16 @@ class MessageService {
 
       await tx
         .deleteFrom('message_interactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .deleteFrom('message_reactions')
+        .where('message_id', '=', deletedMessage.id)
+        .execute();
+
+      await tx
+        .deleteFrom('message_embeddings')
         .where('message_id', '=', deletedMessage.id)
         .execute();
 

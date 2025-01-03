@@ -1,4 +1,7 @@
 export const aiSettings = {
+  enabled: false,
+  embedDelay: 60000,
+
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
     embeddingModel: 'text-embedding-3-large',

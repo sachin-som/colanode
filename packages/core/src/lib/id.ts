@@ -36,7 +36,6 @@ export enum IdType {
   Event = 'ev',
   Host = 'ht',
   Block = 'bl',
-  AiEmbedding = 'ae',
 }
 
 export const generateId = (type: IdType): string => {

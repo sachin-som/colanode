@@ -44,19 +44,16 @@ export const LayoutSidebarHeader = () => {
     <div className="p-2">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-12 text-sm focus-visible:outline-none focus-visible:ring-0">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Avatar
-                id={workspace.id}
-                avatar={workspace.avatar}
-                name={workspace.name}
-                className="h-full w-full"
-              />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{workspace.name}</span>
-              <span className="truncate text-xs">Free Plan</span>
-            </div>
+          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-10 text-sm focus-visible:outline-none focus-visible:ring-0">
+            <Avatar
+              id={workspace.id}
+              avatar={workspace.avatar}
+              name={workspace.name}
+              className="size-7 rounded-lg"
+            />
+            <p className="flex-1 text-left text-sm leading-tight truncate font-semibold">
+              {workspace.name}
+            </p>
             <ChevronsUpDown className="ml-auto size-4" />
             <ReadStateIndicator
               count={importantCount}

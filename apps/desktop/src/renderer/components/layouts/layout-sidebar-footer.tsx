@@ -46,17 +46,16 @@ export function LayoutSidebarFooter() {
     <div className="p-2">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-12 text-sm focus-visible:outline-none focus-visible:ring-0">
+          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-10 text-sm focus-visible:outline-none focus-visible:ring-0">
             <Avatar
-              className="h-8 w-8 rounded-lg"
+              className="h-7 w-7 rounded-lg"
               id={account.id}
               name={account.name}
               avatar={account.avatar}
             />
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{account.name}</span>
-              <span className="truncate text-xs">{account.email}</span>
-            </div>
+            <p className="flex-1 text-left text-sm leading-tight truncate font-semibold">
+              {account.name}
+            </p>
             <ChevronsUpDown className="ml-auto size-4" />
             <ReadStateIndicator
               count={importantCount}

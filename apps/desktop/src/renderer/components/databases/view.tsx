@@ -39,7 +39,7 @@ export const View = ({ view }: ViewProps) => {
   const fields: ViewField[] = React.useMemo(() => {
     return database.fields
       .map((field) => {
-        const viewField = view.fields[field.id];
+        const viewField = view.fields?.[field.id];
 
         return {
           field,
@@ -66,8 +66,8 @@ export const View = ({ view }: ViewProps) => {
         avatar: view.avatar,
         type: view.type,
         fields,
-        filters: Object.values(view.filters),
-        sorts: Object.values(view.sorts),
+        filters: Object.values(view.filters ?? {}),
+        sorts: Object.values(view.sorts ?? {}),
         groupBy: view.groupBy,
         nameWidth: view.nameWidth ?? getDefaultNameWidth(),
         isSearchBarOpened,
@@ -125,12 +125,13 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const viewField = view.fields[id];
+          const viewField = view.fields?.[id];
           if (viewField && viewField.display === display) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.fields = viewCopy.fields ?? {};
           if (!viewCopy.fields[id]) {
             viewCopy.fields[id] = {
               id: id,
@@ -161,12 +162,13 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const viewField = view.fields[id];
+          const viewField = view.fields?.[id];
           if (viewField && viewField.width === width) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.fields = viewCopy.fields ?? {};
           if (!viewCopy.fields[id]) {
             viewCopy.fields[id] = {
               id: id,
@@ -227,7 +229,7 @@ export const View = ({ view }: ViewProps) => {
 
           const newIndex = generateViewFieldIndex(
             database.fields,
-            Object.values(view.fields),
+            Object.values(view.fields ?? {}),
             id,
             after
           );
@@ -236,6 +238,7 @@ export const View = ({ view }: ViewProps) => {
           }
 
           const viewCopy = { ...view };
+          viewCopy.fields = viewCopy.fields ?? {};
           if (!viewCopy.fields[id]) {
             viewCopy.fields[id] = {
               id: id,
@@ -268,7 +271,7 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (view.filters[fieldId]) {
+          if (view.filters?.[fieldId]) {
             setOpenedFieldFilters((prev) => [...prev, fieldId]);
             return;
           }
@@ -284,10 +287,10 @@ export const View = ({ view }: ViewProps) => {
             id: fieldId,
             fieldId,
             operator: operators[0]?.value ?? '',
-            value: null,
           };
 
           const viewCopy = { ...view };
+          viewCopy.filters = viewCopy.filters ?? {};
           viewCopy.filters[fieldId] = filter;
 
           mutate({
@@ -315,11 +318,12 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.filters[id]) {
+          if (!view.filters?.[id]) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.filters = viewCopy.filters ?? {};
           viewCopy.filters[id] = filter;
 
           mutate({
@@ -346,11 +350,12 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.filters[id]) {
+          if (!view.filters?.[id]) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.filters = viewCopy.filters ?? {};
           delete viewCopy.filters[id];
 
           mutate({
@@ -377,7 +382,7 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const existingSort = view.sorts[fieldId];
+          const existingSort = view.sorts?.[fieldId];
           if (existingSort && existingSort.direction === direction) {
             return;
           }
@@ -394,6 +399,7 @@ export const View = ({ view }: ViewProps) => {
           };
 
           const viewCopy = { ...view };
+          viewCopy.sorts = viewCopy.sorts ?? {};
           viewCopy.sorts[fieldId] = sort;
 
           mutate({
@@ -421,11 +427,12 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.sorts[id]) {
+          if (!view.sorts?.[id]) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.sorts = viewCopy.sorts ?? {};
           viewCopy.sorts[id] = sort;
 
           mutate({
@@ -453,11 +460,12 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.sorts[id]) {
+          if (!view.sorts?.[id]) {
             return;
           }
 
           const viewCopy = { ...view };
+          viewCopy.sorts = viewCopy.sorts ?? {};
           delete viewCopy.sorts[id];
 
           mutate({
@@ -498,7 +506,7 @@ export const View = ({ view }: ViewProps) => {
           setOpenedFieldFilters((prev) => prev.filter((id) => id !== fieldId));
         },
         createRecord: (filters?: ViewFilterAttributes[]) => {
-          const viewFilters = Object.values(view.filters) ?? [];
+          const viewFilters = Object.values(view.filters ?? {}) ?? [];
           const extraFilters = filters ?? [];
 
           const allFilters = [...viewFilters, ...extraFilters];

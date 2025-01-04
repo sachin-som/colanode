@@ -33,10 +33,6 @@ export class ViewCreateMutationHandler
           id: id,
           type: input.viewType,
           name: input.name,
-          avatar: null,
-          fields: {},
-          filters: {},
-          sorts: {},
           groupBy: input.groupBy,
           index: generateNodeIndex(maxIndex, null),
         };

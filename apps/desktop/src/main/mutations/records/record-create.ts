@@ -20,7 +20,6 @@ export class RecordCreateMutationHandler
       databaseId: input.databaseId,
       name: input.name ?? '',
       fields: input.fields ?? {},
-      content: {},
     };
 
     await entryService.createEntry(input.userId, {

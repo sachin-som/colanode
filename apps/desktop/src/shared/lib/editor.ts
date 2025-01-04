@@ -68,10 +68,10 @@ const mapAndPushContentToBlock = (
   blocks.push({
     id: id,
     index: index ?? generateNodeIndex(null, null),
-    attrs: attrs.length > 0 ? Object.fromEntries(attrs) : null,
+    attrs: attrs.length > 0 ? Object.fromEntries(attrs) : undefined,
     parentId: parentId,
     type: content.type,
-    content: blockContent?.filter((leaf) => leaf !== null) ?? null,
+    content: blockContent?.filter((leaf) => leaf !== null),
   });
 
   if (!isLeafBlock && content.content) {
@@ -95,14 +95,13 @@ const mapContentsToBlockLeafs = (
 
     nodeBlocks.push({
       type: content.type,
-      text: content.text ?? '',
-      marks:
-        content.marks?.map((mark) => {
-          return {
-            type: mark.type,
-            attrs: mark.attrs ?? null,
-          };
-        }) ?? null,
+      text: content.text,
+      marks: content.marks?.map((mark) => {
+        return {
+          type: mark.type,
+          attrs: mark.attrs,
+        };
+      }),
     });
   }
   return nodeBlocks;
@@ -138,16 +137,16 @@ const mapBlockToContent = (block: Block, blocks: Block[]): JSONContent => {
 };
 
 const mapBlockLeafsToContents = (
-  leafs: BlockLeaf[] | null
+  leafs: BlockLeaf[] | null | undefined
 ): JSONContent[] | undefined => {
-  if (leafs == null) {
+  if (leafs == null || leafs === undefined || leafs.length === 0) {
     return undefined;
   }
   const contents: JSONContent[] = [];
   for (const leaf of leafs) {
     contents.push({
       type: leaf.type,
-      text: leaf.text,
+      text: leaf.text ?? undefined,
       marks:
         leaf.marks?.map((mark) => {
           return {

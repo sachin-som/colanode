@@ -11,12 +11,12 @@ import { ViewField } from '@/shared/types/databases';
 interface ViewContext {
   id: string;
   name: string;
-  avatar: string | null;
+  avatar: string | null | undefined;
   type: ViewType;
   fields: ViewField[];
   filters: ViewFilterAttributes[];
   sorts: ViewSortAttributes[];
-  groupBy: string | null;
+  groupBy: string | null | undefined;
   nameWidth: number;
   isSearchBarOpened: boolean;
   isSortsOpened: boolean;

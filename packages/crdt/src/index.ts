@@ -107,10 +107,9 @@ export class YDoc {
     yMap: Y.Map<any>
   ) {
     for (const [key, value] of Object.entries(attributes)) {
-      if (value === null) {
-        const currentValue = yMap.get(key);
-        if (currentValue !== null) {
-          yMap.set(key, null);
+      if (value === null || value === undefined) {
+        if (yMap.has(key)) {
+          yMap.delete(key);
         }
 
         continue;
@@ -194,11 +193,14 @@ export class YDoc {
     for (let i = 0; i < length; i++) {
       const item = value[i];
 
-      if (item === null) {
+      if (item === null || item === undefined) {
         const currentItem = yArray.get(i);
-        if (currentItem !== null) {
+        if (currentItem !== null && currentItem !== undefined) {
           yArray.delete(i, 1);
-          yArray.insert(i, [null]);
+
+          if (yArray.length > i) {
+            yArray.insert(i, [null]);
+          }
         }
 
         continue;
@@ -271,10 +273,9 @@ export class YDoc {
   ) {
     const valueSchema = this.extractType(schemaField.valueSchema, record);
     for (const [key, value] of Object.entries(record)) {
-      if (value === null) {
-        const currentValue = yMap.get(key);
-        if (currentValue !== null) {
-          yMap.set(key, null);
+      if (value === null || value === undefined) {
+        if (yMap.has(key)) {
+          yMap.delete(key);
         }
 
         continue;

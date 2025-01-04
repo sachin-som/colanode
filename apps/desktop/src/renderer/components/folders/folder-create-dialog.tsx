@@ -39,7 +39,6 @@ export const FolderCreateDialog = ({
           id={generateId(IdType.Folder)}
           values={{
             name: '',
-            avatar: null,
           }}
           isPending={isPending}
           submitText="Create"

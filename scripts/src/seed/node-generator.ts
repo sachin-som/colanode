@@ -400,13 +400,7 @@ export class NodeGenerator {
       id: generateId(IdType.View),
       type: 'table',
       name: 'All Tasks',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(),
-      nameWidth: null,
-      groupBy: null,
-      sorts: {},
     };
 
     const activeTasksFilter: ViewFilterAttributes = {
@@ -421,28 +415,18 @@ export class NodeGenerator {
       id: generateId(IdType.View),
       type: 'table',
       name: 'Active Tasks',
-      avatar: null,
-      fields: {},
       filters: {
         [activeTasksFilter.id]: activeTasksFilter,
       },
       index: generateNodeIndex(),
-      nameWidth: null,
-      groupBy: null,
-      sorts: {},
     };
 
     const kanbanView: ViewAttributes = {
       id: generateId(IdType.View),
       type: 'board',
       name: 'Kanban',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(),
-      nameWidth: null,
       groupBy: statusField.id,
-      sorts: {},
     };
 
     const databaseAttributes: EntryAttributes = {
@@ -655,13 +639,7 @@ export class NodeGenerator {
       id: generateId(IdType.View),
       type: 'table',
       name: 'All Clients',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(),
-      nameWidth: null,
-      groupBy: null,
-      sorts: {},
     };
 
     const activeTasksFilter: ViewFilterAttributes = {
@@ -676,28 +654,18 @@ export class NodeGenerator {
       id: generateId(IdType.View),
       type: 'table',
       name: 'Active Clients',
-      avatar: null,
-      fields: {},
       filters: {
         [activeTasksFilter.id]: activeTasksFilter,
       },
       index: generateNodeIndex(),
-      nameWidth: null,
-      groupBy: null,
-      sorts: {},
     };
 
     const kanbanView: ViewAttributes = {
       id: generateId(IdType.View),
       type: 'board',
       name: 'Board',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(),
-      nameWidth: null,
       groupBy: statusField.id,
-      sorts: {},
     };
 
     const databaseAttributes: EntryAttributes = {
@@ -824,26 +792,15 @@ export class NodeGenerator {
       id: generateId(IdType.View),
       type: 'calendar',
       name: 'Calendar',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(),
-      nameWidth: null,
       groupBy: dateField.id,
-      sorts: {},
     };
 
     const tableView: ViewAttributes = {
       id: generateId(IdType.View),
       type: 'table',
       name: 'Table',
-      avatar: null,
-      fields: {},
-      filters: {},
       index: generateNodeIndex(calendarView.index),
-      nameWidth: null,
-      groupBy: null,
-      sorts: {},
     };
 
     const databaseAttributes: EntryAttributes = {
@@ -910,7 +867,6 @@ export class NodeGenerator {
       databaseId,
       content: this.buildDocumentContent(recordId),
       name: faker.lorem.sentence(),
-      avatar: null,
       fields: {},
     };
 
@@ -998,10 +954,9 @@ export class NodeGenerator {
     return {
       type: 'paragraph',
       parentId,
-      content: [{ type: 'text', text: faker.lorem.sentence(), marks: null }],
+      content: [{ type: 'text', text: faker.lorem.sentence() }],
       id: blockId,
       index,
-      attrs: null,
     };
   }
 

@@ -87,7 +87,6 @@ class WorkspaceService {
           type: 'page',
           name: 'Notes',
           parentId: spaceId,
-          content: {},
         },
         userId: userId,
         workspaceId: workspaceId,

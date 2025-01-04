@@ -18,7 +18,8 @@ export const viewFieldFilterAttributesSchema = z.object({
   operator: z.string(),
   value: z
     .union([z.string(), z.number(), z.boolean(), z.array(z.string())])
-    .nullable(),
+    .nullable()
+    .optional(),
 });
 
 export type ViewFieldFilterAttributes = z.infer<
@@ -55,12 +56,15 @@ export const viewAttributesSchema = z.object({
   id: z.string(),
   type: z.enum(['table', 'board', 'calendar']),
   name: z.string(),
-  avatar: z.string().nullable(),
+  avatar: z.string().nullable().optional(),
   index: z.string(),
-  fields: z.record(z.string(), viewFieldAttributesSchema),
-  filters: z.record(z.string(), viewFilterAttributesSchema),
-  sorts: z.record(z.string(), viewSortAttributesSchema),
-  groupBy: z.string().nullable(),
+  fields: z.record(z.string(), viewFieldAttributesSchema).optional().nullable(),
+  filters: z
+    .record(z.string(), viewFilterAttributesSchema)
+    .optional()
+    .nullable(),
+  sorts: z.record(z.string(), viewSortAttributesSchema).optional().nullable(),
+  groupBy: z.string().nullable().optional(),
   nameWidth: z.number().nullable().optional(),
 });
 

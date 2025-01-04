@@ -49,7 +49,6 @@ export class SpaceCreateMutationHandler
         [input.userId]: 'admin',
       },
       description: input.description,
-      avatar: null,
     };
 
     await entryService.createEntry(input.userId, {
@@ -63,8 +62,6 @@ export class SpaceCreateMutationHandler
       type: 'page',
       name: 'Home',
       parentId: spaceId,
-      content: {},
-      collaborators: {},
     };
 
     await entryService.createEntry(input.userId, {

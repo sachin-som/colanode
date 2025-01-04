@@ -7,7 +7,7 @@ export const pageAttributesSchema = z.object({
   name: z.string(),
   avatar: z.string().nullable().optional(),
   parentId: z.string(),
-  content: z.record(blockSchema),
+  content: z.record(blockSchema).optional().nullable(),
 });
 
 export type PageAttributes = z.infer<typeof pageAttributesSchema>;

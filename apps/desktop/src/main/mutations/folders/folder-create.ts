@@ -19,7 +19,6 @@ export class FolderCreateMutationHandler
       parentId: input.parentId,
       name: input.name,
       avatar: input.avatar,
-      collaborators: {},
     };
 
     await entryService.createEntry(input.userId, {

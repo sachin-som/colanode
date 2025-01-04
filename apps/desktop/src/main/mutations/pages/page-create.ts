@@ -19,7 +19,6 @@ export class PageCreateMutationHandler
       parentId: input.parentId,
       avatar: input.avatar,
       name: input.name,
-      content: {},
     };
 
     await entryService.createEntry(input.userId, {

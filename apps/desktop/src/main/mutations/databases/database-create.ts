@@ -40,12 +40,7 @@ export class DatabaseCreateMutationHandler
           id: viewId,
           type: 'table',
           name: 'Default',
-          fields: {},
-          filters: {},
-          sorts: {},
-          avatar: null,
           index: generateNodeIndex(null, null),
-          groupBy: null,
         },
       },
     };

@@ -5,7 +5,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 interface ViewIconProps {
   id: string;
   name: string;
-  avatar: string | null;
+  avatar: string | null | undefined;
   type: 'table' | 'board' | 'calendar';
   className?: string;
 }

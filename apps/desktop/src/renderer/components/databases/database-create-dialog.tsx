@@ -39,7 +39,6 @@ export const DatabaseCreateDialog = ({
           id={generateId(IdType.Database)}
           values={{
             name: '',
-            avatar: null,
           }}
           isPending={isPending}
           submitText="Create"

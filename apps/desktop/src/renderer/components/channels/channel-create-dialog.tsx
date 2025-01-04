@@ -39,7 +39,6 @@ export const ChannelCreateDialog = ({
           id={generateId(IdType.Channel)}
           values={{
             name: '',
-            avatar: null,
           }}
           isPending={isPending}
           submitText="Create"

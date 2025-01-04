@@ -39,7 +39,6 @@ export const PageCreateDialog = ({
           id={generateId(IdType.Page)}
           values={{
             name: '',
-            avatar: null,
           }}
           isPending={isPending}
           submitText="Create"

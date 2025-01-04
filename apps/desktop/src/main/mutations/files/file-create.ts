@@ -169,6 +169,11 @@ export class FileCreateMutationHandler
     });
 
     eventBus.publish({
+      type: 'mutation_created',
+      userId: input.userId,
+    });
+
+    eventBus.publish({
       type: 'file_state_created',
       userId: input.userId,
       fileState: {

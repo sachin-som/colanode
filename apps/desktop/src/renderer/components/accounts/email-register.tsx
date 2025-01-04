@@ -18,11 +18,25 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { Server } from '@/shared/types/servers';
 
-const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().min(2).email(),
-  password: z.string().min(8),
-});
+const formSchema = z
+  .object({
+    name: z.string().min(2),
+    email: z.string().min(2).email(),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters long')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must contain at least one special character'
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'], // path of error
+  });
 
 interface EmailRegisterProps {
   server: Server;
@@ -37,6 +51,7 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
       name: '',
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
@@ -97,6 +112,22 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
             <FormItem>
               <FormControl>
                 <Input type="password" placeholder="Password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

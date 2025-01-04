@@ -1,6 +1,6 @@
 import started from 'electron-squirrel-startup';
 
-import { app, BrowserWindow, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
 import path from 'path';
 
 import { metadataService } from '@/main/services/metadata-service';
@@ -123,6 +123,11 @@ const createWindow = async () => {
       return assetService.handleAssetRequest(request);
     });
   }
+
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: 'deny' }; // Prevent default new-window behavior
+  });
 
   debug('Window created');
 };

@@ -34,11 +34,9 @@ const createDevicesTable: Migration = {
       .addColumn('type', 'integer', (col) => col.notNull())
       .addColumn('version', 'varchar(30)', (col) => col.notNull())
       .addColumn('platform', 'varchar(30)')
-      .addColumn('cpu', 'varchar(30)')
-      .addColumn('hostname', 'varchar(30)')
+      .addColumn('ip', 'varchar(45)')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
-      .addColumn('last_online_at', 'timestamptz')
-      .addColumn('last_active_at', 'timestamptz')
+      .addColumn('synced_at', 'timestamptz')
       .execute();
 
     await db.schema

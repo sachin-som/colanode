@@ -42,11 +42,9 @@ interface DeviceTable {
   type: ColumnType<number, number, number>;
   version: ColumnType<string, string, string>;
   platform: ColumnType<string | null, string | null, string | null>;
-  cpu: ColumnType<string | null, string | null, string | null>;
-  hostname: ColumnType<string | null, string | null, string | null>;
+  ip: ColumnType<string | null, string | null, string | null>;
   created_at: ColumnType<Date, Date, never>;
-  last_online_at: ColumnType<Date | null, Date | null, Date>;
-  last_active_at: ColumnType<Date | null, Date | null, Date>;
+  synced_at: ColumnType<Date | null, Date | null, Date>;
 }
 
 export type SelectDevice = Selectable<DeviceTable>;

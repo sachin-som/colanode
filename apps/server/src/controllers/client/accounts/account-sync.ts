@@ -26,6 +26,28 @@ export const accountSyncHandler = async (
     });
   }
 
+  const device = await database
+    .selectFrom('devices')
+    .selectAll()
+    .where('id', '=', res.locals.account.deviceId)
+    .executeTakeFirst();
+
+  if (!device) {
+    return ResponseBuilder.notFound(res, {
+      code: ApiErrorCode.DeviceNotFound,
+      message: 'Device not found. Check your token.',
+    });
+  }
+
+  await database
+    .updateTable('devices')
+    .set({
+      synced_at: new Date(),
+      ip: res.locals.ip,
+    })
+    .where('id', '=', device.id)
+    .execute();
+
   const workspaceOutputs: WorkspaceOutput[] = [];
   const users = await database
     .selectFrom('users')

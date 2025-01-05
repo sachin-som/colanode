@@ -12,12 +12,23 @@ import axios from 'axios';
 import { database } from '@/data/database';
 import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { rateLimitService } from '@/services/rate-limit-service';
+
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 
 export const loginWithGoogleHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const ip = res.locals.ip;
+  const isIpRateLimited = await checkIpRateLimit(ip);
+  if (isIpRateLimited) {
+    return ResponseBuilder.tooManyRequests(res, {
+      code: ApiErrorCode.TooManyRequests,
+      message: 'Too many authentication attempts. Please try again later.',
+    });
+  }
+
   const input: GoogleLoginInput = req.body;
   const url = `${GoogleUserInfoUrl}?access_token=${input.access_token}`;
   const userInfoResponse = await axios.get(url);
@@ -61,7 +72,10 @@ export const loginWithGoogleHandler = async (
         .execute();
     }
 
-    const output = await accountService.buildLoginOutput(existingAccount);
+    const output = await accountService.buildLoginOutput(
+      existingAccount,
+      res.locals.ip
+    );
     return ResponseBuilder.success(res, output);
   }
 
@@ -85,6 +99,17 @@ export const loginWithGoogleHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginOutput(newAccount);
+  const output = await accountService.buildLoginOutput(
+    newAccount,
+    res.locals.ip
+  );
   return ResponseBuilder.success(res, output);
+};
+
+const checkIpRateLimit = async (ip: string): Promise<boolean> => {
+  const rateLimitKey = `auth_ip_${ip}`;
+  return await rateLimitService.isRateLimited(rateLimitKey, {
+    limit: 50,
+    window: 600, // 10 minutes
+  });
 };

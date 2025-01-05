@@ -19,7 +19,8 @@ export const redisConfig = {
 };
 
 export const redis = createClient({
-  url: REDIS_URL,
+  url: redisConfig.url,
+  database: redisConfig.db,
 });
 
 export const initRedis = async () => {

@@ -65,7 +65,7 @@ class HttpClient {
       return true;
     }
     const status = error.response?.status ?? 0;
-    return (status >= 500 && status < 600) || status === 429;
+    return status >= 500 && status < 600;
   }
 
   private buildAxiosInstance(config: HttpClientRequestConfig): AxiosInstance {

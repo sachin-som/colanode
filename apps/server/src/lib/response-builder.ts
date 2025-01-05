@@ -26,6 +26,10 @@ export class ResponseBuilder {
     ResponseBuilder.error(res, 500, error);
   }
 
+  static tooManyRequests(res: Response, error: ApiErrorOutput): void {
+    ResponseBuilder.error(res, 429, error);
+  }
+
   static success<T>(res: Response, data: T): void {
     res.status(200).json(data);
   }

@@ -130,6 +130,11 @@ class Scheduler {
   }
 
   private async executeJob(state: JobState) {
+    if (!this.states.has(state.id)) {
+      this.deleteJob(state);
+      return;
+    }
+
     if (state.running) {
       return;
     }
@@ -162,6 +167,14 @@ class Scheduler {
         }, state.handler.interval);
       }
     }
+  }
+
+  private async deleteJob(state: JobState) {
+    if (state.timeout) {
+      clearTimeout(state.timeout);
+    }
+
+    this.states.delete(state.id);
   }
 
   private async scheduleJobs() {
@@ -199,12 +212,12 @@ class Scheduler {
         state.input.type === 'sync_account' &&
         state.input.accountId === accountId
       ) {
-        this.states.delete(jobId);
+        this.deleteJob(state);
       } else if (
         state.input.type === 'connect_socket' &&
         state.input.accountId === accountId
       ) {
-        this.states.delete(jobId);
+        this.deleteJob(state);
       }
     }
   }
@@ -274,7 +287,7 @@ class Scheduler {
           clearTimeout(state.timeout);
         }
 
-        this.states.delete(jobId);
+        this.deleteJob(state);
       }
     }
   }

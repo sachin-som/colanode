@@ -4,6 +4,7 @@ import express, { Request, Response } from 'express';
 import http from 'http';
 
 import { clientRouter } from '@/routes/client';
+import { ipMiddleware } from '@/middlewares/ip';
 import { socketService } from '@/services/socket-service';
 import { createLogger } from '@/lib/logger';
 
@@ -19,6 +20,7 @@ export const initApi = async () => {
     })
   );
   app.use(cors());
+  app.use(ipMiddleware);
 
   app.get('/', (_: Request, res: Response) => {
     res.send(

@@ -5,6 +5,7 @@ export type ApiErrorOutput = {
 
 export enum ApiErrorCode {
   AccountNotFound = 'account_not_found',
+  DeviceNotFound = 'device_not_found',
   AccountMismatch = 'account_mismatch',
   AccountPendingActivation = 'account_pending_activation',
   EmailOrPasswordIncorrect = 'email_or_password_incorrect',
@@ -37,6 +38,7 @@ export enum ApiErrorCode {
   TokenInvalid = 'token_invalid',
   RootNotFound = 'root_not_found',
 
+  TooManyRequests = 'too_many_requests',
   Unauthorized = 'unauthorized',
   Forbidden = 'forbidden',
   NotFound = 'not_found',

@@ -12,7 +12,10 @@ import { workspaceService } from '@/services/workspace-service';
 import { generateToken } from '@/lib/tokens';
 
 class AccountService {
-  public async buildLoginOutput(account: SelectAccount): Promise<LoginOutput> {
+  public async buildLoginOutput(
+    account: SelectAccount,
+    ip: string | undefined
+  ): Promise<LoginOutput> {
     const users = await database
       .selectFrom('users')
       .where('account_id', '=', account.id)
@@ -66,6 +69,7 @@ class AccountService {
         token_salt: salt,
         token_generated_at: new Date(),
         type: 1,
+        ip,
         created_at: new Date(),
         version: '0.1.0',
       })

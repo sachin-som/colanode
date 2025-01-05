@@ -2,22 +2,16 @@ import { LoginOutput } from '@colanode/core';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
-import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
-import {
-  EmailLoginMutationInput,
-  EmailLoginMutationOutput,
-} from '@/shared/mutations/accounts/email-login';
+import { EmailLoginMutationInput } from '@/shared/mutations/accounts/email-login';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
-import { mapAccount, mapWorkspace } from '@/main/utils';
+import { accountService } from '@/main/services/account-service';
 
 export class EmailLoginMutationHandler
   implements MutationHandler<EmailLoginMutationInput>
 {
-  async handleMutation(
-    input: EmailLoginMutationInput
-  ): Promise<EmailLoginMutationOutput> {
+  async handleMutation(input: EmailLoginMutationInput): Promise<LoginOutput> {
     const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
@@ -33,7 +27,7 @@ export class EmailLoginMutationHandler
 
     try {
       const { data } = await httpClient.post<LoginOutput>(
-        '/v1/accounts/login/email',
+        '/v1/accounts/emails/login',
         {
           email: input.email,
           password: input.password,
@@ -43,79 +37,12 @@ export class EmailLoginMutationHandler
         }
       );
 
-      const { createdAccount, createdWorkspaces } =
-        await databaseService.appDatabase.transaction().execute(async (trx) => {
-          const createdAccount = await trx
-            .insertInto('accounts')
-            .returningAll()
-            .values({
-              id: data.account.id,
-              name: data.account.name,
-              avatar: data.account.avatar,
-              device_id: data.deviceId,
-              email: data.account.email,
-              token: data.token,
-              server: server.domain,
-              status: 'active',
-            })
-            .executeTakeFirst();
-
-          if (!createdAccount) {
-            throw new MutationError(
-              MutationErrorCode.AccountLoginFailed,
-              'Failed to login with email and password! Please try again.'
-            );
-          }
-
-          if (data.workspaces.length === 0) {
-            return { createdAccount, createdWorkspaces: [] };
-          }
-
-          const createdWorkspaces = await trx
-            .insertInto('workspaces')
-            .returningAll()
-            .values(
-              data.workspaces.map((workspace) => ({
-                workspace_id: workspace.id,
-                name: workspace.name,
-                account_id: data.account.id,
-                avatar: workspace.avatar,
-                role: workspace.user.role,
-                description: workspace.description,
-                user_id: workspace.user.id,
-              }))
-            )
-            .execute();
-
-          return { createdAccount, createdWorkspaces };
-        });
-
-      if (!createdAccount) {
-        throw new MutationError(
-          MutationErrorCode.AccountLoginFailed,
-          'Failed to login with email and password! Please try again.'
-        );
+      if (data.type === 'verify') {
+        return data;
       }
 
-      const account = mapAccount(createdAccount);
-      eventBus.publish({
-        type: 'account_created',
-        account,
-      });
-
-      if (createdWorkspaces.length > 0) {
-        for (const workspace of createdWorkspaces) {
-          eventBus.publish({
-            type: 'workspace_created',
-            workspace: mapWorkspace(workspace),
-          });
-        }
-      }
-
-      return {
-        account,
-        workspaces: data.workspaces,
-      };
+      await accountService.initAccount(data, server.domain);
+      return data;
     } catch (error) {
       const apiError = parseApiError(error);
       throw new MutationError(MutationErrorCode.ApiError, apiError.message);

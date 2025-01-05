@@ -37,6 +37,7 @@ export enum MutationErrorCode {
   AccountNotFound = 'account_not_found',
   AccountLoginFailed = 'account_login_failed',
   AccountRegisterFailed = 'account_register_failed',
+  EmailVerificationFailed = 'email_verification_failed',
   ServerNotFound = 'server_not_found',
   WorkspaceNotFound = 'workspace_not_found',
   WorkspaceNotCreated = 'workspace_not_created',

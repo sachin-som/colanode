@@ -13,6 +13,7 @@ import { database } from '@/data/database';
 import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
+import { configuration } from '@/lib/configuration';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 
@@ -20,6 +21,13 @@ export const loginWithGoogleHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  if (!configuration.account.allowGoogleLogin) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.GoogleAuthFailed,
+      message: 'Google login is not allowed.',
+    });
+  }
+
   const ip = res.locals.ip;
   const isIpRateLimited = await rateLimitService.isAuthIpRateLimitted(ip);
   if (isIpRateLimited) {
@@ -56,11 +64,7 @@ export const loginWithGoogleHandler = async (
     .executeTakeFirst();
 
   if (existingAccount) {
-    const attrs = existingAccount.attrs
-      ? JSON.parse(existingAccount.attrs)
-      : {};
-
-    if (attrs?.googleId || existingAccount.status === AccountStatus.Pending) {
+    if (existingAccount.status !== AccountStatus.Active) {
       await database
         .updateTable('accounts')
         .set({
@@ -72,7 +76,7 @@ export const loginWithGoogleHandler = async (
         .execute();
     }
 
-    const output = await accountService.buildLoginOutput(
+    const output = await accountService.buildLoginSuccessOutput(
       existingAccount,
       res.locals.ip
     );
@@ -88,6 +92,7 @@ export const loginWithGoogleHandler = async (
       status: AccountStatus.Active,
       created_at: new Date(),
       password: null,
+      attrs: JSON.stringify({ googleId: googleUser.id }),
     })
     .returningAll()
     .executeTakeFirst();
@@ -99,7 +104,7 @@ export const loginWithGoogleHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginOutput(
+  const output = await accountService.buildLoginSuccessOutput(
     newAccount,
     res.locals.ip
   );

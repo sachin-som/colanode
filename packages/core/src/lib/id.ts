@@ -14,7 +14,6 @@ export enum IdType {
   Chat = 'ct',
   Node = 'nd',
   Message = 'ms',
-  Subscriber = 'sb',
   Database = 'db',
   DatabaseReplica = 'dr',
   Record = 'rc',
@@ -36,6 +35,7 @@ export enum IdType {
   Event = 'ev',
   Host = 'ht',
   Block = 'bl',
+  OtpCode = 'ot',
 }
 
 export const generateId = (type: IdType): string => {

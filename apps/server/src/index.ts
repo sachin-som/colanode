@@ -5,6 +5,7 @@ import { initApi } from '@/api';
 import { migrate } from '@/data/database';
 import { initRedis } from '@/data/redis';
 import { jobService } from '@/services/job-service';
+import { emailService } from '@/services/email-service';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ const init = async () => {
   await jobService.initWorker();
 
   await eventBus.init();
+  await emailService.init();
 };
 
 init();

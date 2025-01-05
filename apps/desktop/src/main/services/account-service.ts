@@ -1,4 +1,4 @@
-import { AccountSyncOutput } from '@colanode/core';
+import { AccountSyncOutput, LoginSuccessOutput } from '@colanode/core';
 
 import fs from 'fs';
 
@@ -15,9 +15,81 @@ import {
 import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
 import { socketService } from '@/main/services/socket-service';
+import { MutationError, MutationErrorCode } from '@/shared/mutations';
 
 class AccountService {
   private readonly debug = createDebugger('service:account');
+
+  public async initAccount(output: LoginSuccessOutput, server: string) {
+    const { createdAccount, createdWorkspaces } =
+      await databaseService.appDatabase.transaction().execute(async (trx) => {
+        const createdAccount = await trx
+          .insertInto('accounts')
+          .returningAll()
+          .values({
+            id: output.account.id,
+            name: output.account.name,
+            avatar: output.account.avatar,
+            device_id: output.deviceId,
+            email: output.account.email,
+            token: output.token,
+            server,
+            status: 'active',
+          })
+          .executeTakeFirst();
+
+        if (!createdAccount) {
+          throw new MutationError(
+            MutationErrorCode.AccountLoginFailed,
+            'Failed to login with email and password! Please try again.'
+          );
+        }
+
+        if (output.workspaces.length === 0) {
+          return { createdAccount, createdWorkspaces: [] };
+        }
+
+        const createdWorkspaces = await trx
+          .insertInto('workspaces')
+          .returningAll()
+          .values(
+            output.workspaces.map((workspace) => ({
+              workspace_id: workspace.id,
+              name: workspace.name,
+              account_id: output.account.id,
+              avatar: workspace.avatar,
+              role: workspace.user.role,
+              description: workspace.description,
+              user_id: workspace.user.id,
+            }))
+          )
+          .execute();
+
+        return { createdAccount, createdWorkspaces };
+      });
+
+    if (!createdAccount) {
+      throw new MutationError(
+        MutationErrorCode.AccountLoginFailed,
+        'Failed to login with email and password! Please try again.'
+      );
+    }
+
+    const account = mapAccount(createdAccount);
+    eventBus.publish({
+      type: 'account_created',
+      account,
+    });
+
+    if (createdWorkspaces.length > 0) {
+      for (const workspace of createdWorkspaces) {
+        eventBus.publish({
+          type: 'workspace_created',
+          workspace: mapWorkspace(workspace),
+        });
+      }
+    }
+  }
 
   public async syncAccount(accountId: string) {
     this.debug(`Syncing account ${accountId}`);

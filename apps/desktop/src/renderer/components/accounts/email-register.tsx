@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { LoginOutput } from '@colanode/core';
 
 import { Button } from '@/renderer/components/ui/button';
 import {
@@ -40,10 +40,10 @@ const formSchema = z
 
 interface EmailRegisterProps {
   server: Server;
+  onSuccess: (output: LoginOutput) => void;
 }
 
-export const EmailRegister = ({ server }: EmailRegisterProps) => {
-  const navigate = useNavigate();
+export const EmailRegister = ({ server, onSuccess }: EmailRegisterProps) => {
   const { mutate, isPending } = useMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,8 +65,7 @@ export const EmailRegister = ({ server }: EmailRegisterProps) => {
         server: server.domain,
       },
       onSuccess(output) {
-        const userId = output.workspaces[0]?.id ?? '';
-        navigate(`/${output.account.id}/${userId}`);
+        onSuccess(output);
       },
       onError(error) {
         toast({

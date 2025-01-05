@@ -7,8 +7,9 @@ import { database } from '@/data/database';
 import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
+import { configuration } from '@/lib/configuration';
 
-export const loginWithEmailHandler = async (
+export const emailLoginHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -46,10 +47,16 @@ export const loginWithEmailHandler = async (
     });
   }
 
-  if (account.status === AccountStatus.Pending) {
+  if (account.status === AccountStatus.Unverified) {
+    if (configuration.account.verificationType === 'email') {
+      const output = await accountService.buildLoginVerifyOutput(account);
+      return ResponseBuilder.success(res, output);
+    }
+
     return ResponseBuilder.badRequest(res, {
-      code: ApiErrorCode.AccountPendingActivation,
-      message: 'Account is not activated yet. Register or use another email.',
+      code: ApiErrorCode.AccountPendingVerification,
+      message:
+        'Account is not verified yet. Contact your administrator to verify your account.',
     });
   }
 
@@ -66,6 +73,9 @@ export const loginWithEmailHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginOutput(account, res.locals.ip);
+  const output = await accountService.buildLoginSuccessOutput(
+    account,
+    res.locals.ip
+  );
   return ResponseBuilder.success(res, output);
 };

@@ -1,6 +1,4 @@
-import { WorkspaceOutput } from '@colanode/core';
-
-import { Account } from '@/shared/types/accounts';
+import { LoginOutput } from '@colanode/core';
 
 export type EmailRegisterMutationInput = {
   type: 'email_register';
@@ -10,16 +8,11 @@ export type EmailRegisterMutationInput = {
   password: string;
 };
 
-export type EmailRegisterMutationOutput = {
-  account: Account;
-  workspaces: WorkspaceOutput[];
-};
-
 declare module '@/shared/mutations' {
   interface MutationMap {
     email_register: {
       input: EmailRegisterMutationInput;
-      output: EmailRegisterMutationOutput;
+      output: LoginOutput;
     };
   }
 }

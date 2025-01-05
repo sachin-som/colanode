@@ -14,10 +14,11 @@ import { SelectAccount } from '@/data/schema';
 import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
+import { configuration } from '@/lib/configuration';
 
 const SaltRounds = 15;
 
-export const registerWithEmailHandler = async (
+export const emailRegisterHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -53,6 +54,12 @@ export const registerWithEmailHandler = async (
   const password = await bcrypt.hash(preHashedPassword, salt);
 
   let account: SelectAccount | null | undefined = null;
+
+  const status =
+    configuration.account.verificationType === 'automatic'
+      ? AccountStatus.Active
+      : AccountStatus.Unverified;
+
   if (existingAccount) {
     if (existingAccount.status !== AccountStatus.Pending) {
       return ResponseBuilder.badRequest(res, {
@@ -67,7 +74,7 @@ export const registerWithEmailHandler = async (
         password: password,
         name: input.name,
         updated_at: new Date(),
-        status: AccountStatus.Active,
+        status: status,
       })
       .where('id', '=', existingAccount.id)
       .returningAll()
@@ -80,7 +87,7 @@ export const registerWithEmailHandler = async (
         name: input.name,
         email: email,
         password: password,
-        status: AccountStatus.Active,
+        status: status,
         created_at: new Date(),
       })
       .returningAll()
@@ -94,6 +101,22 @@ export const registerWithEmailHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginOutput(account, res.locals.ip);
+  if (account.status === AccountStatus.Unverified) {
+    if (configuration.account.verificationType === 'email') {
+      const output = await accountService.buildLoginVerifyOutput(account);
+      return ResponseBuilder.success(res, output);
+    }
+
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.AccountPendingVerification,
+      message:
+        'Account is not verified yet. Contact your administrator to verify your account.',
+    });
+  }
+
+  const output = await accountService.buildLoginSuccessOutput(
+    account,
+    res.locals.ip
+  );
   return ResponseBuilder.success(res, output);
 };

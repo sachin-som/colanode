@@ -1,5 +1,6 @@
 export interface Configuration {
   server: ServerConfiguration;
+  account: AccountConfiguration;
   postgres: PostgresConfiguration;
   redis: RedisConfiguration;
   avatarS3: S3Configuration;
@@ -11,6 +12,13 @@ export interface Configuration {
 export interface ServerConfiguration {
   name: string;
   avatar: string;
+}
+
+export type AccountVerificationType = 'automatic' | 'manual' | 'email';
+export interface AccountConfiguration {
+  verificationType: AccountVerificationType;
+  otpTimeout: number;
+  allowGoogleLogin: boolean;
 }
 
 export interface PostgresConfiguration {
@@ -40,7 +48,10 @@ export interface SmtpConfiguration {
   port: number;
   user: string;
   password: string;
-  emailFrom: string;
+  from: {
+    email: string;
+    name: string;
+  };
 }
 
 export interface AiConfiguration {
@@ -83,6 +94,14 @@ export const configuration: Configuration = {
     name: getRequiredEnv('SERVER_NAME'),
     avatar: getOptionalEnv('SERVER_AVATAR') || '',
   },
+  account: {
+    verificationType:
+      (getOptionalEnv(
+        'ACCOUNT_VERIFICATION_TYPE'
+      ) as AccountVerificationType) || 'manual',
+    otpTimeout: parseInt(getOptionalEnv('ACCOUNT_OTP_TIMEOUT') || '600'),
+    allowGoogleLogin: getOptionalEnv('ACCOUNT_ALLOW_GOOGLE_LOGIN') === 'true',
+  },
   postgres: {
     url: getRequiredEnv('POSTGRES_URL'),
   },
@@ -114,7 +133,10 @@ export const configuration: Configuration = {
     port: parseInt(getOptionalEnv('SMTP_PORT') || '587'),
     user: getOptionalEnv('SMTP_USER') || '',
     password: getOptionalEnv('SMTP_PASSWORD') || '',
-    emailFrom: getOptionalEnv('SMTP_EMAIL_FROM') || '',
+    from: {
+      email: getRequiredEnv('SMTP_EMAIL_FROM'),
+      name: getRequiredEnv('SMTP_EMAIL_FROM_NAME'),
+    },
   },
   ai: {
     enabled: getOptionalEnv('AI_ENABLED') === 'true',

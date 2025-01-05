@@ -3,17 +3,15 @@ import { LoginOutput } from '@colanode/core';
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { httpClient } from '@/shared/lib/http-client';
-import { EmailRegisterMutationInput } from '@/shared/mutations/accounts/email-register';
+import { EmailVerifyMutationInput } from '@/shared/mutations/accounts/email-verify';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 import { accountService } from '@/main/services/account-service';
 
-export class EmailRegisterMutationHandler
-  implements MutationHandler<EmailRegisterMutationInput>
+export class EmailVerifyMutationHandler
+  implements MutationHandler<EmailVerifyMutationInput>
 {
-  async handleMutation(
-    input: EmailRegisterMutationInput
-  ): Promise<LoginOutput> {
+  async handleMutation(input: EmailVerifyMutationInput): Promise<LoginOutput> {
     const server = await databaseService.appDatabase
       .selectFrom('servers')
       .selectAll()
@@ -29,11 +27,10 @@ export class EmailRegisterMutationHandler
 
     try {
       const { data } = await httpClient.post<LoginOutput>(
-        '/v1/accounts/emails/register',
+        '/v1/accounts/emails/verify',
         {
-          name: input.name,
-          email: input.email,
-          password: input.password,
+          id: input.id,
+          otp: input.otp,
         },
         {
           domain: server.domain,
@@ -41,10 +38,14 @@ export class EmailRegisterMutationHandler
       );
 
       if (data.type === 'verify') {
-        return data;
+        throw new MutationError(
+          MutationErrorCode.EmailVerificationFailed,
+          'Email verification failed! Please try again.'
+        );
       }
 
       await accountService.initAccount(data, server.domain);
+
       return data;
     } catch (error) {
       const apiError = parseApiError(error);

@@ -2,10 +2,9 @@ import { Router } from 'express';
 
 import {
   accountSyncHandler,
-  loginWithEmailHandler,
-  loginWithGoogleHandler,
+  emailLoginHandler,
+  emailRegisterHandler,
   logoutHandler,
-  registerWithEmailHandler,
   accountUpdateHandler,
   userCreateHandler,
   userRoleUpdateHandler,
@@ -21,6 +20,7 @@ import {
   fileUploadCompleteHandler,
   avatarUploadParameter,
   mutationsSyncHandler,
+  emailVerifyHandler,
 } from '@/controllers/client';
 import { workspaceMiddleware } from '@/middlewares/workspace';
 import { authMiddleware } from '@/middlewares/auth';
@@ -29,11 +29,11 @@ export const clientRouter = Router();
 
 clientRouter.get('/v1/config', configGetHandler);
 
-clientRouter.post('/v1/accounts/login/email', loginWithEmailHandler);
+clientRouter.post('/v1/accounts/emails/login', emailLoginHandler);
 
-clientRouter.post('/v1/accounts/login/google', loginWithGoogleHandler);
+clientRouter.post('/v1/accounts/emails/register', emailRegisterHandler);
 
-clientRouter.post('/v1/accounts/register/email', registerWithEmailHandler);
+clientRouter.post('/v1/accounts/emails/verify', emailVerifyHandler);
 
 clientRouter.delete('/v1/accounts/logout', authMiddleware, logoutHandler);
 

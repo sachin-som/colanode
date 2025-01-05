@@ -16,18 +16,28 @@ interface ServerDropdownProps {
   value: Server;
   onChange: (server: Server) => void;
   servers: Server[];
+  readonly?: boolean;
 }
 
 export const ServerDropdown = ({
   value,
   onChange,
   servers,
+  readonly = false,
 }: ServerDropdownProps) => {
+  const [open, setOpen] = React.useState(false);
   const [openCreate, setOpenCreate] = React.useState(false);
 
   return (
     <React.Fragment>
-      <DropdownMenu>
+      <DropdownMenu
+        open={open}
+        onOpenChange={(openValue) => {
+          if (!readonly) {
+            setOpen(openValue);
+          }
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <div className="flex w-full flex-grow flex-row items-center gap-3 rounded-md border border-input p-2 hover:cursor-pointer hover:bg-gray-100">
             <ServerAvatar

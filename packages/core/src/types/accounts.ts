@@ -24,11 +24,20 @@ export type GoogleUserInfo = {
   picture: string;
 };
 
-export type LoginOutput = {
+export type LoginOutput = LoginSuccessOutput | LoginVerifyOutput;
+
+export type LoginSuccessOutput = {
+  type: 'success';
   account: AccountOutput;
   workspaces: WorkspaceOutput[];
   deviceId: string;
   token: string;
+};
+
+export type LoginVerifyOutput = {
+  type: 'verify';
+  id: string;
+  expiresAt: Date;
 };
 
 export type AccountOutput = {
@@ -39,8 +48,9 @@ export type AccountOutput = {
 };
 
 export enum AccountStatus {
-  Pending = 1,
-  Active = 2,
+  Pending = 0,
+  Active = 1,
+  Unverified = 2,
 }
 
 export type AccountUpdateInput = {
@@ -58,4 +68,9 @@ export type AccountSyncOutput = {
   account: AccountOutput;
   workspaces: WorkspaceOutput[];
   token?: string;
+};
+
+export type EmailVerifyInput = {
+  id: string;
+  otp: string;
 };

@@ -12,6 +12,7 @@ import { DatabaseUpdateMutationHandler } from '@/main/mutations/databases/databa
 import { DatabaseDeleteMutationHandler } from '@/main/mutations/databases/database-delete';
 import { EmailLoginMutationHandler } from '@/main/mutations/accounts/email-login';
 import { EmailRegisterMutationHandler } from '@/main/mutations/accounts/email-register';
+import { EmailVerifyMutationHandler } from '@/main/mutations/accounts/email-verify';
 import { FieldCreateMutationHandler } from '@/main/mutations/databases/field-create';
 import { FieldDeleteMutationHandler } from '@/main/mutations/databases/field-delete';
 import { FieldNameUpdateMutationHandler } from '@/main/mutations/databases/field-name-update';
@@ -67,6 +68,7 @@ type MutationHandlerMap = {
 export const mutationHandlerMap: MutationHandlerMap = {
   email_login: new EmailLoginMutationHandler(),
   email_register: new EmailRegisterMutationHandler(),
+  email_verify: new EmailVerifyMutationHandler(),
   view_create: new ViewCreateMutationHandler(),
   channel_create: new ChannelCreateMutationHandler(),
   channel_delete: new ChannelDeleteMutationHandler(),

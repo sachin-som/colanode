@@ -1,16 +1,16 @@
 import { LoginOutput } from '@colanode/core';
 
-export type EmailLoginMutationInput = {
-  type: 'email_login';
+export type EmailVerifyMutationInput = {
+  type: 'email_verify';
   server: string;
-  email: string;
-  password: string;
+  id: string;
+  otp: string;
 };
 
 declare module '@/shared/mutations' {
   interface MutationMap {
-    email_login: {
-      input: EmailLoginMutationInput;
+    email_verify: {
+      input: EmailVerifyMutationInput;
       output: LoginOutput;
     };
   }

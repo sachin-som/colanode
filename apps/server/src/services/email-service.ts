@@ -20,7 +20,8 @@ class EmailService {
       !configuration.smtp.port ||
       !configuration.smtp.user ||
       !configuration.smtp.password ||
-      !configuration.smtp.emailFrom
+      !configuration.smtp.from.email ||
+      !configuration.smtp.from.name
     ) {
       throw new Error('SMTP configuration is missing');
     }
@@ -44,7 +45,7 @@ class EmailService {
     }
 
     await this.transporter.sendMail({
-      from: configuration.smtp.emailFrom,
+      from: `${configuration.smtp.from.name} <${configuration.smtp.from.email}>`,
       ...message,
     });
   }

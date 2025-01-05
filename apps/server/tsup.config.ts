@@ -1,5 +1,26 @@
 import { defineConfig } from 'tsup';
 
+import fs from 'fs/promises';
+import path from 'path';
+
+const copyTemplates = async () => {
+  const srcDir = path.resolve(__dirname, 'src/templates');
+  const destDir = path.resolve(__dirname, 'dist');
+
+  await fs.mkdir(destDir, { recursive: true });
+
+  const files = await fs.readdir(srcDir);
+  for (const file of files) {
+    if (!file.endsWith('.html')) {
+      continue;
+    }
+
+    await fs.copyFile(path.join(srcDir, file), path.join(destDir, file));
+  }
+
+  console.log('Templates copied to dist/templates');
+};
+
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
@@ -15,4 +36,7 @@ export default defineConfig({
    * the definition maps required for go-to-definition to work in our IDE. We
    * use tsc for that.
    */
+  onSuccess: async () => {
+    await copyTemplates();
+  },
 });

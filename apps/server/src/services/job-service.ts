@@ -24,6 +24,10 @@ class JobService {
         removeOnComplete: true,
       },
     });
+
+    this.jobQueue.on('error', (error) => {
+      console.error('Job queue error:', error);
+    });
   }
 
   public async initWorker() {

@@ -14,8 +14,7 @@ class RateLimitService {
   };
 
   public async isAuthIpRateLimitted(ip: string): Promise<boolean> {
-    const rateLimitKey = this.buildKey(`ai_${ip}`);
-    return await this.isRateLimited(rateLimitKey, {
+    return await this.isRateLimited(`ai_${ip}`, {
       limit: 100,
       window: 600, // 10 minutes
     });
@@ -23,24 +22,21 @@ class RateLimitService {
 
   public async isAuthEmailRateLimitted(email: string): Promise<boolean> {
     const emailHash = sha256(email);
-    const rateLimitKey = this.buildKey(`ae_${emailHash}`);
-    return await this.isRateLimited(rateLimitKey, {
+    return await this.isRateLimited(`ae_${emailHash}`, {
       limit: 10,
       window: 600, // 10 minutes
     });
   }
 
   public async isDeviceApiRateLimitted(deviceId: string): Promise<boolean> {
-    const rateLimitKey = this.buildKey(`da_${deviceId}`);
-    return await this.isRateLimited(rateLimitKey, {
+    return await this.isRateLimited(`da_${deviceId}`, {
       limit: 100,
       window: 60, // 1 minute
     });
   }
 
   public async isDeviceSocketRateLimitted(deviceId: string): Promise<boolean> {
-    const rateLimitKey = this.buildKey(`ds_${deviceId}`);
-    return await this.isRateLimited(rateLimitKey, {
+    return await this.isRateLimited(`ds_${deviceId}`, {
       limit: 20,
       window: 60, // 1 minute
     });
@@ -50,7 +46,7 @@ class RateLimitService {
     key: string,
     config: RateLimitConfig = this.defaultConfig
   ): Promise<boolean> {
-    const redisKey = this.buildKey(key);
+    const redisKey = `rt_${key}`;
     const attempts = await redis.incr(redisKey);
 
     // Set expiry on first attempt
@@ -59,10 +55,6 @@ class RateLimitService {
     }
 
     return attempts > config.limit;
-  }
-
-  private buildKey(key: string): string {
-    return `rt_${key}`;
   }
 }
 

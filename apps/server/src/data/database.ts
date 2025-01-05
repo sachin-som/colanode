@@ -11,10 +11,11 @@ import pg from 'pg';
 
 import { databaseMigrations } from '@/data/migrations';
 import { DatabaseSchema } from '@/data/schema';
+import { configuration } from '@/lib/configuration';
 
 const dialect = new PostgresDialect({
   pool: new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: configuration.postgres.url,
   }),
 });
 

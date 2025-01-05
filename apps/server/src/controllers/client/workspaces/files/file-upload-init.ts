@@ -8,8 +8,9 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { database } from '@/data/database';
-import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 export const fileUploadInitHandler = async (
   req: Request,
@@ -41,14 +42,14 @@ export const fileUploadInitHandler = async (
   //generate presigned url for upload
   const path = `files/${workspaceId}/${input.fileId}${file.extension}`;
   const command = new PutObjectCommand({
-    Bucket: BUCKET_NAMES.FILES,
+    Bucket: configuration.fileS3.bucketName,
     Key: path,
     ContentLength: file.size,
     ContentType: file.mime_type,
   });
 
   const expiresIn = 60 * 60 * 4; // 4 hours
-  const presignedUrl = await getSignedUrl(filesStorage, command, {
+  const presignedUrl = await getSignedUrl(fileS3, command, {
     expiresIn,
   });
 

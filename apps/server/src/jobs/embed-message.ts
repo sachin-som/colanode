@@ -1,8 +1,9 @@
+import { OpenAIEmbeddings } from '@langchain/openai';
+
 import { JobHandler } from '@/types/jobs';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { aiSettings } from '@/lib/ai-settings';
+import { configuration } from '@/lib/configuration';
 import { CreateMessageEmbedding } from '@/data/schema';
 
 export type EmbedMessageInput = {
@@ -21,10 +22,10 @@ declare module '@/types/jobs' {
 export const embedMessageHandler: JobHandler<EmbedMessageInput> = async (
   input
 ) => {
-  if (!aiSettings.enabled) {
+  if (!configuration.ai.enabled) {
     return;
   }
-  
+
   const { messageId } = input;
 
   const message = await database
@@ -41,9 +42,9 @@ export const embedMessageHandler: JobHandler<EmbedMessageInput> = async (
   const chunks = await chunkingService.chunkText(message.content);
 
   const embeddings = new OpenAIEmbeddings({
-    apiKey: aiSettings.openai.apiKey,
-    modelName: aiSettings.openai.embeddingModel,
-    dimensions: aiSettings.openai.embeddingDimensions,
+    apiKey: configuration.ai.openai.apiKey,
+    modelName: configuration.ai.openai.embeddingModel,
+    dimensions: configuration.ai.openai.embeddingDimensions,
   });
 
   const existingEmbeddings = await database
@@ -60,9 +61,7 @@ export const embedMessageHandler: JobHandler<EmbedMessageInput> = async (
       continue;
     }
 
-    const existingEmbedding = existingEmbeddings.find(
-      (e) => e.chunk === i
-    );
+    const existingEmbedding = existingEmbeddings.find((e) => e.chunk === i);
 
     if (existingEmbedding && existingEmbedding.text === chunk) {
       continue;
@@ -81,7 +80,7 @@ export const embedMessageHandler: JobHandler<EmbedMessageInput> = async (
     });
   }
 
-  const batchSize = aiSettings.openai.embeddingBatchSize;
+  const batchSize = configuration.ai.openai.embeddingBatchSize;
   for (let i = 0; i < embeddingsToCreateOrUpdate.length; i += batchSize) {
     const batch = embeddingsToCreateOrUpdate.slice(i, i + batchSize);
     const textsToEmbed = batch.map((item) => item.text);

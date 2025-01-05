@@ -6,8 +6,9 @@ import multer from 'multer';
 
 import path from 'path';
 
-import { avatarStorage, BUCKET_NAMES } from '@/data/storage';
+import { avatarS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 const storage = multer.memoryStorage();
 const uploadMulter = multer({
@@ -54,13 +55,13 @@ export const avatarUploadHandler = async (
 
     const avatarId = generateId(IdType.Avatar);
     const command = new PutObjectCommand({
-      Bucket: BUCKET_NAMES.AVATARS,
+      Bucket: configuration.avatarS3.bucketName,
       Key: `avatars/${avatarId}.jpeg`,
       Body: jpegBuffer,
       ContentType: 'image/jpeg',
     });
 
-    await avatarStorage.send(command);
+    await avatarS3.send(command);
     return ResponseBuilder.success(res, { success: true, id: avatarId });
   } catch {
     return ResponseBuilder.internalError(res, {

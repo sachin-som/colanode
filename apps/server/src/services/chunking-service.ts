@@ -1,15 +1,13 @@
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { ChatOpenAI } from '@langchain/openai';
 import { SystemMessage } from '@langchain/core/messages';
-import { aiSettings } from '@/lib/ai-settings';
+
+import { configuration } from '@/lib/configuration';
 
 export class ChunkingService {
-  public async chunkText(
-    text: string
-  ): Promise<string[]> {
-
-    const chunkSize = aiSettings.chunking.defaultChunkSize;
-    const chunkOverlap = aiSettings.chunking.defaultOverlap;
+  public async chunkText(text: string): Promise<string[]> {
+    const chunkSize = configuration.ai.chunking.defaultChunkSize;
+    const chunkOverlap = configuration.ai.chunking.defaultOverlap;
 
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize,
@@ -21,7 +19,7 @@ export class ChunkingService {
 
     chunks = chunks.filter((c) => c.trim().length > 10);
 
-    if (aiSettings.chunking.enhanceWithContext) {
+    if (configuration.ai.chunking.enhanceWithContext) {
       const enriched: string[] = [];
       for (const chunk of chunks) {
         const c = await this.addContextToChunk(chunk, text);
@@ -39,9 +37,9 @@ export class ChunkingService {
   ): Promise<string> {
     try {
       const chat = new ChatOpenAI({
-        openAIApiKey: aiSettings.openai.apiKey,
-        modelName: aiSettings.chunking.contextEnhancerModel,
-        temperature: aiSettings.chunking.contextEnhancerTemperature,
+        openAIApiKey: configuration.ai.openai.apiKey,
+        modelName: configuration.ai.chunking.contextEnhancerModel,
+        temperature: configuration.ai.chunking.contextEnhancerTemperature,
         maxTokens: 200,
       });
 
@@ -60,7 +58,7 @@ Generate a short (50-100 tokens) contextual prefix that seamlessly provides back
 
       const response = await chat.invoke([new SystemMessage(prompt)]);
       const context = (response.content.toString() ?? '').trim();
-      
+
       return `${context} ${chunk}`;
     } catch (err) {
       console.error('Error adding context to chunk:', err);

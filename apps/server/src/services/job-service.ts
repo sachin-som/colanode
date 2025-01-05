@@ -1,10 +1,8 @@
 import { Job, JobsOptions, Queue, Worker } from 'bullmq';
 
-import { redisConfig } from '@/data/redis';
+import { configuration } from '@/lib/configuration';
 import { jobHandlerMap } from '@/jobs';
 import { JobHandler, JobInput } from '@/types/jobs';
-
-const JOBS_QUEUE_NAME = process.env.REDIS_JOBS_QUEUE_NAME ?? 'jobs';
 
 class JobService {
   private jobQueue: Queue | undefined;
@@ -15,12 +13,12 @@ class JobService {
       return;
     }
 
-    this.jobQueue = new Queue(JOBS_QUEUE_NAME, {
+    this.jobQueue = new Queue(configuration.redis.jobsQueueName, {
       connection: {
-        host: redisConfig.host,
-        password: redisConfig.password,
-        port: redisConfig.port,
-        db: redisConfig.db,
+        host: configuration.redis.host,
+        password: configuration.redis.password,
+        port: configuration.redis.port,
+        db: configuration.redis.db,
       },
       defaultJobOptions: {
         removeOnComplete: true,
@@ -33,14 +31,18 @@ class JobService {
       return;
     }
 
-    this.jobWorker = new Worker(JOBS_QUEUE_NAME, this.handleJobJob, {
-      connection: {
-        host: redisConfig.host,
-        password: redisConfig.password,
-        port: redisConfig.port,
-        db: redisConfig.db,
-      },
-    });
+    this.jobWorker = new Worker(
+      configuration.redis.jobsQueueName,
+      this.handleJobJob,
+      {
+        connection: {
+          host: configuration.redis.host,
+          password: configuration.redis.password,
+          port: configuration.redis.port,
+          db: configuration.redis.db,
+        },
+      }
+    );
   }
 
   public async addJob(job: JobInput, options?: JobsOptions) {

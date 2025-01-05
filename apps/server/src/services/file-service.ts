@@ -15,7 +15,8 @@ import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { fetchEntry, mapEntry } from '@/lib/entries';
 import { eventBus } from '@/lib/event-bus';
-import { filesStorage, BUCKET_NAMES } from '@/data/storage';
+import { fileS3 } from '@/data/storage';
+import { configuration } from '@/lib/configuration';
 
 class FileService {
   public async createFile(
@@ -171,11 +172,11 @@ class FileService {
 
     const path = `files/${deletedFile.workspace_id}/${deletedFile.id}${deletedFile.extension}`;
     const command = new DeleteObjectCommand({
-      Bucket: BUCKET_NAMES.FILES,
+      Bucket: configuration.fileS3.bucketName,
       Key: path,
     });
 
-    await filesStorage.send(command);
+    await fileS3.send(command);
 
     eventBus.publish({
       type: 'file_deleted',

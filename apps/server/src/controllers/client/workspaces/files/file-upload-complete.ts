@@ -3,9 +3,10 @@ import { HeadObjectCommand } from '@aws-sdk/client-s3';
 import { FileStatus, ApiErrorCode } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { fileS3 } from '@/data/storage';
 import { eventBus } from '@/lib/event-bus';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 export const fileUploadCompleteHandler = async (
   req: Request,
@@ -57,12 +58,12 @@ export const fileUploadCompleteHandler = async (
   const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
   // check if the file exists in the bucket
   const command = new HeadObjectCommand({
-    Bucket: BUCKET_NAMES.FILES,
+    Bucket: configuration.fileS3.bucketName,
     Key: path,
   });
 
   try {
-    const headObject = await filesStorage.send(command);
+    const headObject = await fileS3.send(command);
 
     // Verify file size matches expected size
     if (headObject.ContentLength !== file.size) {

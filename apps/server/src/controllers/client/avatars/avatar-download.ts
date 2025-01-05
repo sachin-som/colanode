@@ -4,8 +4,9 @@ import { ApiErrorCode } from '@colanode/core';
 
 import { Readable } from 'stream';
 
-import { avatarStorage, BUCKET_NAMES } from '@/data/storage';
+import { avatarS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 export const avatarDownloadHandler = async (
   req: Request,
@@ -14,11 +15,11 @@ export const avatarDownloadHandler = async (
   try {
     const avatarId = req.params.avatarId;
     const command = new GetObjectCommand({
-      Bucket: BUCKET_NAMES.AVATARS,
+      Bucket: configuration.avatarS3.bucketName,
       Key: `avatars/${avatarId}.jpeg`,
     });
 
-    const avatarResponse = await avatarStorage.send(command);
+    const avatarResponse = await avatarS3.send(command);
     if (!avatarResponse.Body) {
       return ResponseBuilder.badRequest(res, {
         code: ApiErrorCode.AvatarNotFound,

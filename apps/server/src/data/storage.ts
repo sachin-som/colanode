@@ -1,56 +1,21 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-const AVATARS_STORAGE_ENDPOINT = process.env.AVATARS_STORAGE_ENDPOINT;
-const AVATARS_STORAGE_BUCKET_NAME = process.env.AVATARS_STORAGE_BUCKET_NAME;
-const AVATARS_STORAGE_REGION = process.env.AVATARS_STORAGE_REGION;
-const AVATARS_STORAGE_ACCESS_KEY = process.env.AVATARS_STORAGE_ACCESS_KEY;
-const AVATARS_STORAGE_SECRET_KEY = process.env.AVATARS_STORAGE_SECRET_KEY;
+import { configuration } from '@/lib/configuration';
 
-const FILES_STORAGE_ENDPOINT = process.env.FILES_STORAGE_ENDPOINT;
-const FILES_STORAGE_BUCKET_NAME = process.env.FILES_STORAGE_BUCKET_NAME;
-const FILES_STORAGE_REGION = process.env.FILES_STORAGE_REGION;
-const FILES_STORAGE_ACCESS_KEY = process.env.FILES_STORAGE_ACCESS_KEY;
-const FILES_STORAGE_SECRET_KEY = process.env.FILES_STORAGE_SECRET_KEY;
-
-if (
-  !AVATARS_STORAGE_ENDPOINT ||
-  !AVATARS_STORAGE_ACCESS_KEY ||
-  !AVATARS_STORAGE_SECRET_KEY ||
-  !AVATARS_STORAGE_BUCKET_NAME ||
-  !AVATARS_STORAGE_REGION
-) {
-  throw new Error('Avatar storage credentials not set');
-}
-
-if (
-  !FILES_STORAGE_ENDPOINT ||
-  !FILES_STORAGE_ACCESS_KEY ||
-  !FILES_STORAGE_SECRET_KEY ||
-  !FILES_STORAGE_BUCKET_NAME ||
-  !FILES_STORAGE_REGION
-) {
-  throw new Error('Files storage credentials not set');
-}
-
-export const avatarStorage = new S3Client({
-  endpoint: AVATARS_STORAGE_ENDPOINT,
-  region: AVATARS_STORAGE_REGION,
+export const avatarS3 = new S3Client({
+  endpoint: configuration.avatarS3.endpoint,
+  region: configuration.avatarS3.region,
   credentials: {
-    accessKeyId: AVATARS_STORAGE_ACCESS_KEY,
-    secretAccessKey: AVATARS_STORAGE_SECRET_KEY,
+    accessKeyId: configuration.avatarS3.accessKey,
+    secretAccessKey: configuration.avatarS3.secretKey,
   },
 });
 
-export const filesStorage = new S3Client({
-  endpoint: FILES_STORAGE_ENDPOINT,
-  region: FILES_STORAGE_REGION,
+export const fileS3 = new S3Client({
+  endpoint: configuration.fileS3.endpoint,
+  region: configuration.fileS3.region,
   credentials: {
-    accessKeyId: FILES_STORAGE_ACCESS_KEY,
-    secretAccessKey: FILES_STORAGE_SECRET_KEY,
+    accessKeyId: configuration.fileS3.accessKey,
+    secretAccessKey: configuration.fileS3.secretKey,
   },
 });
-
-export const BUCKET_NAMES = {
-  AVATARS: AVATARS_STORAGE_BUCKET_NAME,
-  FILES: FILES_STORAGE_BUCKET_NAME,
-};

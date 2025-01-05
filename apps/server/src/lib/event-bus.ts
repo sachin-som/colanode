@@ -1,8 +1,7 @@
 import { Event } from '@/types/events';
 import { redis } from '@/data/redis';
 import { host } from '@/host';
-
-const CHANNEL_NAME = process.env.REDIS_EVENTS_CHANNEL ?? 'events';
+import { configuration } from '@/lib/configuration';
 
 export interface Subscription {
   id: string;
@@ -41,7 +40,7 @@ export class EventBusService {
     }
 
     const client = redis.duplicate();
-    client.subscribe(CHANNEL_NAME, (message) => {
+    client.subscribe(configuration.redis.eventsChannel, (message) => {
       const envelope = JSON.parse(message) as DistributedEventEnvelope;
       if (envelope.hostId === host.id) {
         return;
@@ -70,7 +69,10 @@ export class EventBusService {
     this.processEvent(event);
 
     if (host.environment === 'production') {
-      redis.publish(CHANNEL_NAME, JSON.stringify({ event, hostId: host.id }));
+      redis.publish(
+        configuration.redis.eventsChannel,
+        JSON.stringify({ event, hostId: host.id })
+      );
     }
   }
 

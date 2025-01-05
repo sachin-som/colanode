@@ -10,7 +10,8 @@ import {
 import { JobHandler } from '@/types/jobs';
 import { eventBus } from '@/lib/event-bus';
 import { createLogger } from '@/lib/logger';
-import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { fileS3 } from '@/data/storage';
+import { configuration } from '@/lib/configuration';
 
 const BATCH_SIZE = 100;
 
@@ -286,11 +287,11 @@ const deleteFiles = async (entryIds: string[], userId: string) => {
 
         const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
         const command = new DeleteObjectCommand({
-          Bucket: BUCKET_NAMES.FILES,
+          Bucket: configuration.fileS3.bucketName,
           Key: path,
         });
 
-        await filesStorage.send(command);
+        await fileS3.send(command);
       }
 
       hasMore = files.length === BATCH_SIZE;

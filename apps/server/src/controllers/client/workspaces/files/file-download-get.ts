@@ -10,8 +10,9 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { database } from '@/data/database';
 import { fetchEntry, mapEntry } from '@/lib/entries';
-import { BUCKET_NAMES, filesStorage } from '@/data/storage';
+import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 export const fileDownloadGetHandler = async (
   req: Request,
@@ -51,11 +52,11 @@ export const fileDownloadGetHandler = async (
   //generate presigned url for download
   const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
   const command = new GetObjectCommand({
-    Bucket: BUCKET_NAMES.FILES,
+    Bucket: configuration.fileS3.bucketName,
     Key: path,
   });
 
-  const presignedUrl = await getSignedUrl(filesStorage, command, {
+  const presignedUrl = await getSignedUrl(fileS3, command, {
     expiresIn: 60 * 60 * 4, // 4 hours
   });
 

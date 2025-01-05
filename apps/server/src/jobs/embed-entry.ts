@@ -1,9 +1,10 @@
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { extractEntryText } from '@colanode/core';
+
 import { JobHandler } from '@/types/jobs';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { aiSettings } from '@/lib/ai-settings';
-import { extractEntryText } from '@colanode/core';
+import { configuration } from '@/lib/configuration';
 import { CreateEntryEmbedding } from '@/data/schema';
 
 export type EmbedEntryInput = {
@@ -20,7 +21,7 @@ declare module '@/types/jobs' {
 }
 
 export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (input) => {
-  if (!aiSettings.enabled) {
+  if (!configuration.ai.enabled) {
     return;
   }
 
@@ -54,9 +55,9 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (input) => {
   const chunks = await chunkingService.chunkText(textResult.text);
 
   const embeddings = new OpenAIEmbeddings({
-    apiKey: aiSettings.openai.apiKey,
-    modelName: aiSettings.openai.embeddingModel,
-    dimensions: aiSettings.openai.embeddingDimensions,
+    apiKey: configuration.ai.openai.apiKey,
+    modelName: configuration.ai.openai.embeddingModel,
+    dimensions: configuration.ai.openai.embeddingDimensions,
   });
 
   const existingEmbeddings = await database
@@ -91,7 +92,7 @@ export const embedEntryHandler: JobHandler<EmbedEntryInput> = async (input) => {
     });
   }
 
-  const batchSize = aiSettings.openai.embeddingBatchSize;
+  const batchSize = configuration.ai.openai.embeddingBatchSize;
   for (let i = 0; i < embeddingsToCreateOrUpdate.length; i += batchSize) {
     const batch = embeddingsToCreateOrUpdate.slice(i, i + batchSize);
     const textsToEmbed = batch.map((item) => item.text);

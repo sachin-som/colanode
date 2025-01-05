@@ -1,10 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM;
+import { configuration } from '@/lib/configuration';
 
 interface EmailMessage {
   to: string | string[];
@@ -19,17 +15,23 @@ class EmailService {
   constructor() {}
 
   public async init() {
-    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !EMAIL_FROM) {
+    if (
+      !configuration.email.host ||
+      !configuration.email.port ||
+      !configuration.email.user ||
+      !configuration.email.password ||
+      !configuration.email.from
+    ) {
       throw new Error('SMTP configuration is missing');
     }
 
     this.transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: parseInt(SMTP_PORT),
+      host: configuration.email.host,
+      port: configuration.email.port,
       secure: true,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: configuration.email.user,
+        pass: configuration.email.password,
       },
     });
 
@@ -42,7 +44,7 @@ class EmailService {
     }
 
     await this.transporter.sendMail({
-      from: EMAIL_FROM,
+      from: configuration.email.from,
       ...message,
     });
   }

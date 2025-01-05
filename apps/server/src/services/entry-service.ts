@@ -42,7 +42,7 @@ import {
   UpdateEntryInput,
   UpdateEntryOutput,
 } from '@/types/entries';
-import { aiSettings } from '@/lib/ai-settings';
+import { configuration } from '@/lib/configuration';
 
 const UPDATE_RETRIES_LIMIT = 10;
 
@@ -1022,7 +1022,7 @@ class EntryService {
       },
       {
         jobId: `embed_entry:${entryId}`,
-        delay: aiSettings.embedDelay,
+        delay: configuration.ai.entryEmbedDelay,
       }
     );
   }

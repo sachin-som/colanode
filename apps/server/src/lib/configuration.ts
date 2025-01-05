@@ -4,7 +4,7 @@ export interface Configuration {
   redis: RedisConfiguration;
   avatarS3: S3Configuration;
   fileS3: S3Configuration;
-  email: EmailConfiguration;
+  smtp: SmtpConfiguration;
   ai: AiConfiguration;
 }
 
@@ -35,12 +35,12 @@ export interface S3Configuration {
   region: string;
 }
 
-export interface EmailConfiguration {
+export interface SmtpConfiguration {
   host: string;
   port: number;
   user: string;
   password: string;
-  from: string;
+  emailFrom: string;
 }
 
 export interface AiConfiguration {
@@ -109,12 +109,12 @@ export const configuration: Configuration = {
     bucketName: getRequiredEnv('S3_FILES_BUCKET_NAME'),
     region: getRequiredEnv('S3_FILES_REGION'),
   },
-  email: {
-    host: getOptionalEnv('EMAIL_HOST') || '',
-    port: parseInt(getOptionalEnv('EMAIL_PORT') || '587'),
-    user: getOptionalEnv('EMAIL_USER') || '',
-    password: getOptionalEnv('EMAIL_PASSWORD') || '',
-    from: getOptionalEnv('EMAIL_FROM') || '',
+  smtp: {
+    host: getOptionalEnv('SMTP_HOST') || '',
+    port: parseInt(getOptionalEnv('SMTP_PORT') || '587'),
+    user: getOptionalEnv('SMTP_USER') || '',
+    password: getOptionalEnv('SMTP_PASSWORD') || '',
+    emailFrom: getOptionalEnv('SMTP_EMAIL_FROM') || '',
   },
   ai: {
     enabled: getOptionalEnv('AI_ENABLED') === 'true',

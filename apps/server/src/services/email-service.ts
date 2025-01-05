@@ -16,22 +16,22 @@ class EmailService {
 
   public async init() {
     if (
-      !configuration.email.host ||
-      !configuration.email.port ||
-      !configuration.email.user ||
-      !configuration.email.password ||
-      !configuration.email.from
+      !configuration.smtp.host ||
+      !configuration.smtp.port ||
+      !configuration.smtp.user ||
+      !configuration.smtp.password ||
+      !configuration.smtp.emailFrom
     ) {
       throw new Error('SMTP configuration is missing');
     }
 
     this.transporter = nodemailer.createTransport({
-      host: configuration.email.host,
-      port: configuration.email.port,
+      host: configuration.smtp.host,
+      port: configuration.smtp.port,
       secure: true,
       auth: {
-        user: configuration.email.user,
-        pass: configuration.email.password,
+        user: configuration.smtp.user,
+        pass: configuration.smtp.password,
       },
     });
 
@@ -44,7 +44,7 @@ class EmailService {
     }
 
     await this.transporter.sendMail({
-      from: configuration.email.from,
+      from: configuration.smtp.emailFrom,
       ...message,
     });
   }

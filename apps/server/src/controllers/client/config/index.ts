@@ -11,6 +11,7 @@ export const configGetHandler = async (
     name: SERVER_NAME || 'Colanode',
     avatar: SERVER_AVATAR || '',
     version: '0.1.0',
+    ip: res.locals.ip,
     attributes: {},
   };
 

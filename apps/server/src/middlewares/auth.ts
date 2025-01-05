@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response, RequestHandler } from 'express';
 import { ApiErrorCode } from '@colanode/core';
 
-import { verifyToken } from '@/lib/tokens';
+import { parseToken, verifyToken } from '@/lib/tokens';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { rateLimitService } from '@/services/rate-limit-service';
 
 export const authMiddleware: RequestHandler = async (
   req: Request,
@@ -18,7 +19,19 @@ export const authMiddleware: RequestHandler = async (
     });
   }
 
-  const result = await verifyToken(token);
+  const tokenData = parseToken(token);
+  const isRateLimited = await rateLimitService.isDeviceApiRateLimitted(
+    tokenData.deviceId
+  );
+
+  if (isRateLimited) {
+    return ResponseBuilder.tooManyRequests(res, {
+      code: ApiErrorCode.TooManyRequests,
+      message: 'Too many requests from this device. Please try again later.',
+    });
+  }
+
+  const result = await verifyToken(tokenData);
   if (!result.authenticated) {
     return ResponseBuilder.unauthorized(res, {
       code: ApiErrorCode.TokenInvalid,

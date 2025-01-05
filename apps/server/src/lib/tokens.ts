@@ -10,6 +10,11 @@ interface GenerateTokenResult {
   hash: string;
 }
 
+interface TokenData {
+  deviceId: string;
+  secret: string;
+}
+
 type VerifyTokenResult =
   | {
       authenticated: false;
@@ -19,10 +24,10 @@ type VerifyTokenResult =
       account: RequestAccount;
     };
 
-export const generateToken = (id: string): GenerateTokenResult => {
+export const generateToken = (deviceId: string): GenerateTokenResult => {
   const salt = uuid();
   const secret = uuid() + uuid();
-  const token = id + secret;
+  const token = deviceId + secret;
   const hash = sha256(secret + salt);
 
   return {
@@ -32,16 +37,22 @@ export const generateToken = (id: string): GenerateTokenResult => {
   };
 };
 
-export const verifyToken = async (
-  token: string
-): Promise<VerifyTokenResult> => {
-  const id = token.slice(0, 28);
+export const parseToken = (token: string): TokenData => {
+  const deviceId = token.slice(0, 28);
   const secret = token.slice(28);
+  return {
+    deviceId,
+    secret,
+  };
+};
 
+export const verifyToken = async (
+  tokenData: TokenData
+): Promise<VerifyTokenResult> => {
   const device = await database
     .selectFrom('devices')
     .selectAll()
-    .where('id', '=', id)
+    .where('id', '=', tokenData.deviceId)
     .executeTakeFirst();
 
   if (!device) {
@@ -50,7 +61,7 @@ export const verifyToken = async (
     };
   }
 
-  if (!verifySecret(secret, device.token_salt, device.token_hash)) {
+  if (!verifySecret(tokenData.secret, device.token_salt, device.token_hash)) {
     return {
       authenticated: false,
     };

@@ -21,7 +21,7 @@ export const loginWithGoogleHandler = async (
   res: Response
 ): Promise<void> => {
   const ip = res.locals.ip;
-  const isIpRateLimited = await checkIpRateLimit(ip);
+  const isIpRateLimited = await rateLimitService.isAuthIpRateLimitted(ip);
   if (isIpRateLimited) {
     return ResponseBuilder.tooManyRequests(res, {
       code: ApiErrorCode.TooManyRequests,
@@ -104,12 +104,4 @@ export const loginWithGoogleHandler = async (
     res.locals.ip
   );
   return ResponseBuilder.success(res, output);
-};
-
-const checkIpRateLimit = async (ip: string): Promise<boolean> => {
-  const rateLimitKey = `auth_ip_${ip}`;
-  return await rateLimitService.isRateLimited(rateLimitKey, {
-    limit: 50,
-    window: 600, // 10 minutes
-  });
 };

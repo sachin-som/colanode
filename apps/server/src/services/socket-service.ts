@@ -2,9 +2,11 @@ import { WebSocketServer, WebSocket } from 'ws';
 
 import { IncomingMessage, Server } from 'http';
 
+import { rateLimitService } from './rate-limit-service';
+
 import { SocketConnection } from '@/services/socket-connection';
 import { eventBus } from '@/lib/event-bus';
-import { verifyToken } from '@/lib/tokens';
+import { parseToken, verifyToken } from '@/lib/tokens';
 import { createLogger } from '@/lib/logger';
 import { RequestAccount } from '@/types/api';
 
@@ -48,7 +50,17 @@ class SocketService {
         return;
       }
 
-      const result = await verifyToken(token);
+      const tokenData = parseToken(token);
+      const isRateLimited = await rateLimitService.isDeviceSocketRateLimitted(
+        tokenData.deviceId
+      );
+
+      if (isRateLimited) {
+        socket.destroy();
+        return;
+      }
+
+      const result = await verifyToken(tokenData);
       if (!result.authenticated) {
         socket.destroy();
         return;

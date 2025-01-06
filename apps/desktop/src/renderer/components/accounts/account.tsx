@@ -14,17 +14,12 @@ export const Account = () => {
   const [openSettings, setOpenSettings] = React.useState(false);
   const [openLogout, setOpenLogout] = React.useState(false);
 
-  const { data, isPending } = useQuery(
-    {
-      type: 'account_get',
-      accountId: accountId ?? '',
-    },
-    {
-      enabled: !!accountId,
-    }
-  );
+  const { data, isPending } = useQuery({
+    type: 'account_get',
+    accountId: accountId!,
+  });
 
-  if (!accountId || isPending) {
+  if (isPending) {
     return null;
   }
 

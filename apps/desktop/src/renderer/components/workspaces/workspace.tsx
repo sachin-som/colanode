@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Layout } from '@/renderer/components/layouts/layout';
 import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
+import { WorkspaceNotFound } from '@/renderer/components/workspaces/workspace-not-found';
 import { useAccount } from '@/renderer/contexts/account';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -15,13 +16,21 @@ export const Workspace = () => {
 
   const [openSettings, setOpenSettings] = React.useState(false);
 
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     type: 'workspace_get',
     accountId: account.id,
     workspaceId: workspaceId!,
   });
 
-  const workspace = data ?? null;
+  if (isPending) {
+    return null;
+  }
+
+  if (!data) {
+    return <WorkspaceNotFound />;
+  }
+
+  const workspace = data;
 
   if (!workspace) {
     return <p>Workspace not found</p>;

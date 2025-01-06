@@ -22,9 +22,15 @@ export const AccountNotFound = () => {
       <div className="col-span-3 flex items-center justify-center py-12">
         <div className="mx-auto grid w-96 gap-6">
           <div className="grid gap-4 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              You have been logged out or your login has expired
-            </h1>
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Account not found
+              </h1>
+              <p className="text-sm font-semibold tracking-tight">
+                You have been logged out or your login has expired.
+              </p>
+            </div>
+            <hr />
             {accounts.length > 0 ? (
               <React.Fragment>
                 <p className="text-sm text-muted-foreground">

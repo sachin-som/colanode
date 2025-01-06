@@ -1,3 +1,4 @@
+import React from 'react';
 import { getIdType, IdType } from '@colanode/core';
 
 import { useAccount } from '@/renderer/contexts/account';
@@ -101,9 +102,14 @@ const IconAvatar = ({ avatar, size, className }: AvatarProps) => {
 
 const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
   const account = useAccount();
+  const [failed, setFailed] = React.useState(false);
 
   if (!avatar) {
     return null;
+  }
+
+  if (failed) {
+    return <AvatarFallback id={avatar} size={size} className={className} />;
   }
 
   const url = getAvatarUrl(account.id, avatar);
@@ -116,6 +122,7 @@ const CustomAvatar = ({ avatar, size, className }: AvatarProps) => {
         className
       )}
       alt={'Custom Avatar'}
+      onError={() => setFailed(true)}
     />
   );
 };

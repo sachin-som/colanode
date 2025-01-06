@@ -2,6 +2,7 @@ import { ChannelEntry, extractEntryRole } from '@colanode/core';
 
 import { ChannelBody } from '@/renderer/components/channels/channel-body';
 import { ChannelHeader } from '@/renderer/components/channels/channel-header';
+import { ChannelNotFound } from '@/renderer/components/channels/channel-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -19,6 +20,8 @@ export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
   });
 
   const channel = entry as ChannelEntry;
+  const channelExists = !!channel;
+
   const { data: root, isPending: isPendingRoot } = useQuery(
     {
       type: 'entry_get',
@@ -26,21 +29,21 @@ export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!channel?.rootId,
+      enabled: channelExists,
     }
   );
 
-  if (isPendingEntry || isPendingRoot) {
+  if (isPendingEntry || (isPendingRoot && channelExists)) {
     return null;
   }
 
   if (!channel || !root) {
-    return null;
+    return <ChannelNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <ChannelNotFound />;
   }
 
   return (

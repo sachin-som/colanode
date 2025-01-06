@@ -2,6 +2,7 @@ import { extractEntryRole, FolderEntry } from '@colanode/core';
 
 import { FolderBody } from '@/renderer/components/folders/folder-body';
 import { FolderHeader } from '@/renderer/components/folders/folder-header';
+import { FolderNotFound } from '@/renderer/components/folders/folder-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -19,6 +20,7 @@ export const FolderContainer = ({ folderId }: FolderContainerProps) => {
   });
 
   const folder = entry as FolderEntry;
+  const folderExists = !!folder;
 
   const { data: root, isPending: isPendingRoot } = useQuery(
     {
@@ -27,21 +29,21 @@ export const FolderContainer = ({ folderId }: FolderContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!folder?.rootId,
+      enabled: folderExists,
     }
   );
 
-  if (isPendingEntry || isPendingRoot) {
+  if (isPendingEntry || (isPendingRoot && folderExists)) {
     return null;
   }
 
   if (!folder || !root) {
-    return null;
+    return <FolderNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <FolderNotFound />;
   }
 
   return (

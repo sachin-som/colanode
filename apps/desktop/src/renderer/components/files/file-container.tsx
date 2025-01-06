@@ -2,6 +2,7 @@ import { extractEntryRole } from '@colanode/core';
 
 import { FileBody } from '@/renderer/components/files/file-body';
 import { FileHeader } from '@/renderer/components/files/file-header';
+import { FileNotFound } from '@/renderer/components/files/file-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -18,6 +19,8 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
     userId: workspace.userId,
   });
 
+  const fileExists = !!file;
+
   const { data: entry, isPending: isPendingEntry } = useQuery(
     {
       type: 'entry_get',
@@ -25,7 +28,7 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!file,
+      enabled: fileExists,
     }
   );
 
@@ -36,21 +39,25 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!file,
+      enabled: fileExists,
     }
   );
 
-  if (isPendingFile || isPendingEntry || isPendingRoot) {
+  if (
+    isPendingFile ||
+    (isPendingEntry && fileExists) ||
+    (isPendingRoot && fileExists)
+  ) {
     return null;
   }
 
   if (!file || !entry || !root) {
-    return null;
+    return <FileNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <FileNotFound />;
   }
 
   return (

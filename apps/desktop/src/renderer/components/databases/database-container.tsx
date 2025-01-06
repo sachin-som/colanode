@@ -2,6 +2,7 @@ import { DatabaseEntry, extractEntryRole } from '@colanode/core';
 
 import { DatabaseBody } from '@/renderer/components/databases/database-body';
 import { DatabaseHeader } from '@/renderer/components/databases/database-header';
+import { DatabaseNotFound } from '@/renderer/components/databases/database-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -19,6 +20,7 @@ export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
   });
 
   const database = entry as DatabaseEntry;
+  const databaseExists = !!database;
 
   const { data: root, isPending: isPendingRoot } = useQuery(
     {
@@ -27,21 +29,21 @@ export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!database?.rootId,
+      enabled: databaseExists,
     }
   );
 
-  if (isPendingEntry || isPendingRoot) {
+  if (isPendingEntry || (isPendingRoot && databaseExists)) {
     return null;
   }
 
   if (!database || !root) {
-    return null;
+    return <DatabaseNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <DatabaseNotFound />;
   }
 
   return (

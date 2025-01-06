@@ -2,6 +2,7 @@ import { DatabaseEntry, extractEntryRole, RecordEntry } from '@colanode/core';
 
 import { RecordBody } from '@/renderer/components/records/record-body';
 import { RecordHeader } from '@/renderer/components/records/record-header';
+import { RecordNotFound } from '@/renderer/components/records/record-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -19,6 +20,7 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
   });
 
   const record = entry as RecordEntry;
+  const recordExists = !!record;
 
   const { data: root, isPending: isPendingRoot } = useQuery(
     {
@@ -27,7 +29,7 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!record?.rootId,
+      enabled: recordExists,
     }
   );
 
@@ -38,7 +40,7 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!record?.attributes.databaseId,
+      enabled: recordExists,
     }
   );
 
@@ -49,12 +51,12 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
   }
 
   if (!record || !root || !database) {
-    return null;
+    return <RecordNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <RecordNotFound />;
   }
 
   return (

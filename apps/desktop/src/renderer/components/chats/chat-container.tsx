@@ -2,6 +2,7 @@ import { extractEntryRole } from '@colanode/core';
 
 import { ChatBody } from '@/renderer/components/chats/chat-body';
 import { ChatHeader } from '@/renderer/components/chats/chat-header';
+import { ChatNotFound } from '@/renderer/components/chats/chat-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -24,12 +25,12 @@ export const ChatContainer = ({ chatId }: ChatContainerProps) => {
 
   const node = data;
   if (!node || node.type !== 'chat') {
-    return null;
+    return <ChatNotFound />;
   }
 
   const role = extractEntryRole(node, workspace.userId);
   if (!role) {
-    return null;
+    return <ChatNotFound />;
   }
 
   return (

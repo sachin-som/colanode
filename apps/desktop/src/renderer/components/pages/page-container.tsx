@@ -2,6 +2,7 @@ import { extractEntryRole, PageEntry } from '@colanode/core';
 
 import { PageBody } from '@/renderer/components/pages/page-body';
 import { PageHeader } from '@/renderer/components/pages/page-header';
+import { PageNotFound } from '@/renderer/components/pages/page-not-found';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 
@@ -19,6 +20,7 @@ export const PageContainer = ({ pageId }: PageContainerProps) => {
   });
 
   const page = entry as PageEntry;
+  const pageExists = !!page;
 
   const { data: root, isPending: isPendingRoot } = useQuery(
     {
@@ -27,22 +29,23 @@ export const PageContainer = ({ pageId }: PageContainerProps) => {
       userId: workspace.userId,
     },
     {
-      enabled: !!page?.rootId,
+      enabled: pageExists,
     }
   );
 
-  if (isPendingEntry || isPendingRoot) {
+  if (isPendingEntry || (isPendingRoot && pageExists)) {
     return null;
   }
 
   if (!page || !root) {
-    return null;
+    return <PageNotFound />;
   }
 
   const role = extractEntryRole(root, workspace.userId);
   if (!role) {
-    return null;
+    return <PageNotFound />;
   }
+
   return (
     <div className="flex h-full w-full flex-col">
       <PageHeader page={page} role={role} />

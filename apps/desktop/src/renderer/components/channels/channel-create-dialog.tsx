@@ -46,7 +46,6 @@ export const ChannelCreateDialog = ({
             onOpenChange(false);
           }}
           handleSubmit={(values) => {
-            console.log('submit', values);
             if (isPending) {
               return;
             }

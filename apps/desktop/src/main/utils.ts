@@ -56,6 +56,10 @@ export const getWorkspaceFilesDirectoryPath = (userId: string): string => {
   return path.join(getWorkspaceDirectoryPath(userId), 'files');
 };
 
+export const getWorkspaceTempFilesDirectoryPath = (userId: string): string => {
+  return path.join(getWorkspaceDirectoryPath(userId), 'temp');
+};
+
 export const getAccountAvatarsDirectoryPath = (accountId: string): string => {
   return path.join(appPath, 'avatars', accountId);
 };

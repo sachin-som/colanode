@@ -21,6 +21,7 @@ import { FileDeleteMutationHandler } from '@/main/mutations/files/file-delete';
 import { FileDownloadMutationHandler } from '@/main/mutations/files/file-download';
 import { FileMarkOpenedMutationHandler } from '@/main/mutations/files/file-mark-opened';
 import { FileMarkSeenMutationHandler } from '@/main/mutations/files/file-mark-seen';
+import { FileSaveTempMutationHandler } from '@/main/mutations/files/file-save-temp';
 import { FolderCreateMutationHandler } from '@/main/mutations/folders/folder-create';
 import { FolderUpdateMutationHandler } from '@/main/mutations/folders/folder-update';
 import { FolderDeleteMutationHandler } from '@/main/mutations/folders/folder-delete';
@@ -117,6 +118,7 @@ export const mutationHandlerMap: MutationHandlerMap = {
   file_download: new FileDownloadMutationHandler(),
   file_mark_opened: new FileMarkOpenedMutationHandler(),
   file_mark_seen: new FileMarkSeenMutationHandler(),
+  file_save_temp: new FileSaveTempMutationHandler(),
   space_update: new SpaceUpdateMutationHandler(),
   account_update: new AccountUpdateMutationHandler(),
   view_update: new ViewUpdateMutationHandler(),

@@ -10,11 +10,11 @@ import React from 'react';
 import tippy from 'tippy.js';
 
 import { updateScrollView } from '@/shared/lib/utils';
-import { EditorCommand,EditorCommandContext } from '@/shared/types/editor';
+import { EditorCommand, EditorContext } from '@/shared/types/editor';
 
 interface CommanderOptions {
   commands: EditorCommand[];
-  context: EditorCommandContext | null;
+  context: EditorContext | null;
 }
 
 const navigationKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
@@ -188,7 +188,7 @@ export const CommanderExtension = Extension.create<CommanderOptions>({
   addOptions() {
     return {
       commands: [],
-      context: {} as EditorCommandContext,
+      context: {} as EditorContext,
     };
   },
   addProseMirrorPlugins() {

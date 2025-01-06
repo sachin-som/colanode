@@ -29,6 +29,7 @@ import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
 import { FileMetadata } from '@/shared/types/files';
 
 interface MessageEditorProps {
+  userId: string;
   conversationId: string;
   onChange?: (content: JSONContent) => void;
   onSubmit: () => void;
@@ -67,7 +68,9 @@ export const MessageEditor = React.forwardRef<
         HighlightMark,
         LinkMark,
         DropcursorExtension,
-        FilePlaceholderNode,
+        FilePlaceholderNode.configure({
+          userId: props.userId,
+        }),
         FileNode,
       ],
       editorProps: {

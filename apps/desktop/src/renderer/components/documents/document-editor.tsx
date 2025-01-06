@@ -108,7 +108,13 @@ export const DocumentEditor = ({
         DocumentNode,
         PageNode,
         FolderNode,
-        FileNode,
+        FileNode.configure({
+          context: {
+            userId: workspace.userId,
+            documentId,
+            rootId,
+          },
+        }),
         TextNode,
         ParagraphNode,
         Heading1Node,

@@ -82,7 +82,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
       }
     }
 
-    if (event.type === 'file_state_created') {
+    if (event.type === 'file_state_created' && event.userId === input.userId) {
       const file = output.find((file) => file.id === event.fileState.fileId);
       if (file) {
         const newResult = output.map((file) => {
@@ -102,7 +102,7 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
       }
     }
 
-    if (event.type === 'file_state_updated') {
+    if (event.type === 'file_state_updated' && event.userId === input.userId) {
       const file = output.find((file) => file.id === event.fileState.fileId);
       if (file) {
         const newResult = output.map((file) => {

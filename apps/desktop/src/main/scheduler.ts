@@ -15,6 +15,7 @@ import { ConnectSocketJobHandler } from '@/main/jobs/connect-socket';
 import { UploadFilesJobHandler } from '@/main/jobs/upload-files';
 import { DownloadFilesJobHandler } from '@/main/jobs/download-files';
 import { CleanDeletedFilesJobHandler } from '@/main/jobs/clean-deleted-files';
+import { CleanTempFilesJobHandler } from '@/main/jobs/clean-temp-files';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Event } from '@/shared/types/events';
 
@@ -33,6 +34,7 @@ export const jobHandlerMap: JobHandlerMap = {
   upload_files: new UploadFilesJobHandler(),
   download_files: new DownloadFilesJobHandler(),
   clean_deleted_files: new CleanDeletedFilesJobHandler(),
+  clean_temp_files: new CleanTempFilesJobHandler(),
 };
 
 type JobState = {
@@ -271,6 +273,16 @@ class Scheduler {
       type: 'download_files',
       userId,
     });
+
+    this.schedule({
+      type: 'clean_deleted_files',
+      userId,
+    });
+
+    this.schedule({
+      type: 'clean_temp_files',
+      userId,
+    });
   }
 
   private deleteWorkspaceJobs(userId: string) {
@@ -327,6 +339,13 @@ class Scheduler {
 
     if (
       state.input.type === 'clean_deleted_files' &&
+      state.input.userId === userId
+    ) {
+      return true;
+    }
+
+    if (
+      state.input.type === 'clean_temp_files' &&
       state.input.userId === userId
     ) {
       return true;

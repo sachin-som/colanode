@@ -4,10 +4,10 @@ import { FC } from 'react';
 export type EditorCommandProps = {
   editor: Editor;
   range: Range;
-  context: EditorCommandContext | null;
+  context: EditorContext | null;
 };
 
-export type EditorCommandContext = {
+export type EditorContext = {
   documentId: string;
   userId: string;
   rootId: string;

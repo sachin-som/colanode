@@ -20,6 +20,7 @@ import { serverService } from '@/main/services/server-service';
 import {
   fetchWorkspaceCredentials,
   getWorkspaceFilesDirectoryPath,
+  getWorkspaceTempFilesDirectoryPath,
   mapFile,
   mapFileInteraction,
   mapFileState,
@@ -77,6 +78,15 @@ class FileService {
       `Copying file ${filePath} to ${destinationFilePath} for user ${userId}`
     );
     fs.copyFileSync(filePath, destinationFilePath);
+
+    // check if the file is in the temp files directory. If it is in
+    // temp files directory it means it has been pasted or dragged
+    // therefore we need to delete it
+    const fileDirectory = path.dirname(filePath);
+    const tempFilesDir = getWorkspaceTempFilesDirectoryPath(userId);
+    if (fileDirectory === tempFilesDir) {
+      fs.rmSync(filePath);
+    }
   }
 
   public openFile(userId: string, id: string, extension: string): void {
@@ -431,6 +441,32 @@ class FileService {
             userId,
             fileState: mapFileState(deletedFileState),
           });
+        }
+      }
+    }
+  }
+
+  public async cleanTempFiles(userId: string): Promise<void> {
+    this.debug(`Checking temp files for user ${userId}`);
+
+    const tempFilesDir = getWorkspaceTempFilesDirectoryPath(userId);
+    if (!fs.existsSync(tempFilesDir)) {
+      return;
+    }
+
+    const files = fs.readdirSync(tempFilesDir);
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    for (const file of files) {
+      const filePath = path.join(tempFilesDir, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.mtimeMs < oneDayAgo) {
+        try {
+          fs.unlinkSync(filePath);
+          this.debug(`Deleted old temp file: ${filePath}`);
+        } catch (error) {
+          this.debug(`Failed to delete temp file: ${filePath}`, error);
         }
       }
     }

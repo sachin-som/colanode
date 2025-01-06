@@ -67,7 +67,11 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
       };
     }
 
-    if (event.type === 'file_state_created') {
+    if (
+      event.type === 'file_state_created' &&
+      event.userId === input.userId &&
+      event.fileState.fileId === input.id
+    ) {
       if (output === null) {
         const newResult = await this.fetchFile(input);
         return {
@@ -85,7 +89,11 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
       };
     }
 
-    if (event.type === 'file_state_updated') {
+    if (
+      event.type === 'file_state_updated' &&
+      event.userId === input.userId &&
+      event.fileState.fileId === input.id
+    ) {
       if (output === null) {
         const newResult = await this.fetchFile(input);
         return {

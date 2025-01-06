@@ -56,10 +56,12 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
     return {
       addFilePlaceholder:
         (metadata: FileMetadata) =>
-        ({ chain }: CommandProps) => {
-          return chain()
+        ({ editor, tr }: CommandProps) => {
+          const pos = tr.selection.$head.pos;
+          editor
+            .chain()
             .focus()
-            .insertContent({
+            .insertContentAt(pos, {
               type: 'filePlaceholder',
               attrs: {
                 id: generateId(IdType.FilePlaceholder),
@@ -71,6 +73,8 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
               },
             })
             .run();
+
+          return true;
         },
     };
   },
@@ -124,7 +128,63 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
                   return;
                 }
 
-                editor.chain().focus().addFilePlaceholder(fileMetadata).run();
+                editor.commands.addFilePlaceholder(fileMetadata);
+              }
+            })();
+
+            return true;
+          },
+        },
+      }),
+      new Plugin({
+        key: new PluginKey('file-placeholder-drop'),
+        props: {
+          handleDrop(_, event) {
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.length == 0) {
+              return false;
+            }
+
+            console.log('files dropped', files);
+
+            (async () => {
+              for (const file of files) {
+                const buffer = await file.arrayBuffer();
+                const fileSaveResult = await window.colanode.executeMutation({
+                  type: 'file_save_temp',
+                  name: file.name,
+                  buffer,
+                  userId: options.userId,
+                });
+
+                if (!fileSaveResult.success) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Failed to add file',
+                    description: fileSaveResult.error.message,
+                  });
+
+                  return;
+                }
+
+                const path = fileSaveResult.output.path;
+                const fileMetadata = await window.colanode.executeQuery({
+                  type: 'file_metadata_get',
+                  path: path,
+                });
+
+                if (fileMetadata === null) {
+                  toast({
+                    title: 'Failed to add file',
+                    description:
+                      'Something went wrong adding file. Please try again!',
+                    variant: 'destructive',
+                  });
+
+                  return;
+                }
+
+                editor.commands.addFilePlaceholder(fileMetadata);
               }
             })();
 

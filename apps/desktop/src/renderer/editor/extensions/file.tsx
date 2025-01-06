@@ -67,35 +67,17 @@ export const FileNode = Node.create<FileNodeOptions>({
             }
 
             const fileId = fileCreateResult.output.id;
-            const range = tr.selection.ranges[0];
-
-            if (range) {
-              editor
-                .chain()
-                .focus()
-                .deleteRange({
-                  from: range.$from.pos,
-                  to: range.$to.pos,
-                })
-                .insertContent({
-                  type: 'file',
-                  attrs: {
-                    id: fileId,
-                  },
-                })
-                .run();
-            } else {
-              editor
-                .chain()
-                .focus()
-                .insertContent({
-                  type: 'file',
-                  attrs: {
-                    id: fileId,
-                  },
-                })
-                .run();
-            }
+            const pos = tr.selection.$head.pos;
+            editor
+              .chain()
+              .focus()
+              .insertContentAt(pos, {
+                type: 'file',
+                attrs: {
+                  id: fileId,
+                },
+              })
+              .run();
           })();
 
           return true;
@@ -142,7 +124,45 @@ export const FileNode = Node.create<FileNodeOptions>({
                 }
 
                 const path = fileSaveResult.output.path;
-                editor.chain().focus().addFile(path).run();
+                editor.commands.addFile(path);
+              }
+            })();
+
+            return true;
+          },
+        },
+      }),
+      new Plugin({
+        key: new PluginKey('file-drop'),
+        props: {
+          handleDrop(_, event) {
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.length == 0) {
+              return false;
+            }
+
+            (async () => {
+              for (const file of files) {
+                const buffer = await file.arrayBuffer();
+                const fileSaveResult = await window.colanode.executeMutation({
+                  type: 'file_save_temp',
+                  name: file.name,
+                  buffer,
+                  userId: options.context.userId,
+                });
+
+                if (!fileSaveResult.success) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Failed to add file',
+                    description: fileSaveResult.error.message,
+                  });
+
+                  return;
+                }
+
+                const path = fileSaveResult.output.path;
+                editor.commands.addFile(path);
               }
             })();
 

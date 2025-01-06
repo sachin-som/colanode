@@ -17,8 +17,8 @@ declare module '@/main/jobs' {
 export class CleanDeletedFilesJobHandler
   implements JobHandler<CleanDeletedFilesInput>
 {
-  public triggerDebounce = 0;
-  public interval = 1000 * 60;
+  public triggerDebounce = 1000;
+  public interval = 1000 * 60 * 10;
 
   public async handleJob(input: CleanDeletedFilesInput) {
     await fileService.cleanDeletedFiles(input.userId);

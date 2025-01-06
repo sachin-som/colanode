@@ -408,7 +408,8 @@ class FileService {
       const fileIdMap: Record<string, string> = {};
 
       for (const file of batch) {
-        fileIdMap[file.split('_')[0]!] = file;
+        const id = path.parse(file).name;
+        fileIdMap[id] = file;
       }
 
       const fileIds = Object.keys(fileIdMap);
@@ -419,29 +420,16 @@ class FileService {
         .execute();
 
       for (const fileId of fileIds) {
-        if (!fileStates.some((f) => f.file_id === fileId)) {
-          const filePath = path.join(
-            getWorkspaceFilesDirectoryPath(userId),
-            fileIdMap[fileId]!
-          );
-          fs.rmSync(filePath, { force: true });
-
-          const deletedFileState = await workspaceDatabase
-            .deleteFrom('file_states')
-            .returningAll()
-            .where('file_id', '=', fileId)
-            .executeTakeFirst();
-
-          if (!deletedFileState) {
-            continue;
-          }
-
-          eventBus.publish({
-            type: 'file_state_deleted',
-            userId,
-            fileState: mapFileState(deletedFileState),
-          });
+        const fileState = fileStates.find((f) => f.file_id === fileId);
+        if (fileState) {
+          continue;
         }
+
+        const filePath = path.join(
+          getWorkspaceFilesDirectoryPath(userId),
+          fileIdMap[fileId]!
+        );
+        fs.rmSync(filePath, { force: true });
       }
     }
   }

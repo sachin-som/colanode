@@ -1,61 +1,54 @@
 <p align="center">
-   <img alt="Colanode cover" src="apps/desktop/assets/colanode_cover_black.png">
+  <img alt="Colanode cover" src="apps/desktop/assets/colanode_cover_black.png">
 </p>
 
 # Colanode
 
-**An all-in-one, open-source, and self-hosted collaboration platform that puts you in control of your data.**
+### Open-source & local-first collaboration workspace that you can self-host
 
-Colanode is a local-first, open-source platform for seamless collaboration. It combines the flexibility of online teamwork with the privacy and security of self-hosted data. Whether you’re chatting with teammates, documenting projects, managing databases, or organizing files, Colanode provides an integrated experience that works both online and offline.
+Colanode is an all-in-one platform for easy collaboration, built to prioritize your data privacy and control. Designed with a **local-first** approach, it helps teams communicate, organize, and manage projects—whether online or offline. With Colanode, you get the flexibility of modern collaboration tools, plus the peace of mind that comes from owning your data.
 
-- **Chat:** Communicate in real-time through direct messages or group chats.
-- **Pages:** Create and edit rich-content documents, wikis, and notes using a Notion-style editor.
-- **Databases:** Structure and query your content using customizable fields and views.
-- **Files & Folders:** Manage and share files through attachments or dedicated folders.
+### What can you do with Colanode?
 
-## How It Works
+- **Real-Time Chat:** Stay connected with instant messaging for teams and individuals.
+- **Rich Text Pages:** Create documents, wikis, and notes using an intuitive editor, similar to Notion.
+- **Customizable Databases:** Organize information with structured data, custom fields and dynamic views (table, kanban, calendar).
+- **File Management:** Store, share, and manage files effortlessly within secure workspaces.
 
-At the core of Colanode is a powerful local-first architecture designed for speed, reliability, and privacy:
+Built for both individuals and teams, Colanode adapts to your needs, whether you're running a small project, managing a team, or collaborating across an entire organization. With its self-hosted model, you retain full control over your data while enjoying a polished, feature-rich experience.
 
-1. **Local Data Model:**  
-   Everything in Colanode is stored as a “node.” This includes messages, pages, databases, records, folders, files, users, and more. All nodes are initially saved in a local SQLite database within the desktop app.
+## How it works
 
-2. **Transactions & Offline Support:**  
-   Changes—such as sending a message or updating a page—are recorded as transactions in the local database. Because all reads occur locally, the platform remains fast and fully functional even without an internet connection.
+Colanode includes a desktop app and a self-hosted server. You can connect to multiple servers with a single app, each containing one or more **workspaces** for different teams or projects. After logging in, you pick a workspace to start collaborating—sending messages, editing pages, or updating database records.
 
-3. **Synchronization with a Central Server:**  
-   A background service automatically syncs all local transactions to a server using CRDT (Conflict-Free Replicated Data Types). This ensures that edits and updates made from multiple devices remain consistent. Only data to which a user has permission is synced to their device, ensuring privacy and reducing unnecessary data transfer.
+### Local-first workflow
 
-4. **Local-First Collaboration:**  
-   With Colanode, you can connect to multiple servers from a single desktop client. Host the server anywhere you choose and maintain full control over your data. This flexible, decentralized approach empowers teams to securely collaborate across various environments.
+All changes you make are saved to a local SQLite database first and then synced to the server. A background process handles this synchronization so you can keep working even if your computer or the server goes offline. Data reads also happen locally, ensuring immediate access to any content you have permissions to view.
 
-## Why Colanode?
+### Concurrent edits
 
-- **Open Source:** Colanode’s code is fully open source, ensuring transparency and the ability to audit or customize the platform to your needs.
-- **Local-First & Offline-Ready:** Don’t let internet outages slow you down. Work offline, and let Colanode handle synchronization behind the scenes when you’re back online.
-- **Scalable & Modular:** Easily adapt Colanode for small teams or large organizations. Its modular architecture and extensible design allow it to grow with you.
-- **Privacy & Security:** Self-hosting gives you ultimate control over your data. Keep your information private, secure, and governed by your own policies.
+Colanode relies on **Conflict-free Replicated Data Types (CRDTs)** - powered by [Yjs](https://docs.yjs.dev/) - to allow real-time collaboration on entries like pages or database records. This means multiple people can edit at the same time, and the system gracefully merges everyone’s updates. Deletions are also tracked as specialized transactions. Messages and file operations don’t support concurrent edits and use simpler database tables.
 
-## Getting started
+## Get started for free
 
-The easiest way to try Colanode is to [download the desktop app](https://colanode.com/downloads) from the official website and sign in to one of Colanode’s provided cloud servers. Enjoy a generous free tier for personal use, and explore the platform’s features without any upfront commitment.
+To begin using Colanode, **download the official desktop app** from the [website](https://colanode.com/downloads). Once installed, you can connect to any Colanode server—including our free beta cloud servers:
 
-## Tech Stack
+- **Colanode Cloud (EU)** – hosted in Europe.
+- **Colanode Cloud (US)** – hosted in the United States.
 
-- **Desktop App:**
+Both cloud servers are currently in beta and free to use; pricing will be announced soon.
 
-  - [Electron](https://www.electronjs.org/)
-  - [Vite](https://vitejs.dev/)
-  - [React](https://reactjs.org/)
-  - [TypeScript](https://www.typescriptlang.org/)
+### Self-host with Docker
 
-- **Server:**
+If you prefer to host your own Colanode server, simply use the Docker Compose file in the root of this repository. In the near future, we’ll provide more detailed instructions for other environments, including Kubernetes. For now, here’s what you need to run Colanode yourself:
 
-  - [Node.js](https://nodejs.org/)
-  - [Express](https://expressjs.com/)
-  - [TypeScript](https://www.typescriptlang.org/)
+- **Postgres** with the **pgvector** extension.
+- **Redis** (any Redis-compatible service will work, e.g., Valkey).
+- **S3-compatible storage** (supporting basic file operations and presigned URLs).
+- **Colanode server API**, provided as a Docker image.
 
-- **Database & Storage:**
-  - [PostgreSQL](https://www.postgresql.org/) for structured data
-  - [Redis](https://redis.io/) for caching and message queues
-  - S3-compatible storage (e.g., [MinIO](https://min.io/)) for files
+All required environment variables for the Colanode server can be found in the docker-compose file.
+
+## License
+
+Colanode is released under the [Apache 2.0 License](LICENSE).

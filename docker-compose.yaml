@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
     networks:
       - colanode_network
 
@@ -20,11 +20,11 @@ services:
     image: redis:7
     container_name: colanode_redis
     restart: always
-    command: ["redis-server", "--requirepass", "strongredispassword"]
+    command: ['redis-server', '--requirepass', 'strongredispassword']
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
     networks:
       - colanode_network
 
@@ -38,14 +38,14 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"
+      - '9000:9000'
     command: server /data
     networks:
       - colanode_network
 
   server:
     build:
-      context: . 
+      context: .
       dockerfile: apps/server/Dockerfile
     image: colanode_server
     container_name: colanode_server
@@ -55,43 +55,91 @@ services:
       - redis
       - minio
     environment:
-      # Server Configuration
+      # ───────────────────────────────────────────────────────────────
+      # General Node/Server Config
+      # ───────────────────────────────────────────────────────────────
       NODE_ENV: production
       PORT: 3000
 
-      # Database Configuration
-      DATABASE_URL: postgres://colanode_user:strongpassword@postgres:5432/colanode_db
+      # The server requires a name and avatar URL which will be displayed in the desktop app login screen.
+      SERVER_NAME: 'Colanode'
+      SERVER_AVATAR: ''
 
+      # ───────────────────────────────────────────────────────────────
+      # Account Configuration
+      # ───────────────────────────────────────────────────────────────
+      # Possible values for ACCOUNT_VERIFICATION_TYPE: 'automatic', 'manual', 'email'
+      ACCOUNT_VERIFICATION_TYPE: 'manual'
+      ACCOUNT_OTP_TIMEOUT: '600' # in seconds
+      ACCOUNT_ALLOW_GOOGLE_LOGIN: 'false'
+
+      # ───────────────────────────────────────────────────────────────
+      # PostgreSQL Configuration
+      # ───────────────────────────────────────────────────────────────
+      # The server expects a PostgreSQL database with the pgvector extension installed.
+      POSTGRES_URL: 'postgres://colanode_user:strongpassword@postgres:5432/colanode_db'
+
+      # ───────────────────────────────────────────────────────────────
       # Redis Configuration
-      REDIS_URL: redis://:strongredispassword@redis:6379/0
-      REDIS_HOST: redis
-      REDIS_PASSWORD: strongredispassword
-      REDIS_PORT: 6379
-      REDIS_DB: 0
+      # ───────────────────────────────────────────────────────────────
+      REDIS_URL: 'redis://:strongredispassword@redis:6379/0'
+      REDIS_HOST: 'redis'
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: 'strongredispassword'
+      REDIS_DB: '0'
+      # Optional variables:
+      REDIS_JOBS_QUEUE_NAME: 'jobs'
+      REDIS_EVENTS_CHANNEL: 'events'
 
-      # Redis Channel Configuration (updated)
-      REDIS_CHANGES_CHANNEL_NAME: colanode_changes
+      # ───────────────────────────────────────────────────────────────
+      # S3 Configuration for Avatars
+      # ───────────────────────────────────────────────────────────────
+      S3_AVATARS_ENDPOINT: 'http://minio:9000'
+      S3_AVATARS_ACCESS_KEY: 'minioadmin'
+      S3_AVATARS_SECRET_KEY: 'minioadminpassword'
+      S3_AVATARS_BUCKET_NAME: 'colanode-avatars'
+      S3_AVATARS_REGION: 'us-east-1'
 
-      # MinIO (S3-Compatible Storage) Configuration
-      AVATARS_STORAGE_ENDPOINT: http://minio:9000
-      AVATARS_STORAGE_BUCKET_NAME: colanode-avatars
-      AVATARS_STORAGE_REGION: us-east-1
-      AVATARS_STORAGE_ACCESS_KEY: minioadmin
-      AVATARS_STORAGE_SECRET_KEY: minioadminpassword
+      # ───────────────────────────────────────────────────────────────
+      # S3 Configuration for Files
+      # ───────────────────────────────────────────────────────────────
+      S3_FILES_ENDPOINT: 'http://minio:9000'
+      S3_FILES_ACCESS_KEY: 'minioadmin'
+      S3_FILES_SECRET_KEY: 'minioadminpassword'
+      S3_FILES_BUCKET_NAME: 'colanode-files'
+      S3_FILES_REGION: 'us-east-1'
 
-      FILES_STORAGE_ENDPOINT: http://minio:9000
-      FILES_STORAGE_BUCKET_NAME: colanode-files
-      FILES_STORAGE_REGION: us-east-1
-      FILES_STORAGE_ACCESS_KEY: minioadmin
-      FILES_STORAGE_SECRET_KEY: minioadminpassword
+      # ───────────────────────────────────────────────────────────────
+      # SMTP Configuration
+      # ───────────────────────────────────────────────────────────────
+      SMTP_HOST: 'smtp.example.com'
+      SMTP_PORT: '587'
+      SMTP_USER: 'user@example.com'
+      SMTP_PASSWORD: 'passsword'
+      # configuration.ts requires SMTP_EMAIL_FROM and SMTP_EMAIL_FROM_NAME
+      SMTP_EMAIL_FROM: 'no-reply@example.com'
+      SMTP_EMAIL_FROM_NAME: 'ColaNode'
 
-      SMTP_HOST: smtp.example.com
-      SMTP_PORT: 587
-      SMTP_USER: user@example.com
-      SMTP_PASS: passsword
-      EMAIL_FROM: user@example.com
+      # ───────────────────────────────────────────────────────────────
+      # AI Configuration
+      # ───────────────────────────────────────────────────────────────
+      AI_ENABLED: 'false'
+      AI_ENTRY_EMBED_DELAY: '60000'
+
+      OPENAI_API_KEY: ''
+      OPENAI_EMBEDDING_MODEL: 'text-embedding-ada-002'
+      OPENAI_EMBEDDING_DIMENSIONS: '2000'
+      OPENAI_EMBEDDING_BATCH_SIZE: '50'
+
+      CHUNK_DEFAULT_CHUNK_SIZE: '1000'
+      CHUNK_DEFAULT_OVERLAP: '200'
+      CHUNK_ENHANCE_WITH_CONTEXT: 'false'
+      CHUNK_CONTEXT_ENHANCER_MODEL: 'gpt-4o-mini'
+      CHUNK_CONTEXT_ENHANCER_TEMPERATURE: '0.3'
+      # ───────────────────────────────────────────────────────────────
+
     ports:
-      - "3000:3000"
+      - '3000:3000'
     networks:
       - colanode_network
 

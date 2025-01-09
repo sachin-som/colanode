@@ -50,12 +50,13 @@ const config: ForgeConfig = {
     },
     extraResource: ['assets'],
     osxSign: {
-      identity: process.env.APPLE_SIGNING_IDENTITY!,
       type: 'distribution',
+      keychain: process.env.KEYCHAIN!,
       optionsForFile: (_) => {
         return {
           hardenedRuntime: true,
           entitlements: 'entitlements.mac.plist',
+          entitlementsInherit: 'entitlements.mac.plist',
         };
       },
     },
@@ -63,6 +64,7 @@ const config: ForgeConfig = {
       appleId: process.env.APPLE_ID!,
       appleIdPassword: process.env.APPLE_ID_PASSWORD!,
       teamId: process.env.APPLE_TEAM_ID!,
+      keychain: process.env.KEYCHAIN!,
     },
   },
   rebuildConfig: {},

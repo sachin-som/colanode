@@ -8,7 +8,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
@@ -80,7 +80,7 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
-    
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
@@ -106,6 +106,33 @@ jobs:
       - name: Set VERSION
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
+      - name: Decode and Import macOS Certificate
+        run: |
+          # Decode the base64 encoded certificate
+          CERTIFICATE_CONTENT=$(echo "${{ secrets.MACOS_CERTIFICATE_BASE64 }}" | base64 --decode)
+
+          # Create a temporary keychain
+          KEYCHAIN_PATH="${RUNNER_TEMP}/temporary.keychain"
+          security create-keychain -p "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" "${KEYCHAIN_PATH}"
+
+          # Import the certificate into the temporary keychain
+          echo "${CERTIFICATE_CONTENT}" > "${RUNNER_TEMP}/certificate.p12"
+          security import "${RUNNER_TEMP}/certificate.p12" -k "${KEYCHAIN_PATH}" -P "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+
+          # Set the temporary keychain as the default keychain
+          security default-keychain -s "${KEYCHAIN_PATH}"
+
+          # Unlock the keychain
+          security unlock-keychain -p "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" "${KEYCHAIN_PATH}"
+
+          # Optionally, list available keys to verify (for debugging)
+          security find-identity -v -p codesigning
+
+          # Set environment variables for codesigning
+          echo "KEYCHAIN_PATH=${KEYCHAIN_PATH}" >> $GITHUB_ENV
+          echo "KEYCHAIN_PASSWORD=${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" >> $GITHUB_ENV
+        shell: bash
+
       - name: Update package.json version
         working-directory: apps/desktop
         run: npm version $VERSION --no-git-tag-version
@@ -114,16 +141,25 @@ jobs:
         run: |
           npm ci
 
-      - name: Build Electron App
+      - name: Build and Notarize Electron App (macOS)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
-          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
-          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+          KEYCHAIN_PASSWORD: ${{ env.KEYCHAIN_PASSWORD }}
         working-directory: apps/desktop
-        run: npm run make -- --mac
+        run: |
+          npm run make -- --mac
+
+      - name: Delete Temporary Keychain
+        if: always()
+        run: |
+          security delete-keychain "${{ env.KEYCHAIN_PATH }}"
+        shell: bash
 
       - name: Publish Release
         env:

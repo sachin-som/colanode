@@ -49,6 +49,21 @@ const config: ForgeConfig = {
       return true;
     },
     extraResource: ['assets'],
+    osxSign: {
+      identity: process.env.APPLE_SIGNING_IDENTITY!,
+      type: 'distribution',
+      optionsForFile: (_) => {
+        return {
+          hardenedRuntime: true,
+          entitlements: 'entitlements.mac.plist',
+        };
+      },
+    },
+    osxNotarize: {
+      appleId: process.env.APPLE_ID!,
+      appleIdPassword: process.env.APPLE_ID_PASSWORD!,
+      teamId: process.env.APPLE_TEAM_ID!,
+    },
   },
   rebuildConfig: {},
   makers: [

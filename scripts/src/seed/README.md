@@ -45,6 +45,7 @@ This directory contains a script that automatically creates a set of **dummy dat
 
 ## Notes
 
+- **Email Verification**: Make sure to disable email verification on your target server before running the seed script. Otherwise, the script will fail since it cannot complete the verification process for the generated accounts.
 - **Performance**: By default, the script creates several thousand messages, records, and pages. If you find performance is an issue, you can reduce the numbers (e.g., number of messages per channel, or records per database) in `node-generator.ts`.
-- **Avatars**: The `avatars/` folder (referenced in `index.ts`) contains sample `.webp` images for users. These are automatically uploaded to the server, and each user’s `avatar` field is updated accordingly.
+- **Avatars**: The `avatars/` folder (referenced in `index.ts`) contains sample `.webp` images for users. These are automatically uploaded to the server, and each user's `avatar` field is updated accordingly.
 - **Data Cleanup**: The script does not automatically purge any existing data. If you run it repeatedly against the same server or workspace, it will fail because of duplicate account emails used before.

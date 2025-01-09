@@ -1,4 +1,4 @@
-import { LoginOutput, Mutation } from '@colanode/core';
+import { LoginSuccessOutput, Mutation } from '@colanode/core';
 
 export type FakerAccount = {
   name: string;
@@ -8,7 +8,7 @@ export type FakerAccount = {
 };
 
 export type User = {
-  login: LoginOutput;
+  login: LoginSuccessOutput;
   userId: string;
   mutations: Mutation[];
 };

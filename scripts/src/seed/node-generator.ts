@@ -15,14 +15,16 @@ import {
   LocalCreateTransaction,
   CreateMessageMutation,
   entryAttributesSchema,
+  MessageType,
+  TransactionOperation,
 } from '@colanode/core';
 import { encodeState, YDoc } from '@colanode/crdt';
 import { faker } from '@faker-js/faker';
 
 import { User } from './types';
 
-const MESSAGES_PER_CONVERSATION = 2000;
-const RECORDS_PER_DATABASE = 2000;
+const MESSAGES_PER_CONVERSATION = 500;
+const RECORDS_PER_DATABASE = 500;
 
 export class NodeGenerator {
   constructor(
@@ -253,11 +255,11 @@ export class NodeGenerator {
       id: generateId(IdType.Mutation),
       data: {
         id: messageId,
-        type: 'standard',
         entryId: conversationId,
         parentId: conversationId,
         rootId,
-        content: {
+        attributes: {
+          type: MessageType.Standard,
           blocks: this.buildMessageContent(messageId),
         },
         createdAt: new Date().toISOString(),
@@ -919,7 +921,7 @@ export class NodeGenerator {
 
     return {
       id: generateId(IdType.Transaction),
-      operation: 'create',
+      operation: TransactionOperation.Create,
       data: encodeState(update),
       entryId,
       rootId,

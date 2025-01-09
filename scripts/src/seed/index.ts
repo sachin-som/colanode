@@ -1,6 +1,6 @@
 import FormData from 'form-data';
 import axios from 'axios';
-import { LoginOutput } from '@colanode/core';
+import { LoginSuccessOutput } from '@colanode/core';
 
 import fs from 'fs';
 import path from 'path';
@@ -38,13 +38,19 @@ const uploadAvatar = async (
   }
 };
 
-const createAccount = async (account: FakerAccount): Promise<LoginOutput> => {
-  const url = `${SERVER_DOMAIN}/client/v1/accounts/register/email`;
-  const { data } = await axios.post<LoginOutput>(url, {
+const createAccount = async (
+  account: FakerAccount
+): Promise<LoginSuccessOutput> => {
+  const url = `${SERVER_DOMAIN}/client/v1/accounts/emails/register`;
+  const { data } = await axios.post<LoginSuccessOutput>(url, {
     name: account.name,
     email: account.email,
     password: account.password,
   });
+
+  if (data.type !== 'success') {
+    throw new Error('Failed to create account');
+  }
 
   const avatarPath = path.resolve(`src/seed/avatars/${account.avatar}`);
   const avatarId = await uploadAvatar(data.token, avatarPath);
@@ -69,7 +75,7 @@ const createAccount = async (account: FakerAccount): Promise<LoginOutput> => {
 
 const createMainAccountAndWorkspace = async (
   account: FakerAccount
-): Promise<LoginOutput> => {
+): Promise<LoginSuccessOutput> => {
   const login = await createAccount(account);
   const workspace = login.workspaces[0];
   if (!workspace) {
@@ -104,7 +110,7 @@ const createMainAccountAndWorkspace = async (
 };
 
 const inviteAccountsToWorkspace = async (
-  mainAccount: LoginOutput,
+  mainAccount: LoginSuccessOutput,
   otherFakerAccounts: FakerAccount[]
 ) => {
   const workspace = mainAccount.workspaces[0];

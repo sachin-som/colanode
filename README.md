@@ -17,6 +17,8 @@ Colanode is an all-in-one platform for easy collaboration, built to prioritize y
 
 Built for both individuals and teams, Colanode adapts to your needs, whether you're running a small project, managing a team, or collaborating across an entire organization. With its self-hosted model, you retain full control over your data while enjoying a polished, feature-rich experience.
 
+![Colanode preview](apps/desktop/assets/colanode_desktop_preview.gif)
+
 ## How it works
 
 Colanode includes a desktop app and a self-hosted server. You can connect to multiple servers with a single app, each containing one or more **workspaces** for different teams or projects. After logging in, you pick a workspace to start collaborating—sending messages, editing pages, or updating database records.

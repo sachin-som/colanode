@@ -7,6 +7,7 @@ import {
   WorkspaceRole,
   MessageType,
   MessageAttributes,
+  TransactionOperation,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -132,7 +133,7 @@ interface EntryTransactionTable {
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  operation: ColumnType<string, string, never>;
+  operation: ColumnType<TransactionOperation, TransactionOperation, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, Uint8Array | null>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;

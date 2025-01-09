@@ -12,6 +12,7 @@ import {
   canCreateEntry,
   canUpdateEntry,
   canDeleteEntry,
+  TransactionOperation,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { Transaction } from 'kysely';
@@ -89,7 +90,7 @@ class EntryService {
       root_id: input.rootId,
       entry_id: input.entryId,
       workspace_id: input.workspaceId,
-      operation: 'create',
+      operation: TransactionOperation.Create,
       data: update,
       created_at: date,
       created_by: input.userId,
@@ -230,7 +231,7 @@ class EntryService {
             entry_id: input.entryId,
             root_id: entry.rootId,
             workspace_id: input.workspaceId,
-            operation: 'update',
+            operation: TransactionOperation.Update,
             data: update,
             created_at: date,
             created_by: input.userId,
@@ -338,7 +339,7 @@ class EntryService {
       entry_id: input.entryId,
       root_id: input.rootId,
       workspace_id: user.workspace_id,
-      operation: 'create',
+      operation: TransactionOperation.Create,
       data:
         typeof input.data === 'string' ? decodeState(input.data) : input.data,
       created_at: input.createdAt,
@@ -490,7 +491,7 @@ class EntryService {
             entry_id: input.entryId,
             root_id: input.rootId,
             workspace_id: user.workspace_id,
-            operation: 'update',
+            operation: TransactionOperation.Update,
             data:
               typeof input.data === 'string'
                 ? decodeState(input.data)
@@ -614,7 +615,7 @@ class EntryService {
             entry_id: input.entryId,
             root_id: input.rootId,
             workspace_id: user.workspace_id,
-            operation: 'delete',
+            operation: TransactionOperation.Delete,
             created_at: input.createdAt,
             created_by: user.id,
             server_created_at: new Date(),

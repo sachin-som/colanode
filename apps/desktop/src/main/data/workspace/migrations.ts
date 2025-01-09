@@ -65,7 +65,7 @@ const createEntryTransactionsTable: Migration = {
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('entry_id', 'text', (col) => col.notNull())
       .addColumn('root_id', 'text', (col) => col.notNull())
-      .addColumn('operation', 'text', (col) => col.notNull())
+      .addColumn('operation', 'integer', (col) => col.notNull())
       .addColumn('data', 'blob')
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('created_by', 'text', (col) => col.notNull())

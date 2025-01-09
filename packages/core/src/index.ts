@@ -21,7 +21,7 @@ export * from './types/interactions';
 export * from './types/sockets';
 export * from './types/entries';
 export * from './types/servers';
-export * from './types/sync';
+export * from './types/transactions';
 export * from './types/workspaces';
 export * from './types/mutations';
 export * from './types/messages';

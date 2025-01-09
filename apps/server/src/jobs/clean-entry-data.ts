@@ -1,5 +1,5 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { generateId, IdType } from '@colanode/core';
+import { generateId, IdType, TransactionOperation } from '@colanode/core';
 
 import { database } from '@/data/database';
 import {
@@ -50,7 +50,7 @@ export const cleanEntryDataHandler: JobHandler<CleanEntryDataInput> = async (
   const deleteTransaction = deleteTransactions[0];
   if (
     !deleteTransaction?.operation ||
-    deleteTransaction.operation !== 'delete'
+    deleteTransaction.operation !== TransactionOperation.Delete
   ) {
     logger.error(`Expected delete transaction for ${input.entryId}`);
     return;
@@ -96,7 +96,7 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
           entry_id: descendant.id,
           root_id: descendant.root_id,
           workspace_id: descendant.workspace_id,
-          operation: 'delete',
+          operation: TransactionOperation.Delete,
           created_at: new Date(),
           created_by: userId,
           server_created_at: new Date(),

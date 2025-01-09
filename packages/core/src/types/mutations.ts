@@ -4,7 +4,7 @@ import {
   LocalCreateTransaction,
   LocalDeleteTransaction,
   LocalUpdateTransaction,
-} from './sync';
+} from './transactions';
 
 export type SyncMutationsInput = {
   mutations: Mutation[];

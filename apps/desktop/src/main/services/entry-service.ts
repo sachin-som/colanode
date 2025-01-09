@@ -16,6 +16,7 @@ import {
   entryAttributesSchema,
   Entry,
   canCreateEntry,
+  TransactionOperation,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
@@ -129,7 +130,7 @@ class EntryService {
             id: transactionId,
             entry_id: input.id,
             root_id: root?.id ?? input.id,
-            operation: 'create',
+            operation: TransactionOperation.Create,
             data: update,
             created_at: createdAt,
             created_by: userId,
@@ -307,7 +308,7 @@ class EntryService {
             id: transactionId,
             entry_id: entryId,
             root_id: entry.rootId,
-            operation: 'update',
+            operation: TransactionOperation.Update,
             data: update,
             created_at: updatedAt,
             created_by: userId,
@@ -439,7 +440,7 @@ class EntryService {
             id: generateId(IdType.Transaction),
             entry_id: entryId,
             root_id: root.root_id,
-            operation: 'delete',
+            operation: TransactionOperation.Delete,
             data: null,
             created_at: new Date().toISOString(),
             created_by: userId,
@@ -497,11 +498,11 @@ class EntryService {
     userId: string,
     transaction: SyncEntryTransactionData
   ) {
-    if (transaction.operation === 'create') {
+    if (transaction.operation === TransactionOperation.Create) {
       await this.applyServerCreateTransaction(userId, transaction);
-    } else if (transaction.operation === 'update') {
+    } else if (transaction.operation === TransactionOperation.Update) {
       await this.applyServerUpdateTransaction(userId, transaction);
-    } else if (transaction.operation === 'delete') {
+    } else if (transaction.operation === TransactionOperation.Delete) {
       await this.applyServerDeleteTransaction(userId, transaction);
     }
   }
@@ -577,7 +578,7 @@ class EntryService {
             id: transaction.id,
             entry_id: transaction.entryId,
             root_id: transaction.rootId,
-            operation: 'create',
+            operation: TransactionOperation.Create,
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
             created_by: transaction.createdBy,
@@ -729,7 +730,7 @@ class EntryService {
             id: transaction.id,
             entry_id: transaction.entryId,
             root_id: transaction.rootId,
-            operation: 'update',
+            operation: TransactionOperation.Update,
             data: decodeState(transaction.data),
             created_at: transaction.createdAt,
             created_by: transaction.createdBy,

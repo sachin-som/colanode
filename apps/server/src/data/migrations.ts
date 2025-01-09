@@ -185,7 +185,7 @@ const createEntryTransactionsTable: Migration = {
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('operation', 'varchar(30)', (col) => col.notNull())
+      .addColumn('operation', 'integer', (col) => col.notNull())
       .addColumn('data', 'bytea')
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())

@@ -1,4 +1,9 @@
-import { LocalTransaction, Mutation, Entry } from '@colanode/core';
+import {
+  LocalTransaction,
+  Mutation,
+  Entry,
+  TransactionOperation,
+} from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 import {
   DeleteResult,
@@ -233,36 +238,36 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
 export const mapEntryTransaction = (
   row: SelectEntryTransaction
 ): LocalTransaction => {
-  if (row.operation === 'create' && row.data) {
+  if (row.operation === TransactionOperation.Create && row.data) {
     return {
       id: row.id,
       entryId: row.entry_id,
       rootId: row.root_id,
-      operation: 'create',
+      operation: TransactionOperation.Create,
       data: encodeState(row.data),
       createdAt: row.created_at,
       createdBy: row.created_by,
     };
   }
 
-  if (row.operation === 'update' && row.data) {
+  if (row.operation === TransactionOperation.Update && row.data) {
     return {
       id: row.id,
       entryId: row.entry_id,
       rootId: row.root_id,
-      operation: 'update',
+      operation: TransactionOperation.Update,
       data: encodeState(row.data),
       createdAt: row.created_at,
       createdBy: row.created_by,
     };
   }
 
-  if (row.operation === 'delete') {
+  if (row.operation === TransactionOperation.Delete) {
     return {
       id: row.id,
       entryId: row.entry_id,
       rootId: row.root_id,
-      operation: 'delete',
+      operation: TransactionOperation.Delete,
       createdAt: row.created_at,
       createdBy: row.created_by,
     };

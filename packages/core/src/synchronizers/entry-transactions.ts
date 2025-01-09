@@ -1,3 +1,5 @@
+import { TransactionOperation } from '../types/transactions';
+
 export type SyncEntryTransactionsInput = {
   type: 'entry_transactions';
   rootId: string;
@@ -5,7 +7,7 @@ export type SyncEntryTransactionsInput = {
 
 export type SyncCreateEntryTransactionData = {
   id: string;
-  operation: 'create';
+  operation: TransactionOperation.Create;
   entryId: string;
   rootId: string;
   workspaceId: string;
@@ -18,7 +20,7 @@ export type SyncCreateEntryTransactionData = {
 
 export type SyncUpdateEntryTransactionData = {
   id: string;
-  operation: 'update';
+  operation: TransactionOperation.Update;
   entryId: string;
   rootId: string;
   workspaceId: string;
@@ -31,7 +33,7 @@ export type SyncUpdateEntryTransactionData = {
 
 export type SyncDeleteEntryTransactionData = {
   id: string;
-  operation: 'delete';
+  operation: TransactionOperation.Delete;
   entryId: string;
   rootId: string;
   workspaceId: string;

@@ -2,6 +2,7 @@ import {
   SynchronizerOutputMessage,
   SyncEntryTransactionsInput,
   SyncEntryTransactionData,
+  TransactionOperation,
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
@@ -59,10 +60,13 @@ export class EntryTransactionSynchronizer extends BaseSynchronizer<SyncEntryTran
   ): SynchronizerOutputMessage<SyncEntryTransactionsInput> {
     const items: SyncEntryTransactionData[] = unsyncedTransactions.map(
       (transaction) => {
-        if (transaction.operation === 'create' && transaction.data) {
+        if (
+          transaction.operation === TransactionOperation.Create &&
+          transaction.data
+        ) {
           return {
             id: transaction.id,
-            operation: 'create',
+            operation: TransactionOperation.Create,
             entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,
@@ -74,10 +78,13 @@ export class EntryTransactionSynchronizer extends BaseSynchronizer<SyncEntryTran
           };
         }
 
-        if (transaction.operation === 'update' && transaction.data) {
+        if (
+          transaction.operation === TransactionOperation.Update &&
+          transaction.data
+        ) {
           return {
             id: transaction.id,
-            operation: 'update',
+            operation: TransactionOperation.Update,
             entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,
@@ -89,10 +96,10 @@ export class EntryTransactionSynchronizer extends BaseSynchronizer<SyncEntryTran
           };
         }
 
-        if (transaction.operation === 'delete') {
+        if (transaction.operation === TransactionOperation.Delete) {
           return {
             id: transaction.id,
-            operation: 'delete',
+            operation: TransactionOperation.Delete,
             entryId: transaction.entry_id,
             rootId: transaction.root_id,
             workspaceId: transaction.workspace_id,

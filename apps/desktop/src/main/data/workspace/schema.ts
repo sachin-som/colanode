@@ -5,6 +5,7 @@ import {
   EntryType,
   WorkspaceRole,
   MessageType,
+  TransactionOperation,
 } from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
@@ -57,7 +58,7 @@ interface EntryTransactionTable {
   id: ColumnType<string, string, never>;
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
-  operation: ColumnType<string, string, never>;
+  operation: ColumnType<TransactionOperation, TransactionOperation, never>;
   data: ColumnType<Uint8Array | null, Uint8Array | null, never>;
   created_at: ColumnType<string, string, never>;
   created_by: ColumnType<string, string, never>;

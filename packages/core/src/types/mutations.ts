@@ -1,5 +1,5 @@
 import { FileType } from './files';
-import { MessageContent, MessageType } from './messages';
+import { MessageAttributes } from './messages';
 import {
   LocalCreateTransaction,
   LocalDeleteTransaction,
@@ -73,10 +73,9 @@ export type ApplyDeleteTransactionMutation = MutationBase & {
 
 export type CreateMessageMutationData = {
   id: string;
-  type: MessageType;
   entryId: string;
   parentId: string;
-  content: MessageContent;
+  attributes: MessageAttributes;
   rootId: string;
   createdAt: string;
 };

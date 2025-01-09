@@ -374,12 +374,14 @@ const createMessagesTable: Migration = {
     await db.schema
       .createTable('messages')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('type', 'varchar(30)', (col) => col.notNull())
+      .addColumn('type', 'integer', (col) =>
+        col.generatedAlwaysAs(sql`(attributes->>'type')::INTEGER`).stored()
+      )
       .addColumn('parent_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('entry_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('content', 'text', (col) => col.notNull())
+      .addColumn('attributes', 'jsonb', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')

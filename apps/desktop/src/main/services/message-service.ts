@@ -42,8 +42,7 @@ class MessageService {
         .updateTable('messages')
         .returningAll()
         .set({
-          content: JSON.stringify(message.content),
-          type: message.type,
+          attributes: JSON.stringify(message.attributes),
           updated_at: message.updatedAt,
           updated_by: message.updatedBy,
           root_id: message.rootId,
@@ -61,7 +60,7 @@ class MessageService {
         .where('id', '=', message.id)
         .execute();
 
-      const text = extractMessageText(message.id, message.content);
+      const text = extractMessageText(message.id, message.attributes);
       if (text) {
         await workspaceDatabase
           .insertInto('texts')
@@ -89,11 +88,10 @@ class MessageService {
       .values({
         id: message.id,
         version,
-        type: message.type,
         parent_id: message.entryId,
         entry_id: message.entryId,
         root_id: message.rootId,
-        content: JSON.stringify(message.content),
+        attributes: JSON.stringify(message.attributes),
         created_at: message.createdAt,
         created_by: message.createdBy,
         updated_at: message.updatedAt,
@@ -105,7 +103,7 @@ class MessageService {
       return;
     }
 
-    const text = extractMessageText(message.id, message.content);
+    const text = extractMessageText(message.id, message.attributes);
     if (text) {
       await workspaceDatabase
         .insertInto('texts')

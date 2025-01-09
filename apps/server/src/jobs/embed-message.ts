@@ -1,4 +1,5 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
+import { extractMessageText } from '@colanode/core';
 
 import { JobHandler } from '@/types/jobs';
 import { ChunkingService } from '@/services/chunking-service';
@@ -39,8 +40,13 @@ export const embedMessageHandler: JobHandler<EmbedMessageInput> = async (
   }
 
   const chunkingService = new ChunkingService();
-  const chunks = await chunkingService.chunkText(message.content);
+  const text = extractMessageText(message.id, message.attributes);
 
+  if (!text || !text.text) {
+    return;
+  }
+
+  const chunks = await chunkingService.chunkText(text.text);
   const embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.openai.apiKey,
     modelName: configuration.ai.openai.embeddingModel,

@@ -56,12 +56,11 @@ class MessageService {
       .returningAll()
       .values({
         id: mutation.data.id,
-        type: mutation.data.type,
         entry_id: mutation.data.entryId,
         parent_id: mutation.data.parentId,
         root_id: mutation.data.rootId,
         workspace_id: root.workspace_id,
-        content: JSON.stringify(mutation.data.content),
+        attributes: JSON.stringify(mutation.data.attributes),
         created_by: user.id,
         created_at: new Date(mutation.data.createdAt),
       })

@@ -6,6 +6,7 @@ import {
   EntryType,
   WorkspaceRole,
   MessageType,
+  MessageAttributes,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -172,12 +173,12 @@ export type UpdateEntryPath = Updateable<EntryPathTable>;
 
 interface MessageTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<MessageType, MessageType, MessageType>;
+  type: ColumnType<MessageType, never, never>;
   parent_id: ColumnType<string, string, never>;
   entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  content: ColumnType<string, string, never>;
+  attributes: JSONColumnType<MessageAttributes, string, string>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;

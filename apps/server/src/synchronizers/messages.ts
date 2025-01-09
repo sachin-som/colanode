@@ -58,12 +58,11 @@ export class MessageSynchronizer extends BaseSynchronizer<SyncMessagesInput> {
   ): SynchronizerOutputMessage<SyncMessagesInput> {
     const items: SyncMessageData[] = unsyncedMessages.map((message) => ({
       id: message.id,
-      type: message.type,
       entryId: message.entry_id,
       parentId: message.parent_id,
       rootId: message.root_id,
       workspaceId: message.workspace_id,
-      content: JSON.parse(message.content),
+      attributes: message.attributes,
       createdAt: message.created_at.toISOString(),
       createdBy: message.created_by,
       updatedAt: message.updated_at?.toISOString() ?? null,

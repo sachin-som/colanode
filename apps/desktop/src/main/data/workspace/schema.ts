@@ -1,10 +1,10 @@
 import {
   FileStatus,
   FileType,
-  MessageType,
   MutationType,
   EntryType,
   WorkspaceRole,
+  MessageType,
 } from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
@@ -99,11 +99,11 @@ export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface MessageTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<MessageType, MessageType, MessageType>;
+  type: ColumnType<MessageType, never, never>;
   parent_id: ColumnType<string, string, string>;
   entry_id: ColumnType<string, string, string>;
   root_id: ColumnType<string, string, string>;
-  content: ColumnType<string, string, string>;
+  attributes: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;

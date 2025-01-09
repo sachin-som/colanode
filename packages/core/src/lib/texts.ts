@@ -1,6 +1,6 @@
 import { Block } from '../registry/block';
 import { EntryAttributes } from '../registry';
-import { MessageContent } from '../types/messages';
+import { MessageAttributes, MessageType } from '../types/messages';
 
 export type TextResult = {
   id: string;
@@ -33,13 +33,17 @@ export const extractEntryText = (
 
 export const extractMessageText = (
   id: string,
-  content: MessageContent
+  attributes: MessageAttributes
 ): TextResult | undefined => {
-  return {
-    id,
-    name: null,
-    text: extractBlockTexts(id, content.blocks),
-  };
+  if (attributes.type === MessageType.Standard) {
+    return {
+      id,
+      name: null,
+      text: extractBlockTexts(id, attributes.blocks),
+    };
+  }
+
+  return undefined;
 };
 
 const extractBlockTexts = (

@@ -7,7 +7,7 @@ interface MessageContentProps {
 }
 
 export const MessageContent = ({ message }: MessageContentProps) => {
-  const nodeBlocks = Object.values(message.content.blocks ?? {});
+  const nodeBlocks = Object.values(message.attributes.blocks ?? {});
   const contents = mapBlocksToContents(message.id, nodeBlocks);
 
   return (

@@ -1,11 +1,11 @@
-import { MessageContent, MessageType } from '@colanode/core';
+import { MessageAttributes, MessageType } from '@colanode/core';
 
 export type MessageNode = {
   id: string;
   type: MessageType;
   parentId: string;
   rootId: string;
-  content: MessageContent;
+  attributes: MessageAttributes;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;

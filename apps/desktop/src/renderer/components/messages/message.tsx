@@ -6,6 +6,7 @@ import { MessageAuthorName } from '@/renderer/components/messages/message-author
 import { MessageContent } from '@/renderer/components/messages/message-content';
 import { MessageReactions } from '@/renderer/components/messages/message-reactions';
 import { MessageTime } from '@/renderer/components/messages/message-time';
+import { MessageReference } from '@/renderer/components/messages/message-reference';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { MessageNode } from '@/shared/types/messages';
@@ -65,9 +66,9 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           }}
         >
           <MessageActions message={message} />
-          {/* {message.type === 'reply' && (
-            <MessageReference messageId={message.referenceId} />
-          )} */}
+          {message.attributes.referenceId && (
+            <MessageReference messageId={message.attributes.referenceId} />
+          )}
           <MessageContent message={message} />
           <MessageReactions message={message} />
         </InView>

@@ -1,7 +1,13 @@
 import { Block } from '../registry/block';
 
-export type MessageType = 'standard';
+export enum MessageType {
+  Standard = 1,
+}
 
-export type MessageContent = {
+export type StandardMessageAttributes = {
+  type: MessageType.Standard;
   blocks: Record<string, Block>;
+  referenceId?: string | null;
 };
+
+export type MessageAttributes = StandardMessageAttributes;

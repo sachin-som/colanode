@@ -7,7 +7,8 @@ import {
   FileStatus,
   generateId,
   IdType,
-  MessageContent,
+  MessageAttributes,
+  MessageType,
 } from '@colanode/core';
 
 import { fileService } from '@/main/services/file-service';
@@ -178,8 +179,10 @@ export class MessageCreateMutationHandler
       {} as Record<string, Block>
     );
 
-    const messageContent: MessageContent = {
+    const messageAttributes: MessageAttributes = {
+      type: MessageType.Standard,
       blocks: blocksRecord,
+      referenceId: input.referenceId,
     };
 
     const { createdMessage, createdFiles, createdFileStates } =
@@ -189,11 +192,10 @@ export class MessageCreateMutationHandler
           .returningAll()
           .values({
             id: messageId,
-            type: 'standard',
             entry_id: input.conversationId,
             parent_id: input.conversationId,
             root_id: input.rootId,
-            content: JSON.stringify(messageContent),
+            attributes: JSON.stringify(messageAttributes),
             created_at: createdAt,
             created_by: input.userId,
             version: 0n,
@@ -206,11 +208,10 @@ export class MessageCreateMutationHandler
 
         const createMessageMutationData: CreateMessageMutationData = {
           id: messageId,
-          type: 'standard',
           entryId: input.conversationId,
           parentId: input.conversationId,
           rootId: input.rootId,
-          content: messageContent,
+          attributes: messageAttributes,
           createdAt: createdAt,
         };
 

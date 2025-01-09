@@ -1,4 +1,4 @@
-import { MessageContent, MessageType } from '../types/messages';
+import { MessageAttributes } from '../types/messages';
 
 export type SyncMessagesInput = {
   type: 'messages';
@@ -7,12 +7,11 @@ export type SyncMessagesInput = {
 
 export type SyncMessageData = {
   id: string;
-  type: MessageType;
   parentId: string;
   entryId: string;
   rootId: string;
   workspaceId: string;
-  content: MessageContent;
+  attributes: MessageAttributes;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;

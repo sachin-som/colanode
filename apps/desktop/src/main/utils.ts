@@ -298,7 +298,7 @@ export const mapMessage = (row: SelectMessage): MessageNode => {
     type: row.type,
     parentId: row.parent_id,
     rootId: row.root_id,
-    content: JSON.parse(row.content),
+    attributes: JSON.parse(row.attributes),
     createdAt: row.created_at,
     createdBy: row.created_by,
     updatedAt: row.updated_at,

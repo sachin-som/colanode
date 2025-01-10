@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { AccountStatus, EmailLoginInput, ApiErrorCode } from '@colanode/core';
-import bcrypt from 'bcrypt';
-import { sha256 } from 'js-sha256';
+import argon2 from '@node-rs/argon2';
 
 import { database } from '@/data/database';
 import { accountService } from '@/services/account-service';
@@ -60,11 +59,7 @@ export const emailLoginHandler = async (
     });
   }
 
-  const preHashedPassword = sha256(input.password);
-  const passwordMatch = await bcrypt.compare(
-    preHashedPassword,
-    account.password
-  );
+  const passwordMatch = await argon2.verify(account.password, input.password);
 
   if (!passwordMatch) {
     return ResponseBuilder.badRequest(res, {

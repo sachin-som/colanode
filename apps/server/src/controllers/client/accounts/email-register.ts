@@ -6,8 +6,7 @@ import {
   IdType,
   ApiErrorCode,
 } from '@colanode/core';
-import bcrypt from 'bcrypt';
-import { sha256 } from 'js-sha256';
+import argon2 from '@node-rs/argon2';
 
 import { database } from '@/data/database';
 import { SelectAccount } from '@/data/schema';
@@ -15,8 +14,6 @@ import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
 import { configuration } from '@/lib/configuration';
-
-const SaltRounds = 15;
 
 export const emailRegisterHandler = async (
   req: Request,
@@ -49,9 +46,11 @@ export const emailRegisterHandler = async (
     .where('email', '=', email)
     .executeTakeFirst();
 
-  const salt = await bcrypt.genSalt(SaltRounds);
-  const preHashedPassword = sha256(input.password);
-  const password = await bcrypt.hash(preHashedPassword, salt);
+  const password = await argon2.hash(input.password, {
+    memoryCost: 19456,
+    timeCost: 2,
+    parallelism: 1,
+  });
 
   let account: SelectAccount | null | undefined = null;
 

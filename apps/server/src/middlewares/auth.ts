@@ -20,6 +20,13 @@ export const authMiddleware: RequestHandler = async (
   }
 
   const tokenData = parseToken(token);
+  if (!tokenData) {
+    return ResponseBuilder.unauthorized(res, {
+      code: ApiErrorCode.TokenInvalid,
+      message: 'Token is invalid or expired',
+    });
+  }
+
   const isRateLimited = await rateLimitService.isDeviceApiRateLimitted(
     tokenData.deviceId
   );

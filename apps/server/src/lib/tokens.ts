@@ -4,6 +4,8 @@ import { database } from '@/data/database';
 import { uuid } from '@/lib/utils';
 import { RequestAccount } from '@/types/api';
 
+const DEVICE_TOKEN_PREFIX = 'cnd_';
+
 interface GenerateTokenResult {
   token: string;
   salt: string;
@@ -27,8 +29,8 @@ type VerifyTokenResult =
 export const generateToken = (deviceId: string): GenerateTokenResult => {
   const salt = uuid();
   const secret = uuid() + uuid();
-  const token = deviceId + secret;
   const hash = sha256(secret + salt);
+  const token = DEVICE_TOKEN_PREFIX + deviceId + secret;
 
   return {
     token,
@@ -37,9 +39,14 @@ export const generateToken = (deviceId: string): GenerateTokenResult => {
   };
 };
 
-export const parseToken = (token: string): TokenData => {
-  const deviceId = token.slice(0, 28);
-  const secret = token.slice(28);
+export const parseToken = (token: string): TokenData | null => {
+  if (!token.startsWith(DEVICE_TOKEN_PREFIX)) {
+    return null;
+  }
+
+  const tokenWithoutPrefix = token.slice(DEVICE_TOKEN_PREFIX.length);
+  const deviceId = tokenWithoutPrefix.slice(0, 28);
+  const secret = tokenWithoutPrefix.slice(28);
   return {
     deviceId,
     secret,

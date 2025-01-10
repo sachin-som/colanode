@@ -51,6 +51,11 @@ class SocketService {
       }
 
       const tokenData = parseToken(token);
+      if (!tokenData) {
+        socket.destroy();
+        return;
+      }
+
       const isRateLimited = await rateLimitService.isDeviceSocketRateLimitted(
         tokenData.deviceId
       );

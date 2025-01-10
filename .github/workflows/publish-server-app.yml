@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Publish server app
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT

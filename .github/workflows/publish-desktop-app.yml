@@ -1,4 +1,4 @@
-name: Publish Desktop
+name: Publish Desktop App
 
 on:
   push:
@@ -63,7 +63,7 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
           NODE_ENV: production
         working-directory: apps/desktop
-        run: npm run make -- --win
+        run: npm run publish -- --win
 
       - name: Clean up certificate
         run: |
@@ -71,12 +71,6 @@ jobs:
             Remove-Item -Path $env:CERTIFICATE_PATH
           }
         shell: pwsh
-
-      - name: Publish Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: apps/desktop
-        run: npm run publish
 
   build-macos:
     runs-on: macos-latest

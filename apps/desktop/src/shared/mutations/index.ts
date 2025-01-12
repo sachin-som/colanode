@@ -99,6 +99,8 @@ export enum MutationErrorCode {
   FileDeleteForbidden = 'file_delete_forbidden',
   FileDeleteFailed = 'file_delete_failed',
   FolderUpdateForbidden = 'folder_update_forbidden',
+  StorageLimitExceeded = 'storage_limit_exceeded',
+  FileTooLarge = 'file_too_large',
   FolderUpdateFailed = 'folder_update_failed',
   MessageCreateForbidden = 'message_create_forbidden',
   MessageCreateFailed = 'message_create_failed',

@@ -12,6 +12,7 @@ import { SelectAccount } from '@/data/schema';
 import { mapEntry } from '@/lib/entries';
 import { entryService } from '@/services/entry-service';
 import { eventBus } from '@/lib/event-bus';
+import { configuration } from '@/lib/configuration';
 
 class WorkspaceService {
   public async createWorkspace(
@@ -51,6 +52,8 @@ class WorkspaceService {
         name: account.name,
         email: account.email,
         avatar: account.avatar,
+        storage_limit: configuration.user.storageLimit,
+        max_file_size: configuration.user.maxFileSize,
         created_at: date,
         created_by: account.id,
         status: UserStatus.Active,

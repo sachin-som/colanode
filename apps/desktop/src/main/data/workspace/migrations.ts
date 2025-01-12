@@ -11,6 +11,8 @@ const createUsersTable: Migration = {
       .addColumn('custom_name', 'text')
       .addColumn('custom_avatar', 'text')
       .addColumn('role', 'text', (col) => col.notNull())
+      .addColumn('storage_limit', 'integer', (col) => col.notNull())
+      .addColumn('max_file_size', 'integer', (col) => col.notNull())
       .addColumn('status', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')

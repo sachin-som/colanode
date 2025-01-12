@@ -1,6 +1,7 @@
 export interface Configuration {
   server: ServerConfiguration;
   account: AccountConfiguration;
+  user: UserConfiguration;
   postgres: PostgresConfiguration;
   redis: RedisConfiguration;
   avatarS3: S3Configuration;
@@ -19,6 +20,11 @@ export interface AccountConfiguration {
   verificationType: AccountVerificationType;
   otpTimeout: number;
   allowGoogleLogin: boolean;
+}
+
+export interface UserConfiguration {
+  storageLimit: bigint;
+  maxFileSize: bigint;
 }
 
 export interface PostgresConfiguration {
@@ -101,6 +107,10 @@ export const configuration: Configuration = {
       ) as AccountVerificationType) || 'manual',
     otpTimeout: parseInt(getOptionalEnv('ACCOUNT_OTP_TIMEOUT') || '600'),
     allowGoogleLogin: getOptionalEnv('ACCOUNT_ALLOW_GOOGLE_LOGIN') === 'true',
+  },
+  user: {
+    storageLimit: BigInt(getOptionalEnv('USER_STORAGE_LIMIT') || '10737418240'),
+    maxFileSize: BigInt(getOptionalEnv('USER_MAX_FILE_SIZE') || '104857600'),
   },
   postgres: {
     url: getRequiredEnv('POSTGRES_URL'),

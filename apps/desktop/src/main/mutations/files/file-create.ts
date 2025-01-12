@@ -15,7 +15,14 @@ import {
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
+import {
+  fetchEntry,
+  fetchUser,
+  fetchUserStorageUsed,
+  mapEntry,
+  mapFile,
+} from '@/main/utils';
+import { formatBytes } from '@/shared/lib/files';
 
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
@@ -40,6 +47,31 @@ export class FileCreateMutationHandler
       throw new MutationError(
         MutationErrorCode.UserNotFound,
         'There was an error while fetching the user. Please make sure you are logged in.'
+      );
+    }
+
+    if (metadata.size > user.max_file_size) {
+      throw new MutationError(
+        MutationErrorCode.FileTooLarge,
+        'The file you are trying to upload is too large. The maximum file size is ' +
+          formatBytes(user.max_file_size)
+      );
+    }
+
+    const storageUsed = await fetchUserStorageUsed(
+      workspaceDatabase,
+      input.userId
+    );
+
+    if (storageUsed + BigInt(metadata.size) > user.storage_limit) {
+      throw new MutationError(
+        MutationErrorCode.StorageLimitExceeded,
+        'You have reached your storage limit. You have used ' +
+          formatBytes(storageUsed) +
+          ' and you are trying to upload a file of size ' +
+          formatBytes(metadata.size) +
+          '. Your storage limit is ' +
+          formatBytes(user.storage_limit)
       );
     }
 

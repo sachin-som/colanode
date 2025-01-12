@@ -149,6 +149,21 @@ export const fetchUser = (
     .executeTakeFirst();
 };
 
+export const fetchUserStorageUsed = async (
+  database:
+    | Kysely<WorkspaceDatabaseSchema>
+    | Transaction<WorkspaceDatabaseSchema>,
+  userId: string
+): Promise<bigint> => {
+  const storageUsedRow = await database
+    .selectFrom('files')
+    .select(({ fn }) => [fn.sum('size').as('storage_used')])
+    .where('created_by', '=', userId)
+    .executeTakeFirst();
+
+  return BigInt(storageUsedRow?.storage_used ?? 0);
+};
+
 export const fetchWorkspaceCredentials = async (
   userId: string
 ): Promise<WorkspaceCredentials | null> => {

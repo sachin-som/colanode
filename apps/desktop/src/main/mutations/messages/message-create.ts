@@ -29,11 +29,13 @@ import { eventBus } from '@/shared/lib/event-bus';
 import {
   fetchEntry,
   fetchUser,
+  fetchUserStorageUsed,
   mapEntry,
   mapFile,
   mapFileState,
   mapMessage,
 } from '@/main/utils';
+import { formatBytes } from '@/shared/lib/files';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -106,6 +108,14 @@ export class MessageCreateMutationHandler
           );
         }
 
+        if (metadata.size > user.max_file_size) {
+          throw new MutationError(
+            MutationErrorCode.FileTooLarge,
+            'The file you are trying to upload is too large. The maximum file size is ' +
+              formatBytes(user.max_file_size)
+          );
+        }
+
         const fileId = generateId(IdType.File);
         block.id = fileId;
         block.type = 'file';
@@ -168,6 +178,33 @@ export class MessageCreateMutationHandler
           download_retries: 0,
           created_at: createdAt,
         });
+      }
+    }
+
+    if (files.length > 0) {
+      const storageUsed = await fetchUserStorageUsed(
+        workspaceDatabase,
+        input.userId
+      );
+
+      const fileSizeSum = BigInt(
+        files.reduce((sum, file) => sum + file.size, 0)
+      );
+
+      if (storageUsed + fileSizeSum > user.storage_limit) {
+        for (const file of files) {
+          fileService.deleteFile(input.userId, file.id, file.extension);
+        }
+
+        throw new MutationError(
+          MutationErrorCode.StorageLimitExceeded,
+          'You have reached your storage limit. You have used ' +
+            formatBytes(storageUsed) +
+            ' and you are trying to upload files of size ' +
+            formatBytes(fileSizeSum) +
+            '. Your storage limit is ' +
+            formatBytes(user.storage_limit)
+        );
       }
     }
 

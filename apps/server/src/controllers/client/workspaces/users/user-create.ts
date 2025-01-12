@@ -14,6 +14,7 @@ import { getNameFromEmail } from '@/lib/utils';
 import { SelectAccount, SelectUser } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { configuration } from '@/lib/configuration';
 
 export const userCreateHandler = async (
   req: Request,
@@ -75,6 +76,8 @@ export const userCreateHandler = async (
         name: account.name,
         email: account.email,
         avatar: account.avatar,
+        storage_limit: configuration.user.storageLimit,
+        max_file_size: configuration.user.maxFileSize,
         created_at: new Date(),
         created_by: res.locals.account.id,
         status: UserStatus.Active,

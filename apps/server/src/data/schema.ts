@@ -80,6 +80,8 @@ interface UserTable {
   avatar: ColumnType<string | null, string | null, string | null>;
   custom_name: ColumnType<string | null, string | null, string | null>;
   custom_avatar: ColumnType<string | null, string | null, string | null>;
+  storage_limit: ColumnType<bigint, bigint, bigint>;
+  max_file_size: ColumnType<bigint, bigint, bigint>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;

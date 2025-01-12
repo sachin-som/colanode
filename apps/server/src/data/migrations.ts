@@ -94,6 +94,8 @@ const createUsersTable: Migration = {
       .addColumn('custom_name', 'varchar(256)')
       .addColumn('custom_avatar', 'varchar(256)')
       .addColumn('role', 'varchar(30)', (col) => col.notNull())
+      .addColumn('storage_limit', 'bigint', (col) => col.notNull())
+      .addColumn('max_file_size', 'bigint', (col) => col.notNull())
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('created_by', 'varchar(30)', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')

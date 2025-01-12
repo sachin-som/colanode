@@ -1,13 +1,29 @@
-export const formatBytes = (bytes: number, decimals?: number): string => {
+export const formatBytes = (
+  bytes: number | bigint,
+  decimals?: number
+): string => {
   if (bytes === 0) {
     return '0 Bytes';
   }
 
-  const k = 1024;
+  const bytesBigInt = BigInt(bytes);
+  const k = BigInt(1024);
   const dm = decimals || 2;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
+
+  // Find the largest power of k that's smaller than bytes
+  let i = 0;
+  let reducedBytes = bytesBigInt;
+  while (reducedBytes >= k && i < sizes.length - 1) {
+    reducedBytes = reducedBytes / k;
+    i++;
+  }
+
+  // Convert to decimal representation with proper precision
+  const factor = Math.pow(10, dm);
+  const value = Number((reducedBytes * BigInt(factor)) / BigInt(factor));
+
+  return `${value.toFixed(dm)} ${sizes[i]}`;
 };
 
 export const getFileUrl = (

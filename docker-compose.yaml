@@ -74,6 +74,12 @@ services:
       ACCOUNT_ALLOW_GOOGLE_LOGIN: 'false'
 
       # ───────────────────────────────────────────────────────────────
+      # User Configuration
+      # ───────────────────────────────────────────────────────────────
+      USER_STORAGE_LIMIT: '10737418240' # 10 GB
+      USER_MAX_FILE_SIZE: '104857600' # 100 MB
+
+      # ───────────────────────────────────────────────────────────────
       # PostgreSQL Configuration
       # ───────────────────────────────────────────────────────────────
       # The server expects a PostgreSQL database with the pgvector extension installed.

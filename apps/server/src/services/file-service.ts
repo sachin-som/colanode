@@ -59,6 +59,22 @@ class FileService {
       return false;
     }
 
+    if (mutation.data.size > user.max_file_size) {
+      return false;
+    }
+
+    const storageUsedRow = await database
+      .selectFrom('files')
+      .select(({ fn }) => [fn.sum('size').as('storage_used')])
+      .where('created_by', '=', user.id)
+      .executeTakeFirst();
+
+    const storageUsed = BigInt(storageUsedRow?.storage_used ?? 0);
+
+    if (storageUsed + BigInt(mutation.data.size) > user.storage_limit) {
+      return false;
+    }
+
     const createdFile = await database
       .insertInto('files')
       .returningAll()

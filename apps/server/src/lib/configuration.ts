@@ -33,9 +33,6 @@ export interface PostgresConfiguration {
 
 export interface RedisConfiguration {
   url: string;
-  host: string;
-  port: number;
-  password: string;
   db: number;
   eventsChannel: string;
   jobsQueueName: string;
@@ -117,9 +114,6 @@ export const configuration: Configuration = {
   },
   redis: {
     url: getRequiredEnv('REDIS_URL'),
-    host: getRequiredEnv('REDIS_HOST'),
-    port: parseInt(getOptionalEnv('REDIS_PORT') || '6379'),
-    password: getRequiredEnv('REDIS_PASSWORD'),
     db: parseInt(getOptionalEnv('REDIS_DB') || '0'),
     jobsQueueName: getOptionalEnv('REDIS_JOBS_QUEUE_NAME') || 'jobs',
     eventsChannel: getOptionalEnv('REDIS_EVENTS_CHANNEL') || 'events',

@@ -15,10 +15,8 @@ class JobService {
 
     this.jobQueue = new Queue(configuration.redis.jobsQueueName, {
       connection: {
-        host: configuration.redis.host,
-        password: configuration.redis.password,
-        port: configuration.redis.port,
         db: configuration.redis.db,
+        url: configuration.redis.url,
       },
       defaultJobOptions: {
         removeOnComplete: true,
@@ -40,9 +38,7 @@ class JobService {
       this.handleJobJob,
       {
         connection: {
-          host: configuration.redis.host,
-          password: configuration.redis.password,
-          port: configuration.redis.port,
+          url: configuration.redis.url,
           db: configuration.redis.db,
         },
       }

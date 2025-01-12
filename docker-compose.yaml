@@ -89,9 +89,6 @@ services:
       # Redis Configuration
       # ───────────────────────────────────────────────────────────────
       REDIS_URL: 'redis://:strongredispassword@redis:6379/0'
-      REDIS_HOST: 'redis'
-      REDIS_PORT: '6379'
-      REDIS_PASSWORD: 'strongredispassword'
       REDIS_DB: '0'
       # Optional variables:
       REDIS_JOBS_QUEUE_NAME: 'jobs'

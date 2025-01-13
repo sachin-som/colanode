@@ -393,6 +393,15 @@ class Scheduler {
         type: 'download_files',
         userId: event.userId,
       });
+    } else if (event.type === 'file_updated') {
+      this.trigger({
+        type: 'upload_files',
+        userId: event.userId,
+      });
+      this.trigger({
+        type: 'download_files',
+        userId: event.userId,
+      });
     } else if (event.type === 'file_deleted') {
       this.trigger({
         type: 'clean_deleted_files',

@@ -3,6 +3,7 @@ import {
   CreateDownloadOutput,
   CreateUploadOutput,
   extractFileType,
+  FileStatus,
   SyncFileData,
   SyncFileInteractionData,
   SyncFileTombstoneData,
@@ -158,7 +159,7 @@ class FileService {
 
     const filesDir = getWorkspaceFilesDirectoryPath(userId);
     for (const upload of uploads) {
-      if (upload.upload_retries >= 5) {
+      if (upload.upload_retries >= 10) {
         await workspaceDatabase
           .updateTable('file_states')
           .set({
@@ -181,6 +182,26 @@ class FileService {
         await workspaceDatabase
           .deleteFrom('file_states')
           .where('file_id', '=', upload.file_id)
+          .execute();
+
+        continue;
+      }
+
+      if (file.version === BigInt(0)) {
+        // file is not synced with the server, we need to wait for the sync to complete
+        continue;
+      }
+
+      if (file.status === FileStatus.Ready) {
+        // file is already uploaded to the server
+        await workspaceDatabase
+          .updateTable('file_states')
+          .set({
+            upload_status: UploadStatus.Completed,
+            upload_progress: 100,
+            updated_at: new Date().toISOString(),
+          })
+          .where('file_id', '=', file.id)
           .execute();
 
         continue;

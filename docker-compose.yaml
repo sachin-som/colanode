@@ -98,6 +98,7 @@ services:
       REDIS_DB: '0'
       # Optional variables:
       REDIS_JOBS_QUEUE_NAME: 'jobs'
+      REDIS_JOBS_QUEUE_PREFIX: 'colanode'
       REDIS_EVENTS_CHANNEL: 'events'
 
       # ───────────────────────────────────────────────────────────────

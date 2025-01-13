@@ -220,7 +220,7 @@ class AccountService {
   }
 
   private getOtpDataRedisKey(otpId: string): string {
-    return `otp_${otpId}`;
+    return `otp:${otpId}`;
   }
 
   private async generateOtpCode(): Promise<string> {

@@ -40,8 +40,11 @@ export interface PostgresConfiguration {
 export interface RedisConfiguration {
   url: string;
   db: number;
+  jobs: {
+    prefix: string;
+    name: string;
+  };
   eventsChannel: string;
-  jobsQueueName: string;
 }
 
 export interface S3Configuration {
@@ -130,7 +133,10 @@ export const configuration: Configuration = {
   redis: {
     url: getRequiredEnv('REDIS_URL'),
     db: parseInt(getOptionalEnv('REDIS_DB') || '0'),
-    jobsQueueName: getOptionalEnv('REDIS_JOBS_QUEUE_NAME') || 'jobs',
+    jobs: {
+      name: getOptionalEnv('REDIS_JOBS_QUEUE_NAME') || 'jobs',
+      prefix: getOptionalEnv('REDIS_JOBS_QUEUE_PREFIX') || 'colanode',
+    },
     eventsChannel: getOptionalEnv('REDIS_EVENTS_CHANNEL') || 'events',
   },
   avatarS3: {

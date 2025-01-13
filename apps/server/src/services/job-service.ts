@@ -12,12 +12,13 @@ class JobService {
   private jobWorker: Worker | undefined;
 
   // Bullmq performs atomic operations across different keys, which can cause
-  // issues with Redis clusters, so we wrap the queue name in curly braces to
+  // issues with Redis clusters, so we wrap the prefix in curly braces to
   // ensure that all keys are in the same slot (Redis node)
 
   // for more information, see: https://docs.bullmq.io/bull/patterns/redis-cluster
 
-  private readonly queueName = `{${configuration.redis.jobsQueueName}}`;
+  private readonly queueName = configuration.redis.jobs.name;
+  private readonly prefix = `{${configuration.redis.jobs.prefix}}`;
 
   public initQueue() {
     if (this.jobQueue) {
@@ -25,6 +26,7 @@ class JobService {
     }
 
     this.jobQueue = new Queue(this.queueName, {
+      prefix: this.prefix,
       connection: {
         db: configuration.redis.db,
         url: configuration.redis.url,
@@ -45,6 +47,7 @@ class JobService {
     }
 
     this.jobWorker = new Worker(this.queueName, this.handleJobJob, {
+      prefix: this.prefix,
       connection: {
         url: configuration.redis.url,
         db: configuration.redis.db,

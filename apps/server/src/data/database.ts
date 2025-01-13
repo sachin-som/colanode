@@ -20,7 +20,8 @@ const dialect = new PostgresDialect({
   pool: new pg.Pool({
     connectionString: configuration.postgres.url,
     ssl:
-      Object.keys(configuration.postgres.ssl).length > 0
+      configuration.postgres.ssl &&
+      Object.values(configuration.postgres.ssl).some((value) => value)
         ? configuration.postgres.ssl
         : undefined,
   }),

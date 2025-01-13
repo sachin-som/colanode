@@ -96,6 +96,7 @@ export enum MutationErrorCode {
   FileCreateForbidden = 'file_create_forbidden',
   FileCreateFailed = 'file_create_failed',
   FileNotFound = 'file_not_found',
+  FileNotReady = 'file_not_ready',
   FileDeleteForbidden = 'file_delete_forbidden',
   FileDeleteFailed = 'file_delete_failed',
   FolderUpdateForbidden = 'folder_update_forbidden',

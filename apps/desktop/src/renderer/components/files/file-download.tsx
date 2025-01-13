@@ -4,7 +4,7 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
-import { FileWithState } from '@/shared/types/files';
+import { DownloadStatus, FileWithState } from '@/shared/types/files';
 import { formatBytes } from '@/shared/lib/files';
 
 interface FileDownloadProps {
@@ -15,14 +15,14 @@ export const FileDownload = ({ file }: FileDownloadProps) => {
   const workspace = useWorkspace();
   const { mutate } = useMutation();
 
-  const isDownloading = file.downloadStatus === 'pending';
+  const isDownloading = file.downloadStatus === DownloadStatus.Pending;
 
   return (
     <div className="flex h-full w-full items-center justify-center">
       {isDownloading ? (
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Spinner className="size-8" />
-          <p className="text-sm">Downloading file...</p>
+          <p className="text-sm">Downloading file ({file.downloadProgress}%)</p>
         </div>
       ) : (
         <div

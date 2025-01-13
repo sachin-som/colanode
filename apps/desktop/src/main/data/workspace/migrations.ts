@@ -238,10 +238,10 @@ const createFileStatesTable: Migration = {
     await db.schema
       .createTable('file_states')
       .addColumn('file_id', 'text', (col) => col.notNull().primaryKey())
-      .addColumn('download_status', 'text', (col) => col.notNull())
+      .addColumn('download_status', 'integer', (col) => col.notNull())
       .addColumn('download_progress', 'integer', (col) => col.notNull())
       .addColumn('download_retries', 'integer', (col) => col.notNull())
-      .addColumn('upload_status', 'text', (col) => col.notNull())
+      .addColumn('upload_status', 'integer', (col) => col.notNull())
       .addColumn('upload_progress', 'integer', (col) => col.notNull())
       .addColumn('upload_retries', 'integer', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())

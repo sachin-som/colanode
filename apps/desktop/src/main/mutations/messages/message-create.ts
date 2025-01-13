@@ -36,6 +36,7 @@ import {
   mapMessage,
 } from '@/main/utils';
 import { formatBytes } from '@/shared/lib/files';
+import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 
 export class MessageCreateMutationHandler
   implements MutationHandler<MessageCreateMutationInput>
@@ -170,11 +171,11 @@ export class MessageCreateMutationHandler
 
         fileStates.push({
           file_id: fileId,
-          upload_status: 'pending',
+          upload_status: UploadStatus.Pending,
           upload_progress: 0,
           upload_retries: 0,
-          download_status: 'pending',
-          download_progress: 0,
+          download_status: DownloadStatus.Completed,
+          download_progress: 100,
           download_retries: 0,
           created_at: createdAt,
         });

@@ -26,6 +26,7 @@ export enum ApiErrorCode {
   WorkspaceUpdateFailed = 'workspace_update_failed',
   FileNotFound = 'file_not_found',
   FileNoAccess = 'file_no_access',
+  FileNotReady = 'file_not_ready',
   FileOwnerMismatch = 'file_owner_mismatch',
   WorkspaceMismatch = 'workspace_mismatch',
   FileError = 'file_error',

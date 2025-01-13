@@ -1,3 +1,5 @@
+import { FileStatus } from '@colanode/core';
+
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { mapFileState } from '@/main/utils';
@@ -7,6 +9,7 @@ import {
   FileDownloadMutationInput,
   FileDownloadMutationOutput,
 } from '@/shared/mutations/files/file-download';
+import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 
 export class FileDownloadMutationHandler
   implements MutationHandler<FileDownloadMutationInput>
@@ -31,6 +34,13 @@ export class FileDownloadMutationHandler
       );
     }
 
+    if (file.status !== FileStatus.Ready) {
+      throw new MutationError(
+        MutationErrorCode.FileNotReady,
+        'The file you are trying to download is not uploaded by the author yet.'
+      );
+    }
+
     const existingFileState = await workspaceDatabase
       .selectFrom('file_states')
       .selectAll()
@@ -39,7 +49,7 @@ export class FileDownloadMutationHandler
 
     if (
       existingFileState &&
-      existingFileState.download_status === 'completed'
+      existingFileState.download_status === DownloadStatus.Completed
     ) {
       return {
         success: true,
@@ -51,17 +61,17 @@ export class FileDownloadMutationHandler
       .returningAll()
       .values({
         file_id: input.fileId,
-        download_status: 'pending',
+        download_status: DownloadStatus.Pending,
         download_progress: 0,
         download_retries: 0,
-        upload_status: 'none',
+        upload_status: UploadStatus.None,
         upload_progress: 0,
         upload_retries: 0,
         created_at: new Date().toISOString(),
       })
       .onConflict((oc) =>
         oc.doUpdateSet(() => ({
-          download_status: 'pending',
+          download_status: DownloadStatus.Pending,
           download_progress: 0,
           download_retries: 0,
           updated_at: new Date().toISOString(),

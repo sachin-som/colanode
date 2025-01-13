@@ -3,7 +3,11 @@ import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapFile } from '@/main/utils';
 import { FileGetQueryInput } from '@/shared/queries/files/file-get';
 import { Event } from '@/shared/types/events';
-import { FileWithState } from '@/shared/types/files';
+import {
+  DownloadStatus,
+  FileWithState,
+  UploadStatus,
+} from '@/shared/types/files';
 
 export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   public async handleQuery(
@@ -49,9 +53,9 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
         result: {
           ...event.file,
           downloadProgress: output?.downloadProgress ?? 0,
-          downloadStatus: output?.downloadStatus ?? 'none',
+          downloadStatus: output?.downloadStatus ?? DownloadStatus.None,
           uploadProgress: output?.uploadProgress ?? 0,
-          uploadStatus: output?.uploadStatus ?? 'none',
+          uploadStatus: output?.uploadStatus ?? UploadStatus.None,
         },
       };
     }
@@ -160,9 +164,9 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
     const fileWithState: FileWithState = {
       ...mapFile(file),
       downloadProgress: file.download_progress ?? 0,
-      downloadStatus: file.download_status ?? 'none',
+      downloadStatus: file.download_status ?? DownloadStatus.None,
       uploadProgress: file.upload_progress ?? 0,
-      uploadStatus: file.upload_status ?? 'none',
+      uploadStatus: file.upload_status ?? UploadStatus.None,
     };
 
     return fileWithState;

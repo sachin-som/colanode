@@ -27,7 +27,11 @@ import {
 } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
-import { FileMetadata } from '@/shared/types/files';
+import {
+  DownloadStatus,
+  FileMetadata,
+  UploadStatus,
+} from '@/shared/types/files';
 
 class FileService {
   private readonly debug = createDebugger('service:file');
@@ -139,7 +143,7 @@ class FileService {
     const uploads = await workspaceDatabase
       .selectFrom('file_states')
       .selectAll()
-      .where('upload_status', '=', 'pending')
+      .where('upload_status', '=', UploadStatus.Pending)
       .execute();
 
     if (uploads.length === 0) {
@@ -158,7 +162,7 @@ class FileService {
         await workspaceDatabase
           .updateTable('file_states')
           .set({
-            upload_status: 'failed',
+            upload_status: UploadStatus.Failed,
             updated_at: new Date().toISOString(),
           })
           .where('file_id', '=', upload.file_id)
@@ -211,10 +215,43 @@ class FileService {
 
         const presignedUrl = data.url;
         const fileStream = fs.createReadStream(filePath);
+
+        let lastProgress = 0;
         await axios.put(presignedUrl, fileStream, {
           headers: {
             'Content-Type': file.mime_type,
             'Content-Length': file.size,
+          },
+          onUploadProgress: async (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded / file.size) * 100
+            );
+
+            if (progress >= lastProgress) {
+              return;
+            }
+
+            lastProgress = progress;
+
+            const updatedFileState = await workspaceDatabase
+              .updateTable('file_states')
+              .returningAll()
+              .set({
+                upload_progress: progress,
+                updated_at: new Date().toISOString(),
+              })
+              .where('file_id', '=', file.id)
+              .executeTakeFirst();
+
+            if (!updatedFileState) {
+              return;
+            }
+
+            eventBus.publish({
+              type: 'file_state_updated',
+              userId,
+              fileState: mapFileState(updatedFileState),
+            });
           },
         });
 
@@ -234,7 +271,7 @@ class FileService {
         await workspaceDatabase
           .updateTable('file_states')
           .set({
-            upload_status: 'completed',
+            upload_status: UploadStatus.Completed,
             upload_progress: 100,
             updated_at: new Date().toISOString(),
           })
@@ -251,13 +288,15 @@ class FileService {
   }
 
   public async downloadFiles(userId: string): Promise<void> {
+    this.debug(`Downloading files for user ${userId}`);
+
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
     const downloads = await workspaceDatabase
       .selectFrom('file_states')
       .selectAll()
-      .where('download_status', '=', 'pending')
+      .where('download_status', '=', DownloadStatus.Pending)
       .execute();
 
     if (downloads.length === 0) {
@@ -309,7 +348,7 @@ class FileService {
           .updateTable('file_states')
           .returningAll()
           .set({
-            download_status: 'completed',
+            download_status: DownloadStatus.Completed,
             download_progress: 100,
             updated_at: new Date().toISOString(),
           })
@@ -344,8 +383,43 @@ class FileService {
 
         const presignedUrl = data.url;
         const fileStream = fs.createWriteStream(filePath);
+        let lastProgress = 0;
+
         await axios
-          .get(presignedUrl, { responseType: 'stream' })
+          .get(presignedUrl, {
+            responseType: 'stream',
+            onDownloadProgress: async (progressEvent) => {
+              const progress = Math.round(
+                (progressEvent.loaded / file.size) * 100
+              );
+
+              if (progress <= lastProgress) {
+                return;
+              }
+
+              lastProgress = progress;
+
+              const updatedFileState = await workspaceDatabase
+                .updateTable('file_states')
+                .returningAll()
+                .set({
+                  download_progress: progress,
+                  updated_at: new Date().toISOString(),
+                })
+                .where('file_id', '=', file.id)
+                .executeTakeFirst();
+
+              if (!updatedFileState) {
+                return;
+              }
+
+              eventBus.publish({
+                type: 'file_state_updated',
+                userId,
+                fileState: mapFileState(updatedFileState),
+              });
+            },
+          })
           .then((response) => {
             response.data.pipe(fileStream);
           });
@@ -354,7 +428,7 @@ class FileService {
           .updateTable('file_states')
           .returningAll()
           .set({
-            download_status: 'completed',
+            download_status: DownloadStatus.Completed,
             download_progress: 100,
             updated_at: new Date().toISOString(),
           })

@@ -4,6 +4,7 @@ import {
   hasEntryRole,
   ApiErrorCode,
   extractEntryRole,
+  FileStatus,
 } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -30,6 +31,13 @@ export const fileDownloadGetHandler = async (
     return ResponseBuilder.badRequest(res, {
       code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
+    });
+  }
+
+  if (file.status !== FileStatus.Ready) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotReady,
+      message: 'File is not ready to be downloaded.',
     });
   }
 

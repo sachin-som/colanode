@@ -23,6 +23,7 @@ import {
   mapFile,
 } from '@/main/utils';
 import { formatBytes } from '@/shared/lib/files';
+import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 
 export class FileCreateMutationHandler
   implements MutationHandler<FileCreateMutationInput>
@@ -167,10 +168,10 @@ export class FileCreateMutationHandler
             file_id: fileId,
             created_at: new Date().toISOString(),
             download_progress: 100,
-            download_status: 'completed',
+            download_status: DownloadStatus.Completed,
             download_retries: 0,
             upload_progress: 0,
-            upload_status: 'pending',
+            upload_status: UploadStatus.Pending,
             upload_retries: 0,
           })
           .execute();
@@ -211,10 +212,10 @@ export class FileCreateMutationHandler
       fileState: {
         fileId: fileId,
         downloadProgress: 100,
-        downloadStatus: 'completed',
+        downloadStatus: DownloadStatus.Completed,
         downloadRetries: 0,
         uploadProgress: 10,
-        uploadStatus: 'pending',
+        uploadStatus: UploadStatus.Pending,
         uploadRetries: 0,
         createdAt: new Date().toISOString(),
         updatedAt: null,

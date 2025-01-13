@@ -1,8 +1,11 @@
+import { ApiErrorCode } from '@colanode/core';
+
 import { serverService } from '@/main/services/server-service';
 import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { JobHandler } from '@/main/jobs';
 import { httpClient } from '@/shared/lib/http-client';
+import { parseApiError } from '@/shared/lib/axios';
 
 export type SyncDeletedTokensInput = {
   type: 'sync_deleted_tokens';
@@ -73,6 +76,25 @@ export class SyncDeletedTokensJobHandler
           `Logged out account ${deletedToken.account_id} from server ${deletedToken.domain}`
         );
       } catch (error) {
+        const parsedError = parseApiError(error);
+        if (
+          parsedError.code === ApiErrorCode.TokenInvalid ||
+          parsedError.code === ApiErrorCode.AccountNotFound ||
+          parsedError.code === ApiErrorCode.DeviceNotFound
+        ) {
+          this.debug(
+            `Account ${deletedToken.account_id} is already logged out, skipping...`
+          );
+
+          await databaseService.appDatabase
+            .deleteFrom('deleted_tokens')
+            .where('token', '=', deletedToken.token)
+            .where('account_id', '=', deletedToken.account_id)
+            .execute();
+
+          continue;
+        }
+
         this.debug(
           `Failed to logout account ${deletedToken.account_id} from server ${deletedToken.domain}`,
           error

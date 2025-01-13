@@ -1,4 +1,9 @@
-import { AccountSyncOutput, LoginSuccessOutput } from '@colanode/core';
+import {
+  AccountSyncOutput,
+  ApiErrorCode,
+  ApiErrorOutput,
+  LoginSuccessOutput,
+} from '@colanode/core';
 
 import fs from 'fs';
 
@@ -16,6 +21,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { httpClient } from '@/shared/lib/http-client';
 import { socketService } from '@/main/services/socket-service';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { parseApiError } from '@/shared/lib/axios';
 
 class AccountService {
   private readonly debug = createDebugger('service:account');
@@ -125,135 +131,146 @@ class AccountService {
       return;
     }
 
-    const { data, status } = await httpClient.get<AccountSyncOutput>(
-      '/v1/accounts/sync',
-      {
-        domain: server.domain,
-        token: account.token,
-      }
-    );
-
-    this.debug(`Account sync response status code: ${status}`);
-
-    if (status >= 400 && status < 500) {
-      this.debug(`Account ${account.email} is not valid, logging out...`);
-      await this.logoutAccount(account);
-      return;
-    }
-
-    if (status !== 200) {
-      return;
-    }
-
-    const currentWorkspaces = await databaseService.appDatabase
-      .selectFrom('workspaces')
-      .selectAll()
-      .where('account_id', '=', account.id)
-      .execute();
-
-    if (
-      data.account.name !== account.name ||
-      data.account.avatar !== account.avatar
-    ) {
-      const updatedAccount = await databaseService.appDatabase
-        .updateTable('accounts')
-        .returningAll()
-        .set({
-          name: data.account.name,
-          avatar: data.account.avatar,
-        })
-        .where('id', '=', account.id)
-        .executeTakeFirst();
-
-      if (!updatedAccount) {
-        this.debug(`Failed to update account ${account.email} after sync`);
-        return;
-      } else {
-        this.debug(`Updated account ${account.email} after sync`);
-      }
-
-      eventBus.publish({
-        type: 'account_updated',
-        account: mapAccount(updatedAccount),
-      });
-    }
-
-    for (const workspace of data.workspaces) {
-      const currentWorkspace = currentWorkspaces.find(
-        (w) => w.workspace_id === workspace.id
+    try {
+      const { data, status } = await httpClient.get<AccountSyncOutput>(
+        '/v1/accounts/sync',
+        {
+          domain: server.domain,
+          token: account.token,
+        }
       );
 
-      if (!currentWorkspace) {
-        // create workspace here
-        const createdWorkspace = await databaseService.appDatabase
-          .insertInto('workspaces')
-          .values({
-            workspace_id: workspace.id,
-            user_id: workspace.user.id,
-            account_id: account.id,
-            name: workspace.name,
-            avatar: workspace.avatar,
-            description: workspace.description,
-            role: workspace.user.role,
-          })
-          .returningAll()
-          .executeTakeFirst();
+      this.debug(`Account sync response status code: ${status}`);
 
-        if (!createdWorkspace) {
-          this.debug(
-            `Failed to create workspace ${workspace.id} for account ${account.email}`
-          );
-          return;
-        } else {
-          this.debug(
-            `Created workspace ${workspace.id} for account ${account.email} after sync`
-          );
-        }
+      if (status >= 400 && status < 500) {
+        this.debug(`Account ${account.email} is not valid, logging out...`);
+        await this.logoutAccount(account);
+        return;
+      }
 
-        eventBus.publish({
-          type: 'workspace_created',
-          workspace: mapWorkspace(createdWorkspace),
-        });
-      } else {
-        // update workspace here
-        const updatedWorkspace = await databaseService.appDatabase
-          .updateTable('workspaces')
+      if (status !== 200) {
+        return;
+      }
+
+      const currentWorkspaces = await databaseService.appDatabase
+        .selectFrom('workspaces')
+        .selectAll()
+        .where('account_id', '=', account.id)
+        .execute();
+
+      if (
+        data.account.name !== account.name ||
+        data.account.avatar !== account.avatar
+      ) {
+        const updatedAccount = await databaseService.appDatabase
+          .updateTable('accounts')
           .returningAll()
           .set({
-            name: workspace.name,
-            avatar: workspace.avatar,
-            description: workspace.description,
-            role: workspace.user.role,
+            name: data.account.name,
+            avatar: data.account.avatar,
           })
-          .where('user_id', '=', currentWorkspace.user_id)
+          .where('id', '=', account.id)
           .executeTakeFirst();
 
-        if (!updatedWorkspace) {
-          this.debug(
-            `Failed to update workspace ${currentWorkspace.user_id} for account ${account.email}`
-          );
+        if (!updatedAccount) {
+          this.debug(`Failed to update account ${account.email} after sync`);
           return;
         } else {
-          this.debug(
-            `Updated workspace ${currentWorkspace.user_id} for account ${account.email} after sync`
-          );
+          this.debug(`Updated account ${account.email} after sync`);
         }
 
         eventBus.publish({
-          type: 'workspace_updated',
-          workspace: mapWorkspace(updatedWorkspace),
+          type: 'account_updated',
+          account: mapAccount(updatedAccount),
         });
       }
-    }
 
-    for (const workspace of currentWorkspaces) {
-      const updatedWorkspace = data.workspaces.find(
-        (w) => w.id === workspace.workspace_id
-      );
+      for (const workspace of data.workspaces) {
+        const currentWorkspace = currentWorkspaces.find(
+          (w) => w.workspace_id === workspace.id
+        );
 
-      if (!updatedWorkspace) {
-        await this.deleteWorkspace(workspace.user_id);
+        if (!currentWorkspace) {
+          // create workspace here
+          const createdWorkspace = await databaseService.appDatabase
+            .insertInto('workspaces')
+            .values({
+              workspace_id: workspace.id,
+              user_id: workspace.user.id,
+              account_id: account.id,
+              name: workspace.name,
+              avatar: workspace.avatar,
+              description: workspace.description,
+              role: workspace.user.role,
+            })
+            .returningAll()
+            .executeTakeFirst();
+
+          if (!createdWorkspace) {
+            this.debug(
+              `Failed to create workspace ${workspace.id} for account ${account.email}`
+            );
+            return;
+          } else {
+            this.debug(
+              `Created workspace ${workspace.id} for account ${account.email} after sync`
+            );
+          }
+
+          eventBus.publish({
+            type: 'workspace_created',
+            workspace: mapWorkspace(createdWorkspace),
+          });
+        } else {
+          // update workspace here
+          const updatedWorkspace = await databaseService.appDatabase
+            .updateTable('workspaces')
+            .returningAll()
+            .set({
+              name: workspace.name,
+              avatar: workspace.avatar,
+              description: workspace.description,
+              role: workspace.user.role,
+            })
+            .where('user_id', '=', currentWorkspace.user_id)
+            .executeTakeFirst();
+
+          if (!updatedWorkspace) {
+            this.debug(
+              `Failed to update workspace ${currentWorkspace.user_id} for account ${account.email}`
+            );
+            return;
+          } else {
+            this.debug(
+              `Updated workspace ${currentWorkspace.user_id} for account ${account.email} after sync`
+            );
+          }
+
+          eventBus.publish({
+            type: 'workspace_updated',
+            workspace: mapWorkspace(updatedWorkspace),
+          });
+        }
       }
+
+      for (const workspace of currentWorkspaces) {
+        const updatedWorkspace = data.workspaces.find(
+          (w) => w.id === workspace.workspace_id
+        );
+
+        if (!updatedWorkspace) {
+          await this.deleteWorkspace(workspace.user_id);
+        }
+      }
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      if (this.isSyncInvalid(parsedError)) {
+        this.debug(`Account ${account.email} is not valid, logging out...`);
+        await this.logoutAccount(account);
+        return;
+      }
+
+      this.debug(`Failed to sync account ${account.email}: ${parsedError}`);
     }
   }
 
@@ -337,6 +354,15 @@ class AccountService {
     });
 
     return true;
+  }
+
+  private isSyncInvalid(error: ApiErrorOutput) {
+    return (
+      error.code === ApiErrorCode.TokenInvalid ||
+      error.code === ApiErrorCode.TokenMissing ||
+      error.code === ApiErrorCode.AccountNotFound ||
+      error.code === ApiErrorCode.DeviceNotFound
+    );
   }
 }
 

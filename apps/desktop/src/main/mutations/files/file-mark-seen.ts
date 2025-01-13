@@ -100,7 +100,6 @@ export class FileMarkSeenMutationHandler
             type: mutation.type,
             data: JSON.stringify(mutation.data),
             created_at: mutation.createdAt,
-            node_id: input.fileId,
             retries: 0,
           })
           .executeTakeFirst();

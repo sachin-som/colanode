@@ -181,7 +181,6 @@ export class FileCreateMutationHandler
           .values({
             id: generateId(IdType.Mutation),
             type: 'create_file',
-            node_id: fileId,
             data: JSON.stringify(mutationData),
             created_at: new Date().toISOString(),
             retries: 0,

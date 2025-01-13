@@ -102,7 +102,6 @@ export class MessageDeleteMutationHandler
         .values({
           id: generateId(IdType.Mutation),
           type: 'delete_message',
-          node_id: input.messageId,
           data: JSON.stringify(deleteMessageMutationData),
           created_at: deletedAt,
           retries: 0,

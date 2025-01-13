@@ -163,7 +163,6 @@ export class MessageCreateMutationHandler
         fileMutations.push({
           id: generateId(IdType.Mutation),
           type: 'create_file',
-          node_id: fileId,
           data: JSON.stringify(mutationData),
           created_at: createdAt,
           retries: 0,
@@ -258,7 +257,6 @@ export class MessageCreateMutationHandler
           .values({
             id: generateId(IdType.Mutation),
             type: 'create_message',
-            node_id: messageId,
             data: JSON.stringify(createMessageMutationData),
             created_at: createdAt,
             retries: 0,

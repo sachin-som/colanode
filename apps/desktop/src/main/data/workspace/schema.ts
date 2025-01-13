@@ -207,7 +207,6 @@ export type UpdateFileInteraction = Updateable<FileInteractionTable>;
 interface MutationTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<MutationType, MutationType, never>;
-  node_id: ColumnType<string, string, never>;
   data: ColumnType<string, string, never>;
   created_at: ColumnType<string, string, never>;
   retries: ColumnType<number, number, number>;

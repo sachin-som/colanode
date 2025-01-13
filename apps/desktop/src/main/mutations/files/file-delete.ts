@@ -104,7 +104,6 @@ export class FileDeleteMutationHandler
         .values({
           id: generateId(IdType.Mutation),
           type: 'delete_file',
-          node_id: input.fileId,
           data: JSON.stringify(deleteFileMutationData),
           created_at: deletedAt,
           retries: 0,

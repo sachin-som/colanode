@@ -282,7 +282,6 @@ const createMutationsTable: Migration = {
       .createTable('mutations')
       .addColumn('id', 'text', (col) => col.notNull().primaryKey())
       .addColumn('type', 'text', (col) => col.notNull())
-      .addColumn('node_id', 'text', (col) => col.notNull())
       .addColumn('data', 'text', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('retries', 'integer', (col) => col.notNull())

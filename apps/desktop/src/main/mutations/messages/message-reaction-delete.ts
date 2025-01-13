@@ -75,7 +75,6 @@ export class MessageReactionDeleteMutationHandler
             type: mutation.type,
             data: JSON.stringify(mutation.data),
             created_at: mutation.createdAt,
-            node_id: input.messageId,
             retries: 0,
           })
           .executeTakeFirst();

@@ -147,7 +147,6 @@ class EntryService {
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            node_id: input.id,
             type: 'apply_create_transaction',
             data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: createdAt,
@@ -325,7 +324,6 @@ class EntryService {
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            node_id: entryId,
             type: 'apply_update_transaction',
             data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: updatedAt,
@@ -457,7 +455,6 @@ class EntryService {
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            node_id: entryId,
             type: 'apply_delete_transaction',
             data: JSON.stringify(mapEntryTransaction(createdTransaction)),
             created_at: new Date().toISOString(),

@@ -100,7 +100,6 @@ export class EntryMarkSeenMutationHandler
             type: mutation.type,
             data: JSON.stringify(mutation.data),
             created_at: mutation.createdAt,
-            node_id: input.entryId,
             retries: 0,
           })
           .executeTakeFirst();

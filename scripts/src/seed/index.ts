@@ -146,7 +146,7 @@ const sendMutations = async (user: User, workspaceId: string) => {
     const batch = remainingMutations.splice(0, batchSize);
 
     console.log(
-      `Sending batch ${currentBatch} of ${totalBatches} mutations for user ${user.login.account.email}`
+      `Sending batch ${currentBatch++} of ${totalBatches} mutations for user ${user.login.account.email}`
     );
 
     await axios.post(
@@ -158,8 +158,6 @@ const sendMutations = async (user: User, workspaceId: string) => {
         headers: { Authorization: `Bearer ${user.login.token}` },
       }
     );
-
-    currentBatch++;
   }
 };
 

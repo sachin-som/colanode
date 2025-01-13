@@ -23,7 +23,6 @@ interface AccountTable {
   avatar: ColumnType<string | null, string | null, string | null>;
   token: ColumnType<string, string, string>;
   device_id: ColumnType<string, string, never>;
-  status: ColumnType<string, string, string>;
 }
 
 export type SelectAccount = Selectable<AccountTable>;

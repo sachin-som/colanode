@@ -83,7 +83,6 @@ export class AccountUpdateMutationHandler
           avatar: updatedAccount.avatar,
           deviceId: updatedAccount.device_id,
           server: updatedAccount.server,
-          status: updatedAccount.status,
         },
       });
 

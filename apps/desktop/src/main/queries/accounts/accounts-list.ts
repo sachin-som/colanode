@@ -61,7 +61,6 @@ export class AccountListQueryHandler
     return databaseService.appDatabase
       .selectFrom('accounts')
       .selectAll()
-      .where('status', '=', 'active')
       .execute();
   }
 }

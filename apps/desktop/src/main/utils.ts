@@ -234,7 +234,6 @@ export const mapAccount = (row: SelectAccount): Account => {
     deviceId: row.device_id,
     email: row.email,
     token: row.token,
-    status: row.status,
   };
 };
 

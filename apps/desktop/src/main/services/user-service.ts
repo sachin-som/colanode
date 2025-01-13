@@ -1,4 +1,4 @@
-import { SyncUserData } from '@colanode/core';
+import { SyncUserData, UserStatus } from '@colanode/core';
 
 import { mapUser } from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
@@ -23,7 +23,7 @@ class UserService {
         version: BigInt(user.version),
         created_at: user.createdAt,
         updated_at: user.updatedAt,
-        status: 'active',
+        status: UserStatus.Active,
         custom_name: user.customName,
         custom_avatar: user.customAvatar,
       })

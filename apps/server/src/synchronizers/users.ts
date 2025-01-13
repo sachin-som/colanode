@@ -70,6 +70,7 @@ export class UserSynchronizer extends BaseSynchronizer<SyncUsersInput> {
       createdAt: user.created_at.toISOString(),
       updatedAt: user.updated_at?.toISOString() ?? null,
       version: user.version.toString(),
+      status: user.status,
     }));
 
     return {

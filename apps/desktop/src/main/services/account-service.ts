@@ -40,7 +40,6 @@ class AccountService {
             email: output.account.email,
             token: output.token,
             server,
-            status: 'active',
           })
           .executeTakeFirst();
 

@@ -51,7 +51,6 @@ const createAccountsTable: Migration = {
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
       .addColumn('token', 'text', (col) => col.notNull())
-      .addColumn('status', 'text', (col) => col.defaultTo('active').notNull())
       .execute();
   },
   down: async (db) => {

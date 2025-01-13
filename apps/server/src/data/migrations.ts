@@ -506,7 +506,8 @@ const createMessageInteractionsTable: Migration = {
       .addColumn('collaborator_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
-      .addColumn('seen_at', 'timestamptz')
+      .addColumn('first_seen_at', 'timestamptz')
+      .addColumn('last_seen_at', 'timestamptz')
       .addColumn('first_opened_at', 'timestamptz')
       .addColumn('last_opened_at', 'timestamptz')
       .addColumn('version', 'bigint', (col) =>

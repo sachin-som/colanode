@@ -38,11 +38,22 @@ export class MessageMarkSeenMutationHandler
       .where('collaborator_id', '=', input.userId)
       .executeTakeFirst();
 
-    if (existingInteraction && existingInteraction.seen_at !== null) {
-      return {
-        success: true,
-      };
+    if (existingInteraction) {
+      const lastSeenAt = existingInteraction.last_seen_at;
+      if (
+        lastSeenAt &&
+        lastSeenAt > new Date(Date.now() - 5 * 1000).toISOString()
+      ) {
+        return {
+          success: true,
+        };
+      }
     }
+
+    const lastSeenAt = new Date().toISOString();
+    const firstSeenAt = existingInteraction
+      ? existingInteraction.first_seen_at
+      : lastSeenAt;
 
     const { createdInteraction, createdMutation } = await workspaceDatabase
       .transaction()
@@ -53,17 +64,16 @@ export class MessageMarkSeenMutationHandler
           .values({
             message_id: input.messageId,
             collaborator_id: input.userId,
-            seen_at: new Date().toISOString(),
+            first_seen_at: firstSeenAt,
+            last_seen_at: lastSeenAt,
             version: 0n,
             root_id: message.root_id,
           })
           .onConflict((b) =>
-            b
-              .columns(['message_id', 'collaborator_id'])
-              .doUpdateSet({
-                seen_at: new Date().toISOString(),
-              })
-              .where('seen_at', 'is', null)
+            b.columns(['message_id', 'collaborator_id']).doUpdateSet({
+              first_seen_at: firstSeenAt,
+              last_seen_at: lastSeenAt,
+            })
           )
           .executeTakeFirst();
 

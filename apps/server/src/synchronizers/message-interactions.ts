@@ -60,7 +60,8 @@ export class MessageInteractionSynchronizer extends BaseSynchronizer<SyncMessage
       (messageInteraction) => ({
         messageId: messageInteraction.message_id,
         collaboratorId: messageInteraction.collaborator_id,
-        seenAt: messageInteraction.seen_at?.toISOString() ?? null,
+        firstSeenAt: messageInteraction.first_seen_at?.toISOString() ?? null,
+        lastSeenAt: messageInteraction.last_seen_at?.toISOString() ?? null,
         firstOpenedAt:
           messageInteraction.first_opened_at?.toISOString() ?? null,
         lastOpenedAt: messageInteraction.last_opened_at?.toISOString() ?? null,

@@ -345,7 +345,9 @@ export const mapMessageInteraction = (
     messageId: row.message_id,
     collaboratorId: row.collaborator_id,
     rootId: row.root_id,
-    seenAt: row.seen_at,
+    firstSeenAt: row.first_seen_at,
+    lastSeenAt: row.last_seen_at,
+    firstOpenedAt: row.first_opened_at,
     lastOpenedAt: row.last_opened_at,
     version: row.version,
   };

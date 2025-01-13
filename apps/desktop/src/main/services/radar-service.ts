@@ -124,7 +124,7 @@ class RadarWorkspace {
       )
       .select(['message.id as message_id', 'message.entry_id as entry_id'])
       .where('message.created_by', '!=', this.workspace.userId)
-      .where('message_interactions.seen_at', 'is', null)
+      .where('message_interactions.last_seen_at', 'is', null)
       .where('entry_interactions.last_seen_at', 'is not', null)
       .whereRef('message.created_at', '>=', 'entry_interactions.first_seen_at')
       .execute();
@@ -149,7 +149,7 @@ class RadarWorkspace {
       return;
     }
 
-    if (interaction.seenAt) {
+    if (interaction.lastSeenAt) {
       const unreadMessage = this.unreadMessages.get(interaction.messageId);
       if (unreadMessage) {
         this.unreadMessages.delete(interaction.messageId);
@@ -187,7 +187,7 @@ class RadarWorkspace {
       .where('collaborator_id', '=', this.workspace.userId)
       .executeTakeFirst();
 
-    if (messageInteraction && messageInteraction.seen_at) {
+    if (messageInteraction && messageInteraction.last_seen_at) {
       return;
     }
 

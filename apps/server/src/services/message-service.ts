@@ -345,25 +345,29 @@ class MessageService {
 
     if (
       existingInteraction &&
-      existingInteraction.seen_at !== null &&
-      existingInteraction.seen_at <= new Date(mutation.data.seenAt)
+      existingInteraction.last_seen_at !== null &&
+      existingInteraction.last_seen_at >= new Date(mutation.data.seenAt)
     ) {
       return true;
     }
 
+    const lastSeenAt = new Date(mutation.data.seenAt);
+    const firstSeenAt = existingInteraction?.first_seen_at ?? lastSeenAt;
     const createdInteraction = await database
       .insertInto('message_interactions')
       .returningAll()
       .values({
         message_id: mutation.data.messageId,
         collaborator_id: user.id,
-        seen_at: new Date(mutation.data.seenAt),
+        first_seen_at: firstSeenAt,
+        last_seen_at: lastSeenAt,
         root_id: root.id,
         workspace_id: root.workspace_id,
       })
       .onConflict((b) =>
         b.columns(['message_id', 'collaborator_id']).doUpdateSet({
-          seen_at: new Date(mutation.data.seenAt),
+          last_seen_at: lastSeenAt,
+          first_seen_at: firstSeenAt,
         })
       )
       .executeTakeFirst();

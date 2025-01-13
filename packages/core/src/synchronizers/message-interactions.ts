@@ -6,7 +6,8 @@ export type SyncMessageInteractionsInput = {
 export type SyncMessageInteractionData = {
   messageId: string;
   collaboratorId: string;
-  seenAt: string | null;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
   firstOpenedAt: string | null;
   lastOpenedAt: string | null;
   rootId: string;

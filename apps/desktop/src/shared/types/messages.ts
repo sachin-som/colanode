@@ -31,7 +31,9 @@ export type MessageInteraction = {
   messageId: string;
   collaboratorId: string;
   rootId: string;
-  seenAt: string | null;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  firstOpenedAt: string | null;
   lastOpenedAt: string | null;
   version: bigint;
 };

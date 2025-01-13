@@ -213,7 +213,8 @@ interface MessageInteractionTable {
   collaborator_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  seen_at: ColumnType<Date | null, Date | null, Date | null>;
+  first_seen_at: ColumnType<Date | null, Date | null, Date | null>;
+  last_seen_at: ColumnType<Date | null, Date | null, Date | null>;
   first_opened_at: ColumnType<Date | null, Date | null, Date | null>;
   last_opened_at: ColumnType<Date | null, Date | null, Date | null>;
   version: ColumnType<bigint, never, never>;

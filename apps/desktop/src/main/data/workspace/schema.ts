@@ -138,7 +138,8 @@ interface MessageInteractionTable {
   message_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, string>;
-  seen_at: ColumnType<string | null, string | null, string | null>;
+  first_seen_at: ColumnType<string | null, string | null, string | null>;
+  last_seen_at: ColumnType<string | null, string | null, string | null>;
   first_opened_at: ColumnType<string | null, string | null, string | null>;
   last_opened_at: ColumnType<string | null, string | null, string | null>;
   version: ColumnType<bigint, bigint, bigint>;

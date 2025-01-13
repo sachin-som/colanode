@@ -268,16 +268,18 @@ class MessageService {
         message_id: messageInteraction.messageId,
         collaborator_id: messageInteraction.collaboratorId,
         root_id: messageInteraction.rootId,
-        seen_at: messageInteraction.seenAt,
-        last_opened_at: messageInteraction.lastOpenedAt,
+        first_seen_at: messageInteraction.firstSeenAt,
+        last_seen_at: messageInteraction.lastSeenAt,
         first_opened_at: messageInteraction.firstOpenedAt,
+        last_opened_at: messageInteraction.lastOpenedAt,
         version,
       })
       .onConflict((b) =>
         b.columns(['message_id', 'collaborator_id']).doUpdateSet({
-          seen_at: messageInteraction.seenAt,
-          last_opened_at: messageInteraction.lastOpenedAt,
+          first_seen_at: messageInteraction.firstSeenAt,
+          last_seen_at: messageInteraction.lastSeenAt,
           first_opened_at: messageInteraction.firstOpenedAt,
+          last_opened_at: messageInteraction.lastOpenedAt,
           version,
         })
       )

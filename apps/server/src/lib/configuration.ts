@@ -29,6 +29,12 @@ export interface UserConfiguration {
 
 export interface PostgresConfiguration {
   url: string;
+  ssl: {
+    rejectUnauthorized?: boolean;
+    ca?: string;
+    key?: string;
+    cert?: string;
+  };
 }
 
 export interface RedisConfiguration {
@@ -111,6 +117,15 @@ export const configuration: Configuration = {
   },
   postgres: {
     url: getRequiredEnv('POSTGRES_URL'),
+    ssl: {
+      rejectUnauthorized:
+        getOptionalEnv('POSTGRES_SSL_REJECT_UNAUTHORIZED') === undefined
+          ? undefined
+          : getOptionalEnv('POSTGRES_SSL_REJECT_UNAUTHORIZED') === 'true',
+      ca: getOptionalEnv('POSTGRES_SSL_CA'),
+      key: getOptionalEnv('POSTGRES_SSL_KEY'),
+      cert: getOptionalEnv('POSTGRES_SSL_CERT'),
+    },
   },
   redis: {
     url: getRequiredEnv('REDIS_URL'),

@@ -12,10 +12,17 @@ import pg from 'pg';
 import { databaseMigrations } from '@/data/migrations';
 import { DatabaseSchema } from '@/data/schema';
 import { configuration } from '@/lib/configuration';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('database');
 
 const dialect = new PostgresDialect({
   pool: new pg.Pool({
     connectionString: configuration.postgres.url,
+    ssl:
+      Object.keys(configuration.postgres.ssl).length > 0
+        ? configuration.postgres.ssl
+        : undefined,
   }),
 });
 
@@ -33,7 +40,18 @@ export const migrate = async () => {
     },
   });
 
-  await migrator.migrateToLatest();
+  const result = await migrator.migrateToLatest();
+  if (result.error) {
+    logger.error(`Migration failed, ${result.error}`);
+  }
+
+  if (result.results && result.results.length > 0) {
+    for (const r of result.results) {
+      logger.info(
+        `Migration result: ${r.direction} - ${r.migrationName} - ${r.status} `
+      );
+    }
+  }
 };
 
 export const hasInsertChanges = (result: InsertResult[]): boolean => {

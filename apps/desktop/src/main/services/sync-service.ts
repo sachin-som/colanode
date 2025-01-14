@@ -236,6 +236,8 @@ class SyncService {
     rootId: string,
     workspaceDatabase: Kysely<WorkspaceDatabaseSchema>
   ) {
+    this.debug('Initializing root node synchronizers', rootId);
+
     await this.initSynchronizer(userId, accountId, workspaceDatabase, {
       type: 'entry_transactions',
       rootId,
@@ -283,6 +285,8 @@ class SyncService {
   }
 
   private async removeRootNodeSynchronizers(userId: string, rootId: string) {
+    this.debug('Removing root node synchronizers', rootId);
+
     const keys = Array.from(this.synchronizers.keys());
 
     for (const key of keys) {
@@ -301,6 +305,8 @@ class SyncService {
 
       await synchronizer.delete();
       this.synchronizers.delete(key);
+
+      this.debug('Removed root node synchronizer', userId, synchronizer.input);
     }
   }
 
@@ -316,6 +322,12 @@ class SyncService {
       if (synchronizer.userId === userId) {
         await synchronizer.delete();
         this.synchronizers.delete(key);
+
+        this.debug(
+          'Removed workspace synchronizer',
+          userId,
+          synchronizer.input
+        );
       }
     }
   }
@@ -332,6 +344,12 @@ class SyncService {
       if (synchronizer.accountId === accountId) {
         await synchronizer.delete();
         this.synchronizers.delete(key);
+
+        this.debug(
+          'Removed account synchronizer',
+          accountId,
+          synchronizer.input
+        );
       }
     }
   }

@@ -83,7 +83,14 @@ class DatabaseService {
 
     const workspaceDatabase = this.workspaceDatabases.get(userId);
     if (workspaceDatabase) {
-      workspaceDatabase.destroy();
+      try {
+        workspaceDatabase.destroy();
+      } catch (error) {
+        this.debug(
+          `Failed to destroy workspace database for user: ${userId}`,
+          error
+        );
+      }
     }
 
     this.workspaceDatabases.delete(userId);

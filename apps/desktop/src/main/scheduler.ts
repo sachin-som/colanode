@@ -295,10 +295,6 @@ class Scheduler {
       }
 
       if (this.isWorkspaceJob(state, userId)) {
-        if (state.timeout) {
-          clearTimeout(state.timeout);
-        }
-
         this.deleteJob(state);
       }
     }

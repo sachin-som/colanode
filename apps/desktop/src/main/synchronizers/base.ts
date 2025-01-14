@@ -97,7 +97,7 @@ export abstract class BaseSynchronizer<TInput extends SynchronizerInput> {
     };
 
     const sent = socketService.sendMessage(this.accountId, message);
-    if (!sent) {
+    if (sent) {
       this.status = 'waiting';
     }
   }
@@ -130,10 +130,14 @@ export abstract class BaseSynchronizer<TInput extends SynchronizerInput> {
   }
 
   public async delete() {
-    await this.database
-      .deleteFrom('cursors')
-      .where('key', '=', this.cursorKey)
-      .execute();
+    try {
+      await this.database
+        .deleteFrom('cursors')
+        .where('key', '=', this.cursorKey)
+        .execute();
+    } catch {
+      this.debug('Failed to delete cursor', this.cursorKey);
+    }
   }
 
   private generateId(userId: string, input: TInput) {

@@ -336,15 +336,13 @@ class AccountService {
     if (!deletedWorkspace) {
       this.debug(`Failed to delete workspace ${userId}`);
       return false;
-    } else {
-      this.debug(`Deleted workspace ${userId}`);
     }
 
     await databaseService.removeWorkspaceDatabase(userId);
     const workspaceDir = getWorkspaceDirectoryPath(userId);
 
     let deleted = false;
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) {
       try {
         if (fs.existsSync(workspaceDir)) {
           fs.rmSync(workspaceDir, { recursive: true, force: true });
@@ -356,17 +354,17 @@ class AccountService {
           `Failed to delete workspace directory ${workspaceDir} on attempt ${attempt}`,
           error
         );
-        if (attempt === 5) {
+        if (attempt === 10) {
           break;
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
-    if (!deleted) {
-      this.debug(`Failed to delete workspace directory ${workspaceDir}`);
-    } else {
+    if (deleted) {
       this.debug(`Deleted workspace directory ${workspaceDir}`);
+    } else {
+      this.debug(`Failed to delete workspace directory ${workspaceDir}`);
     }
 
     eventBus.publish({

@@ -1,13 +1,10 @@
-import { compareString } from '@colanode/core';
 import { sql } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
-import { SelectMessage } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapMessage } from '@/main/utils';
 import { MessageReactionsGetQueryInput } from '@/shared/queries/messages/message-reactions-get';
 import { Event } from '@/shared/types/events';
-import { MessageNode, MessageReactionsCount } from '@/shared/types/messages';
+import { MessageReactionsCount } from '@/shared/types/messages';
 
 interface MessageReactionsCountRow {
   reaction: string;
@@ -104,9 +101,4 @@ export class MessageReactionsGetQueryHandler
 
     return counts;
   }
-
-  private buildMessages = (rows: SelectMessage[]): MessageNode[] => {
-    const messages = rows.map(mapMessage);
-    return messages.sort((a, b) => compareString(a.id, b.id));
-  };
 }

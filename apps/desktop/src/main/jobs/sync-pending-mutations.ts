@@ -257,6 +257,28 @@ export class SyncPendingMutationsJobHandler
             deletedMutationIds.add(previousMutation.id);
           }
         }
+      } else if (mutation.type === 'delete_message_reaction') {
+        for (let j = i - 1; j >= 0; j--) {
+          const previousMutation = mutations[j];
+          if (!previousMutation) {
+            continue;
+          }
+
+          if (
+            previousMutation.type === 'create_message_reaction' &&
+            previousMutation.data.messageId === mutation.data.messageId &&
+            previousMutation.data.reaction === mutation.data.reaction
+          ) {
+            deletedMutationIds.add(mutation.id);
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'delete_message_reaction' &&
+            previousMutation.data.messageId === mutation.data.messageId &&
+            previousMutation.data.reaction === mutation.data.reaction
+          ) {
+            deletedMutationIds.add(previousMutation.id);
+          }
+        }
       } else if (mutation.type === 'mark_entry_seen') {
         for (let j = i - 1; j >= 0; j--) {
           const previousMutation = mutations[j];

@@ -172,6 +172,29 @@ class MessageService {
     const workspaceDatabase =
       await databaseService.getWorkspaceDatabase(userId);
 
+    if (messageReaction.deletedAt) {
+      const deletedMessageReaction = await workspaceDatabase
+        .deleteFrom('message_reactions')
+        .returningAll()
+        .where('message_id', '=', messageReaction.messageId)
+        .where('collaborator_id', '=', messageReaction.collaboratorId)
+        .where('reaction', '=', messageReaction.reaction)
+        .executeTakeFirst();
+
+      if (deletedMessageReaction) {
+        eventBus.publish({
+          type: 'message_reaction_deleted',
+          userId,
+          messageReaction: mapMessageReaction(deletedMessageReaction),
+        });
+      }
+
+      this.debug(
+        `Server message reaction for message ${messageReaction.messageId} has been synced`
+      );
+      return;
+    }
+
     const existingMessageReaction = await workspaceDatabase
       .selectFrom('message_reactions')
       .selectAll()
@@ -221,6 +244,12 @@ class MessageService {
         created_at: messageReaction.createdAt,
         version,
       })
+      .onConflict((b) =>
+        b.columns(['message_id', 'collaborator_id', 'reaction']).doUpdateSet({
+          version,
+          deleted_at: null,
+        })
+      )
       .executeTakeFirst();
 
     if (!createdMessageReaction) {

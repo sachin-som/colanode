@@ -106,6 +106,13 @@ export class MessageReactionCreateMutationHandler
             version: 0n,
             created_at: new Date().toISOString(),
           })
+          .onConflict((cb) =>
+            cb
+              .columns(['message_id', 'collaborator_id', 'reaction'])
+              .doUpdateSet({
+                deleted_at: null,
+              })
+          )
           .executeTakeFirst();
 
         if (!createdMessageReaction) {

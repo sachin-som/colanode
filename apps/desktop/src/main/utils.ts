@@ -78,7 +78,7 @@ export const getAssetsSourcePath = (): string => {
 };
 
 export const getAppIconPath = (): string => {
-  return path.join(getAssetsSourcePath(), 'colanode_logo_black.png');
+  return path.join(getAssetsSourcePath(), 'colanode-logo-black.png');
 };
 
 export const hasInsertChanges = (result: InsertResult[]): boolean => {

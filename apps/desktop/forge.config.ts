@@ -12,7 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     name: 'Colanode',
     executableName: process.platform === 'linux' ? 'colanode' : 'Colanode',
-    icon: 'assets/colanode_logo_black',
+    icon: 'assets/colanode-logo-black',
     appBundleId: 'com.colanode.desktop',
     ...(process.platform === 'win32' && {
       certificateFile: process.env.CERTIFICATE_PATH,
@@ -79,7 +79,7 @@ const config: ForgeConfig = {
     new MakerDMG({
       name: 'Colanode',
       appPath: '',
-      icon: 'assets/colanode_logo_black.png',
+      icon: 'assets/colanode-logo-black.png',
       title: 'Colanode',
     }),
     {

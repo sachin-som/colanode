@@ -50,10 +50,6 @@ const fieldTypes: FieldTypeOption[] = [
     type: 'email',
   },
   {
-    name: 'File',
-    type: 'file',
-  },
-  {
     name: 'Multi Select',
     type: 'multiSelect',
   },
@@ -86,7 +82,7 @@ const fieldTypes: FieldTypeOption[] = [
     type: 'updatedAt',
   },
   {
-    name: 'Last Updated by user',
+    name: 'Last Updated By',
     type: 'updatedBy',
   },
 ];

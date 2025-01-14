@@ -77,13 +77,16 @@ class DatabaseService {
     return this.workspaceDatabases;
   }
 
-  public async deleteWorkspaceDatabase(userId: string): Promise<void> {
+  public async removeWorkspaceDatabase(userId: string): Promise<void> {
     this.debug(`Deleting workspace database for user: ${userId}`);
     await this.waitForInit();
 
-    if (this.workspaceDatabases.has(userId)) {
-      this.workspaceDatabases.delete(userId);
+    const workspaceDatabase = this.workspaceDatabases.get(userId);
+    if (workspaceDatabase) {
+      workspaceDatabase.destroy();
     }
+
+    this.workspaceDatabases.delete(userId);
   }
 
   private async waitForInit(): Promise<void> {

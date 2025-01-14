@@ -58,7 +58,10 @@ const createWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+    autoHideMenuBar: true,
   });
+
+  mainWindow.setMenuBarVisibility(false);
 
   mainWindow.on('resized', () => {
     windowSize = {

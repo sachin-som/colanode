@@ -82,6 +82,11 @@ const config: ForgeConfig = {
       icon: 'assets/colanode_logo_black.png',
       title: 'Colanode',
     }),
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['darwin'],
+      config: {},
+    },
   ],
   publishers: [
     {
@@ -91,9 +96,6 @@ const config: ForgeConfig = {
           owner: 'colanode',
           name: 'colanode',
         },
-        // Publishing options:
-        //    draft=true creates private release for review,
-        //    prerelease=true marks as beta, false=stable/production
         prerelease: false,
         draft: true,
       },

@@ -1,4 +1,5 @@
 import started from 'electron-squirrel-startup';
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 
 import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
 import path from 'path';
@@ -29,6 +30,16 @@ app.setAppUserModelId('com.colanode.desktop');
 if (started) {
   app.quit();
 }
+
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.ElectronPublicUpdateService,
+    repo: 'colanode/colanode',
+    host: 'https://update.electronjs.org',
+  },
+  updateInterval: '10 minutes',
+  notifyUser: true,
+});
 
 const createWindow = async () => {
   await scheduler.init();

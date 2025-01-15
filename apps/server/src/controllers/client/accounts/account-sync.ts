@@ -4,13 +4,14 @@ import {
   WorkspaceOutput,
   WorkspaceRole,
   ApiErrorCode,
+  AccountSyncInput,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { ResponseBuilder } from '@/lib/response-builder';
 
 export const accountSyncHandler = async (
-  _: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const account = await database
@@ -39,11 +40,15 @@ export const accountSyncHandler = async (
     });
   }
 
+  const input: AccountSyncInput = req.body;
+
   await database
     .updateTable('devices')
     .set({
       synced_at: new Date(),
       ip: res.locals.ip,
+      platform: input.platform,
+      version: input.version,
     })
     .where('id', '=', device.id)
     .execute();

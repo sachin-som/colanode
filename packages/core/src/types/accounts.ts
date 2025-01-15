@@ -64,6 +64,11 @@ export type AccountUpdateOutput = {
   avatar?: string | null;
 };
 
+export type AccountSyncInput = {
+  platform: string;
+  version: string;
+};
+
 export type AccountSyncOutput = {
   account: AccountOutput;
   workspaces: WorkspaceOutput[];

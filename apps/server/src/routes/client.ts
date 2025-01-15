@@ -43,7 +43,7 @@ clientRouter.put(
   accountUpdateHandler
 );
 
-clientRouter.get('/v1/accounts/sync', authMiddleware, accountSyncHandler);
+clientRouter.post('/v1/accounts/sync', authMiddleware, accountSyncHandler);
 
 clientRouter.post(
   '/v1/avatars',

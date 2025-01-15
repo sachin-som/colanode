@@ -5,6 +5,7 @@ import {
   LoginSuccessOutput,
 } from '@colanode/core';
 
+import { app } from 'electron';
 import fs from 'fs';
 
 import { createDebugger } from '@/main/debugger';
@@ -131,8 +132,12 @@ class AccountService {
     }
 
     try {
-      const { data, status } = await httpClient.get<AccountSyncOutput>(
+      const { data, status } = await httpClient.post<AccountSyncOutput>(
         '/v1/accounts/sync',
+        {
+          platform: process.platform,
+          version: app.getVersion(),
+        },
         {
           domain: server.domain,
           token: account.token,

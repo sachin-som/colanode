@@ -210,8 +210,27 @@ const createEntryTransactionsTable: Migration = {
       .on('entry_transactions')
       .columns(['root_id', 'version'])
       .execute();
+
+    await sql`
+      CREATE OR REPLACE FUNCTION update_entry_transaction_version() RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.version = nextval('entry_transactions_version_sequence');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_entry_transaction_version
+      BEFORE UPDATE ON entry_transactions
+      FOR EACH ROW
+      EXECUTE FUNCTION update_entry_transaction_version();
+    `.execute(db);
   },
   down: async (db) => {
+    await sql`
+      DROP TRIGGER IF EXISTS trg_update_entry_transaction_version ON entry_transactions;
+      DROP FUNCTION IF EXISTS update_entry_transaction_version();
+    `.execute(db);
+
     await db.schema.dropIndex('entry_transactions_entry_id_idx').execute();
     await db.schema
       .dropIndex('entry_transactions_root_id_version_idx')
@@ -470,6 +489,11 @@ const createMessageReactionsTable: Migration = {
         RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;
+
+      CREATE TRIGGER trg_update_message_reaction_version
+      BEFORE UPDATE ON message_reactions
+      FOR EACH ROW
+      EXECUTE FUNCTION update_message_reaction_version();
     `.execute(db);
   },
   down: async (db) => {

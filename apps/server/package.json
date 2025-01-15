@@ -15,7 +15,7 @@
     "build": "npm run compile && tsup-node",
     "clean": "del-cli dist isolate tsconfig.tsbuildinfo",
     "lint": "eslint . --max-warnings 0",
-    "dev": "tsx watch --env-file .env src/index.ts"
+    "dev": "DEBUG=colanode:* tsx watch --env-file .env src/index.ts"
   },
   "description": "",
   "devDependencies": {

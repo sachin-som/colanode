@@ -64,6 +64,8 @@ services:
       # The server requires a name and avatar URL which will be displayed in the desktop app login screen.
       SERVER_NAME: 'Colanode'
       SERVER_AVATAR: ''
+      # Possible values for SERVER_MODE: 'standalone', 'cluster'
+      SERVER_MODE: 'standalone'
 
       # ───────────────────────────────────────────────────────────────
       # Account Configuration

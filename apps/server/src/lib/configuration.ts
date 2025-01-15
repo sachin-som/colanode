@@ -10,9 +10,12 @@ export interface Configuration {
   ai: AiConfiguration;
 }
 
+export type ServerMode = 'standalone' | 'cluster';
+
 export interface ServerConfiguration {
   name: string;
   avatar: string;
+  mode: ServerMode;
 }
 
 export type AccountVerificationType = 'automatic' | 'manual' | 'email';
@@ -105,6 +108,7 @@ export const configuration: Configuration = {
   server: {
     name: getRequiredEnv('SERVER_NAME'),
     avatar: getOptionalEnv('SERVER_AVATAR') || '',
+    mode: (getOptionalEnv('SERVER_MODE') as ServerMode) || 'standalone',
   },
   account: {
     verificationType:

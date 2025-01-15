@@ -1,6 +1,7 @@
+import { generateId, IdType } from '@colanode/core';
+
 import { Event } from '@/types/events';
 import { redis } from '@/data/redis';
-import { host } from '@/host';
 import { configuration } from '@/lib/configuration';
 
 export interface Subscription {
@@ -20,12 +21,14 @@ export type DistributedEventEnvelope = {
 };
 
 export class EventBusService {
-  private subscriptions: Map<string, Subscription>;
-  private id = 0;
+  private readonly subscriptions: Map<string, Subscription>;
+  private readonly hostId: string;
+  private subscriberId = 0;
   private initialized = false;
 
   public constructor() {
     this.subscriptions = new Map<string, Subscription>();
+    this.hostId = generateId(IdType.Host);
   }
 
   public async init() {
@@ -35,14 +38,16 @@ export class EventBusService {
 
     this.initialized = true;
 
-    if (host.environment === 'development') {
+    if (configuration.server.mode === 'standalone') {
       return;
     }
 
     const client = redis.duplicate();
+    await client.connect();
+
     client.subscribe(configuration.redis.eventsChannel, (message) => {
       const envelope = JSON.parse(message) as DistributedEventEnvelope;
-      if (envelope.hostId === host.id) {
+      if (envelope.hostId === this.hostId) {
         return;
       }
 
@@ -51,7 +56,7 @@ export class EventBusService {
   }
 
   public subscribe(callback: (event: Event) => void): string {
-    const id = (this.id++).toLocaleString();
+    const id = (this.subscriberId++).toLocaleString();
     this.subscriptions.set(id, {
       callback,
       id,
@@ -68,12 +73,14 @@ export class EventBusService {
   public publish(event: Event) {
     this.processEvent(event);
 
-    if (host.environment === 'production') {
-      redis.publish(
-        configuration.redis.eventsChannel,
-        JSON.stringify({ event, hostId: host.id })
-      );
+    if (configuration.server.mode === 'standalone') {
+      return;
     }
+
+    redis.publish(
+      configuration.redis.eventsChannel,
+      JSON.stringify({ event, hostId: this.hostId })
+    );
   }
 
   private processEvent(event: Event) {

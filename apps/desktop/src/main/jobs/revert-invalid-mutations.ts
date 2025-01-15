@@ -1,7 +1,8 @@
+import { createDebugger } from '@colanode/core';
+
 import { entryService } from '@/main/services/entry-service';
 import { fileService } from '@/main/services/file-service';
 import { messageService } from '@/main/services/message-service';
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { JobHandler } from '@/main/jobs';
 import { mapMutation } from '@/main/utils';
@@ -25,7 +26,9 @@ export class RevertInvalidMutationsJobHandler
   public triggerDebounce = 100;
   public interval = 1000 * 60 * 5;
 
-  private readonly debug = createDebugger('job:revert-invalid-mutations');
+  private readonly debug = createDebugger(
+    'desktop:job:revert-invalid-mutations'
+  );
 
   public async handleJob(input: RevertInvalidMutationsInput) {
     this.debug(`Reverting invalid mutations for user ${input.userId}`);

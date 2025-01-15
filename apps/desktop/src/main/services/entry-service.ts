@@ -17,10 +17,10 @@ import {
   Entry,
   canCreateEntry,
   TransactionOperation,
+  createDebugger,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { SelectEntryTransaction } from '@/main/data/workspace/schema';
 import {
@@ -48,7 +48,7 @@ export type UpdateEntryResult =
   | 'invalid_attributes';
 
 class EntryService {
-  private readonly debug = createDebugger('service:entry');
+  private readonly debug = createDebugger('desktop:service:entry');
 
   public async createEntry(userId: string, input: CreateEntryInput) {
     this.debug(`Creating ${Array.isArray(input) ? 'entries' : 'entry'}`);

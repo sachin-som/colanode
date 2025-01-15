@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es';
+import { createDebugger } from '@colanode/core';
 
-import { createDebugger } from '@/main/debugger';
 import { queryHandlerMap } from '@/main/queries';
 import { QueryHandler, SubscribedQuery } from '@/main/types';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -8,7 +8,7 @@ import { QueryInput, QueryMap } from '@/shared/queries';
 import { Event } from '@/shared/types/events';
 
 class QueryService {
-  private readonly debug = createDebugger('service:query');
+  private readonly debug = createDebugger('desktop:service:query');
   private readonly subscribedQueries: Map<string, SubscribedQuery<QueryInput>> =
     new Map();
 

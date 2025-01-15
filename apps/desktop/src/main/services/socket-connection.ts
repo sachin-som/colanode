@@ -1,8 +1,7 @@
-import { Message } from '@colanode/core';
+import { Message, createDebugger } from '@colanode/core';
 import { WebSocket } from 'ws';
 
 import { scheduler } from '@/main/scheduler';
-import { createDebugger } from '@/main/debugger';
 import { SelectAccount } from '@/main/data/app/schema';
 import { syncService } from '@/main/services/sync-service';
 import { BackoffCalculator } from '@/shared/lib/backoff-calculator';

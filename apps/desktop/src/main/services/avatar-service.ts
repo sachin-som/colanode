@@ -1,3 +1,5 @@
+import { createDebugger } from '@colanode/core';
+
 import { net } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -5,10 +7,9 @@ import path from 'path';
 import { databaseService } from '@/main/data/database-service';
 import { getAccountAvatarsDirectoryPath } from '@/main/utils';
 import { httpClient } from '@/shared/lib/http-client';
-import { createDebugger } from '@/main/debugger';
 
 class AvatarService {
-  private readonly debug = createDebugger('service:avatar');
+  private readonly debug = createDebugger('desktop:service:avatar');
 
   public async handleAvatarRequest(request: Request): Promise<Response> {
     const url = request.url.replace('avatar://', '');

@@ -1,4 +1,5 @@
-import { createDebugger } from '@/main/debugger';
+import { createDebugger } from '@colanode/core';
+
 import { mutationHandlerMap } from '@/main/mutations';
 import { MutationHandler } from '@/main/types';
 import {
@@ -9,7 +10,7 @@ import {
 } from '@/shared/mutations';
 
 class MutationService {
-  private readonly debug = createDebugger('service:mutation');
+  private readonly debug = createDebugger('desktop:service:mutation');
 
   public async executeMutation<T extends MutationInput>(
     input: T

@@ -4,11 +4,11 @@ import {
   SynchronizerInputMessage,
   SynchronizerInput,
   SynchronizerMap,
+  createDebugger,
 } from '@colanode/core';
 import { sha256 } from 'js-sha256';
 
 import { socketService } from '@/main/services/socket-service';
-import { createDebugger } from '@/main/debugger';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 
 export type SynchronizerStatus = 'idle' | 'waiting' | 'processing';
@@ -20,7 +20,7 @@ export abstract class BaseSynchronizer<TInput extends SynchronizerInput> {
   public readonly input: TInput;
 
   protected readonly database: Kysely<WorkspaceDatabaseSchema>;
-  protected readonly debug = createDebugger('consumer');
+  protected readonly debug = createDebugger('desktop:synchronizer');
 
   private status: SynchronizerStatus = 'idle';
   private cursor: bigint = 0n;
@@ -143,7 +143,7 @@ export abstract class BaseSynchronizer<TInput extends SynchronizerInput> {
   private generateId(userId: string, input: TInput) {
     const idObj = {
       userId,
-      inputId: input,
+      input,
     };
 
     return sha256(JSON.stringify(idObj));

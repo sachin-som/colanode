@@ -1,7 +1,6 @@
-import { ApiErrorCode } from '@colanode/core';
+import { ApiErrorCode, createDebugger } from '@colanode/core';
 
 import { serverService } from '@/main/services/server-service';
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { JobHandler } from '@/main/jobs';
 import { httpClient } from '@/shared/lib/http-client';
@@ -25,7 +24,7 @@ export class SyncDeletedTokensJobHandler
   public triggerDebounce = 100;
   public interval = 1000 * 60 * 5;
 
-  private readonly debug = createDebugger('job:sync-deleted-tokens');
+  private readonly debug = createDebugger('desktop:job:sync-deleted-tokens');
 
   public async handleJob(_: SyncDeletedTokensInput) {
     this.debug('Syncing deleted tokens');

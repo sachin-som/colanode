@@ -6,6 +6,7 @@ import {
   SyncMessageInteractionData,
   SyncMessageReactionData,
   SyncMessageTombstoneData,
+  createDebugger,
 } from '@colanode/core';
 
 import { fileService } from '@/main/services/file-service';
@@ -15,11 +16,10 @@ import {
   mapMessageReaction,
 } from '@/main/utils';
 import { databaseService } from '@/main/data/database-service';
-import { createDebugger } from '@/main/debugger';
 import { eventBus } from '@/shared/lib/event-bus';
 
 class MessageService {
-  private readonly debug = createDebugger('service:message');
+  private readonly debug = createDebugger('desktop:service:message');
 
   public async syncServerMessage(userId: string, message: SyncMessageData) {
     const workspaceDatabase =

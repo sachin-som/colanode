@@ -4,9 +4,9 @@ import {
   SynchronizerInput,
   SynchronizerInputMessage,
   WorkspaceStatus,
+  createDebugger,
 } from '@colanode/core';
 
-import { createLogger } from '@/lib/logger';
 import { RequestAccount } from '@/types/api';
 import { database } from '@/data/database';
 import {
@@ -38,7 +38,7 @@ type SocketUser = {
 };
 
 export class SocketConnection {
-  private readonly logger = createLogger('socket-connection');
+  private readonly debug = createDebugger('server:service:socket-connection');
   private readonly account: RequestAccount;
   private readonly socket: WebSocket;
 
@@ -47,6 +47,10 @@ export class SocketConnection {
     new Map();
 
   constructor(account: RequestAccount, socket: WebSocket) {
+    this.debug(
+      `New connection, account:${account.id}, device:${account.deviceId}`
+    );
+
     this.account = account;
     this.socket = socket;
 
@@ -73,7 +77,9 @@ export class SocketConnection {
   }
 
   private async handleMessage(message: Message) {
-    this.logger.trace(message, `Socket message from ${this.account.id}`);
+    this.debug(
+      `Socket message, account:${this.account.id}, device:${this.account.deviceId}, type:${message.type}`
+    );
 
     if (message.type === 'synchronizer_input') {
       this.handleSynchronizerInput(message);
@@ -105,10 +111,6 @@ export class SocketConnection {
   }
 
   private async handleSynchronizerInput(message: SynchronizerInputMessage) {
-    this.logger.info(
-      `Synchronizer input from ${this.account.id} and user ${message.userId} and input ${message.input}`
-    );
-
     const user = await this.getOrCreateUser(message.userId);
     if (user === null) {
       return;

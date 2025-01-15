@@ -1,5 +1,6 @@
+import { createDebugger } from '@colanode/core';
+
 import { databaseService } from '@/main/data/database-service';
-import { createDebugger } from '@/main/debugger';
 import { socketService } from '@/main/services/socket-service';
 import { JobHandler } from '@/main/jobs';
 
@@ -20,7 +21,7 @@ export class ConnectSocketJobHandler implements JobHandler<ConnectSocketInput> {
   public triggerDebounce = 0;
   public interval = 1000 * 30;
 
-  private readonly debug = createDebugger('job:connect-socket');
+  private readonly debug = createDebugger('desktop:job:connect-socket');
 
   public async handleJob(input: ConnectSocketInput) {
     const account = await databaseService.appDatabase

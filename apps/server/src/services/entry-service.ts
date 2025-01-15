@@ -13,6 +13,7 @@ import {
   canUpdateEntry,
   canDeleteEntry,
   TransactionOperation,
+  createDebugger,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { Transaction } from 'kysely';
@@ -30,7 +31,6 @@ import {
 } from '@/data/schema';
 import { eventBus } from '@/lib/event-bus';
 import { fetchEntry, mapEntry } from '@/lib/entries';
-import { createLogger } from '@/lib/logger';
 import {
   ApplyCreateTransactionInput,
   ApplyCreateTransactionOutput,
@@ -59,7 +59,7 @@ type CollaboratorChangeResult = {
 };
 
 class EntryService {
-  private readonly logger = createLogger('node-service');
+  private readonly debug = createDebugger('server:service:entry');
 
   public async createEntry(
     input: CreateEntryInput
@@ -129,7 +129,7 @@ class EntryService {
         transaction: createdTransaction,
       };
     } catch (error) {
-      this.logger.error(error, 'Failed to create node transaction');
+      this.debug(`Failed to create node transaction: ${error}`);
       return null;
     }
   }
@@ -379,7 +379,7 @@ class EntryService {
         transaction: createdTransaction,
       };
     } catch (error) {
-      this.logger.error(error, 'Failed to apply node create transaction');
+      this.debug(`Failed to apply node create transaction: ${error}`);
       return null;
     }
   }

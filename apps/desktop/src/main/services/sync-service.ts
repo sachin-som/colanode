@@ -1,9 +1,12 @@
-import { SynchronizerInput, SynchronizerOutputMessage } from '@colanode/core';
+import {
+  createDebugger,
+  SynchronizerInput,
+  SynchronizerOutputMessage,
+} from '@colanode/core';
 import { Kysely } from 'kysely';
 
 import { databaseService } from '@/main/data/database-service';
 import { BaseSynchronizer } from '@/main/synchronizers/base';
-import { createDebugger } from '@/main/debugger';
 import { UserSynchronizer } from '@/main/synchronizers/users';
 import { WorkspaceDatabaseSchema } from '@/main/data/workspace/schema';
 import { CollaborationSynchronizer } from '@/main/synchronizers/collaborations';
@@ -19,7 +22,7 @@ import { MessageTombstoneSynchronizer } from '@/main/synchronizers/message-tombs
 import { eventBus } from '@/shared/lib/event-bus';
 
 class SyncService {
-  private readonly debug = createDebugger('service:sync');
+  private readonly debug = createDebugger('desktop:service:sync');
   private readonly synchronizers: Map<
     string,
     BaseSynchronizer<SynchronizerInput>

@@ -1,11 +1,10 @@
-import { SyncCollaborationData } from '@colanode/core';
+import { SyncCollaborationData, createDebugger } from '@colanode/core';
 
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
 
 class CollaborationService {
-  private readonly debug = createDebugger('service:collaboration');
+  private readonly debug = createDebugger('desktop:service:collaboration');
 
   public async syncServerCollaboration(
     userId: string,

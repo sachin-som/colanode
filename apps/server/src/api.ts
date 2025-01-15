@@ -1,14 +1,14 @@
 import cors from 'cors';
 import express, { Request, Response } from 'express';
+import { createDebugger } from '@colanode/core';
 
 import http from 'http';
 
 import { clientRouter } from '@/routes/client';
 import { ipMiddleware } from '@/middlewares/ip';
 import { socketService } from '@/services/socket-service';
-import { createLogger } from '@/lib/logger';
 
-const logger = createLogger('api');
+const debug = createDebugger('server:api');
 
 export const initApi = async () => {
   const app = express();
@@ -34,6 +34,6 @@ export const initApi = async () => {
   await socketService.init(server);
 
   server.listen(port, () => {
-    logger.info(`Server is running at http://localhost:${port}`);
+    debug(`Server is running at http://localhost:${port}`);
   });
 };

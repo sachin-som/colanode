@@ -1,5 +1,6 @@
 import started from 'electron-squirrel-startup';
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
+import { createDebugger } from '@colanode/core';
 
 import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
 import path from 'path';
@@ -7,7 +8,6 @@ import path from 'path';
 import { metadataService } from '@/main/services/metadata-service';
 import { notificationService } from '@/main/services/notification-service';
 import { WindowSize } from '@/shared/types/metadata';
-import { createDebugger } from '@/main/debugger';
 import { scheduler } from '@/main/scheduler';
 import { assetService } from '@/main/services/asset-service';
 import { avatarService } from '@/main/services/avatar-service';
@@ -21,7 +21,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { MutationInput, MutationMap } from '@/shared/mutations';
 import { QueryInput, QueryMap } from '@/shared/queries';
 
-const debug = createDebugger('main');
+const debug = createDebugger('desktop:main');
 
 app.setName('Colanode');
 app.setAppUserModelId('com.colanode.desktop');

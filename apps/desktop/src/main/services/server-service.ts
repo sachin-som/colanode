@@ -1,11 +1,10 @@
-import { ServerConfig } from '@colanode/core';
+import { createDebugger, ServerConfig } from '@colanode/core';
 import axios from 'axios';
 
 import { databaseService } from '@/main/data/database-service';
 import { mapServer } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Server } from '@/shared/types/servers';
-import { createDebugger } from '@/main/debugger';
 
 type ServerState = {
   isAvailable: boolean;
@@ -16,7 +15,7 @@ type ServerState = {
 
 class ServerService {
   private readonly states: Map<string, ServerState> = new Map();
-  private readonly debug = createDebugger('service:server');
+  private readonly debug = createDebugger('desktop:service:server');
 
   public async syncServers() {
     this.debug('Syncing servers');

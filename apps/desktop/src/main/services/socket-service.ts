@@ -1,12 +1,11 @@
-import { Message } from '@colanode/core';
+import { createDebugger, Message } from '@colanode/core';
 
 import { SelectAccount } from '@/main/data/app/schema';
-import { createDebugger } from '@/main/debugger';
 import { serverService } from '@/main/services/server-service';
 import { SocketConnection } from '@/main/services/socket-connection';
 
 class SocketService {
-  private readonly debug = createDebugger('service:socket');
+  private readonly debug = createDebugger('desktop:service:socket');
   private readonly sockets: Map<string, SocketConnection> = new Map();
 
   constructor() {}

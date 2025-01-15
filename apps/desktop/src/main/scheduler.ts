@@ -1,9 +1,9 @@
 import { sha256 } from 'js-sha256';
+import { createDebugger } from '@colanode/core';
 
 import { socketService } from '@/main/services/socket-service';
 import { radarService } from '@/main/services/radar-service';
 import { databaseService } from '@/main/data/database-service';
-import { createDebugger } from '@/main/debugger';
 import { JobHandler, JobInput, JobMap } from '@/main/jobs';
 import { SyncServersJobHandler } from '@/main/jobs/sync-servers';
 import { SyncAccountJobHandler } from '@/main/jobs/sync-account';
@@ -47,7 +47,7 @@ type JobState = {
 };
 
 class Scheduler {
-  private readonly debug = createDebugger('scheduler');
+  private readonly debug = createDebugger('desktop:scheduler');
   private initPromise: Promise<void> | null = null;
   private initialized = false;
 

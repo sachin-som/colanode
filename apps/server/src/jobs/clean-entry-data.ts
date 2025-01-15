@@ -1,5 +1,10 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { generateId, IdType, TransactionOperation } from '@colanode/core';
+import {
+  createDebugger,
+  generateId,
+  IdType,
+  TransactionOperation,
+} from '@colanode/core';
 
 import { database } from '@/data/database';
 import {
@@ -9,13 +14,12 @@ import {
 } from '@/data/schema';
 import { JobHandler } from '@/types/jobs';
 import { eventBus } from '@/lib/event-bus';
-import { createLogger } from '@/lib/logger';
 import { fileS3 } from '@/data/storage';
 import { configuration } from '@/lib/configuration';
 
 const BATCH_SIZE = 100;
 
-const logger = createLogger('clean-entry-data');
+const debug = createDebugger('server:job:clean-entry-data');
 
 export type CleanEntryDataInput = {
   type: 'clean_entry_data';
@@ -34,7 +38,7 @@ declare module '@/types/jobs' {
 export const cleanEntryDataHandler: JobHandler<CleanEntryDataInput> = async (
   input
 ) => {
-  logger.trace(`Cleaning entry data for ${input.entryId}`);
+  debug(`Cleaning entry data for ${input.entryId}`);
 
   const deleteTransactions = await database
     .selectFrom('entry_transactions')
@@ -43,7 +47,7 @@ export const cleanEntryDataHandler: JobHandler<CleanEntryDataInput> = async (
     .execute();
 
   if (deleteTransactions.length !== 1) {
-    logger.error(`Expected 1 delete transaction for ${input.entryId}`);
+    debug(`Expected 1 delete transaction for ${input.entryId}`);
     return;
   }
 
@@ -52,7 +56,7 @@ export const cleanEntryDataHandler: JobHandler<CleanEntryDataInput> = async (
     !deleteTransaction?.operation ||
     deleteTransaction.operation !== TransactionOperation.Delete
   ) {
-    logger.error(`Expected delete transaction for ${input.entryId}`);
+    debug(`Expected delete transaction for ${input.entryId}`);
     return;
   }
 
@@ -84,7 +88,7 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
         .execute();
 
       if (descendants.length === 0) {
-        logger.trace(`No descendants found for ${parentIds}`);
+        debug(`No descendants found for ${parentIds}`);
         hasMore = false;
         break;
       }
@@ -155,7 +159,7 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
 
       hasMore = descendants.length === BATCH_SIZE;
     } catch (error) {
-      logger.error(`Error cleaning entry data for ${parentIds}: ${error}`);
+      debug(`Error cleaning entry data for ${parentIds}: ${error}`);
       hasMore = false;
     }
   }
@@ -229,7 +233,7 @@ const deleteMessages = async (entryIds: string[], userId: string) => {
 
       hasMore = messages.length === BATCH_SIZE;
     } catch (error) {
-      logger.error(`Error deleting messages for ${entryIds}: ${error}`);
+      debug(`Error deleting messages for ${entryIds}: ${error}`);
       hasMore = false;
     }
   }
@@ -296,7 +300,7 @@ const deleteFiles = async (entryIds: string[], userId: string) => {
 
       hasMore = files.length === BATCH_SIZE;
     } catch (error) {
-      logger.error(`Error deleting files for ${entryIds}: ${error}`);
+      debug(`Error deleting files for ${entryIds}: ${error}`);
       hasMore = false;
     }
   }

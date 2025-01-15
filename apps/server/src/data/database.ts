@@ -8,13 +8,13 @@ import {
   UpdateResult,
 } from 'kysely';
 import pg from 'pg';
+import { createDebugger } from '@colanode/core';
 
 import { databaseMigrations } from '@/data/migrations';
 import { DatabaseSchema } from '@/data/schema';
 import { configuration } from '@/lib/configuration';
-import { createLogger } from '@/lib/logger';
 
-const logger = createLogger('database');
+const debug = createDebugger('server:database');
 
 const dialect = new PostgresDialect({
   pool: new pg.Pool({
@@ -43,12 +43,12 @@ export const migrate = async () => {
 
   const result = await migrator.migrateToLatest();
   if (result.error) {
-    logger.error(`Migration failed, ${result.error}`);
+    debug(`Migration failed, ${result.error}`);
   }
 
   if (result.results && result.results.length > 0) {
     for (const r of result.results) {
-      logger.info(
+      debug(
         `Migration result: ${r.direction} - ${r.migrationName} - ${r.status} `
       );
     }

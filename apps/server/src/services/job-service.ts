@@ -1,11 +1,11 @@
 import { Job, JobsOptions, Queue, Worker } from 'bullmq';
+import { createDebugger } from '@colanode/core';
 
 import { configuration } from '@/lib/configuration';
 import { jobHandlerMap } from '@/jobs';
 import { JobHandler, JobInput } from '@/types/jobs';
-import { createLogger } from '@/lib/logger';
 
-const logger = createLogger('job-service');
+const debug = createDebugger('server:service:job');
 
 class JobService {
   private jobQueue: Queue | undefined;
@@ -37,7 +37,7 @@ class JobService {
     });
 
     this.jobQueue.on('error', (error) => {
-      logger.error(error, 'Job queue error');
+      debug(`Job queue error: ${error}`);
     });
   }
 

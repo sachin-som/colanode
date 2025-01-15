@@ -1,10 +1,11 @@
-import { createDebugger } from '@/main/debugger';
+import { createDebugger } from '@colanode/core';
+
 import { commandHandlerMap } from '@/main/commands';
 import { CommandHandler } from '@/main/types';
 import { CommandInput, CommandMap } from '@/shared/commands';
 
 class CommandService {
-  private readonly debug = createDebugger('service:command');
+  private readonly debug = createDebugger('desktop:service:command');
 
   public async executeCommand<T extends CommandInput>(
     input: T

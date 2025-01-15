@@ -7,6 +7,7 @@ import {
   SyncFileData,
   SyncFileInteractionData,
   SyncFileTombstoneData,
+  createDebugger,
 } from '@colanode/core';
 import axios from 'axios';
 import mime from 'mime-types';
@@ -15,7 +16,6 @@ import { net, shell } from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { serverService } from '@/main/services/server-service';
 import {
@@ -35,7 +35,7 @@ import {
 } from '@/shared/types/files';
 
 class FileService {
-  private readonly debug = createDebugger('service:file');
+  private readonly debug = createDebugger('desktop:service:file');
 
   public async handleFileRequest(request: Request): Promise<Response> {
     const url = request.url.replace('local-file://', '');

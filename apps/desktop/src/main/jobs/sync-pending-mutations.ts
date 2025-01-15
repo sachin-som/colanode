@@ -1,7 +1,6 @@
-import { Mutation, SyncMutationsOutput } from '@colanode/core';
+import { Mutation, SyncMutationsOutput, createDebugger } from '@colanode/core';
 
 import { fetchWorkspaceCredentials, mapMutation } from '@/main/utils';
-import { createDebugger } from '@/main/debugger';
 import { databaseService } from '@/main/data/database-service';
 import { serverService } from '@/main/services/server-service';
 import { JobHandler } from '@/main/jobs';
@@ -29,7 +28,7 @@ export class SyncPendingMutationsJobHandler
   public triggerDebounce = 0;
   public interval = 1000 * 60;
 
-  private readonly debug = createDebugger('job:sync-pending-mutations');
+  private readonly debug = createDebugger('desktop:job:sync-pending-mutations');
 
   public async handleJob(input: SyncPendingMutationsInput) {
     let hasMore = true;

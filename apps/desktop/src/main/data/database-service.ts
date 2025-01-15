@@ -1,9 +1,9 @@
 import SQLite from 'better-sqlite3';
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
+import { createDebugger } from '@colanode/core';
 
 import fs from 'fs';
 
-import { createDebugger } from '@/main/debugger';
 import { appDatabaseMigrations } from '@/main/data/app/migrations';
 import { AppDatabaseSchema } from '@/main/data/app/schema';
 import { workspaceDatabaseMigrations } from '@/main/data/workspace/migrations';
@@ -19,7 +19,7 @@ class DatabaseService {
   > = new Map();
 
   public readonly appDatabase: Kysely<AppDatabaseSchema>;
-  private readonly debug = createDebugger('database-service');
+  private readonly debug = createDebugger('desktop:service:database');
 
   constructor() {
     this.debug('Constructing database service');

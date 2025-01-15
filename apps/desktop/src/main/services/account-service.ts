@@ -3,12 +3,12 @@ import {
   ApiErrorCode,
   ApiErrorOutput,
   LoginSuccessOutput,
+  createDebugger,
 } from '@colanode/core';
 
 import { app } from 'electron';
 import fs from 'fs';
 
-import { createDebugger } from '@/main/debugger';
 import { SelectAccount } from '@/main/data/app/schema';
 import { databaseService } from '@/main/data/database-service';
 import { serverService } from '@/main/services/server-service';
@@ -25,7 +25,7 @@ import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 
 class AccountService {
-  private readonly debug = createDebugger('service:account');
+  private readonly debug = createDebugger('desktop:service:account');
 
   public async initAccount(output: LoginSuccessOutput, server: string) {
     const { createdAccount, createdWorkspaces } =

@@ -72,6 +72,7 @@ class WorkspaceService {
         type: 'space',
         name: 'Home',
         description: 'This is your home space.',
+        visibility: 'private',
         collaborators: {
           [userId]: 'admin',
         },

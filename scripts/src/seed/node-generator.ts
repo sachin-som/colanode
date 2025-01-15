@@ -114,6 +114,7 @@ export class NodeGenerator {
       description,
       collaborators,
       avatar,
+      visibility: 'private',
     };
 
     const user = this.getMainUser();

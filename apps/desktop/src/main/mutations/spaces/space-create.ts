@@ -45,6 +45,7 @@ export class SpaceCreateMutationHandler
     const spaceAttributes: SpaceAttributes = {
       type: 'space',
       name: input.name,
+      visibility: 'private',
       collaborators: {
         [input.userId]: 'admin',
       },

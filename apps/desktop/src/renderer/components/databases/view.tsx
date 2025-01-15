@@ -50,7 +50,7 @@ export const View = ({ view }: ViewProps) => {
       })
       .filter((field) => field.display)
       .sort((a, b) => compareString(a.index, b.index));
-  }, [database.fields, view.fields]);
+  }, [view.id, database.fields, view.fields]);
 
   const [isSearchBarOpened, setIsSearchBarOpened] = React.useState(false);
   const [isSortsOpened, setIsSortsOpened] = React.useState(false);

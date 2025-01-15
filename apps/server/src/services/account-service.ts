@@ -23,10 +23,16 @@ import { emailService } from '@/services/email-service';
 const OTP_DIGITS = '0123456789';
 const OTP_LENGTH = 6;
 
+interface DeviceMetadata {
+  ip: string | undefined;
+  platform: string;
+  version: string;
+}
+
 class AccountService {
   public async buildLoginSuccessOutput(
     account: SelectAccount,
-    ip: string | undefined
+    metadata: DeviceMetadata
   ): Promise<LoginSuccessOutput> {
     const users = await database
       .selectFrom('users')
@@ -81,9 +87,10 @@ class AccountService {
         token_salt: salt,
         token_generated_at: new Date(),
         type: 1,
-        ip,
+        ip: metadata.ip,
+        platform: metadata.platform,
+        version: metadata.version,
         created_at: new Date(),
-        version: '0.1.0',
       })
       .returningAll()
       .executeTakeFirst();

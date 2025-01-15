@@ -4,17 +4,23 @@ export type GoogleLoginInput = {
   access_token: string;
   token_type: string;
   expires_in: number;
+  platform: string;
+  version: string;
 };
 
 export type EmailRegisterInput = {
   name: string;
   email: string;
   password: string;
+  platform: string;
+  version: string;
 };
 
 export type EmailLoginInput = {
   email: string;
   password: string;
+  platform: string;
+  version: string;
 };
 
 export type GoogleUserInfo = {
@@ -78,4 +84,6 @@ export type AccountSyncOutput = {
 export type EmailVerifyInput = {
   id: string;
   otp: string;
+  platform: string;
+  version: string;
 };

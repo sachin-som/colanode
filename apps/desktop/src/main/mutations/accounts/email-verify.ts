@@ -1,4 +1,6 @@
-import { LoginOutput } from '@colanode/core';
+import { EmailVerifyInput, LoginOutput } from '@colanode/core';
+
+import { app } from 'electron';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -26,12 +28,16 @@ export class EmailVerifyMutationHandler
     }
 
     try {
+      const emailVerifyInput: EmailVerifyInput = {
+        id: input.id,
+        otp: input.otp,
+        platform: process.platform,
+        version: app.getVersion(),
+      };
+
       const { data } = await httpClient.post<LoginOutput>(
         '/v1/accounts/emails/verify',
-        {
-          id: input.id,
-          otp: input.otp,
-        },
+        emailVerifyInput,
         {
           domain: server.domain,
         }

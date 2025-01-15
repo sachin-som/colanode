@@ -78,7 +78,11 @@ export const loginWithGoogleHandler = async (
 
     const output = await accountService.buildLoginSuccessOutput(
       existingAccount,
-      res.locals.ip
+      {
+        ip: res.locals.ip,
+        platform: input.platform,
+        version: input.version,
+      }
     );
     return ResponseBuilder.success(res, output);
   }
@@ -104,9 +108,10 @@ export const loginWithGoogleHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginSuccessOutput(
-    newAccount,
-    res.locals.ip
-  );
+  const output = await accountService.buildLoginSuccessOutput(newAccount, {
+    ip: res.locals.ip,
+    platform: input.platform,
+    version: input.version,
+  });
   return ResponseBuilder.success(res, output);
 };

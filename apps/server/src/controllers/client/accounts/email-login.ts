@@ -68,9 +68,10 @@ export const emailLoginHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginSuccessOutput(
-    account,
-    res.locals.ip
-  );
+  const output = await accountService.buildLoginSuccessOutput(account, {
+    ip: res.locals.ip,
+    platform: input.platform,
+    version: input.version,
+  });
   return ResponseBuilder.success(res, output);
 };

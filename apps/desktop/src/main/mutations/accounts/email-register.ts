@@ -1,4 +1,6 @@
-import { LoginOutput } from '@colanode/core';
+import { EmailRegisterInput, LoginOutput } from '@colanode/core';
+
+import { app } from 'electron';
 
 import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
@@ -28,13 +30,17 @@ export class EmailRegisterMutationHandler
     }
 
     try {
+      const emailRegisterInput: EmailRegisterInput = {
+        name: input.name,
+        email: input.email,
+        password: input.password,
+        platform: process.platform,
+        version: app.getVersion(),
+      };
+
       const { data } = await httpClient.post<LoginOutput>(
         '/v1/accounts/emails/register',
-        {
-          name: input.name,
-          email: input.email,
-          password: input.password,
-        },
+        emailRegisterInput,
         {
           domain: server.domain,
         }

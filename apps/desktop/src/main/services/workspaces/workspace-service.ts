@@ -20,6 +20,7 @@ import { UserService } from '@/main/services/workspaces/user-service';
 import { CollaborationService } from '@/main/services/workspaces/collaboration-service';
 import { SyncService } from '@/main/services/workspaces/sync-service';
 import { RadarService } from '@/main/services/workspaces/radar-service';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class WorkspaceService {
   private readonly debug = createDebugger('desktop:service:workspace');
@@ -133,6 +134,11 @@ export class WorkspaceService {
       if (fs.existsSync(workspacePath)) {
         fs.rmSync(workspacePath, { recursive: true, force: true });
       }
+
+      eventBus.publish({
+        type: 'workspace_deleted',
+        workspace: this.workspace,
+      });
     } catch (error) {
       this.debug(`Error deleting workspace ${this.workspace.id}: ${error}`);
     }

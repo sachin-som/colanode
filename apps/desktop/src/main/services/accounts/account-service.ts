@@ -299,6 +299,11 @@ export class AccountService {
 
           const mappedWorkspace = mapWorkspace(createdWorkspace);
           await this.initWorkspace(mappedWorkspace);
+
+          eventBus.publish({
+            type: 'workspace_created',
+            workspace: mappedWorkspace,
+          });
         } else {
           const updatedWorkspace = await this.database
             .updateTable('workspaces')

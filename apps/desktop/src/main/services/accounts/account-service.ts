@@ -223,8 +223,9 @@ export class AccountService {
   private handleMessage(message: Message): void {
     if (
       message.type === 'account_updated' ||
+      message.type === 'workspace_deleted' ||
       message.type === 'workspace_updated' ||
-      message.type === 'workspace_deleted'
+      message.type === 'user_created'
     ) {
       this.eventLoop.trigger();
     }

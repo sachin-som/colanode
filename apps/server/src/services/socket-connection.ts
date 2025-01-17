@@ -14,6 +14,7 @@ import {
   CollaborationCreatedEvent,
   CollaborationUpdatedEvent,
   Event,
+  UserCreatedEvent,
   WorkspaceDeletedEvent,
   WorkspaceUpdatedEvent,
 } from '@/types/events';
@@ -97,6 +98,8 @@ export class SocketConnection {
       this.handleCollaborationCreatedEvent(event);
     } else if (event.type === 'collaboration_updated') {
       this.handleCollaborationUpdatedEvent(event);
+    } else if (event.type === 'user_created') {
+      this.handleUserCreatedEvent(event);
     }
 
     for (const user of this.users.values()) {
@@ -372,5 +375,18 @@ export class SocketConnection {
     } else {
       user.rootIds.add(event.entryId);
     }
+  }
+
+  private handleUserCreatedEvent(event: UserCreatedEvent) {
+    if (event.accountId !== this.account.id) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'user_created',
+      accountId: event.accountId,
+      workspaceId: event.workspaceId,
+      userId: event.userId,
+    });
   }
 }

@@ -33,9 +33,17 @@ export type WorkspaceDeletedMessage = {
   accountId: string;
 };
 
+export type UserCreatedMessage = {
+  type: 'user_created';
+  accountId: string;
+  workspaceId: string;
+  userId: string;
+};
+
 export type Message =
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
   | WorkspaceDeletedMessage
+  | UserCreatedMessage
   | SynchronizerInputMessage
   | SynchronizerOutputMessage<SynchronizerInput>;

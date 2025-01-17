@@ -193,14 +193,14 @@ export class FileCreateMutationHandler
       throw new Error('Failed to create file.');
     }
 
+    workspace.mutations.triggerSync();
+
     eventBus.publish({
       type: 'file_created',
       accountId: workspace.accountId,
       workspaceId: workspace.id,
       file: mapFile(createdFile),
     });
-
-    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'file_state_created',

@@ -4,6 +4,7 @@ import { appService } from '@/main/services/app-service';
 import { ServerService } from '@/main/services/server-service';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { mapAccount, mapWorkspace } from '@/main/utils';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export abstract class AccountMutationHandlerBase {
   protected async handleLoginSuccess(
@@ -17,7 +18,7 @@ export abstract class AccountMutationHandlerBase {
         id: login.account.id,
         email: login.account.email,
         name: login.account.name,
-        server: server.server.domain,
+        server: server.domain,
         token: login.token,
         device_id: login.deviceId,
         avatar: login.account.avatar,
@@ -33,6 +34,11 @@ export abstract class AccountMutationHandlerBase {
 
     const account = mapAccount(createdAccount);
     const accountService = await appService.initAccount(account);
+
+    eventBus.publish({
+      type: 'account_created',
+      account: account,
+    });
 
     if (login.workspaces.length === 0) {
       return;
@@ -58,6 +64,10 @@ export abstract class AccountMutationHandlerBase {
       }
 
       await accountService.initWorkspace(mapWorkspace(createdWorkspace));
+      eventBus.publish({
+        type: 'workspace_created',
+        workspace: mapWorkspace(createdWorkspace),
+      });
     }
   }
 }

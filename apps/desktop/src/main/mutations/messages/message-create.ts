@@ -292,6 +292,8 @@ export class MessageCreateMutationHandler
         };
       });
 
+    workspace.mutations.triggerSync();
+
     if (createdMessage) {
       eventBus.publish({
         type: 'message_created',
@@ -322,8 +324,6 @@ export class MessageCreateMutationHandler
         });
       }
     }
-
-    workspace.mutations.triggerSync();
 
     return {
       id: messageId,

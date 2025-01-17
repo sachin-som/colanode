@@ -23,6 +23,7 @@ export class AppService {
   private readonly servers: Map<string, ServerService> = new Map();
   private readonly accounts: Map<string, AccountService> = new Map();
   private readonly cleanupEventLoop: EventLoop;
+  private readonly eventSubscriptionId: string;
 
   public readonly database: Kysely<AppDatabaseSchema>;
   public readonly metadata: MetadataService;
@@ -51,6 +52,12 @@ export class AppService {
         this.cleanup();
       }
     );
+
+    this.eventSubscriptionId = eventBus.subscribe((event) => {
+      if (event.type === 'account_deleted') {
+        this.accounts.delete(event.account.id);
+      }
+    });
   }
 
   public async migrate(): Promise<void> {

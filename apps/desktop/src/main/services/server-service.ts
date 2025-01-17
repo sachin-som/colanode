@@ -2,8 +2,6 @@ import { createDebugger, ServerConfig } from '@colanode/core';
 import axios from 'axios';
 import ms from 'ms';
 
-import { EventEmitter } from 'events';
-
 import { mapServer } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Server } from '@/shared/types/servers';
@@ -17,7 +15,7 @@ type ServerState = {
   count: number;
 };
 
-export class ServerService extends EventEmitter {
+export class ServerService {
   private readonly debug = createDebugger('desktop:service:server');
   private readonly appService: AppService;
 
@@ -29,8 +27,6 @@ export class ServerService extends EventEmitter {
   public readonly apiBaseUrl: string;
 
   constructor(appService: AppService, server: Server) {
-    super();
-
     this.appService = appService;
     this.server = server;
     this.synapseUrl = ServerService.buildSynapseUrl(server.domain);
@@ -42,8 +38,12 @@ export class ServerService extends EventEmitter {
     this.eventLoop.start();
   }
 
-  public isAvailable() {
+  public get isAvailable() {
     return this.state?.isAvailable ?? false;
+  }
+
+  public get domain() {
+    return this.server.domain;
   }
 
   private async sync() {
@@ -62,7 +62,11 @@ export class ServerService extends EventEmitter {
     const wasAvailable = existingState?.isAvailable ?? false;
     const isAvailable = newState.isAvailable;
     if (wasAvailable !== isAvailable) {
-      this.emit('availability_change', isAvailable);
+      eventBus.publish({
+        type: 'server_availability_changed',
+        server: this.server,
+        isAvailable,
+      });
     }
 
     this.debug(

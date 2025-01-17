@@ -102,14 +102,14 @@ export class FileDeleteMutationHandler
         .execute();
     });
 
+    workspace.mutations.triggerSync();
+
     eventBus.publish({
       type: 'file_deleted',
       accountId: workspace.accountId,
       workspaceId: workspace.id,
       file: mapFile(file),
     });
-
-    workspace.mutations.triggerSync();
 
     return {
       success: true,

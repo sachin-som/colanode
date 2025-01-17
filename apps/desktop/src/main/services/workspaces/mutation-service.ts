@@ -46,7 +46,7 @@ export class MutationService {
   }
 
   private async sendMutations(): Promise<boolean> {
-    if (!this.workspace.account.server.isAvailable()) {
+    if (!this.workspace.account.server.isAvailable) {
       return false;
     }
 

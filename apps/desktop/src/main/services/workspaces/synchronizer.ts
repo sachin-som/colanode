@@ -12,6 +12,7 @@ import ms from 'ms';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { AccountConnection } from '@/main/services/accounts/account-connection';
 import { EventLoop } from '@/shared/lib/event-loop';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export type SynchronizerStatus = 'idle' | 'waiting' | 'processing';
 
@@ -23,6 +24,7 @@ export class Synchronizer<TInput extends SynchronizerInput> {
   private readonly connection: AccountConnection;
   private readonly cursorKey: string;
   private readonly eventLoop: EventLoop;
+  private readonly eventSubscriptionId: string;
 
   private readonly processor: (
     data: SynchronizerMap[TInput['type']]['data']
@@ -49,20 +51,24 @@ export class Synchronizer<TInput extends SynchronizerInput> {
       this.ping();
     });
 
-    this.connection.on('open', () => {
-      this.eventLoop.trigger();
+    this.eventSubscriptionId = eventBus.subscribe((event) => {
+      if (
+        event.type === 'account_connection_message' &&
+        event.accountId === this.workspace.account.id
+      ) {
+        this.handleMessage(event.message);
+      } else if (
+        event.type === 'account_connection_opened' &&
+        event.accountId === this.workspace.account.id
+      ) {
+        this.eventLoop.trigger();
+      } else if (
+        event.type === 'account_connection_closed' &&
+        event.accountId === this.workspace.account.id
+      ) {
+        this.eventLoop.stop();
+      }
     });
-
-    this.connection.on('close', () => {
-      this.eventLoop.stop();
-    });
-
-    this.connection.on('error', () => {
-      this.eventLoop.stop();
-    });
-
-    this.handleMessage = this.handleMessage.bind(this);
-    this.connection.on('message', this.handleMessage);
 
     this.eventLoop.start();
   }
@@ -172,17 +178,16 @@ export class Synchronizer<TInput extends SynchronizerInput> {
 
   public destroy() {
     this.eventLoop.stop();
-    this.connection.off('message', this.handleMessage);
+    eventBus.unsubscribe(this.eventSubscriptionId);
   }
 
   public async delete() {
+    this.destroy();
+
     await this.workspace.database
       .deleteFrom('cursors')
       .where('key', '=', this.cursorKey)
       .execute();
-
-    this.eventLoop.stop();
-    this.connection.off('message', this.handleMessage);
   }
 
   private generateId() {

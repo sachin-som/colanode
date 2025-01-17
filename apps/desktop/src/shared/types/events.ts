@@ -1,4 +1,4 @@
-import { Entry } from '@colanode/core';
+import { Entry, Message } from '@colanode/core';
 
 import { EntryInteraction } from '@/shared/types/entries';
 import {
@@ -222,6 +222,22 @@ export type ServerAvailabilityChangedEvent = {
   isAvailable: boolean;
 };
 
+export type AccountConnectionOpenedEvent = {
+  type: 'account_connection_opened';
+  accountId: string;
+};
+
+export type AccountConnectionClosedEvent = {
+  type: 'account_connection_closed';
+  accountId: string;
+};
+
+export type AccountConnectionMessageEvent = {
+  type: 'account_connection_message';
+  accountId: string;
+  message: Message;
+};
+
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -255,4 +271,7 @@ export type Event =
   | RadarDataUpdatedEvent
   | ServerAvailabilityChangedEvent
   | CollaborationCreatedEvent
-  | CollaborationDeletedEvent;
+  | CollaborationDeletedEvent
+  | AccountConnectionOpenedEvent
+  | AccountConnectionClosedEvent
+  | AccountConnectionMessageEvent;

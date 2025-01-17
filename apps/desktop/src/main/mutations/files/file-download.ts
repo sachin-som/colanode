@@ -82,6 +82,8 @@ export class FileDownloadMutationHandler
       throw new Error('Failed to create file state.');
     }
 
+    workspace.files.triggerDownloads();
+
     eventBus.publish({
       type: 'file_state_created',
       accountId: workspace.accountId,

@@ -2,13 +2,12 @@ import { Message, createDebugger } from '@colanode/core';
 import { WebSocket } from 'ws';
 import ms from 'ms';
 
-import { EventEmitter } from 'events';
-
 import { BackoffCalculator } from '@/shared/lib/backoff-calculator';
 import { AccountService } from '@/main/services/accounts/account-service';
 import { EventLoop } from '@/shared/lib/event-loop';
+import { eventBus } from '@/shared/lib/event-bus';
 
-export class AccountConnection extends EventEmitter {
+export class AccountConnection {
   private readonly debug = createDebugger('service:account-connection');
   private readonly account: AccountService;
   private readonly eventLoop: EventLoop;
@@ -17,9 +16,9 @@ export class AccountConnection extends EventEmitter {
   private backoffCalculator: BackoffCalculator;
   private closingCount: number;
 
-  constructor(accountService: AccountService) {
-    super();
+  private eventSubscriptionId: string;
 
+  constructor(accountService: AccountService) {
     this.account = accountService;
     this.socket = null;
     this.backoffCalculator = new BackoffCalculator();
@@ -29,15 +28,20 @@ export class AccountConnection extends EventEmitter {
       this.checkConnection();
     });
 
-    this.account.server.on('availability_change', () => {
-      this.eventLoop.trigger();
+    this.eventSubscriptionId = eventBus.subscribe((event) => {
+      if (
+        event.type === 'server_availability_changed' &&
+        event.server.domain === this.account.server.domain
+      ) {
+        this.eventLoop.trigger();
+      }
     });
   }
 
   public init(): void {
     this.eventLoop.start();
 
-    if (!this.account.server.isAvailable()) {
+    if (!this.account.server.isAvailable) {
       return;
     }
 
@@ -66,26 +70,39 @@ export class AccountConnection extends EventEmitter {
         `Received message of type ${message.type} for account ${this.account.id}`
       );
 
-      this.emit('message', message);
+      eventBus.publish({
+        type: 'account_connection_message',
+        accountId: this.account.id,
+        message,
+      });
     };
 
     this.socket.onopen = () => {
       this.debug(`Socket connection for account ${this.account.id} opened`);
 
       this.backoffCalculator.reset();
-      this.emit('open');
+      eventBus.publish({
+        type: 'account_connection_opened',
+        accountId: this.account.id,
+      });
     };
 
     this.socket.onerror = () => {
       this.debug(`Socket connection for account ${this.account.id} errored`);
       this.backoffCalculator.increaseError();
-      this.emit('close');
+      eventBus.publish({
+        type: 'account_connection_closed',
+        accountId: this.account.id,
+      });
     };
 
     this.socket.onclose = () => {
       this.debug(`Socket connection for account ${this.account.id} closed`);
       this.backoffCalculator.increaseError();
-      this.emit('close');
+      eventBus.publish({
+        type: 'account_connection_closed',
+        accountId: this.account.id,
+      });
     };
   }
 
@@ -113,13 +130,13 @@ export class AccountConnection extends EventEmitter {
       this.socket = null;
     }
 
-    this.removeAllListeners();
     this.eventLoop.stop();
+    eventBus.unsubscribe(this.eventSubscriptionId);
   }
 
   private checkConnection(): void {
     this.debug(`Checking connection for account ${this.account.id}`);
-    if (!this.account.server.isAvailable()) {
+    if (!this.account.server.isAvailable) {
       return;
     }
 

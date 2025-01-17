@@ -44,6 +44,7 @@ export class AccountService {
 
   public readonly connection: AccountConnection;
   public readonly client: AccountClient;
+  private readonly eventSubscriptionId: string;
 
   constructor(account: Account, server: ServerService, app: AppService) {
     this.debug(`Initializing account service for account ${account.id}`);
@@ -71,14 +72,23 @@ export class AccountService {
     this.client = new AccountClient(this);
     this.connection = new AccountConnection(this);
 
-    this.handleMessage = this.handleMessage.bind(this);
-    this.connection.on('message', this.handleMessage);
-
-    this.triggerSync = this.triggerSync.bind(this);
-    this.server.on('availability_change', this.triggerSync);
-
     this.eventLoop = new EventLoop(ms('1 minute'), ms('1 second'), () => {
       this.sync();
+    });
+
+    this.eventSubscriptionId = eventBus.subscribe((event) => {
+      if (
+        event.type === 'server_availability_changed' &&
+        event.server.domain === this.server.domain &&
+        event.isAvailable
+      ) {
+        this.eventLoop.trigger();
+      } else if (
+        event.type === 'account_connection_message' &&
+        event.accountId === this.account.id
+      ) {
+        this.handleMessage(event.message);
+      }
     });
   }
 
@@ -118,19 +128,47 @@ export class AccountService {
 
   public async logout(): Promise<void> {
     try {
+      await this.app.database.transaction().execute(async (tx) => {
+        const deletedAccount = await tx
+          .deleteFrom('accounts')
+          .where('id', '=', this.account.id)
+          .executeTakeFirst();
+
+        if (!deletedAccount) {
+          throw new Error('Failed to delete account');
+        }
+
+        await tx
+          .insertInto('deleted_tokens')
+          .values({
+            account_id: this.account.id,
+            token: this.account.token,
+            server: this.server.domain,
+            created_at: new Date().toISOString(),
+          })
+          .execute();
+      });
+
       const workspaces = this.workspaces.values();
       for (const workspace of workspaces) {
         await workspace.delete();
+        this.workspaces.delete(workspace.id);
       }
 
       this.database.destroy();
       this.connection.close();
       this.eventLoop.stop();
+      eventBus.unsubscribe(this.eventSubscriptionId);
 
       const accountPath = getAccountDirectoryPath(this.account.id);
       if (fs.existsSync(accountPath)) {
         fs.rmSync(accountPath, { recursive: true, force: true });
       }
+
+      eventBus.publish({
+        type: 'account_deleted',
+        account: this.account,
+      });
     } catch (error) {
       this.debug(`Error logging out of account ${this.account.id}: ${error}`);
     }
@@ -192,16 +230,12 @@ export class AccountService {
     }
   }
 
-  private triggerSync(): void {
-    this.eventLoop.trigger();
-  }
-
   private async sync(): Promise<void> {
     this.debug(`Syncing account ${this.account.id}`);
 
-    if (!this.server.isAvailable()) {
+    if (!this.server.isAvailable) {
       this.debug(
-        `Server ${this.server.server.domain} is not available for syncing account ${this.account.email}`
+        `Server ${this.server.domain} is not available for syncing account ${this.account.email}`
       );
       return;
     }

@@ -135,7 +135,7 @@ export class FileService {
   }
 
   private async uploadFiles(): Promise<void> {
-    if (!this.workspace.account.server.isAvailable()) {
+    if (!this.workspace.account.server.isAvailable) {
       return;
     }
 
@@ -341,7 +341,7 @@ export class FileService {
   }
 
   public async downloadFiles(): Promise<void> {
-    if (!this.workspace.account.server.isAvailable()) {
+    if (!this.workspace.account.server.isAvailable) {
       return;
     }
 

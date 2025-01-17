@@ -99,14 +99,14 @@ export class MessageDeleteMutationHandler
         .execute();
     });
 
+    workspace.mutations.triggerSync();
+
     eventBus.publish({
       type: 'message_deleted',
       accountId: workspace.accountId,
       workspaceId: workspace.id,
       message: mapMessage(message),
     });
-
-    workspace.mutations.triggerSync();
 
     return {
       success: true,

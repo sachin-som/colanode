@@ -395,7 +395,7 @@ export class MutationService {
     }
 
     return {
-      validMutations,
+      validMutations: validMutations.reverse(),
       deletedMutationIds,
     };
   }

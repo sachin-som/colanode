@@ -26,7 +26,8 @@ export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
     length: lastPage,
   }).map((_, i) => ({
     type: 'file_list',
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     parentId: id,
     count: FILES_PER_PAGE,
     page: i + 1,

@@ -5,27 +5,25 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   MessageDeleteMutationInput,
   MessageDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { fetchEntry, fetchUser, mapEntry, mapMessage } from '@/main/utils';
+import { fetchEntry, mapEntry, mapMessage } from '@/main/utils';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 export class MessageDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<MessageDeleteMutationInput>
 {
   async handleMutation(
     input: MessageDeleteMutationInput
   ): Promise<MessageDeleteMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const message = await workspaceDatabase
+    const message = await workspace.database
       .selectFrom('messages')
       .selectAll()
       .where('id', '=', input.messageId)
@@ -37,15 +35,7 @@ export class MessageDeleteMutationHandler
       };
     }
 
-    const user = await fetchUser(workspaceDatabase, input.userId);
-    if (!user) {
-      throw new MutationError(
-        MutationErrorCode.UserNotFound,
-        'There was an error while fetching the user. Please make sure you are logged in.'
-      );
-    }
-
-    const entry = await fetchEntry(workspaceDatabase, message.entry_id);
+    const entry = await fetchEntry(workspace.database, message.entry_id);
     if (!entry) {
       throw new MutationError(
         MutationErrorCode.EntryNotFound,
@@ -53,7 +43,7 @@ export class MessageDeleteMutationHandler
       );
     }
 
-    const root = await fetchEntry(workspaceDatabase, message.root_id);
+    const root = await fetchEntry(workspace.database, message.root_id);
     if (!root) {
       throw new MutationError(
         MutationErrorCode.RootNotFound,
@@ -64,8 +54,8 @@ export class MessageDeleteMutationHandler
     if (
       !canDeleteMessage({
         user: {
-          userId: input.userId,
-          role: user.role,
+          userId: workspace.userId,
+          role: workspace.role,
         },
         root: mapEntry(root),
         entry: mapEntry(entry),
@@ -88,7 +78,7 @@ export class MessageDeleteMutationHandler
       deletedAt,
     };
 
-    await workspaceDatabase.transaction().execute(async (tx) => {
+    await workspace.database.transaction().execute(async (tx) => {
       await tx
         .updateTable('messages')
         .set({
@@ -111,14 +101,12 @@ export class MessageDeleteMutationHandler
 
     eventBus.publish({
       type: 'message_deleted',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       message: mapMessage(message),
     });
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     return {
       success: true,

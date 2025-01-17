@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectUser } from '@/main/data/workspace/schema';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
+import { SelectUser } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapUser } from '@/main/utils';
 import { UserSearchQueryInput } from '@/shared/queries/users/user-search';
@@ -9,6 +9,7 @@ import { Event } from '@/shared/types/events';
 import { User } from '@/shared/types/users';
 
 export class UserSearchQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<UserSearchQueryInput>
 {
   public async handleQuery(input: UserSearchQueryInput): Promise<User[]> {
@@ -27,7 +28,8 @@ export class UserSearchQueryHandler
   ): Promise<ChangeCheckResult<UserSearchQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -35,7 +37,11 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (event.type === 'user_created' && event.userId === input.userId) {
+    if (
+      event.type === 'user_created' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -43,7 +49,11 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (event.type === 'user_updated' && event.userId === input.userId) {
+    if (
+      event.type === 'user_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -51,7 +61,11 @@ export class UserSearchQueryHandler
       };
     }
 
-    if (event.type === 'user_deleted' && event.userId === input.userId) {
+    if (
+      event.type === 'user_deleted' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -67,16 +81,14 @@ export class UserSearchQueryHandler
   private async searchUsers(
     input: UserSearchQueryInput
   ): Promise<SelectUser[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const exclude = input.exclude ?? [];
     const query = sql<SelectUser>`
       SELECT u.*
       FROM users u
       JOIN texts t ON u.id = t.id
-      WHERE u.id != ${input.userId}
+      WHERE u.id != ${workspace.userId}
         AND t.name MATCH ${input.searchQuery + '*'}
         ${
           exclude.length > 0
@@ -86,21 +98,19 @@ export class UserSearchQueryHandler
               )})`
             : sql``
         }
-    `.compile(workspaceDatabase);
+    `.compile(workspace.database);
 
-    const result = await workspaceDatabase.executeQuery(query);
+    const result = await workspace.database.executeQuery(query);
     return result.rows;
   }
 
   private async fetchUsers(input: UserSearchQueryInput): Promise<SelectUser[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const exclude = input.exclude ?? [];
-    return workspaceDatabase
+    return workspace.database
       .selectFrom('users')
-      .where('id', '!=', input.userId)
+      .where('id', '!=', workspace.userId)
       .where('id', 'not in', exclude)
       .selectAll()
       .execute();

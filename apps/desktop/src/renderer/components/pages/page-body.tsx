@@ -25,7 +25,8 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
       mutate({
         input: {
           type: 'page_content_update',
-          userId: workspace.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           pageId: page.id,
           before,
           after,
@@ -43,10 +44,10 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
   );
 
   useEffect(() => {
-    radar.markEntryAsOpened(workspace.userId, page.id);
+    radar.markEntryAsOpened(workspace.accountId, workspace.id, page.id);
 
     const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.userId, page.id);
+      radar.markEntryAsOpened(workspace.accountId, workspace.id, page.id);
     }, 60000);
 
     return () => clearInterval(interval);

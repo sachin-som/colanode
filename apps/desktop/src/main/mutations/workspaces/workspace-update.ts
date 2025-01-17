@@ -1,8 +1,8 @@
-import { databaseService } from '@/main/data/database-service';
+import { appService } from '@/main/services/app-service';
 import { MutationHandler } from '@/main/types';
+import { mapWorkspace } from '@/main/utils';
 import { parseApiError } from '@/shared/lib/axios';
 import { eventBus } from '@/shared/lib/event-bus';
-import { httpClient } from '@/shared/lib/http-client';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   WorkspaceUpdateMutationInput,
@@ -16,47 +16,34 @@ export class WorkspaceUpdateMutationHandler
   async handleMutation(
     input: WorkspaceUpdateMutationInput
   ): Promise<WorkspaceUpdateMutationOutput> {
-    const account = await databaseService.appDatabase
-      .selectFrom('accounts')
-      .selectAll()
-      .where('id', '=', input.accountId)
-      .executeTakeFirst();
+    const accountService = appService.getAccount(input.accountId);
 
-    if (!account) {
+    if (!accountService) {
       throw new MutationError(
         MutationErrorCode.AccountNotFound,
         'Account not found or has been logged out.'
       );
     }
 
-    const server = await databaseService.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .where('domain', '=', account.server)
-      .executeTakeFirst();
-
-    if (!server) {
+    const workspaceService = accountService.getWorkspace(input.id);
+    if (!workspaceService) {
       throw new MutationError(
-        MutationErrorCode.ServerNotFound,
-        'The server associated with this account was not found.'
+        MutationErrorCode.WorkspaceNotFound,
+        'Workspace not found.'
       );
     }
 
     try {
-      const { data } = await httpClient.put<Workspace>(
+      const { data } = await accountService.client.put<Workspace>(
         `/v1/workspaces/${input.id}`,
         {
           name: input.name,
           description: input.description,
           avatar: input.avatar,
-        },
-        {
-          domain: server.domain,
-          token: account.token,
         }
       );
 
-      const updatedWorkspace = await databaseService.appDatabase
+      const updatedWorkspace = await accountService.database
         .updateTable('workspaces')
         .returningAll()
         .set({
@@ -65,12 +52,7 @@ export class WorkspaceUpdateMutationHandler
           avatar: data.avatar,
           role: data.role,
         })
-        .where((eb) =>
-          eb.and([
-            eb('account_id', '=', input.accountId),
-            eb('workspace_id', '=', input.id),
-          ])
-        )
+        .where((eb) => eb.and([eb('id', '=', input.id)]))
         .executeTakeFirst();
 
       if (!updatedWorkspace) {
@@ -80,15 +62,12 @@ export class WorkspaceUpdateMutationHandler
         );
       }
 
+      const workspace = mapWorkspace(updatedWorkspace);
+      workspaceService.updateWorkspace(workspace);
+
       eventBus.publish({
         type: 'workspace_updated',
-        workspace: {
-          id: updatedWorkspace.workspace_id,
-          userId: updatedWorkspace.user_id,
-          name: updatedWorkspace.name,
-          accountId: updatedWorkspace.account_id,
-          role: updatedWorkspace.role,
-        },
+        workspace: workspace,
       });
 
       return {

@@ -1,14 +1,15 @@
 import { RecordEntry } from '@colanode/core';
 import { sql } from 'kysely';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapEntry } from '@/main/utils';
 import { RecordSearchQueryInput } from '@/shared/queries/records/record-search';
 import { Event } from '@/shared/types/events';
+import { SelectEntry } from '@/main/databases/workspace';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
 export class RecordSearchQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<RecordSearchQueryInput>
 {
   public async handleQuery(
@@ -29,7 +30,8 @@ export class RecordSearchQueryHandler
   ): Promise<ChangeCheckResult<RecordSearchQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -39,7 +41,8 @@ export class RecordSearchQueryHandler
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'record' &&
       event.entry.attributes.databaseId === input.databaseId
     ) {
@@ -52,7 +55,8 @@ export class RecordSearchQueryHandler
 
     if (
       event.type === 'entry_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'record' &&
       event.entry.attributes.databaseId === input.databaseId
     ) {
@@ -65,7 +69,8 @@ export class RecordSearchQueryHandler
 
     if (
       event.type === 'entry_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'record' &&
       event.entry.attributes.databaseId === input.databaseId
     ) {
@@ -84,9 +89,7 @@ export class RecordSearchQueryHandler
   private async searchRecords(
     input: RecordSearchQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const exclude = input.exclude ?? [];
     const query = sql<SelectEntry>`
@@ -104,21 +107,19 @@ export class RecordSearchQueryHandler
               )})`
             : sql``
         }
-    `.compile(workspaceDatabase);
+    `.compile(workspace.database);
 
-    const result = await workspaceDatabase.executeQuery(query);
+    const result = await workspace.database.executeQuery(query);
     return result.rows;
   }
 
   private async fetchRecords(
     input: RecordSearchQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const exclude = input.exclude ?? [];
-    return workspaceDatabase
+    return workspace.database
       .selectFrom('entries')
       .where('type', '=', 'record')
       .where('parent_id', '=', input.databaseId)

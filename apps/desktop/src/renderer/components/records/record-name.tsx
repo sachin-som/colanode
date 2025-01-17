@@ -42,7 +42,8 @@ export const RecordName = () => {
             type: 'record_name_update',
             recordId: record.id,
             name: value,
-            userId: workspace.userId,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
           },
           onError(error) {
             toast({

@@ -51,7 +51,8 @@ export const MessageDeleteButton = ({ id }: MessageDeleteButtonProps) => {
                   input: {
                     type: 'message_delete',
                     messageId: id,
-                    userId: workspace.userId,
+                    accountId: workspace.accountId,
+                    workspaceId: workspace.id,
                   },
                   onSuccess() {
                     setShowDeleteModal(false);

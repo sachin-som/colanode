@@ -1,17 +1,20 @@
-import { entryService } from '@/main/services/entry-service';
-import { MutationHandler } from '@/main/types';
 import {
   PageDeleteMutationInput,
   PageDeleteMutationOutput,
 } from '@/shared/mutations/pages/page-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
+import { MutationHandler } from '@/main/types';
 
 export class PageDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<PageDeleteMutationInput>
 {
   async handleMutation(
     input: PageDeleteMutationInput
   ): Promise<PageDeleteMutationOutput> {
-    await entryService.deleteEntry(input.pageId, input.userId);
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    await workspace.entries.deleteEntry(input.pageId);
 
     return {
       success: true,

@@ -1,4 +1,4 @@
-import { assetService } from '@/main/services/asset-service';
+import { getEmojiData } from '@/main/lib/assets';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { EmojisGetQueryInput } from '@/shared/queries/emojis/emojis-get';
 import { EmojiData } from '@/shared/types/emojis';
@@ -8,7 +8,7 @@ export class EmojisGetQueryHandler
   implements QueryHandler<EmojisGetQueryInput>
 {
   public async handleQuery(_: EmojisGetQueryInput): Promise<EmojiData> {
-    const data = assetService.getEmojiData();
+    const data = getEmojiData();
     return data;
   }
 

@@ -1,4 +1,7 @@
-import { fileService } from '@/main/services/file-service';
+import path from 'path';
+import { shell } from 'electron';
+
+import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
 import { CommandHandler } from '@/main/types';
 import { FileOpenCommandInput } from '@/shared/commands/file-open';
 
@@ -6,6 +9,16 @@ export class FileOpenCommandHandler
   implements CommandHandler<FileOpenCommandInput>
 {
   public async handleCommand(input: FileOpenCommandInput): Promise<void> {
-    fileService.openFile(input.userId, input.fileId, input.extension);
+    const workspaceFilesDir = getWorkspaceFilesDirectoryPath(
+      input.accountId,
+      input.workspaceId
+    );
+
+    const filePath = path.join(
+      workspaceFilesDir,
+      `${input.fileId}${input.extension}`
+    );
+
+    shell.openPath(filePath);
   }
 }

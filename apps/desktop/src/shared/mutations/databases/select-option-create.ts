@@ -1,6 +1,7 @@
 export type SelectOptionCreateMutationInput = {
   type: 'select_option_create';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   fieldId: string;
   name: string;

@@ -34,7 +34,8 @@ export const FileDownload = ({ file }: FileDownloadProps) => {
             mutate({
               input: {
                 type: 'file_download',
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 fileId: file.id,
               },
               onError(error) {

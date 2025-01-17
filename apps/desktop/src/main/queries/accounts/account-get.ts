@@ -1,5 +1,5 @@
-import { SelectAccount } from '@/main/data/app/schema';
-import { databaseService } from '@/main/data/database-service';
+import { SelectAccount } from '@/main/databases/app';
+import { appService } from '@/main/services/app-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapAccount } from '@/main/utils';
 import { AccountGetQueryInput } from '@/shared/queries/accounts/account-get';
@@ -60,7 +60,7 @@ export class AccountGetQueryHandler
   }
 
   private fetchAccount(accountId: string): Promise<SelectAccount | undefined> {
-    return databaseService.appDatabase
+    return appService.database
       .selectFrom('accounts')
       .selectAll()
       .where('id', '=', accountId)

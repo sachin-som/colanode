@@ -48,7 +48,8 @@ export const PageDeleteDialog = ({
                 input: {
                   type: 'page_delete',
                   pageId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

@@ -17,7 +17,8 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
   const { data } = useQuery({
     type: 'message_reactions_get',
     messageId: message.id,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const reactionCounts = data ?? [];
@@ -57,7 +58,8 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
                   input: {
                     type: 'message_reaction_delete',
                     messageId: message.id,
-                    userId: workspace.userId,
+                    accountId: workspace.accountId,
+                    workspaceId: workspace.id,
                     rootId: message.rootId,
                     reaction: reaction.reaction,
                   },
@@ -74,7 +76,8 @@ export const MessageReactions = ({ message }: MessageReactionsProps) => {
                   input: {
                     type: 'message_reaction_create',
                     messageId: message.id,
-                    userId: workspace.userId,
+                    accountId: workspace.accountId,
+                    workspaceId: workspace.id,
                     rootId: message.rootId,
                     reaction: reaction.reaction,
                   },

@@ -2,7 +2,8 @@ import { DatabaseEntry } from '@colanode/core';
 
 export type DatabaseListQueryInput = {
   type: 'database_list';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

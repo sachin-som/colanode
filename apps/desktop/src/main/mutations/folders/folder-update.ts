@@ -1,22 +1,24 @@
 import { FolderAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FolderUpdateMutationInput,
   FolderUpdateMutationOutput,
 } from '@/shared/mutations/folders/folder-update';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FolderUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FolderUpdateMutationInput>
 {
   async handleMutation(
     input: FolderUpdateMutationInput
   ): Promise<FolderUpdateMutationOutput> {
-    const result = await entryService.updateEntry<FolderAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<FolderAttributes>(
       input.folderId,
-      input.userId,
       (attributes) => {
         attributes.name = input.name;
         attributes.avatar = input.avatar;

@@ -1,6 +1,7 @@
 export type FileOpenCommandInput = {
   type: 'file_open';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileId: string;
   extension: string;
 };

@@ -5,7 +5,8 @@ export type MessageListQueryInput = {
   conversationId: string;
   page: number;
   count: number;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

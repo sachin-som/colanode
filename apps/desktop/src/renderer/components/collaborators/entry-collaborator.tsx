@@ -28,8 +28,9 @@ export const EntryCollaborator = ({
 
   const { data } = useQuery({
     type: 'user_get',
-    id: collaboratorId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId: collaboratorId,
   });
 
   if (!data) {
@@ -56,7 +57,8 @@ export const EntryCollaborator = ({
                 entryId: entryId,
                 collaboratorId: collaboratorId,
                 role: newRole,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
               },
               onError(error) {
                 toast({
@@ -77,7 +79,8 @@ export const EntryCollaborator = ({
                   type: 'entry_collaborator_delete',
                   entryId: entryId,
                   collaboratorId: collaboratorId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
               });
             }}

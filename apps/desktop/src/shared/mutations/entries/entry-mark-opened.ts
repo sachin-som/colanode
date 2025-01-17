@@ -1,6 +1,7 @@
 export type EntryMarkOpenedMutationInput = {
   type: 'entry_mark_opened';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryId: string;
 };
 

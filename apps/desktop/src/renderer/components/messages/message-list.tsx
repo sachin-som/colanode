@@ -22,7 +22,8 @@ export const MessageList = () => {
   }).map((_, i) => ({
     type: 'message_list',
     conversationId: conversation.id,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     page: i + 1,
     count: MESSAGES_PER_PAGE,
   }));

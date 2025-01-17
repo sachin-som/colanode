@@ -37,7 +37,8 @@ export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
       mutate({
         input: {
           type: 'record_content_update',
-          userId: workspace.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           recordId: record.id,
           before,
           after,
@@ -55,10 +56,10 @@ export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
   );
 
   useEffect(() => {
-    radar.markEntryAsOpened(workspace.userId, record.id);
+    radar.markEntryAsOpened(workspace.accountId, workspace.id, record.id);
 
     const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.userId, record.id);
+      radar.markEntryAsOpened(workspace.accountId, workspace.id, record.id);
     }, 60000);
 
     return () => clearInterval(interval);

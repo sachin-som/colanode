@@ -1,6 +1,7 @@
 export type RecordDeleteMutationInput = {
   type: 'record_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   recordId: string;
 };
 

@@ -16,8 +16,9 @@ export const EntryCollaboratorAudit = ({
   const workspace = useWorkspace();
   const { data, isPending } = useQuery({
     type: 'user_get',
-    id: collaboratorId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId: collaboratorId,
   });
 
   if (isPending || !data) {

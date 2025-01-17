@@ -1,30 +1,25 @@
 import { DatabaseAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FieldDeleteMutationInput,
   FieldDeleteMutationOutput,
 } from '@/shared/mutations/databases/field-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FieldDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FieldDeleteMutationInput>
 {
   async handleMutation(
     input: FieldDeleteMutationInput
   ): Promise<FieldDeleteMutationOutput> {
-    const result = await entryService.updateEntry<DatabaseAttributes>(
-      input.databaseId,
-      input.userId,
-      (attributes) => {
-        if (!attributes.fields[input.fieldId]) {
-          throw new MutationError(
-            MutationErrorCode.FieldNotFound,
-            'The field you are trying to delete does not exist.'
-          );
-        }
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
+      input.databaseId,
+      (attributes) => {
         delete attributes.fields[input.fieldId];
 
         return attributes;

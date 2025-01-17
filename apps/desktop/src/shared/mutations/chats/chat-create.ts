@@ -1,8 +1,8 @@
 export type ChatCreateMutationInput = {
   type: 'chat_create';
+  accountId: string;
   workspaceId: string;
   userId: string;
-  otherUserId: string;
 };
 
 export type ChatCreateMutationOutput = {

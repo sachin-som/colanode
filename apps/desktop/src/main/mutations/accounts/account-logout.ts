@@ -1,5 +1,4 @@
-import { databaseService } from '@/main/data/database-service';
-import { accountService } from '@/main/services/account-service';
+import { appService } from '@/main/services/app-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
@@ -13,11 +12,7 @@ export class AccountLogoutMutationHandler
   async handleMutation(
     input: AccountLogoutMutationInput
   ): Promise<AccountLogoutMutationOutput> {
-    const account = await databaseService.appDatabase
-      .selectFrom('accounts')
-      .selectAll()
-      .where('id', '=', input.accountId)
-      .executeTakeFirst();
+    const account = appService.getAccount(input.accountId);
 
     if (!account) {
       throw new MutationError(
@@ -26,7 +21,7 @@ export class AccountLogoutMutationHandler
       );
     }
 
-    await accountService.logoutAccount(account);
+    await account.logout();
     return {
       success: true,
     };

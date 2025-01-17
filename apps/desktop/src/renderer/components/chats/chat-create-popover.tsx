@@ -30,9 +30,9 @@ export const ChatCreatePopover = () => {
             mutate({
               input: {
                 type: 'chat_create',
-                userId: workspace.userId,
-                otherUserId: user.id,
+                accountId: workspace.accountId,
                 workspaceId: workspace.id,
+                userId: user.id,
               },
               onSuccess(output) {
                 workspace.openInMain(output.id);

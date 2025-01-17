@@ -30,7 +30,8 @@ export const RecordSearch = ({
   const { data } = useQuery({
     type: 'record_search',
     searchQuery: query,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     exclude,
     databaseId,
   });

@@ -1,14 +1,15 @@
 import { compareString } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectMessage } from '@/main/data/workspace/schema';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapMessage } from '@/main/utils';
 import { MessageListQueryInput } from '@/shared/queries/messages/message-list';
 import { Event } from '@/shared/types/events';
 import { MessageNode } from '@/shared/types/messages';
+import { SelectMessage } from '@/main/databases/workspace';
 
 export class MessageListQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<MessageListQueryInput>
 {
   public async handleQuery(
@@ -25,7 +26,8 @@ export class MessageListQueryHandler
   ): Promise<ChangeCheckResult<MessageListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -35,7 +37,8 @@ export class MessageListQueryHandler
 
     if (
       event.type === 'message_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.parentId === input.conversationId
     ) {
       const newResult = await this.handleQuery(input);
@@ -48,7 +51,8 @@ export class MessageListQueryHandler
 
     if (
       event.type === 'message_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.parentId === input.conversationId
     ) {
       const message = output.find((message) => message.id === event.message.id);
@@ -69,7 +73,8 @@ export class MessageListQueryHandler
 
     if (
       event.type === 'message_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.parentId === input.conversationId
     ) {
       const message = output.find((message) => message.id === event.message.id);
@@ -91,12 +96,10 @@ export class MessageListQueryHandler
   private async fetchMesssages(
     input: MessageListQueryInput
   ): Promise<SelectMessage[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const offset = (input.page - 1) * input.count;
-    const messages = await workspaceDatabase
+    const messages = await workspace.database
       .selectFrom('messages')
       .selectAll()
       .where('parent_id', '=', input.conversationId)

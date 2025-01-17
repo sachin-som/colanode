@@ -32,11 +32,12 @@ export const FileCommand: EditorCommand = {
       return;
     }
 
-    const { userId, documentId, rootId } = context;
+    const { accountId, workspaceId, documentId, rootId } = context;
     const output = await window.colanode.executeMutation({
       type: 'file_create',
       filePath,
-      userId,
+      accountId,
+      workspaceId,
       parentId: documentId,
       rootId,
       entryId: documentId,

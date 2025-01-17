@@ -84,7 +84,8 @@ export const WorkspaceUserInvite = ({
               input: {
                 type: 'users_invite',
                 emails: emails,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 role: 'collaborator',
               },
               onSuccess() {

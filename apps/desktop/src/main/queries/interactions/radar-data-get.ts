@@ -1,6 +1,9 @@
-import { radarService } from '@/main/services/radar-service';
+import { appService } from '@/main/services/app-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { RadarDataGetQueryInput } from '@/shared/queries/interactions/radar-data-get';
+import {
+  RadarDataGetQueryInput,
+  RadarDataGetQueryOutput,
+} from '@/shared/queries/interactions/radar-data-get';
 import { Event } from '@/shared/types/events';
 import { WorkspaceRadarData } from '@/shared/types/radars';
 
@@ -9,18 +12,18 @@ export class RadarDataGetQueryHandler
 {
   public async handleQuery(
     _: RadarDataGetQueryInput
-  ): Promise<Record<string, WorkspaceRadarData>> {
-    const data = radarService.getData();
+  ): Promise<RadarDataGetQueryOutput> {
+    const data = this.getRadarData();
     return data;
   }
 
   public async checkForChanges(
     event: Event,
     _: RadarDataGetQueryInput,
-    ___: Record<string, WorkspaceRadarData>
+    ___: RadarDataGetQueryOutput
   ): Promise<ChangeCheckResult<RadarDataGetQueryInput>> {
     if (event.type === 'radar_data_updated') {
-      const data = radarService.getData();
+      const data = this.getRadarData();
       return {
         hasChanges: true,
         result: data,
@@ -30,5 +33,27 @@ export class RadarDataGetQueryHandler
     return {
       hasChanges: false,
     };
+  }
+
+  private getRadarData(): RadarDataGetQueryOutput {
+    const result: RadarDataGetQueryOutput = {};
+    const accounts = appService.getAccounts();
+    if (accounts.length === 0) {
+      return result;
+    }
+
+    for (const account of accounts) {
+      const accountResult: Record<string, WorkspaceRadarData> = {};
+      const workspaces = account.getWorkspaces();
+
+      for (const workspace of workspaces) {
+        const radarData = workspace.radar.getData();
+        accountResult[workspace.id] = radarData;
+      }
+
+      result[account.id] = accountResult;
+    }
+
+    return result;
   }
 }

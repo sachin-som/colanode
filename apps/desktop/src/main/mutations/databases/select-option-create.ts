@@ -6,24 +6,26 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   SelectOptionCreateMutationInput,
   SelectOptionCreateMutationOutput,
 } from '@/shared/mutations/databases/select-option-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class SelectOptionCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<SelectOptionCreateMutationInput>
 {
   async handleMutation(
     input: SelectOptionCreateMutationInput
   ): Promise<SelectOptionCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const id = generateId(IdType.SelectOption);
-    const result = await entryService.updateEntry<DatabaseAttributes>(
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
       input.databaseId,
-      input.userId,
       (attributes) => {
         const field = attributes.fields[input.fieldId];
         if (!field) {

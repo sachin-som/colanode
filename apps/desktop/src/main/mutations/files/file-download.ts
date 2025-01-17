@@ -1,6 +1,5 @@
 import { FileStatus } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { mapFileState } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -10,18 +9,18 @@ import {
   FileDownloadMutationOutput,
 } from '@/shared/mutations/files/file-download';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileDownloadMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FileDownloadMutationInput>
 {
   async handleMutation(
     input: FileDownloadMutationInput
   ): Promise<FileDownloadMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspaceDatabase
+    const file = await workspace.database
       .selectFrom('files')
       .selectAll()
       .where('id', '=', input.fileId)
@@ -41,7 +40,7 @@ export class FileDownloadMutationHandler
       );
     }
 
-    const existingFileState = await workspaceDatabase
+    const existingFileState = await workspace.database
       .selectFrom('file_states')
       .selectAll()
       .where('file_id', '=', input.fileId)
@@ -56,7 +55,7 @@ export class FileDownloadMutationHandler
       };
     }
 
-    const fileState = await workspaceDatabase
+    const fileState = await workspace.database
       .insertInto('file_states')
       .returningAll()
       .values({
@@ -85,7 +84,8 @@ export class FileDownloadMutationHandler
 
     eventBus.publish({
       type: 'file_state_created',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       fileState: mapFileState(fileState),
     });
 

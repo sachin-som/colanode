@@ -1,6 +1,7 @@
 export type SpaceUpdateMutationInput = {
   type: 'space_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   id: string;
   name: string;
   description: string;

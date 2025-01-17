@@ -5,32 +5,26 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   MessageReactionCreateMutationInput,
   MessageReactionCreateMutationOutput,
 } from '@/shared/mutations/messages/message-reaction-create';
 import { eventBus } from '@/shared/lib/event-bus';
-import {
-  fetchEntry,
-  fetchUser,
-  mapEntry,
-  mapMessageReaction,
-} from '@/main/utils';
+import { fetchEntry, mapEntry, mapMessageReaction } from '@/main/utils';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class MessageReactionCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<MessageReactionCreateMutationInput>
 {
   async handleMutation(
     input: MessageReactionCreateMutationInput
   ): Promise<MessageReactionCreateMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const message = await workspaceDatabase
+    const message = await workspace.database
       .selectFrom('messages')
       .selectAll()
       .where('id', '=', input.messageId)
@@ -43,11 +37,11 @@ export class MessageReactionCreateMutationHandler
       );
     }
 
-    const existingMessageReaction = await workspaceDatabase
+    const existingMessageReaction = await workspace.database
       .selectFrom('message_reactions')
       .selectAll()
       .where('message_id', '=', input.messageId)
-      .where('collaborator_id', '=', input.userId)
+      .where('collaborator_id', '=', workspace.userId)
       .where('reaction', '=', input.reaction)
       .executeTakeFirst();
 
@@ -57,15 +51,7 @@ export class MessageReactionCreateMutationHandler
       };
     }
 
-    const user = await fetchUser(workspaceDatabase, input.userId);
-    if (!user) {
-      throw new MutationError(
-        MutationErrorCode.UserNotFound,
-        'There was an error while fetching the user. Please make sure you are logged in.'
-      );
-    }
-
-    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    const root = await fetchEntry(workspace.database, input.rootId);
     if (!root) {
       throw new MutationError(
         MutationErrorCode.RootNotFound,
@@ -76,8 +62,8 @@ export class MessageReactionCreateMutationHandler
     if (
       !canCreateMessageReaction({
         user: {
-          userId: input.userId,
-          role: user.role,
+          userId: workspace.userId,
+          role: workspace.role,
         },
         root: mapEntry(root),
         message: {
@@ -92,7 +78,7 @@ export class MessageReactionCreateMutationHandler
       );
     }
 
-    const { createdMessageReaction, createdMutation } = await workspaceDatabase
+    const { createdMessageReaction, createdMutation } = await workspace.database
       .transaction()
       .execute(async (trx) => {
         const createdMessageReaction = await trx
@@ -100,7 +86,7 @@ export class MessageReactionCreateMutationHandler
           .returningAll()
           .values({
             message_id: input.messageId,
-            collaborator_id: input.userId,
+            collaborator_id: workspace.userId,
             reaction: input.reaction,
             root_id: input.rootId,
             version: 0n,
@@ -153,14 +139,12 @@ export class MessageReactionCreateMutationHandler
       throw new Error('Failed to create message reaction');
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'message_reaction_created',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       messageReaction: mapMessageReaction(createdMessageReaction),
     });
 

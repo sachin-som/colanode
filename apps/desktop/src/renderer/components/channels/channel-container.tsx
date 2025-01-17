@@ -16,7 +16,8 @@ export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
   const { data: entry, isPending: isPendingEntry } = useQuery({
     type: 'entry_get',
     entryId: channelId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const channel = entry as ChannelEntry;
@@ -26,7 +27,8 @@ export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
     {
       type: 'entry_get',
       entryId: channel?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: channelExists,

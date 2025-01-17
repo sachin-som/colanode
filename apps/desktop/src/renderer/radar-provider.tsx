@@ -15,16 +15,20 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
     <RadarContext.Provider
       value={{
         getAccountState: (accountId) => {
-          const workspaceStates = Object.values(radarData).filter(
-            (state) => state.accountId === accountId
-          );
+          const accountState = radarData[accountId];
+          if (!accountState) {
+            return {
+              importantCount: 0,
+              hasUnseenChanges: false,
+            };
+          }
 
-          const importantCount = workspaceStates.reduce(
+          const importantCount = Object.values(accountState).reduce(
             (acc, state) => acc + state.importantCount,
             0
           );
 
-          const hasUnseenChanges = workspaceStates.some(
+          const hasUnseenChanges = Object.values(accountState).some(
             (state) => state.hasUnseenChanges
           );
 
@@ -33,8 +37,8 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             hasUnseenChanges,
           };
         },
-        getWorkspaceState: (userId) => {
-          const workspaceState = radarData[userId];
+        getWorkspaceState: (accountId, workspaceId) => {
+          const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
             return {
               hasUnseenChanges: workspaceState.hasUnseenChanges,
@@ -48,8 +52,8 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             hasUnseenChanges: false,
           };
         },
-        getChatState: (userId, entryId) => {
-          const workspaceState = radarData[userId];
+        getChatState: (accountId, workspaceId, entryId) => {
+          const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
             const chatState = workspaceState.nodeStates[entryId];
             if (chatState && chatState.type === 'chat') {
@@ -64,8 +68,8 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
-        getChannelState: (userId, entryId) => {
-          const workspaceState = radarData[userId];
+        getChannelState: (accountId, workspaceId, entryId) => {
+          const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
             const channelState = workspaceState.nodeStates[entryId];
             if (channelState && channelState.type === 'channel') {
@@ -80,39 +84,44 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
-        markMessageAsSeen: (userId, messageId) => {
+        markMessageAsSeen: (accountId, workspaceId, messageId) => {
           window.colanode.executeMutation({
             type: 'message_mark_seen',
             messageId,
-            userId,
+            accountId,
+            workspaceId,
           });
         },
-        markFileAsSeen: (userId, fileId) => {
+        markFileAsSeen: (accountId, workspaceId, fileId) => {
           window.colanode.executeMutation({
             type: 'file_mark_seen',
             fileId,
-            userId,
+            accountId,
+            workspaceId,
           });
         },
-        markFileAsOpened: (userId, fileId) => {
+        markFileAsOpened: (accountId, workspaceId, fileId) => {
           window.colanode.executeMutation({
             type: 'file_mark_opened',
             fileId,
-            userId,
+            accountId,
+            workspaceId,
           });
         },
-        markEntryAsSeen: (userId, entryId) => {
+        markEntryAsSeen: (accountId, workspaceId, entryId) => {
           window.colanode.executeMutation({
             type: 'entry_mark_seen',
             entryId,
-            userId,
+            accountId,
+            workspaceId,
           });
         },
-        markEntryAsOpened: (userId, entryId) => {
+        markEntryAsOpened: (accountId, workspaceId, entryId) => {
           window.colanode.executeMutation({
             type: 'entry_mark_opened',
             entryId,
-            userId,
+            accountId,
+            workspaceId,
           });
         },
       }}

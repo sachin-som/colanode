@@ -1,22 +1,24 @@
 import { RecordAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   RecordFieldValueDeleteMutationInput,
   RecordFieldValueDeleteMutationOutput,
 } from '@/shared/mutations/records/record-field-value-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class RecordFieldValueDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<RecordFieldValueDeleteMutationInput>
 {
   async handleMutation(
     input: RecordFieldValueDeleteMutationInput
   ): Promise<RecordFieldValueDeleteMutationOutput> {
-    const result = await entryService.updateEntry<RecordAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<RecordAttributes>(
       input.recordId,
-      input.userId,
       (attributes) => {
         delete attributes.fields[input.fieldId];
         return attributes;

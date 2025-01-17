@@ -1,15 +1,15 @@
 import { AccountUpdateOutput } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import { eventBus } from '@/shared/lib/event-bus';
-import { httpClient } from '@/shared/lib/http-client';
 import {
   AccountUpdateMutationInput,
   AccountUpdateMutationOutput,
 } from '@/shared/mutations/accounts/account-update';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
+import { appService } from '@/main/services/app-service';
+import { mapAccount } from '@/main/utils';
 
 export class AccountUpdateMutationHandler
   implements MutationHandler<AccountUpdateMutationInput>
@@ -17,46 +17,25 @@ export class AccountUpdateMutationHandler
   async handleMutation(
     input: AccountUpdateMutationInput
   ): Promise<AccountUpdateMutationOutput> {
-    const account = await databaseService.appDatabase
-      .selectFrom('accounts')
-      .selectAll()
-      .where('id', '=', input.id)
-      .executeTakeFirst();
+    const accountService = appService.getAccount(input.id);
 
-    if (!account) {
+    if (!accountService) {
       throw new MutationError(
         MutationErrorCode.AccountNotFound,
         'Account not found or has been logged out already. Try closing the app and opening it again.'
       );
     }
 
-    const server = await databaseService.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .where('domain', '=', account.server)
-      .executeTakeFirst();
-
-    if (!server) {
-      throw new MutationError(
-        MutationErrorCode.ServerNotFound,
-        `The server ${account.server} associated with this account was not found. Try closing the app and opening it again.`
-      );
-    }
-
     try {
-      const { data } = await httpClient.put<AccountUpdateOutput>(
+      const { data } = await accountService.client.put<AccountUpdateOutput>(
         `/v1/accounts/${input.id}`,
         {
           name: input.name,
           avatar: input.avatar,
-        },
-        {
-          domain: server.domain,
-          token: account.token,
         }
       );
 
-      const updatedAccount = await databaseService.appDatabase
+      const updatedAccount = await appService.database
         .updateTable('accounts')
         .set({
           name: data.name,
@@ -73,17 +52,12 @@ export class AccountUpdateMutationHandler
         );
       }
 
+      const account = mapAccount(updatedAccount);
+      accountService.updateAccount(account);
+
       eventBus.publish({
         type: 'account_updated',
-        account: {
-          id: updatedAccount.id,
-          name: updatedAccount.name,
-          email: updatedAccount.email,
-          token: updatedAccount.token,
-          avatar: updatedAccount.avatar,
-          deviceId: updatedAccount.device_id,
-          server: updatedAccount.server,
-        },
+        account,
       });
 
       return {

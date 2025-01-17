@@ -1,7 +1,6 @@
 import { RecordAttributes } from '@colanode/core';
 import { isEqual } from 'lodash-es';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
@@ -9,16 +8,19 @@ import {
   RecordContentUpdateMutationOutput,
 } from '@/shared/mutations/records/record-content-update';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class RecordContentUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<RecordContentUpdateMutationInput>
 {
   async handleMutation(
     input: RecordContentUpdateMutationInput
   ): Promise<RecordContentUpdateMutationOutput> {
-    const result = await entryService.updateEntry<RecordAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<RecordAttributes>(
       input.recordId,
-      input.userId,
       (attributes) => {
         const indexMap = new Map<string, string>();
         if (attributes.content) {

@@ -56,7 +56,8 @@ export const ChannelCreateDialog = ({
                 spaceId: spaceId,
                 name: values.name,
                 avatar: values.avatar,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
               },
               onSuccess(output) {
                 onOpenChange(false);

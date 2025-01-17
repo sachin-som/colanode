@@ -1,8 +1,9 @@
 export type UserRoleUpdateMutationInput = {
   type: 'user_role_update';
-  userToUpdateId: string;
-  role: string;
+  accountId: string;
+  workspaceId: string;
   userId: string;
+  role: string;
 };
 
 export type UserRoleUpdateMutationOutput = {

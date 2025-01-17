@@ -1,6 +1,7 @@
 export type ViewCreateMutationInput = {
   type: 'view_create';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   viewType: 'table' | 'board' | 'calendar';
   name: string;

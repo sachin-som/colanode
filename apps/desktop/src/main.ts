@@ -5,21 +5,20 @@ import { createDebugger } from '@colanode/core';
 import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
 import path from 'path';
 
-import { metadataService } from '@/main/services/metadata-service';
-import { notificationService } from '@/main/services/notification-service';
 import { WindowSize } from '@/shared/types/metadata';
-import { scheduler } from '@/main/scheduler';
-import { assetService } from '@/main/services/asset-service';
-import { avatarService } from '@/main/services/avatar-service';
-import { commandService } from '@/main/services/command-service';
-import { fileService } from '@/main/services/file-service';
-import { mutationService } from '@/main/services/mutation-service';
-import { queryService } from '@/main/services/query-service';
+import { mediator } from '@/main/mediator';
 import { getAppIconPath } from '@/main/utils';
 import { CommandInput, CommandMap } from '@/shared/commands';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationInput, MutationMap } from '@/shared/mutations';
 import { QueryInput, QueryMap } from '@/shared/queries';
+import { appService } from '@/main/services/app-service';
+import {
+  handleAssetRequest,
+  handleAvatarRequest,
+  handleFilePreviewRequest,
+  handleFileRequest,
+} from '@/main/lib/protocols';
 
 const debug = createDebugger('desktop:main');
 
@@ -42,11 +41,10 @@ updateElectronApp({
 });
 
 const createWindow = async () => {
-  await scheduler.init();
-  notificationService.checkBadge();
+  await appService.migrate();
 
   // Create the browser window.
-  let windowSize = await metadataService.get<WindowSize>('window_size');
+  let windowSize = await appService.metadata.get<WindowSize>('window_size');
   const mainWindow = new BrowserWindow({
     width: windowSize?.width ?? 1200,
     height: windowSize?.height ?? 800,
@@ -70,7 +68,7 @@ const createWindow = async () => {
       fullscreen: false,
     };
 
-    metadataService.set('window_size', windowSize);
+    appService.metadata.set('window_size', windowSize);
   });
 
   mainWindow.on('enter-full-screen', () => {
@@ -80,7 +78,7 @@ const createWindow = async () => {
       fullscreen: true,
     };
 
-    metadataService.set('window_size', windowSize);
+    appService.metadata.set('window_size', windowSize);
   });
 
   mainWindow.on('leave-full-screen', () => {
@@ -90,7 +88,7 @@ const createWindow = async () => {
       fullscreen: false,
     };
 
-    metadataService.set('window_size', windowSize);
+    appService.metadata.set('window_size', windowSize);
   });
 
   // and load the index.html of the app.
@@ -116,25 +114,25 @@ const createWindow = async () => {
 
   if (!protocol.isProtocolHandled('avatar')) {
     protocol.handle('avatar', (request) => {
-      return avatarService.handleAvatarRequest(request);
+      return handleAvatarRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('local-file')) {
     protocol.handle('local-file', (request) => {
-      return fileService.handleFileRequest(request);
+      return handleFileRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('local-file-preview')) {
     protocol.handle('local-file-preview', (request) => {
-      return fileService.handleFilePreviewRequest(request);
+      return handleFilePreviewRequest(request);
     });
   }
 
   if (!protocol.isProtocolHandled('asset')) {
     protocol.handle('asset', (request) => {
-      return assetService.handleAssetRequest(request);
+      return handleAssetRequest(request);
     });
   }
 
@@ -159,7 +157,7 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 
-  queryService.clearSubscriptions();
+  mediator.clearSubscriptions();
 });
 
 app.on('activate', () => {
@@ -173,7 +171,7 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 ipcMain.handle('init', async () => {
-  await scheduler.init();
+  await appService.init();
 });
 
 ipcMain.handle(
@@ -182,7 +180,7 @@ ipcMain.handle(
     _: unknown,
     input: T
   ): Promise<MutationMap[T['type']]['output']> => {
-    return mutationService.executeMutation(input);
+    return mediator.executeMutation(input);
   }
 );
 
@@ -192,7 +190,7 @@ ipcMain.handle(
     _: unknown,
     input: T
   ): Promise<QueryMap[T['type']]['output']> => {
-    return queryService.executeQuery(input);
+    return mediator.executeQuery(input);
   }
 );
 
@@ -203,12 +201,12 @@ ipcMain.handle(
     id: string,
     input: T
   ): Promise<QueryMap[T['type']]['output']> => {
-    return queryService.executeQueryAndSubscribe(id, input);
+    return mediator.executeQueryAndSubscribe(id, input);
   }
 );
 
 ipcMain.handle('unsubscribe-query', (_: unknown, id: string): void => {
-  queryService.unsubscribeQuery(id);
+  mediator.unsubscribeQuery(id);
 });
 
 ipcMain.handle(
@@ -217,6 +215,6 @@ ipcMain.handle(
     _: unknown,
     input: T
   ): Promise<CommandMap[T['type']]['output']> => {
-    return commandService.executeCommand(input);
+    return mediator.executeCommand(input);
   }
 );

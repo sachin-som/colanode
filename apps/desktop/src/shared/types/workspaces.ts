@@ -9,12 +9,3 @@ export type Workspace = {
   role: WorkspaceRole;
   userId: string;
 };
-
-export type WorkspaceCredentials = {
-  workspaceId: string;
-  accountId: string;
-  userId: string;
-  token: string;
-  serverDomain: string;
-  serverAttributes: string;
-};

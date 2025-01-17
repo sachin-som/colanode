@@ -47,7 +47,8 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
         input: {
           type: 'message_reaction_create',
           messageId: message.id,
-          userId: workspace.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           reaction,
           rootId: conversation.rootId,
         },
@@ -91,7 +92,8 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
               input: {
                 type: 'message_reaction_create',
                 messageId: message.id,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 reaction,
                 rootId: conversation.rootId,
               },

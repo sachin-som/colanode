@@ -1,22 +1,24 @@
 import { PageAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   PageUpdateMutationInput,
   PageUpdateMutationOutput,
 } from '@/shared/mutations/pages/page-update';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class PageUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<PageUpdateMutationInput>
 {
   async handleMutation(
     input: PageUpdateMutationInput
   ): Promise<PageUpdateMutationOutput> {
-    const result = await entryService.updateEntry<PageAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<PageAttributes>(
       input.pageId,
-      input.userId,
       (attributes) => {
         attributes.name = input.name;
         attributes.avatar = input.avatar;

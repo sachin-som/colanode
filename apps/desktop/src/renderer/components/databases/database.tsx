@@ -40,7 +40,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               databaseId: database.id,
               name,
               fieldType: type,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -62,7 +63,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               databaseId: database.id,
               fieldId: id,
               name,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -83,7 +85,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               type: 'field_delete',
               databaseId: database.id,
               fieldId: id,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -106,7 +109,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               fieldId,
               name,
               color,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -130,7 +134,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               optionId: attributes.id,
               name: attributes.name,
               color: attributes.color,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -152,7 +157,8 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
               databaseId: database.id,
               fieldId,
               optionId,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({

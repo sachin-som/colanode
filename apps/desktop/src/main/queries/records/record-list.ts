@@ -19,14 +19,15 @@ import {
 } from '@colanode/core';
 import { sql } from 'kysely';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapEntry } from '@/main/utils';
 import { RecordListQueryInput } from '@/shared/queries/records/record-list';
 import { Event } from '@/shared/types/events';
+import { SelectEntry } from '@/main/databases/workspace';
 
 export class RecordListQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<RecordListQueryInput>
 {
   public async handleQuery(
@@ -43,7 +44,8 @@ export class RecordListQueryHandler
   ): Promise<ChangeCheckResult<RecordListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -53,7 +55,8 @@ export class RecordListQueryHandler
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'record'
     ) {
       const newResult = await this.handleQuery(input);
@@ -63,7 +66,11 @@ export class RecordListQueryHandler
       };
     }
 
-    if (event.type === 'entry_updated' && event.userId === input.userId) {
+    if (
+      event.type === 'entry_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       if (
         event.entry.type === 'record' &&
         event.entry.attributes.databaseId === input.databaseId
@@ -104,7 +111,11 @@ export class RecordListQueryHandler
       }
     }
 
-    if (event.type === 'entry_deleted' && event.userId === input.userId) {
+    if (
+      event.type === 'entry_deleted' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       if (
         event.entry.type === 'record' &&
         event.entry.attributes.databaseId === input.databaseId
@@ -135,16 +146,13 @@ export class RecordListQueryHandler
   private async fetchRecords(
     input: RecordListQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
-
-    const database = await this.fetchDatabase(input.userId, input.databaseId);
+    const database = await this.fetchDatabase(input);
     const filterQuery = this.buildFiltersQuery(
       input.filters,
       database.attributes.fields
     );
 
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
     const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'e."id" ASC'}`;
     const offset = (input.page - 1) * input.count;
     const query = sql<SelectEntry>`
@@ -154,9 +162,9 @@ export class RecordListQueryHandler
         ${sql.raw(orderByQuery)}
         LIMIT ${sql.lit(input.count)}
         OFFSET ${sql.lit(offset)}
-    `.compile(workspaceDatabase);
+    `.compile(workspace.database);
 
-    const result = await workspaceDatabase.executeQuery(query);
+    const result = await workspace.database.executeQuery(query);
     return result.rows;
   }
 
@@ -176,15 +184,13 @@ export class RecordListQueryHandler
   };
 
   private async fetchDatabase(
-    userId: string,
-    databaseId: string
+    input: RecordListQueryInput
   ): Promise<DatabaseEntry> {
-    const workspaceDatabase =
-      await databaseService.getWorkspaceDatabase(userId);
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const row = await workspaceDatabase
+    const row = await workspace.database
       .selectFrom('entries')
-      .where('id', '=', databaseId)
+      .where('id', '=', input.databaseId)
       .selectAll()
       .executeTakeFirst();
 
@@ -260,7 +266,7 @@ export class RecordListQueryHandler
     }
   };
 
-  buildBooleanFilterQuery = (
+  private buildBooleanFilterQuery = (
     filter: ViewFieldFilterAttributes,
     field: BooleanFieldAttributes
   ): string | null => {

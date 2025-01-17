@@ -2,7 +2,8 @@ import { User } from '@/shared/types/users';
 
 export type UserListQueryInput = {
   type: 'user_list';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   page: number;
   count: number;
 };

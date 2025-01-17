@@ -16,7 +16,8 @@ export const FolderContainer = ({ folderId }: FolderContainerProps) => {
   const { data: entry, isPending: isPendingEntry } = useQuery({
     type: 'entry_get',
     entryId: folderId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const folder = entry as FolderEntry;
@@ -26,7 +27,8 @@ export const FolderContainer = ({ folderId }: FolderContainerProps) => {
     {
       type: 'entry_get',
       entryId: folder?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: folderExists,

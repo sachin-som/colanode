@@ -1,6 +1,7 @@
 export type MessageMarkSeenMutationInput = {
   type: 'message_mark_seen';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageId: string;
 };
 

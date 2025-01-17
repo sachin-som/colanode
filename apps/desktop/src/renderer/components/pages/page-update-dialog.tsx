@@ -59,7 +59,8 @@ export const PageUpdateDialog = ({
                 pageId: page.id,
                 name: values.name,
                 avatar: values.avatar,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
               },
               onSuccess() {
                 onOpenChange(false);

@@ -1,6 +1,7 @@
 export type PageDeleteMutationInput = {
   type: 'page_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   pageId: string;
 };
 

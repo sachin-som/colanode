@@ -135,7 +135,8 @@ export const ViewCreateDialog = ({
         viewType: values.type,
         databaseId: database.id,
         name: values.name,
-        userId: workspace.userId,
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
         groupBy: values.groupBy ?? null,
       },
       onSuccess() {

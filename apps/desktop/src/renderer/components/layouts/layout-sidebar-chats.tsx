@@ -9,8 +9,8 @@ export const LayoutSidebarChats = () => {
 
   const { data } = useQuery({
     type: 'chat_list',
-    userId: workspace.userId,
-    parentId: workspace.id,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     page: 0,
     count: 100,
   });

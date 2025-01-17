@@ -4,7 +4,8 @@ export type ChatListQueryInput = {
   type: 'chat_list';
   page: number;
   count: number;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

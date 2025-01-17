@@ -1,18 +1,21 @@
 import { generateId, IdType, RecordAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   RecordCreateMutationInput,
   RecordCreateMutationOutput,
 } from '@/shared/mutations/records/record-create';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class RecordCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<RecordCreateMutationInput>
 {
   async handleMutation(
     input: RecordCreateMutationInput
   ): Promise<RecordCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const id = generateId(IdType.Record);
     const attributes: RecordAttributes = {
       type: 'record',
@@ -22,7 +25,7 @@ export class RecordCreateMutationHandler
       fields: input.fields ?? {},
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id,
       attributes,
       parentId: input.databaseId,

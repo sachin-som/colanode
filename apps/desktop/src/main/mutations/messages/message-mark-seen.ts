@@ -1,6 +1,5 @@
 import { MarkMessageSeenMutation, generateId, IdType } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   MessageMarkSeenMutationInput,
@@ -8,18 +7,18 @@ import {
 } from '@/shared/mutations/messages/message-mark-seen';
 import { eventBus } from '@/shared/lib/event-bus';
 import { mapMessageInteraction } from '@/main/utils';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class MessageMarkSeenMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<MessageMarkSeenMutationInput>
 {
   async handleMutation(
     input: MessageMarkSeenMutationInput
   ): Promise<MessageMarkSeenMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const message = await workspaceDatabase
+    const message = await workspace.database
       .selectFrom('messages')
       .selectAll()
       .where('id', '=', input.messageId)
@@ -31,11 +30,11 @@ export class MessageMarkSeenMutationHandler
       };
     }
 
-    const existingInteraction = await workspaceDatabase
+    const existingInteraction = await workspace.database
       .selectFrom('message_interactions')
       .selectAll()
       .where('message_id', '=', input.messageId)
-      .where('collaborator_id', '=', input.userId)
+      .where('collaborator_id', '=', workspace.userId)
       .executeTakeFirst();
 
     if (existingInteraction) {
@@ -55,7 +54,7 @@ export class MessageMarkSeenMutationHandler
       ? existingInteraction.first_seen_at
       : lastSeenAt;
 
-    const { createdInteraction, createdMutation } = await workspaceDatabase
+    const { createdInteraction, createdMutation } = await workspace.database
       .transaction()
       .execute(async (trx) => {
         const createdInteraction = await trx
@@ -63,7 +62,7 @@ export class MessageMarkSeenMutationHandler
           .returningAll()
           .values({
             message_id: input.messageId,
-            collaborator_id: input.userId,
+            collaborator_id: workspace.userId,
             first_seen_at: firstSeenAt,
             last_seen_at: lastSeenAt,
             version: 0n,
@@ -87,7 +86,7 @@ export class MessageMarkSeenMutationHandler
           type: 'mark_message_seen',
           data: {
             messageId: input.messageId,
-            collaboratorId: input.userId,
+            collaboratorId: workspace.userId,
             seenAt: new Date().toISOString(),
           },
         };
@@ -114,14 +113,12 @@ export class MessageMarkSeenMutationHandler
       throw new Error('Failed to create message interaction');
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'message_interaction_updated',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       messageInteraction: mapMessageInteraction(createdInteraction),
     });
 

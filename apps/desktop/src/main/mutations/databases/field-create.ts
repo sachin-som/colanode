@@ -7,22 +7,24 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   FieldCreateMutationInput,
   FieldCreateMutationOutput,
 } from '@/shared/mutations/databases/field-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-import { databaseService } from '@/main/data/database-service';
 import { fetchEntry } from '@/main/utils';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FieldCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FieldCreateMutationInput>
 {
   async handleMutation(
     input: FieldCreateMutationInput
   ): Promise<FieldCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     if (input.fieldType === 'relation') {
       if (!input.relationDatabaseId) {
         throw new MutationError(
@@ -31,12 +33,8 @@ export class FieldCreateMutationHandler
         );
       }
 
-      const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-        input.userId
-      );
-
       const relationDatabase = await fetchEntry(
-        workspaceDatabase,
+        workspace.database,
         input.relationDatabaseId
       );
 
@@ -49,9 +47,8 @@ export class FieldCreateMutationHandler
     }
 
     const fieldId = generateId(IdType.Field);
-    const result = await entryService.updateEntry(
+    const result = await workspace.entries.updateEntry(
       input.databaseId,
-      input.userId,
       (attributes) => {
         if (attributes.type !== 'database') {
           throw new Error('Invalid node type');

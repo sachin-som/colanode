@@ -1,22 +1,24 @@
 import { ChannelAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ChannelUpdateMutationInput,
   ChannelUpdateMutationOutput,
 } from '@/shared/mutations/channels/channel-update';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ChannelUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ChannelUpdateMutationInput>
 {
   async handleMutation(
     input: ChannelUpdateMutationInput
   ): Promise<ChannelUpdateMutationOutput> {
-    const result = await entryService.updateEntry<ChannelAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<ChannelAttributes>(
       input.channelId,
-      input.userId,
       (attributes) => {
         attributes.name = input.name;
         attributes.avatar = input.avatar;

@@ -1,4 +1,4 @@
-import { assetService } from '@/main/services/asset-service';
+import { getIconData } from '@/main/lib/assets';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { IconsGetQueryInput } from '@/shared/queries/icons/icons-get';
 import { Event } from '@/shared/types/events';
@@ -6,7 +6,7 @@ import { IconData } from '@/shared/types/icons';
 
 export class IconsGetQueryHandler implements QueryHandler<IconsGetQueryInput> {
   public async handleQuery(_: IconsGetQueryInput): Promise<IconData> {
-    const data = assetService.getIconData();
+    const data = getIconData();
 
     return data;
   }

@@ -1,13 +1,14 @@
 import { Entry } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { fetchEntryAncestors, mapEntry } from '@/main/utils';
 import { EntryTreeGetQueryInput } from '@/shared/queries/entries/entry-tree-get';
 import { Event } from '@/shared/types/events';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
 export class EntryTreeGetQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<EntryTreeGetQueryInput>
 {
   public async handleQuery(input: EntryTreeGetQueryInput): Promise<Entry[]> {
@@ -22,7 +23,8 @@ export class EntryTreeGetQueryHandler
   ): Promise<ChangeCheckResult<EntryTreeGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -32,7 +34,8 @@ export class EntryTreeGetQueryHandler
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.id === input.entryId
     ) {
       const newResult = await this.handleQuery(input);
@@ -42,7 +45,11 @@ export class EntryTreeGetQueryHandler
       };
     }
 
-    if (event.type === 'entry_updated' && event.userId === input.userId) {
+    if (
+      event.type === 'entry_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const entry = output.find((entry) => entry.id === event.entry.id);
       if (entry) {
         const newEntries = output.map((entry) => {
@@ -59,7 +66,11 @@ export class EntryTreeGetQueryHandler
       }
     }
 
-    if (event.type === 'entry_deleted' && event.userId === input.userId) {
+    if (
+      event.type === 'entry_deleted' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const entry = output.find((entry) => entry.id === event.entry.id);
       if (entry) {
         const newResult = await this.handleQuery(input);
@@ -78,11 +89,9 @@ export class EntryTreeGetQueryHandler
   private async fetchEntries(
     input: EntryTreeGetQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const rows = await fetchEntryAncestors(workspaceDatabase, input.entryId);
+    const rows = await fetchEntryAncestors(workspace.database, input.entryId);
     if (rows.length === 0) {
       return [];
     }

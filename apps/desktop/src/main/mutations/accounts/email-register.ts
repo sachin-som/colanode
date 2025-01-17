@@ -1,26 +1,21 @@
 import { EmailRegisterInput, LoginOutput } from '@colanode/core';
+import axios from 'axios';
 
-import { app } from 'electron';
-
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
-import { httpClient } from '@/shared/lib/http-client';
 import { EmailRegisterMutationInput } from '@/shared/mutations/accounts/email-register';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
-import { accountService } from '@/main/services/account-service';
+import { appService } from '@/main/services/app-service';
+import { AccountMutationHandlerBase } from '@/main/mutations/accounts/base';
 
 export class EmailRegisterMutationHandler
+  extends AccountMutationHandlerBase
   implements MutationHandler<EmailRegisterMutationInput>
 {
   async handleMutation(
     input: EmailRegisterMutationInput
   ): Promise<LoginOutput> {
-    const server = await databaseService.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .where('domain', '=', input.server)
-      .executeTakeFirst();
+    const server = appService.getServer(input.server);
 
     if (!server) {
       throw new MutationError(
@@ -35,22 +30,20 @@ export class EmailRegisterMutationHandler
         email: input.email,
         password: input.password,
         platform: process.platform,
-        version: app.getVersion(),
+        version: appService.version,
       };
 
-      const { data } = await httpClient.post<LoginOutput>(
-        '/v1/accounts/emails/register',
-        emailRegisterInput,
-        {
-          domain: server.domain,
-        }
+      const { data } = await axios.post<LoginOutput>(
+        `${server.apiBaseUrl}/v1/accounts/emails/register`,
+        emailRegisterInput
       );
 
       if (data.type === 'verify') {
         return data;
       }
 
-      await accountService.initAccount(data, server.domain);
+      await this.handleLoginSuccess(data, server);
+
       return data;
     } catch (error) {
       const apiError = parseApiError(error);

@@ -1,4 +1,3 @@
-import { databaseService } from '@/main/data/database-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapFile } from '@/main/utils';
 import { FileGetQueryInput } from '@/shared/queries/files/file-get';
@@ -8,8 +7,12 @@ import {
   FileWithState,
   UploadStatus,
 } from '@/shared/types/files';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
-export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
+export class FileGetQueryHandler
+  extends WorkspaceQueryHandlerBase
+  implements QueryHandler<FileGetQueryInput>
+{
   public async handleQuery(
     input: FileGetQueryInput
   ): Promise<FileWithState | null> {
@@ -23,7 +26,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   ): Promise<ChangeCheckResult<FileGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -33,7 +37,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
     if (
       event.type === 'file_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.id === input.id
     ) {
       const output = await this.handleQuery(input);
@@ -45,7 +50,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
     if (
       event.type === 'file_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.id === input.id
     ) {
       return {
@@ -62,7 +68,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
     if (
       event.type === 'file_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.id === input.id
     ) {
       return {
@@ -73,7 +80,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
     if (
       event.type === 'file_state_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.fileState.fileId === input.id
     ) {
       if (output === null) {
@@ -95,7 +103,8 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
 
     if (
       event.type === 'file_state_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.fileState.fileId === input.id
     ) {
       if (output === null) {
@@ -123,11 +132,9 @@ export class FileGetQueryHandler implements QueryHandler<FileGetQueryInput> {
   private async fetchFile(
     input: FileGetQueryInput
   ): Promise<FileWithState | null> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspaceDatabase
+    const file = await workspace.database
       .selectFrom('files as f')
       .leftJoin('file_states as fs', 'f.id', 'fs.file_id')
       .select([

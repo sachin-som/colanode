@@ -3,7 +3,8 @@ import { FileWithState } from '@/shared/types/files';
 export type FileGetQueryInput = {
   type: 'file_get';
   id: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

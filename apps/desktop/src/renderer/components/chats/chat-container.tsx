@@ -16,7 +16,8 @@ export const ChatContainer = ({ chatId }: ChatContainerProps) => {
   const { data, isPending } = useQuery({
     type: 'entry_get',
     entryId: chatId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   if (isPending) {

@@ -48,7 +48,8 @@ export const ChannelDeleteDialog = ({
                 input: {
                   type: 'channel_delete',
                   channelId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

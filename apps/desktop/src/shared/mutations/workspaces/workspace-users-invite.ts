@@ -2,8 +2,9 @@ import { WorkspaceRole } from '@colanode/core';
 
 export type UsersInviteMutationInput = {
   type: 'users_invite';
+  accountId: string;
+  workspaceId: string;
   emails: string[];
-  userId: string;
   role: WorkspaceRole;
 };
 

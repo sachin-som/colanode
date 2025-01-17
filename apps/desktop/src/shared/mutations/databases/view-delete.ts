@@ -1,6 +1,7 @@
 export type ViewDeleteMutationInput = {
   type: 'view_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   viewId: string;
 };

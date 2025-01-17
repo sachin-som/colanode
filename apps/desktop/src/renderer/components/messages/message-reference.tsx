@@ -13,7 +13,8 @@ export const MessageReference = ({ messageId }: MessageReferenceProps) => {
   const { data, isPending } = useQuery({
     type: 'message_get',
     messageId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   if (isPending) {

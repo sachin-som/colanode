@@ -1,10 +1,10 @@
-import { SelectWorkspace } from '@/main/data/app/schema';
-import { databaseService } from '@/main/data/database-service';
+import { SelectWorkspace } from '@/main/databases/account';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapWorkspace } from '@/main/utils';
 import { WorkspaceGetQueryInput } from '@/shared/queries/workspaces/workspace-get';
 import { Event } from '@/shared/types/events';
 import { Workspace } from '@/shared/types/workspaces';
+import { appService } from '@/main/services/app-service';
 
 export class WorkspaceGetQueryHandler
   implements QueryHandler<WorkspaceGetQueryInput>
@@ -63,15 +63,21 @@ export class WorkspaceGetQueryHandler
     };
   }
 
-  private fetchWorkspace(
+  private async fetchWorkspace(
     accountId: string,
     workspaceId: string
   ): Promise<SelectWorkspace | undefined> {
-    return databaseService.appDatabase
+    const account = appService.getAccount(accountId);
+    if (!account) {
+      return undefined;
+    }
+
+    const workspace = await account.database
       .selectFrom('workspaces')
       .selectAll()
-      .where('account_id', '=', accountId)
-      .where('workspace_id', '=', workspaceId)
+      .where('id', '=', workspaceId)
       .executeTakeFirst();
+
+    return workspace;
   }
 }

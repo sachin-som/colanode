@@ -103,9 +103,10 @@ export const WorkspaceUserRoleDropdown = ({
                 mutate({
                   input: {
                     type: 'user_role_update',
-                    userToUpdateId: userId,
+                    accountId: workspace.accountId,
+                    workspaceId: workspace.id,
+                    userId: userId,
                     role: role.value,
-                    userId: workspace.userId,
                   },
                   onError(error) {
                     toast({

@@ -9,14 +9,45 @@ import {
 
 interface RadarContext {
   getAccountState: (accountId: string) => AccountReadState;
-  getWorkspaceState: (userId: string) => WorkspaceReadState;
-  getChatState: (userId: string, entryId: string) => ChatReadState;
-  getChannelState: (userId: string, entryIdId: string) => ChannelReadState;
-  markMessageAsSeen: (userId: string, messageId: string) => void;
-  markFileAsSeen: (userId: string, fileId: string) => void;
-  markFileAsOpened: (userId: string, fileId: string) => void;
-  markEntryAsSeen: (userId: string, entryId: string) => void;
-  markEntryAsOpened: (userId: string, entryId: string) => void;
+  getWorkspaceState: (
+    accountId: string,
+    workspaceId: string
+  ) => WorkspaceReadState;
+  getChatState: (
+    accountId: string,
+    workspaceId: string,
+    entryId: string
+  ) => ChatReadState;
+  getChannelState: (
+    accountId: string,
+    workspaceId: string,
+    entryId: string
+  ) => ChannelReadState;
+  markMessageAsSeen: (
+    accountId: string,
+    workspaceId: string,
+    messageId: string
+  ) => void;
+  markFileAsSeen: (
+    accountId: string,
+    workspaceId: string,
+    fileId: string
+  ) => void;
+  markFileAsOpened: (
+    accountId: string,
+    workspaceId: string,
+    fileId: string
+  ) => void;
+  markEntryAsSeen: (
+    accountId: string,
+    workspaceId: string,
+    entryId: string
+  ) => void;
+  markEntryAsOpened: (
+    accountId: string,
+    workspaceId: string,
+    entryId: string
+  ) => void;
 }
 
 export const RadarContext = createContext<RadarContext>({} as RadarContext);

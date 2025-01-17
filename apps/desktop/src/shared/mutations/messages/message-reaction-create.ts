@@ -1,6 +1,7 @@
 export type MessageReactionCreateMutationInput = {
   type: 'message_reaction_create';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageId: string;
   rootId: string;
   reaction: string;

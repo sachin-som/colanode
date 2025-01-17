@@ -16,7 +16,8 @@ export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
   const { data: entry, isPending: isPendingEntry } = useQuery({
     type: 'entry_get',
     entryId: databaseId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const database = entry as DatabaseEntry;
@@ -26,7 +27,8 @@ export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
     {
       type: 'entry_get',
       entryId: database?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: databaseExists,

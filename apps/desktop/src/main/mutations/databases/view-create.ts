@@ -6,24 +6,26 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ViewCreateMutationInput,
   ViewCreateMutationOutput,
 } from '@/shared/mutations/databases/view-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ViewCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ViewCreateMutationInput>
 {
   async handleMutation(
     input: ViewCreateMutationInput
   ): Promise<ViewCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const id = generateId(IdType.View);
-    const result = await entryService.updateEntry<DatabaseAttributes>(
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
       input.databaseId,
-      input.userId,
       (attributes) => {
         const maxIndex = Object.values(attributes.views)
           .map((view) => view.index)

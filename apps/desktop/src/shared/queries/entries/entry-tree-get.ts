@@ -3,7 +3,8 @@ import { Entry } from '@colanode/core';
 export type EntryTreeGetQueryInput = {
   type: 'entry_tree_get';
   entryId: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

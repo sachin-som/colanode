@@ -10,7 +10,8 @@ export const LayoutSidebarSpaces = () => {
 
   const { data } = useQuery({
     type: 'space_list',
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     parentId: workspace.id,
     page: 0,
     count: 100,

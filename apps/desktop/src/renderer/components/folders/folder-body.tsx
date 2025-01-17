@@ -101,7 +101,8 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
     mutate({
       input: {
         type: 'file_create',
-        userId: workspace.userId,
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
         filePath,
         parentId: folder.id,
         entryId: folder.id,
@@ -120,10 +121,10 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
   };
 
   useEffect(() => {
-    radar.markEntryAsOpened(workspace.userId, folder.id);
+    radar.markEntryAsOpened(workspace.accountId, workspace.id, folder.id);
 
     const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.userId, folder.id);
+      radar.markEntryAsOpened(workspace.accountId, workspace.id, folder.id);
     }, 60000);
 
     return () => clearInterval(interval);

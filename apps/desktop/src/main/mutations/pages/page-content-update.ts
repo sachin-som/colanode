@@ -1,7 +1,6 @@
 import { PageAttributes } from '@colanode/core';
 import { isEqual } from 'lodash-es';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
@@ -9,16 +8,19 @@ import {
   PageContentUpdateMutationOutput,
 } from '@/shared/mutations/pages/page-content-update';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class PageContentUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<PageContentUpdateMutationInput>
 {
   async handleMutation(
     input: PageContentUpdateMutationInput
   ): Promise<PageContentUpdateMutationOutput> {
-    const result = await entryService.updateEntry<PageAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<PageAttributes>(
       input.pageId,
-      input.userId,
       (attributes) => {
         const indexMap = new Map<string, string>();
         if (attributes.content) {

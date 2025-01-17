@@ -56,7 +56,8 @@ export const FolderCreateDialog = ({
                 parentId: spaceId,
                 name: values.name,
                 avatar: values.avatar,
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 generateIndex: true,
               },
               onSuccess(output) {

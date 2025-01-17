@@ -1,6 +1,7 @@
 export type FolderDeleteMutationInput = {
   type: 'folder_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   folderId: string;
 };
 

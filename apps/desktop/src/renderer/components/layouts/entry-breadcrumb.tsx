@@ -30,7 +30,8 @@ export const EntryBreadcrumb = ({ entry }: EntryBreadcrumbProps) => {
     {
       type: 'entry_tree_get',
       entryId: entry.id,
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: entry.type !== 'chat',

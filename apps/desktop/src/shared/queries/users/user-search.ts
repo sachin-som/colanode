@@ -3,7 +3,8 @@ import { User } from '@/shared/types/users';
 export type UserSearchQueryInput = {
   type: 'user_search';
   searchQuery: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   exclude?: string[];
 };
 

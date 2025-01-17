@@ -1,6 +1,7 @@
 export type SelectOptionUpdateMutationInput = {
   type: 'select_option_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   fieldId: string;
   optionId: string;

@@ -1,6 +1,7 @@
 export type MessageDeleteMutationInput = {
   type: 'message_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageId: string;
 };
 

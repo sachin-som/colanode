@@ -1,6 +1,7 @@
 export type EntryCollaboratorUpdateMutationInput = {
   type: 'entry_collaborator_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryId: string;
   collaboratorId: string;
   role: string;

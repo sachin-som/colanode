@@ -12,7 +12,8 @@ export const FileBlock = ({ id }: FileBlockProps) => {
   const { data } = useQuery({
     type: 'file_get',
     id,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   if (!data) {

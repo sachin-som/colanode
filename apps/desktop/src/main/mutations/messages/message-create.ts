@@ -11,7 +11,6 @@ import {
   MessageType,
 } from '@colanode/core';
 
-import { fileService } from '@/main/services/file-service';
 import { MutationHandler } from '@/main/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
@@ -23,13 +22,13 @@ import {
   CreateFile,
   CreateFileState,
   CreateMutation,
-} from '@/main/data/workspace/schema';
-import { databaseService } from '@/main/data/database-service';
+} from '@/main/databases/workspace';
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   fetchEntry,
   fetchUser,
   fetchUserStorageUsed,
+  getFileMetadata,
   mapEntry,
   mapFile,
   mapFileState,
@@ -37,18 +36,18 @@ import {
 } from '@/main/utils';
 import { formatBytes } from '@/shared/lib/files';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class MessageCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<MessageCreateMutationInput>
 {
   async handleMutation(
     input: MessageCreateMutationInput
   ): Promise<MessageCreateMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const user = await fetchUser(workspaceDatabase, input.userId);
+    const user = await fetchUser(workspace.database, workspace.userId);
     if (!user) {
       throw new MutationError(
         MutationErrorCode.UserNotFound,
@@ -56,7 +55,7 @@ export class MessageCreateMutationHandler
       );
     }
 
-    const entry = await fetchEntry(workspaceDatabase, input.conversationId);
+    const entry = await fetchEntry(workspace.database, input.conversationId);
     if (!entry) {
       throw new MutationError(
         MutationErrorCode.EntryNotFound,
@@ -64,7 +63,7 @@ export class MessageCreateMutationHandler
       );
     }
 
-    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    const root = await fetchEntry(workspace.database, input.rootId);
     if (!root) {
       throw new MutationError(
         MutationErrorCode.RootNotFound,
@@ -75,7 +74,7 @@ export class MessageCreateMutationHandler
     if (
       !canCreateMessage({
         user: {
-          userId: input.userId,
+          userId: workspace.userId,
           role: user.role,
         },
         root: mapEntry(root),
@@ -101,7 +100,7 @@ export class MessageCreateMutationHandler
     for (const block of blocks) {
       if (block.type === EditorNodeTypes.FilePlaceholder) {
         const path = block.attrs?.path;
-        const metadata = fileService.getFileMetadata(path);
+        const metadata = getFileMetadata(path);
         if (!metadata) {
           throw new MutationError(
             MutationErrorCode.FileInvalid,
@@ -122,12 +121,7 @@ export class MessageCreateMutationHandler
         block.type = 'file';
         block.attrs = null;
 
-        fileService.copyFileToWorkspace(
-          path,
-          fileId,
-          metadata.extension,
-          input.userId
-        );
+        workspace.files.copyFileToWorkspace(path, fileId, metadata.extension);
 
         files.push({
           id: fileId,
@@ -142,7 +136,7 @@ export class MessageCreateMutationHandler
           extension: metadata.extension,
           size: metadata.size,
           created_at: createdAt,
-          created_by: input.userId,
+          created_by: workspace.userId,
           version: 0n,
         });
 
@@ -183,8 +177,8 @@ export class MessageCreateMutationHandler
 
     if (files.length > 0) {
       const storageUsed = await fetchUserStorageUsed(
-        workspaceDatabase,
-        input.userId
+        workspace.database,
+        workspace.userId
       );
 
       const fileSizeSum = BigInt(
@@ -193,7 +187,7 @@ export class MessageCreateMutationHandler
 
       if (storageUsed + fileSizeSum > user.storage_limit) {
         for (const file of files) {
-          fileService.deleteFile(input.userId, file.id, file.extension);
+          workspace.files.deleteFile(file.id, file.extension);
         }
 
         throw new MutationError(
@@ -223,7 +217,7 @@ export class MessageCreateMutationHandler
     };
 
     const { createdMessage, createdFiles, createdFileStates } =
-      await workspaceDatabase.transaction().execute(async (tx) => {
+      await workspace.database.transaction().execute(async (tx) => {
         const createdMessage = await tx
           .insertInto('messages')
           .returningAll()
@@ -234,7 +228,7 @@ export class MessageCreateMutationHandler
             root_id: input.rootId,
             attributes: JSON.stringify(messageAttributes),
             created_at: createdAt,
-            created_by: input.userId,
+            created_by: workspace.userId,
             version: 0n,
           })
           .executeTakeFirst();
@@ -301,7 +295,8 @@ export class MessageCreateMutationHandler
     if (createdMessage) {
       eventBus.publish({
         type: 'message_created',
-        userId: input.userId,
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
         message: mapMessage(createdMessage),
       });
     }
@@ -310,7 +305,8 @@ export class MessageCreateMutationHandler
       for (const file of createdFiles) {
         eventBus.publish({
           type: 'file_created',
-          userId: input.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           file: mapFile(file),
         });
       }
@@ -320,16 +316,14 @@ export class MessageCreateMutationHandler
       for (const fileState of createdFileStates) {
         eventBus.publish({
           type: 'file_state_created',
-          userId: input.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           fileState: mapFileState(fileState),
         });
       }
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     return {
       id: messageId,

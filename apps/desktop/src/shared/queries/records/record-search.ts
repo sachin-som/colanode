@@ -3,7 +3,8 @@ import { RecordEntry } from '@colanode/core';
 export type RecordSearchQueryInput = {
   type: 'record_search';
   searchQuery: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   exclude?: string[];
 };

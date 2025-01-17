@@ -25,8 +25,9 @@ export const FileSidebar = ({ file }: FileSidebarProps) => {
   const workspace = useWorkspace();
   const { data } = useQuery({
     type: 'user_get',
-    id: file.createdBy,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId: file.createdBy,
   });
 
   const user = data ?? null;

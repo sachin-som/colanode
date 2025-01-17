@@ -1,5 +1,5 @@
-import { fileService } from '@/main/services/file-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { getFileMetadata } from '@/main/utils';
 import { FileMetadataGetQueryInput } from '@/shared/queries/files/file-metadata-get';
 import { Event } from '@/shared/types/events';
 import { FileMetadata } from '@/shared/types/files';
@@ -10,7 +10,7 @@ export class FileMetadataGetQueryHandler
   public async handleQuery(
     input: FileMetadataGetQueryInput
   ): Promise<FileMetadata | null> {
-    const data = fileService.getFileMetadata(input.path);
+    const data = getFileMetadata(input.path);
     return data;
   }
 

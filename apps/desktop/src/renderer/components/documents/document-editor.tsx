@@ -110,7 +110,8 @@ export const DocumentEditor = ({
         FolderNode,
         FileNode.configure({
           context: {
-            userId: workspace.userId,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
             documentId,
             rootId,
           },
@@ -155,7 +156,8 @@ export const DocumentEditor = ({
           ],
           context: {
             documentId,
-            userId: workspace.userId,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
             rootId,
           },
         }),

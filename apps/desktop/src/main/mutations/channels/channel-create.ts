@@ -1,25 +1,23 @@
 import { ChannelAttributes, generateId, IdType } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChannelCreateMutationInput,
   ChannelCreateMutationOutput,
 } from '@/shared/mutations/channels/channel-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ChannelCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ChannelCreateMutationInput>
 {
   async handleMutation(
     input: ChannelCreateMutationInput
   ): Promise<ChannelCreateMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const space = await workspaceDatabase
+    const space = await workspace.database
       .selectFrom('entries')
       .selectAll()
       .where('id', '=', input.spaceId)
@@ -40,7 +38,7 @@ export class ChannelCreateMutationHandler
       parentId: input.spaceId,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id,
       attributes,
       parentId: input.spaceId,

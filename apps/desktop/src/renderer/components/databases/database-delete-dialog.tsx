@@ -48,7 +48,8 @@ export const DatabaseDeleteDialog = ({
                 input: {
                   type: 'database_delete',
                   databaseId: entryId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

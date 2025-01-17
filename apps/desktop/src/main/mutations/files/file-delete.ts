@@ -5,27 +5,26 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   FileDeleteMutationInput,
   FileDeleteMutationOutput,
 } from '@/shared/mutations/files/file-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { fetchEntry, fetchUser, mapEntry, mapFile } from '@/main/utils';
+import { fetchEntry, mapEntry, mapFile } from '@/main/utils';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FileDeleteMutationInput>
 {
   async handleMutation(
     input: FileDeleteMutationInput
   ): Promise<FileDeleteMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspaceDatabase
+    const file = await workspace.database
       .selectFrom('files')
       .selectAll()
       .where('id', '=', input.fileId)
@@ -38,15 +37,7 @@ export class FileDeleteMutationHandler
       );
     }
 
-    const user = await fetchUser(workspaceDatabase, input.userId);
-    if (!user) {
-      throw new MutationError(
-        MutationErrorCode.UserNotFound,
-        'There was an error while fetching the user. Please make sure you are logged in.'
-      );
-    }
-
-    const entry = await fetchEntry(workspaceDatabase, file.root_id);
+    const entry = await fetchEntry(workspace.database, file.root_id);
     if (!entry) {
       throw new MutationError(
         MutationErrorCode.EntryNotFound,
@@ -54,7 +45,7 @@ export class FileDeleteMutationHandler
       );
     }
 
-    const root = await fetchEntry(workspaceDatabase, entry.root_id);
+    const root = await fetchEntry(workspace.database, entry.root_id);
     if (!root) {
       throw new MutationError(
         MutationErrorCode.RootNotFound,
@@ -65,8 +56,8 @@ export class FileDeleteMutationHandler
     if (
       !canDeleteFile({
         user: {
-          userId: input.userId,
-          role: user.role,
+          userId: workspace.userId,
+          role: workspace.role,
         },
         root: mapEntry(root),
         entry: mapEntry(entry),
@@ -90,7 +81,7 @@ export class FileDeleteMutationHandler
       deletedAt,
     };
 
-    await workspaceDatabase.transaction().execute(async (tx) => {
+    await workspace.database.transaction().execute(async (tx) => {
       await tx
         .updateTable('files')
         .set({
@@ -113,14 +104,12 @@ export class FileDeleteMutationHandler
 
     eventBus.publish({
       type: 'file_deleted',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       file: mapFile(file),
     });
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     return {
       success: true,

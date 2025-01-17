@@ -2,11 +2,12 @@ import { FieldType } from '@colanode/core';
 
 export type FieldCreateMutationInput = {
   type: 'field_create';
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   name: string;
   fieldType: FieldType;
   relationDatabaseId?: string | null;
-  userId: string;
 };
 
 export type FieldCreateMutationOutput = {

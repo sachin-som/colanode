@@ -1,13 +1,14 @@
 import { SpaceEntry } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapEntry } from '@/main/utils';
 import { SpaceListQueryInput } from '@/shared/queries/spaces/space-list';
 import { Event } from '@/shared/types/events';
+import { SelectEntry } from '@/main/databases/workspace';
 
 export class SpaceListQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<SpaceListQueryInput>
 {
   public async handleQuery(input: SpaceListQueryInput): Promise<SpaceEntry[]> {
@@ -22,7 +23,8 @@ export class SpaceListQueryHandler
   ): Promise<ChangeCheckResult<SpaceListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -32,7 +34,8 @@ export class SpaceListQueryHandler
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'space'
     ) {
       const newChildren = [...output, event.entry];
@@ -44,7 +47,8 @@ export class SpaceListQueryHandler
 
     if (
       event.type === 'entry_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'space'
     ) {
       const entry = output.find((entry) => entry.id === event.entry.id);
@@ -62,7 +66,8 @@ export class SpaceListQueryHandler
 
     if (
       event.type === 'entry_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'space'
     ) {
       const entry = output.find((entry) => entry.id === event.entry.id);
@@ -85,11 +90,9 @@ export class SpaceListQueryHandler
   private async fetchChildren(
     input: SpaceListQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const rows = await workspaceDatabase
+    const rows = await workspace.database
       .selectFrom('entries')
       .selectAll()
       .where('parent_id', 'is', null)

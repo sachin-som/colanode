@@ -3,6 +3,7 @@ import {
   Mutation,
   Entry,
   TransactionOperation,
+  extractFileType,
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 import {
@@ -12,17 +13,14 @@ import {
   Transaction,
   UpdateResult,
 } from 'kysely';
+import mime from 'mime-types';
 
 import { app } from 'electron';
 import path from 'path';
+import fs from 'fs';
 
-import { databaseService } from './data/database-service';
-
-import {
-  SelectAccount,
-  SelectServer,
-  SelectWorkspace,
-} from '@/main/data/app/schema';
+import { SelectAccount, SelectServer } from '@/main/databases/app';
+import { SelectWorkspace } from '@/main/databases/account';
 import {
   SelectFile,
   SelectFileState,
@@ -36,12 +34,17 @@ import {
   SelectMessageInteraction,
   SelectFileInteraction,
   SelectEntryInteraction,
-} from '@/main/data/workspace/schema';
+} from '@/main/databases/workspace';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
-import { File, FileInteraction, FileState } from '@/shared/types/files';
-import { Workspace, WorkspaceCredentials } from '@/shared/types/workspaces';
+import {
+  File,
+  FileInteraction,
+  FileMetadata,
+  FileState,
+} from '@/shared/types/files';
+import { Workspace } from '@/shared/types/workspaces';
 import {
   MessageInteraction,
   MessageNode,
@@ -53,20 +56,37 @@ export const appPath = app.getPath('userData');
 
 export const appDatabasePath = path.join(appPath, 'app.db');
 
-export const getWorkspaceDirectoryPath = (userId: string): string => {
-  return path.join(appPath, 'workspaces', userId);
+export const getAccountDirectoryPath = (accountId: string): string => {
+  return path.join(appPath, 'accounts', accountId);
 };
 
-export const getWorkspaceFilesDirectoryPath = (userId: string): string => {
-  return path.join(getWorkspaceDirectoryPath(userId), 'files');
+export const getWorkspaceDirectoryPath = (
+  accountId: string,
+  workspaceId: string
+): string => {
+  return path.join(
+    getAccountDirectoryPath(accountId),
+    'workspaces',
+    workspaceId
+  );
 };
 
-export const getWorkspaceTempFilesDirectoryPath = (userId: string): string => {
-  return path.join(getWorkspaceDirectoryPath(userId), 'temp');
+export const getWorkspaceFilesDirectoryPath = (
+  accountId: string,
+  workspaceId: string
+): string => {
+  return path.join(getWorkspaceDirectoryPath(accountId, workspaceId), 'files');
+};
+
+export const getWorkspaceTempFilesDirectoryPath = (
+  accountId: string,
+  workspaceId: string
+): string => {
+  return path.join(getWorkspaceDirectoryPath(accountId, workspaceId), 'temp');
 };
 
 export const getAccountAvatarsDirectoryPath = (accountId: string): string => {
-  return path.join(appPath, 'avatars', accountId);
+  return path.join(getAccountDirectoryPath(accountId), 'avatars');
 };
 
 export const getAssetsSourcePath = (): string => {
@@ -101,6 +121,29 @@ export const hasUpdateChanges = (result: UpdateResult[]): boolean => {
 
 export const hasDeleteChanges = (result: DeleteResult[]): boolean => {
   return result.some((r) => r.numDeletedRows && r.numDeletedRows > 0n);
+};
+
+export const getFileMetadata = (filePath: string): FileMetadata | null => {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const mimeType = mime.lookup(filePath);
+  if (mimeType === false) {
+    return null;
+  }
+
+  const stats = fs.statSync(filePath);
+  const type = extractFileType(mimeType);
+
+  return {
+    path: filePath,
+    mimeType,
+    extension: path.extname(filePath),
+    name: path.basename(filePath),
+    size: stats.size,
+    type,
+  };
 };
 
 export const fetchEntryAncestors = (
@@ -164,38 +207,6 @@ export const fetchUserStorageUsed = async (
   return BigInt(storageUsedRow?.storage_used ?? 0);
 };
 
-export const fetchWorkspaceCredentials = async (
-  userId: string
-): Promise<WorkspaceCredentials | null> => {
-  const workspace = await databaseService.appDatabase
-    .selectFrom('workspaces')
-    .innerJoin('accounts', 'workspaces.account_id', 'accounts.id')
-    .innerJoin('servers', 'accounts.server', 'servers.domain')
-    .select([
-      'workspaces.workspace_id',
-      'workspaces.user_id',
-      'workspaces.account_id',
-      'accounts.token',
-      'servers.domain',
-      'servers.attributes',
-    ])
-    .where('workspaces.user_id', '=', userId)
-    .executeTakeFirst();
-
-  if (!workspace) {
-    return null;
-  }
-
-  return {
-    workspaceId: workspace.workspace_id,
-    accountId: workspace.account_id,
-    userId: workspace.user_id,
-    token: workspace.token,
-    serverDomain: workspace.domain,
-    serverAttributes: workspace.attributes,
-  };
-};
-
 export const mapUser = (row: SelectUser): User => {
   return {
     id: row.id,
@@ -239,7 +250,7 @@ export const mapAccount = (row: SelectAccount): Account => {
 
 export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   return {
-    id: row.workspace_id,
+    id: row.id,
     name: row.name,
     accountId: row.account_id,
     role: row.role,

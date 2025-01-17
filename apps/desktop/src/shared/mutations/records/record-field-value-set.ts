@@ -2,7 +2,8 @@ import { FieldValue } from '@colanode/core';
 
 export type RecordFieldValueSetMutationInput = {
   type: 'record_field_value_set';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   recordId: string;
   fieldId: string;
   value: FieldValue;

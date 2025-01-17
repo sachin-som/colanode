@@ -16,7 +16,8 @@ export const PageContainer = ({ pageId }: PageContainerProps) => {
   const { data: entry, isPending: isPendingEntry } = useQuery({
     type: 'entry_get',
     entryId: pageId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const page = entry as PageEntry;
@@ -26,7 +27,8 @@ export const PageContainer = ({ pageId }: PageContainerProps) => {
     {
       type: 'entry_get',
       entryId: page?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: pageExists,

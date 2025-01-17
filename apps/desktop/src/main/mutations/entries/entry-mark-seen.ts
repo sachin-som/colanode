@@ -1,29 +1,24 @@
 import { MarkEntrySeenMutation, generateId, IdType } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   EntryMarkSeenMutationInput,
   EntryMarkSeenMutationOutput,
 } from '@/shared/mutations/entries/entry-mark-seen';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapEntryInteraction } from '@/main/utils';
+import { fetchEntry, mapEntryInteraction } from '@/main/utils';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class EntryMarkSeenMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<EntryMarkSeenMutationInput>
 {
   async handleMutation(
     input: EntryMarkSeenMutationInput
   ): Promise<EntryMarkSeenMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const entry = await workspaceDatabase
-      .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', input.entryId)
-      .executeTakeFirst();
+    const entry = await fetchEntry(workspace.database, input.entryId);
 
     if (!entry) {
       return {
@@ -31,11 +26,11 @@ export class EntryMarkSeenMutationHandler
       };
     }
 
-    const existingInteraction = await workspaceDatabase
+    const existingInteraction = await workspace.database
       .selectFrom('entry_interactions')
       .selectAll()
       .where('entry_id', '=', input.entryId)
-      .where('collaborator_id', '=', input.userId)
+      .where('collaborator_id', '=', workspace.userId)
       .executeTakeFirst();
 
     if (existingInteraction) {
@@ -55,7 +50,7 @@ export class EntryMarkSeenMutationHandler
       ? existingInteraction.first_seen_at
       : lastSeenAt;
 
-    const { createdInteraction, createdMutation } = await workspaceDatabase
+    const { createdInteraction, createdMutation } = await workspace.database
       .transaction()
       .execute(async (trx) => {
         const createdInteraction = await trx
@@ -63,7 +58,7 @@ export class EntryMarkSeenMutationHandler
           .returningAll()
           .values({
             entry_id: input.entryId,
-            collaborator_id: input.userId,
+            collaborator_id: workspace.userId,
             last_seen_at: lastSeenAt,
             first_seen_at: firstSeenAt,
             version: 0n,
@@ -87,7 +82,7 @@ export class EntryMarkSeenMutationHandler
           type: 'mark_entry_seen',
           data: {
             entryId: input.entryId,
-            collaboratorId: input.userId,
+            collaboratorId: workspace.userId,
             seenAt: new Date().toISOString(),
           },
         };
@@ -114,14 +109,12 @@ export class EntryMarkSeenMutationHandler
       throw new Error('Failed to create entry interaction');
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'entry_interaction_updated',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       entryInteraction: mapEntryInteraction(createdInteraction),
     });
 

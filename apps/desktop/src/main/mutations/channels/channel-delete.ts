@@ -1,17 +1,19 @@
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChannelDeleteMutationInput,
   ChannelDeleteMutationOutput,
 } from '@/shared/mutations/channels/channel-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ChannelDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ChannelDeleteMutationInput>
 {
   async handleMutation(
     input: ChannelDeleteMutationInput
   ): Promise<ChannelDeleteMutationOutput> {
-    await entryService.deleteEntry(input.channelId, input.userId);
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+    await workspace.entries.deleteEntry(input.channelId);
 
     return {
       success: true,

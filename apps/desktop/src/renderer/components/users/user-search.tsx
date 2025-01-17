@@ -25,7 +25,8 @@ export const UserSearch = ({ exclude, onSelect }: UserSearchProps) => {
   const { data } = useQuery({
     type: 'user_search',
     searchQuery: query,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     exclude,
   });
 

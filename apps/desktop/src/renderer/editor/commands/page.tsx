@@ -14,11 +14,12 @@ export const PageCommand: EditorCommand = {
       return;
     }
 
-    const { userId, documentId } = context;
+    const { accountId, workspaceId, documentId } = context;
     const output = await window.colanode.executeMutation({
       type: 'page_create',
       name: 'Untitled',
-      userId,
+      accountId,
+      workspaceId,
       parentId: documentId,
       generateIndex: false,
     });

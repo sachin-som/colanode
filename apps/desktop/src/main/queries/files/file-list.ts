@@ -1,4 +1,3 @@
-import { databaseService } from '@/main/data/database-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapFile } from '@/main/utils';
 import { FileListQueryInput } from '@/shared/queries/files/file-list';
@@ -8,8 +7,12 @@ import {
   FileWithState,
   UploadStatus,
 } from '@/shared/types/files';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
-export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
+export class FileListQueryHandler
+  extends WorkspaceQueryHandlerBase
+  implements QueryHandler<FileListQueryInput>
+{
   public async handleQuery(
     input: FileListQueryInput
   ): Promise<FileWithState[]> {
@@ -23,7 +26,8 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
   ): Promise<ChangeCheckResult<FileListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -33,7 +37,8 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
 
     if (
       event.type === 'file_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.parentId === input.parentId
     ) {
       const output = await this.handleQuery(input);
@@ -45,7 +50,8 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
 
     if (
       event.type === 'file_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.parentId === input.parentId
     ) {
       const file = output.find((file) => file.id === event.file.id);
@@ -73,7 +79,8 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
 
     if (
       event.type === 'file_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.file.parentId === input.parentId
     ) {
       const file = output.find((file) => file.id === event.file.id);
@@ -86,7 +93,11 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
       }
     }
 
-    if (event.type === 'file_state_created' && event.userId === input.userId) {
+    if (
+      event.type === 'file_state_created' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const file = output.find((file) => file.id === event.fileState.fileId);
       if (file) {
         const newResult = output.map((file) => {
@@ -106,7 +117,11 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
       }
     }
 
-    if (event.type === 'file_state_updated' && event.userId === input.userId) {
+    if (
+      event.type === 'file_state_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const file = output.find((file) => file.id === event.fileState.fileId);
       if (file) {
         const newResult = output.map((file) => {
@@ -134,12 +149,10 @@ export class FileListQueryHandler implements QueryHandler<FileListQueryInput> {
   private async fetchFiles(
     input: FileListQueryInput
   ): Promise<FileWithState[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const offset = (input.page - 1) * input.count;
-    const files = await workspaceDatabase
+    const files = await workspace.database
       .selectFrom('files as f')
       .leftJoin('file_states as fs', 'f.id', 'fs.file_id')
       .select([

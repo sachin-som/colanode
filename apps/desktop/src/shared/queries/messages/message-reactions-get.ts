@@ -3,7 +3,8 @@ import { MessageReactionsCount } from '@/shared/types/messages';
 export type MessageReactionsGetQueryInput = {
   type: 'message_reactions_get';
   messageId: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

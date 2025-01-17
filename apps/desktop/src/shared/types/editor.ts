@@ -9,7 +9,8 @@ export type EditorCommandProps = {
 
 export type EditorContext = {
   documentId: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   rootId: string;
 };
 

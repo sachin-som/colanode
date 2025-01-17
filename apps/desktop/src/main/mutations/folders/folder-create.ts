@@ -1,18 +1,21 @@
 import { FolderAttributes, generateId, IdType } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   FolderCreateMutationInput,
   FolderCreateMutationOutput,
 } from '@/shared/mutations/folders/folder-create';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FolderCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FolderCreateMutationInput>
 {
   async handleMutation(
     input: FolderCreateMutationInput
   ): Promise<FolderCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const id = generateId(IdType.Folder);
     const attributes: FolderAttributes = {
       type: 'folder',
@@ -21,7 +24,7 @@ export class FolderCreateMutationHandler
       avatar: input.avatar,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id,
       attributes,
       parentId: input.parentId,

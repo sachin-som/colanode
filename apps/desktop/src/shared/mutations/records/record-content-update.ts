@@ -2,7 +2,8 @@ import { JSONContent } from '@tiptap/core';
 
 export type RecordContentUpdateMutationInput = {
   type: 'record_content_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   recordId: string;
   before: JSONContent;
   after: JSONContent;

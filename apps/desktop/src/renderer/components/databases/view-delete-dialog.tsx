@@ -55,7 +55,8 @@ export const ViewDeleteDialog = ({
                   type: 'view_delete',
                   viewId: id,
                   databaseId: database.id,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

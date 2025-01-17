@@ -16,7 +16,8 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
   const { data: entry, isPending: isPendingEntry } = useQuery({
     type: 'entry_get',
     entryId: recordId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const record = entry as RecordEntry;
@@ -26,7 +27,8 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
     {
       type: 'entry_get',
       entryId: record?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: recordExists,
@@ -37,7 +39,8 @@ export const RecordContainer = ({ recordId }: RecordContainerProps) => {
     {
       type: 'entry_get',
       entryId: record?.attributes.databaseId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: recordExists,

@@ -4,7 +4,8 @@ export type SpaceListQueryInput = {
   type: 'space_list';
   page: number;
   count: number;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

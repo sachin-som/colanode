@@ -17,8 +17,9 @@ export const ChatBreadcrumbItem = ({ chat }: ChatBreadcrumbItemProps) => {
 
   const { data, isPending } = useQuery({
     type: 'user_get',
-    id: userId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId,
   });
 
   if (isPending || !data) {

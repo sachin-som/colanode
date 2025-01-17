@@ -1,22 +1,24 @@
 import { set } from 'lodash-es';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   EntryCollaboratorUpdateMutationInput,
   EntryCollaboratorUpdateMutationOutput,
 } from '@/shared/mutations/entries/entry-collaborator-update';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class EntryCollaboratorUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<EntryCollaboratorUpdateMutationInput>
 {
   async handleMutation(
     input: EntryCollaboratorUpdateMutationInput
   ): Promise<EntryCollaboratorUpdateMutationOutput> {
-    const result = await entryService.updateEntry(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry(
       input.entryId,
-      input.userId,
       (attributes) => {
         set(attributes, `collaborators.${input.collaboratorId}`, input.role);
         return attributes;

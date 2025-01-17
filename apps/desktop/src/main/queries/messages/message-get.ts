@@ -1,5 +1,5 @@
-import { databaseService } from '@/main/data/database-service';
-import { SelectMessage } from '@/main/data/workspace/schema';
+import { SelectMessage } from '@/main/databases/workspace';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapMessage } from '@/main/utils';
 import { MessageGetQueryInput } from '@/shared/queries/messages/message-get';
@@ -7,6 +7,7 @@ import { Event } from '@/shared/types/events';
 import { MessageNode } from '@/shared/types/messages';
 
 export class MessageGetQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<MessageGetQueryInput>
 {
   public async handleQuery(
@@ -23,7 +24,8 @@ export class MessageGetQueryHandler
   ): Promise<ChangeCheckResult<MessageGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -33,7 +35,8 @@ export class MessageGetQueryHandler
 
     if (
       event.type === 'message_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.id === input.messageId
     ) {
       return {
@@ -44,7 +47,8 @@ export class MessageGetQueryHandler
 
     if (
       event.type === 'message_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.id === input.messageId
     ) {
       return {
@@ -55,7 +59,8 @@ export class MessageGetQueryHandler
 
     if (
       event.type === 'message_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.message.id === input.messageId
     ) {
       return {
@@ -72,11 +77,9 @@ export class MessageGetQueryHandler
   private async fetchMessage(
     input: MessageGetQueryInput
   ): Promise<SelectMessage | undefined> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const row = await workspaceDatabase
+    const row = await workspace.database
       .selectFrom('messages')
       .selectAll()
       .where('id', '=', input.messageId)

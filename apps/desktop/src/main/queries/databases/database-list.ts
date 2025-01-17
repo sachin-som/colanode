@@ -1,13 +1,14 @@
 import { compareString, DatabaseEntry } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapEntry } from '@/main/utils';
 import { DatabaseListQueryInput } from '@/shared/queries/databases/database-list';
 import { Event } from '@/shared/types/events';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
 export class DatabaseListQueryHandler
+  extends WorkspaceQueryHandlerBase
   implements QueryHandler<DatabaseListQueryInput>
 {
   public async handleQuery(
@@ -24,7 +25,8 @@ export class DatabaseListQueryHandler
   ): Promise<ChangeCheckResult<DatabaseListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -34,7 +36,8 @@ export class DatabaseListQueryHandler
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'database'
     ) {
       const newResult = await this.handleQuery(input);
@@ -47,7 +50,8 @@ export class DatabaseListQueryHandler
 
     if (
       event.type === 'entry_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'database'
     ) {
       const database = output.find(
@@ -70,7 +74,8 @@ export class DatabaseListQueryHandler
 
     if (
       event.type === 'entry_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.type === 'database'
     ) {
       const database = output.find(
@@ -94,11 +99,9 @@ export class DatabaseListQueryHandler
   private async fetchDatabases(
     input: DatabaseListQueryInput
   ): Promise<SelectEntry[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const databases = await workspaceDatabase
+    const databases = await workspace.database
       .selectFrom('entries')
       .where('type', '=', 'database')
       .selectAll()

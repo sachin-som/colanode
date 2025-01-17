@@ -14,12 +14,13 @@ export const FolderCommand: EditorCommand = {
       return;
     }
 
-    const { userId, documentId } = context;
+    const { accountId, workspaceId, documentId } = context;
     const output = await window.colanode.executeMutation({
       type: 'folder_create',
       name: 'Untitled',
       avatar: null,
-      userId,
+      accountId,
+      workspaceId,
       parentId: documentId,
       generateIndex: false,
     });

@@ -61,7 +61,11 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           rootMargin="50px"
           onChange={(inView) => {
             if (inView) {
-              radar.markMessageAsSeen(workspace.userId, message.id);
+              radar.markMessageAsSeen(
+                workspace.accountId,
+                workspace.id,
+                message.id
+              );
             }
           }}
         >

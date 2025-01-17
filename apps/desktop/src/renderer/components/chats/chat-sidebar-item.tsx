@@ -23,15 +23,20 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
 
   const { data, isPending } = useQuery({
     type: 'user_get',
-    id: userId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId,
   });
 
   if (isPending || !data) {
     return null;
   }
 
-  const nodeReadState = radar.getChatState(workspace.userId, chat.id);
+  const nodeReadState = radar.getChatState(
+    workspace.accountId,
+    workspace.id,
+    chat.id
+  );
   const isActive = workspace.isEntryActive(chat.id);
   const unreadCount =
     nodeReadState.unseenMessagesCount + nodeReadState.mentionsCount;
@@ -41,7 +46,7 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markEntryAsSeen(workspace.userId, chat.id);
+          radar.markEntryAsSeen(workspace.accountId, workspace.id, chat.id);
         }
       }}
       className={cn(

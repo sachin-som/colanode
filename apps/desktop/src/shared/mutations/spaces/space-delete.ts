@@ -1,6 +1,7 @@
 export type SpaceDeleteMutationInput = {
   type: 'space_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   spaceId: string;
 };
 

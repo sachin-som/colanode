@@ -17,8 +17,9 @@ export const RecordUpdatedByValue = ({ field }: RecordUpdatedByValueProps) => {
   const { data } = useQuery(
     {
       type: 'user_get',
-      id: record.updatedBy!,
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
+      userId: record.updatedBy!,
     },
     {
       enabled: !!record.updatedBy,

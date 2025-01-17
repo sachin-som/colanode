@@ -50,7 +50,8 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
   const { data } = useQuery({
     type: 'entry_children_get',
     entryId: space.id,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     types: ['page', 'channel', 'database', 'folder'],
   });
 

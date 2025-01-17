@@ -1,5 +1,5 @@
-import { SelectServer } from '@/main/data/app/schema';
-import { databaseService } from '@/main/data/database-service';
+import { SelectServer } from '@/main/databases/app';
+import { appService } from '@/main/services/app-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { ServerListQueryInput } from '@/shared/queries/servers/server-list';
 import { Event } from '@/shared/types/events';
@@ -40,10 +40,7 @@ export class ServerListQueryHandler
   }
 
   private fetchServers(): Promise<SelectServer[]> {
-    return databaseService.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .execute();
+    return appService.database.selectFrom('servers').selectAll().execute();
   }
 
   private mapServers = (rows: SelectServer[]): Server[] => {

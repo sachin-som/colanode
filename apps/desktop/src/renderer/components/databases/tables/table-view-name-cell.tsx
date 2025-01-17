@@ -72,7 +72,8 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
         type: 'record_name_update',
         name: newName,
         recordId: record.id,
-        userId: workspace.userId,
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
       },
       onSuccess() {
         setIsEditing(false);

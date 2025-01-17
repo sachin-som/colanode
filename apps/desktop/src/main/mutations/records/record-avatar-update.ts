@@ -1,22 +1,24 @@
 import { RecordAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   RecordAvatarUpdateMutationInput,
   RecordAvatarUpdateMutationOutput,
 } from '@/shared/mutations/records/record-avatar-update';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class RecordAvatarUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<RecordAvatarUpdateMutationInput>
 {
   async handleMutation(
     input: RecordAvatarUpdateMutationInput
   ): Promise<RecordAvatarUpdateMutationOutput> {
-    const result = await entryService.updateEntry<RecordAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<RecordAttributes>(
       input.recordId,
-      input.userId,
       (attributes) => {
         attributes.avatar = input.avatar;
         return attributes;

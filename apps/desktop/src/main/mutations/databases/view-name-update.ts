@@ -1,22 +1,24 @@
 import { DatabaseAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewNameUpdateMutationInput,
   ViewNameUpdateMutationOutput,
 } from '@/shared/mutations/databases/view-name-update';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ViewNameUpdateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ViewNameUpdateMutationInput>
 {
   async handleMutation(
     input: ViewNameUpdateMutationInput
   ): Promise<ViewNameUpdateMutationOutput> {
-    const result = await entryService.updateEntry<DatabaseAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
       input.databaseId,
-      input.userId,
       (attributes) => {
         const view = attributes.views[input.viewId];
         if (!view) {

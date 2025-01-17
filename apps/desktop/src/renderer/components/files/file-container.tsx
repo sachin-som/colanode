@@ -16,7 +16,8 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
   const { data: file, isPending: isPendingFile } = useQuery({
     type: 'file_get',
     id: fileId,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const fileExists = !!file;
@@ -25,7 +26,8 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
     {
       type: 'entry_get',
       entryId: file?.entryId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: fileExists,
@@ -36,7 +38,8 @@ export const FileContainer = ({ fileId }: FileContainerProps) => {
     {
       type: 'entry_get',
       entryId: file?.rootId ?? '',
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     },
     {
       enabled: fileExists,

@@ -1,22 +1,24 @@
 import { DatabaseAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewDeleteMutationInput,
   ViewDeleteMutationOutput,
 } from '@/shared/mutations/databases/view-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class ViewDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ViewDeleteMutationInput>
 {
   async handleMutation(
     input: ViewDeleteMutationInput
   ): Promise<ViewDeleteMutationOutput> {
-    const result = await entryService.updateEntry<DatabaseAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
       input.databaseId,
-      input.userId,
       (attributes) => {
         if (!attributes.views[input.viewId]) {
           throw new MutationError(

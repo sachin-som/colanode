@@ -16,7 +16,8 @@ declare module '@tiptap/core' {
 }
 
 interface FilePlaceholderOptions {
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 }
 
 export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
@@ -98,7 +99,8 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
                   type: 'file_save_temp',
                   name: file.name,
                   buffer,
-                  userId: options.userId,
+                  accountId: options.accountId,
+                  workspaceId: options.workspaceId,
                 });
 
                 if (!fileSaveResult.success) {
@@ -145,8 +147,6 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
               return false;
             }
 
-            console.log('files dropped', files);
-
             (async () => {
               for (const file of files) {
                 const buffer = await file.arrayBuffer();
@@ -154,7 +154,8 @@ export const FilePlaceholderNode = Node.create<FilePlaceholderOptions>({
                   type: 'file_save_temp',
                   name: file.name,
                   buffer,
-                  userId: options.userId,
+                  accountId: options.accountId,
+                  workspaceId: options.workspaceId,
                 });
 
                 if (!fileSaveResult.success) {

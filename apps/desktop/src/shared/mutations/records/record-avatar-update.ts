@@ -1,6 +1,7 @@
 export type RecordAvatarUpdateMutationInput = {
   type: 'record_avatar_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   recordId: string;
   avatar: string;
 };

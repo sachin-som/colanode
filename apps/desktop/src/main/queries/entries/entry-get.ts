@@ -1,13 +1,16 @@
 import { Entry } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { SelectEntry } from '@/main/data/workspace/schema';
+import { SelectEntry } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapEntry } from '@/main/utils';
 import { EntryGetQueryInput } from '@/shared/queries/entries/entry-get';
 import { Event } from '@/shared/types/events';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
-export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
+export class EntryGetQueryHandler
+  extends WorkspaceQueryHandlerBase
+  implements QueryHandler<EntryGetQueryInput>
+{
   public async handleQuery(input: EntryGetQueryInput): Promise<Entry | null> {
     const row = await this.fetchEntry(input);
     return row ? mapEntry(row) : null;
@@ -20,7 +23,8 @@ export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
   ): Promise<ChangeCheckResult<EntryGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -30,7 +34,8 @@ export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
 
     if (
       event.type === 'entry_created' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.id === input.entryId
     ) {
       return {
@@ -41,7 +46,8 @@ export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
 
     if (
       event.type === 'entry_updated' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.id === input.entryId
     ) {
       return {
@@ -52,7 +58,8 @@ export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
 
     if (
       event.type === 'entry_deleted' &&
-      event.userId === input.userId &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
       event.entry.id === input.entryId
     ) {
       return {
@@ -69,11 +76,9 @@ export class EntryGetQueryHandler implements QueryHandler<EntryGetQueryInput> {
   private async fetchEntry(
     input: EntryGetQueryInput
   ): Promise<SelectEntry | undefined> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const row = await workspaceDatabase
+    const row = await workspace.database
       .selectFrom('entries')
       .selectAll()
       .where('id', '=', input.entryId)

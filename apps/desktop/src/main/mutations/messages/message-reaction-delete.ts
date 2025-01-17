@@ -4,7 +4,6 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   MessageReactionDeleteMutationInput,
@@ -12,22 +11,22 @@ import {
 } from '@/shared/mutations/messages/message-reaction-delete';
 import { mapMessageReaction } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class MessageReactionDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<MessageReactionDeleteMutationInput>
 {
   async handleMutation(
     input: MessageReactionDeleteMutationInput
   ): Promise<MessageReactionDeleteMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const existingMessageReaction = await workspaceDatabase
+    const existingMessageReaction = await workspace.database
       .selectFrom('message_reactions')
       .selectAll()
       .where('message_id', '=', input.messageId)
-      .where('collaborator_id', '=', input.userId)
+      .where('collaborator_id', '=', workspace.userId)
       .where('reaction', '=', input.reaction)
       .executeTakeFirst();
 
@@ -37,7 +36,7 @@ export class MessageReactionDeleteMutationHandler
       };
     }
 
-    const { deletedMessageReaction, createdMutation } = await workspaceDatabase
+    const { deletedMessageReaction, createdMutation } = await workspace.database
       .transaction()
       .execute(async (trx) => {
         const deletedMessageReaction = await trx
@@ -47,7 +46,7 @@ export class MessageReactionDeleteMutationHandler
             deleted_at: new Date().toISOString(),
           })
           .where('message_id', '=', input.messageId)
-          .where('collaborator_id', '=', input.userId)
+          .where('collaborator_id', '=', workspace.userId)
           .where('reaction', '=', input.reaction)
           .executeTakeFirst();
 
@@ -89,14 +88,12 @@ export class MessageReactionDeleteMutationHandler
       throw new Error('Failed to delete message reaction');
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'message_reaction_deleted',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       messageReaction: mapMessageReaction(deletedMessageReaction),
     });
 

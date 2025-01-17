@@ -14,121 +14,141 @@ import { File, FileInteraction, FileState } from '@/shared/types/files';
 
 export type UserCreatedEvent = {
   type: 'user_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   user: User;
 };
 
 export type UserUpdatedEvent = {
   type: 'user_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   user: User;
 };
 
 export type UserDeletedEvent = {
   type: 'user_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   user: User;
 };
 
 export type EntryCreatedEvent = {
   type: 'entry_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entry: Entry;
 };
 
 export type EntryUpdatedEvent = {
   type: 'entry_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entry: Entry;
 };
 
 export type EntryDeletedEvent = {
   type: 'entry_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entry: Entry;
 };
 
 export type EntryInteractionUpdatedEvent = {
   type: 'entry_interaction_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryInteraction: EntryInteraction;
 };
 
 export type MessageCreatedEvent = {
   type: 'message_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   message: MessageNode;
 };
 
 export type MessageUpdatedEvent = {
   type: 'message_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   message: MessageNode;
 };
 
 export type MessageDeletedEvent = {
   type: 'message_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   message: MessageNode;
 };
 
 export type MessageReactionCreatedEvent = {
   type: 'message_reaction_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageReaction: MessageReaction;
 };
 
 export type MessageReactionDeletedEvent = {
   type: 'message_reaction_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageReaction: MessageReaction;
 };
 
 export type MessageInteractionUpdatedEvent = {
   type: 'message_interaction_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   messageInteraction: MessageInteraction;
 };
 
 export type FileCreatedEvent = {
   type: 'file_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   file: File;
 };
 
 export type FileUpdatedEvent = {
   type: 'file_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   file: File;
 };
 
 export type FileDeletedEvent = {
   type: 'file_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   file: File;
 };
 
 export type FileStateCreatedEvent = {
   type: 'file_state_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileState: FileState;
 };
 
 export type FileStateUpdatedEvent = {
   type: 'file_state_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileState: FileState;
 };
 
 export type FileStateDeletedEvent = {
   type: 'file_state_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileState: FileState;
 };
 
 export type FileInteractionUpdatedEvent = {
   type: 'file_interaction_updated';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileInteraction: FileInteraction;
 };
 
@@ -182,20 +202,17 @@ export type RadarDataUpdatedEvent = {
   type: 'radar_data_updated';
 };
 
-export type MutationCreatedEvent = {
-  type: 'mutation_created';
-  userId: string;
-};
-
 export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryId: string;
 };
 
 export type CollaborationDeletedEvent = {
   type: 'collaboration_deleted';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryId: string;
 };
 
@@ -203,11 +220,6 @@ export type ServerAvailabilityChangedEvent = {
   type: 'server_availability_changed';
   server: Server;
   isAvailable: boolean;
-};
-
-export type SocketConnectionOpenedEvent = {
-  type: 'socket_connection_opened';
-  accountId: string;
 };
 
 export type Event =
@@ -241,8 +253,6 @@ export type Event =
   | FileInteractionUpdatedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
-  | MutationCreatedEvent
   | ServerAvailabilityChangedEvent
-  | SocketConnectionOpenedEvent
   | CollaborationCreatedEvent
   | CollaborationDeletedEvent;

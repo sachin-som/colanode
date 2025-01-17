@@ -1,12 +1,15 @@
-import { databaseService } from '@/main/data/database-service';
-import { SelectUser } from '@/main/data/workspace/schema';
+import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
+import { SelectUser } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapUser } from '@/main/utils';
 import { UserListQueryInput } from '@/shared/queries/users/user-list';
 import { Event } from '@/shared/types/events';
 import { User } from '@/shared/types/users';
 
-export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
+export class UserListQueryHandler
+  extends WorkspaceQueryHandlerBase
+  implements QueryHandler<UserListQueryInput>
+{
   public async handleQuery(input: UserListQueryInput): Promise<User[]> {
     const rows = await this.fetchUsers(input);
     return this.buildWorkspaceUserNodes(rows);
@@ -19,7 +22,8 @@ export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
   ): Promise<ChangeCheckResult<UserListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
-      event.workspace.userId === input.userId
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
     ) {
       return {
         hasChanges: true,
@@ -27,7 +31,11 @@ export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
       };
     }
 
-    if (event.type === 'user_created' && event.userId === input.userId) {
+    if (
+      event.type === 'user_created' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -35,8 +43,12 @@ export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
       };
     }
 
-    if (event.type === 'user_updated' && event.userId === input.userId) {
-      const user = output.find((user) => user.id === event.userId);
+    if (
+      event.type === 'user_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
+      const user = output.find((user) => user.id === event.user.id);
       if (user) {
         const newUsers = output.map((user) => {
           if (user.id === event.user.id) {
@@ -52,7 +64,11 @@ export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
       }
     }
 
-    if (event.type === 'user_deleted' && event.userId === input.userId) {
+    if (
+      event.type === 'user_deleted' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
       const newResult = await this.handleQuery(input);
       return {
         hasChanges: true,
@@ -66,12 +82,10 @@ export class UserListQueryHandler implements QueryHandler<UserListQueryInput> {
   }
 
   private async fetchUsers(input: UserListQueryInput): Promise<SelectUser[]> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const offset = (input.page - 1) * input.count;
-    const rows = await workspaceDatabase
+    const rows = await workspace.database
       .selectFrom('users')
       .selectAll()
       .orderBy('created_at asc')

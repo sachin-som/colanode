@@ -30,7 +30,8 @@ export const DatabaseSelect = ({ id, onChange }: DatabaseSelectProps) => {
   const [open, setOpen] = React.useState(false);
   const { data } = useQuery({
     type: 'database_list',
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   const databases = data ?? [];

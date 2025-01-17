@@ -1,6 +1,7 @@
 export type FileSaveTempMutationInput = {
   type: 'file_save_temp';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   name: string;
   buffer: ArrayBuffer;
 };

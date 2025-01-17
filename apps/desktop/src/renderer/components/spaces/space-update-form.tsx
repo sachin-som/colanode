@@ -50,7 +50,8 @@ export const SpaceUpdateForm = ({ space }: SpaceUpdateFormProps) => {
     updateSpace({
       input: {
         type: 'space_update',
-        userId: workspace.userId,
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
         id: space.id,
         name: values.name,
         description: values.description,

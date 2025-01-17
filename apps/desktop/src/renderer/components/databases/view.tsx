@@ -83,7 +83,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -107,7 +108,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -144,7 +146,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -181,7 +184,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -209,7 +213,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -251,7 +256,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -296,7 +302,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -329,7 +336,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -361,7 +369,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -405,7 +414,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -438,7 +448,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -471,7 +482,8 @@ export const View = ({ view }: ViewProps) => {
           mutate({
             input: {
               type: 'view_update',
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               databaseId: database.id,
               view: viewCopy,
             },
@@ -520,7 +532,8 @@ export const View = ({ view }: ViewProps) => {
             input: {
               type: 'record_create',
               databaseId: database.id,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
               fields,
             },
             onSuccess: (output) => {

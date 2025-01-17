@@ -1,37 +1,35 @@
 import { ChatAttributes, generateId, IdType } from '@colanode/core';
 import { sql } from 'kysely';
 
-import { databaseService } from '@/main/data/database-service';
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   ChatCreateMutationInput,
   ChatCreateMutationOutput,
 } from '@/shared/mutations/chats/chat-create';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 interface ChatRow {
   id: string;
 }
 
 export class ChatCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<ChatCreateMutationInput>
 {
   public async handleMutation(
     input: ChatCreateMutationInput
   ): Promise<ChatCreateMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const query = sql<ChatRow>`
       SELECT id
       FROM entries
       WHERE type = 'chat'
       AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') is not null
-      AND json_extract(attributes, '$.collaborators.${sql.raw(input.otherUserId)}') is not null
-    `.compile(workspaceDatabase);
+      AND json_extract(attributes, '$.collaborators.${sql.raw(workspace.userId)}') is not null
+    `.compile(workspace.database);
 
-    const existingChats = await workspaceDatabase.executeQuery(query);
+    const existingChats = await workspace.database.executeQuery(query);
     const chat = existingChats.rows?.[0];
     if (chat) {
       return {
@@ -44,11 +42,11 @@ export class ChatCreateMutationHandler
       type: 'chat',
       collaborators: {
         [input.userId]: 'admin',
-        [input.otherUserId]: 'admin',
+        [workspace.userId]: 'admin',
       },
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id,
       attributes,
       parentId: null,

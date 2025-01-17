@@ -1,10 +1,14 @@
 import { app } from 'electron';
 
-import { radarService } from '@/main/services/radar-service';
 import { eventBus } from '@/shared/lib/event-bus';
+import { AppService } from '@/main/services/app-service';
 
-class NotificationService {
-  constructor() {
+export class NotificationService {
+  private readonly appService: AppService;
+
+  constructor(appService: AppService) {
+    this.appService = appService;
+
     if (process.platform !== 'darwin') {
       return;
     }
@@ -21,14 +25,24 @@ class NotificationService {
       return;
     }
 
-    const radarData = radarService.getData();
-    const importantCount = Object.values(radarData).reduce(
-      (acc, curr) => acc + curr.importantCount,
-      0
-    );
-    const hasUnseenChanges = Object.values(radarData).some(
-      (data) => data.hasUnseenChanges
-    );
+    const accounts = this.appService.getAccounts();
+    if (accounts.length === 0) {
+      app.dock.setBadge('');
+      return;
+    }
+
+    let importantCount = 0;
+    let hasUnseenChanges = false;
+
+    for (const account of accounts) {
+      const workspaces = account.getWorkspaces();
+
+      for (const workspace of workspaces) {
+        const radarData = workspace.radar.getData();
+        importantCount += radarData.importantCount;
+        hasUnseenChanges = hasUnseenChanges || radarData.hasUnseenChanges;
+      }
+    }
 
     if (importantCount > 0) {
       app.dock.setBadge(importantCount.toString());
@@ -39,5 +53,3 @@ class NotificationService {
     }
   }
 }
-
-export const notificationService = new NotificationService();

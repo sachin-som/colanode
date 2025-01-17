@@ -1,6 +1,5 @@
 import { MarkFileOpenedMutation, generateId, IdType } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
 import { MutationHandler } from '@/main/types';
 import {
   FileMarkOpenedMutationInput,
@@ -8,18 +7,18 @@ import {
 } from '@/shared/mutations/files/file-mark-opened';
 import { eventBus } from '@/shared/lib/event-bus';
 import { mapFileInteraction } from '@/main/utils';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileMarkOpenedMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FileMarkOpenedMutationInput>
 {
   async handleMutation(
     input: FileMarkOpenedMutationInput
   ): Promise<FileMarkOpenedMutationOutput> {
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspaceDatabase
+    const file = await workspace.database
       .selectFrom('files')
       .selectAll()
       .where('id', '=', input.fileId)
@@ -31,11 +30,11 @@ export class FileMarkOpenedMutationHandler
       };
     }
 
-    const existingInteraction = await workspaceDatabase
+    const existingInteraction = await workspace.database
       .selectFrom('file_interactions')
       .selectAll()
       .where('file_id', '=', input.fileId)
-      .where('collaborator_id', '=', input.userId)
+      .where('collaborator_id', '=', workspace.userId)
       .executeTakeFirst();
 
     if (existingInteraction) {
@@ -55,7 +54,7 @@ export class FileMarkOpenedMutationHandler
       ? existingInteraction.first_opened_at
       : lastOpenedAt;
 
-    const { createdInteraction, createdMutation } = await workspaceDatabase
+    const { createdInteraction, createdMutation } = await workspace.database
       .transaction()
       .execute(async (trx) => {
         const createdInteraction = await trx
@@ -63,7 +62,7 @@ export class FileMarkOpenedMutationHandler
           .returningAll()
           .values({
             file_id: input.fileId,
-            collaborator_id: input.userId,
+            collaborator_id: workspace.userId,
             last_opened_at: lastOpenedAt,
             first_opened_at: firstOpenedAt,
             version: 0n,
@@ -87,7 +86,7 @@ export class FileMarkOpenedMutationHandler
           type: 'mark_file_opened',
           data: {
             fileId: input.fileId,
-            collaboratorId: input.userId,
+            collaboratorId: workspace.userId,
             openedAt: new Date().toISOString(),
           },
         };
@@ -114,14 +113,12 @@ export class FileMarkOpenedMutationHandler
       throw new Error('Failed to create file interaction');
     }
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'file_interaction_updated',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       fileInteraction: mapFileInteraction(createdInteraction),
     });
 

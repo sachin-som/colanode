@@ -1,5 +1,5 @@
-import { SelectWorkspace } from '@/main/data/app/schema';
-import { databaseService } from '@/main/data/database-service';
+import { SelectWorkspace } from '@/main/databases/account';
+import { appService } from '@/main/services/app-service';
 import { ChangeCheckResult, QueryHandler } from '@/main/types';
 import { mapWorkspace } from '@/main/utils';
 import { WorkspaceListQueryInput } from '@/shared/queries/workspaces/workspace-list';
@@ -68,11 +68,17 @@ export class WorkspaceListQueryHandler
     };
   }
 
-  private fetchWorkspaces(accountId: string): Promise<SelectWorkspace[]> {
-    return databaseService.appDatabase
+  private async fetchWorkspaces(accountId: string): Promise<SelectWorkspace[]> {
+    const account = appService.getAccount(accountId);
+    if (!account) {
+      return [];
+    }
+
+    const workspaces = await account.database
       .selectFrom('workspaces')
       .selectAll()
-      .where('account_id', '=', accountId)
       .execute();
+
+    return workspaces;
   }
 }

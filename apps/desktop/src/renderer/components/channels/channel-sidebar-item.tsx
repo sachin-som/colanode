@@ -16,7 +16,11 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
   const radar = useRadar();
 
   const isActive = workspace.isEntryActive(channel.id);
-  const channelState = radar.getChannelState(workspace.userId, channel.id);
+  const channelState = radar.getChannelState(
+    workspace.accountId,
+    workspace.id,
+    channel.id
+  );
   const unreadCount = channelState.unseenMessagesCount;
   const mentionsCount = channelState.mentionsCount;
 
@@ -25,7 +29,7 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markEntryAsSeen(workspace.userId, channel.id);
+          radar.markEntryAsSeen(workspace.accountId, workspace.id, channel.id);
         }
       }}
       className={cn(

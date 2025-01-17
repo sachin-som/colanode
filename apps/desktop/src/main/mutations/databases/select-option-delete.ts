@@ -1,22 +1,24 @@
 import { DatabaseAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   SelectOptionDeleteMutationInput,
   SelectOptionDeleteMutationOutput,
 } from '@/shared/mutations/databases/select-option-delete';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class SelectOptionDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<SelectOptionDeleteMutationInput>
 {
   async handleMutation(
     input: SelectOptionDeleteMutationInput
   ): Promise<SelectOptionDeleteMutationOutput> {
-    const result = await entryService.updateEntry<DatabaseAttributes>(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
       input.databaseId,
-      input.userId,
       (attributes) => {
         const field = attributes.fields[input.fieldId];
         if (!field) {

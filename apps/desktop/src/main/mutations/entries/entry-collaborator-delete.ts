@@ -1,22 +1,24 @@
 import { unset } from 'lodash-es';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   EntryCollaboratorDeleteMutationInput,
   EntryCollaboratorDeleteMutationOutput,
 } from '@/shared/mutations/entries/entry-collaborator-delete';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class EntryCollaboratorDeleteMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<EntryCollaboratorDeleteMutationInput>
 {
   async handleMutation(
     input: EntryCollaboratorDeleteMutationInput
   ): Promise<EntryCollaboratorDeleteMutationOutput> {
-    const result = await entryService.updateEntry(
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    const result = await workspace.entries.updateEntry(
       input.entryId,
-      input.userId,
       (attributes) => {
         unset(attributes, `collaborators.${input.collaboratorId}`);
         return attributes;

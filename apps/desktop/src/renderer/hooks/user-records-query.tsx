@@ -22,6 +22,8 @@ export const useRecordsQuery = (
     length: lastPage,
   }).map((_, i) => ({
     type: 'record_list',
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
     databaseId: database.id,
     filters: filters,
     sorts: sorts,

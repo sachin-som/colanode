@@ -17,8 +17,6 @@ const copyTemplates = async () => {
 
     await fs.copyFile(path.join(srcDir, file), path.join(destDir, file));
   }
-
-  console.log('Templates copied to dist/templates');
 };
 
 export default defineConfig({

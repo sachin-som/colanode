@@ -6,26 +6,22 @@ import {
   SpaceAttributes,
 } from '@colanode/core';
 
-import { databaseService } from '@/main/data/database-service';
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   SpaceCreateMutationInput,
   SpaceCreateMutationOutput,
 } from '@/shared/mutations/spaces/space-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class SpaceCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<SpaceCreateMutationInput>
 {
   async handleMutation(
     input: SpaceCreateMutationInput
   ): Promise<SpaceCreateMutationOutput> {
-    const workspace = await databaseService.appDatabase
-      .selectFrom('workspaces')
-      .where('user_id', '=', input.userId)
-      .selectAll()
-      .executeTakeFirst();
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     if (!workspace) {
       throw new MutationError(
@@ -47,12 +43,12 @@ export class SpaceCreateMutationHandler
       name: input.name,
       visibility: 'private',
       collaborators: {
-        [input.userId]: 'admin',
+        [workspace.userId]: 'admin',
       },
       description: input.description,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id: spaceId,
       attributes: spaceAttributes,
       parentId: null,
@@ -65,7 +61,7 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id: pageId,
       attributes: pageAttributes,
       parentId: spaceId,
@@ -78,7 +74,7 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id: channelId,
       attributes: channelAttributes,
       parentId: spaceId,

@@ -1,6 +1,7 @@
 export type FileMarkSeenMutationInput = {
   type: 'file_mark_seen';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileId: string;
 };
 

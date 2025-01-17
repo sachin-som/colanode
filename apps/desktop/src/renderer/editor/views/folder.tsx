@@ -12,7 +12,8 @@ export const FolderNodeView = ({ node }: NodeViewProps) => {
   const { data } = useQuery({
     type: 'entry_get',
     entryId: id,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   });
 
   if (!id) {

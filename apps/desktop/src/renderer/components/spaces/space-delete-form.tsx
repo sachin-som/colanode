@@ -30,7 +30,8 @@ export const SpaceDeleteForm = ({ id }: SpaceDeleteFormProps) => {
             mutate({
               input: {
                 type: 'space_delete',
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 spaceId: id,
               },
               onSuccess() {

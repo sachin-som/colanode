@@ -15,10 +15,10 @@ export const ChannelBody = ({ channel, role }: ChannelBodyProps) => {
   const radar = useRadar();
 
   useEffect(() => {
-    radar.markEntryAsOpened(workspace.userId, channel.id);
+    radar.markEntryAsOpened(workspace.accountId, workspace.id, channel.id);
 
     const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.userId, channel.id);
+      radar.markEntryAsOpened(workspace.accountId, workspace.id, channel.id);
     }, 60000);
 
     return () => clearInterval(interval);

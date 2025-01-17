@@ -1,6 +1,7 @@
 export type EntryCollaboratorDeleteMutationInput = {
   type: 'entry_collaborator_delete';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   entryId: string;
   collaboratorId: string;
 };

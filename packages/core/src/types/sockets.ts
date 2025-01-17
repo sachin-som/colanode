@@ -2,8 +2,8 @@ import { SynchronizerInput, SynchronizerMap } from '../synchronizers';
 
 export type SynchronizerInputMessage = {
   type: 'synchronizer_input';
-  userId: string;
   id: string;
+  userId: string;
   input: SynchronizerInput;
   cursor: string;
 };

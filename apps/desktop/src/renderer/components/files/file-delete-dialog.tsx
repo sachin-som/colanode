@@ -48,7 +48,8 @@ export const FileDeleteDialog = ({
                 input: {
                   type: 'file_delete',
                   fileId: fileId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

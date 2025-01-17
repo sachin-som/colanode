@@ -1,6 +1,7 @@
 export type DatabaseCreateMutationInput = {
   type: 'database_create';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   spaceId: string;
   name: string;
   avatar?: string | null;

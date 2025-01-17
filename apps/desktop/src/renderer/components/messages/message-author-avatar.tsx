@@ -15,8 +15,9 @@ export const MessageAuthorAvatar = ({
   const workspace = useWorkspace();
   const { data } = useQuery({
     type: 'user_get',
-    id: message.createdBy,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    userId: message.createdBy,
   });
 
   if (!data) {

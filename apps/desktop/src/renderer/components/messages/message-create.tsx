@@ -68,7 +68,8 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
           type: 'message_create',
           conversationId: conversation.id,
           content: content,
-          userId: workspace.userId,
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
           referenceId: replyTo?.id,
           rootId: conversation.rootId,
         },
@@ -175,7 +176,8 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
             <div className="max-h-72 flex-grow overflow-y-auto">
               {conversation.canCreateMessage ? (
                 <MessageEditor
-                  userId={workspace.userId}
+                  accountId={workspace.accountId}
+                  workspaceId={workspace.id}
                   ref={messageEditorRef}
                   conversationId={conversation.id}
                   onChange={setContent}

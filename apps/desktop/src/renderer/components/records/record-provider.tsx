@@ -40,7 +40,8 @@ export const RecordProvider = ({
               recordId: record.id,
               fieldId: field.id,
               value,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({
@@ -57,7 +58,8 @@ export const RecordProvider = ({
               type: 'record_field_value_delete',
               recordId: record.id,
               fieldId: field.id,
-              userId: workspace.userId,
+              accountId: workspace.accountId,
+              workspaceId: workspace.id,
             },
             onError(error) {
               toast({

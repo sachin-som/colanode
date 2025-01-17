@@ -3,7 +3,8 @@ import { Entry, EntryType } from '@colanode/core';
 export type EntryChildrenGetQueryInput = {
   type: 'entry_children_get';
   entryId: string;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   types?: EntryType[];
 };
 

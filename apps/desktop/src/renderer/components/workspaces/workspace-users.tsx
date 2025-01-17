@@ -24,7 +24,8 @@ export const WorkspaceUsers = () => {
     type: 'user_list',
     page: i + 1,
     count: USERS_PER_PAGE,
-    userId: workspace.userId,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
   }));
 
   const result = useQueries(inputs);

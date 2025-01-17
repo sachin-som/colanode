@@ -1,6 +1,7 @@
 export type FolderCreateMutationInput = {
   type: 'folder_create';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   parentId: string;
   name: string;
   avatar?: string | null;

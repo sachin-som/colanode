@@ -1,18 +1,21 @@
 import { generateId, IdType, PageAttributes } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   PageCreateMutationInput,
   PageCreateMutationOutput,
 } from '@/shared/mutations/pages/page-create';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class PageCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<PageCreateMutationInput>
 {
   async handleMutation(
     input: PageCreateMutationInput
   ): Promise<PageCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const id = generateId(IdType.Page);
     const attributes: PageAttributes = {
       type: 'page',
@@ -21,7 +24,7 @@ export class PageCreateMutationHandler
       name: input.name,
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id,
       attributes,
       parentId: input.parentId,

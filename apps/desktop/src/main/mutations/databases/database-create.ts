@@ -5,19 +5,22 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { entryService } from '@/main/services/entry-service';
 import { MutationHandler } from '@/main/types';
 import {
   DatabaseCreateMutationInput,
   DatabaseCreateMutationOutput,
 } from '@/shared/mutations/databases/database-create';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class DatabaseCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<DatabaseCreateMutationInput>
 {
   async handleMutation(
     input: DatabaseCreateMutationInput
   ): Promise<DatabaseCreateMutationOutput> {
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
     const databaseId = generateId(IdType.Database);
     const viewId = generateId(IdType.View);
     const fieldId = generateId(IdType.Field);
@@ -45,7 +48,7 @@ export class DatabaseCreateMutationHandler
       },
     };
 
-    await entryService.createEntry(input.userId, {
+    await workspace.entries.createEntry({
       id: databaseId,
       attributes,
       parentId: input.spaceId,

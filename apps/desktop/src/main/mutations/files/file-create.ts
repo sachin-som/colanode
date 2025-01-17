@@ -6,32 +6,33 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { fileService } from '@/main/services/file-service';
 import { MutationHandler } from '@/main/types';
 import {
   FileCreateMutationInput,
   FileCreateMutationOutput,
 } from '@/shared/mutations/files/file-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-import { databaseService } from '@/main/data/database-service';
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   fetchEntry,
   fetchUser,
   fetchUserStorageUsed,
+  getFileMetadata,
   mapEntry,
   mapFile,
 } from '@/main/utils';
 import { formatBytes } from '@/shared/lib/files';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileCreateMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FileCreateMutationInput>
 {
   async handleMutation(
     input: FileCreateMutationInput
   ): Promise<FileCreateMutationOutput> {
-    const metadata = fileService.getFileMetadata(input.filePath);
+    const metadata = getFileMetadata(input.filePath);
     if (!metadata) {
       throw new MutationError(
         MutationErrorCode.FileInvalid,
@@ -39,11 +40,10 @@ export class FileCreateMutationHandler
       );
     }
 
-    const workspaceDatabase = await databaseService.getWorkspaceDatabase(
-      input.userId
-    );
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const user = await fetchUser(workspaceDatabase, input.userId);
+    const user = await fetchUser(workspace.database, workspace.userId);
+
     if (!user) {
       throw new MutationError(
         MutationErrorCode.UserNotFound,
@@ -60,8 +60,8 @@ export class FileCreateMutationHandler
     }
 
     const storageUsed = await fetchUserStorageUsed(
-      workspaceDatabase,
-      input.userId
+      workspace.database,
+      workspace.userId
     );
 
     if (storageUsed + BigInt(metadata.size) > user.storage_limit) {
@@ -76,7 +76,7 @@ export class FileCreateMutationHandler
       );
     }
 
-    const entry = await fetchEntry(workspaceDatabase, input.entryId);
+    const entry = await fetchEntry(workspace.database, input.entryId);
     if (!entry) {
       throw new MutationError(
         MutationErrorCode.EntryNotFound,
@@ -84,7 +84,7 @@ export class FileCreateMutationHandler
       );
     }
 
-    const root = await fetchEntry(workspaceDatabase, input.rootId);
+    const root = await fetchEntry(workspace.database, input.rootId);
     if (!root) {
       throw new MutationError(
         MutationErrorCode.RootNotFound,
@@ -96,8 +96,8 @@ export class FileCreateMutationHandler
     if (
       !canCreateFile({
         user: {
-          userId: input.userId,
-          role: user.role,
+          userId: workspace.userId,
+          role: workspace.role,
         },
         root: mapEntry(root),
         entry: mapEntry(entry),
@@ -113,11 +113,10 @@ export class FileCreateMutationHandler
       );
     }
 
-    fileService.copyFileToWorkspace(
+    workspace.files.copyFileToWorkspace(
       input.filePath,
       fileId,
-      metadata.extension,
-      input.userId
+      metadata.extension
     );
 
     const mutationData: CreateFileMutationData = {
@@ -134,7 +133,7 @@ export class FileCreateMutationHandler
       createdAt: new Date().toISOString(),
     };
 
-    const createdFile = await workspaceDatabase
+    const createdFile = await workspace.database
       .transaction()
       .execute(async (tx) => {
         const createdFile = await tx
@@ -152,7 +151,7 @@ export class FileCreateMutationHandler
             size: metadata.size,
             extension: metadata.extension,
             created_at: new Date().toISOString(),
-            created_by: input.userId,
+            created_by: workspace.userId,
             status: FileStatus.Pending,
             version: 0n,
           })
@@ -196,18 +195,17 @@ export class FileCreateMutationHandler
 
     eventBus.publish({
       type: 'file_created',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       file: mapFile(createdFile),
     });
 
-    eventBus.publish({
-      type: 'mutation_created',
-      userId: input.userId,
-    });
+    workspace.mutations.triggerSync();
 
     eventBus.publish({
       type: 'file_state_created',
-      userId: input.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
       fileState: {
         fileId: fileId,
         downloadProgress: 100,

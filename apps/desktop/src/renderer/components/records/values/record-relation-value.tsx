@@ -50,7 +50,8 @@ export const RecordRelationValue = ({
     relationIds.map((id) => ({
       type: 'entry_get',
       entryId: id,
-      userId: workspace.userId,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     }))
   );
 

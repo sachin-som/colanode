@@ -1,6 +1,7 @@
 export type FileMarkOpenedMutationInput = {
   type: 'file_mark_opened';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   fileId: string;
 };
 

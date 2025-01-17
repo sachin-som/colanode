@@ -1,8 +1,17 @@
-import { databaseService } from '@/main/data/database-service';
+import { createDebugger } from '@colanode/core';
 
-class MetadataService {
+import { AppService } from '@/main/services/app-service';
+
+export class MetadataService {
+  private readonly debug = createDebugger('desktop:service:metadata');
+  private readonly app: AppService;
+
+  constructor(app: AppService) {
+    this.app = app;
+  }
+
   public async get<T>(key: string): Promise<T | null> {
-    const metadata = await databaseService.appDatabase
+    const metadata = await this.app.database
       .selectFrom('metadata')
       .selectAll()
       .where('key', '=', key)
@@ -16,7 +25,9 @@ class MetadataService {
   }
 
   public async set<T>(key: string, value: T) {
-    await databaseService.appDatabase
+    this.debug(`Setting metadata key ${key} to value ${value}`);
+
+    await this.app.database
       .insertInto('metadata')
       .values({
         key,
@@ -33,11 +44,11 @@ class MetadataService {
   }
 
   public async delete(key: string) {
-    await databaseService.appDatabase
+    this.debug(`Deleting metadata key ${key}`);
+
+    await this.app.database
       .deleteFrom('metadata')
       .where('key', '=', key)
       .execute();
   }
 }
-
-export const metadataService = new MetadataService();

@@ -1,10 +1,14 @@
 import { createDebugger, ServerConfig } from '@colanode/core';
 import axios from 'axios';
+import ms from 'ms';
 
-import { databaseService } from '@/main/data/database-service';
+import { EventEmitter } from 'events';
+
 import { mapServer } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Server } from '@/shared/types/servers';
+import { AppService } from '@/main/services/app-service';
+import { EventLoop } from '@/shared/lib/event-loop';
 
 type ServerState = {
   isAvailable: boolean;
@@ -13,76 +17,38 @@ type ServerState = {
   count: number;
 };
 
-class ServerService {
-  private readonly states: Map<string, ServerState> = new Map();
+export class ServerService extends EventEmitter {
   private readonly debug = createDebugger('desktop:service:server');
+  private readonly appService: AppService;
 
-  public async syncServers() {
-    this.debug('Syncing servers');
+  private state: ServerState | null = null;
+  private eventLoop: EventLoop;
 
-    const rows = await databaseService.appDatabase
-      .selectFrom('servers')
-      .selectAll()
-      .execute();
+  public readonly server: Server;
+  public readonly synapseUrl: string;
+  public readonly apiBaseUrl: string;
 
-    const servers = rows.map(mapServer);
-    for (const server of servers) {
-      await this.syncServer(server);
-    }
-  }
+  constructor(appService: AppService, server: Server) {
+    super();
 
-  public isAvailable(domain: string) {
-    const state = this.states.get(domain);
-    return state?.isAvailable ?? false;
-  }
+    this.appService = appService;
+    this.server = server;
+    this.synapseUrl = ServerService.buildSynapseUrl(server.domain);
+    this.apiBaseUrl = ServerService.buildApiBaseUrl(server.domain);
 
-  public async createServer(domain: string): Promise<Server | null> {
-    if (this.states.has(domain)) {
-      return null;
-    }
-
-    const config = await this.fetchServerConfig(domain);
-    if (config === null) {
-      return null;
-    }
-
-    const createdServer = await databaseService.appDatabase
-      .insertInto('servers')
-      .returningAll()
-      .values({
-        domain,
-        name: config.name,
-        avatar: config.avatar,
-        attributes: JSON.stringify(config.attributes),
-        version: config.version,
-        created_at: new Date().toISOString(),
-      })
-      .executeTakeFirst();
-
-    if (!createdServer) {
-      return null;
-    }
-
-    const server = mapServer(createdServer);
-    eventBus.publish({
-      type: 'server_created',
-      server,
+    this.eventLoop = new EventLoop(ms('1 minute'), ms('1 second'), () => {
+      this.sync();
     });
-
-    const state: ServerState = {
-      isAvailable: true,
-      lastCheckedAt: new Date(),
-      lastCheckedSuccessfullyAt: new Date(),
-      count: 1,
-    };
-
-    this.states.set(domain, state);
-    return server;
+    this.eventLoop.start();
   }
 
-  private async syncServer(server: Server) {
-    const config = await this.fetchServerConfig(server.domain);
-    const existingState = this.states.get(server.domain);
+  public isAvailable() {
+    return this.state?.isAvailable ?? false;
+  }
+
+  private async sync() {
+    const config = await ServerService.fetchServerConfig(this.server.domain);
+    const existingState = this.state;
 
     const newState: ServerState = {
       isAvailable: config !== null,
@@ -91,24 +57,20 @@ class ServerService {
       count: existingState ? existingState.count + 1 : 1,
     };
 
-    this.states.set(server.domain, newState);
+    this.state = newState;
 
     const wasAvailable = existingState?.isAvailable ?? false;
     const isAvailable = newState.isAvailable;
     if (wasAvailable !== isAvailable) {
-      eventBus.publish({
-        type: 'server_availability_changed',
-        server,
-        isAvailable,
-      });
+      this.emit('availability_change', isAvailable);
     }
 
     this.debug(
-      `Server ${server.domain} is ${isAvailable ? 'available' : 'unavailable'}`
+      `Server ${this.server.domain} is ${isAvailable ? 'available' : 'unavailable'}`
     );
 
     if (config) {
-      const updatedServer = await databaseService.appDatabase
+      const updatedServer = await this.appService.database
         .updateTable('servers')
         .returningAll()
         .set({
@@ -118,8 +80,13 @@ class ServerService {
           name: config.name,
           version: config.version,
         })
-        .where('domain', '=', server.domain)
+        .where('domain', '=', this.server.domain)
         .executeTakeFirst();
+
+      this.server.attributes = config.attributes;
+      this.server.avatar = config.avatar;
+      this.server.name = config.name;
+      this.server.version = config.version;
 
       if (updatedServer) {
         eventBus.publish({
@@ -130,9 +97,7 @@ class ServerService {
     }
   }
 
-  public async fetchServerConfig(domain: string) {
-    this.debug(`Fetching server config for ${domain}`);
-
+  public static async fetchServerConfig(domain: string) {
     const baseUrl = this.buildApiBaseUrl(domain);
     const configUrl = `${baseUrl}/v1/config`;
     try {
@@ -143,15 +108,13 @@ class ServerService {
     }
   }
 
-  public buildApiBaseUrl(domain: string) {
+  private static buildApiBaseUrl(domain: string) {
     const protocol = domain.startsWith('localhost:') ? 'http' : 'https';
     return `${protocol}://${domain}/client`;
   }
 
-  public buildSynapseUrl(domain: string) {
+  private static buildSynapseUrl(domain: string) {
     const protocol = domain.startsWith('localhost:') ? 'ws' : 'wss';
     return `${protocol}://${domain}/client/v1/synapse`;
   }
 }
-
-export const serverService = new ServerService();

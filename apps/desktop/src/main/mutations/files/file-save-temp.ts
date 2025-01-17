@@ -7,14 +7,19 @@ import {
   FileSaveTempMutationOutput,
 } from '@/shared/mutations/files/file-save-temp';
 import { getWorkspaceTempFilesDirectoryPath } from '@/main/utils';
-
+import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 export class FileSaveTempMutationHandler
+  extends WorkspaceMutationHandlerBase
   implements MutationHandler<FileSaveTempMutationInput>
 {
   async handleMutation(
     input: FileSaveTempMutationInput
   ): Promise<FileSaveTempMutationOutput> {
-    const directoryPath = getWorkspaceTempFilesDirectoryPath(input.userId);
+    const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+    const directoryPath = getWorkspaceTempFilesDirectoryPath(
+      workspace.accountId,
+      workspace.id
+    );
 
     const fileName = this.generateUniqueName(directoryPath, input.name);
     const filePath = path.join(directoryPath, fileName);

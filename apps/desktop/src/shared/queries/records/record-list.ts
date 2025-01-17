@@ -11,7 +11,8 @@ export type RecordListQueryInput = {
   sorts: ViewSortAttributes[];
   page: number;
   count: number;
-  userId: string;
+  accountId: string;
+  workspaceId: string;
 };
 
 declare module '@/shared/queries' {

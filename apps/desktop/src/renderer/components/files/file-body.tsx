@@ -46,7 +46,8 @@ export const FileBody = ({ file }: FileBodyProps) => {
             onClick={() =>
               window.colanode.executeCommand({
                 type: 'file_open',
-                userId: workspace.userId,
+                accountId: workspace.accountId,
+                workspaceId: workspace.id,
                 fileId: file.id,
                 extension: file.extension,
               })

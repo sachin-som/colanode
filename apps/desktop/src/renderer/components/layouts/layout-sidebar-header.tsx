@@ -32,7 +32,7 @@ export const LayoutSidebarHeader = () => {
   const workspaces = data ?? [];
   const otherWorkspaces = workspaces.filter((w) => w.id !== workspace.id);
   const otherWorkspaceStates = otherWorkspaces.map((w) =>
-    radar.getWorkspaceState(w.userId)
+    radar.getWorkspaceState(w.accountId, w.id)
   );
   const importantCount = otherWorkspaceStates.reduce(
     (acc, curr) => acc + curr.importantCount,
@@ -100,7 +100,8 @@ export const LayoutSidebarHeader = () => {
               <DropdownMenuLabel className="mb-1">Workspaces</DropdownMenuLabel>
               {workspaces.map((workspaceItem) => {
                 const workspaceState = radar.getWorkspaceState(
-                  workspaceItem.userId
+                  workspaceItem.accountId,
+                  workspaceItem.id
                 );
                 return (
                   <DropdownMenuItem

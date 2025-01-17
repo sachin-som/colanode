@@ -2,7 +2,8 @@ import { ViewAttributes } from '@colanode/core';
 
 export type ViewUpdateMutationInput = {
   type: 'view_update';
-  userId: string;
+  accountId: string;
+  workspaceId: string;
   databaseId: string;
   view: ViewAttributes;
 };

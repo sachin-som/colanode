@@ -53,7 +53,8 @@ export const FileNode = Node.create<FileNodeOptions>({
               entryId: options.context.documentId,
               rootId: options.context.rootId,
               filePath: path,
-              userId: options.context.userId,
+              accountId: options.context.accountId,
+              workspaceId: options.context.workspaceId,
               parentId: options.context.documentId,
             });
 
@@ -110,7 +111,8 @@ export const FileNode = Node.create<FileNodeOptions>({
                   type: 'file_save_temp',
                   name: file.name,
                   buffer,
-                  userId: options.context.userId,
+                  accountId: options.context.accountId,
+                  workspaceId: options.context.workspaceId,
                 });
 
                 if (!fileSaveResult.success) {
@@ -148,7 +150,8 @@ export const FileNode = Node.create<FileNodeOptions>({
                   type: 'file_save_temp',
                   name: file.name,
                   buffer,
-                  userId: options.context.userId,
+                  accountId: options.context.accountId,
+                  workspaceId: options.context.workspaceId,
                 });
 
                 if (!fileSaveResult.success) {

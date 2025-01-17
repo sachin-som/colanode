@@ -48,7 +48,8 @@ export const FolderDeleteDialog = ({
                 input: {
                   type: 'folder_delete',
                   folderId: entryId,
-                  userId: workspace.userId,
+                  accountId: workspace.accountId,
+                  workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);

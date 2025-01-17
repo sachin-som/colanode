@@ -19,7 +19,12 @@ export const FilePreview = ({ file }: FilePreviewProps) => {
     return <FileDownload file={file} />;
   }
 
-  const url = getFileUrl(workspace.userId, file.id, file.extension);
+  const url = getFileUrl(
+    workspace.accountId,
+    workspace.id,
+    file.id,
+    file.extension
+  );
 
   return match(file.type)
     .with('image', () => <FilePreviewImage url={url} name={file.name} />)

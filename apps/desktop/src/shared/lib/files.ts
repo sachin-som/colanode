@@ -27,11 +27,12 @@ export const formatBytes = (
 };
 
 export const getFileUrl = (
-  userId: string,
+  accountId: string,
+  workspaceId: string,
   fileId: string,
   extension: string
 ) => {
-  return `local-file://${userId}/${fileId}${extension}`;
+  return `local-file://${accountId}/${workspaceId}/${fileId}${extension}`;
 };
 
 export const getFilePlaceholderUrl = (path: string) => {

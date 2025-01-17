@@ -13,7 +13,12 @@ export const FileThumbnail = ({ file, className }: FileThumbnailProps) => {
   const workspace = useWorkspace();
 
   if (file.type === 'image' && file.downloadProgress === 100) {
-    const url = getFileUrl(workspace.userId, file.id, file.extension);
+    const url = getFileUrl(
+      workspace.accountId,
+      workspace.id,
+      file.id,
+      file.extension
+    );
     return (
       <img
         src={url}

@@ -13,7 +13,7 @@ import { AccountService } from '@/main/services/accounts/account-service';
 import { ServerService } from '@/main/services/server-service';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 import { parseApiError } from '@/shared/lib/axios';
 import { NotificationService } from '@/main/services/notification-service';
 import { eventBus } from '@/shared/lib/event-bus';

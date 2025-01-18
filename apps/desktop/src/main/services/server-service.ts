@@ -6,7 +6,7 @@ import { mapServer } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Server } from '@/shared/types/servers';
 import { AppService } from '@/main/services/app-service';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 
 type ServerState = {
   isAvailable: boolean;

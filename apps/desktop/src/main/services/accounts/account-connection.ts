@@ -2,9 +2,9 @@ import { Message, createDebugger } from '@colanode/core';
 import { WebSocket } from 'ws';
 import ms from 'ms';
 
-import { BackoffCalculator } from '@/shared/lib/backoff-calculator';
+import { BackoffCalculator } from '@/main/lib/backoff-calculator';
 import { AccountService } from '@/main/services/accounts/account-service';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 import { eventBus } from '@/shared/lib/event-bus';
 
 export class AccountConnection {

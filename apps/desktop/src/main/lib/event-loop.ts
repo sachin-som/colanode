@@ -3,13 +3,17 @@ type EventLoopStatus = 'idle' | 'scheduled' | 'processing';
 export class EventLoop {
   private readonly interval: number;
   private readonly debounce: number;
-  private readonly callback: () => void;
+  private readonly callback: () => void | Promise<void>;
 
   private timeout: NodeJS.Timeout | null;
   private status: EventLoopStatus = 'idle';
   private triggered: boolean = false;
 
-  constructor(interval: number, debounce: number, callback: () => void) {
+  constructor(
+    interval: number,
+    debounce: number,
+    callback: () => void | Promise<void>
+  ) {
     this.interval = interval;
     this.debounce = debounce;
 
@@ -47,14 +51,22 @@ export class EventLoop {
     this.start();
   }
 
-  private execute(): void {
+  private async execute(): Promise<void> {
     if (this.status !== 'scheduled') {
       return;
     }
 
     this.status = 'processing';
 
-    this.callback();
+    try {
+      await Promise.resolve(this.callback());
+    } catch (error) {
+      console.error('Callback execution failed:', error);
+    }
+
+    if (this.status !== 'processing') {
+      return;
+    }
 
     const timeout = this.triggered ? this.debounce : this.interval;
     this.timeout = setTimeout(() => {

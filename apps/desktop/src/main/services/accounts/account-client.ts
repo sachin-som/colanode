@@ -8,7 +8,7 @@ import axios, {
 import { createDebugger } from '@colanode/core';
 
 import { AccountService } from '@/main/services/accounts/account-service';
-import { BackoffCalculator } from '@/shared/lib/backoff-calculator';
+import { BackoffCalculator } from '@/main/lib/backoff-calculator';
 
 export class AccountClient {
   private readonly debug = createDebugger('desktop:service:account');

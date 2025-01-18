@@ -24,7 +24,7 @@ import {
 import { eventBus } from '@/shared/lib/event-bus';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 import { SelectFileState } from '@/main/databases/workspace';
 
 const UPLOAD_RETRIES_LIMIT = 10;

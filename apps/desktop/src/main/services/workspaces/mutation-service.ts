@@ -3,7 +3,7 @@ import ms from 'ms';
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { mapMutation } from '@/main/utils';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 
 const READ_SIZE = 500;
 const BATCH_SIZE = 50;
@@ -16,7 +16,7 @@ export class MutationService {
   constructor(workspaceService: WorkspaceService) {
     this.workspace = workspaceService;
 
-    this.eventLoop = new EventLoop(ms('1 minute'), ms('1 second'), () => {
+    this.eventLoop = new EventLoop(ms('1 minute'), 100, () => {
       this.sync();
     });
 
@@ -33,10 +33,10 @@ export class MutationService {
 
   private async sync(): Promise<void> {
     try {
-      let hasMore = true;
+      let hasMutations = true;
 
-      while (hasMore) {
-        hasMore = await this.sendMutations();
+      while (hasMutations) {
+        hasMutations = await this.sendMutations();
       }
 
       await this.revertInvalidMutations();
@@ -120,7 +120,7 @@ export class MutationService {
       );
     }
 
-    return unsyncedMutations.length === READ_SIZE;
+    return unsyncedMutations.length > 0;
   }
 
   private async revertInvalidMutations(): Promise<void> {

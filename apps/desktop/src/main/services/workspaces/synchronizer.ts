@@ -11,7 +11,7 @@ import ms from 'ms';
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { AccountConnection } from '@/main/services/accounts/account-connection';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 import { eventBus } from '@/shared/lib/event-bus';
 
 export type SynchronizerStatus = 'idle' | 'waiting' | 'processing';
@@ -112,7 +112,7 @@ export class Synchronizer<TInput extends SynchronizerInput> {
         lastCursor = BigInt(item.cursor);
       }
     } catch (error) {
-      this.debug('Error consuming items', error);
+      this.debug(`Error consuming items: ${error}`);
     } finally {
       if (lastCursor !== null) {
         this.cursor = lastCursor;

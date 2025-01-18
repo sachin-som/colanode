@@ -30,7 +30,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { parseApiError } from '@/shared/lib/axios';
 import { Account } from '@/shared/types/accounts';
 import { Workspace } from '@/shared/types/workspaces';
-import { EventLoop } from '@/shared/lib/event-loop';
+import { EventLoop } from '@/main/lib/event-loop';
 
 export class AccountService {
   private readonly debug = createDebugger('desktop:service:account');

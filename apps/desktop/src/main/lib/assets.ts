@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getAssetsSourcePath } from '@/main/utils';
+import { getAssetsSourcePath } from '@/main/lib/utils';
 import { EmojiData } from '@/shared/types/emojis';
 import { IconData } from '@/shared/types/icons';
 

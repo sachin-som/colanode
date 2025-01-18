@@ -1,6 +1,6 @@
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapUser } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapUser } from '@/main/lib/mappers';
 import { UserGetQueryInput } from '@/shared/queries/users/user-get';
 import { Event } from '@/shared/types/events';
 import { User } from '@/shared/types/users';

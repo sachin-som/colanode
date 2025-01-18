@@ -59,7 +59,7 @@ import { WorkspaceCreateMutationHandler } from '@/main/mutations/workspaces/work
 import { WorkspaceUpdateMutationHandler } from '@/main/mutations/workspaces/workspace-update';
 import { UserRoleUpdateMutationHandler } from '@/main/mutations/users/user-role-update';
 import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite';
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
 type MutationHandlerMap = {

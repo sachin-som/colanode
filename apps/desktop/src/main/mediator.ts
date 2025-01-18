@@ -7,7 +7,7 @@ import {
   CommandHandler,
   QueryHandler,
   SubscribedQuery,
-} from '@/main/types';
+} from '@/main/lib/types';
 import {
   MutationError,
   MutationErrorCode,

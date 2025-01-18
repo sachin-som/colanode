@@ -1,12 +1,12 @@
 import { MarkFileOpenedMutation, generateId, IdType } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   FileMarkOpenedMutationInput,
   FileMarkOpenedMutationOutput,
 } from '@/shared/mutations/files/file-mark-opened';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapFileInteraction } from '@/main/utils';
+import { mapFileInteraction } from '@/main/lib/mappers';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileMarkOpenedMutationHandler

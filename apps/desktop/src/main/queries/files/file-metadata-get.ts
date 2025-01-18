@@ -1,5 +1,5 @@
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { getFileMetadata } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { getFileMetadata } from '@/main/lib/utils';
 import { FileMetadataGetQueryInput } from '@/shared/queries/files/file-metadata-get';
 import { Event } from '@/shared/types/events';
 import { FileMetadata } from '@/shared/types/files';

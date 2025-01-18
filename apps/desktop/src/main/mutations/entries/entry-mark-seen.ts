@@ -1,12 +1,13 @@
 import { MarkEntrySeenMutation, generateId, IdType } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   EntryMarkSeenMutationInput,
   EntryMarkSeenMutationOutput,
 } from '@/shared/mutations/entries/entry-mark-seen';
 import { eventBus } from '@/shared/lib/event-bus';
-import { fetchEntry, mapEntryInteraction } from '@/main/utils';
+import { fetchEntry } from '@/main/lib/utils';
+import { mapEntryInteraction } from '@/main/lib/mappers';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class EntryMarkSeenMutationHandler

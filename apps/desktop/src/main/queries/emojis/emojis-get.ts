@@ -1,5 +1,5 @@
 import { getEmojiData } from '@/main/lib/assets';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
 import { EmojisGetQueryInput } from '@/shared/queries/emojis/emojis-get';
 import { EmojiData } from '@/shared/types/emojis';
 import { Event } from '@/shared/types/events';

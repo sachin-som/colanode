@@ -6,7 +6,7 @@ import {
   SpaceAttributes,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   SpaceCreateMutationInput,
   SpaceCreateMutationOutput,

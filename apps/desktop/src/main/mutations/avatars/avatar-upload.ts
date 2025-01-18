@@ -2,7 +2,7 @@ import FormData from 'form-data';
 
 import fs from 'fs';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   AvatarUploadMutationInput,
   AvatarUploadMutationOutput,

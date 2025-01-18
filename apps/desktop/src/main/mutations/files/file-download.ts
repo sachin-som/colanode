@@ -1,7 +1,7 @@
 import { FileStatus } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
-import { mapFileState } from '@/main/utils';
+import { MutationHandler } from '@/main/lib/types';
+import { mapFileState } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {

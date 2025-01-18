@@ -22,12 +22,12 @@ import {
 import { decodeState, YDoc } from '@colanode/crdt';
 
 import { SelectEntryTransaction } from '@/main/databases/workspace';
+import { fetchEntry } from '@/main/lib/utils';
 import {
-  fetchEntry,
   mapEntry,
   mapEntryInteraction,
   mapEntryTransaction,
-} from '@/main/utils';
+} from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 

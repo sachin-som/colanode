@@ -1,8 +1,8 @@
 import { RecordEntry } from '@colanode/core';
 import { sql } from 'kysely';
 
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapEntry } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapEntry } from '@/main/lib/mappers';
 import { RecordSearchQueryInput } from '@/shared/queries/records/record-search';
 import { Event } from '@/shared/types/events';
 import { SelectEntry } from '@/main/databases/workspace';

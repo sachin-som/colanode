@@ -1,8 +1,9 @@
 import { Entry } from '@colanode/core';
 
 import { SelectEntry } from '@/main/databases/workspace';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { fetchEntryAncestors, mapEntry } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { fetchEntryAncestors } from '@/main/lib/utils';
+import { mapEntry } from '@/main/lib/mappers';
 import { EntryTreeGetQueryInput } from '@/shared/queries/entries/entry-tree-get';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';

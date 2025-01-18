@@ -1,7 +1,7 @@
 import { SelectMessage } from '@/main/databases/workspace';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapMessage } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapMessage } from '@/main/lib/mappers';
 import { MessageGetQueryInput } from '@/shared/queries/messages/message-get';
 import { Event } from '@/shared/types/events';
 import { MessageNode } from '@/shared/types/messages';

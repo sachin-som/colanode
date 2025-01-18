@@ -7,7 +7,8 @@ import axios from 'axios';
 import { app } from 'electron';
 
 import { AppDatabaseSchema, appDatabaseMigrations } from '@/main/databases/app';
-import { appDatabasePath, mapAccount, mapServer } from '@/main/utils';
+import { appDatabasePath } from '@/main/lib/utils';
+import { mapServer, mapAccount } from '@/main/lib/mappers';
 import { MetadataService } from '@/main/services/metadata-service';
 import { AccountService } from '@/main/services/accounts/account-service';
 import { ServerService } from '@/main/services/server-service';

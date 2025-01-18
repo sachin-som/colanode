@@ -1,6 +1,6 @@
 import { createDebugger, SyncUserData, UserStatus } from '@colanode/core';
 
-import { mapUser } from '@/main/utils';
+import { mapUser } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 

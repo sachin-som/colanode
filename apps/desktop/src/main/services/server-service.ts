@@ -2,11 +2,11 @@ import { createDebugger, ServerConfig } from '@colanode/core';
 import axios from 'axios';
 import ms from 'ms';
 
-import { mapServer } from '@/main/utils';
 import { eventBus } from '@/shared/lib/event-bus';
 import { Server } from '@/shared/types/servers';
 import { AppService } from '@/main/services/app-service';
 import { EventLoop } from '@/main/lib/event-loop';
+import { mapServer } from '@/main/lib/mappers';
 
 type ServerState = {
   isAvailable: boolean;

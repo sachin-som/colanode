@@ -1,12 +1,12 @@
 import { MarkMessageSeenMutation, generateId, IdType } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   MessageMarkSeenMutationInput,
   MessageMarkSeenMutationOutput,
 } from '@/shared/mutations/messages/message-mark-seen';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapMessageInteraction } from '@/main/utils';
+import { mapMessageInteraction } from '@/main/lib/mappers';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class MessageMarkSeenMutationHandler

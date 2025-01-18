@@ -6,7 +6,7 @@ import {
   getAccountAvatarsDirectoryPath,
   getAssetsSourcePath,
   getWorkspaceFilesDirectoryPath,
-} from '@/main/utils';
+} from '@/main/lib/utils';
 import { appService } from '@/main/services/app-service';
 
 export const handleAssetRequest = (request: Request): Promise<Response> => {

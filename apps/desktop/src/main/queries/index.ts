@@ -23,7 +23,7 @@ import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { UserGetQueryHandler } from '@/main/queries/users/user-get';
 import { SpaceListQueryHandler } from '@/main/queries/spaces/space-list';
 import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
-import { QueryHandler } from '@/main/types';
+import { QueryHandler } from '@/main/lib/types';
 import { QueryMap } from '@/shared/queries';
 
 type QueryHandlerMap = {

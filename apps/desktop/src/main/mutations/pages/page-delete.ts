@@ -3,7 +3,7 @@ import {
   PageDeleteMutationOutput,
 } from '@/shared/mutations/pages/page-delete';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 
 export class PageDeleteMutationHandler
   extends WorkspaceMutationHandlerBase

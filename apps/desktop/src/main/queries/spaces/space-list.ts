@@ -1,8 +1,8 @@
 import { SpaceEntry } from '@colanode/core';
 
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapEntry } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapEntry } from '@/main/lib/mappers';
 import { SpaceListQueryInput } from '@/shared/queries/spaces/space-list';
 import { Event } from '@/shared/types/events';
 import { SelectEntry } from '@/main/databases/workspace';

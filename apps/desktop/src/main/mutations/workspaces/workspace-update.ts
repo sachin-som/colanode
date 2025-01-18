@@ -1,6 +1,6 @@
 import { appService } from '@/main/services/app-service';
-import { MutationHandler } from '@/main/types';
-import { mapWorkspace } from '@/main/utils';
+import { MutationHandler } from '@/main/lib/types';
+import { mapWorkspace } from '@/main/lib/mappers';
 import { parseApiError } from '@/shared/lib/axios';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';

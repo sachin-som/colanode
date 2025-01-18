@@ -1,8 +1,8 @@
 import path from 'path';
 import { shell } from 'electron';
 
-import { getWorkspaceFilesDirectoryPath } from '@/main/utils';
-import { CommandHandler } from '@/main/types';
+import { getWorkspaceFilesDirectoryPath } from '@/main/lib/utils';
+import { CommandHandler } from '@/main/lib/types';
 import { FileOpenCommandInput } from '@/shared/commands/file-open';
 
 export class FileOpenCommandHandler

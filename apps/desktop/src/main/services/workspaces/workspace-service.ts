@@ -9,7 +9,7 @@ import {
   WorkspaceDatabaseSchema,
   workspaceDatabaseMigrations,
 } from '@/main/databases/workspace';
-import { getWorkspaceDirectoryPath } from '@/main/utils';
+import { getWorkspaceDirectoryPath } from '@/main/lib/utils';
 import { AccountService } from '@/main/services/accounts/account-service';
 import { EntryService } from '@/main/services/workspaces/entry-service';
 import { MessageService } from '@/main/services/workspaces/message-service';
@@ -86,6 +86,14 @@ export class WorkspaceService {
 
   public get role(): WorkspaceRole {
     return this.workspace.role;
+  }
+
+  public get maxFileSize(): bigint {
+    return this.workspace.maxFileSize;
+  }
+
+  public get storageLimit(): bigint {
+    return this.workspace.storageLimit;
   }
 
   public updateWorkspace(workspace: Workspace): void {

@@ -17,11 +17,8 @@ import {
   AccountDatabaseSchema,
   accountDatabaseMigrations,
 } from '@/main/databases/account';
-import {
-  getAccountDirectoryPath,
-  mapAccount,
-  mapWorkspace,
-} from '@/main/utils';
+import { mapAccount, mapWorkspace } from '@/main/lib/mappers';
+import { getAccountDirectoryPath } from '@/main/lib/utils';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { AccountConnection } from '@/main/services/accounts/account-connection';
 import { AccountClient } from '@/main/services/accounts/account-client';

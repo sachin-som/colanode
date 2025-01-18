@@ -1,7 +1,7 @@
 import { EmailLoginInput, LoginOutput } from '@colanode/core';
 import axios from 'axios';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { EmailLoginMutationInput } from '@/shared/mutations/accounts/email-login';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';

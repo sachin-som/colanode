@@ -2,7 +2,7 @@ import { createDebugger, Mutation, SyncMutationsOutput } from '@colanode/core';
 import ms from 'ms';
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
-import { mapMutation } from '@/main/utils';
+import { mapMutation } from '@/main/lib/mappers';
 import { EventLoop } from '@/main/lib/event-loop';
 
 const READ_SIZE = 500;

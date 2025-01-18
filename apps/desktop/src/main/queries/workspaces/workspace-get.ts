@@ -1,6 +1,6 @@
 import { SelectWorkspace } from '@/main/databases/account';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapWorkspace } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapWorkspace } from '@/main/lib/mappers';
 import { WorkspaceGetQueryInput } from '@/shared/queries/workspaces/workspace-get';
 import { Event } from '@/shared/types/events';
 import { Workspace } from '@/shared/types/workspaces';

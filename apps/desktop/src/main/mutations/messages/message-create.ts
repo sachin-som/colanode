@@ -11,7 +11,7 @@ import {
   MessageType,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
   MessageCreateMutationInput,
@@ -26,14 +26,15 @@ import {
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   fetchEntry,
-  fetchUser,
   fetchUserStorageUsed,
   getFileMetadata,
+} from '@/main/lib/utils';
+import {
   mapEntry,
   mapFile,
   mapFileState,
   mapMessage,
-} from '@/main/utils';
+} from '@/main/lib/mappers';
 import { formatBytes } from '@/shared/lib/files';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
@@ -46,14 +47,6 @@ export class MessageCreateMutationHandler
     input: MessageCreateMutationInput
   ): Promise<MessageCreateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
-    const user = await fetchUser(workspace.database, workspace.userId);
-    if (!user) {
-      throw new MutationError(
-        MutationErrorCode.UserNotFound,
-        'There was an error while fetching the user. Please make sure you are logged in.'
-      );
-    }
 
     const entry = await fetchEntry(workspace.database, input.conversationId);
     if (!entry) {
@@ -75,7 +68,7 @@ export class MessageCreateMutationHandler
       !canCreateMessage({
         user: {
           userId: workspace.userId,
-          role: user.role,
+          role: workspace.role,
         },
         root: mapEntry(root),
         entry: mapEntry(entry),
@@ -108,11 +101,11 @@ export class MessageCreateMutationHandler
           );
         }
 
-        if (metadata.size > user.max_file_size) {
+        if (metadata.size > workspace.maxFileSize) {
           throw new MutationError(
             MutationErrorCode.FileTooLarge,
             'The file you are trying to upload is too large. The maximum file size is ' +
-              formatBytes(user.max_file_size)
+              formatBytes(workspace.maxFileSize)
           );
         }
 
@@ -185,7 +178,7 @@ export class MessageCreateMutationHandler
         files.reduce((sum, file) => sum + file.size, 0)
       );
 
-      if (storageUsed + fileSizeSum > user.storage_limit) {
+      if (storageUsed + fileSizeSum > workspace.storageLimit) {
         for (const file of files) {
           workspace.files.deleteFile(file.id, file.extension);
         }
@@ -197,7 +190,7 @@ export class MessageCreateMutationHandler
             ' and you are trying to upload files of size ' +
             formatBytes(fileSizeSum) +
             '. Your storage limit is ' +
-            formatBytes(user.storage_limit)
+            formatBytes(workspace.storageLimit)
         );
       }
     }

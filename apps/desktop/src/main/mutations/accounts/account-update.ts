@@ -1,6 +1,6 @@
 import { AccountUpdateOutput } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   AccountUpdateMutationInput,
@@ -9,7 +9,7 @@ import {
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 import { appService } from '@/main/services/app-service';
-import { mapAccount } from '@/main/utils';
+import { mapAccount } from '@/main/lib/mappers';
 
 export class AccountUpdateMutationHandler
   implements MutationHandler<AccountUpdateMutationInput>

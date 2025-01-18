@@ -2,8 +2,8 @@ import { sql } from 'kysely';
 
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { SelectUser } from '@/main/databases/workspace';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapUser } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapUser } from '@/main/lib/mappers';
 import { UserSearchQueryInput } from '@/shared/queries/users/user-search';
 import { Event } from '@/shared/types/events';
 import { User } from '@/shared/types/users';

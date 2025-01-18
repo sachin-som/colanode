@@ -1,6 +1,6 @@
 import { WorkspaceOutput } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   WorkspaceCreateMutationInput,
@@ -9,7 +9,7 @@ import {
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { parseApiError } from '@/shared/lib/axios';
 import { appService } from '@/main/services/app-service';
-import { mapWorkspace } from '@/main/utils';
+import { mapWorkspace } from '@/main/lib/mappers';
 
 export class WorkspaceCreateMutationHandler
   implements MutationHandler<WorkspaceCreateMutationInput>

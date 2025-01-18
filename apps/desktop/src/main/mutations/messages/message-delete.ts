@@ -5,13 +5,14 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   MessageDeleteMutationInput,
   MessageDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-delete';
 import { eventBus } from '@/shared/lib/event-bus';
-import { fetchEntry, mapEntry, mapMessage } from '@/main/utils';
+import { fetchEntry } from '@/main/lib/utils';
+import { mapEntry, mapMessage } from '@/main/lib/mappers';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 export class MessageDeleteMutationHandler

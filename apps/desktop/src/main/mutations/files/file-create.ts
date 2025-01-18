@@ -6,7 +6,7 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   FileCreateMutationInput,
   FileCreateMutationOutput,
@@ -15,12 +15,10 @@ import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { eventBus } from '@/shared/lib/event-bus';
 import {
   fetchEntry,
-  fetchUser,
   fetchUserStorageUsed,
   getFileMetadata,
-  mapEntry,
-  mapFile,
-} from '@/main/utils';
+} from '@/main/lib/utils';
+import { mapEntry, mapFile } from '@/main/lib/mappers';
 import { formatBytes } from '@/shared/lib/files';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
@@ -42,20 +40,11 @@ export class FileCreateMutationHandler
 
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const user = await fetchUser(workspace.database, workspace.userId);
-
-    if (!user) {
-      throw new MutationError(
-        MutationErrorCode.UserNotFound,
-        'There was an error while fetching the user. Please make sure you are logged in.'
-      );
-    }
-
-    if (metadata.size > user.max_file_size) {
+    if (metadata.size > workspace.maxFileSize) {
       throw new MutationError(
         MutationErrorCode.FileTooLarge,
         'The file you are trying to upload is too large. The maximum file size is ' +
-          formatBytes(user.max_file_size)
+          formatBytes(workspace.maxFileSize)
       );
     }
 
@@ -64,7 +53,7 @@ export class FileCreateMutationHandler
       workspace.userId
     );
 
-    if (storageUsed + BigInt(metadata.size) > user.storage_limit) {
+    if (storageUsed + BigInt(metadata.size) > workspace.storageLimit) {
       throw new MutationError(
         MutationErrorCode.StorageLimitExceeded,
         'You have reached your storage limit. You have used ' +
@@ -72,7 +61,7 @@ export class FileCreateMutationHandler
           ' and you are trying to upload a file of size ' +
           formatBytes(metadata.size) +
           '. Your storage limit is ' +
-          formatBytes(user.storage_limit)
+          formatBytes(workspace.storageLimit)
       );
     }
 

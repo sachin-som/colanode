@@ -1,5 +1,5 @@
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapFile } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapFile } from '@/main/lib/mappers';
 import { FileGetQueryInput } from '@/shared/queries/files/file-get';
 import { Event } from '@/shared/types/events';
 import {

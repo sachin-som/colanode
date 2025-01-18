@@ -20,8 +20,8 @@ import {
 import { sql } from 'kysely';
 
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapEntry } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapEntry } from '@/main/lib/mappers';
 import { RecordListQueryInput } from '@/shared/queries/records/record-list';
 import { Event } from '@/shared/types/events';
 import { SelectEntry } from '@/main/databases/workspace';

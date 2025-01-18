@@ -17,10 +17,8 @@ import path from 'path';
 import {
   getWorkspaceFilesDirectoryPath,
   getWorkspaceTempFilesDirectoryPath,
-  mapFile,
-  mapFileInteraction,
-  mapFileState,
-} from '@/main/utils';
+} from '@/main/lib/utils';
+import { mapFile, mapFileInteraction, mapFileState } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';

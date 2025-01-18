@@ -1,7 +1,7 @@
 import { SelectAccount } from '@/main/databases/app';
 import { appService } from '@/main/services/app-service';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapAccount } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapAccount } from '@/main/lib/mappers';
 import { AccountGetQueryInput } from '@/shared/queries/accounts/account-get';
 import { Account } from '@/shared/types/accounts';
 import { Event } from '@/shared/types/events';

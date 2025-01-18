@@ -7,7 +7,7 @@ import path from 'path';
 
 import { WindowSize } from '@/shared/types/metadata';
 import { mediator } from '@/main/mediator';
-import { getAppIconPath } from '@/main/utils';
+import { getAppIconPath } from '@/main/lib/utils';
 import { CommandInput, CommandMap } from '@/shared/commands';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationInput, MutationMap } from '@/shared/mutations';

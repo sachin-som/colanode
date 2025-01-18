@@ -1,6 +1,6 @@
 import { unset } from 'lodash-es';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   EntryCollaboratorDeleteMutationInput,
   EntryCollaboratorDeleteMutationOutput,

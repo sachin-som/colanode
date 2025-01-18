@@ -1,6 +1,6 @@
 import { generateId, IdType, RecordAttributes } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   RecordCreateMutationInput,
   RecordCreateMutationOutput,

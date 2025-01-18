@@ -1,6 +1,6 @@
 import { sql } from 'kysely';
 
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
 import { MessageReactionsGetQueryInput } from '@/shared/queries/messages/message-reactions-get';
 import { Event } from '@/shared/types/events';
 import { MessageReactionsCount } from '@/shared/types/messages';

@@ -1,12 +1,12 @@
 import path from 'path';
 import fs from 'fs';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   FileSaveTempMutationInput,
   FileSaveTempMutationOutput,
 } from '@/shared/mutations/files/file-save-temp';
-import { getWorkspaceTempFilesDirectoryPath } from '@/main/utils';
+import { getWorkspaceTempFilesDirectoryPath } from '@/main/lib/utils';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 export class FileSaveTempMutationHandler
   extends WorkspaceMutationHandlerBase

@@ -1,5 +1,5 @@
 import { appService } from '@/main/services/app-service';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
 import {
   RadarDataGetQueryInput,
   RadarDataGetQueryOutput,

@@ -4,12 +4,12 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   MessageReactionDeleteMutationInput,
   MessageReactionDeleteMutationOutput,
 } from '@/shared/mutations/messages/message-reaction-delete';
-import { mapMessageReaction } from '@/main/utils';
+import { mapMessageReaction } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 

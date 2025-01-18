@@ -1,7 +1,7 @@
 import { PageAttributes } from '@colanode/core';
 import { isEqual } from 'lodash-es';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import { mapContentsToBlocks } from '@/shared/lib/editor';
 import {
   PageContentUpdateMutationInput,

@@ -1,8 +1,8 @@
 import { ChatEntry } from '@colanode/core';
 
 import { SelectEntry } from '@/main/databases/workspace';
-import { ChangeCheckResult, QueryHandler } from '@/main/types';
-import { mapEntry } from '@/main/utils';
+import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
+import { mapEntry } from '@/main/lib/mappers';
 import { ChatListQueryInput } from '@/shared/queries/chats/chat-list';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';

@@ -13,7 +13,7 @@ import {
   mapMessage,
   mapMessageInteraction,
   mapMessageReaction,
-} from '@/main/utils';
+} from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 

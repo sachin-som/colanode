@@ -3,7 +3,7 @@ import { LoginSuccessOutput } from '@colanode/core';
 import { appService } from '@/main/services/app-service';
 import { ServerService } from '@/main/services/server-service';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-import { mapAccount, mapWorkspace } from '@/main/utils';
+import { mapAccount, mapWorkspace } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 
 export abstract class AccountMutationHandlerBase {

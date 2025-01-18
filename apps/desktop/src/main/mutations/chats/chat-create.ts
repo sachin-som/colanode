@@ -1,7 +1,7 @@
 import { ChatAttributes, generateId, IdType } from '@colanode/core';
 import { sql } from 'kysely';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   ChatCreateMutationInput,
   ChatCreateMutationOutput,

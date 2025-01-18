@@ -7,13 +7,13 @@ import {
   IdType,
 } from '@colanode/core';
 
-import { MutationHandler } from '@/main/types';
+import { MutationHandler } from '@/main/lib/types';
 import {
   FieldCreateMutationInput,
   FieldCreateMutationOutput,
 } from '@/shared/mutations/databases/field-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-import { fetchEntry } from '@/main/utils';
+import { fetchEntry } from '@/main/lib/utils';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FieldCreateMutationHandler

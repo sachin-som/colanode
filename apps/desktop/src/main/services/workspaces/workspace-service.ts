@@ -125,6 +125,7 @@ export class WorkspaceService {
       this.synchronizer.destroy();
       this.files.destroy();
       this.mutations.destroy();
+      this.radar.destroy();
 
       const workspacePath = getWorkspaceDirectoryPath(
         this.account.id,

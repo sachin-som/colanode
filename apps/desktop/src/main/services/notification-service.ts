@@ -16,6 +16,10 @@ export class NotificationService {
     eventBus.subscribe((event) => {
       if (event.type === 'radar_data_updated') {
         this.checkBadge();
+      } else if (event.type === 'workspace_deleted') {
+        this.checkBadge();
+      } else if (event.type === 'account_deleted') {
+        this.checkBadge();
       }
     });
   }

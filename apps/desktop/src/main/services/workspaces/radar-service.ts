@@ -27,10 +27,11 @@ export class RadarService {
   private readonly workspace: WorkspaceService;
   private readonly unreadMessages: Map<string, UndreadMessage> = new Map();
   private readonly collaborations: Map<string, SelectCollaboration> = new Map();
+  private readonly eventSubscriptionId: string;
 
   constructor(workspace: WorkspaceService) {
     this.workspace = workspace;
-    eventBus.subscribe(this.handleEvent.bind(this));
+    this.eventSubscriptionId = eventBus.subscribe(this.handleEvent.bind(this));
   }
 
   public getData(): WorkspaceRadarData {
@@ -126,6 +127,10 @@ export class RadarService {
         parentIdType: getIdType(unreadMessageRow.entry_id),
       });
     }
+  }
+
+  public destroy(): void {
+    eventBus.unsubscribe(this.eventSubscriptionId);
   }
 
   private async handleEvent(event: Event) {

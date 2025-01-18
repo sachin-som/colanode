@@ -46,6 +46,8 @@ export const workspaceGetHandler = async (
       id: user.id,
       accountId: user.account_id,
       role: user.role as WorkspaceRole,
+      storageLimit: user.storage_limit,
+      maxFileSize: user.max_file_size,
     },
   };
 

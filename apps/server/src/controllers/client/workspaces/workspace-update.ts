@@ -58,6 +58,8 @@ export const workspaceUpdateHandler = async (
       id: res.locals.user.id,
       accountId: res.locals.user.account_id,
       role: res.locals.user.role,
+      storageLimit: res.locals.user.storage_limit,
+      maxFileSize: res.locals.user.max_file_size,
     },
   };
 

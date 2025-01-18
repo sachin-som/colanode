@@ -132,6 +132,8 @@ class WorkspaceService {
         id: user.id,
         accountId: user.account_id,
         role: user.role,
+        storageLimit: user.storage_limit,
+        maxFileSize: user.max_file_size,
       },
     };
   }

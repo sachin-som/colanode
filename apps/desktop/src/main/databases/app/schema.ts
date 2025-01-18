@@ -7,7 +7,7 @@ interface ServerTable {
   attributes: ColumnType<string, string, string>;
   version: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, string>;
-  last_synced_at: ColumnType<string | null, string | null, string>;
+  synced_at: ColumnType<string | null, string | null, string>;
 }
 
 export type SelectServer = Selectable<ServerTable>;
@@ -22,6 +22,9 @@ interface AccountTable {
   avatar: ColumnType<string | null, string | null, string | null>;
   token: ColumnType<string, string, string>;
   device_id: ColumnType<string, string, never>;
+  created_at: ColumnType<string, string, string>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  synced_at: ColumnType<string | null, string | null, string | null>;
 }
 
 export type SelectAccount = Selectable<AccountTable>;

@@ -245,6 +245,9 @@ export const mapAccount = (row: SelectAccount): Account => {
     deviceId: row.device_id,
     email: row.email,
     token: row.token,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    syncedAt: row.synced_at,
   };
 };
 
@@ -318,7 +321,7 @@ export const mapServer = (row: SelectServer): Server => {
     attributes: JSON.parse(row.attributes),
     version: row.version,
     createdAt: new Date(row.created_at),
-    lastSyncedAt: row.last_synced_at ? new Date(row.last_synced_at) : null,
+    syncedAt: row.synced_at ? new Date(row.synced_at) : null,
   };
 };
 

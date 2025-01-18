@@ -22,6 +22,7 @@ export abstract class AccountMutationHandlerBase {
         token: login.token,
         device_id: login.deviceId,
         avatar: login.account.avatar,
+        created_at: new Date().toISOString(),
       })
       .executeTakeFirst();
 
@@ -54,8 +55,11 @@ export abstract class AccountMutationHandlerBase {
           user_id: workspace.user.id,
           account_id: account.id,
           role: workspace.user.role,
+          storage_limit: workspace.user.storageLimit,
+          max_file_size: workspace.user.maxFileSize,
           avatar: workspace.avatar,
           description: workspace.description,
+          created_at: new Date().toISOString(),
         })
         .executeTakeFirst();
 

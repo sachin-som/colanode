@@ -7,5 +7,5 @@ export type Server = {
   attributes: ServerAttributes;
   version: string;
   createdAt: Date;
-  lastSyncedAt: Date | null;
+  syncedAt: Date | null;
 };

@@ -250,12 +250,20 @@ export class AccountService {
         }
       );
 
+      const hasChanges =
+        data.account.name !== this.account.name ||
+        data.account.avatar !== this.account.avatar;
+
       const updatedAccount = await this.app.database
         .updateTable('accounts')
         .returningAll()
         .set({
           name: data.account.name,
           avatar: data.account.avatar,
+          updated_at: hasChanges
+            ? new Date().toISOString()
+            : this.account.updatedAt,
+          synced_at: new Date().toISOString(),
         })
         .where('id', '=', this.account.id)
         .executeTakeFirst();
@@ -289,6 +297,9 @@ export class AccountService {
               description: workspace.description,
               avatar: workspace.avatar,
               role: workspace.user.role,
+              storage_limit: workspace.user.storageLimit,
+              max_file_size: workspace.user.maxFileSize,
+              created_at: new Date().toISOString(),
             })
             .executeTakeFirst();
 
@@ -313,6 +324,8 @@ export class AccountService {
               description: workspace.description,
               avatar: workspace.avatar,
               role: workspace.user.role,
+              storage_limit: workspace.user.storageLimit,
+              max_file_size: workspace.user.maxFileSize,
             })
             .where('id', '=', workspace.id)
             .executeTakeFirst();

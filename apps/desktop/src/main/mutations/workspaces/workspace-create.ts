@@ -46,7 +46,10 @@ export class WorkspaceCreateMutationHandler
           description: data.description,
           avatar: data.avatar,
           role: data.user.role,
+          storage_limit: data.user.storageLimit,
+          max_file_size: data.user.maxFileSize,
           user_id: data.user.id,
+          created_at: new Date().toISOString(),
         })
         .onConflict((cb) => cb.doNothing())
         .executeTakeFirst();

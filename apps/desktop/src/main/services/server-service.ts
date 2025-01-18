@@ -78,7 +78,7 @@ export class ServerService {
         .updateTable('servers')
         .returningAll()
         .set({
-          last_synced_at: new Date().toISOString(),
+          synced_at: new Date().toISOString(),
           attributes: JSON.stringify(config.attributes),
           avatar: config.avatar,
           name: config.name,

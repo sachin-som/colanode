@@ -52,7 +52,7 @@ export class ServerListQueryHandler
         attributes: JSON.parse(row.attributes),
         version: row.version,
         createdAt: new Date(row.created_at),
-        lastSyncedAt: row.last_synced_at ? new Date(row.last_synced_at) : null,
+        syncedAt: row.synced_at ? new Date(row.synced_at) : null,
       };
     });
   };

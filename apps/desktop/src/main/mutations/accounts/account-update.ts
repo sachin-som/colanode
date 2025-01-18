@@ -40,6 +40,7 @@ export class AccountUpdateMutationHandler
         .set({
           name: data.name,
           avatar: data.avatar,
+          updated_at: new Date().toISOString(),
         })
         .where('id', '=', input.id)
         .returningAll()

@@ -6,4 +6,7 @@ export type Account = {
   token: string;
   deviceId: string;
   server: string;
+  createdAt: string;
+  updatedAt: string | null;
+  syncedAt: string | null;
 };

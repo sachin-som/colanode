@@ -11,6 +11,9 @@ export const createAccountsTable: Migration = {
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
       .addColumn('token', 'text', (col) => col.notNull())
+      .addColumn('created_at', 'text', (col) => col.notNull())
+      .addColumn('updated_at', 'text')
+      .addColumn('synced_at', 'text')
       .execute();
   },
   down: async (db) => {

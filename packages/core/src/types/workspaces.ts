@@ -35,6 +35,8 @@ export type WorkspaceUserOutput = {
   id: string;
   accountId: string;
   role: WorkspaceRole;
+  storageLimit: bigint;
+  maxFileSize: bigint;
 };
 
 export type WorkspaceUpdateInput = {

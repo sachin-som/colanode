@@ -2,41 +2,33 @@ import path from 'path';
 import fs from 'fs';
 
 const copyEmojisDb = () => {
-  const sourceEmojisDbPath = path.resolve(
-    'scripts',
-    'src',
-    'emojis',
-    'emojis.db'
-  );
-
-  if (!fs.existsSync(sourceEmojisDbPath)) {
+  const sourcePath = path.resolve('scripts', 'src', 'emojis', 'emojis.db');
+  if (!fs.existsSync(sourcePath)) {
     return;
   }
 
-  const targetEmojisDbPath = path.resolve(
-    'apps',
-    'desktop',
-    'assets',
-    'emojis.db'
-  );
+  const targetDir = path.resolve('apps', 'desktop', 'assets');
+  if (!fs.existsSync(targetDir)) {
+    return;
+  }
 
-  fs.copyFileSync(sourceEmojisDbPath, targetEmojisDbPath);
+  const targetPath = path.resolve(targetDir, 'emojis.db');
+  fs.copyFileSync(sourcePath, targetPath);
 };
 
 const copyIconsDb = () => {
-  const sourceIconsDbPath = path.resolve('scripts', 'src', 'icons', 'icons.db');
-  if (!fs.existsSync(sourceIconsDbPath)) {
+  const sourcePath = path.resolve('scripts', 'src', 'icons', 'icons.db');
+  if (!fs.existsSync(sourcePath)) {
     return;
   }
 
-  const targetIconsDbPath = path.resolve(
-    'apps',
-    'desktop',
-    'assets',
-    'icons.db'
-  );
+  const targetDir = path.resolve('apps', 'desktop', 'assets');
+  if (!fs.existsSync(targetDir)) {
+    return;
+  }
 
-  fs.copyFileSync(sourceIconsDbPath, targetIconsDbPath);
+  const targetPath = path.resolve(targetDir, 'icons.db');
+  fs.copyFileSync(sourcePath, targetPath);
 };
 
 const execute = () => {

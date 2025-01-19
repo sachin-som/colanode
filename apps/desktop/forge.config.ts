@@ -175,39 +175,45 @@ const config: ForgeConfig = {
       });
 
       for (const nodeModule of nodeModules) {
-        if (nodeModule.isDirectory() && nodeModule.name !== 'node_modules') {
-          const files = await fs.readdir(
-            path.join(nodeModulesPath, nodeModule.name),
-            {
-              withFileTypes: true,
+        if (!nodeModule.isDirectory()) {
+          continue;
+        }
+
+        if (nodeModule.name === 'node_modules') {
+          continue;
+        }
+
+        const files = await fs.readdir(
+          path.join(nodeModulesPath, nodeModule.name),
+          {
+            withFileTypes: true,
+          }
+        );
+
+        if (files.length === 0) {
+          await fs.rmdir(path.join(nodeModulesPath, nodeModule.name));
+        } else {
+          for (const file of files) {
+            if (!file.isFile()) {
+              continue;
             }
-          );
 
-          if (files.length === 0) {
-            await fs.rmdir(path.join(nodeModulesPath, nodeModule.name));
-          } else {
-            for (const file of files) {
-              if (!file.isFile()) {
-                continue;
-              }
+            const shouldDelete =
+              file.name === 'LICENSE' ||
+              file.name.endsWith('.md') ||
+              file.name.endsWith('.txt') ||
+              file.name.endsWith('.lock') ||
+              file.name.endsWith('.yaml') ||
+              file.name.endsWith('.yml') ||
+              file.name.endsWith('.gitignore') ||
+              file.name.endsWith('.npmignore') ||
+              file.name.endsWith('.npmrc') ||
+              file.name.endsWith('.npm');
 
-              const shouldDelete =
-                file.name === 'LICENSE' ||
-                file.name.endsWith('.md') ||
-                file.name.endsWith('.txt') ||
-                file.name.endsWith('.lock') ||
-                file.name.endsWith('.yaml') ||
-                file.name.endsWith('.yml') ||
-                file.name.endsWith('.gitignore') ||
-                file.name.endsWith('.npmignore') ||
-                file.name.endsWith('.npmrc') ||
-                file.name.endsWith('.npm');
-
-              if (shouldDelete) {
-                await fs.rm(
-                  path.join(nodeModulesPath, nodeModule.name, file.name)
-                );
-              }
+            if (shouldDelete) {
+              await fs.rm(
+                path.join(nodeModulesPath, nodeModule.name, file.name)
+              );
             }
           }
         }

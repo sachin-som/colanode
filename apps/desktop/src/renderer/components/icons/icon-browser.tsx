@@ -1,9 +1,9 @@
 import React from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { FixedSizeList } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { IconPickerRowData } from '@/shared/types/icons';
-import { IconPickerIconRow } from '@/renderer/components/icons/icon-browser-row';
+import { IconBrowserItems } from '@/renderer/components/icons/icon-browser-items';
+import { IconBrowserCategory } from '@/renderer/components/icons/icon-browser-category';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 const ICONS_PER_ROW = 10;
@@ -19,7 +19,7 @@ export const IconBrowser = () => {
 
     for (const category of categories) {
       rows.push({
-        type: 'label',
+        type: 'category',
         category: category.name,
       });
 
@@ -28,7 +28,7 @@ export const IconBrowser = () => {
 
       for (let i = 0; i < numRowsInCategory; i++) {
         rows.push({
-          type: 'icon',
+          type: 'items',
           category: category.id,
           page: i,
           count: ICONS_PER_ROW,
@@ -39,20 +39,47 @@ export const IconBrowser = () => {
     return rows;
   }, [categories]);
 
+  const parentRef = React.useRef(null);
+
+  const virtualizer = useVirtualizer({
+    count: rowDataArray.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 30,
+  });
+
   return (
-    <AutoSizer>
-      {({ width, height }: { width: number; height: number }) => (
-        <FixedSizeList
-          width={width}
-          height={height}
-          itemCount={rowDataArray.length}
-          itemSize={30}
-          className="List"
-          itemData={{ rows: rowDataArray }}
-        >
-          {IconPickerIconRow}
-        </FixedSizeList>
-      )}
-    </AutoSizer>
+    <div
+      ref={parentRef}
+      style={{
+        height: `100%`,
+        overflow: 'auto',
+      }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const row = rowDataArray[virtualItem.index]!;
+          const style: React.CSSProperties = {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: `${virtualItem.size}px`,
+            transform: `translateY(${virtualItem.start}px)`,
+          };
+
+          if (row.type === 'category') {
+            return <IconBrowserCategory row={row} style={style} />;
+          }
+
+          return <IconBrowserItems row={row} style={style} />;
+        })}
+      </div>
+    </div>
   );
 };

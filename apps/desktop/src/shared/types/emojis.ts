@@ -20,15 +20,15 @@ export type EmojiSkin = {
   unified: string;
 };
 
-export type EmojiPickerRowData = EmojiPickerLabelRow | EmojiPickerEmojiRow;
+export type EmojiPickerRowData = EmojiPickerCategoryRow | EmojiPickerItemsRow;
 
-export type EmojiPickerLabelRow = {
-  type: 'label';
+export type EmojiPickerCategoryRow = {
+  type: 'category';
   category: string;
 };
 
-export type EmojiPickerEmojiRow = {
-  type: 'emoji';
+export type EmojiPickerItemsRow = {
+  type: 'items';
   category: string;
   page: number;
   count: number;

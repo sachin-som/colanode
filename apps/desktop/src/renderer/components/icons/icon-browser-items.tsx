@@ -1,13 +1,13 @@
-import { IconPickerIconRow } from '@/shared/types/icons';
+import { IconPickerItemsRow } from '@/shared/types/icons';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { IconPickerItem } from '@/renderer/components/icons/icon-picker-item';
 
-interface IconBrowserIconsProps {
-  row: IconPickerIconRow;
+interface IconBrowserItemsProps {
+  row: IconPickerItemsRow;
   style: React.CSSProperties;
 }
 
-export const IconBrowserIcons = ({ row, style }: IconBrowserIconsProps) => {
+export const IconBrowserItems = ({ row, style }: IconBrowserItemsProps) => {
   const { data } = useQuery({
     type: 'icon_list',
     category: row.category,

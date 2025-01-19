@@ -13,15 +13,15 @@ export type IconCategory = {
   display_order: number;
 };
 
-export type IconPickerRowData = IconPickerLabelRow | IconPickerIconRow;
+export type IconPickerRowData = IconPickerCategoryRow | IconPickerItemsRow;
 
-export type IconPickerLabelRow = {
-  type: 'label';
+export type IconPickerCategoryRow = {
+  type: 'category';
   category: string;
 };
 
-export type IconPickerIconRow = {
-  type: 'icon';
+export type IconPickerItemsRow = {
+  type: 'items';
   category: string;
   page: number;
   count: number;

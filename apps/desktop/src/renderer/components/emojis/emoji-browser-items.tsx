@@ -1,13 +1,13 @@
-import { EmojiPickerEmojiRow } from '@/shared/types/emojis';
+import { EmojiPickerItemsRow } from '@/shared/types/emojis';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { EmojiPickerItem } from '@/renderer/components/emojis/emoji-picker-item';
 
-interface EmojiBrowserEmojisProps {
-  row: EmojiPickerEmojiRow;
+interface EmojiBrowserItemsProps {
+  row: EmojiPickerItemsRow;
   style: React.CSSProperties;
 }
 
-export const EmojiBrowserEmojis = ({ row, style }: EmojiBrowserEmojisProps) => {
+export const EmojiBrowserItems = ({ row, style }: EmojiBrowserItemsProps) => {
   const { data } = useQuery({
     type: 'emoji_list',
     category: row.category,

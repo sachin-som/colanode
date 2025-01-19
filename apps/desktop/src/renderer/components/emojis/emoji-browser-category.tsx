@@ -1,7 +1,7 @@
-import { EmojiPickerLabelRow } from '@/shared/types/emojis';
+import { EmojiPickerCategoryRow } from '@/shared/types/emojis';
 
 interface EmojiBrowserCategoryProps {
-  row: EmojiPickerLabelRow;
+  row: EmojiPickerCategoryRow;
   style: React.CSSProperties;
 }
 

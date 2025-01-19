@@ -1,10 +1,10 @@
 import React from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { FixedSizeList } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { EmojiPickerRowData } from '@/shared/types/emojis';
-import { EmojiBrowserRow } from '@/renderer/components/emojis/emoji-browser-row';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { EmojiBrowserCategory } from '@/renderer/components/emojis/emoji-browser-category';
+import { EmojiBrowserItems } from '@/renderer/components/emojis/emoji-browser-items';
 
 const EMOJIS_PER_ROW = 10;
 
@@ -19,7 +19,7 @@ export const EmojiBrowser = () => {
 
     for (const category of categories) {
       rows.push({
-        type: 'label',
+        type: 'category',
         category: category.name,
       });
 
@@ -28,7 +28,7 @@ export const EmojiBrowser = () => {
 
       for (let i = 0; i < numRowsInCategory; i++) {
         rows.push({
-          type: 'emoji',
+          type: 'items',
           category: category.id,
           page: i,
           count: EMOJIS_PER_ROW,
@@ -39,20 +39,47 @@ export const EmojiBrowser = () => {
     return rows;
   }, [categories]);
 
+  const parentRef = React.useRef(null);
+
+  const virtualizer = useVirtualizer({
+    count: rowDataArray.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 30,
+  });
+
   return (
-    <AutoSizer>
-      {({ width, height }: { width: number; height: number }) => (
-        <FixedSizeList
-          width={width}
-          height={height}
-          itemCount={rowDataArray.length}
-          itemSize={30}
-          className="List"
-          itemData={{ rows: rowDataArray }}
-        >
-          {EmojiBrowserRow}
-        </FixedSizeList>
-      )}
-    </AutoSizer>
+    <div
+      ref={parentRef}
+      style={{
+        height: `100%`,
+        overflow: 'auto',
+      }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const row = rowDataArray[virtualItem.index]!;
+          const style: React.CSSProperties = {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: `${virtualItem.size}px`,
+            transform: `translateY(${virtualItem.start}px)`,
+          };
+
+          if (row.type === 'category') {
+            return <EmojiBrowserCategory row={row} style={style} />;
+          }
+
+          return <EmojiBrowserItems row={row} style={style} />;
+        })}
+      </div>
+    </div>
   );
 };

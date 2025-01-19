@@ -1,7 +1,7 @@
-import { IconPickerLabelRow } from '@/shared/types/icons';
+import { IconPickerCategoryRow } from '@/shared/types/icons';
 
 interface IconBrowserCategoryProps {
-  row: IconPickerLabelRow;
+  row: IconPickerCategoryRow;
   style: React.CSSProperties;
 }
 

@@ -1,29 +1,28 @@
-export type IconData = {
-  categories: IconCategory[];
-  icons: Record<string, Icon>;
-};
-
 export type Icon = {
   id: string;
   name: string;
   code: string;
+  categoryId: string;
   tags: string[];
 };
 
 export type IconCategory = {
   id: string;
   name: string;
-  icons: string[];
+  count: number;
+  display_order: number;
 };
 
-export type IconPickerRowData = IconPickerLabelRow | IconPickerEmojiRow;
+export type IconPickerRowData = IconPickerLabelRow | IconPickerIconRow;
 
 export type IconPickerLabelRow = {
   type: 'label';
   category: string;
 };
 
-export type IconPickerEmojiRow = {
+export type IconPickerIconRow = {
   type: 'icon';
-  icons: Icon[];
+  category: string;
+  page: number;
+  count: number;
 };

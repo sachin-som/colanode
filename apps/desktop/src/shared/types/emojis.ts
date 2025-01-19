@@ -1,12 +1,8 @@
-export type EmojiData = {
-  categories: EmojiCategory[];
-  emojis: Record<string, Emoji>;
-};
-
 export type Emoji = {
   id: string;
   code: string;
   name: string;
+  categoryId: string;
   tags: string[];
   emoticons: string[] | undefined;
   skins: EmojiSkin[];
@@ -15,7 +11,8 @@ export type Emoji = {
 export type EmojiCategory = {
   id: string;
   name: string;
-  emojis: string[];
+  count: number;
+  display_order: number;
 };
 
 export type EmojiSkin = {
@@ -32,5 +29,7 @@ export type EmojiPickerLabelRow = {
 
 export type EmojiPickerEmojiRow = {
   type: 'emoji';
-  emojis: Emoji[];
+  category: string;
+  page: number;
+  count: number;
 };

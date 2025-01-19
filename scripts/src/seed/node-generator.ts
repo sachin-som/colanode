@@ -43,21 +43,21 @@ export class NodeGenerator {
     const spaceId = this.buildSpace(
       'General',
       'The general space',
-      '01je8kh1yekmqd9643naenqf1rem'
+      '01jhzbzq5d9why53gcew16ybh6es'
     );
-    this.buildPage(spaceId, 'Welcome', spaceId, '01je8kh2018tqrrxqsc6af71zfem');
+    this.buildPage(spaceId, 'Welcome', spaceId, '01jhzbzt92e67eva4ptspwtx7xes');
     this.buildPage(
       spaceId,
       'Resources',
       spaceId,
-      '01je8kh202et2bagv8phg219cbem'
+      '01jhzbzt96tp281z0tqtc0mg0tes'
     );
-    this.buildPage(spaceId, 'Guide', spaceId, '01je8kh202et2bagv8phg219cdem');
+    this.buildPage(spaceId, 'Guide', spaceId, '01jhzbzta4qewnx5kn8jv3d3nyes');
     this.buildChannel(
       spaceId,
       'Announcements',
       spaceId,
-      '01je8kh1zvyrbp8fgt59t2cy8pem'
+      '01jhzbzspgp8r6tj9k3733bw24es'
     );
   }
 
@@ -65,21 +65,21 @@ export class NodeGenerator {
     const spaceId = this.buildSpace(
       'Product',
       'The product space',
-      '01je8kh20sp99fzn32cf9mf3pyem'
+      '01jhzbzves59xk8zqpzsaj7jmhes'
     );
     this.buildChannel(
       spaceId,
       'Discussions',
       spaceId,
-      '01je8kh1j5m7v8bk06ara5txq5em'
+      '01jhzbzkw7e9khk5p32rxj1q31es'
     );
     this.buildChannel(
       spaceId,
       'Alerts',
       spaceId,
-      '01je8kh1yv79yfr5dsvy19g696em'
+      '01jhzbzr7m2zrjxe60d88v6ryyes'
     );
-    this.buildPage(spaceId, 'Roadmap', spaceId, '01je8kh1yyqmcxbdf67bgsc0wqem');
+    this.buildPage(spaceId, 'Roadmap', spaceId, '01jhzbzrctc3zbj7542a3pfdzves');
     this.buildTasksDatabase(spaceId, spaceId);
   }
 
@@ -87,9 +87,9 @@ export class NodeGenerator {
     const spaceId = this.buildSpace(
       'Business',
       'The business space',
-      '01je8kh2055hxb5k4g0sr5vj6gem'
+      '01jhzbzv0xhvx0dzx63qv6ahkzes'
     );
-    this.buildPage(spaceId, 'Notes', spaceId, '01je8kh2055hxb5k4g0sr5vj6aem');
+    this.buildPage(spaceId, 'Notes', spaceId, '01jhzbztvzghvzhnt6wh75c0x8es');
     this.buildClientsDatabase(spaceId, spaceId);
     this.buildMeetingsDatabase(spaceId, spaceId);
   }
@@ -436,7 +436,7 @@ export class NodeGenerator {
       type: 'database',
       parentId,
       name: 'Tasks',
-      avatar: '01je8kh202et2bagv8phg219chem',
+      avatar: '01jhzbztaackk799qwrm744q15es',
       fields: {
         [statusField.id]: statusField,
         [teamsField.id]: teamsField,
@@ -675,7 +675,7 @@ export class NodeGenerator {
       type: 'database',
       parentId,
       name: 'Clients',
-      avatar: '01je8kh1zbbrb0mc3zrtrmz9dwem',
+      avatar: '01jhzbzpdgkmnx5e7y31c0bzpfes',
       fields: {
         [statusField.id]: statusField,
         [sectorField.id]: sectorField,
@@ -810,7 +810,7 @@ export class NodeGenerator {
       type: 'database',
       parentId,
       name: 'Meetings',
-      avatar: '01je8kh206r0bn9mrvsmhrrxzkem',
+      avatar: '01jhzbzv3sx8c66vdr0e98b7f1es',
       fields: {
         [tagsField.id]: tagsField,
         [attendeesField.id]: attendeesField,

@@ -1,24 +1,20 @@
-import fs from 'fs';
+import { Kysely, SqliteDialect } from 'kysely';
+import SQLite from 'better-sqlite3';
+
 import path from 'path';
 
+import { EmojiDatabaseSchema } from '@/main/databases/emojis';
+import { IconDatabaseSchema } from '@/main/databases/icons';
 import { getAssetsSourcePath } from '@/main/lib/utils';
-import { EmojiData } from '@/shared/types/emojis';
-import { IconData } from '@/shared/types/icons';
 
-export const getEmojiData = (): EmojiData => {
-  const emojisMetadataPath = path.join(
-    getAssetsSourcePath(),
-    'emojis',
-    'emojis.json'
-  );
-  return JSON.parse(fs.readFileSync(emojisMetadataPath, 'utf8'));
-};
+export const emojiDatabase = new Kysely<EmojiDatabaseSchema>({
+  dialect: new SqliteDialect({
+    database: new SQLite(path.join(getAssetsSourcePath(), 'emojis.db')),
+  }),
+});
 
-export const getIconData = (): IconData => {
-  const iconsMetadataPath = path.join(
-    getAssetsSourcePath(),
-    'icons',
-    'icons.json'
-  );
-  return JSON.parse(fs.readFileSync(iconsMetadataPath, 'utf8'));
-};
+export const iconDatabase = new Kysely<IconDatabaseSchema>({
+  dialect: new SqliteDialect({
+    database: new SQLite(path.join(getAssetsSourcePath(), 'icons.db')),
+  }),
+});

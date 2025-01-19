@@ -1,8 +1,10 @@
 import AdmZip from 'adm-zip';
 import fetch from 'node-fetch';
+import SQLite from 'better-sqlite3';
 import { generateId, IdType } from '@colanode/core';
 
 import fs from 'fs';
+import path from 'path';
 
 type EmojiMartI18n = {
   categories: Record<string, string>;
@@ -32,27 +34,9 @@ type EmojiMartData = {
   categories: Record<string, EmojiMartCategory>;
 };
 
-const WORK_DIR_PATH = 'src/emojis/temp';
-const EMOJIS_DIR_PATH = `${WORK_DIR_PATH}/emojis`;
-const EMOJIS_METADATA_FILE_PATH = 'src/emojis/emojis.json';
-const EMOJIS_ZIP_FILE_PATH = 'src/emojis/emojis.zip';
-
-const GITHUB_DOMAIN = 'https://github.com';
-
-const EMOJI_MART_REPO = 'missive/emoji-mart';
-const EMOJI_MART_TAG = '5.6.0';
-const EMOJI_MART_DIR_PATH = `${WORK_DIR_PATH}/emoji-mart-${EMOJI_MART_TAG}`;
-const EMOJI_MART_I18N_FILE_PATH = `${EMOJI_MART_DIR_PATH}/packages/emoji-mart-data/i18n/en.json`;
-const EMOJI_MART_DATA_FILE_PATH = `${EMOJI_MART_DIR_PATH}/packages/emoji-mart-data/sets/15/twitter.json`;
-
-const TWEEMOJI_REPO = 'jdecked/twemoji';
-const TWEEMOJI_TAG = '15.1.0';
-const TWEEMOJI_DIR_PATH = `${WORK_DIR_PATH}/twemoji-${TWEEMOJI_TAG}`;
-const TWEEMOJI_SVG_DIR_PATH = `${TWEEMOJI_DIR_PATH}/assets/svg`;
-
-type EmojiMetadata = {
-  categories: EmojiCategory[];
-  emojis: Record<string, Emoji>;
+type EmojiSkin = {
+  id: string;
+  unified: string;
 };
 
 type Emoji = {
@@ -64,67 +48,91 @@ type Emoji = {
   skins: EmojiSkin[];
 };
 
+type EmojiRow = {
+  id: string;
+  code: string;
+  name: string;
+  tags: string;
+  emoticons: string;
+  skins: string;
+};
+
 type EmojiCategory = {
   id: string;
   name: string;
-  emojis: string[];
+  count: number;
+  display_order: number;
 };
 
-type EmojiSkin = {
-  id: string;
-  unified: string;
+const GITHUB_DOMAIN = 'https://github.com';
+
+const WORK_DIR_PATH = 'src/emojis/temp';
+const DATABASE_PATH = 'src/emojis/emojis.db';
+
+const EMOJI_MART_REPO = 'missive/emoji-mart';
+const EMOJI_MART_TAG = '5.6.0';
+const EMOJI_MART_DIR_PATH = path.join(
+  WORK_DIR_PATH,
+  `emoji-mart-${EMOJI_MART_TAG}`
+);
+const EMOJI_MART_DATA_DIR_PATH = path.join(
+  EMOJI_MART_DIR_PATH,
+  'packages',
+  'emoji-mart-data'
+);
+const EMOJI_MART_I18N_FILE_PATH = path.join(
+  EMOJI_MART_DATA_DIR_PATH,
+  'i18n',
+  'en.json'
+);
+const EMOJI_MART_DATA_FILE_PATH = path.join(
+  EMOJI_MART_DATA_DIR_PATH,
+  'sets',
+  '15',
+  'twitter.json'
+);
+
+const TWEEMOJI_REPO = 'jdecked/twemoji';
+const TWEEMOJI_TAG = '15.1.0';
+const TWEEMOJI_DIR_PATH = path.join(WORK_DIR_PATH, `twemoji-${TWEEMOJI_TAG}`);
+const TWEEMOJI_SVG_DIR_PATH = path.join(TWEEMOJI_DIR_PATH, 'assets', 'svg');
+
+const downloadZipAndExtract = async (url: string, dir: string) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to download ${url}`);
+
+  const buffer = await response.arrayBuffer();
+  const zip = new AdmZip(Buffer.from(buffer));
+  zip.extractAllTo(dir, true);
 };
 
 const downloadEmojiMartRepo = async () => {
-  console.log(`Downloading emoji-mart repo`);
+  console.log(`Downloading emoji-mart repo...`);
   const url = `${GITHUB_DOMAIN}/${EMOJI_MART_REPO}/archive/refs/tags/v${EMOJI_MART_TAG}.zip`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}`);
-  }
 
-  if (fs.existsSync(EMOJI_MART_DIR_PATH)) {
-    fs.rmSync(EMOJI_MART_DIR_PATH, { recursive: true });
-  }
-
-  const buffer = await response.buffer();
-  const zip = new AdmZip(buffer);
-  zip.extractAllTo(WORK_DIR_PATH, true);
-  console.log(`Downloaded emoji-mart repo`);
+  await downloadZipAndExtract(url, WORK_DIR_PATH);
+  console.log(`Downloaded emoji-mart repo.`);
 };
 
 const downloadTweemojiRepo = async () => {
-  console.log(`Downloading twemoji repo`);
+  console.log(`Downloading twemoji repo...`);
   const url = `${GITHUB_DOMAIN}/${TWEEMOJI_REPO}/archive/refs/tags/v${TWEEMOJI_TAG}.zip`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}`);
-  }
 
-  if (fs.existsSync(TWEEMOJI_DIR_PATH)) {
-    fs.rmSync(TWEEMOJI_DIR_PATH, { recursive: true });
-  }
-
-  const buffer = await response.buffer();
-  const zip = new AdmZip(buffer);
-  zip.extractAllTo(WORK_DIR_PATH, true);
-  console.log(`Downloaded twemoji repo`);
+  await downloadZipAndExtract(url, WORK_DIR_PATH);
+  console.log(`Downloaded twemoji repo.`);
 };
 
-const getEmojiSkinFileName = (unified: string) => {
+const getEmojiSkinFileName = (unified: string): string => {
   let file = unified;
 
-  if (file.substring(0, 2) == '00') {
+  if (file.substring(0, 2) === '00') {
     file = file.substring(2);
-
-    // Fix for keycap emojis
-    const regex = /-fe0f/i;
-    file = file.replace(regex, '');
+    // fix for keycap emojis
+    file = file.replace(/-fe0f/i, '');
   }
 
   if (file.startsWith('1f441')) {
-    const regex = /-fe0f/gi;
-    file = file.replace(regex, '');
+    file = file.replace(/-fe0f/gi, '');
   }
 
   if (file.endsWith('-fe0f')) {
@@ -137,26 +145,120 @@ const getEmojiSkinFileName = (unified: string) => {
   return `${file}.svg`;
 };
 
-const readMetadata = (): EmojiMetadata => {
-  if (!fs.existsSync(EMOJIS_METADATA_FILE_PATH)) {
-    return { emojis: {}, categories: [] };
-  }
+const initDatabase = () => {
+  const database = new SQLite(DATABASE_PATH);
 
-  return JSON.parse(
-    fs.readFileSync(EMOJIS_METADATA_FILE_PATH, 'utf-8')
-  ) as EmojiMetadata;
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      count INTEGER NOT NULL,
+      display_order INTEGER NOT NULL
+    );
+  
+    CREATE TABLE IF NOT EXISTS emojis (
+      id TEXT PRIMARY KEY,
+      category_id TEXT,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      tags TEXT,
+      emoticons TEXT,
+      skins TEXT,
+      FOREIGN KEY(category_id) REFERENCES categories(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_emojis_category_id ON emojis(category_id);
+
+    CREATE TABLE IF NOT EXISTS emoji_svgs (
+      skin_id TEXT PRIMARY KEY,
+      emoji_id TEXT NOT NULL,
+      svg BLOB NOT NULL
+    );
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS emoji_search
+    USING fts5(
+      id UNINDEXED,
+      text
+    );
+  `);
+
+  return database;
 };
 
-const generateEmojisDir = () => {
-  console.log(`Generating emojis dir`);
-  const existingMetadata: EmojiMetadata = readMetadata();
+const readExistingMetadata = (database: SQLite.Database) => {
+  const emojiRows = database
+    .prepare<unknown[], EmojiRow>(`SELECT * FROM emojis`)
+    .all();
 
-  const result: EmojiMetadata = {
-    categories: [],
-    emojis: {},
-  };
+  const emojis: Record<string, Emoji> = {};
 
-  const idMap: Record<string, string> = {};
+  for (const row of emojiRows) {
+    emojis[row.id] = {
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      tags: row.tags ? JSON.parse(row.tags) : [],
+      emoticons: row.emoticons ? JSON.parse(row.emoticons) : [],
+      skins: row.skins ? JSON.parse(row.skins) : [],
+    };
+  }
+
+  const categoryRows = database
+    .prepare<unknown[], EmojiCategory>(`SELECT * FROM categories`)
+    .all();
+
+  const categories: EmojiCategory[] = categoryRows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    count: c.count,
+    display_order: c.display_order,
+  }));
+
+  return { emojis, categories };
+};
+
+const processEmojisIntoDb = (database: SQLite.Database) => {
+  console.log(`Processing emojis into database...`);
+
+  const insertOrUpdateCategory = database.prepare(`
+    INSERT INTO categories (id, name, count, display_order)
+    VALUES (@id, @name, @count, @display_order)
+    ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,
+      count=excluded.count,
+      display_order=excluded.display_order
+  `);
+
+  const insertOrUpdateEmoji = database.prepare(`
+    INSERT INTO emojis (id, category_id, code, name, tags, emoticons, skins)
+    VALUES (@id, @category_id, @code, @name, @tags, @emoticons, @skins)
+    ON CONFLICT(id) DO UPDATE SET
+      category_id=excluded.category_id,
+      code=excluded.code,
+      name=excluded.name,
+      tags=excluded.tags,
+      emoticons=excluded.emoticons,
+      skins=excluded.skins
+  `);
+
+  const deleteSearch = database.prepare(`
+    DELETE FROM emoji_search WHERE id = @id
+  `);
+
+  const insertSearch = database.prepare(`
+    INSERT INTO emoji_search (id, text)
+    VALUES (
+      @id,
+      @text
+    )
+  `);
+
+  const insertOrReplaceSVG = database.prepare(`
+    INSERT OR REPLACE INTO emoji_svgs (skin_id, emoji_id, svg)
+    VALUES (@skin_id, @emoji_id, @svg)
+  `);
+
+  const existingMetadata = readExistingMetadata(database);
 
   const emojiMartData = JSON.parse(
     fs.readFileSync(EMOJI_MART_DATA_FILE_PATH, 'utf-8')
@@ -166,107 +268,162 @@ const generateEmojisDir = () => {
     fs.readFileSync(EMOJI_MART_I18N_FILE_PATH, 'utf-8')
   ) as EmojiMartI18n;
 
-  console.log(`Processing emojis`);
-  for (const emojiMartItem of Object.values(emojiMartData.emojis)) {
-    const existingEmoji = Object.values(existingMetadata.emojis).find(
-      (emoji) => emoji.code === emojiMartItem.id
+  const codeToEmojiId: Record<string, string> = {};
+  let maxDisplayOrder = 0;
+
+  console.log(`Processing categories and their emojis...`);
+  for (const category of Object.values(emojiMartData.categories)) {
+    const i18nCategory = i18nData.categories[category.id];
+    if (!i18nCategory) {
+      throw new Error(`Category ${category.id} not found in i18n data`);
+    }
+
+    console.log(
+      `Processing category: ${i18nCategory} (${category.emojis.length} emojis)`
     );
 
-    const emojiId = existingEmoji ? existingEmoji.id : generateId(IdType.Emoji);
-    const emoji: Emoji = {
-      id: emojiId,
-      code: emojiMartItem.id,
-      name: emojiMartItem.name,
-      tags: emojiMartItem.keywords,
-      emoticons: emojiMartItem.emoticons,
-      skins: [],
-    };
+    const existingCategory = existingMetadata.categories.find(
+      (c) => c.id === category.id
+    );
+    const displayOrder = existingCategory
+      ? existingCategory.display_order
+      : maxDisplayOrder + 1;
 
-    for (const skin of emojiMartItem.skins) {
-      const existingSkin = existingEmoji?.skins.find(
-        (s) => s.unified === skin.unified
+    insertOrUpdateCategory.run({
+      id: category.id,
+      name: i18nCategory,
+      count: category.emojis.length,
+      display_order: displayOrder,
+    });
+
+    if (displayOrder > maxDisplayOrder) {
+      maxDisplayOrder = displayOrder;
+    }
+
+    for (const emojiCode of category.emojis) {
+      const emojiMartItem = emojiMartData.emojis[emojiCode];
+      if (!emojiMartItem) {
+        console.warn(`Emoji ${emojiCode} not found in emoji data`);
+        continue;
+      }
+
+      const existingEmoji = Object.values(existingMetadata.emojis).find(
+        (e) => e.code === emojiMartItem.id
       );
 
-      const skinId = existingSkin?.id ?? generateId(IdType.Emoji);
-      emoji.skins.push({
-        id: skinId,
-        unified: skin.unified,
+      const finalEmojiId = existingEmoji
+        ? existingEmoji.id
+        : generateId(IdType.Emoji);
+
+      const newEmoji: Emoji = {
+        id: finalEmojiId,
+        code: emojiMartItem.id,
+        name: emojiMartItem.name,
+        tags: emojiMartItem.keywords,
+        emoticons: emojiMartItem.emoticons,
+        skins: [],
+      };
+
+      if (existingEmoji) {
+        for (const skin of emojiMartItem.skins) {
+          const existingSkin = existingEmoji.skins.find(
+            (s) => s.unified === skin.unified
+          );
+
+          const skinId = existingSkin?.id ?? generateId(IdType.EmojiSkin);
+          newEmoji.skins.push({ id: skinId, unified: skin.unified });
+        }
+      } else {
+        for (const skin of emojiMartItem.skins) {
+          newEmoji.skins.push({
+            id: generateId(IdType.EmojiSkin),
+            unified: skin.unified,
+          });
+        }
+      }
+
+      insertOrUpdateEmoji.run({
+        id: newEmoji.id,
+        category_id: category.id,
+        code: newEmoji.code,
+        name: newEmoji.name,
+        tags: JSON.stringify(newEmoji.tags),
+        emoticons: JSON.stringify(newEmoji.emoticons || []),
+        skins: JSON.stringify(newEmoji.skins),
       });
 
-      const fileName = getEmojiSkinFileName(skin.unified);
-      const sourceFilePath = `${TWEEMOJI_SVG_DIR_PATH}/${fileName}`;
-      const targetFilePath = `${EMOJIS_DIR_PATH}/${skinId}.svg`;
-      if (!fs.existsSync(targetFilePath)) {
-        fs.copyFileSync(sourceFilePath, targetFilePath);
-      }
-    }
+      const text = [
+        newEmoji.name,
+        ...newEmoji.tags,
+        ...(newEmoji.emoticons || []),
+      ].join(' ');
 
-    idMap[emoji.code] = emoji.id;
-    result.emojis[emojiId] = emoji;
+      deleteSearch.run({ id: newEmoji.id });
+
+      insertSearch.run({
+        id: newEmoji.id,
+        text,
+      });
+
+      for (const skin of newEmoji.skins) {
+        const fileName = getEmojiSkinFileName(skin.unified);
+        const sourceFilePath = path.join(TWEEMOJI_SVG_DIR_PATH, fileName);
+
+        if (!fs.existsSync(sourceFilePath)) {
+          console.warn(`Missing SVG for ${skin.unified} at ${fileName}`);
+          continue;
+        }
+
+        const svgBuffer = fs.readFileSync(sourceFilePath);
+        insertOrReplaceSVG.run({
+          skin_id: skin.id,
+          emoji_id: newEmoji.id,
+          svg: svgBuffer,
+        });
+      }
+
+      codeToEmojiId[emojiMartItem.id] = finalEmojiId;
+    }
   }
 
-  console.log(`Processing categories`);
-  for (const emojiMartCategory of Object.values(emojiMartData.categories)) {
-    const i18nCategory = i18nData.categories[emojiMartCategory.id];
-
-    if (!i18nCategory) {
-      throw new Error(
-        `Category ${emojiMartCategory.id} not found in i18n data`
-      );
-    }
-
-    const categoryEmojis: string[] = [];
-    for (const emoji of emojiMartCategory.emojis) {
-      if (!idMap[emoji]) {
-        throw new Error(`Emoji ${emoji} not found in idMap`);
-      }
-
-      categoryEmojis.push(idMap[emoji]);
-    }
-
-    const category: EmojiCategory = {
-      id: emojiMartCategory.id,
-      name: i18nCategory,
-      emojis: categoryEmojis,
-    };
-
-    result.categories.push(category);
-  }
-
-  fs.writeFileSync(EMOJIS_METADATA_FILE_PATH, JSON.stringify(result, null, 2));
-  console.log(`Generated emojis dir`);
+  console.log(`Done processing emojis into database.`);
 };
 
-const zipEmojis = async () => {
-  console.log(`Zipping emojis`);
-  if (fs.existsSync(EMOJIS_ZIP_FILE_PATH)) {
-    fs.rmSync(EMOJIS_ZIP_FILE_PATH);
-  }
-
-  const zip = new AdmZip();
-  zip.addLocalFolder(EMOJIS_DIR_PATH);
-  zip.writeZip(EMOJIS_ZIP_FILE_PATH);
-  console.log(`Zipped emojis`);
-};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const generateEmojis = async () => {
   if (!fs.existsSync(WORK_DIR_PATH)) {
     fs.mkdirSync(WORK_DIR_PATH);
   }
 
-  if (!fs.existsSync(EMOJIS_DIR_PATH)) {
-    fs.mkdirSync(EMOJIS_DIR_PATH);
-  }
-
   await downloadEmojiMartRepo();
   await downloadTweemojiRepo();
 
-  generateEmojisDir();
-  await zipEmojis();
+  const db = initDatabase();
+  processEmojisIntoDb(db);
 
-  console.log(`Cleaning up`);
-  fs.rmSync(WORK_DIR_PATH, { recursive: true });
-  console.log(`All done`);
+  console.log(`Cleaning up...`);
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      fs.rmSync(WORK_DIR_PATH, { recursive: true, force: true });
+      break;
+    } catch (err) {
+      if (attempt === 3) {
+        console.error(
+          `Failed to remove ${WORK_DIR_PATH} after 3 attempts: ${err}`
+        );
+      } else {
+        console.log(`Retry ${attempt}/3 to remove working directory...`);
+        await sleep(1000);
+      }
+    }
+  }
+
+  console.log(`All done. The 'emojis.db' file now contains everything!`);
 };
 
-generateEmojis();
+generateEmojis().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

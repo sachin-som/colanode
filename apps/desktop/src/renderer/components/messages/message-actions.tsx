@@ -1,15 +1,16 @@
 import { MessagesSquare, Reply } from 'lucide-react';
 import React from 'react';
 
-import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { MessageDeleteButton } from '@/renderer/components/messages/message-delete-button';
 import { MessageReactionCreatePopover } from '@/renderer/components/messages/message-reaction-create-popover';
+import { MessageQuickReaction } from '@/renderer/components/messages/message-quick-reaction';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useConversation } from '@/renderer/contexts/conversation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { MessageNode } from '@/shared/types/messages';
+import { defaultEmojis } from '@/shared/lib/assets';
 
 const MessageAction = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -22,12 +23,6 @@ const MessageAction = ({ children }: { children: React.ReactNode }) => {
 interface MessageActionsProps {
   message: MessageNode;
 }
-
-const quickReactions = [
-  '01je8kh1jw8hm4s8pgb1j7ha3jem',
-  '01je8kh1j23gc6jt9cbjfsam7dem',
-  '01je8kh228xbs1hv5gn6ff0y90em',
-];
 
 export const MessageActions = ({ message }: MessageActionsProps) => {
   const workspace = useWorkspace();
@@ -66,15 +61,24 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
 
   return (
     <ul className="invisible absolute -top-2 right-1 z-10 flex flex-row items-center bg-gray-100 text-muted-foreground shadow group-hover:visible">
-      {quickReactions.map((reaction) => (
-        <MessageAction key={reaction}>
-          <EmojiElement
-            id={reaction}
-            className="size-4"
-            onClick={() => handleReactionClick(reaction)}
-          />
-        </MessageAction>
-      ))}
+      <MessageAction>
+        <MessageQuickReaction
+          emoji={defaultEmojis.like}
+          onClick={handleReactionClick}
+        />
+      </MessageAction>
+      <MessageAction>
+        <MessageQuickReaction
+          emoji={defaultEmojis.heart}
+          onClick={handleReactionClick}
+        />
+      </MessageAction>
+      <MessageAction>
+        <MessageQuickReaction
+          emoji={defaultEmojis.check}
+          onClick={handleReactionClick}
+        />
+      </MessageAction>
       <Separator orientation="vertical" className="h-6 w-[2px] mx-1" />
       {canReplyInThread && (
         <MessageAction>

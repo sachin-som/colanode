@@ -4,16 +4,53 @@ import path from 'path';
 
 import {
   getAccountAvatarsDirectoryPath,
-  getAssetsSourcePath,
   getWorkspaceFilesDirectoryPath,
 } from '@/main/lib/utils';
 import { appService } from '@/main/services/app-service';
+import { emojiDatabase, iconDatabase } from '@/main/lib/assets';
 
-export const handleAssetRequest = (request: Request): Promise<Response> => {
+export const handleAssetRequest = async (
+  request: Request
+): Promise<Response> => {
   const url = request.url.replace('asset://', '');
-  const assetPath = path.join(getAssetsSourcePath(), url);
-  const localFileUrl = `file://${assetPath}`;
-  return net.fetch(localFileUrl);
+  const [type, id] = url.split('/');
+  if (!type || !id) {
+    return new Response(null, { status: 400 });
+  }
+
+  if (type === 'emojis') {
+    const emoji = await emojiDatabase
+      .selectFrom('emoji_svgs')
+      .selectAll()
+      .where('skin_id', '=', id)
+      .executeTakeFirst();
+
+    if (emoji) {
+      return new Response(emoji.svg, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+        },
+      });
+    }
+  }
+
+  if (type === 'icons') {
+    const icon = await iconDatabase
+      .selectFrom('icon_svgs')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    if (icon) {
+      return new Response(icon.svg, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+        },
+      });
+    }
+  }
+
+  return new Response(null, { status: 404 });
 };
 
 export const handleAvatarRequest = async (

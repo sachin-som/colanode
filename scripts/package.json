@@ -12,6 +12,7 @@
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
     "@types/adm-zip": "^0.5.7",
+    "@types/better-sqlite3": "^7.6.12",
     "tsx": "^4.19.2"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "@colanode/crdt": "*",
     "adm-zip": "^0.5.16",
     "axios": "^1.7.9",
+    "better-sqlite3": "^11.8.1",
     "form-data": "^4.0.1",
     "node-fetch": "^3.3.2"
   }

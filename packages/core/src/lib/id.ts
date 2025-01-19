@@ -25,6 +25,7 @@ export enum IdType {
   ViewSort = 'vs',
   Query = 'qu',
   Emoji = 'em',
+  EmojiSkin = 'es',
   Avatar = 'av',
   Icon = 'ic',
   File = 'fi',

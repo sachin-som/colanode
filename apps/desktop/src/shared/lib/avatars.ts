@@ -1,5 +1,7 @@
 import { hashCode, IdType } from '@colanode/core';
 
+import { defaultIcons } from '@/shared/lib/assets';
+
 export const getAvatarSizeClasses = (size?: string) => {
   if (size === 'small') {
     return 'size-5';
@@ -41,27 +43,27 @@ export const getAvatarUrl = (accountId: string, avatar: string): string => {
 
 export const getDefaultNodeAvatar = (type: IdType): string | null => {
   if (type === IdType.Channel) {
-    return '01je8md2pbpk5rdesmb1d54s1tic';
+    return defaultIcons.chat;
   }
 
   if (type === IdType.Page) {
-    return '01je8md2q765zkjskwmqm17jrtic';
+    return defaultIcons.book;
   }
 
   if (type === IdType.Database) {
-    return '01je8md2q0qm5h2dgwhv6sk6kaic';
+    return defaultIcons.database;
   }
 
   if (type === IdType.Record) {
-    return '01je8md2q8d8p8yaq4rpybhktqic';
+    return defaultIcons.bookmark;
   }
 
   if (type === IdType.Folder) {
-    return '01je8md2qfbtd5hxzsvkhbmbpfic';
+    return defaultIcons.folder;
   }
 
   if (type === IdType.Space) {
-    return '01je8md2tezbkwrjm9eht228j6ic';
+    return defaultIcons.apps;
   }
 
   return null;

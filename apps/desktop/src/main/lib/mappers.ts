@@ -7,6 +7,8 @@ import {
 import { encodeState } from '@colanode/crdt';
 
 import { SelectAccount, SelectServer } from '@/main/databases/app';
+import { SelectEmoji } from '@/main/databases/emojis';
+import { SelectIcon } from '@/main/databases/icons';
 import { SelectWorkspace } from '@/main/databases/account';
 import {
   SelectFile,
@@ -32,6 +34,8 @@ import {
   MessageReaction,
 } from '@/shared/types/messages';
 import { EntryInteraction } from '@/shared/types/entries';
+import { Emoji } from '@/shared/types/emojis';
+import { Icon } from '@/shared/types/icons';
 
 export const mapUser = (row: SelectUser): User => {
   return {
@@ -257,5 +261,27 @@ export const mapEntryInteraction = (
     lastOpenedAt: row.last_opened_at,
     firstOpenedAt: row.first_opened_at,
     version: row.version,
+  };
+};
+
+export const mapEmoji = (row: SelectEmoji): Emoji => {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    categoryId: row.category_id,
+    tags: row.tags ? JSON.parse(row.tags) : [],
+    emoticons: row.emoticons ? JSON.parse(row.emoticons) : [],
+    skins: row.skins ? JSON.parse(row.skins) : [],
+  };
+};
+
+export const mapIcon = (row: SelectIcon): Icon => {
+  return {
+    id: row.id,
+    name: row.name,
+    categoryId: row.category_id,
+    code: row.code,
+    tags: row.tags ? JSON.parse(row.tags) : [],
   };
 };

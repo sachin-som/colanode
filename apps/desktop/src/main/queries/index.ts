@@ -1,10 +1,15 @@
 import { AccountGetQueryHandler } from '@/main/queries/accounts/account-get';
 import { AccountListQueryHandler } from '@/main/queries/accounts/accounts-list';
-import { EmojisGetQueryHandler } from '@/main/queries/emojis/emojis-get';
+import { EmojiGetQueryHandler } from '@/main/queries/emojis/emoji-get';
+import { EmojiListQueryHandler } from '@/main/queries/emojis/emoji-list';
+import { EmojiCategoryListQueryHandler } from '@/main/queries/emojis/emoji-category-list';
+import { EmojiSearchQueryHandler } from '@/main/queries/emojis/emoji-search';
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
 import { FileGetQueryHandler } from '@/main/queries/files/file-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
-import { IconsGetQueryHandler } from '@/main/queries/icons/icons-get';
+import { IconListQueryHandler } from '@/main/queries/icons/icon-list';
+import { IconSearchQueryHandler } from '@/main/queries/icons/icon-search';
+import { IconCategoryListQueryHandler } from '@/main/queries/icons/icon-category-list';
 import { MessageGetQueryHandler } from '@/main/queries/messages/message-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
 import { MessageReactionsGetQueryHandler } from '@/main/queries/messages/message-reactions-get';
@@ -42,8 +47,13 @@ export const queryHandlerMap: QueryHandlerMap = {
   workspace_list: new WorkspaceListQueryHandler(),
   user_list: new UserListQueryHandler(),
   file_list: new FileListQueryHandler(),
-  emojis_get: new EmojisGetQueryHandler(),
-  icons_get: new IconsGetQueryHandler(),
+  emoji_list: new EmojiListQueryHandler(),
+  emoji_get: new EmojiGetQueryHandler(),
+  emoji_category_list: new EmojiCategoryListQueryHandler(),
+  emoji_search: new EmojiSearchQueryHandler(),
+  icon_list: new IconListQueryHandler(),
+  icon_search: new IconSearchQueryHandler(),
+  icon_category_list: new IconCategoryListQueryHandler(),
   entry_tree_get: new EntryTreeGetQueryHandler(),
   entry_children_get: new EntryChildrenGetQueryHandler(),
   radar_data_get: new RadarDataGetQueryHandler(),

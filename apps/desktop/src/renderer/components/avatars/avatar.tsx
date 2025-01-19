@@ -8,8 +8,7 @@ import {
   getColorForId,
   getDefaultNodeAvatar,
 } from '@/shared/lib/avatars';
-import { getEmojiUrl } from '@/shared/lib/emojis';
-import { getIconUrl } from '@/shared/lib/icons';
+import { getEmojiUrl, getIconUrl } from '@/shared/lib/assets';
 import { cn } from '@/shared/lib/utils';
 
 interface AvatarProps {

@@ -1,14 +1,12 @@
 import AdmZip from 'adm-zip';
 import fetch from 'node-fetch';
+import SQLite from 'better-sqlite3';
 import { generateId, IdType } from '@colanode/core';
 
 import fs from 'fs';
+import path from 'path';
 
-type SimpleIconsData = {
-  icons: SimpleIconItem[];
-};
-
-type SimpleIconItem = {
+type SimpleIconsItem = {
   title: string;
   slug?: string;
 };
@@ -47,239 +45,362 @@ const simpleIconTitleToSlug = (title: string) =>
     .normalize('NFD')
     .replaceAll(TITLE_TO_SLUG_RANGE_REGEX, '');
 
-const WORK_DIR_PATH = 'src/icons/temp';
-const ICONS_DIR_PATH = `${WORK_DIR_PATH}/icons`;
-const ICONS_METADATA_FILE_PATH = `src/icons/icons.json`;
-const ICONS_ZIP_FILE_PATH = 'src/icons/icons.zip';
-
-const GITHUB_DOMAIN = 'https://github.com';
-
-const REMIX_ICON_REPO = 'Remix-Design/RemixIcon';
-const REMIX_ICON_TAG = '4.5.0';
-const REMIX_ICON_DIR_PATH = `${WORK_DIR_PATH}/RemixIcon-${REMIX_ICON_TAG}`;
-const REMIX_ICON_TAGS_FILE_PATH = `${REMIX_ICON_DIR_PATH}/tags.json`;
-const REMIX_ICON_ICONS_DIR_PATH = `${REMIX_ICON_DIR_PATH}/icons`;
-
-const SIMPLE_ICONS_REPO = 'simple-icons/simple-icons';
-const SIMPLE_ICONS_TAG = '13.16.0';
-const SIMPLE_ICONS_DIR_PATH = `${WORK_DIR_PATH}/simple-icons-${SIMPLE_ICONS_TAG}`;
-const SIMPLE_ICONS_DATA_FILE_PATH = `${SIMPLE_ICONS_DIR_PATH}/_data/simple-icons.json`;
-const SIMPLE_ICONS_ICONS_DIR_PATH = `${SIMPLE_ICONS_DIR_PATH}/icons`;
-
-type IconMetadata = {
-  categories: IconCategory[];
-  icons: Record<string, Icon>;
-};
-
 type Icon = {
   id: string;
-  name: string;
   code: string;
+  name: string;
   tags: string[];
+};
+
+type IconRow = {
+  id: string;
+  code: string;
+  name: string;
+  tags: string;
 };
 
 type IconCategory = {
   id: string;
   name: string;
-  icons: string[];
+  count: number;
+  display_order: number;
+};
+
+const GITHUB_DOMAIN = 'https://github.com';
+
+const WORK_DIR_PATH = 'src/icons/temp';
+const DATABASE_PATH = 'src/icons/icons.db';
+
+const REMIX_ICON_REPO = 'Remix-Design/RemixIcon';
+const REMIX_ICON_TAG = '4.6.0';
+const REMIX_ICON_DIR_PATH = path.join(
+  WORK_DIR_PATH,
+  `RemixIcon-${REMIX_ICON_TAG}`
+);
+const REMIX_ICON_TAGS_FILE_PATH = path.join(REMIX_ICON_DIR_PATH, 'tags.json');
+const REMIX_ICON_ICONS_DIR_PATH = path.join(REMIX_ICON_DIR_PATH, 'icons');
+
+const SIMPLE_ICONS_REPO = 'simple-icons/simple-icons';
+const SIMPLE_ICONS_TAG = '14.3.0';
+const SIMPLE_ICONS_DIR_PATH = path.join(
+  WORK_DIR_PATH,
+  `simple-icons-${SIMPLE_ICONS_TAG}`
+);
+const SIMPLE_ICONS_DATA_FILE_PATH = path.join(
+  SIMPLE_ICONS_DIR_PATH,
+  '_data',
+  'simple-icons.json'
+);
+const SIMPLE_ICONS_ICONS_DIR_PATH = path.join(SIMPLE_ICONS_DIR_PATH, 'icons');
+
+const downloadZipAndExtract = async (url: string, dir: string) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to download ${url}`);
+
+  const buffer = await response.arrayBuffer();
+  const zip = new AdmZip(Buffer.from(buffer));
+  zip.extractAllTo(dir, true);
 };
 
 const downloadRemixIconRepo = async () => {
-  console.log(`Downloading remix icon repo`);
+  console.log('Downloading remix icon repo...');
   const url = `${GITHUB_DOMAIN}/${REMIX_ICON_REPO}/archive/refs/tags/v${REMIX_ICON_TAG}.zip`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}`);
-  }
 
-  if (fs.existsSync(REMIX_ICON_DIR_PATH)) {
-    fs.rmSync(REMIX_ICON_DIR_PATH, { recursive: true });
-  }
-
-  const buffer = await response.buffer();
-  const zip = new AdmZip(buffer);
-  zip.extractAllTo(WORK_DIR_PATH, true);
-  console.log(`Downloaded remix icon repo`);
+  await downloadZipAndExtract(url, WORK_DIR_PATH);
+  console.log('Downloaded remix icon repo.');
 };
 
 const downloadSimpleIconsRepo = async () => {
-  console.log(`Downloading simple icons repo`);
+  console.log('Downloading simple icons repo...');
   const url = `${GITHUB_DOMAIN}/${SIMPLE_ICONS_REPO}/archive/refs/tags/${SIMPLE_ICONS_TAG}.zip`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}`);
-  }
 
-  if (fs.existsSync(SIMPLE_ICONS_DIR_PATH)) {
-    fs.rmSync(SIMPLE_ICONS_DIR_PATH, { recursive: true });
-  }
-
-  const buffer = await response.buffer();
-  const zip = new AdmZip(buffer);
-  zip.extractAllTo(WORK_DIR_PATH, true);
-  console.log(`Downloaded simple icons repo`);
+  await downloadZipAndExtract(url, WORK_DIR_PATH);
+  console.log('Downloaded simple icons repo.');
 };
 
-const readMetadata = (): IconMetadata => {
-  if (!fs.existsSync(ICONS_METADATA_FILE_PATH)) {
-    return { categories: [], icons: {} };
-  }
+const initDatabase = () => {
+  const db = new SQLite(DATABASE_PATH);
 
-  return JSON.parse(
-    fs.readFileSync(ICONS_METADATA_FILE_PATH, 'utf-8')
-  ) as IconMetadata;
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      count INTEGER NOT NULL,
+      display_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS icons (
+      id TEXT PRIMARY KEY,
+      category_id TEXT,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      tags TEXT,
+      FOREIGN KEY(category_id) REFERENCES categories(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_icons_category_id ON icons(category_id);
+
+    CREATE TABLE IF NOT EXISTS icon_svgs (
+      id TEXT PRIMARY KEY,
+      svg BLOB NOT NULL
+    );
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS icon_search
+    USING fts5(
+      id UNINDEXED,
+      text
+    );
+  `);
+  return db;
 };
 
-const generateIconsDir = async () => {
-  console.log(`Generating icons dir`);
-  const existingMetadata = readMetadata();
+const readExistingMetadata = (db: SQLite.Database) => {
+  const rows = db.prepare<unknown[], IconRow>('SELECT * FROM icons').all();
 
-  const result: IconMetadata = {
-    categories: [],
-    icons: {},
-  };
+  const icons: Record<string, Icon> = {};
 
-  console.log('Generating remix icons');
-  const remixIconTags = JSON.parse(
+  for (const row of rows) {
+    icons[row.id] = {
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      tags: row.tags ? JSON.parse(row.tags) : [],
+    };
+  }
+
+  const categoryRows = db
+    .prepare<unknown[], IconCategory>('SELECT * FROM categories')
+    .all();
+
+  const categories: IconCategory[] = categoryRows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    count: c.count,
+    display_order: c.display_order,
+  }));
+
+  return { icons, categories };
+};
+
+const processIconsIntoDb = (db: SQLite.Database) => {
+  console.log('Processing icons into database...');
+
+  const insertOrUpdateCategory = db.prepare(`
+    INSERT INTO categories (id, name, count, display_order)
+    VALUES (@id, @name, @count, @display_order)
+    ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,
+      count=excluded.count,
+      display_order=excluded.display_order
+  `);
+
+  const insertOrUpdateIcon = db.prepare(`
+    INSERT INTO icons (id, category_id, code, name, tags)
+    VALUES (@id, @category_id, @code, @name, @tags)
+    ON CONFLICT(id) DO UPDATE SET
+      category_id=excluded.category_id,
+      code=excluded.code,
+      name=excluded.name,
+      tags=excluded.tags
+  `);
+
+  const deleteSearch = db.prepare('DELETE FROM icon_search WHERE id = @id');
+
+  const insertSearch = db.prepare(`
+    INSERT INTO icon_search (id, text)
+    VALUES (@id, @text)
+  `);
+
+  const insertOrReplaceSVG = db.prepare(`
+    INSERT OR REPLACE INTO icon_svgs (id, svg)
+    VALUES (@id, @svg)
+  `);
+
+  const existing = readExistingMetadata(db);
+
+  const remixTags = JSON.parse(
     fs.readFileSync(REMIX_ICON_TAGS_FILE_PATH, 'utf-8')
   ) as Record<string, Record<string, string>>;
 
-  const categoryDirs = fs.readdirSync(REMIX_ICON_ICONS_DIR_PATH);
-  for (const categoryDir of categoryDirs) {
-    const categoryId = categoryDir.toLowerCase().replace(/\s+/g, '-');
-    const category: IconCategory = {
-      id: categoryId,
-      name: categoryDir,
-      icons: [],
-    };
+  const categories = fs.readdirSync(REMIX_ICON_ICONS_DIR_PATH);
+  let maxDisplayOrder = 0;
 
-    const categoryTags = remixIconTags[categoryDir] ?? {};
-
+  for (const category of categories) {
+    const catId = category.toLowerCase().replace(/\s+/g, '-');
     const iconFiles = fs.readdirSync(
-      `${REMIX_ICON_ICONS_DIR_PATH}/${categoryDir}`
+      path.join(REMIX_ICON_ICONS_DIR_PATH, category)
     );
-    for (const iconFile of iconFiles) {
-      const fileName = iconFile.replace('.svg', '');
-      if (fileName.endsWith('-fill')) {
-        continue;
-      }
+    const relevantFiles = iconFiles.filter((f) => !f.endsWith('-fill.svg'));
 
-      const iconName = fileName.replace('-line', '');
+    console.log(
+      `Processing remix icon category: ${category} (${relevantFiles.length} icons)`
+    );
+
+    const existingCategory = existing.categories.find((c) => c.id === catId);
+    const displayOrder = existingCategory
+      ? existingCategory.display_order
+      : maxDisplayOrder + 1;
+
+    insertOrUpdateCategory.run({
+      id: catId,
+      name: category,
+      count: relevantFiles.length,
+      display_order: displayOrder,
+    });
+
+    if (displayOrder > maxDisplayOrder) {
+      maxDisplayOrder = displayOrder;
+    }
+
+    for (const file of relevantFiles) {
+      const iconName = file.replace('-line.svg', '').replace('.svg', '');
       const iconCode = `ri-${iconName}`;
-
-      const existingIcon = Object.values(existingMetadata.icons).find(
-        (icon) => icon.code === iconCode
+      const existingIcon = Object.values(existing.icons).find(
+        (i) => i.code === iconCode
       );
 
-      const iconTags = new Set<string>(iconName.split('-'));
-      if (categoryTags[iconName]) {
-        const extraTags = categoryTags[iconName].split(',');
-        for (const extraTag of extraTags) {
-          // Only accept tags that contain English letters (a-z, A-Z)
-          const isEnglish = /^[a-zA-Z]+$/.test(extraTag.trim());
-          if (isEnglish) {
-            iconTags.add(extraTag);
-          }
+      const setOfTags = new Set<string>(iconName.split('-'));
+      if (remixTags[category] && remixTags[category][iconName]) {
+        const extra = remixTags[category][iconName].split(',');
+        for (const t of extra) {
+          if (/^[a-zA-Z]+$/.test(t.trim())) setOfTags.add(t);
         }
       }
 
       const iconId = existingIcon ? existingIcon.id : generateId(IdType.Icon);
-      const icon: Icon = {
+      const newIcon: Icon = {
         id: iconId,
-        name: iconName,
         code: iconCode,
-        tags: Array.from(iconTags),
+        name: iconName,
+        tags: Array.from(setOfTags),
       };
 
-      result.icons[iconId] = icon;
-      category.icons.push(iconId);
+      insertOrUpdateIcon.run({
+        id: newIcon.id,
+        category_id: catId,
+        code: newIcon.code,
+        name: newIcon.name,
+        tags: JSON.stringify(newIcon.tags),
+      });
 
-      const sourceFilePath = `${REMIX_ICON_ICONS_DIR_PATH}/${categoryDir}/${iconFile}`;
-      const targetFilePath = `${ICONS_DIR_PATH}/${iconId}.svg`;
-      if (!fs.existsSync(targetFilePath)) {
-        fs.copyFileSync(sourceFilePath, targetFilePath);
+      deleteSearch.run({ id: newIcon.id });
+
+      insertSearch.run({
+        id: newIcon.id,
+        text: [newIcon.name, ...newIcon.tags].join(' '),
+      });
+
+      const svgPath = path.join(REMIX_ICON_ICONS_DIR_PATH, category, file);
+      if (fs.existsSync(svgPath)) {
+        const svgBuffer = fs.readFileSync(svgPath);
+        insertOrReplaceSVG.run({
+          id: newIcon.id,
+          svg: svgBuffer,
+        });
       }
     }
-
-    result.categories.push(category);
   }
 
-  const logosCategory: IconCategory = {
-    id: 'logos',
-    name: 'Logos',
-    icons: [],
-  };
-
-  console.log('Generating simple icons');
-  const simpleIconsData = JSON.parse(
+  console.log('Processing simple icons...');
+  const simpleData = JSON.parse(
     fs.readFileSync(SIMPLE_ICONS_DATA_FILE_PATH, 'utf-8')
-  ) as SimpleIconsData;
+  ) as SimpleIconsItem[];
 
-  for (const simpleIcon of simpleIconsData.icons) {
-    const simpleIconTitle = simpleIcon.title;
-    const simpleIconSlug =
-      simpleIcon.slug ?? simpleIconTitleToSlug(simpleIconTitle);
-
-    const iconCode = `si-${simpleIconSlug}`;
-
-    const existingIcon = Object.values(existingMetadata.icons).find(
-      (icon) => icon.code === iconCode
+  const logos: Icon[] = [];
+  for (const item of simpleData) {
+    const title = item.title;
+    const slug = item.slug || simpleIconTitleToSlug(title);
+    const code = `si-${slug}`;
+    const existingIcon = Object.values(existing.icons).find(
+      (i) => i.code === code
     );
 
-    const iconTags = new Set<string>([
-      simpleIconTitle.toLowerCase(),
-      simpleIconSlug,
-    ]);
+    const setOfTags = new Set<string>([title.toLowerCase(), slug]);
 
     const iconId = existingIcon ? existingIcon.id : generateId(IdType.Icon);
-    const icon: Icon = {
+    const newIcon: Icon = {
       id: iconId,
-      name: simpleIconTitle,
-      code: iconCode,
-      tags: Array.from(iconTags),
+      code,
+      name: title,
+      tags: Array.from(setOfTags),
     };
-
-    result.icons[iconId] = icon;
-    logosCategory.icons.push(iconId);
-
-    const sourceFilePath = `${SIMPLE_ICONS_ICONS_DIR_PATH}/${simpleIconSlug}.svg`;
-    const targetFilePath = `${ICONS_DIR_PATH}/${iconId}.svg`;
-    if (!fs.existsSync(targetFilePath)) {
-      fs.copyFileSync(sourceFilePath, targetFilePath);
-    }
+    logos.push(newIcon);
   }
 
-  result.categories.push(logosCategory);
+  const existingCategory = existing.categories.find((c) => c.id === 'logos');
+  const displayOrder = existingCategory
+    ? existingCategory.display_order
+    : maxDisplayOrder + 1;
 
-  fs.writeFileSync(ICONS_METADATA_FILE_PATH, JSON.stringify(result, null, 2));
-  console.log(`Generated icons dir`);
+  insertOrUpdateCategory.run({
+    id: 'logos',
+    name: 'Logos',
+    count: logos.length,
+    display_order: displayOrder,
+  });
+
+  for (const logo of logos) {
+    insertOrUpdateIcon.run({
+      id: logo.id,
+      category_id: 'logos',
+      code: logo.code,
+      name: logo.name,
+      tags: JSON.stringify(logo.tags),
+    });
+
+    deleteSearch.run({ id: logo.id });
+
+    insertSearch.run({
+      id: logo.id,
+      text: [logo.name, ...logo.tags].join(' '),
+    });
+
+    const svgFile = path.join(
+      SIMPLE_ICONS_ICONS_DIR_PATH,
+      logo.code.replace('si-', '') + '.svg'
+    );
+
+    if (fs.existsSync(svgFile)) {
+      const svgBuffer = fs.readFileSync(svgFile);
+      insertOrReplaceSVG.run({ id: logo.id, svg: svgBuffer });
+    }
+  }
+  console.log('Done processing icons into database.');
 };
 
-const zipIcons = async () => {
-  const zip = new AdmZip();
-  zip.addLocalFolder(ICONS_DIR_PATH);
-  zip.writeZip(ICONS_ZIP_FILE_PATH);
-  console.log(`Zipped icons`);
-};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const generateIcons = async () => {
   if (!fs.existsSync(WORK_DIR_PATH)) {
     fs.mkdirSync(WORK_DIR_PATH);
   }
 
-  if (!fs.existsSync(ICONS_DIR_PATH)) {
-    fs.mkdirSync(ICONS_DIR_PATH);
-  }
-
   await downloadRemixIconRepo();
   await downloadSimpleIconsRepo();
 
-  generateIconsDir();
-  await zipIcons();
+  const db = initDatabase();
+  processIconsIntoDb(db);
 
-  console.log(`Cleaning up`);
-  fs.rmSync(WORK_DIR_PATH, { recursive: true });
-  console.log(`All done`);
+  console.log('Cleaning up...');
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      fs.rmSync(WORK_DIR_PATH, { recursive: true, force: true });
+      break;
+    } catch (err) {
+      if (attempt === 3) {
+        console.error(
+          `Failed to remove ${WORK_DIR_PATH} after 3 attempts: ${err}`
+        );
+      } else {
+        console.log(`Retry ${attempt}/3 to remove working directory...`);
+        await sleep(1000);
+      }
+    }
+  }
+  console.log("All done. The 'icons.db' file now contains everything!");
 };
 
-generateIcons();
+generateIcons().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

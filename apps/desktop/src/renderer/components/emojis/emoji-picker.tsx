@@ -1,10 +1,9 @@
 import React from 'react';
 
-import { EmojiPickerBrowser } from '@/renderer/components/emojis/emoji-picker-browser';
-import { EmojiPickerSearch } from '@/renderer/components/emojis/emoji-picker-search';
+import { EmojiBrowser } from '@/renderer/components/emojis/emoji-browser';
+import { EmojiSearch } from '@/renderer/components/emojis/emoji-search';
 import { EmojiSkinToneSelector } from '@/renderer/components/emojis/emoji-skin-tone-selector';
 import { EmojiPickerContext } from '@/renderer/contexts/emoji-picker';
-import { useQuery } from '@/renderer/hooks/use-query';
 import { Emoji } from '@/shared/types/emojis';
 
 interface EmojiPickerProps {
@@ -14,7 +13,6 @@ interface EmojiPickerProps {
 export const EmojiPicker = ({ onPick }: EmojiPickerProps) => {
   const [query, setQuery] = React.useState('');
   const [skinTone, setSkinTone] = React.useState(0);
-  const { data, isPending } = useQuery({ type: 'emojis_get' });
 
   return (
     <div className="flex flex-col gap-1 p-1">
@@ -32,21 +30,14 @@ export const EmojiPicker = ({ onPick }: EmojiPickerProps) => {
         />
       </div>
       <div className="h-[280px] min-h-[280px] overflow-auto w-[330px] min-w-[330px]">
-        {!isPending && data && (
-          <EmojiPickerContext.Provider
-            value={{
-              data,
-              skinTone,
-              onPick: (emoji) => onPick(emoji, skinTone),
-            }}
-          >
-            {query.length > 2 ? (
-              <EmojiPickerSearch query={query} />
-            ) : (
-              <EmojiPickerBrowser />
-            )}
-          </EmojiPickerContext.Provider>
-        )}
+        <EmojiPickerContext.Provider
+          value={{
+            skinTone,
+            onPick: (emoji) => onPick(emoji, skinTone),
+          }}
+        >
+          {query.length > 2 ? <EmojiSearch query={query} /> : <EmojiBrowser />}
+        </EmojiPickerContext.Provider>
       </div>
     </div>
   );

@@ -18,7 +18,6 @@ export class RecordContentUpdateMutationHandler
     input: RecordContentUpdateMutationInput
   ): Promise<RecordContentUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
     const result = await workspace.entries.updateEntry<RecordAttributes>(
       input.recordId,
       (attributes) => {
@@ -53,7 +52,11 @@ export class RecordContentUpdateMutationHandler
         }
 
         for (const beforeBlock of beforeBlocks) {
-          if (!content[beforeBlock.id]) {
+          const afterBlock = afterBlocks.find(
+            (block) => block.id === beforeBlock.id
+          );
+
+          if (!afterBlock) {
             delete content[beforeBlock.id];
           }
         }

@@ -14,7 +14,7 @@ export enum WorkspaceStatus {
 
 export enum UserStatus {
   Active = 1,
-  Inactive = 2,
+  Removed = 2,
 }
 
 export type WorkspaceCreateInput = {

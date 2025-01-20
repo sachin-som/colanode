@@ -40,10 +40,17 @@ export type UserCreatedMessage = {
   userId: string;
 };
 
+export type UserUpdatedMessage = {
+  type: 'user_updated';
+  accountId: string;
+  userId: string;
+};
+
 export type Message =
   | AccountUpdatedMessage
   | WorkspaceUpdatedMessage
   | WorkspaceDeletedMessage
   | UserCreatedMessage
+  | UserUpdatedMessage
   | SynchronizerInputMessage
   | SynchronizerOutputMessage<SynchronizerInput>;

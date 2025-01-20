@@ -20,8 +20,6 @@ interface UserTable {
   custom_name: ColumnType<string | null, string | null, string | null>;
   custom_avatar: ColumnType<string | null, string | null, string | null>;
   role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
-  storage_limit: ColumnType<bigint, bigint, bigint>;
-  max_file_size: ColumnType<bigint, bigint, bigint>;
   status: ColumnType<UserStatus, UserStatus, UserStatus>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;

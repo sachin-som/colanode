@@ -5,6 +5,7 @@ import {
   WorkspaceRole,
   ApiErrorCode,
   AccountSyncInput,
+  UserStatus,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
@@ -57,6 +58,8 @@ export const accountSyncHandler = async (
   const users = await database
     .selectFrom('users')
     .where('account_id', '=', account.id)
+    .where('status', '=', UserStatus.Active)
+    .where('role', '!=', 'none')
     .selectAll()
     .execute();
 

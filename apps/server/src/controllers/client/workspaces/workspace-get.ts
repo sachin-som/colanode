@@ -1,4 +1,9 @@
-import { WorkspaceRole, WorkspaceOutput, ApiErrorCode } from '@colanode/core';
+import {
+  WorkspaceRole,
+  WorkspaceOutput,
+  ApiErrorCode,
+  UserStatus,
+} from '@colanode/core';
 import { Request, Response } from 'express';
 
 import { database } from '@/data/database';
@@ -30,7 +35,7 @@ export const workspaceGetHandler = async (
     .where('account_id', '=', res.locals.account.id)
     .executeTakeFirst();
 
-  if (!user) {
+  if (!user || user.status !== UserStatus.Active || user.role === 'none') {
     return ResponseBuilder.forbidden(res, {
       code: ApiErrorCode.WorkspaceNoAccess,
       message: 'You do not have access to this workspace.',

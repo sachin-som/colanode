@@ -65,8 +65,6 @@ export class UserSynchronizer extends BaseSynchronizer<SyncUsersInput> {
       avatar: user.avatar,
       customName: user.custom_name,
       customAvatar: user.custom_avatar,
-      storageLimit: user.storage_limit.toString(),
-      maxFileSize: user.max_file_size.toString(),
       createdAt: user.created_at.toISOString(),
       updatedAt: user.updated_at?.toISOString() ?? null,
       version: user.version.toString(),

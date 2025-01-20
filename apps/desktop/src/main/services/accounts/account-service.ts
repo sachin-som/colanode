@@ -69,9 +69,8 @@ export class AccountService {
     this.client = new AccountClient(this);
     this.connection = new AccountConnection(this);
 
-    this.eventLoop = new EventLoop(ms('1 minute'), ms('1 second'), () => {
-      this.sync();
-    });
+    this.sync = this.sync.bind(this);
+    this.eventLoop = new EventLoop(ms('1 minute'), ms('1 second'), this.sync);
 
     this.eventSubscriptionId = eventBus.subscribe((event) => {
       if (
@@ -222,7 +221,8 @@ export class AccountService {
       message.type === 'account_updated' ||
       message.type === 'workspace_deleted' ||
       message.type === 'workspace_updated' ||
-      message.type === 'user_created'
+      message.type === 'user_created' ||
+      message.type === 'user_updated'
     ) {
       this.eventLoop.trigger();
     }

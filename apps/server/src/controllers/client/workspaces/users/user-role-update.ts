@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserRoleUpdateInput, ApiErrorCode } from '@colanode/core';
+import { UserRoleUpdateInput, ApiErrorCode, UserStatus } from '@colanode/core';
 
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
@@ -34,10 +34,12 @@ export const userRoleUpdateHandler = async (
     });
   }
 
+  const status = input.role === 'none' ? UserStatus.Removed : UserStatus.Active;
   await database
     .updateTable('users')
     .set({
       role: input.role,
+      status,
       updated_at: new Date(),
       updated_by: user.id,
     })
@@ -47,7 +49,7 @@ export const userRoleUpdateHandler = async (
   eventBus.publish({
     type: 'user_updated',
     userId: userToUpdate.id,
-    accountId: user.account_id,
+    accountId: userToUpdate.account_id,
     workspaceId: userToUpdate.workspace_id,
   });
 

@@ -8,6 +8,7 @@ import {
   MessageType,
   MessageAttributes,
   TransactionOperation,
+  UserStatus,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -86,7 +87,7 @@ interface UserTable {
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
   updated_by: ColumnType<string | null, string | null, string>;
-  status: ColumnType<number, number, number>;
+  status: ColumnType<UserStatus, UserStatus, UserStatus>;
   version: ColumnType<bigint, never, never>;
 }
 

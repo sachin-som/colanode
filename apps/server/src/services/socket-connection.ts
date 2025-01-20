@@ -3,7 +3,7 @@ import {
   Message,
   SynchronizerInput,
   SynchronizerInputMessage,
-  WorkspaceStatus,
+  UserStatus,
   createDebugger,
 } from '@colanode/core';
 
@@ -15,6 +15,7 @@ import {
   CollaborationUpdatedEvent,
   Event,
   UserCreatedEvent,
+  UserUpdatedEvent,
   WorkspaceDeletedEvent,
   WorkspaceUpdatedEvent,
 } from '@/types/events';
@@ -100,6 +101,8 @@ export class SocketConnection {
       this.handleCollaborationUpdatedEvent(event);
     } else if (event.type === 'user_created') {
       this.handleUserCreatedEvent(event);
+    } else if (event.type === 'user_updated') {
+      this.handleUserUpdatedEvent(event);
     }
 
     for (const user of this.users.values()) {
@@ -256,12 +259,14 @@ export class SocketConnection {
     const user = await database
       .selectFrom('users')
       .where('id', '=', userId)
+      .where('status', '=', UserStatus.Active)
+      .where('role', '!=', 'none')
       .selectAll()
       .executeTakeFirst();
 
     if (
       !user ||
-      user.status !== WorkspaceStatus.Active ||
+      user.status !== UserStatus.Active ||
       user.account_id !== this.account.id
     ) {
       return null;
@@ -386,6 +391,18 @@ export class SocketConnection {
       type: 'user_created',
       accountId: event.accountId,
       workspaceId: event.workspaceId,
+      userId: event.userId,
+    });
+  }
+
+  private handleUserUpdatedEvent(event: UserUpdatedEvent) {
+    if (event.accountId !== this.account.id) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'user_updated',
+      accountId: event.accountId,
       userId: event.userId,
     });
   }

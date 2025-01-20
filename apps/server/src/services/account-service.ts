@@ -3,6 +3,7 @@ import {
   IdType,
   LoginSuccessOutput,
   LoginVerifyOutput,
+  UserStatus,
   WorkspaceOutput,
   WorkspaceRole,
 } from '@colanode/core';
@@ -37,6 +38,8 @@ class AccountService {
     const users = await database
       .selectFrom('users')
       .where('account_id', '=', account.id)
+      .where('status', '=', UserStatus.Active)
+      .where('role', '!=', 'none')
       .selectAll()
       .execute();
 

@@ -144,6 +144,11 @@ export class WorkspaceService {
         fs.rmSync(workspacePath, { recursive: true, force: true });
       }
 
+      await this.account.database
+        .deleteFrom('workspaces')
+        .where('id', '=', this.workspace.id)
+        .execute();
+
       eventBus.publish({
         type: 'workspace_deleted',
         workspace: this.workspace,

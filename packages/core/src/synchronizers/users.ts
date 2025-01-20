@@ -13,8 +13,6 @@ export type SyncUserData = {
   role: WorkspaceRole;
   customName: string | null;
   customAvatar: string | null;
-  storageLimit: string;
-  maxFileSize: string;
   createdAt: string;
   updatedAt: string | null;
   version: string;

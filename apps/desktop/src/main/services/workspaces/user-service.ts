@@ -26,12 +26,10 @@ export class UserService {
         name: user.name,
         avatar: user.avatar,
         role: user.role,
-        storage_limit: BigInt(user.storageLimit),
-        max_file_size: BigInt(user.maxFileSize),
         version: BigInt(user.version),
         created_at: user.createdAt,
         updated_at: user.updatedAt,
-        status: UserStatus.Active,
+        status: user.status,
         custom_name: user.customName,
         custom_avatar: user.customAvatar,
       })
@@ -44,8 +42,7 @@ export class UserService {
             custom_name: user.customName,
             custom_avatar: user.customAvatar,
             role: user.role,
-            storage_limit: BigInt(user.storageLimit),
-            max_file_size: BigInt(user.maxFileSize),
+            status: user.status,
             version: BigInt(user.version),
             updated_at: user.updatedAt,
           })

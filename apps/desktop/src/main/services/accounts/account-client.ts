@@ -51,7 +51,7 @@ export class AccountClient {
       return response;
     } catch (error) {
       this.debug(`Error in request for account ${this.account.id}: ${error}`);
-      if (isAxiosError(error) && this.isServerError(error)) {
+      if (isAxiosError(error) && this.shouldBackoff(error)) {
         this.backoff.increaseError();
       }
       throw error;
@@ -88,11 +88,15 @@ export class AccountClient {
     return this.request<T>('delete', path, config);
   }
 
-  private isServerError(error: AxiosError): boolean {
+  private shouldBackoff(error: AxiosError): boolean {
     if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
       return true;
     }
     const status = error.response?.status ?? 0;
+    if (status === 429) {
+      return true;
+    }
+
     return status >= 500 && status < 600;
   }
 }

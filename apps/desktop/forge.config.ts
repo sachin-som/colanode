@@ -150,7 +150,12 @@ const config: ForgeConfig = {
       const destNodeModules = './node_modules';
 
       // First clear the node_modules directory
-      await fs.rm(destNodeModules, { recursive: true, force: true });
+      await fs.rm(destNodeModules, {
+        recursive: true,
+        force: true,
+        maxRetries: 3,
+        retryDelay: 1000,
+      });
 
       // Ensure the destination directory exists
       await fs.mkdir(destNodeModules, { recursive: true });
@@ -163,7 +168,16 @@ const config: ForgeConfig = {
     },
     postPackage: async () => {
       // Remove the node_modules directory
-      await fs.rm('./node_modules', { recursive: true, force: true });
+      try {
+        await fs.rm('./node_modules', {
+          recursive: true,
+          force: true,
+          maxRetries: 3,
+          retryDelay: 1000,
+        });
+      } catch (error) {
+        console.error(error);
+      }
     },
     packageAfterPrune: async (_, buildPath) => {
       // Remove empty node_modules folders that are left behind

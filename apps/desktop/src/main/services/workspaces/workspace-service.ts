@@ -141,7 +141,12 @@ export class WorkspaceService {
       );
 
       if (fs.existsSync(workspacePath)) {
-        fs.rmSync(workspacePath, { recursive: true, force: true });
+        fs.rmSync(workspacePath, {
+          recursive: true,
+          force: true,
+          maxRetries: 3,
+          retryDelay: 1000,
+        });
       }
 
       await this.account.database

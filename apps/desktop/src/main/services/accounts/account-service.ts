@@ -158,7 +158,12 @@ export class AccountService {
 
       const accountPath = getAccountDirectoryPath(this.account.id);
       if (fs.existsSync(accountPath)) {
-        fs.rmSync(accountPath, { recursive: true, force: true });
+        fs.rmSync(accountPath, {
+          recursive: true,
+          force: true,
+          maxRetries: 3,
+          retryDelay: 1000,
+        });
       }
 
       eventBus.publish({

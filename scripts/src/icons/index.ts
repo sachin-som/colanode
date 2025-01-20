@@ -382,21 +382,13 @@ const generateIcons = async () => {
   processIconsIntoDb(db);
 
   console.log('Cleaning up...');
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      fs.rmSync(WORK_DIR_PATH, { recursive: true, force: true });
-      break;
-    } catch (err) {
-      if (attempt === 3) {
-        console.error(
-          `Failed to remove ${WORK_DIR_PATH} after 3 attempts: ${err}`
-        );
-      } else {
-        console.log(`Retry ${attempt}/3 to remove working directory...`);
-        await sleep(1000);
-      }
-    }
-  }
+  fs.rmSync(WORK_DIR_PATH, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 1000,
+  });
+
   console.log("All done. The 'icons.db' file now contains everything!");
 };
 

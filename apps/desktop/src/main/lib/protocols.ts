@@ -4,6 +4,7 @@ import path from 'path';
 
 import {
   getAccountAvatarsDirectoryPath,
+  getAssetsSourcePath,
   getWorkspaceFilesDirectoryPath,
 } from '@/main/lib/utils';
 import { appService } from '@/main/services/app-service';
@@ -48,6 +49,12 @@ export const handleAssetRequest = async (
         },
       });
     }
+  }
+
+  if (type === 'fonts') {
+    const filePath = path.join(getAssetsSourcePath(), 'fonts', id);
+    const fileUrl = `file://${filePath}`;
+    return net.fetch(fileUrl);
   }
 
   return new Response(null, { status: 404 });

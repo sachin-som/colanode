@@ -69,6 +69,11 @@ class EntryService {
       entryAttributesSchema,
       input.attributes
     );
+
+    if (!update) {
+      return null;
+    }
+
     const attributes = ydoc.getAttributes<EntryAttributes>();
     const attributesJson = JSON.stringify(attributes);
 
@@ -187,6 +192,10 @@ class EntryService {
       entryAttributesSchema,
       updatedAttributes
     );
+
+    if (!update) {
+      return { type: 'success', output: null };
+    }
 
     const attributes = ydoc.getAttributes<EntryAttributes>();
     const attributesJson = JSON.stringify(attributes);

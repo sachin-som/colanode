@@ -919,6 +919,9 @@ export class NodeGenerator {
   ): LocalCreateTransaction {
     const ydoc = new YDoc();
     const update = ydoc.updateAttributes(entryAttributesSchema, attributes);
+    if (!update) {
+      throw new Error('Failed to create transaction');
+    }
 
     return {
       id: generateId(IdType.Transaction),

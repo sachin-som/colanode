@@ -39,7 +39,7 @@ export class YDoc {
   public updateAttributes(
     schema: ZodSchema,
     attributes: z.infer<typeof schema>
-  ): Uint8Array {
+  ): Uint8Array | null {
     if (!schema.safeParse(attributes).success) {
       throw new Error('Invalid attributes', schema.safeParse(attributes).error);
     }
@@ -68,7 +68,11 @@ export class YDoc {
 
     this.doc.off('update', onUpdateCallback);
 
-    if (updates.length === 0 || updates.length > 1) {
+    if (updates.length === 0) {
+      return null;
+    }
+
+    if (updates.length > 1) {
       throw new Error('Invalid number of updates');
     }
 

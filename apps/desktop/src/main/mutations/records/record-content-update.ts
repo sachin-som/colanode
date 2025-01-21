@@ -18,6 +18,13 @@ export class RecordContentUpdateMutationHandler
     input: RecordContentUpdateMutationInput
   ): Promise<RecordContentUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
+
+    if (isEqual(input.before.content, input.after.content)) {
+      return {
+        success: true,
+      };
+    }
+
     const result = await workspace.entries.updateEntry<RecordAttributes>(
       input.recordId,
       (attributes) => {

@@ -98,6 +98,10 @@ export class EntryService {
       input.attributes
     );
 
+    if (!update) {
+      return;
+    }
+
     const createdAt = new Date().toISOString();
     const transactionId = generateId(IdType.Transaction);
     const text = extractEntryText(input.id, input.attributes);
@@ -261,6 +265,10 @@ export class EntryService {
       )
     ) {
       return 'unauthorized';
+    }
+
+    if (!update) {
+      return 'success';
     }
 
     const text = extractEntryText(entryId, updatedAttributes);

@@ -262,7 +262,7 @@ export class YDoc {
     }
 
     if (yArray.length > length) {
-      yArray.delete(yArray.length - 1, yArray.length - length);
+      yArray.delete(length, yArray.length - length);
     }
   }
 

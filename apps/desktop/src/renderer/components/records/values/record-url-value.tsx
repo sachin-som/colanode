@@ -1,4 +1,4 @@
-import { isValidUrl,UrlFieldAttributes } from '@colanode/core';
+import { isValidUrl, UrlFieldAttributes } from '@colanode/core';
 import { ExternalLink } from 'lucide-react';
 
 import {
@@ -48,12 +48,12 @@ export const RecordUrlValue = ({ field, readOnly }: RecordUrlValueProps) => {
       </HoverCardTrigger>
       <HoverCardContent
         className={cn(
-          'flex w-full min-w-80 max-w-128 flex-row items-center justify-between gap-2 text-ellipsis',
+          'flex w-full min-w-80 max-w-128 flex-row items-center justify-between gap-2 overflow-hidden',
           !canOpen && 'hidden'
         )}
       >
-        <span
-          className="text-blue-500 underline hover:cursor-pointer hover:text-blue-600"
+        <a
+          className="text-blue-500 underline hover:cursor-pointer hover:text-blue-600 text-ellipsis w-full overflow-hidden whitespace-nowrap"
           onClick={() => {
             if (!canOpen) return;
 
@@ -64,7 +64,7 @@ export const RecordUrlValue = ({ field, readOnly }: RecordUrlValueProps) => {
           }}
         >
           {url}
-        </span>
+        </a>
         <ExternalLink className="size-4 min-h-4 min-w-4 text-muted-foreground" />
       </HoverCardContent>
     </HoverCard>

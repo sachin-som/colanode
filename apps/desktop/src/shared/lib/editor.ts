@@ -7,7 +7,9 @@ import {
   generateNodeIndex,
   IdType,
 } from '@colanode/core';
-import { JSONContent } from '@tiptap/core';
+import { Editor, JSONContent } from '@tiptap/core';
+import { Node as ProseMirrorNode, ResolvedPos } from '@tiptap/pm/model';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
 const leafBlockTypes = new Set([
   EditorNodeTypes.Paragraph,
@@ -245,4 +247,144 @@ export const editorHasContent = (block?: JSONContent) => {
   }
 
   return false;
+};
+
+export const findNodePosById = (doc: ProseMirrorNode, id: string) => {
+  let foundPos: number | null = null;
+
+  doc.descendants((node: any, pos: number) => {
+    if (node?.attrs?.id === id) {
+      foundPos = pos;
+      return false; // stop search
+    }
+    return true;
+  });
+
+  return foundPos;
+};
+
+export const findBlockFromPos = (pos: ResolvedPos) => {
+  for (let i = pos.depth; i >= 0; i--) {
+    const node = pos.node(i);
+    if (node?.attrs?.id) {
+      return {
+        nodeId: node.attrs.id,
+        // offset within the text of that node
+        offset:
+          i === pos.depth
+            ? pos.parentOffset // if the node at i is the text parent
+            : pos.pos - pos.start(i), // general fallback
+      };
+    }
+  }
+  return null;
+};
+
+export type RelativeSelection =
+  | {
+      type: 'node';
+      nodeId: string;
+    }
+  | {
+      type: 'text';
+      anchor: {
+        nodeId: string;
+        offset: number;
+      };
+      head: {
+        nodeId: string;
+        offset: number;
+      };
+    };
+
+export const getRelativeSelection = (
+  editor: Editor
+): RelativeSelection | null => {
+  const selection = editor.state.selection;
+  if (selection instanceof NodeSelection) {
+    const node = selection.node;
+    if (node.attrs?.id) {
+      return {
+        type: 'node',
+        nodeId: node.attrs.id,
+      };
+    }
+
+    return null;
+  }
+
+  if (selection instanceof TextSelection) {
+    const { $from, $head } = selection;
+
+    const anchor = findBlockFromPos($from);
+    const head = findBlockFromPos($head);
+
+    if (anchor && head) {
+      return {
+        type: 'text',
+        anchor,
+        head,
+      };
+    }
+
+    return null;
+  }
+
+  return null;
+};
+
+export const restoreRelativeSelection = (
+  editor: Editor,
+  selection: RelativeSelection
+) => {
+  const { state, view } = editor;
+  const { doc } = state;
+  let tr = state.tr;
+
+  if (selection.type === 'node') {
+    const pos = findNodePosById(doc, selection.nodeId);
+    if (pos != null) {
+      tr = tr.setSelection(NodeSelection.create(doc, pos));
+      view.dispatch(tr);
+    }
+
+    return;
+  }
+
+  // Restore TextSelection
+  if (selection.type === 'text') {
+    const { anchor, head } = selection;
+
+    const anchorNodePos = findNodePosById(doc, anchor.nodeId);
+    const headNodePos = findNodePosById(doc, head.nodeId);
+
+    if (anchorNodePos == null || headNodePos == null) {
+      return;
+    }
+
+    const anchorNode = doc.nodeAt(anchorNodePos);
+    const headNode = doc.nodeAt(headNodePos);
+
+    if (!anchorNode || !headNode) {
+      return;
+    }
+
+    const anchorTextSize = anchorNode.textContent?.length ?? 0;
+    const headTextSize = headNode.textContent?.length ?? 0;
+
+    const anchorOffset = Math.min(anchor.offset, anchorTextSize);
+    const headOffset = Math.min(head.offset, headTextSize);
+
+    const anchorAbsolutePos = anchorNodePos + 1 + anchorOffset;
+    const headAbsolutePos = headNodePos + 1 + headOffset;
+
+    const textSelection = TextSelection.create(
+      doc,
+      anchorAbsolutePos,
+      headAbsolutePos
+    );
+
+    tr = tr.setSelection(textSelection);
+    view.dispatch(tr);
+  }
 };

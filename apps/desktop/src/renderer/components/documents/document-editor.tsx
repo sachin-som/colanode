@@ -6,7 +6,7 @@ import {
   JSONContent,
   useEditor,
 } from '@tiptap/react';
-import { debounce } from 'lodash-es';
+import { debounce, isEqual } from 'lodash-es';
 import React from 'react';
 
 import { useWorkspace } from '@/renderer/contexts/workspace';
@@ -63,6 +63,10 @@ import {
   DatabaseNode,
 } from '@/renderer/editor/extensions';
 import { ToolbarMenu, ActionMenu } from '@/renderer/editor/menus';
+import {
+  restoreRelativeSelection,
+  getRelativeSelection,
+} from '@/shared/lib/editor';
 
 interface DocumentEditorProps {
   documentId: string;
@@ -207,11 +211,15 @@ export const DocumentEditor = ({
       return;
     }
 
-    const selection = editor.state.selection;
-    if (selection.$anchor != null && selection.$head != null) {
-      editor.chain().setContent(content).setTextSelection(selection).run();
-    } else {
-      editor.chain().setContent(content).run();
+    if (isEqual(content, contentRef.current)) {
+      return;
+    }
+
+    const relativeSelection = getRelativeSelection(editor);
+    editor.chain().setContent(content).run();
+
+    if (relativeSelection != null) {
+      restoreRelativeSelection(editor, relativeSelection);
     }
 
     transactionIdRef.current = transactionId;

@@ -12,33 +12,34 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { buildEntryCollaborators } from '@/shared/lib/entries';
 
 interface EntryCollaboratorsProps {
-  entryId: string;
+  entry: Entry;
   entries: Entry[];
   role: EntryRole;
 }
 
 export const EntryCollaborators = ({
-  entryId,
+  entry,
   entries,
   role,
 }: EntryCollaboratorsProps) => {
   const collaborators = buildEntryCollaborators(entries);
   const directCollaborators = collaborators.filter(
-    (collaborator) => collaborator.entryId === entryId
+    (collaborator) => collaborator.entryId === entry.id
   );
   const directCollaboratorIds = directCollaborators.map(
     (collaborator) => collaborator.collaboratorId
   );
 
   const isAdmin = hasEntryRole(role, 'admin');
-  const ancestors = entries.filter((entry) => entry.id !== entryId);
+  const canAddCollaborator = isAdmin && entry.type === 'space';
+  const ancestors = entries.filter((entry) => entry.id !== entry.id);
 
   return (
     <div className="flex flex-col gap-2">
-      {isAdmin && (
+      {canAddCollaborator && (
         <React.Fragment>
           <EntryCollaboratorCreate
-            entryId={entryId}
+            entryId={entry.id}
             existingCollaborators={directCollaboratorIds}
           />
           <Separator />
@@ -67,7 +68,7 @@ export const EntryCollaborators = ({
                 return (
                   <EntryCollaborator
                     key={collaborator.collaboratorId}
-                    entryId={entryId}
+                    entryId={entry.id}
                     collaboratorId={collaborator.collaboratorId}
                     role={collaborator.role}
                     canEdit={canEdit}
@@ -85,7 +86,7 @@ export const EntryCollaborators = ({
       </div>
       {ancestors.map((node) => {
         const inheritCollaborators = collaborators.filter(
-          (collaborator) => collaborator.entryId === entryId
+          (collaborator) => collaborator.entryId === node.id
         );
 
         if (inheritCollaborators.length === 0) {
@@ -105,7 +106,7 @@ export const EntryCollaborators = ({
                   return (
                     <EntryCollaborator
                       key={collaborator.collaboratorId}
-                      entryId={entryId}
+                      entryId={node.id}
                       collaboratorId={collaborator.collaboratorId}
                       role={collaborator.role}
                       canEdit={canEdit}

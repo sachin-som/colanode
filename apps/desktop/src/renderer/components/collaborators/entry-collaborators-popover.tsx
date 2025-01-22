@@ -9,13 +9,13 @@ import {
 } from '@/renderer/components/ui/popover';
 
 interface EntryCollaboratorsPopoverProps {
-  entryId: string;
+  entry: Entry;
   entries: Entry[];
   role: EntryRole;
 }
 
 export const EntryCollaboratorsPopover = ({
-  entryId,
+  entry,
   entries,
   role,
 }: EntryCollaboratorsPopoverProps) => {
@@ -25,7 +25,7 @@ export const EntryCollaboratorsPopover = ({
         <UserRoundPlus className="size-5 cursor-pointer text-muted-foreground hover:text-foreground" />
       </PopoverTrigger>
       <PopoverContent className="mr-2 max-h-128 w-128 overflow-auto">
-        <EntryCollaborators entryId={entryId} entries={entries} role={role} />
+        <EntryCollaborators entry={entry} entries={entries} role={role} />
       </PopoverContent>
     </Popover>
   );

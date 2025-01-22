@@ -102,11 +102,7 @@ export const SpaceSettingsDialog = ({
               className="focus-visible:ring-0 focus-visible:ring-offset-0"
               value="collaborators"
             >
-              <EntryCollaborators
-                entryId={space.id}
-                entries={[space]}
-                role={role}
-              />
+              <EntryCollaborators entry={space} entries={[space]} role={role} />
             </TabsContent>
             {canDelete && (
               <TabsContent

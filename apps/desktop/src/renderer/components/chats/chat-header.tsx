@@ -25,7 +25,7 @@ export const ChatHeader = ({ chat, role }: ChatHeaderProps) => {
         </div>
         <div className="flex items-center gap-2">
           <EntryCollaboratorsPopover
-            entryId={chat.id}
+            entry={chat}
             entries={[chat]}
             role={role}
           />

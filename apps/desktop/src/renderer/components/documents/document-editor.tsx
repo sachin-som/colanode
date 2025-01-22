@@ -60,7 +60,7 @@ import {
   TrailingNode,
   UnderlineMark,
 } from '@/renderer/editor/extensions';
-import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
+import { ToolbarMenu, ActionMenu } from '@/renderer/editor/menus';
 
 interface DocumentEditorProps {
   documentId: string;
@@ -218,7 +218,8 @@ export const DocumentEditor = ({
     <div className="min-h-[500px]">
       {editor && canEdit && (
         <React.Fragment>
-          <EditorBubbleMenu editor={editor} />
+          <ToolbarMenu editor={editor} />
+          <ActionMenu editor={editor} />
         </React.Fragment>
       )}
       <EditorContent editor={editor} />

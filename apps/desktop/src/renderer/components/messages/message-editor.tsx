@@ -25,7 +25,7 @@ import {
   TrailingNode,
   UnderlineMark,
 } from '@/renderer/editor/extensions';
-import { EditorBubbleMenu } from '@/renderer/editor/menu/bubble-menu';
+import { ToolbarMenu } from '@/renderer/editor/menus';
 import { FileMetadata } from '@/shared/types/files';
 
 interface MessageEditorProps {
@@ -123,7 +123,7 @@ export const MessageEditor = React.forwardRef<
 
   return (
     <React.Fragment>
-      <EditorBubbleMenu editor={editor} />
+      <ToolbarMenu editor={editor} />
       <EditorContent
         editor={editor}
         onKeyDown={(event) => {

@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/core';
 import { Check, Link, Trash2 } from 'lucide-react';
+import { isValidUrl } from '@colanode/core';
 
 import { Input } from '@/renderer/components/ui/input';
 import {
@@ -8,15 +9,6 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { cn } from '@/shared/lib/utils';
-
-const isValidUrl = (url: string) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 const getUrlFromString = (str: string): string | null => {
   if (isValidUrl(str)) return str;

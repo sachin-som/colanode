@@ -24,6 +24,7 @@ import {
   PageCommand,
   ParagraphCommand,
   TodoCommand,
+  DatabaseCommand,
 } from '@/renderer/editor/commands';
 import {
   BlockquoteNode,
@@ -59,6 +60,7 @@ import {
   TextNode,
   TrailingNode,
   UnderlineMark,
+  DatabaseNode,
 } from '@/renderer/editor/extensions';
 import { ToolbarMenu, ActionMenu } from '@/renderer/editor/menus';
 
@@ -138,6 +140,7 @@ export const DocumentEditor = ({
         LinkMark,
         DeleteControlExtension,
         DropcursorExtension,
+        DatabaseNode,
         CommanderExtension.configure({
           commands: [
             ParagraphCommand,
@@ -149,6 +152,7 @@ export const DocumentEditor = ({
             BulletListCommand,
             CodeBlockCommand,
             OrderedListCommand,
+            DatabaseCommand,
             DividerCommand,
             TodoCommand,
             FileCommand,

@@ -29,7 +29,7 @@ export class DatabaseCreateMutationHandler
       type: 'database',
       name: input.name,
       avatar: input.avatar,
-      parentId: input.spaceId,
+      parentId: input.parentId,
       fields: {
         [fieldId]: {
           id: fieldId,
@@ -51,7 +51,7 @@ export class DatabaseCreateMutationHandler
     await workspace.entries.createEntry({
       id: databaseId,
       attributes,
-      parentId: input.spaceId,
+      parentId: input.parentId,
     });
 
     return {

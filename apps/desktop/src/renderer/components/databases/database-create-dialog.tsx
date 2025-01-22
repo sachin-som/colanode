@@ -53,7 +53,7 @@ export const DatabaseCreateDialog = ({
             mutate({
               input: {
                 type: 'database_create',
-                spaceId: spaceId,
+                parentId: spaceId,
                 name: values.name,
                 avatar: values.avatar,
                 accountId: workspace.accountId,

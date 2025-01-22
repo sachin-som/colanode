@@ -5,7 +5,6 @@ export type PageCreateMutationInput = {
   parentId: string;
   avatar?: string | null;
   name: string;
-  generateIndex: boolean;
 };
 
 export type PageCreateMutationOutput = {

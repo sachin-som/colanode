@@ -34,6 +34,7 @@ import { TabKeymapExtension } from '@/renderer/editor/extensions/tab-keymap';
 import { TaskItemNode } from '@/renderer/editor/extensions/task-item';
 import { TaskListNode } from '@/renderer/editor/extensions/task-list';
 import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
+import { DatabaseNode } from '@/renderer/editor/extensions/database';
 
 export {
   BlockquoteNode,
@@ -71,4 +72,5 @@ export {
   TextNode,
   TrailingNode,
   UnderlineMark,
+  DatabaseNode,
 };

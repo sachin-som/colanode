@@ -25,11 +25,25 @@ export const ToolbarMenu = (props: ToolbarMenuProps) => {
       const { selection } = state;
       const { empty } = selection;
 
-      // don't show bubble menu if:
-      // - the selected node is an image
-      // - the selection is empty
-      // - the selection is a node selection (for drag handles)
-      return !(editor.isActive('image') || empty || isNodeSelection(selection));
+      if (empty) {
+        return false;
+      }
+
+      if (isNodeSelection(selection)) {
+        return false;
+      }
+
+      if (
+        editor.isActive('page') ||
+        editor.isActive('database') ||
+        editor.isActive('folder') ||
+        editor.isActive('file') ||
+        editor.isActive('filePlaceholder')
+      ) {
+        return false;
+      }
+
+      return true;
     },
     tippyOptions: {
       moveTransition: 'transform 0.15s ease-out',

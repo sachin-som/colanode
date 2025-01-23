@@ -46,3 +46,6 @@ export const getDisplayedDates = (
 
   return { first: firstDayDisplayed, last: lastDayDisplayed };
 };
+
+export const pluralize = (count: number, singular: string, plural: string) =>
+  count === 1 ? singular : plural;

@@ -4,6 +4,7 @@ import { EmojiGetQueryHandler } from '@/main/queries/emojis/emoji-get';
 import { EmojiListQueryHandler } from '@/main/queries/emojis/emoji-list';
 import { EmojiCategoryListQueryHandler } from '@/main/queries/emojis/emoji-category-list';
 import { EmojiSearchQueryHandler } from '@/main/queries/emojis/emoji-search';
+import { EmojiGetBySkinIdQueryHandler } from '@/main/queries/emojis/emoji-get-by-skin-id';
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
 import { FileGetQueryHandler } from '@/main/queries/files/file-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
@@ -12,7 +13,8 @@ import { IconSearchQueryHandler } from '@/main/queries/icons/icon-search';
 import { IconCategoryListQueryHandler } from '@/main/queries/icons/icon-category-list';
 import { MessageGetQueryHandler } from '@/main/queries/messages/message-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
-import { MessageReactionsGetQueryHandler } from '@/main/queries/messages/message-reactions-get';
+import { MessageReactionsListQueryHandler } from '@/main/queries/messages/message-reaction-list';
+import { MessageReactionsAggregateQueryHandler } from '@/main/queries/messages/message-reactions-aggregate';
 import { EntryChildrenGetQueryHandler } from '@/main/queries/entries/entry-children-get';
 import { EntryGetQueryHandler } from '@/main/queries/entries/entry-get';
 import { EntryTreeGetQueryHandler } from '@/main/queries/entries/entry-tree-get';
@@ -38,7 +40,8 @@ type QueryHandlerMap = {
 export const queryHandlerMap: QueryHandlerMap = {
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
-  message_reactions_get: new MessageReactionsGetQueryHandler(),
+  message_reaction_list: new MessageReactionsListQueryHandler(),
+  message_reactions_aggregate: new MessageReactionsAggregateQueryHandler(),
   message_get: new MessageGetQueryHandler(),
   entry_get: new EntryGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
@@ -49,6 +52,7 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_list: new FileListQueryHandler(),
   emoji_list: new EmojiListQueryHandler(),
   emoji_get: new EmojiGetQueryHandler(),
+  emoji_get_by_skin_id: new EmojiGetBySkinIdQueryHandler(),
   emoji_category_list: new EmojiCategoryListQueryHandler(),
   emoji_search: new EmojiSearchQueryHandler(),
   icon_list: new IconListQueryHandler(),

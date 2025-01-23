@@ -21,7 +21,7 @@ export type MessageReaction = {
   createdAt: string;
 };
 
-export type MessageReactionsCount = {
+export type MessageReactionCount = {
   reaction: string;
   count: number;
   reacted: boolean;

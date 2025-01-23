@@ -1,32 +1,32 @@
 import { sql } from 'kysely';
 
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { MessageReactionsGetQueryInput } from '@/shared/queries/messages/message-reactions-get';
+import { MessageReactionsAggregateQueryInput } from '@/shared/queries/messages/message-reactions-aggregate';
 import { Event } from '@/shared/types/events';
-import { MessageReactionsCount } from '@/shared/types/messages';
+import { MessageReactionCount } from '@/shared/types/messages';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
-interface MessageReactionsCountRow {
+interface MessageReactionsAggregateRow {
   reaction: string;
   count: number;
   reacted: number;
 }
 
-export class MessageReactionsGetQueryHandler
+export class MessageReactionsAggregateQueryHandler
   extends WorkspaceQueryHandlerBase
-  implements QueryHandler<MessageReactionsGetQueryInput>
+  implements QueryHandler<MessageReactionsAggregateQueryInput>
 {
   public async handleQuery(
-    input: MessageReactionsGetQueryInput
-  ): Promise<MessageReactionsCount[]> {
+    input: MessageReactionsAggregateQueryInput
+  ): Promise<MessageReactionCount[]> {
     return this.fetchMessageReactions(input);
   }
 
   public async checkForChanges(
     event: Event,
-    input: MessageReactionsGetQueryInput,
-    _: MessageReactionsCount[]
-  ): Promise<ChangeCheckResult<MessageReactionsGetQueryInput>> {
+    input: MessageReactionsAggregateQueryInput,
+    _: MessageReactionCount[]
+  ): Promise<ChangeCheckResult<MessageReactionsAggregateQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
       event.workspace.accountId === input.accountId &&
@@ -72,11 +72,11 @@ export class MessageReactionsGetQueryHandler
   }
 
   private async fetchMessageReactions(
-    input: MessageReactionsGetQueryInput
-  ): Promise<MessageReactionsCount[]> {
+    input: MessageReactionsAggregateQueryInput
+  ): Promise<MessageReactionCount[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await sql<MessageReactionsCountRow>`
+    const result = await sql<MessageReactionsAggregateRow>`
       SELECT 
         reaction,
         COUNT(reaction) as count,

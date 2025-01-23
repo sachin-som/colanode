@@ -4,7 +4,7 @@ import { MessageActions } from '@/renderer/components/messages/message-actions';
 import { MessageAuthorAvatar } from '@/renderer/components/messages/message-author-avatar';
 import { MessageAuthorName } from '@/renderer/components/messages/message-author-name';
 import { MessageContent } from '@/renderer/components/messages/message-content';
-import { MessageReactions } from '@/renderer/components/messages/message-reactions';
+import { MessageReactionCounts } from '@/renderer/components/messages/message-reaction-counts';
 import { MessageTime } from '@/renderer/components/messages/message-time';
 import { MessageReference } from '@/renderer/components/messages/message-reference';
 import { useRadar } from '@/renderer/contexts/radar';
@@ -74,7 +74,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
             <MessageReference messageId={message.attributes.referenceId} />
           )}
           <MessageContent message={message} />
-          <MessageReactions message={message} />
+          <MessageReactionCounts message={message} />
         </InView>
       </div>
     </div>

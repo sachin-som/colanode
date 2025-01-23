@@ -14,7 +14,6 @@ import { RecordProvider } from '@/renderer/components/records/record-provider';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { useRadar } from '@/renderer/contexts/radar';
 
@@ -27,32 +26,30 @@ interface RecordBodyProps {
 export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
   const workspace = useWorkspace();
   const radar = useRadar();
-  const { mutate } = useMutation();
 
   const canEdit =
     record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
 
   const handleUpdate = useCallback(
-    (before: JSONContent, after: JSONContent) => {
-      mutate({
-        input: {
-          type: 'record_content_update',
-          accountId: workspace.accountId,
-          workspaceId: workspace.id,
-          recordId: record.id,
-          before,
-          after,
-        },
-        onError(error) {
-          toast({
-            title: 'Failed to update record',
-            description: error.message,
-            variant: 'destructive',
-          });
-        },
+    async (before: JSONContent, after: JSONContent) => {
+      const result = await window.colanode.executeMutation({
+        type: 'record_content_update',
+        accountId: workspace.accountId,
+        workspaceId: workspace.id,
+        recordId: record.id,
+        before,
+        after,
       });
+
+      if (!result.success) {
+        toast({
+          title: 'Failed to update page',
+          description: result.error.message,
+          variant: 'destructive',
+        });
+      }
     },
-    [mutate]
+    [workspace.accountId, workspace.id, record.id]
   );
 
   useEffect(() => {

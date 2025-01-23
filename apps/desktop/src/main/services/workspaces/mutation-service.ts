@@ -50,18 +50,18 @@ export class MutationService {
       return false;
     }
 
-    const unsyncedMutations = await this.workspace.database
+    const pendingMutations = await this.workspace.database
       .selectFrom('mutations')
       .selectAll()
       .orderBy('id', 'asc')
       .limit(READ_SIZE)
       .execute();
 
-    if (unsyncedMutations.length === 0) {
+    if (pendingMutations.length === 0) {
       return false;
     }
 
-    const allMutations: Mutation[] = unsyncedMutations.map(mapMutation);
+    const allMutations: Mutation[] = pendingMutations.map(mapMutation);
     const { validMutations, deletedMutationIds } =
       this.consolidateMutations(allMutations);
 
@@ -73,7 +73,7 @@ export class MutationService {
     }
 
     this.debug(
-      `Sending ${unsyncedMutations.length} local pending mutations for user ${this.workspace.id}`
+      `Sending ${pendingMutations.length} local pending mutations for user ${this.workspace.id}`
     );
 
     const totalBatches = Math.ceil(validMutations.length / BATCH_SIZE);
@@ -118,9 +118,11 @@ export class MutationService {
       this.debug(
         `Failed to send local pending mutations for user ${this.workspace.id}: ${error}`
       );
+
+      return false;
     }
 
-    return unsyncedMutations.length > 0;
+    return pendingMutations.length > 0;
   }
 
   private async revertInvalidMutations(): Promise<void> {

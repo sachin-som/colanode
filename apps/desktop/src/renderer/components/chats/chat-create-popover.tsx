@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import React from 'react';
 
 import {
@@ -20,7 +20,7 @@ export const ChatCreatePopover = () => {
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Plus className="mr-2 size-4 cursor-pointer" />
+        <SquarePen className="mr-2 size-4 cursor-pointer" />
       </PopoverTrigger>
       <PopoverContent className="w-96 p-1">
         <UserSearch

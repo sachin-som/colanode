@@ -389,8 +389,6 @@ const processEmojisIntoDb = (database: SQLite.Database) => {
   console.log(`Done processing emojis into database.`);
 };
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const generateEmojis = async () => {
   if (!fs.existsSync(WORK_DIR_PATH)) {
     fs.mkdirSync(WORK_DIR_PATH);

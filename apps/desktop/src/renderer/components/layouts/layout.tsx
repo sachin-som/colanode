@@ -1,6 +1,6 @@
 import { LayoutMain } from '@/renderer/components/layouts/layout-main';
 import { LayoutModal } from '@/renderer/components/layouts/layout-modal';
-import { LayoutSidebar } from '@/renderer/components/layouts/layout-sidebar';
+import { Sidebar } from '@/renderer/components/layouts/sidebars/sidebar';
 
 interface LayoutProps {
   main?: string | null;
@@ -10,7 +10,7 @@ interface LayoutProps {
 export const Layout = ({ main, modal }: LayoutProps) => {
   return (
     <div className="w-screen min-w-screen h-screen min-h-screen flex flex-row">
-      <LayoutSidebar />
+      <Sidebar />
       <main className="h-full max-h-screen w-full min-w-128 flex-grow overflow-hidden bg-white">
         {main && <LayoutMain entryId={main} />}
       </main>

@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
+import { Check, LogOut, Plus, Settings } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ import { useRadar } from '@/renderer/contexts/radar';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { AccountReadState } from '@/shared/types/radars';
 
-export function LayoutSidebarFooter() {
+export function SidebarMenuFooter() {
   const account = useAccount();
   const navigate = useNavigate();
   const radar = useRadar();
@@ -34,32 +34,16 @@ export function LayoutSidebarFooter() {
     accountStates[accountItem.id] = radar.getAccountState(accountItem.id);
   }
 
-  const importantCount = Object.values(accountStates).reduce(
-    (acc, curr) => acc + curr.importantCount,
-    0
-  );
-  const hasUnseenChanges = Object.values(accountStates).some(
-    (state) => state.hasUnseenChanges
-  );
-
   return (
     <div className="p-2">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground h-10 text-sm focus-visible:outline-none focus-visible:ring-0">
+          <button className="flex w-full items-center justify-center">
             <Avatar
-              className="h-7 w-7 rounded-lg"
               id={account.id}
               name={account.name}
               avatar={account.avatar}
-            />
-            <p className="flex-1 text-left text-sm leading-tight truncate font-semibold">
-              {account.name}
-            </p>
-            <ChevronsUpDown className="ml-auto size-4" />
-            <ReadStateIndicator
-              count={importantCount}
-              hasChanges={hasUnseenChanges}
+              className="size-10 rounded-lg shadow-md"
             />
           </button>
         </DropdownMenuTrigger>

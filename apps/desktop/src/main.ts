@@ -57,6 +57,8 @@ const createWindow = async () => {
       preload: path.join(__dirname, 'preload.js'),
     },
     autoHideMenuBar: true,
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 5, y: 5 },
   });
 
   mainWindow.setMenuBarVisibility(false);

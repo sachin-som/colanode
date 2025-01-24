@@ -87,7 +87,8 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
           !node ||
           !node.isBlock ||
           node.type.name === 'bulletList' ||
-          node.type.name === 'orderedList'
+          node.type.name === 'orderedList' ||
+          node.type.name === 'taskList'
         ) {
           currentPos--;
           continue;

@@ -5,6 +5,7 @@ import {
   WorkspaceOutput,
   WorkspaceStatus,
   UserStatus,
+  MessageType,
 } from '@colanode/core';
 
 import { database } from '@/data/database';
@@ -13,6 +14,11 @@ import { mapEntry } from '@/lib/entries';
 import { entryService } from '@/services/entry-service';
 import { eventBus } from '@/lib/event-bus';
 import { configuration } from '@/lib/configuration';
+import { messageService } from '@/services/message-service';
+import {
+  generateWelcomePageBlocks,
+  generateInitialMessageBlocks,
+} from '@/lib/blocks';
 
 class WorkspaceService {
   public async createWorkspace(
@@ -84,21 +90,25 @@ class WorkspaceService {
 
     if (createSpaceEntryOutput) {
       const spaceEntry = mapEntry(createSpaceEntryOutput.entry);
+
+      const pageId = generateId(IdType.Page);
       await entryService.createEntry({
-        entryId: generateId(IdType.Page),
+        entryId: pageId,
         rootId: spaceId,
         attributes: {
           type: 'page',
-          name: 'Notes',
+          name: 'Welcome',
           parentId: spaceId,
+          content: generateWelcomePageBlocks(pageId),
         },
         userId: userId,
         workspaceId: workspaceId,
         ancestors: [spaceEntry],
       });
 
+      const channelId = generateId(IdType.Channel);
       await entryService.createEntry({
-        entryId: generateId(IdType.Channel),
+        entryId: channelId,
         rootId: spaceId,
         attributes: {
           type: 'channel',
@@ -108,6 +118,24 @@ class WorkspaceService {
         userId: userId,
         workspaceId: workspaceId,
         ancestors: [spaceEntry],
+      });
+
+      const messageId = generateId(IdType.Message);
+      await messageService.createMessage(user, {
+        id: messageId,
+        type: 'create_message',
+        data: {
+          id: messageId,
+          entryId: channelId,
+          parentId: channelId,
+          attributes: {
+            type: MessageType.Standard,
+            blocks: generateInitialMessageBlocks(messageId),
+          },
+          rootId: spaceId,
+          createdAt: date.toISOString(),
+        },
+        createdAt: date.toISOString(),
       });
     }
 

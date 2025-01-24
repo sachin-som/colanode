@@ -3,7 +3,7 @@ import { GripVertical, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
-// @ts-ignore
+// @ts-expect-error - we can just ignore this for now
 import { __serializeForClipboard } from '@tiptap/pm/view';
 import { Editor } from '@tiptap/react';
 
@@ -22,7 +22,7 @@ type MenuState = {
 };
 
 export const ActionMenu = ({ editor }: ActionMenuProps) => {
-  const view = useRef(editor?.view!);
+  const view = useRef(editor!.view!);
   const [menuState, setMenuState] = useState<MenuState>({
     show: false,
   });
@@ -42,6 +42,10 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
   }, [menuState.rect, menuState.domNode]);
 
   useEffect(() => {
+    if (editor == null) {
+      return;
+    }
+
     const handleMouseMove = (event: MouseEvent) => {
       const editorBounds = view.current.dom.getBoundingClientRect();
       const mouseOverEditor =
@@ -74,25 +78,40 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
       let currentPos = pos.pos;
       let pmNode = null;
       let domNode = null;
+      let nodePos = -1;
+
       while (currentPos >= 0) {
         const node = view.current.state.doc.nodeAt(currentPos);
-        if (node?.isBlock) {
-          const nodeDOM = view.current.nodeDOM(currentPos) as HTMLElement;
-          const nodeDOMElement =
-            nodeDOM instanceof HTMLElement
-              ? nodeDOM
-              : ((nodeDOM as Node)?.parentElement as HTMLElement);
-          if (nodeDOMElement) {
-            const nodeRect = nodeDOMElement.getBoundingClientRect();
-            // Check if the mouse is horizontally aligned with this block
-            if (
-              event.clientX > nodeRect.left - LEFT_MARGIN &&
-              event.clientX < nodeRect.right
-            ) {
-              pmNode = node;
-              domNode = nodeDOMElement;
-              break;
-            }
+
+        if (
+          !node ||
+          !node.isBlock ||
+          node.type.name === 'bulletList' ||
+          node.type.name === 'orderedList'
+        ) {
+          currentPos--;
+          continue;
+        }
+
+        const nodeDOM = view.current.nodeDOM(currentPos) as HTMLElement;
+        const nodeDOMElement =
+          nodeDOM instanceof HTMLElement
+            ? nodeDOM
+            : ((nodeDOM as Node)?.parentElement as HTMLElement);
+
+        if (nodeDOMElement) {
+          const nodeRect = nodeDOMElement.getBoundingClientRect();
+
+          // Are we on the same horizontal axis (vertical range) as the mouse over?
+          const verticallyAligned =
+            event.clientY >= nodeRect.top && event.clientY <= nodeRect.bottom;
+
+          if (verticallyAligned) {
+            pmNode = node;
+            domNode = nodeDOMElement;
+            nodePos = currentPos;
+          } else {
+            break;
           }
         }
         currentPos--;
@@ -105,19 +124,20 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
         return;
       }
 
-      const rect = domNode.getBoundingClientRect();
+      const nodeRect = domNode.getBoundingClientRect();
+      const editorRect = editor.view.dom.getBoundingClientRect();
       const menuRect = DOMRect.fromRect({
-        x: rect.x - 10,
-        y: rect.y,
+        x: editorRect.x - 10,
+        y: nodeRect.y,
         width: 0,
-        height: rect.height,
+        height: nodeRect.height,
       });
 
       setMenuState({
         show: true,
         pmNode,
         domNode,
-        pos: currentPos,
+        pos: nodePos,
         rect: menuRect,
       });
     };
@@ -128,12 +148,12 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
       });
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('scroll', handleScroll, true);
+    editor.view.dom.addEventListener('mousemove', handleMouseMove);
+    editor.view.dom.addEventListener('scroll', handleScroll, true);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('scroll', handleScroll, true);
+      editor.view.dom.removeEventListener('mousemove', handleMouseMove);
+      editor.view.dom.removeEventListener('scroll', handleScroll, true);
     };
   }, [editor]);
 

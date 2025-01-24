@@ -35,6 +35,7 @@ import { TaskItemNode } from '@/renderer/editor/extensions/task-item';
 import { TaskListNode } from '@/renderer/editor/extensions/task-list';
 import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
 import { DatabaseNode } from '@/renderer/editor/extensions/database';
+import { AutoJoiner } from '@/renderer/editor/extensions/auto-joiner';
 
 export {
   BlockquoteNode,
@@ -73,4 +74,5 @@ export {
   TrailingNode,
   UnderlineMark,
   DatabaseNode,
+  AutoJoiner,
 };

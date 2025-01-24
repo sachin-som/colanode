@@ -61,6 +61,7 @@ import {
   TrailingNode,
   UnderlineMark,
   DatabaseNode,
+  AutoJoiner,
 } from '@/renderer/editor/extensions';
 import { ToolbarMenu, ActionMenu } from '@/renderer/editor/menus';
 import {
@@ -145,6 +146,7 @@ export const DocumentEditor = ({
         DeleteControlExtension,
         DropcursorExtension,
         DatabaseNode,
+        AutoJoiner,
         CommanderExtension.configure({
           commands: [
             ParagraphCommand,

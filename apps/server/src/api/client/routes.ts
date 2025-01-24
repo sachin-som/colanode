@@ -21,9 +21,9 @@ import {
   avatarUploadParameter,
   mutationsSyncHandler,
   emailVerifyHandler,
-} from '@/controllers/client';
-import { workspaceMiddleware } from '@/middlewares/workspace';
-import { authMiddleware } from '@/middlewares/auth';
+} from '@/api/client/controllers';
+import { workspaceMiddleware } from '@/api/client/middlewares/workspace';
+import { authMiddleware } from '@/api/client/middlewares/auth';
 
 export const clientRouter = Router();
 

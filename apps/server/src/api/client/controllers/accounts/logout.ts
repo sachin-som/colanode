@@ -5,7 +5,7 @@ import { eventBus } from '@/lib/event-bus';
 import { ResponseBuilder } from '@/lib/response-builder';
 
 export const logoutHandler = async (
-  req: Request,
+  _: Request,
   res: Response
 ): Promise<void> => {
   const account = res.locals.account;

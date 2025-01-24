@@ -4,13 +4,13 @@ import { createDebugger } from '@colanode/core';
 
 import http from 'http';
 
-import { clientRouter } from '@/routes/client';
-import { ipMiddleware } from '@/middlewares/ip';
+import { clientRouter } from '@/api/client/routes';
+import { ipMiddleware } from '@/api/client/middlewares/ip';
 import { socketService } from '@/services/socket-service';
 
-const debug = createDebugger('server:api');
+const debug = createDebugger('server:app');
 
-export const initApi = async () => {
+export const initApp = async () => {
   const app = express();
   const port = 3000;
 

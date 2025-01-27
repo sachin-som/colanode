@@ -13,7 +13,7 @@ export type Workspace = {
 };
 
 export type ContainerTab = {
-  id: string;
+  path: string;
   preview?: boolean;
   active?: boolean;
 };

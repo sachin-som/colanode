@@ -105,15 +105,18 @@ export const useLayoutState = () => {
   );
 
   const handleOpenLeft = useCallback(
-    (tab: string) => {
-      const existingTab = leftContainerMetadata.tabs.find((t) => t.id === tab);
+    (path: string) => {
+      const existingTab = leftContainerMetadata.tabs.find(
+        (t) => t.path === path
+      );
+
       if (existingTab) {
         replaceLeftContainerMetadata({
           ...leftContainerMetadata,
           tabs: leftContainerMetadata.tabs.map((t) => ({
             ...t,
-            active: t.id === tab ? true : undefined,
-            preview: t.id === tab ? undefined : t.preview,
+            active: t.path === path ? true : undefined,
+            preview: t.path === path ? undefined : t.preview,
           })),
         });
       } else {
@@ -121,12 +124,12 @@ export const useLayoutState = () => {
           ...leftContainerMetadata,
           tabs: [
             ...leftContainerMetadata.tabs
-              .filter((t) => t.id !== tab)
+              .filter((t) => t.path !== path)
               .map((t) => ({
                 ...t,
                 active: undefined,
               })),
-            { id: tab, active: true },
+            { path, active: true },
           ],
         });
       }
@@ -135,15 +138,18 @@ export const useLayoutState = () => {
   );
 
   const handleOpenRight = useCallback(
-    (tab: string) => {
-      const existingTab = rightContainerMetadata.tabs.find((t) => t.id === tab);
+    (path: string) => {
+      const existingTab = rightContainerMetadata.tabs.find(
+        (t) => t.path === path
+      );
+
       if (existingTab) {
         replaceRightContainerMetadata({
           ...rightContainerMetadata,
           tabs: rightContainerMetadata.tabs.map((t) => ({
             ...t,
-            active: t.id === tab ? true : undefined,
-            preview: t.id === tab ? undefined : t.preview,
+            active: t.path === path ? true : undefined,
+            preview: t.path === path ? undefined : t.preview,
           })),
         });
       } else {
@@ -151,12 +157,12 @@ export const useLayoutState = () => {
           ...rightContainerMetadata,
           tabs: [
             ...rightContainerMetadata.tabs
-              .filter((t) => t.id !== tab)
+              .filter((t) => t.path !== path)
               .map((t) => ({
                 ...t,
                 active: undefined,
               })),
-            { id: tab, active: true },
+            { path, active: true },
           ],
         });
       }
@@ -165,27 +171,27 @@ export const useLayoutState = () => {
   );
 
   const handleOpen = useCallback(
-    (tab: string) => {
+    (path: string) => {
       if (activeContainer === 'left') {
-        handleOpenLeft(tab);
+        handleOpenLeft(path);
       } else {
-        handleOpenRight(tab);
+        handleOpenRight(path);
       }
     },
     [activeContainer, handleOpenLeft, handleOpenRight]
   );
 
   const handleCloseLeft = useCallback(
-    (tab: string) => {
+    (path: string) => {
       const existingTabIndex = leftContainerMetadata.tabs.findIndex(
-        (t) => t.id === tab
+        (t) => t.path === path
       );
 
       if (existingTabIndex === -1) {
         return;
       }
 
-      const newTabs = leftContainerMetadata.tabs.filter((t) => t.id !== tab);
+      const newTabs = leftContainerMetadata.tabs.filter((t) => t.path !== path);
 
       // Make the closest tab active, preferring the previous tab
       if (newTabs.length > 0 && !newTabs.some((t) => t.active)) {
@@ -195,7 +201,7 @@ export const useLayoutState = () => {
           newTabs[0];
 
         newTabs.forEach((t) => {
-          t.active = t.id === nextActiveTab?.id;
+          t.active = t.path === nextActiveTab?.path;
         });
       }
 
@@ -224,16 +230,18 @@ export const useLayoutState = () => {
   );
 
   const handleCloseRight = useCallback(
-    (tab: string) => {
+    (path: string) => {
       const existingTabIndex = rightContainerMetadata.tabs.findIndex(
-        (t) => t.id === tab
+        (t) => t.path === path
       );
 
       if (existingTabIndex === -1) {
         return;
       }
 
-      const newTabs = rightContainerMetadata.tabs.filter((t) => t.id !== tab);
+      const newTabs = rightContainerMetadata.tabs.filter(
+        (t) => t.path !== path
+      );
 
       // Make the closest tab active, preferring the previous tab
       if (newTabs.length > 0 && !newTabs.some((t) => t.active)) {
@@ -243,7 +251,7 @@ export const useLayoutState = () => {
           newTabs[0];
 
         newTabs.forEach((t) => {
-          t.active = t.id === nextActiveTab?.id;
+          t.active = t.path === nextActiveTab?.path;
         });
       }
 
@@ -260,23 +268,25 @@ export const useLayoutState = () => {
   );
 
   const handleClose = useCallback(
-    (tab: string) => {
-      handleCloseLeft(tab);
-      handleCloseRight(tab);
+    (path: string) => {
+      handleCloseLeft(path);
+      handleCloseRight(path);
     },
     [handleCloseLeft, handleCloseRight]
   );
 
   const handlePreviewLeft = useCallback(
-    (tab: string, keepCurrent: boolean = false) => {
-      const existingTab = leftContainerMetadata.tabs.find((t) => t.id === tab);
+    (path: string, keepCurrent: boolean = false) => {
+      const existingTab = leftContainerMetadata.tabs.find(
+        (t) => t.path === path
+      );
       if (existingTab) {
         if (!existingTab.active) {
           replaceLeftContainerMetadata({
             ...leftContainerMetadata,
             tabs: leftContainerMetadata.tabs.map((t) => ({
               ...t,
-              active: t.id === tab ? true : undefined,
+              active: t.path === path ? true : undefined,
             })),
           });
         }
@@ -294,7 +304,7 @@ export const useLayoutState = () => {
               active: undefined,
               preview: undefined,
             })),
-          { id: tab, active: true, preview: true },
+          { path, active: true, preview: true },
         ],
       });
     },
@@ -302,15 +312,18 @@ export const useLayoutState = () => {
   );
 
   const handlePreviewRight = useCallback(
-    (tab: string, keepCurrent: boolean = false) => {
-      const existingTab = rightContainerMetadata.tabs.find((t) => t.id === tab);
+    (path: string, keepCurrent: boolean = false) => {
+      const existingTab = rightContainerMetadata.tabs.find(
+        (t) => t.path === path
+      );
+
       if (existingTab) {
         if (!existingTab.active) {
           replaceRightContainerMetadata({
             ...rightContainerMetadata,
             tabs: rightContainerMetadata.tabs.map((t) => ({
               ...t,
-              active: t.id === tab ? true : undefined,
+              active: t.path === path ? true : undefined,
             })),
           });
         }
@@ -328,7 +341,7 @@ export const useLayoutState = () => {
               active: undefined,
               preview: true,
             })),
-          { id: tab, active: true, preview: true },
+          { path, active: true, preview: true },
         ],
       });
     },
@@ -336,19 +349,19 @@ export const useLayoutState = () => {
   );
 
   const handlePreview = useCallback(
-    (tab: string, keepCurrent: boolean = false) => {
+    (path: string, keepCurrent: boolean = false) => {
       if (activeContainer === 'left') {
-        handlePreviewLeft(tab, keepCurrent);
+        handlePreviewLeft(path, keepCurrent);
       } else {
-        handlePreviewRight(tab, keepCurrent);
+        handlePreviewRight(path, keepCurrent);
       }
     },
     [activeContainer, handlePreviewLeft, handlePreviewRight]
   );
 
   const handleActivateLeft = useCallback(
-    (tab: string) => {
-      if (!leftContainerMetadata.tabs.some((t) => t.id === tab)) {
+    (path: string) => {
+      if (!leftContainerMetadata.tabs.some((t) => t.path === path)) {
         return;
       }
 
@@ -356,7 +369,7 @@ export const useLayoutState = () => {
         ...leftContainerMetadata,
         tabs: leftContainerMetadata.tabs.map((t) => ({
           ...t,
-          active: t.id === tab ? true : undefined,
+          active: t.path === path ? true : undefined,
         })),
       });
     },
@@ -364,8 +377,8 @@ export const useLayoutState = () => {
   );
 
   const handleActivateRight = useCallback(
-    (tab: string) => {
-      if (!rightContainerMetadata.tabs.some((t) => t.id === tab)) {
+    (path: string) => {
+      if (!rightContainerMetadata.tabs.some((t) => t.path === path)) {
         return;
       }
 
@@ -373,7 +386,7 @@ export const useLayoutState = () => {
         ...rightContainerMetadata,
         tabs: rightContainerMetadata.tabs.map((t) => ({
           ...t,
-          active: t.id === tab ? true : undefined,
+          active: t.path === path ? true : undefined,
         })),
       });
     },
@@ -381,19 +394,21 @@ export const useLayoutState = () => {
   );
 
   const handleActivate = useCallback(
-    (tab: string) => {
+    (path: string) => {
       if (activeContainer === 'left') {
-        handleActivateLeft(tab);
+        handleActivateLeft(path);
       } else {
-        handleActivateRight(tab);
+        handleActivateRight(path);
       }
     },
     [activeContainer, handleActivateLeft, handleActivateRight]
   );
 
   const handleMoveLeft = useCallback(
-    (id: string, before: string | null) => {
-      const tabIndex = leftContainerMetadata.tabs.findIndex((t) => t.id === id);
+    (path: string, before: string | null) => {
+      const tabIndex = leftContainerMetadata.tabs.findIndex(
+        (t) => t.path === path
+      );
 
       if (tabIndex === -1) {
         return;
@@ -415,7 +430,7 @@ export const useLayoutState = () => {
         });
       } else {
         const beforeIndex = leftContainerMetadata.tabs.findIndex(
-          (t) => t.id === before
+          (t) => t.path === before
         );
 
         if (beforeIndex === -1 || tabIndex === beforeIndex - 1) {
@@ -425,7 +440,7 @@ export const useLayoutState = () => {
         const newTabs = [...leftContainerMetadata.tabs];
         newTabs.splice(tabIndex, 1);
 
-        const newIndex = newTabs.findIndex((t) => t.id === before);
+        const newIndex = newTabs.findIndex((t) => t.path === before);
         newTabs.splice(newIndex, 0, tab);
 
         replaceLeftContainerMetadata({
@@ -438,9 +453,9 @@ export const useLayoutState = () => {
   );
 
   const handleMoveRight = useCallback(
-    (id: string, before: string | null) => {
+    (path: string, before: string | null) => {
       const tabIndex = rightContainerMetadata.tabs.findIndex(
-        (t) => t.id === id
+        (t) => t.path === path
       );
 
       if (tabIndex === -1) {
@@ -463,7 +478,7 @@ export const useLayoutState = () => {
         });
       } else {
         const beforeIndex = rightContainerMetadata.tabs.findIndex(
-          (t) => t.id === before
+          (t) => t.path === before
         );
 
         if (beforeIndex === -1 || tabIndex === beforeIndex - 1) {
@@ -473,7 +488,7 @@ export const useLayoutState = () => {
         const newTabs = [...rightContainerMetadata.tabs];
         newTabs.splice(tabIndex, 1);
 
-        const newIndex = newTabs.findIndex((t) => t.id === before);
+        const newIndex = newTabs.findIndex((t) => t.path === before);
         newTabs.splice(newIndex, 0, tab);
 
         replaceRightContainerMetadata({

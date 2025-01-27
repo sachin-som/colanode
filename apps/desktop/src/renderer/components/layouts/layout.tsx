@@ -53,8 +53,8 @@ export const Layout = () => {
         previewRight: handlePreviewRight,
         activeTab:
           activeContainer === 'left'
-            ? leftContainerMetadata.tabs.find((t) => t.active)?.id
-            : rightContainerMetadata.tabs.find((t) => t.active)?.id,
+            ? leftContainerMetadata.tabs.find((t) => t.active)?.path
+            : rightContainerMetadata.tabs.find((t) => t.active)?.path,
       }}
     >
       <div className="w-screen min-w-screen h-screen min-h-screen flex flex-row">

@@ -18,18 +18,20 @@ interface ContainerTabContentProps {
 export const ContainerTabContent = ({ tab }: ContainerTabContentProps) => {
   return (
     <TabsContent
-      value={tab.id}
-      key={tab.id}
+      value={tab.path}
+      key={tab.path}
       className="h-full min-h-full w-full min-w-full m-0 pt-2"
     >
-      {match(getIdType(tab.id))
-        .with(IdType.Channel, () => <ChannelContainer channelId={tab.id} />)
-        .with(IdType.Page, () => <PageContainer pageId={tab.id} />)
-        .with(IdType.Database, () => <DatabaseContainer databaseId={tab.id} />)
-        .with(IdType.Record, () => <RecordContainer recordId={tab.id} />)
-        .with(IdType.Chat, () => <ChatContainer chatId={tab.id} />)
-        .with(IdType.Folder, () => <FolderContainer folderId={tab.id} />)
-        .with(IdType.File, () => <FileContainer fileId={tab.id} />)
+      {match(getIdType(tab.path))
+        .with(IdType.Channel, () => <ChannelContainer channelId={tab.path} />)
+        .with(IdType.Page, () => <PageContainer pageId={tab.path} />)
+        .with(IdType.Database, () => (
+          <DatabaseContainer databaseId={tab.path} />
+        ))
+        .with(IdType.Record, () => <RecordContainer recordId={tab.path} />)
+        .with(IdType.Chat, () => <ChatContainer chatId={tab.path} />)
+        .with(IdType.Folder, () => <FolderContainer folderId={tab.path} />)
+        .with(IdType.File, () => <FileContainer fileId={tab.path} />)
         .otherwise(() => null)}
     </TabsContent>
   );

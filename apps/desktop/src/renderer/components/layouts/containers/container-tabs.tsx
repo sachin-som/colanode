@@ -23,7 +23,7 @@ export const ContainerTabs = ({
   onClose,
   onMove,
 }: ContainerTabsProps) => {
-  const activeTab = tabs.find((t) => t.active)?.id;
+  const activeTab = tabs.find((t) => t.active)?.path;
 
   const [dropMonitor, dropRef] = useDrop({
     accept: 'container-tab',
@@ -41,7 +41,7 @@ export const ContainerTabs = ({
 
   return (
     <Tabs
-      defaultValue={tabs[0]?.id}
+      defaultValue={tabs[0]?.path}
       value={activeTab}
       onValueChange={onTabChange}
       onFocus={onFocus}
@@ -51,10 +51,10 @@ export const ContainerTabs = ({
         <TabsList className="h-10 bg-slate-50 w-full justify-start p-0 app-drag-region">
           {tabs.map((tab) => (
             <ContainerTabTrigger
-              key={tab.id}
+              key={tab.path}
               tab={tab}
-              onClose={() => onClose(tab.id)}
-              onMove={(before) => onMove(tab.id, before)}
+              onClose={() => onClose(tab.path)}
+              onMove={(before) => onMove(tab.path, before)}
             />
           ))}
           <div
@@ -71,7 +71,7 @@ export const ContainerTabs = ({
       </ScrollArea>
       <div className="flex-grow overflow-hidden">
         {tabs.map((tab) => (
-          <ContainerTabContent key={tab.id} tab={tab} />
+          <ContainerTabContent key={tab.path} tab={tab} />
         ))}
       </div>
     </Tabs>

@@ -28,7 +28,7 @@ export const ContainerTabTrigger = ({
 }: ContainerTabTriggerProps) => {
   const [, dragRef] = useDrag<string>({
     type: 'container-tab',
-    item: tab.id,
+    item: tab.path,
     canDrag: () => true,
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult<{ before: string | null }>();
@@ -46,7 +46,7 @@ export const ContainerTabTrigger = ({
   const [dropMonitor, dropRef] = useDrop({
     accept: 'container-tab',
     drop: () => ({
-      before: tab.id,
+      before: tab.path,
     }),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -59,8 +59,8 @@ export const ContainerTabTrigger = ({
 
   return (
     <TabsTrigger
-      value={tab.id}
-      key={tab.id}
+      value={tab.path}
+      key={tab.path}
       className={cn(
         'overflow-hidden rounded-b-none bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none h-10 group/tab app-no-drag-region flex items-center justify-between gap-2',
         tab.preview && 'italic',
@@ -77,18 +77,18 @@ export const ContainerTabTrigger = ({
       ref={dragDropRef as React.LegacyRef<HTMLButtonElement>}
     >
       <div className="overflow-hidden truncate">
-        {match(getIdType(tab.id))
+        {match(getIdType(tab.path))
           .with(IdType.Channel, () => (
-            <ChannelContainerTab channelId={tab.id} />
+            <ChannelContainerTab channelId={tab.path} />
           ))
-          .with(IdType.Page, () => <PageContainerTab pageId={tab.id} />)
+          .with(IdType.Page, () => <PageContainerTab pageId={tab.path} />)
           .with(IdType.Database, () => (
-            <DatabaseContainerTab databaseId={tab.id} />
+            <DatabaseContainerTab databaseId={tab.path} />
           ))
-          .with(IdType.Record, () => <RecordContainerTab recordId={tab.id} />)
-          .with(IdType.Chat, () => <ChatContainerTab chatId={tab.id} />)
-          .with(IdType.Folder, () => <FolderContainerTab folderId={tab.id} />)
-          .with(IdType.File, () => <FileContainerTab fileId={tab.id} />)
+          .with(IdType.Record, () => <RecordContainerTab recordId={tab.path} />)
+          .with(IdType.Chat, () => <ChatContainerTab chatId={tab.path} />)
+          .with(IdType.Folder, () => <FolderContainerTab folderId={tab.path} />)
+          .with(IdType.File, () => <FileContainerTab fileId={tab.path} />)
           .otherwise(() => null)}
       </div>
       <div

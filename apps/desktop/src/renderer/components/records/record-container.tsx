@@ -9,7 +9,7 @@ import {
   ContainerHeader,
   ContainerSettings,
 } from '@/renderer/components/ui/container';
-import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { RecordBody } from '@/renderer/components/records/record-body';
 import { RecordSettings } from '@/renderer/components/records/record-settings';
 

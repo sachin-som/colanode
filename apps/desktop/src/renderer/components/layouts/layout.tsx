@@ -1,6 +1,6 @@
 import { Resizable } from 're-resizable';
 
-import { LayoutTabs } from '@/renderer/components/layouts/layout-tabs';
+import { ContainerTabs } from '@/renderer/components/layouts/containers/container-tabs';
 import { Sidebar } from '@/renderer/components/layouts/sidebars/sidebar';
 import { LayoutContext } from '@/renderer/contexts/layout';
 import { useLayoutState } from '@/renderer/hooks/user-layout-state';
@@ -30,6 +30,8 @@ export const Layout = () => {
     handlePreviewRight,
     handleActivateLeft,
     handleActivateRight,
+    handleMoveLeft,
+    handleMoveRight,
   } = useLayoutState();
 
   const shouldDisplayLeft = leftContainerMetadata.tabs.length > 0;
@@ -93,13 +95,14 @@ export const Layout = () => {
 
         {shouldDisplayLeft && (
           <div className="h-full max-h-screen w-full flex-grow overflow-hidden bg-white">
-            <LayoutTabs
+            <ContainerTabs
               tabs={leftContainerMetadata.tabs}
               onFocus={() => {
                 handleFocus('left');
               }}
               onClose={handleCloseLeft}
               onTabChange={handleActivateLeft}
+              onMove={handleMoveLeft}
             />
           </div>
         )}
@@ -133,13 +136,14 @@ export const Layout = () => {
               handleRightContainerResize(ref.offsetWidth);
             }}
           >
-            <LayoutTabs
+            <ContainerTabs
               tabs={rightContainerMetadata.tabs}
               onFocus={() => {
                 handleFocus('right');
               }}
               onTabChange={handleActivateRight}
               onClose={handleCloseRight}
+              onMove={handleMoveRight}
             />
           </Resizable>
         )}

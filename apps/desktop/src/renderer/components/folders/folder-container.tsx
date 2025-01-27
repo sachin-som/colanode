@@ -7,7 +7,7 @@ import {
   ContainerHeader,
   ContainerSettings,
 } from '@/renderer/components/ui/container';
-import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
 import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
 import { FolderSettings } from '@/renderer/components/folders/folder-settings';

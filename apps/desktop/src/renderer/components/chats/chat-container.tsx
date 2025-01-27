@@ -6,7 +6,7 @@ import {
   ContainerHeader,
   ContainerSettings,
 } from '@/renderer/components/ui/container';
-import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { ChatNotFound } from '@/renderer/components/chats/chat-not-found';
 import { EntryCollaboratorsPopover } from '@/renderer/components/collaborators/entry-collaborators-popover';
 import { Conversation } from '@/renderer/components/messages/conversation';

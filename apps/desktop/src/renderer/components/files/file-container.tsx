@@ -5,7 +5,7 @@ import {
   ContainerHeader,
   ContainerSettings,
 } from '@/renderer/components/ui/container';
-import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { FileNotFound } from '@/renderer/components/files/file-not-found';
 import { useFileContainer } from '@/renderer/hooks/use-file-container';
 import { FileSettings } from '@/renderer/components/files/file-settings';

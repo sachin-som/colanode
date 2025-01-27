@@ -10,7 +10,7 @@ import {
   ContainerHeader,
   ContainerSettings,
 } from '@/renderer/components/ui/container';
-import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { PageBody } from '@/renderer/components/pages/page-body';
 
 interface PageContainerProps {

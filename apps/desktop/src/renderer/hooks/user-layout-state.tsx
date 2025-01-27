@@ -391,6 +391,100 @@ export const useLayoutState = () => {
     [activeContainer, handleActivateLeft, handleActivateRight]
   );
 
+  const handleMoveLeft = useCallback(
+    (id: string, before: string | null) => {
+      const tabIndex = leftContainerMetadata.tabs.findIndex((t) => t.id === id);
+
+      if (tabIndex === -1) {
+        return;
+      }
+
+      const tab = leftContainerMetadata.tabs[tabIndex];
+      if (!tab) {
+        return;
+      }
+
+      if (before === null) {
+        const newTabs = [...leftContainerMetadata.tabs];
+        newTabs.splice(tabIndex, 1);
+        newTabs.push(tab);
+
+        replaceLeftContainerMetadata({
+          ...leftContainerMetadata,
+          tabs: newTabs,
+        });
+      } else {
+        const beforeIndex = leftContainerMetadata.tabs.findIndex(
+          (t) => t.id === before
+        );
+
+        if (beforeIndex === -1 || tabIndex === beforeIndex - 1) {
+          return;
+        }
+
+        const newTabs = [...leftContainerMetadata.tabs];
+        newTabs.splice(tabIndex, 1);
+
+        const newIndex = newTabs.findIndex((t) => t.id === before);
+        newTabs.splice(newIndex, 0, tab);
+
+        replaceLeftContainerMetadata({
+          ...leftContainerMetadata,
+          tabs: newTabs,
+        });
+      }
+    },
+    [leftContainerMetadata]
+  );
+
+  const handleMoveRight = useCallback(
+    (id: string, before: string | null) => {
+      const tabIndex = rightContainerMetadata.tabs.findIndex(
+        (t) => t.id === id
+      );
+
+      if (tabIndex === -1) {
+        return;
+      }
+
+      const tab = rightContainerMetadata.tabs[tabIndex];
+      if (!tab) {
+        return;
+      }
+
+      if (before === null) {
+        const newTabs = [...rightContainerMetadata.tabs];
+        newTabs.splice(tabIndex, 1);
+        newTabs.push(tab);
+
+        replaceRightContainerMetadata({
+          ...rightContainerMetadata,
+          tabs: newTabs,
+        });
+      } else {
+        const beforeIndex = rightContainerMetadata.tabs.findIndex(
+          (t) => t.id === before
+        );
+
+        if (beforeIndex === -1 || tabIndex === beforeIndex - 1) {
+          return;
+        }
+
+        const newTabs = [...rightContainerMetadata.tabs];
+        newTabs.splice(tabIndex, 1);
+
+        const newIndex = newTabs.findIndex((t) => t.id === before);
+        newTabs.splice(newIndex, 0, tab);
+
+        replaceRightContainerMetadata({
+          ...rightContainerMetadata,
+          tabs: newTabs,
+        });
+      }
+    },
+    [rightContainerMetadata]
+  );
+
   const handleFocus = useCallback((side: 'left' | 'right') => {
     setActiveContainer(side);
   }, []);
@@ -416,5 +510,7 @@ export const useLayoutState = () => {
     handleActivate,
     handleActivateLeft,
     handleActivateRight,
+    handleMoveLeft,
+    handleMoveRight,
   };
 };

@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { useLayout } from '@/renderer/contexts/layout';
-import { ContainerBreadcrumbItem } from '@/renderer/components/layouts/breadcrumbs/container-breadcrumb-item';
+import { ContainerBreadcrumbItem } from '@/renderer/components/layouts/containers/container-breadcrumb-item';
 
 interface ContainerBreadcrumbProps {
   breadcrumb: string[];

@@ -19,7 +19,6 @@ import { MessageReactionsAggregateQueryHandler } from '@/main/queries/messages/m
 import { MessageBreadcrumbGetQueryHandler } from '@/main/queries/messages/message-breadcrumb-get';
 import { EntryChildrenGetQueryHandler } from '@/main/queries/entries/entry-children-get';
 import { EntryGetQueryHandler } from '@/main/queries/entries/entry-get';
-import { EntryTreeGetQueryHandler } from '@/main/queries/entries/entry-tree-get';
 import { EntryBreadcrumbGetQueryHandler } from '@/main/queries/entries/entry-breadcrumb-get';
 import { RadarDataGetQueryHandler } from '@/main/queries/interactions/radar-data-get';
 import { RecordListQueryHandler } from '@/main/queries/records/record-list';
@@ -64,7 +63,6 @@ export const queryHandlerMap: QueryHandlerMap = {
   icon_list: new IconListQueryHandler(),
   icon_search: new IconSearchQueryHandler(),
   icon_category_list: new IconCategoryListQueryHandler(),
-  entry_tree_get: new EntryTreeGetQueryHandler(),
   entry_children_get: new EntryChildrenGetQueryHandler(),
   radar_data_get: new RadarDataGetQueryHandler(),
   file_metadata_get: new FileMetadataGetQueryHandler(),

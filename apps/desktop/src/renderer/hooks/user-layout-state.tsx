@@ -274,12 +274,10 @@ export const useLayoutState = () => {
         if (!existingTab.active) {
           replaceLeftContainerMetadata({
             ...leftContainerMetadata,
-            tabs: leftContainerMetadata.tabs
-              .filter((t) => keepCurrent || !t.preview)
-              .map((t) => ({
-                ...t,
-                active: t.id === tab ? true : undefined,
-              })),
+            tabs: leftContainerMetadata.tabs.map((t) => ({
+              ...t,
+              active: t.id === tab ? true : undefined,
+            })),
           });
         }
 
@@ -310,12 +308,10 @@ export const useLayoutState = () => {
         if (!existingTab.active) {
           replaceRightContainerMetadata({
             ...rightContainerMetadata,
-            tabs: rightContainerMetadata.tabs
-              .filter((t) => keepCurrent || !t.preview)
-              .map((t) => ({
-                ...t,
-                active: t.id === tab ? true : undefined,
-              })),
+            tabs: rightContainerMetadata.tabs.map((t) => ({
+              ...t,
+              active: t.id === tab ? true : undefined,
+            })),
           });
         }
 

@@ -168,7 +168,7 @@ export const fetchEntryBreadcrumb = async (
     .selectFrom('entry_paths')
     .select('ancestor_id')
     .where('descendant_id', '=', entryId)
-    .orderBy('level', 'asc')
+    .orderBy('level', 'desc')
     .execute();
 
   return rows.map((row) => row.ancestor_id);

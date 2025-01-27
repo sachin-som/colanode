@@ -56,7 +56,7 @@ export const LayoutTabs = ({
               value={tab.id}
               key={tab.id}
               className={cn(
-                'overflow-hidden rounded-b-none bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none h-10 group/tab app-no-drag-region',
+                'overflow-hidden rounded-b-none bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none h-10 group/tab app-no-drag-region flex items-center justify-between gap-2',
                 tab.preview && 'italic'
               )}
               onAuxClick={(e) => {
@@ -66,33 +66,35 @@ export const LayoutTabs = ({
                 }
               }}
             >
-              {match(getIdType(tab.id))
-                .with(IdType.Channel, () => (
-                  <ChannelContainerTab channelId={tab.id} />
-                ))
-                .with(IdType.Page, () => <PageContainerTab pageId={tab.id} />)
-                .with(IdType.Database, () => (
-                  <DatabaseContainerTab databaseId={tab.id} />
-                ))
-                .with(IdType.Record, () => (
-                  <RecordContainerTab recordId={tab.id} />
-                ))
-                .with(IdType.Chat, () => <ChatContainerTab chatId={tab.id} />)
-                .with(IdType.Folder, () => (
-                  <FolderContainerTab folderId={tab.id} />
-                ))
-                .with(IdType.File, () => <FileContainerTab fileId={tab.id} />)
-                .otherwise(() => null)}
-
+              <div className="overflow-hidden truncate">
+                {match(getIdType(tab.id))
+                  .with(IdType.Channel, () => (
+                    <ChannelContainerTab channelId={tab.id} />
+                  ))
+                  .with(IdType.Page, () => <PageContainerTab pageId={tab.id} />)
+                  .with(IdType.Database, () => (
+                    <DatabaseContainerTab databaseId={tab.id} />
+                  ))
+                  .with(IdType.Record, () => (
+                    <RecordContainerTab recordId={tab.id} />
+                  ))
+                  .with(IdType.Chat, () => <ChatContainerTab chatId={tab.id} />)
+                  .with(IdType.Folder, () => (
+                    <FolderContainerTab folderId={tab.id} />
+                  ))
+                  .with(IdType.File, () => <FileContainerTab fileId={tab.id} />)
+                  .otherwise(() => null)}
+              </div>
               <div
-                className="opacity-0 group-hover/tab:opacity-100 group-data-[state=active]/tab:opacity-100 transition-opacity duration-200"
+                className="opacity-0 group-hover/tab:opacity-100 group-data-[state=active]/tab:opacity-100 transition-opacity duration-200 flex-shrink-0"
                 onClick={() => onClose(tab.id)}
               >
-                <X className="size-4 text-muted-foreground ml-2 hover:text-primary" />
+                <X className="size-4 text-muted-foreground hover:text-primary" />
               </div>
             </TabsTrigger>
           ))}
         </TabsList>
+
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex-grow overflow-hidden">

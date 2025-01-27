@@ -1,5 +1,4 @@
 import { useQuery } from '@/renderer/hooks/use-query';
-import { Header } from '@/renderer/components/ui/header';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { SpaceCreateButton } from '@/renderer/components/spaces/space-create-button';
 import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
@@ -22,14 +21,14 @@ export const SidebarSpaces = () => {
 
   return (
     <div className="flex flex-col group/sidebar-spaces h-full px-2">
-      <Header>
-        <p className="font-medium text-muted-foreground flex-grow">Spaces</p>
+      <div className="flex items-center justify-between h-12 pl-2 pr-1">
+        <p className="font-bold text-muted-foreground flex-grow">Spaces</p>
         {canCreateSpace && (
-          <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center p-0">
+          <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center">
             <SpaceCreateButton />
           </div>
         )}
-      </Header>
+      </div>
       <div className="flex w-full min-w-0 flex-col gap-1">
         {spaces.map((space) => (
           <SpaceSidebarItem space={space} key={space.id} />

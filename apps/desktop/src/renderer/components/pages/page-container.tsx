@@ -1,57 +1,48 @@
-import { extractEntryRole, PageEntry } from '@colanode/core';
+import { PageEntry } from '@colanode/core';
 
-import { PageBody } from '@/renderer/components/pages/page-body';
-import { PageHeader } from '@/renderer/components/pages/page-header';
 import { PageNotFound } from '@/renderer/components/pages/page-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { PageSettings } from '@/renderer/components/pages/page-settings';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { PageBody } from '@/renderer/components/pages/page-body';
 
 interface PageContainerProps {
   pageId: string;
 }
 
 export const PageContainer = ({ pageId }: PageContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<PageEntry>(pageId);
 
-  const { data: entry, isPending: isPendingEntry } = useQuery({
-    type: 'entry_get',
-    entryId: pageId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  const page = entry as PageEntry;
-  const pageExists = !!page;
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: page?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: pageExists,
-    }
-  );
-
-  if (isPendingEntry || (isPendingRoot && pageExists)) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!page || !root) {
+  if (!data.entry) {
     return <PageNotFound />;
   }
 
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
-    return <PageNotFound />;
-  }
+  const { entry: page, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <PageHeader page={page} role={role} />
-      <PageBody page={page} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <PageSettings page={page} role={role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <PageBody page={page} role={role} />
+      </ContainerBody>
+    </Container>
   );
 };

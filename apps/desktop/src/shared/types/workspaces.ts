@@ -11,3 +11,55 @@ export type Workspace = {
   maxFileSize: bigint;
   storageLimit: bigint;
 };
+
+export type ContainerTab = {
+  id: string;
+  preview?: boolean;
+  active?: boolean;
+};
+
+export type ContainerMetadata = {
+  tabs: ContainerTab[];
+  width?: number;
+};
+
+export type SidebarMenuType = 'chats' | 'spaces';
+
+export type SidebarMetadata = {
+  menu: SidebarMenuType;
+  width: number;
+};
+
+export type WorkspaceSidebarMetadata = {
+  key: 'sidebar';
+  value: SidebarMetadata;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type WorkspaceLeftContainerMetadata = {
+  key: 'left_container';
+  value: ContainerMetadata;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type WorkspaceRightContainerMetadata = {
+  key: 'right_container';
+  value: ContainerMetadata;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type WorkspaceMetadata =
+  | WorkspaceSidebarMetadata
+  | WorkspaceRightContainerMetadata
+  | WorkspaceLeftContainerMetadata;
+
+export type WorkspaceMetadataKey = WorkspaceMetadata['key'];
+
+export type WorkspaceMetadataMap = {
+  sidebar: WorkspaceSidebarMetadata;
+  right_container: WorkspaceRightContainerMetadata;
+  left_container: WorkspaceLeftContainerMetadata;
+};

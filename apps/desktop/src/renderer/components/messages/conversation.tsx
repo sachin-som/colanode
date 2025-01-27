@@ -97,25 +97,27 @@ export const Conversation = ({
         },
       }}
     >
-      <ScrollArea
-        ref={viewportRef}
-        onScroll={handleScroll}
-        className="flex-grow overflow-y-auto px-10"
-      >
-        <div className="container" ref={containerRef}>
-          <MessageList />
-        </div>
-        <InView
-          className="h-4"
-          rootMargin="20px"
-          onChange={(inView) => {
-            bottomVisibleRef.current = inView;
-          }}
+      <div className="h-full min-h-full w-full min-w-full flex flex-col">
+        <ScrollArea
+          ref={viewportRef}
+          onScroll={handleScroll}
+          className="flex-grow overflow-y-auto"
         >
-          <div ref={bottomRef} className="h-4"></div>
-        </InView>
-      </ScrollArea>
-      <MessageCreate ref={messageCreateRef} />
+          <div ref={containerRef}>
+            <MessageList />
+          </div>
+          <InView
+            className="h-4"
+            rootMargin="20px"
+            onChange={(inView) => {
+              bottomVisibleRef.current = inView;
+            }}
+          >
+            <div ref={bottomRef} className="h-4"></div>
+          </InView>
+        </ScrollArea>
+        <MessageCreate ref={messageCreateRef} />
+      </div>
     </ConversationContext.Provider>
   );
 };

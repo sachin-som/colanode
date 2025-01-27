@@ -10,6 +10,7 @@ import {
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import { useLayout } from '@/renderer/contexts/layout';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface PageDeleteDialogProps {
@@ -24,6 +25,7 @@ export const PageDeleteDialog = ({
   onOpenChange,
 }: PageDeleteDialogProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -53,7 +55,7 @@ export const PageDeleteDialog = ({
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeEntry(pageId);
+                  layout.close(pageId);
                 },
                 onError(error) {
                   toast({

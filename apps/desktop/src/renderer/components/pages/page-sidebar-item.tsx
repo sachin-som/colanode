@@ -1,7 +1,7 @@
 import { PageEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface PageSidebarItemProps {
@@ -9,8 +9,8 @@ interface PageSidebarItemProps {
 }
 
 export const PageSidebarItem = ({ page }: PageSidebarItemProps) => {
-  const workspace = useWorkspace();
-  const isActive = workspace.isEntryActive(page.id);
+  const layout = useLayout();
+  const isActive = layout.activeTab === page.id;
   const isUnread = false;
   const mentionsCount = 0;
 

@@ -231,6 +231,21 @@ interface CursorTable {
   updated_at: ColumnType<string | null, string | null, string | null>;
 }
 
+export type SelectCursor = Selectable<CursorTable>;
+export type CreateCursor = Insertable<CursorTable>;
+export type UpdateCursor = Updateable<CursorTable>;
+
+interface MetadataTable {
+  key: ColumnType<string, string, never>;
+  value: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectWorkspaceMetadata = Selectable<MetadataTable>;
+export type CreateWorkspaceMetadata = Insertable<MetadataTable>;
+export type UpdateWorkspaceMetadata = Updateable<MetadataTable>;
+
 export interface WorkspaceDatabaseSchema {
   users: UserTable;
   entries: EntryTable;
@@ -247,4 +262,5 @@ export interface WorkspaceDatabaseSchema {
   mutations: MutationTable;
   texts: TextTable;
   cursors: CursorTable;
+  metadata: MetadataTable;
 }

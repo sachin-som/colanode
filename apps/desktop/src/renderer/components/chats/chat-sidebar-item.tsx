@@ -6,6 +6,7 @@ import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-ind
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface ChatSidebarItemProps {
@@ -14,6 +15,7 @@ interface ChatSidebarItemProps {
 
 export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const radar = useRadar();
 
   const userId =
@@ -37,7 +39,7 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
     workspace.id,
     chat.id
   );
-  const isActive = workspace.isEntryActive(chat.id);
+  const isActive = layout.activeTab === chat.id;
   const unreadCount =
     nodeReadState.unseenMessagesCount + nodeReadState.mentionsCount;
 

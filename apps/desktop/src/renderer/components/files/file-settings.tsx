@@ -1,6 +1,6 @@
 import { Copy, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
-import { Entry, EntryRole, hasEntryRole } from '@colanode/core';
+import { EntryRole, hasEntryRole } from '@colanode/core';
 
 import { FileDeleteDialog } from '@/renderer/components/files/file-delete-dialog';
 import {
@@ -15,14 +15,13 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 interface FileSettingsProps {
   file: FileWithState;
   role: EntryRole;
-  entry: Entry;
 }
 
-export const FileSettings = ({ file, role, entry }: FileSettingsProps) => {
+export const FileSettings = ({ file, role }: FileSettingsProps) => {
   const workspace = useWorkspace();
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const canDelete =
-    file.parentId === entry.id &&
+    file.parentId === file.entryId &&
     (file.createdBy === workspace.userId || hasEntryRole(role, 'editor'));
 
   return (

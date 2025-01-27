@@ -9,6 +9,7 @@ import {
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
@@ -24,6 +25,7 @@ export const DatabaseDeleteDialog = ({
   onOpenChange,
 }: DatabaseDeleteDialogProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -53,7 +55,7 @@ export const DatabaseDeleteDialog = ({
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeEntry(entryId);
+                  layout.close(entryId);
                 },
                 onError(error) {
                   toast({

@@ -23,7 +23,7 @@ export const CalendarView = () => {
 
   return (
     <React.Fragment>
-      <div className="mt-2 flex flex-row justify-between border-b">
+      <div className="flex flex-row justify-between border-b">
         <ViewTabs />
         <div className="invisible flex flex-row items-center justify-end group-hover/database:visible">
           <CalendarViewSettings />

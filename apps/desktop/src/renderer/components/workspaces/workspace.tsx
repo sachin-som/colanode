@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Layout } from '@/renderer/components/layouts/layout';
 import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
@@ -7,93 +7,83 @@ import { WorkspaceNotFound } from '@/renderer/components/workspaces/workspace-no
 import { useAccount } from '@/renderer/contexts/account';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import {
+  WorkspaceMetadataKey,
+  WorkspaceMetadataMap,
+} from '@/shared/types/workspaces';
 
 export const Workspace = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
   const account = useAccount();
-  const [searchParams, setSearchParams] = useSearchParams();
-
   const [openSettings, setOpenSettings] = React.useState(false);
 
-  const { data, isPending } = useQuery({
+  const { data: workspace, isPending: isPendingWorkspace } = useQuery({
     type: 'workspace_get',
     accountId: account.id,
     workspaceId: workspaceId!,
   });
 
-  if (isPending) {
+  const { data: metadata, isPending: isPendingMetadata } = useQuery({
+    type: 'workspace_metadata_list',
+    accountId: account.id,
+    workspaceId: workspaceId!,
+  });
+
+  if (isPendingWorkspace || isPendingMetadata) {
     return null;
   }
 
-  if (!data) {
+  if (!workspace) {
     return <WorkspaceNotFound />;
   }
 
-  const workspace = data;
-
   if (!workspace) {
-    return <p>Workspace not found</p>;
+    return <WorkspaceNotFound />;
   }
 
-  const main = searchParams.get('main');
-  const modal = searchParams.get('modal');
   return (
     <WorkspaceContext.Provider
       value={{
         ...workspace,
-        openInMain(entryId) {
-          setSearchParams((prev) => {
-            prev.set('main', entryId);
-            if (entryId === modal) {
-              prev.delete('modal');
-            }
-            return prev;
-          });
-        },
-        isEntryActive(id) {
-          return id === main;
-        },
-        isModalActive(id) {
-          return id === modal;
-        },
-        openInModal(modal) {
-          setSearchParams((prev) => {
-            prev.set('modal', modal);
-            return prev;
-          });
-        },
-        closeModal() {
-          setSearchParams((prev) => {
-            prev.delete('modal');
-            return prev;
-          });
-        },
-        closeMain() {
-          setSearchParams((prev) => {
-            prev.delete('main');
-            return prev;
-          });
-        },
-        closeEntry(id) {
-          if (id === main) {
-            setSearchParams((prev) => {
-              prev.delete('main');
-              return prev;
-            });
-          } else if (id === modal) {
-            setSearchParams((prev) => {
-              prev.delete('modal');
-              return prev;
-            });
-          }
-        },
         openSettings() {
           setOpenSettings(true);
         },
+        getMetadata<K extends WorkspaceMetadataKey>(key: K) {
+          const value = metadata?.find((m) => m.key === key);
+          if (!value) {
+            return undefined;
+          }
+
+          if (value.key !== key) {
+            return undefined;
+          }
+
+          return value as WorkspaceMetadataMap[K];
+        },
+        setMetadata<K extends WorkspaceMetadataKey>(
+          key: K,
+          value: WorkspaceMetadataMap[K]['value']
+        ) {
+          window.colanode.executeMutation({
+            type: 'workspace_metadata_save',
+            accountId: account.id,
+            workspaceId: workspaceId!,
+            key,
+            value: JSON.stringify(value),
+          });
+        },
+        deleteMetadata(key: string) {
+          window.colanode.executeMutation({
+            type: 'workspace_metadata_delete',
+            accountId: account.id,
+            workspaceId: workspaceId!,
+            key,
+          });
+        },
       }}
     >
-      <Layout main={main} modal={modal} />
+      <Layout />
       {openSettings && (
         <WorkspaceSettingsDialog
           open={openSettings}

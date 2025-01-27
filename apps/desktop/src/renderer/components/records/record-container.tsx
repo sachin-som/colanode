@@ -1,71 +1,48 @@
-import { DatabaseEntry, extractEntryRole, RecordEntry } from '@colanode/core';
+import { RecordEntry } from '@colanode/core';
 
-import { RecordBody } from '@/renderer/components/records/record-body';
-import { RecordHeader } from '@/renderer/components/records/record-header';
 import { RecordNotFound } from '@/renderer/components/records/record-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { RecordBody } from '@/renderer/components/records/record-body';
+import { RecordSettings } from '@/renderer/components/records/record-settings';
 
 interface RecordContainerProps {
   recordId: string;
 }
 
 export const RecordContainer = ({ recordId }: RecordContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<RecordEntry>(recordId);
 
-  const { data: entry, isPending: isPendingEntry } = useQuery({
-    type: 'entry_get',
-    entryId: recordId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  const record = entry as RecordEntry;
-  const recordExists = !!record;
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: record?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: recordExists,
-    }
-  );
-
-  const { data: databaseEntry, isPending: isPendingDatabase } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: record?.attributes.databaseId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: recordExists,
-    }
-  );
-
-  const database = databaseEntry as DatabaseEntry;
-
-  if (isPendingEntry || isPendingRoot || isPendingDatabase) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!record || !root || !database) {
+  if (!data.entry) {
     return <RecordNotFound />;
   }
 
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
-    return <RecordNotFound />;
-  }
+  const { entry: record, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <RecordHeader record={record} role={role} />
-      <RecordBody record={record} database={database} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <RecordSettings record={record} role={role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <RecordBody record={record} role={role} />
+      </ContainerBody>
+    </Container>
   );
 };

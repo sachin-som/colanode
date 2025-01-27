@@ -7,7 +7,7 @@ import {
   List,
   Upload,
 } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { FolderFiles } from '@/renderer/components/folders/folder-files';
 import { Button } from '@/renderer/components/ui/button';
@@ -25,16 +25,15 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { FolderLayoutType } from '@/shared/types/folders';
 import { toast } from '@/renderer/hooks/use-toast';
-import { useRadar } from '@/renderer/contexts/radar';
 
-export type FolderLayout = {
+export type FolderLayoutOption = {
   value: FolderLayoutType;
   name: string;
   description: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 
-export const folderLayouts: FolderLayout[] = [
+export const folderLayouts: FolderLayoutOption[] = [
   {
     name: 'Grid',
     value: 'grid',
@@ -62,7 +61,6 @@ interface FolderBodyProps {
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {
   const workspace = useWorkspace();
-  const radar = useRadar();
   const { mutate } = useMutation();
 
   const [layout, setLayout] = React.useState<FolderLayoutType>('grid');
@@ -120,16 +118,6 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
     isDialogOpenedRef.current = false;
   };
 
-  useEffect(() => {
-    radar.markEntryAsOpened(workspace.accountId, workspace.id, folder.id);
-
-    const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.accountId, workspace.id, folder.id);
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [folder.id, folder.type, folder.transactionId]);
-
   return (
     <Dropzone
       text="Drop files here to upload them in the folder"
@@ -137,7 +125,7 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
         files.forEach((file) => console.log(file));
       }}
     >
-      <div className="flex h-full max-h-full flex-col gap-4 overflow-y-auto px-10 pt-4">
+      <div className="flex h-full max-h-full flex-col gap-4 overflow-y-auto">
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-2">
             <Button type="button" variant="outline" onClick={openFileDialog}>
@@ -181,8 +169,8 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
       {/* <FolderUploads
         uploads={Object.values(uploads)}
         open={openUploads}
-        setOpen={setOpenUploads}
-      /> */}
+          setOpen={setOpenUploads}
+        /> */}
     </Dropzone>
   );
 };

@@ -1,16 +1,21 @@
 import { createContext, useContext } from 'react';
 
-import { Workspace } from '@/shared/types/workspaces';
+import {
+  Workspace,
+  WorkspaceMetadataKey,
+  WorkspaceMetadataMap,
+} from '@/shared/types/workspaces';
 
 interface WorkspaceContext extends Workspace {
-  openInMain: (entryId: string) => void;
-  isEntryActive: (entryId: string) => boolean;
-  openInModal: (entryId: string) => void;
-  isModalActive: (entryId: string) => boolean;
-  closeModal: () => void;
-  closeMain: () => void;
-  closeEntry: (entryId: string) => void;
   openSettings: () => void;
+  getMetadata: <K extends WorkspaceMetadataKey>(
+    key: K
+  ) => WorkspaceMetadataMap[K] | undefined;
+  setMetadata: <K extends WorkspaceMetadataKey>(
+    key: K,
+    value: WorkspaceMetadataMap[K]['value']
+  ) => void;
+  deleteMetadata: <K extends WorkspaceMetadataKey>(key: K) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContext>(

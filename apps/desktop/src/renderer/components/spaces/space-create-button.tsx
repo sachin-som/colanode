@@ -7,10 +7,7 @@ export const SpaceCreateButton = () => {
   const [open, setOpen] = React.useState(false);
   return (
     <React.Fragment>
-      <Plus
-        className="mr-2 size-4 cursor-pointer"
-        onClick={() => setOpen(true)}
-      />
+      <Plus className="size-4 cursor-pointer" onClick={() => setOpen(true)} />
       <SpaceCreateDialog open={open} onOpenChange={setOpen} />
     </React.Fragment>
   );

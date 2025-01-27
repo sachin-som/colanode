@@ -3,10 +3,11 @@ import { LayoutGrid, MessageCircle } from 'lucide-react';
 import { SidebarMenuIcon } from '@/renderer/components/layouts/sidebars/sidebar-menu-icon';
 import { SidebarMenuHeader } from '@/renderer/components/layouts/sidebars/sidebar-menu-header';
 import { SidebarMenuFooter } from '@/renderer/components/layouts/sidebars/sidebar-menu-footer';
+import { SidebarMenuType } from '@/shared/types/workspaces';
 
 interface SidebarMenuProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: SidebarMenuType;
+  onChange: (value: SidebarMenuType) => void;
 }
 
 export const SidebarMenu = ({ value, onChange }: SidebarMenuProps) => {

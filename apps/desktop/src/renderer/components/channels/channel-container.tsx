@@ -1,57 +1,52 @@
-import { ChannelEntry, extractEntryRole } from '@colanode/core';
+import { ChannelEntry } from '@colanode/core';
 
-import { ChannelBody } from '@/renderer/components/channels/channel-body';
-import { ChannelHeader } from '@/renderer/components/channels/channel-header';
 import { ChannelNotFound } from '@/renderer/components/channels/channel-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/breadcrumbs/container-breadrumb';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { ChannelSettings } from '@/renderer/components/channels/channel-settings';
+import { Conversation } from '@/renderer/components/messages/conversation';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
 
 interface ChannelContainerProps {
   channelId: string;
 }
 
 export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<ChannelEntry>(channelId);
 
-  const { data: entry, isPending: isPendingEntry } = useQuery({
-    type: 'entry_get',
-    entryId: channelId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  const channel = entry as ChannelEntry;
-  const channelExists = !!channel;
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: channel?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: channelExists,
-    }
-  );
-
-  if (isPendingEntry || (isPendingRoot && channelExists)) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!channel || !root) {
+  if (!data.entry) {
     return <ChannelNotFound />;
   }
 
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
-    return <ChannelNotFound />;
-  }
+  const { entry: channel, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <ChannelHeader channel={channel} role={role} />
-      <ChannelBody channel={channel} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <ChannelSettings channel={channel} role={role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <Conversation
+          conversationId={channel.id}
+          rootId={channel.rootId}
+          role={role}
+        />
+      </ContainerBody>
+    </Container>
   );
 };

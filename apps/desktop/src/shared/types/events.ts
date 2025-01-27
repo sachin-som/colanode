@@ -8,7 +8,7 @@ import {
 } from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
-import { Workspace } from '@/shared/types/workspaces';
+import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
 import { File, FileInteraction, FileState } from '@/shared/types/files';
 
@@ -238,6 +238,20 @@ export type AccountConnectionMessageEvent = {
   message: Message;
 };
 
+export type WorkspaceMetadataUpdatedEvent = {
+  type: 'workspace_metadata_updated';
+  accountId: string;
+  workspaceId: string;
+  metadata: WorkspaceMetadata;
+};
+
+export type WorkspaceMetadataDeletedEvent = {
+  type: 'workspace_metadata_deleted';
+  accountId: string;
+  workspaceId: string;
+  metadata: WorkspaceMetadata;
+};
+
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -274,4 +288,6 @@ export type Event =
   | CollaborationDeletedEvent
   | AccountConnectionOpenedEvent
   | AccountConnectionClosedEvent
-  | AccountConnectionMessageEvent;
+  | AccountConnectionMessageEvent
+  | WorkspaceMetadataUpdatedEvent
+  | WorkspaceMetadataDeletedEvent;

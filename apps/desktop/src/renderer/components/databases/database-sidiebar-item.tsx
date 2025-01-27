@@ -1,7 +1,7 @@
 import { DatabaseEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface DatabaseSidebarItemProps {
@@ -9,8 +9,8 @@ interface DatabaseSidebarItemProps {
 }
 
 export const DatabaseSidebarItem = ({ database }: DatabaseSidebarItemProps) => {
-  const workspace = useWorkspace();
-  const isActive = workspace.isEntryActive(database.id);
+  const layout = useLayout();
+  const isActive = layout.activeTab === database.id;
   const isUnread = false;
   const mentionsCount = 0;
 

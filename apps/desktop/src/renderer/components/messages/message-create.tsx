@@ -139,7 +139,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
     }, [messageEditorRef]);
 
     return (
-      <div className="container mt-1 px-10">
+      <div className="mt-1">
         <div className="flex flex-col">
           {conversation.canCreateMessage && replyTo && (
             <MessageReplyBanner

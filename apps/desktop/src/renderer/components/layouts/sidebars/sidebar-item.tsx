@@ -8,13 +8,11 @@ import { FolderSidebarItem } from '@/renderer/components/folders/folder-sidebar-
 import { PageSidebarItem } from '@/renderer/components/pages/page-sidebar-item';
 import { SpaceSidebarItem } from '@/renderer/components/spaces/space-sidebar-item';
 
-interface EntrySidebarItemProps {
+interface SidebarItemProps {
   entry: Entry;
 }
 
-export const EntrySidebarItem = ({
-  entry,
-}: EntrySidebarItemProps): React.ReactNode => {
+export const SidebarItem = ({ entry }: SidebarItemProps): React.ReactNode => {
   switch (entry.type) {
     case 'space':
       return <SpaceSidebarItem space={entry} />;

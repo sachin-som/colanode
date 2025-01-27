@@ -1,12 +1,13 @@
 import { useQuery } from '@/renderer/hooks/use-query';
-import { Header } from '@/renderer/components/ui/header';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { ChatSidebarItem } from '@/renderer/components/chats/chat-sidebar-item';
 import { ChatCreatePopover } from '@/renderer/components/chats/chat-create-popover';
 import { cn } from '@/shared/lib/utils';
+import { useLayout } from '@/renderer/contexts/layout';
 
 export const SidebarChats = () => {
   const workspace = useWorkspace();
+  const layout = useLayout();
 
   const { data } = useQuery({
     type: 'chat_list',
@@ -19,24 +20,27 @@ export const SidebarChats = () => {
   const chats = data ?? [];
 
   return (
-    <div className="flex flex-col group/sidebar-spaces h-full px-2">
-      <Header>
-        <p className="font-medium text-muted-foreground flex-grow">Chats</p>
-        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-spaces:opacity-100 flex items-center justify-center p-0">
+    <div className="flex flex-col group/sidebar-chats h-full px-2">
+      <div className="flex items-center justify-between h-12 pl-2 pr-1">
+        <p className="font-bold text-muted-foreground flex-grow">Chats</p>
+        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100 flex items-center justify-center">
           <ChatCreatePopover />
         </div>
-      </Header>
+      </div>
       <div className="flex w-full min-w-0 flex-col gap-1">
         {chats.map((item) => (
           <button
             key={item.id}
             className={cn(
               'px-2 flex w-full items-center gap-2 overflow-hidden rounded-md text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-7',
-              workspace.isEntryActive(item.id) &&
+              layout.activeTab === item.id &&
                 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
             )}
             onClick={() => {
-              workspace.openInMain(item.id);
+              layout.preview(item.id);
+            }}
+            onDoubleClick={() => {
+              layout.open(item.id);
             }}
           >
             <ChatSidebarItem chat={item} />

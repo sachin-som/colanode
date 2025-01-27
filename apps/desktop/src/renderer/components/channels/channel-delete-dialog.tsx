@@ -8,6 +8,7 @@ import {
   AlertDialogTitle,
 } from '@/renderer/components/ui/alert-dialog';
 import { Button } from '@/renderer/components/ui/button';
+import { useLayout } from '@/renderer/contexts/layout';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
@@ -24,6 +25,7 @@ export const ChannelDeleteDialog = ({
   onOpenChange,
 }: ChannelDeleteDialogProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -53,7 +55,7 @@ export const ChannelDeleteDialog = ({
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  workspace.closeEntry(channelId);
+                  layout.close(channelId);
                 },
                 onError(error) {
                   toast({

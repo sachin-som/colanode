@@ -25,7 +25,7 @@ export const DatabaseViews = () => {
     >
       <div className="h-full w-full overflow-y-auto">
         <ScrollAreaPrimitive.Root className="relative overflow-hidden">
-          <ScrollAreaPrimitive.Viewport className="group/database h-full max-h-[calc(100vh-130px)] w-full overflow-y-auto rounded-[inherit] px-10 pb-12">
+          <ScrollAreaPrimitive.Viewport className="group/database h-full max-h-[calc(100vh-130px)] w-full overflow-y-auto rounded-[inherit]">
             {activeView && <View view={activeView} />}
           </ScrollAreaPrimitive.Viewport>
           <ScrollBar orientation="horizontal" />

@@ -3,6 +3,7 @@ import { getIdType, IdType } from '@colanode/core';
 
 import { ContainerTab } from '@/shared/types/workspaces';
 import { TabsContent } from '@/renderer/components/ui/tabs';
+import { SpaceContainer } from '@/renderer/components/spaces/space-container';
 import { ChannelContainer } from '@/renderer/components/channels/channel-container';
 import { ChatContainer } from '@/renderer/components/chats/chat-container';
 import { DatabaseContainer } from '@/renderer/components/databases/database-container';
@@ -23,6 +24,7 @@ export const ContainerTabContent = ({ tab }: ContainerTabContentProps) => {
       className="h-full min-h-full w-full min-w-full m-0 pt-2"
     >
       {match(getIdType(tab.path))
+        .with(IdType.Space, () => <SpaceContainer spaceId={tab.path} />)
         .with(IdType.Channel, () => <ChannelContainer channelId={tab.path} />)
         .with(IdType.Page, () => <PageContainer pageId={tab.path} />)
         .with(IdType.Database, () => (

@@ -3,27 +3,24 @@ import { SpaceAttributes } from '@colanode/core';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
-  SpaceUpdateMutationInput,
-  SpaceUpdateMutationOutput,
-} from '@/shared/mutations/spaces/space-update';
+  SpaceDescriptionUpdateMutationInput,
+  SpaceDescriptionUpdateMutationOutput,
+} from '@/shared/mutations/spaces/space-description-update';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
-export class SpaceUpdateMutationHandler
+export class SpaceDescriptionUpdateMutationHandler
   extends WorkspaceMutationHandlerBase
-  implements MutationHandler<SpaceUpdateMutationInput>
+  implements MutationHandler<SpaceDescriptionUpdateMutationInput>
 {
   async handleMutation(
-    input: SpaceUpdateMutationInput
-  ): Promise<SpaceUpdateMutationOutput> {
+    input: SpaceDescriptionUpdateMutationInput
+  ): Promise<SpaceDescriptionUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const result = await workspace.entries.updateEntry<SpaceAttributes>(
-      input.id,
+      input.spaceId,
       (attributes) => {
-        attributes.name = input.name;
         attributes.description = input.description;
-        attributes.avatar = input.avatar;
-
         return attributes;
       }
     );
@@ -32,13 +29,6 @@ export class SpaceUpdateMutationHandler
       throw new MutationError(
         MutationErrorCode.SpaceUpdateForbidden,
         "You don't have permission to update this space."
-      );
-    }
-
-    if (result !== 'success') {
-      throw new MutationError(
-        MutationErrorCode.SpaceUpdateFailed,
-        'Something went wrong while updating the space. Please try again later.'
       );
     }
 

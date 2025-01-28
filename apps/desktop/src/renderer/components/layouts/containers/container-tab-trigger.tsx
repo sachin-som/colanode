@@ -7,6 +7,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { TabsTrigger } from '@/renderer/components/ui/tabs';
 import { ContainerTab } from '@/shared/types/workspaces';
 import { cn } from '@/shared/lib/utils';
+import { SpaceContainerTab } from '@/renderer/components/spaces/space-container-tab';
 import { ChannelContainerTab } from '@/renderer/components/channels/channel-container-tab';
 import { FileContainerTab } from '@/renderer/components/files/file-container-tab';
 import { DatabaseContainerTab } from '@/renderer/components/databases/database-container-tab';
@@ -62,7 +63,7 @@ export const ContainerTabTrigger = ({
       value={tab.path}
       key={tab.path}
       className={cn(
-        'overflow-hidden rounded-b-none bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none h-10 group/tab app-no-drag-region flex items-center justify-between gap-2',
+        'overflow-hidden rounded-b-none bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none h-10 group/tab app-no-drag-region flex items-center justify-between gap-2 max-w-60',
         tab.preview && 'italic',
         dropMonitor.isOver &&
           dropMonitor.canDrop &&
@@ -78,6 +79,7 @@ export const ContainerTabTrigger = ({
     >
       <div className="overflow-hidden truncate">
         {match(getIdType(tab.path))
+          .with(IdType.Space, () => <SpaceContainerTab spaceId={tab.path} />)
           .with(IdType.Channel, () => (
             <ChannelContainerTab channelId={tab.path} />
           ))

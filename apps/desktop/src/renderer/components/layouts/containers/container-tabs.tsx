@@ -45,9 +45,9 @@ export const ContainerTabs = ({
       value={activeTab}
       onValueChange={onTabChange}
       onFocus={onFocus}
-      className="h-full min-h-full w-full min-w-full flex flex-col"
+      className="h-full min-h-full w-full min-w-full max-h-full max-w-full flex flex-col overflow-hidden"
     >
-      <ScrollArea>
+      <ScrollArea className="h-10 min-h-10 w-full">
         <TabsList className="h-10 bg-slate-50 w-full justify-start p-0 app-drag-region">
           {tabs.map((tab) => (
             <ContainerTabTrigger

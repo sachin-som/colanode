@@ -209,7 +209,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
             </div>
           </div>
         </div>
-        <div className="flex h-8 min-h-8 items-center text-xs text-muted-foreground"></div>
+        <div className="flex h-3 min-h-3 items-center text-xs text-muted-foreground"></div>
       </div>
     );
   }

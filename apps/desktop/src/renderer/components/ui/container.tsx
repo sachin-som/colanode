@@ -39,7 +39,13 @@ export const ContainerBody = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
-    <div className={cn('px-10 py-5 flex-grow', className)} {...props}>
+    <div
+      className={cn(
+        'px-10 py-4 flex-grow max-h-full h-full overflow-hidden',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );

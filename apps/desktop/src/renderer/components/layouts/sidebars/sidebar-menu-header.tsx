@@ -31,16 +31,29 @@ export const SidebarMenuHeader = () => {
 
   const workspaces = data ?? [];
   const otherWorkspaces = workspaces.filter((w) => w.id !== workspace.id);
+  const otherWorkspaceStates = otherWorkspaces.map((w) =>
+    radar.getWorkspaceState(w.accountId, w.id)
+  );
+  const importantCount = otherWorkspaceStates.reduce(
+    (acc, curr) => acc + curr.importantCount,
+    0
+  );
+  const hasUnseenChanges = otherWorkspaceStates.some((w) => w.hasUnseenChanges);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <button className="flex w-full items-center justify-center">
+        <button className="flex w-full items-center justify-center relative">
           <Avatar
             id={workspace.id}
             avatar={workspace.avatar}
             name={workspace.name}
             className="size-10 rounded-lg shadow-md"
+          />
+          <NotificationBadge
+            count={importantCount}
+            unseen={hasUnseenChanges}
+            className="absolute -top-1 right-0"
           />
         </button>
       </DropdownMenuTrigger>

@@ -20,6 +20,7 @@ export class DatabaseUpdateMutationHandler
       input.databaseId,
       (attributes) => {
         attributes.name = input.name;
+        attributes.avatar = input.avatar;
 
         return attributes;
       }

@@ -50,7 +50,9 @@ import { SelectOptionUpdateMutationHandler } from '@/main/mutations/databases/se
 import { ServerCreateMutationHandler } from '@/main/mutations/servers/server-create';
 import { SpaceCreateMutationHandler } from '@/main/mutations/spaces/space-create';
 import { SpaceDeleteMutationHandler } from '@/main/mutations/spaces/space-delete';
-import { SpaceUpdateMutationHandler } from '@/main/mutations/spaces/space-update';
+import { SpaceDescriptionUpdateMutationHandler } from '@/main/mutations/spaces/space-description-update';
+import { SpaceAvatarUpdateMutationHandler } from '@/main/mutations/spaces/space-avatar-update';
+import { SpaceNameUpdateMutationHandler } from '@/main/mutations/spaces/space-name-update';
 import { ViewCreateMutationHandler } from '@/main/mutations/databases/view-create';
 import { ViewDeleteMutationHandler } from '@/main/mutations/databases/view-delete';
 import { ViewUpdateMutationHandler } from '@/main/mutations/databases/view-update';
@@ -59,6 +61,8 @@ import { WorkspaceCreateMutationHandler } from '@/main/mutations/workspaces/work
 import { WorkspaceUpdateMutationHandler } from '@/main/mutations/workspaces/workspace-update';
 import { UserRoleUpdateMutationHandler } from '@/main/mutations/users/user-role-update';
 import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite';
+import { WorkspaceMetadataSaveMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-save';
+import { WorkspaceMetadataDeleteMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-delete';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -119,7 +123,9 @@ export const mutationHandlerMap: MutationHandlerMap = {
   file_mark_opened: new FileMarkOpenedMutationHandler(),
   file_mark_seen: new FileMarkSeenMutationHandler(),
   file_save_temp: new FileSaveTempMutationHandler(),
-  space_update: new SpaceUpdateMutationHandler(),
+  space_avatar_update: new SpaceAvatarUpdateMutationHandler(),
+  space_description_update: new SpaceDescriptionUpdateMutationHandler(),
+  space_name_update: new SpaceNameUpdateMutationHandler(),
   account_update: new AccountUpdateMutationHandler(),
   view_update: new ViewUpdateMutationHandler(),
   view_delete: new ViewDeleteMutationHandler(),
@@ -128,4 +134,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   page_update: new PageUpdateMutationHandler(),
   folder_update: new FolderUpdateMutationHandler(),
   database_update: new DatabaseUpdateMutationHandler(),
+  workspace_metadata_save: new WorkspaceMetadataSaveMutationHandler(),
+  workspace_metadata_delete: new WorkspaceMetadataDeleteMutationHandler(),
 };

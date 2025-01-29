@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import React from 'react';
 
 import {
@@ -10,17 +10,19 @@ import { UserSearch } from '@/renderer/components/users/user-search';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useLayout } from '@/renderer/contexts/layout';
 
 export const ChatCreatePopover = () => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
+  const layout = useLayout();
 
   const [open, setOpen] = React.useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Plus className="mr-2 size-4 cursor-pointer" />
+        <SquarePen className="size-4 cursor-pointer" />
       </PopoverTrigger>
       <PopoverContent className="w-96 p-1">
         <UserSearch
@@ -35,7 +37,7 @@ export const ChatCreatePopover = () => {
                 userId: user.id,
               },
               onSuccess(output) {
-                workspace.openInMain(output.id);
+                layout.openLeft(output.id);
                 setOpen(false);
               },
               onError(error) {

@@ -16,6 +16,7 @@ import { useDatabase } from '@/renderer/contexts/database';
 import { ViewContext } from '@/renderer/contexts/view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
+import { useLayout } from '@/renderer/contexts/layout';
 import {
   generateFieldValuesFromFilters,
   generateViewFieldIndex,
@@ -34,6 +35,7 @@ interface ViewProps {
 export const View = ({ view }: ViewProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
+  const layout = useLayout();
   const { mutate } = useMutation();
 
   const fields: ViewField[] = React.useMemo(() => {
@@ -537,7 +539,7 @@ export const View = ({ view }: ViewProps) => {
               fields,
             },
             onSuccess: (output) => {
-              workspace.openInModal(output.id);
+              layout.previewLeft(output.id, true);
             },
             onError(error) {
               toast({

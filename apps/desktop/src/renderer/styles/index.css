@@ -105,3 +105,11 @@
 .cm-editor.cm-focused {
   outline: none;
 }
+
+.app-drag-region {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag-region {
+  -webkit-app-region: no-drag;
+}

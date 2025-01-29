@@ -49,3 +49,9 @@ export const getDisplayedDates = (
 
 export const pluralize = (count: number, singular: string, plural: string) =>
   count === 1 ? singular : plural;
+
+export const percentToNumber = (total: number, percent: number) =>
+  Math.round((total * percent) / 100);
+
+export const numberToPercent = (total: number, number: number) =>
+  Math.round((number / total) * 100);

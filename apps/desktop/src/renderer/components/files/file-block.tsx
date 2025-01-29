@@ -1,5 +1,6 @@
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { useQuery } from '@/renderer/hooks/use-query';
 
 interface FileBlockProps {
@@ -8,6 +9,7 @@ interface FileBlockProps {
 
 export const FileBlock = ({ id }: FileBlockProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
 
   const { data } = useQuery({
     type: 'file_get',
@@ -24,7 +26,7 @@ export const FileBlock = ({ id }: FileBlockProps) => {
     <div
       className="flex h-72 max-h-72 max-w-128 w-full cursor-pointer overflow-hidden rounded-md p-2 hover:bg-gray-100"
       onClick={() => {
-        workspace.openInModal(id);
+        layout.previewLeft(id, true);
       }}
     >
       <FilePreview file={data} />

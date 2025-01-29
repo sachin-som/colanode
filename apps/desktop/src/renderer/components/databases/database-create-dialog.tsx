@@ -11,6 +11,7 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { useLayout } from '@/renderer/contexts/layout';
 
 interface DatabaseCreateDialogProps {
   spaceId: string;
@@ -24,6 +25,7 @@ export const DatabaseCreateDialog = ({
   onOpenChange,
 }: DatabaseCreateDialogProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const { mutate, isPending } = useMutation();
 
   return (
@@ -61,7 +63,7 @@ export const DatabaseCreateDialog = ({
               },
               onSuccess(output) {
                 onOpenChange(false);
-                workspace.openInMain(output.id);
+                layout.openLeft(output.id);
               },
               onError(error) {
                 toast({

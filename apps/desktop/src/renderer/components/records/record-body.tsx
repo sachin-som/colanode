@@ -1,13 +1,7 @@
-import {
-  DatabaseEntry,
-  EntryRole,
-  hasEntryRole,
-  RecordEntry,
-} from '@colanode/core';
+import { EntryRole, hasEntryRole, RecordEntry } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
-import { Database } from '@/renderer/components/databases/database';
 import { Document } from '@/renderer/components/documents/document';
 import { RecordAttributes } from '@/renderer/components/records/record-attributes';
 import { RecordProvider } from '@/renderer/components/records/record-provider';
@@ -15,17 +9,15 @@ import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
-import { useRadar } from '@/renderer/contexts/radar';
+import { RecordDatabase } from '@/renderer/components/records/record-database';
 
 interface RecordBodyProps {
   record: RecordEntry;
-  database: DatabaseEntry;
   role: EntryRole;
 }
 
-export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
+export const RecordBody = ({ record, role }: RecordBodyProps) => {
   const workspace = useWorkspace();
-  const radar = useRadar();
 
   const canEdit =
     record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
@@ -52,19 +44,9 @@ export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
     [workspace.accountId, workspace.id, record.id]
   );
 
-  useEffect(() => {
-    radar.markEntryAsOpened(workspace.accountId, workspace.id, record.id);
-
-    const interval = setInterval(() => {
-      radar.markEntryAsOpened(workspace.accountId, workspace.id, record.id);
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [record.id, record.type, record.transactionId]);
-
   return (
-    <Database database={database} role={role}>
-      <ScrollArea className="h-full max-h-full w-full overflow-y-auto px-10 pb-12">
+    <RecordDatabase id={record.attributes.databaseId} role={role}>
+      <ScrollArea className="h-full max-h-full w-full overflow-y-auto">
         <RecordProvider record={record} role={role}>
           <RecordAttributes />
         </RecordProvider>
@@ -79,6 +61,6 @@ export const RecordBody = ({ record, database, role }: RecordBodyProps) => {
           autoFocus={false}
         />
       </ScrollArea>
-    </Database>
+    </RecordDatabase>
   );
 };

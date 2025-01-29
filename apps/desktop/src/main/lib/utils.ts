@@ -1,4 +1,4 @@
-import { extractFileType } from '@colanode/core';
+import { extractFileType, getIdType, IdType } from '@colanode/core';
 import {
   DeleteResult,
   InsertResult,
@@ -158,4 +158,77 @@ export const fetchUserStorageUsed = async (
     .executeTakeFirst();
 
   return BigInt(storageUsedRow?.storage_used ?? 0);
+};
+
+export const fetchEntryBreadcrumb = async (
+  database: Kysely<WorkspaceDatabaseSchema>,
+  entryId: string
+): Promise<string[]> => {
+  const rows = await database
+    .selectFrom('entry_paths')
+    .select('ancestor_id')
+    .where('descendant_id', '=', entryId)
+    .orderBy('level', 'desc')
+    .execute();
+
+  return rows.map((row) => row.ancestor_id);
+};
+
+export const fetchMessageBreadcrumb = async (
+  database: Kysely<WorkspaceDatabaseSchema>,
+  messageId: string
+): Promise<string[]> => {
+  const message = await database
+    .selectFrom('messages')
+    .select('parent_id')
+    .where('id', '=', messageId)
+    .executeTakeFirst();
+
+  if (!message) {
+    return [];
+  }
+
+  const parentIdType = getIdType(message.parent_id);
+  if (parentIdType === IdType.Message) {
+    const messageBreadcrumb = await fetchMessageBreadcrumb(
+      database,
+      message.parent_id
+    );
+
+    return [...messageBreadcrumb, messageId];
+  }
+
+  const entryBreadcrumb = await fetchEntryBreadcrumb(
+    database,
+    message.parent_id
+  );
+  return [...entryBreadcrumb, messageId];
+};
+
+export const fetchFileBreadcrumb = async (
+  database: Kysely<WorkspaceDatabaseSchema>,
+  fileId: string
+): Promise<string[]> => {
+  const file = await database
+    .selectFrom('files')
+    .select('parent_id')
+    .where('id', '=', fileId)
+    .executeTakeFirst();
+
+  if (!file) {
+    return [];
+  }
+
+  const parentIdType = getIdType(file.parent_id);
+  if (parentIdType === IdType.Message) {
+    const messageBreadcrumb = await fetchMessageBreadcrumb(
+      database,
+      file.parent_id
+    );
+
+    return [...messageBreadcrumb, fileId];
+  }
+
+  const entryBreadcrumb = await fetchEntryBreadcrumb(database, file.parent_id);
+  return [...entryBreadcrumb, fileId];
 };

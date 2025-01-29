@@ -1,57 +1,51 @@
-import { DatabaseEntry, extractEntryRole } from '@colanode/core';
+import { DatabaseEntry } from '@colanode/core';
 
-import { DatabaseBody } from '@/renderer/components/databases/database-body';
-import { DatabaseHeader } from '@/renderer/components/databases/database-header';
 import { DatabaseNotFound } from '@/renderer/components/databases/database-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { DatabaseSettings } from '@/renderer/components/databases/database-settings';
+import { Database } from '@/renderer/components/databases/database';
+import { DatabaseViews } from '@/renderer/components/databases/database-views';
 
 interface DatabaseContainerProps {
   databaseId: string;
 }
 
 export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<DatabaseEntry>(databaseId);
 
-  const { data: entry, isPending: isPendingEntry } = useQuery({
-    type: 'entry_get',
-    entryId: databaseId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  const database = entry as DatabaseEntry;
-  const databaseExists = !!database;
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: database?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: databaseExists,
-    }
-  );
-
-  if (isPendingEntry || (isPendingRoot && databaseExists)) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!database || !root) {
+  if (!data.entry) {
     return <DatabaseNotFound />;
   }
 
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
-    return <DatabaseNotFound />;
-  }
+  const { entry: database, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <DatabaseHeader database={database} role={role} />
-      <DatabaseBody database={database} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <DatabaseSettings database={database} role={role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <Database database={database} role={role}>
+          <DatabaseViews />
+        </Database>
+      </ContainerBody>
+    </Container>
   );
 };

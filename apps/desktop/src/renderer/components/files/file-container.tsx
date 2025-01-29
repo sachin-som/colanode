@@ -1,72 +1,41 @@
-import { extractEntryRole } from '@colanode/core';
-
 import { FileBody } from '@/renderer/components/files/file-body';
-import { FileHeader } from '@/renderer/components/files/file-header';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { FileNotFound } from '@/renderer/components/files/file-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import { useFileContainer } from '@/renderer/hooks/use-file-container';
+import { FileSettings } from '@/renderer/components/files/file-settings';
 
 interface FileContainerProps {
   fileId: string;
 }
 
 export const FileContainer = ({ fileId }: FileContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useFileContainer(fileId);
 
-  const { data: file, isPending: isPendingFile } = useQuery({
-    type: 'file_get',
-    id: fileId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
-
-  const fileExists = !!file;
-
-  const { data: entry, isPending: isPendingEntry } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: file?.entryId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: fileExists,
-    }
-  );
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: file?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: fileExists,
-    }
-  );
-
-  if (
-    isPendingFile ||
-    (isPendingEntry && fileExists) ||
-    (isPendingRoot && fileExists)
-  ) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!file || !entry || !root) {
-    return <FileNotFound />;
-  }
-
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
+  if (!data.file) {
     return <FileNotFound />;
   }
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <FileHeader file={file} role={role} entry={entry} />
-      <FileBody file={file} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <FileSettings file={data.file} role={data.role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <FileBody file={data.file} />
+      </ContainerBody>
+    </Container>
   );
 };

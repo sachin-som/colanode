@@ -5,6 +5,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface ChannelSidebarItemProps {
@@ -13,9 +14,10 @@ interface ChannelSidebarItemProps {
 
 export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
   const radar = useRadar();
 
-  const isActive = workspace.isEntryActive(channel.id);
+  const isActive = layout.activeTab === channel.id;
   const channelState = radar.getChannelState(
     workspace.accountId,
     workspace.id,

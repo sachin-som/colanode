@@ -1,43 +1,56 @@
-import { extractEntryRole } from '@colanode/core';
+import { ChatEntry } from '@colanode/core';
 
-import { ChatBody } from '@/renderer/components/chats/chat-body';
-import { ChatHeader } from '@/renderer/components/chats/chat-header';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { ChatNotFound } from '@/renderer/components/chats/chat-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import { EntryCollaboratorsPopover } from '@/renderer/components/collaborators/entry-collaborators-popover';
+import { Conversation } from '@/renderer/components/messages/conversation';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
 
 interface ChatContainerProps {
   chatId: string;
 }
 
 export const ChatContainer = ({ chatId }: ChatContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<ChatEntry>(chatId);
 
-  const { data, isPending } = useQuery({
-    type: 'entry_get',
-    entryId: chatId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  if (isPending) {
+  if (data.isPending) {
     return null;
   }
 
-  const node = data;
-  if (!node || node.type !== 'chat') {
+  if (!data.entry) {
     return <ChatNotFound />;
   }
 
-  const role = extractEntryRole(node, workspace.userId);
-  if (!role) {
-    return <ChatNotFound />;
-  }
+  const { entry, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <ChatHeader chat={node} role={role} />
-      <ChatBody chat={node} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <EntryCollaboratorsPopover
+            entry={entry}
+            entries={[entry]}
+            role={role}
+          />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <Conversation
+          conversationId={entry.id}
+          rootId={entry.rootId}
+          role={role}
+        />
+      </ContainerBody>
+    </Container>
   );
 };

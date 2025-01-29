@@ -1,57 +1,48 @@
-import { extractEntryRole, FolderEntry } from '@colanode/core';
+import { FolderEntry } from '@colanode/core';
 
-import { FolderBody } from '@/renderer/components/folders/folder-body';
-import { FolderHeader } from '@/renderer/components/folders/folder-header';
 import { FolderNotFound } from '@/renderer/components/folders/folder-not-found';
-import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
+import {
+  Container,
+  ContainerBody,
+  ContainerHeader,
+  ContainerSettings,
+} from '@/renderer/components/ui/container';
+import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
+import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { FolderSettings } from '@/renderer/components/folders/folder-settings';
+import { FolderBody } from '@/renderer/components/folders/folder-body';
 
 interface FolderContainerProps {
   folderId: string;
 }
 
 export const FolderContainer = ({ folderId }: FolderContainerProps) => {
-  const workspace = useWorkspace();
+  const data = useEntryContainer<FolderEntry>(folderId);
 
-  const { data: entry, isPending: isPendingEntry } = useQuery({
-    type: 'entry_get',
-    entryId: folderId,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
+  useEntryRadar(data.entry);
 
-  const folder = entry as FolderEntry;
-  const folderExists = !!folder;
-
-  const { data: root, isPending: isPendingRoot } = useQuery(
-    {
-      type: 'entry_get',
-      entryId: folder?.rootId ?? '',
-      accountId: workspace.accountId,
-      workspaceId: workspace.id,
-    },
-    {
-      enabled: folderExists,
-    }
-  );
-
-  if (isPendingEntry || (isPendingRoot && folderExists)) {
+  if (data.isPending) {
     return null;
   }
 
-  if (!folder || !root) {
+  if (!data.entry) {
     return <FolderNotFound />;
   }
 
-  const role = extractEntryRole(root, workspace.userId);
-  if (!role) {
-    return <FolderNotFound />;
-  }
+  const { entry: folder, role } = data;
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <FolderHeader folder={folder} role={role} />
-      <FolderBody folder={folder} role={role} />
-    </div>
+    <Container>
+      <ContainerHeader>
+        <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
+        <ContainerSettings>
+          <FolderSettings folder={folder} role={role} />
+        </ContainerSettings>
+      </ContainerHeader>
+      <ContainerBody>
+        <FolderBody folder={folder} role={role} />
+      </ContainerBody>
+    </Container>
   );
 };

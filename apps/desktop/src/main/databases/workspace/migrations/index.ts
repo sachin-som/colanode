@@ -15,6 +15,7 @@ import { createMutationsTable } from './00012-create-mutations-table';
 import { createEntryPathsTable } from './00013-create-entry-paths-table';
 import { createTextsTable } from './00014-create-texts-table';
 import { createCursorsTable } from './00015-create-cursors-table';
+import { createMetadataTable } from './00016-create-metadata-table';
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001-create-users-table': createUsersTable,
@@ -32,4 +33,5 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00013-create-entry-paths-table': createEntryPathsTable,
   '00014-create-texts-table': createTextsTable,
   '00015-create-cursors-table': createCursorsTable,
+  '00016-create-metadata-table': createMetadataTable,
 };

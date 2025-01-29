@@ -1,3 +1,4 @@
+import { AppMetadataListQueryHandler } from '@/main/queries/apps/app-metadata-list';
 import { AccountGetQueryHandler } from '@/main/queries/accounts/account-get';
 import { AccountListQueryHandler } from '@/main/queries/accounts/accounts-list';
 import { EmojiGetQueryHandler } from '@/main/queries/emojis/emoji-get';
@@ -8,6 +9,7 @@ import { EmojiGetBySkinIdQueryHandler } from '@/main/queries/emojis/emoji-get-by
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
 import { FileGetQueryHandler } from '@/main/queries/files/file-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
+import { FileBreadcrumbGetQueryHandler } from '@/main/queries/files/file-breadcrumb-get';
 import { IconListQueryHandler } from '@/main/queries/icons/icon-list';
 import { IconSearchQueryHandler } from '@/main/queries/icons/icon-search';
 import { IconCategoryListQueryHandler } from '@/main/queries/icons/icon-category-list';
@@ -15,9 +17,10 @@ import { MessageGetQueryHandler } from '@/main/queries/messages/message-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
 import { MessageReactionsListQueryHandler } from '@/main/queries/messages/message-reaction-list';
 import { MessageReactionsAggregateQueryHandler } from '@/main/queries/messages/message-reactions-aggregate';
+import { MessageBreadcrumbGetQueryHandler } from '@/main/queries/messages/message-breadcrumb-get';
 import { EntryChildrenGetQueryHandler } from '@/main/queries/entries/entry-children-get';
 import { EntryGetQueryHandler } from '@/main/queries/entries/entry-get';
-import { EntryTreeGetQueryHandler } from '@/main/queries/entries/entry-tree-get';
+import { EntryBreadcrumbGetQueryHandler } from '@/main/queries/entries/entry-breadcrumb-get';
 import { RadarDataGetQueryHandler } from '@/main/queries/interactions/radar-data-get';
 import { RecordListQueryHandler } from '@/main/queries/records/record-list';
 import { ServerListQueryHandler } from '@/main/queries/servers/server-list';
@@ -30,6 +33,7 @@ import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { UserGetQueryHandler } from '@/main/queries/users/user-get';
 import { SpaceListQueryHandler } from '@/main/queries/spaces/space-list';
 import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
+import { WorkspaceMetadataListQueryHandler } from '@/main/queries/workspaces/workspace-metadata-list';
 import { QueryHandler } from '@/main/lib/types';
 import { QueryMap } from '@/shared/queries';
 
@@ -38,12 +42,15 @@ type QueryHandlerMap = {
 };
 
 export const queryHandlerMap: QueryHandlerMap = {
+  app_metadata_list: new AppMetadataListQueryHandler(),
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
   message_reaction_list: new MessageReactionsListQueryHandler(),
   message_reactions_aggregate: new MessageReactionsAggregateQueryHandler(),
   message_get: new MessageGetQueryHandler(),
+  message_breadcrumb_get: new MessageBreadcrumbGetQueryHandler(),
   entry_get: new EntryGetQueryHandler(),
+  entry_breadcrumb_get: new EntryBreadcrumbGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
   server_list: new ServerListQueryHandler(),
   user_search: new UserSearchQueryHandler(),
@@ -58,10 +65,10 @@ export const queryHandlerMap: QueryHandlerMap = {
   icon_list: new IconListQueryHandler(),
   icon_search: new IconSearchQueryHandler(),
   icon_category_list: new IconCategoryListQueryHandler(),
-  entry_tree_get: new EntryTreeGetQueryHandler(),
   entry_children_get: new EntryChildrenGetQueryHandler(),
   radar_data_get: new RadarDataGetQueryHandler(),
   file_metadata_get: new FileMetadataGetQueryHandler(),
+  file_breadcrumb_get: new FileBreadcrumbGetQueryHandler(),
   account_get: new AccountGetQueryHandler(),
   workspace_get: new WorkspaceGetQueryHandler(),
   database_list: new DatabaseListQueryHandler(),
@@ -70,4 +77,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   file_get: new FileGetQueryHandler(),
   chat_list: new ChatListQueryHandler(),
   space_list: new SpaceListQueryHandler(),
+  workspace_metadata_list: new WorkspaceMetadataListQueryHandler(),
 };

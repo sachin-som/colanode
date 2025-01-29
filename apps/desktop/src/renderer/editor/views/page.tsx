@@ -4,9 +4,11 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { useLayout } from '@/renderer/contexts/layout';
 
 export const PageNodeView = ({ node }: NodeViewProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
 
   const id = node.attrs.id;
   const { data } = useQuery({
@@ -32,7 +34,7 @@ export const PageNodeView = ({ node }: NodeViewProps) => {
       data-id={node.attrs.id}
       className="my-0.5 flex h-12 w-full cursor-pointer flex-row items-center gap-1 rounded-md bg-gray-50 p-2 hover:bg-gray-100"
       onClick={() => {
-        workspace.openInMain(id);
+        layout.previewLeft(id, true);
       }}
     >
       <Avatar size="small" id={id} name={name} avatar={avatar} />

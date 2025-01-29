@@ -46,6 +46,8 @@ const createAccount = async (
     name: account.name,
     email: account.email,
     password: account.password,
+    platform: 'seed',
+    version: '0.0.4',
   });
 
   if (data.type !== 'success') {

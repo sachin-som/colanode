@@ -26,7 +26,7 @@ export const Avatar = (props: AvatarProps) => {
   }
 
   const avatarType = getIdType(avatar);
-  if (avatarType === IdType.Emoji) {
+  if (avatarType === IdType.EmojiSkin) {
     return <EmojiAvatar {...props} />;
   } else if (avatarType === IdType.Icon) {
     return <IconAvatar {...props} />;

@@ -1,7 +1,7 @@
 import { FolderEntry } from '@colanode/core';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface FolderSidebarItemProps {
@@ -9,8 +9,8 @@ interface FolderSidebarItemProps {
 }
 
 export const FolderSidebarItem = ({ folder }: FolderSidebarItemProps) => {
-  const workspace = useWorkspace();
-  const isActive = workspace.isEntryActive(folder.id);
+  const layout = useLayout();
+  const isActive = layout.activeTab === folder.id;
   const isUnread = false;
   const mentionsCount = 0;
 

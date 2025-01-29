@@ -38,20 +38,20 @@ interface DeletedTokenTable {
   created_at: ColumnType<string, string, string>;
 }
 
-interface MetadataTable {
+interface AppMetadataTable {
   key: ColumnType<string, string, never>;
   value: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
 }
 
-export type SelectMetadata = Selectable<MetadataTable>;
-export type CreateMetadata = Insertable<MetadataTable>;
-export type UpdateMetadata = Updateable<MetadataTable>;
+export type SelectAppMetadata = Selectable<AppMetadataTable>;
+export type CreateAppMetadata = Insertable<AppMetadataTable>;
+export type UpdateAppMetadata = Updateable<AppMetadataTable>;
 
 export interface AppDatabaseSchema {
   servers: ServerTable;
   accounts: AccountTable;
   deleted_tokens: DeletedTokenTable;
-  metadata: MetadataTable;
+  metadata: AppMetadataTable;
 }

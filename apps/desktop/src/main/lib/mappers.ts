@@ -6,7 +6,11 @@ import {
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
-import { SelectAccount, SelectServer } from '@/main/databases/app';
+import {
+  SelectAccount,
+  SelectAppMetadata,
+  SelectServer,
+} from '@/main/databases/app';
 import { SelectEmoji } from '@/main/databases/emojis';
 import { SelectIcon } from '@/main/databases/icons';
 import { SelectWorkspace } from '@/main/databases/account';
@@ -22,12 +26,17 @@ import {
   SelectMessageInteraction,
   SelectFileInteraction,
   SelectEntryInteraction,
+  SelectWorkspaceMetadata,
 } from '@/main/databases/workspace';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
 import { File, FileInteraction, FileState } from '@/shared/types/files';
-import { Workspace } from '@/shared/types/workspaces';
+import {
+  Workspace,
+  WorkspaceMetadata,
+  WorkspaceMetadataKey,
+} from '@/shared/types/workspaces';
 import {
   MessageInteraction,
   MessageNode,
@@ -36,6 +45,7 @@ import {
 import { EntryInteraction } from '@/shared/types/entries';
 import { Emoji } from '@/shared/types/emojis';
 import { Icon } from '@/shared/types/icons';
+import { AppMetadata, AppMetadataKey } from '@/shared/types/apps';
 
 export const mapUser = (row: SelectUser): User => {
   return {
@@ -283,5 +293,24 @@ export const mapIcon = (row: SelectIcon): Icon => {
     categoryId: row.category_id,
     code: row.code,
     tags: row.tags ? JSON.parse(row.tags) : [],
+  };
+};
+
+export const mapAppMetadata = (row: SelectAppMetadata): AppMetadata => {
+  return {
+    key: row.key as AppMetadataKey,
+    value: JSON.parse(row.value),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+export const mapWorkspaceMetadata = (
+  row: SelectWorkspaceMetadata
+): WorkspaceMetadata => {
+  return {
+    key: row.key as WorkspaceMetadataKey,
+    value: JSON.parse(row.value),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 };

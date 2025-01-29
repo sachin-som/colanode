@@ -1,10 +1,10 @@
 import { RecordFieldValue } from '@/renderer/components/records/record-field-value';
 import { useRecord } from '@/renderer/contexts/record';
 import { useView } from '@/renderer/contexts/view';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 
 export const CalendarViewRecordCard = () => {
-  const workspace = useWorkspace();
+  const layout = useLayout();
   const view = useView();
   const record = useRecord();
 
@@ -16,7 +16,9 @@ export const CalendarViewRecordCard = () => {
       role="presentation"
       key={record.id}
       className="animate-fade-in flex justify-start items-start cursor-pointer flex-col gap-1 rounded-md border p-2 hover:bg-gray-50"
-      onClick={() => workspace.openInModal(record.id)}
+      onClick={() => {
+        layout.previewLeft(record.id, true);
+      }}
     >
       <p className={hasName ? '' : 'text-muted-foreground'}>
         {name ?? 'Unnamed'}

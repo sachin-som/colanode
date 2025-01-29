@@ -15,9 +15,8 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { ChannelCreateDialog } from '@/renderer/components/channels/channel-create-dialog';
 import { DatabaseCreateDialog } from '@/renderer/components/databases/database-create-dialog';
 import { FolderCreateDialog } from '@/renderer/components/folders/folder-create-dialog';
-import { EntrySidebarItem } from '@/renderer/components/layouts/entry-sidebar-item';
+import { SidebarItem } from '@/renderer/components/layouts/sidebars/sidebar-item';
 import { PageCreateDialog } from '@/renderer/components/pages/page-create-dialog';
-import { SpaceSettingsDialog } from '@/renderer/components/spaces/space-settings-dialog';
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,11 +33,7 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { cn } from '@/shared/lib/utils';
-
-interface SettingsState {
-  open: boolean;
-  tab?: string;
-}
+import { useLayout } from '@/renderer/contexts/layout';
 
 interface SpaceSidebarItemProps {
   space: SpaceEntry;
@@ -46,6 +41,7 @@ interface SpaceSidebarItemProps {
 
 export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
 
   const { data } = useQuery({
     type: 'entry_children_get',
@@ -61,9 +57,6 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
   const [openCreateChannel, setOpenCreateChannel] = React.useState(false);
   const [openCreateDatabase, setOpenCreateDatabase] = React.useState(false);
   const [openCreateFolder, setOpenCreateFolder] = React.useState(false);
-  const [settingsState, setSettingsState] = React.useState<SettingsState>({
-    open: false,
-  });
 
   return (
     <React.Fragment>
@@ -123,22 +116,13 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setSettingsState({ open: true })}
-                >
+                <DropdownMenuItem onClick={() => layout.previewLeft(space.id)}>
                   <div className="flex flex-row items-center gap-2">
                     <Settings className="size-4" />
                     <span>Settings</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    setSettingsState({
-                      open: true,
-                      tab: 'collaborators',
-                    })
-                  }
-                >
+                <DropdownMenuItem onClick={() => layout.previewLeft(space.id)}>
                   <div className="flex flex-row items-center gap-2">
                     <Plus className="size-4" />
                     <span>Add collaborators</span>
@@ -153,18 +137,21 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
                 <li
                   key={child.id}
                   onClick={() => {
-                    workspace.openInMain(child.id);
+                    layout.preview(child.id);
                   }}
-                  className="cursor-pointer"
+                  onDoubleClick={() => {
+                    layout.open(child.id);
+                  }}
+                  className="cursor-pointer select-none"
                 >
                   <div
                     className={cn(
                       'text-sm flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                      workspace.isEntryActive(child.id) &&
+                      layout.activeTab === child.id &&
                         'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
                     )}
                   >
-                    <EntrySidebarItem entry={child} />
+                    <SidebarItem entry={child} />
                   </div>
                 </li>
               ))}
@@ -198,16 +185,6 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
           spaceId={space.id}
           open={openCreateFolder}
           onOpenChange={setOpenCreateFolder}
-        />
-      )}
-      {settingsState.open && (
-        <SpaceSettingsDialog
-          space={space}
-          open={settingsState.open}
-          onOpenChange={(open) =>
-            setSettingsState({ open, tab: settingsState.tab })
-          }
-          defaultTab={settingsState.tab}
         />
       )}
     </React.Fragment>

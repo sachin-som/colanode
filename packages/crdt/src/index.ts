@@ -354,19 +354,21 @@ export class YDoc {
     const currentText = yText.toString();
     const newText = value ? value.toString() : '';
 
-    if (!isEqual(currentText, newText)) {
-      const diffs = diffChars(currentText, newText);
-      let index = 0;
+    if (isEqual(currentText, newText)) {
+      return;
+    }
 
-      for (const diff of diffs) {
-        if (diff.added) {
-          yText.insert(index, diff.value);
-          index += diff.value.length;
-        } else if (diff.removed) {
-          yText.delete(index, diff.value.length);
-        } else {
-          index += diff.value.length;
-        }
+    const diffs = diffChars(currentText, newText);
+    let index = 0;
+
+    for (const diff of diffs) {
+      if (diff.added) {
+        yText.insert(index, diff.value);
+        index += diff.value.length;
+      } else if (diff.removed) {
+        yText.delete(index, diff.value.length);
+      } else {
+        index += diff.value.length;
       }
     }
   }

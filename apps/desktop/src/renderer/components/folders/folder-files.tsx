@@ -1,4 +1,3 @@
-import { getIdType, IdType } from '@colanode/core';
 import React from 'react';
 import { match } from 'ts-pattern';
 
@@ -10,6 +9,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQueries } from '@/renderer/hooks/use-queries';
 import { FileListQueryInput } from '@/shared/queries/files/file-list';
 import { FolderLayoutType } from '@/shared/types/folders';
+import { useLayout } from '@/renderer/contexts/layout';
 
 const FILES_PER_PAGE = 100;
 
@@ -19,8 +19,14 @@ interface FolderFilesProps {
   layout: FolderLayoutType;
 }
 
-export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
+export const FolderFiles = ({
+  id,
+  name,
+  layout: folderLayout,
+}: FolderFilesProps) => {
   const workspace = useWorkspace();
+  const layout = useLayout();
+
   const [lastPage] = React.useState<number>(1);
   const inputs: FileListQueryInput[] = Array.from({
     length: lastPage,
@@ -46,18 +52,12 @@ export const FolderFiles = ({ id, name, layout }: FolderFilesProps) => {
           console.log('onClick');
         },
         onDoubleClick: (_, id) => {
-          const idType = getIdType(id);
-
-          if (idType === IdType.Folder) {
-            workspace.openInMain(id);
-          } else if (idType === IdType.File) {
-            workspace.openInModal(id);
-          }
+          layout.previewLeft(id, true);
         },
         onMove: () => {},
       }}
     >
-      {match(layout)
+      {match(folderLayout)
         .with('grid', () => <GridLayout />)
         .with('list', () => <ListLayout />)
         .with('gallery', () => <GalleryLayout />)

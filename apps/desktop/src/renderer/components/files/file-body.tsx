@@ -1,11 +1,9 @@
 import { SquareArrowOutUpRight } from 'lucide-react';
-// import { useEffect } from 'react';
 
 import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-// import { useRadar } from '@/renderer/contexts/radar';
 import { FileWithState } from '@/shared/types/files';
 
 interface FileBodyProps {
@@ -14,27 +12,6 @@ interface FileBodyProps {
 
 export const FileBody = ({ file }: FileBodyProps) => {
   const workspace = useWorkspace();
-  // const radar = useRadar();
-
-  // useEffect(() => {
-  //   radar.markAsOpened(
-  //     workspace.userId,
-  //     file.id,
-  //     'file',
-  //     file.transactionId
-  //   );
-
-  //   const interval = setInterval(() => {
-  //     radar.markAsOpened(
-  //       workspace.userId,
-  //       file.id,
-  //       file.type,
-  //       file.transactionId
-  //     );
-  //   }, 60000);
-
-  //   return () => clearInterval(interval);
-  // }, [file.id, file.type, file.transactionId]);
 
   return (
     <div className="flex h-full max-h-full w-full flex-row items-center gap-2">

@@ -9,7 +9,7 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/renderer/components/ui/context-menu';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { useLayout } from '@/renderer/contexts/layout';
 
 interface FileContextMenuProps {
   id: string;
@@ -17,7 +17,7 @@ interface FileContextMenuProps {
 }
 
 export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
-  const workspace = useWorkspace();
+  const layout = useLayout();
   const [openDelete, setOpenDelete] = React.useState(false);
 
   return (
@@ -27,7 +27,7 @@ export const FileContextMenu = ({ id, children }: FileContextMenuProps) => {
         <ContextMenuContent className="w-64">
           <ContextMenuItem
             onSelect={() => {
-              workspace.openInModal(id);
+              layout.previewLeft(id, true);
             }}
             className="pl-2"
           >

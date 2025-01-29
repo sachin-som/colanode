@@ -368,8 +368,6 @@ const processIconsIntoDb = (db: SQLite.Database) => {
   console.log('Done processing icons into database.');
 };
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const generateIcons = async () => {
   if (!fs.existsSync(WORK_DIR_PATH)) {
     fs.mkdirSync(WORK_DIR_PATH);

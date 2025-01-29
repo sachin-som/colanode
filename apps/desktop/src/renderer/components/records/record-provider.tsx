@@ -32,6 +32,7 @@ export const RecordProvider = ({
         createdAt: record.createdAt,
         updatedBy: record.updatedBy,
         updatedAt: record.updatedAt,
+        databaseId: record.attributes.databaseId,
         canEdit,
         updateFieldValue: (field, value) => {
           mutate({

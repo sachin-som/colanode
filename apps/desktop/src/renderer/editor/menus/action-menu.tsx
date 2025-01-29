@@ -1,4 +1,4 @@
-import { useFloating, shift, offset } from '@floating-ui/react';
+import { useFloating, shift, offset, FloatingPortal } from '@floating-ui/react';
 import { GripVertical, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
@@ -163,62 +163,64 @@ export const ActionMenu = ({ editor }: ActionMenuProps) => {
   }
 
   return (
-    <div
-      ref={refs.setFloating}
-      style={floatingStyles}
-      className="flex items-center text-muted-foreground p-1 mr-2"
-    >
-      <Plus
-        className="size-4 cursor-pointer hover:text-primary"
-        onClick={() => {
-          if (menuState.pos === undefined || !menuState.domNode) {
-            return;
-          }
-
-          editor
-            .chain()
-            .insertContentAt(menuState.pos, { type: 'paragraph' })
-            .focus()
-            .run();
-        }}
-      />
+    <FloatingPortal>
       <div
-        draggable={true}
-        onDragStart={(event) => {
-          if (menuState.pos === undefined || !menuState.domNode) {
-            return;
-          }
-
-          view.current.focus();
-          view.current.dispatch(
-            view.current.state.tr.setSelection(
-              NodeSelection.create(view.current.state.doc, menuState.pos)
-            )
-          );
-
-          const slice = view.current.state.selection.content();
-          const { dom, text } = __serializeForClipboard(view.current, slice);
-
-          event.dataTransfer.clearData();
-          event.dataTransfer.effectAllowed = 'copyMove';
-          event.dataTransfer.setData('text/html', dom.innerHTML);
-          event.dataTransfer.setData('text/plain', text);
-          event.dataTransfer.setDragImage(menuState.domNode, 0, 0);
-
-          view.current.dragging = { slice, move: true };
-        }}
-        onDragEnd={() => {
-          view.current.dispatch(
-            view.current.state.tr.setSelection(
-              TextSelection.create(view.current.state.doc, 1)
-            )
-          );
-
-          view.current.dom.blur();
-        }}
+        ref={refs.setFloating}
+        style={floatingStyles}
+        className="flex items-center text-muted-foreground p-1 mr-2"
       >
-        <GripVertical className="size-4 cursor-pointer hover:text-primary" />
+        <Plus
+          className="size-4 cursor-pointer hover:text-primary"
+          onClick={() => {
+            if (menuState.pos === undefined || !menuState.domNode) {
+              return;
+            }
+
+            editor
+              .chain()
+              .insertContentAt(menuState.pos, { type: 'paragraph' })
+              .focus()
+              .run();
+          }}
+        />
+        <div
+          draggable={true}
+          onDragStart={(event) => {
+            if (menuState.pos === undefined || !menuState.domNode) {
+              return;
+            }
+
+            view.current.focus();
+            view.current.dispatch(
+              view.current.state.tr.setSelection(
+                NodeSelection.create(view.current.state.doc, menuState.pos)
+              )
+            );
+
+            const slice = view.current.state.selection.content();
+            const { dom, text } = __serializeForClipboard(view.current, slice);
+
+            event.dataTransfer.clearData();
+            event.dataTransfer.effectAllowed = 'copyMove';
+            event.dataTransfer.setData('text/html', dom.innerHTML);
+            event.dataTransfer.setData('text/plain', text);
+            event.dataTransfer.setDragImage(menuState.domNode, 0, 0);
+
+            view.current.dragging = { slice, move: true };
+          }}
+          onDragEnd={() => {
+            view.current.dispatch(
+              view.current.state.tr.setSelection(
+                TextSelection.create(view.current.state.doc, 1)
+              )
+            );
+
+            view.current.dom.blur();
+          }}
+        >
+          <GripVertical className="size-4 cursor-pointer hover:text-primary" />
+        </div>
       </div>
-    </div>
+    </FloatingPortal>
   );
 };

@@ -3,10 +3,10 @@ import '@/renderer/styles/index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoot } from 'react-dom/client';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 
+import { HTML5Backend } from '@/shared/lib/dnd-backend';
 import { App } from '@/renderer/app';
 import { Account } from '@/renderer/components/accounts/account';
 import { AccountRedirect } from '@/renderer/components/accounts/account-redirect';

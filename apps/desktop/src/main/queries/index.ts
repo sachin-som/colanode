@@ -1,3 +1,4 @@
+import { AppMetadataListQueryHandler } from '@/main/queries/apps/app-metadata-list';
 import { AccountGetQueryHandler } from '@/main/queries/accounts/account-get';
 import { AccountListQueryHandler } from '@/main/queries/accounts/accounts-list';
 import { EmojiGetQueryHandler } from '@/main/queries/emojis/emoji-get';
@@ -41,6 +42,7 @@ type QueryHandlerMap = {
 };
 
 export const queryHandlerMap: QueryHandlerMap = {
+  app_metadata_list: new AppMetadataListQueryHandler(),
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
   message_reaction_list: new MessageReactionsListQueryHandler(),

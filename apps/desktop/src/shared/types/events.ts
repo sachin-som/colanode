@@ -1,5 +1,6 @@
 import { Entry, Message } from '@colanode/core';
 
+import { AppMetadata } from '@/shared/types/apps';
 import { EntryInteraction } from '@/shared/types/entries';
 import {
   MessageInteraction,
@@ -238,6 +239,16 @@ export type AccountConnectionMessageEvent = {
   message: Message;
 };
 
+export type AppMetadataUpdatedEvent = {
+  type: 'app_metadata_updated';
+  metadata: AppMetadata;
+};
+
+export type AppMetadataDeletedEvent = {
+  type: 'app_metadata_deleted';
+  metadata: AppMetadata;
+};
+
 export type WorkspaceMetadataUpdatedEvent = {
   type: 'workspace_metadata_updated';
   accountId: string;
@@ -289,5 +300,7 @@ export type Event =
   | AccountConnectionOpenedEvent
   | AccountConnectionClosedEvent
   | AccountConnectionMessageEvent
+  | AppMetadataUpdatedEvent
+  | AppMetadataDeletedEvent
   | WorkspaceMetadataUpdatedEvent
   | WorkspaceMetadataDeletedEvent;

@@ -1,6 +1,13 @@
 import { createDebugger } from '@colanode/core';
 
 import { AppService } from '@/main/services/app-service';
+import {
+  AppMetadata,
+  AppMetadataMap,
+  AppMetadataKey,
+} from '@/shared/types/apps';
+import { mapAppMetadata } from '@/main/lib/mappers';
+import { eventBus } from '@/shared/lib/event-bus';
 
 export class MetadataService {
   private readonly debug = createDebugger('desktop:service:metadata');
@@ -10,7 +17,18 @@ export class MetadataService {
     this.app = app;
   }
 
-  public async get<T>(key: string): Promise<T | null> {
+  public async getAll(): Promise<AppMetadata[]> {
+    const metadata = await this.app.database
+      .selectFrom('metadata')
+      .selectAll()
+      .execute();
+
+    return metadata.map(mapAppMetadata);
+  }
+
+  public async get<K extends AppMetadataKey>(
+    key: K
+  ): Promise<AppMetadataMap[K] | null> {
     const metadata = await this.app.database
       .selectFrom('metadata')
       .selectAll()
@@ -21,14 +39,18 @@ export class MetadataService {
       return null;
     }
 
-    return JSON.parse(metadata.value) as T;
+    return mapAppMetadata(metadata) as AppMetadataMap[K];
   }
 
-  public async set<T>(key: string, value: T) {
+  public async set<K extends AppMetadataKey>(
+    key: K,
+    value: AppMetadataMap[K]['value']
+  ) {
     this.debug(`Setting metadata key ${key} to value ${value}`);
 
-    await this.app.database
+    const createdMetadata = await this.app.database
       .insertInto('metadata')
+      .returningAll()
       .values({
         key,
         value: JSON.stringify(value),
@@ -40,15 +62,34 @@ export class MetadataService {
           updated_at: new Date().toISOString(),
         })
       )
-      .execute();
+      .executeTakeFirst();
+
+    if (!createdMetadata) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'app_metadata_updated',
+      metadata: mapAppMetadata(createdMetadata),
+    });
   }
 
   public async delete(key: string) {
     this.debug(`Deleting metadata key ${key}`);
 
-    await this.app.database
+    const deletedMetadata = await this.app.database
       .deleteFrom('metadata')
       .where('key', '=', key)
-      .execute();
+      .returningAll()
+      .executeTakeFirst();
+
+    if (!deletedMetadata) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'app_metadata_deleted',
+      metadata: mapAppMetadata(deletedMetadata),
+    });
   }
 }

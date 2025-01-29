@@ -5,7 +5,6 @@ import { createDebugger } from '@colanode/core';
 import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
 import path from 'path';
 
-import { WindowSize } from '@/shared/types/metadata';
 import { mediator } from '@/main/mediator';
 import { getAppIconPath } from '@/main/lib/utils';
 import { CommandInput, CommandMap } from '@/shared/commands';
@@ -44,7 +43,7 @@ const createWindow = async () => {
   await appService.migrate();
 
   // Create the browser window.
-  let windowSize = await appService.metadata.get<WindowSize>('window_size');
+  let windowSize = (await appService.metadata.get('window_size'))?.value;
   const mainWindow = new BrowserWindow({
     width: windowSize?.width ?? 1200,
     height: windowSize?.height ?? 800,

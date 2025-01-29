@@ -18,6 +18,7 @@ import { EventLoop } from '@/main/lib/event-loop';
 import { parseApiError } from '@/shared/lib/axios';
 import { NotificationService } from '@/main/services/notification-service';
 import { eventBus } from '@/shared/lib/event-bus';
+import { AppPlatform } from '@/shared/types/apps';
 
 export class AppService {
   private readonly debug = createDebugger('desktop:service:app');
@@ -74,6 +75,9 @@ export class AppService {
     });
 
     await migrator.migrateToLatest();
+
+    await this.metadata.set('version', this.version);
+    await this.metadata.set('platform', process.platform as AppPlatform);
   }
 
   public getAccount(id: string): AccountService | null {

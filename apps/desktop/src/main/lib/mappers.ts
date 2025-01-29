@@ -6,7 +6,11 @@ import {
 } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
-import { SelectAccount, SelectServer } from '@/main/databases/app';
+import {
+  SelectAccount,
+  SelectAppMetadata,
+  SelectServer,
+} from '@/main/databases/app';
 import { SelectEmoji } from '@/main/databases/emojis';
 import { SelectIcon } from '@/main/databases/icons';
 import { SelectWorkspace } from '@/main/databases/account';
@@ -41,6 +45,7 @@ import {
 import { EntryInteraction } from '@/shared/types/entries';
 import { Emoji } from '@/shared/types/emojis';
 import { Icon } from '@/shared/types/icons';
+import { AppMetadata, AppMetadataKey } from '@/shared/types/apps';
 
 export const mapUser = (row: SelectUser): User => {
   return {
@@ -291,6 +296,14 @@ export const mapIcon = (row: SelectIcon): Icon => {
   };
 };
 
+export const mapAppMetadata = (row: SelectAppMetadata): AppMetadata => {
+  return {
+    key: row.key as AppMetadataKey,
+    value: JSON.parse(row.value),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
 export const mapWorkspaceMetadata = (
   row: SelectWorkspaceMetadata
 ): WorkspaceMetadata => {

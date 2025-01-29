@@ -78,7 +78,6 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({
       name: 'Colanode',
-      appPath: '',
       icon: 'assets/colanode-logo-black.png',
       title: 'Colanode',
     }),

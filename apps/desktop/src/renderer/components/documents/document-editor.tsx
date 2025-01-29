@@ -217,15 +217,15 @@ export const DocumentEditor = ({
       return;
     }
 
+    transactionIdRef.current = transactionId;
+    contentRef.current = content;
+
     const relativeSelection = getRelativeSelection(editor);
     editor.chain().setContent(content).run();
 
     if (relativeSelection != null) {
       restoreRelativeSelection(editor, relativeSelection);
     }
-
-    transactionIdRef.current = transactionId;
-    contentRef.current = content;
   }, [content, transactionId]);
 
   return (

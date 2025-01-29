@@ -126,16 +126,23 @@ export const mapBlocksToContents = (
 };
 
 const mapBlockToContent = (block: Block, blocks: Block[]): JSONContent => {
-  return {
+  const content: JSONContent = {
     type: block.type,
     attrs: {
       id: block.id,
-      ...block.attrs,
+      ...(block.attrs && block.attrs),
     },
-    content: leafBlockTypes.has(block.type)
-      ? mapBlockLeafsToContents(block.content)
-      : mapBlocksToContents(block.id, blocks),
   };
+
+  const blockContent = leafBlockTypes.has(block.type)
+    ? mapBlockLeafsToContents(block.content)
+    : mapBlocksToContents(block.id, blocks);
+
+  if (blockContent?.length) {
+    content.content = blockContent;
+  }
+
+  return content;
 };
 
 const mapBlockLeafsToContents = (
@@ -148,14 +155,13 @@ const mapBlockLeafsToContents = (
   for (const leaf of leafs) {
     contents.push({
       type: leaf.type,
-      text: leaf.text ?? undefined,
-      marks:
-        leaf.marks?.map((mark) => {
-          return {
-            type: mark.type,
-            attrs: mark.attrs ?? undefined,
-          };
-        }) ?? undefined,
+      ...(leaf.text && { text: leaf.text }),
+      ...(leaf.marks?.length && {
+        marks: leaf.marks.map((mark) => ({
+          type: mark.type,
+          ...(mark.attrs && { attrs: mark.attrs }),
+        })),
+      }),
     });
   }
   return contents;
@@ -252,7 +258,7 @@ export const editorHasContent = (block?: JSONContent) => {
 export const findNodePosById = (doc: ProseMirrorNode, id: string) => {
   let foundPos: number | null = null;
 
-  doc.descendants((node: any, pos: number) => {
+  doc.descendants((node: ProseMirrorNode, pos: number) => {
     if (node?.attrs?.id === id) {
       foundPos = pos;
       return false; // stop search

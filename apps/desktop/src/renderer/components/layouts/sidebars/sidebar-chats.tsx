@@ -21,9 +21,11 @@ export const SidebarChats = () => {
 
   return (
     <div className="flex flex-col group/sidebar-chats h-full px-2">
-      <div className="flex items-center justify-between h-12 pl-2 pr-1">
-        <p className="font-bold text-muted-foreground flex-grow">Chats</p>
-        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100 flex items-center justify-center">
+      <div className="flex items-center justify-between h-12 pl-2 pr-1 app-drag-region">
+        <p className="font-bold text-muted-foreground flex-grow app-no-drag-region">
+          Chats
+        </p>
+        <div className="text-muted-foreground opacity-0 transition-opacity group-hover/sidebar-chats:opacity-100 flex items-center justify-center app-no-drag-region">
           <ChatCreatePopover />
         </div>
       </div>

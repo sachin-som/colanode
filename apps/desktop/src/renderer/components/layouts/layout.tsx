@@ -1,6 +1,7 @@
 import { Resizable } from 're-resizable';
 
 import { ContainerTabs } from '@/renderer/components/layouts/containers/container-tabs';
+import { ContainerBlank } from '@/renderer/components/layouts/containers/container-blank';
 import { Sidebar } from '@/renderer/components/layouts/sidebars/sidebar';
 import { LayoutContext } from '@/renderer/contexts/layout';
 import { useLayoutState } from '@/renderer/hooks/user-layout-state';
@@ -106,7 +107,7 @@ export const Layout = () => {
             />
           </div>
         )}
-        {shouldDisplayRight && (
+        {shouldDisplayLeft && shouldDisplayRight && (
           <Resizable
             as="div"
             className="h-full max-h-full min-h-full overflow-hidden border-l border-gray-200 bg-white"
@@ -147,6 +148,7 @@ export const Layout = () => {
             />
           </Resizable>
         )}
+        {!shouldDisplayLeft && !shouldDisplayRight && <ContainerBlank />}
       </div>
     </LayoutContext.Provider>
   );

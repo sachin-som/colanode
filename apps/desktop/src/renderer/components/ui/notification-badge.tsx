@@ -1,13 +1,13 @@
-interface ReadStateIndicatorProps {
+interface NotificationBadgeProps {
   count: number;
-  hasChanges: boolean;
+  unseen: boolean;
 }
 
-export const ReadStateIndicator = ({
+export const NotificationBadge = ({
   count,
-  hasChanges,
-}: ReadStateIndicatorProps) => {
-  if (count === 0 && !hasChanges) {
+  unseen,
+}: NotificationBadgeProps) => {
+  if (count === 0 && !unseen) {
     return null;
   }
 

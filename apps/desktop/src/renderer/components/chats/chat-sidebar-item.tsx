@@ -2,7 +2,7 @@ import { ChatEntry } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
+import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -71,7 +71,7 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
         {data.name ?? 'Unnamed'}
       </span>
       {!isActive && (
-        <ReadStateIndicator count={unreadCount} hasChanges={unreadCount > 0} />
+        <NotificationBadge count={unreadCount} unseen={unreadCount > 0} />
       )}
     </InView>
   );

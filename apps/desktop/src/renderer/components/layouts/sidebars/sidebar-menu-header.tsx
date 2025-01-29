@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { ReadStateIndicator } from '@/renderer/components/layouts/read-state-indicator';
+import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,9 +107,9 @@ export const SidebarMenuHeader = () => {
                     {workspaceItem.id === workspace.id ? (
                       <Check className="size-4" />
                     ) : (
-                      <ReadStateIndicator
+                      <NotificationBadge
                         count={workspaceState.importantCount}
-                        hasChanges={workspaceState.hasUnseenChanges}
+                        unseen={workspaceState.hasUnseenChanges}
                       />
                     )}
                   </div>

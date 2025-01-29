@@ -81,14 +81,22 @@ export const ContainerTabTrigger = ({
         {match(getIdType(tab.path))
           .with(IdType.Space, () => <SpaceContainerTab spaceId={tab.path} />)
           .with(IdType.Channel, () => (
-            <ChannelContainerTab channelId={tab.path} />
+            <ChannelContainerTab
+              channelId={tab.path}
+              isActive={tab.active ?? false}
+            />
           ))
           .with(IdType.Page, () => <PageContainerTab pageId={tab.path} />)
           .with(IdType.Database, () => (
             <DatabaseContainerTab databaseId={tab.path} />
           ))
           .with(IdType.Record, () => <RecordContainerTab recordId={tab.path} />)
-          .with(IdType.Chat, () => <ChatContainerTab chatId={tab.path} />)
+          .with(IdType.Chat, () => (
+            <ChatContainerTab
+              chatId={tab.path}
+              isActive={tab.active ?? false}
+            />
+          ))
           .with(IdType.Folder, () => <FolderContainerTab folderId={tab.path} />)
           .with(IdType.File, () => <FileContainerTab fileId={tab.path} />)
           .otherwise(() => null)}

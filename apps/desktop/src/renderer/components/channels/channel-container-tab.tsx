@@ -3,15 +3,20 @@ import { ChannelEntry } from '@colanode/core';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { useRadar } from '@/renderer/contexts/radar';
+import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
 
 interface ChannelContainerTabProps {
   channelId: string;
+  isActive: boolean;
 }
 
 export const ChannelContainerTab = ({
   channelId,
+  isActive,
 }: ChannelContainerTabProps) => {
   const workspace = useWorkspace();
+  const radar = useRadar();
 
   const { data, isPending } = useQuery({
     type: 'entry_get',
@@ -34,6 +39,14 @@ export const ChannelContainerTab = ({
       ? channel.attributes.name
       : 'Unnamed';
 
+  const channelState = radar.getChannelState(
+    workspace.accountId,
+    workspace.id,
+    channel.id
+  );
+  const unreadCount = channelState.unseenMessagesCount;
+  const mentionsCount = channelState.mentionsCount;
+
   return (
     <div className="flex items-center space-x-2">
       <Avatar
@@ -43,6 +56,9 @@ export const ChannelContainerTab = ({
         avatar={channel.attributes.avatar}
       />
       <span>{name}</span>
+      {!isActive && (
+        <NotificationBadge count={mentionsCount} unseen={unreadCount > 0} />
+      )}
     </div>
   );
 };

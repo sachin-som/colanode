@@ -215,7 +215,7 @@ export class AppService {
 
     for (const deletedToken of deletedTokens) {
       const serverService = this.servers.get(deletedToken.domain);
-      if (!serverService) {
+      if (!serverService || !serverService.isAvailable) {
         this.debug(
           `Server ${deletedToken.domain} is not available for logging out account ${deletedToken.account_id}`
         );

@@ -1,6 +1,6 @@
 import { RecordEntry } from '@colanode/core';
 import isHotkey from 'is-hotkey';
-import { Maximize2 } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
 import React, { Fragment } from 'react';
 
 import { Spinner } from '@/renderer/components/ui/spinner';
@@ -117,7 +117,7 @@ export const TableViewNameCell = ({ record }: TableViewNameCellProps) => {
               layout.previewLeft(record.id, true);
             }}
           >
-            <Maximize2 className="mr-1 size-4" /> <p>Open</p>
+            <SquareArrowOutUpRight className="mr-1 size-4" /> <p>Open</p>
           </button>
           {isPending && (
             <span className="absolute right-2 text-muted-foreground">

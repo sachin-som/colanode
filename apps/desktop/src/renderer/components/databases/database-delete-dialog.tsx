@@ -12,6 +12,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useLayout } from '@/renderer/contexts/layout';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { Spinner } from '@/renderer/components/ui/spinner';
 
 interface DatabaseDeleteDialogProps {
   open: boolean;
@@ -67,6 +68,7 @@ export const DatabaseDeleteDialog = ({
               });
             }}
           >
+            {isPending && <Spinner className="mr-1" />}
             Delete
           </Button>
         </AlertDialogFooter>

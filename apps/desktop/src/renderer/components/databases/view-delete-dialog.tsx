@@ -12,6 +12,7 @@ import { useDatabase } from '@/renderer/contexts/database';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { Spinner } from '@/renderer/components/ui/spinner';
 
 interface ViewDeleteDialogProps {
   id: string;
@@ -71,6 +72,7 @@ export const ViewDeleteDialog = ({
               });
             }}
           >
+            {isPending && <Spinner className="mr-1" />}
             Delete
           </Button>
         </AlertDialogFooter>

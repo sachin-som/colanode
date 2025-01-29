@@ -15,7 +15,6 @@ import { TableView } from '@/renderer/components/databases/tables/table-view';
 import { useDatabase } from '@/renderer/contexts/database';
 import { ViewContext } from '@/renderer/contexts/view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useLayout } from '@/renderer/contexts/layout';
 import {
   generateFieldValuesFromFilters,
@@ -36,7 +35,6 @@ export const View = ({ view }: ViewProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
   const layout = useLayout();
-  const { mutate } = useMutation();
 
   const fields: ViewField[] = React.useMemo(() => {
     return database.fields
@@ -74,65 +72,55 @@ export const View = ({ view }: ViewProps) => {
         nameWidth: view.nameWidth ?? getDefaultNameWidth(),
         isSearchBarOpened,
         isSortsOpened,
-        rename: (name: string) => {
-          if (!database.canEdit) {
-            return;
-          }
+        rename: async (name: string) => {
+          if (!database.canEdit) return;
 
           const viewCopy = { ...view };
           viewCopy.name = name;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
-        },
-        updateAvatar: (avatar: string) => {
-          if (!database.canEdit) {
-            return;
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
           }
+        },
+        updateAvatar: async (avatar: string) => {
+          if (!database.canEdit) return;
 
           const viewCopy = { ...view };
           viewCopy.avatar = avatar;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
-        },
-        setFieldDisplay: (id: string, display: boolean) => {
-          if (!database.canEdit) {
-            return;
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
           }
+        },
+        setFieldDisplay: async (id: string, display: boolean) => {
+          if (!database.canEdit) return;
 
           const viewField = view.fields?.[id];
-          if (viewField && viewField.display === display) {
-            return;
-          }
+          if (viewField && viewField.display === display) return;
 
           const viewCopy = { ...view };
           viewCopy.fields = viewCopy.fields ?? {};
@@ -145,24 +133,23 @@ export const View = ({ view }: ViewProps) => {
             viewCopy.fields[id].display = display;
           }
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
-        resizeField: (id: string, width: number) => {
+        resizeField: async (id: string, width: number) => {
           if (!database.canEdit) {
             return;
           }
@@ -183,24 +170,23 @@ export const View = ({ view }: ViewProps) => {
             viewCopy.fields[id].width = width;
           }
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
-        resizeName: (width: number) => {
+        resizeName: async (width: number) => {
           if (!database.canEdit) {
             return;
           }
@@ -212,24 +198,23 @@ export const View = ({ view }: ViewProps) => {
           const viewCopy = { ...view };
           viewCopy.nameWidth = width;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
-        moveField: (id: string, after: string) => {
+        moveField: async (id: string, after: string) => {
           if (!database.canEdit) {
             return;
           }
@@ -255,26 +240,25 @@ export const View = ({ view }: ViewProps) => {
             viewCopy.fields[id].index = newIndex;
           }
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
         isFieldFilterOpened: (fieldId: string) =>
           openedFieldFilters.includes(fieldId),
-        initFieldFilter: (fieldId: string) => {
+        initFieldFilter: async (fieldId: string) => {
           if (!database.canEdit) {
             return;
           }
@@ -301,28 +285,25 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.filters = viewCopy.filters ?? {};
           viewCopy.filters[fieldId] = filter;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setOpenedFieldFilters((prev) => [...prev, fieldId]);
-              setIsSearchBarOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setOpenedFieldFilters((prev) => [...prev, fieldId]);
+          }
         },
-        updateFilter: (id: string, filter: ViewFilterAttributes) => {
+        updateFilter: async (id: string, filter: ViewFilterAttributes) => {
           if (!database.canEdit) {
             return;
           }
@@ -335,27 +316,25 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.filters = viewCopy.filters ?? {};
           viewCopy.filters[id] = filter;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setIsSearchBarOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setIsSearchBarOpened(true);
+          }
         },
-        removeFilter: (id: string) => {
+        removeFilter: async (id: string) => {
           if (!database.canEdit) {
             return;
           }
@@ -368,27 +347,25 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.filters = viewCopy.filters ?? {};
           delete viewCopy.filters[id];
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setIsSearchBarOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setIsSearchBarOpened(true);
+          }
         },
-        initFieldSort: (fieldId: string, direction: SortDirection) => {
+        initFieldSort: async (fieldId: string, direction: SortDirection) => {
           if (!database.canEdit) {
             return;
           }
@@ -413,28 +390,26 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.sorts = viewCopy.sorts ?? {};
           viewCopy.sorts[fieldId] = sort;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setIsSearchBarOpened(true);
-              setIsSortsOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setIsSearchBarOpened(true);
+            setIsSortsOpened(true);
+          }
         },
-        updateSort: (id: string, sort: ViewSortAttributes) => {
+        updateSort: async (id: string, sort: ViewSortAttributes) => {
           if (!database.canEdit) {
             return;
           }
@@ -447,28 +422,26 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.sorts = viewCopy.sorts ?? {};
           viewCopy.sorts[id] = sort;
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setIsSearchBarOpened(true);
-              setIsSortsOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setIsSearchBarOpened(true);
+            setIsSortsOpened(true);
+          }
         },
-        removeSort: (id: string) => {
+        removeSort: async (id: string) => {
           if (!database.canEdit) {
             return;
           }
@@ -481,25 +454,24 @@ export const View = ({ view }: ViewProps) => {
           viewCopy.sorts = viewCopy.sorts ?? {};
           delete viewCopy.sorts[id];
 
-          mutate({
-            input: {
-              type: 'view_update',
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              databaseId: database.id,
-              view: viewCopy,
-            },
-            onSuccess() {
-              setIsSearchBarOpened(true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update view',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'view_update',
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            databaseId: database.id,
+            view: viewCopy,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update view',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            setIsSearchBarOpened(true);
+            setIsSortsOpened(true);
+          }
         },
         openSearchBar: () => {
           setIsSearchBarOpened(true);
@@ -519,7 +491,7 @@ export const View = ({ view }: ViewProps) => {
         closeFieldFilter: (fieldId: string) => {
           setOpenedFieldFilters((prev) => prev.filter((id) => id !== fieldId));
         },
-        createRecord: (filters?: ViewFilterAttributes[]) => {
+        createRecord: async (filters?: ViewFilterAttributes[]) => {
           const viewFilters = Object.values(view.filters ?? {}) ?? [];
           const extraFilters = filters ?? [];
 
@@ -530,25 +502,23 @@ export const View = ({ view }: ViewProps) => {
             workspace.userId
           );
 
-          mutate({
-            input: {
-              type: 'record_create',
-              databaseId: database.id,
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-              fields,
-            },
-            onSuccess: (output) => {
-              layout.previewLeft(output.id, true);
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to create record',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+          const result = await window.colanode.executeMutation({
+            type: 'record_create',
+            databaseId: database.id,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
+            fields,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to create record',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          } else {
+            layout.previewLeft(result.output.id, true);
+          }
         },
       }}
     >

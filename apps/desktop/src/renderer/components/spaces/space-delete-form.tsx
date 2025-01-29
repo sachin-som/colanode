@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/renderer/components/ui/alert-dialog';
+import { Spinner } from '@/renderer/components/ui/spinner';
 
 interface SpaceDeleteFormProps {
   id: string;
@@ -88,6 +89,7 @@ export const SpaceDeleteForm = ({ id, onDeleted }: SpaceDeleteFormProps) => {
                 });
               }}
             >
+              {isPending && <Spinner className="mr-1" />}
               Delete
             </Button>
           </AlertDialogFooter>

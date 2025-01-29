@@ -11,6 +11,7 @@ import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { Spinner } from '@/renderer/components/ui/spinner';
 
 interface FileDeleteDialogProps {
   fileId: string;
@@ -64,6 +65,7 @@ export const FileDeleteDialog = ({
               });
             }}
           >
+            {isPending && <Spinner className="mr-1" />}
             Delete
           </Button>
         </AlertDialogFooter>

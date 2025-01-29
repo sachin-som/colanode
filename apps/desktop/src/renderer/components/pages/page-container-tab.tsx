@@ -11,27 +11,36 @@ interface PageContainerTabProps {
 export const PageContainerTab = ({ pageId }: PageContainerTabProps) => {
   const workspace = useWorkspace();
 
-  const { data: entry } = useQuery({
+  const { data, isPending } = useQuery({
     type: 'entry_get',
     entryId: pageId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
 
-  const page = entry as PageEntry;
-  if (!page) {
-    return <p>Not found</p>;
+  if (isPending) {
+    return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
+
+  const page = data as PageEntry;
+  if (!page) {
+    return <p className="text-sm text-muted-foreground">Not found</p>;
+  }
+
+  const name =
+    page.attributes.name && page.attributes.name.length > 0
+      ? page.attributes.name
+      : 'Unnamed';
 
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
         id={page.id}
-        name={page.attributes.name}
+        name={name}
         avatar={page.attributes.avatar}
       />
-      <span>{page.attributes.name}</span>
+      <span>{name}</span>
     </div>
   );
 };

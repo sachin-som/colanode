@@ -11,27 +11,36 @@ interface FolderContainerTabProps {
 export const FolderContainerTab = ({ folderId }: FolderContainerTabProps) => {
   const workspace = useWorkspace();
 
-  const { data: entry } = useQuery({
+  const { data, isPending } = useQuery({
     type: 'entry_get',
     entryId: folderId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
 
-  const folder = entry as FolderEntry;
-  if (!folder) {
-    return <p>Not found</p>;
+  if (isPending) {
+    return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
+
+  const folder = data as FolderEntry;
+  if (!folder) {
+    return <p className="text-sm text-muted-foreground">Not found</p>;
+  }
+
+  const name =
+    folder.attributes.name && folder.attributes.name.length > 0
+      ? folder.attributes.name
+      : 'Unnamed';
 
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
         id={folder.id}
-        name={folder.attributes.name}
+        name={name}
         avatar={folder.attributes.avatar}
       />
-      <span>{folder.attributes.name}</span>
+      <span>{name}</span>
     </div>
   );
 };

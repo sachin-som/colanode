@@ -3,7 +3,6 @@ import React from 'react';
 
 import { RecordContext } from '@/renderer/contexts/record';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 export const RecordProvider = ({
@@ -16,7 +15,6 @@ export const RecordProvider = ({
   children: React.ReactNode;
 }) => {
   const workspace = useWorkspace();
-  const { mutate } = useMutation();
 
   const canEdit =
     record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
@@ -34,42 +32,40 @@ export const RecordProvider = ({
         updatedAt: record.updatedAt,
         databaseId: record.attributes.databaseId,
         canEdit,
-        updateFieldValue: (field, value) => {
-          mutate({
-            input: {
-              type: 'record_field_value_set',
-              recordId: record.id,
-              fieldId: field.id,
-              value,
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to update record field value',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+        updateFieldValue: async (field, value) => {
+          const result = await window.colanode.executeMutation({
+            type: 'record_field_value_set',
+            recordId: record.id,
+            fieldId: field.id,
+            value,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to update record field value',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
-        removeFieldValue: (field) => {
-          mutate({
-            input: {
-              type: 'record_field_value_delete',
-              recordId: record.id,
-              fieldId: field.id,
-              accountId: workspace.accountId,
-              workspaceId: workspace.id,
-            },
-            onError(error) {
-              toast({
-                title: 'Failed to delete record field value',
-                description: error.message,
-                variant: 'destructive',
-              });
-            },
+        removeFieldValue: async (field) => {
+          const result = await window.colanode.executeMutation({
+            type: 'record_field_value_delete',
+            recordId: record.id,
+            fieldId: field.id,
+            accountId: workspace.accountId,
+            workspaceId: workspace.id,
           });
+
+          if (!result.success) {
+            toast({
+              title: 'Failed to delete record field value',
+              description: result.error.message,
+              variant: 'destructive',
+            });
+          }
         },
         getBooleanValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];

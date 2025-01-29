@@ -12,7 +12,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { useLayout } from '@/renderer/contexts/layout';
 import { toast } from '@/renderer/hooks/use-toast';
-
+import { Spinner } from '@/renderer/components/ui/spinner';
 interface PageDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,6 +67,7 @@ export const PageDeleteDialog = ({
               });
             }}
           >
+            {isPending && <Spinner className="mr-1" />}
             Delete
           </Button>
         </AlertDialogFooter>

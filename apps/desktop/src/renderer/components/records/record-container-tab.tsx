@@ -23,15 +23,20 @@ export const RecordContainerTab = ({ recordId }: RecordContainerTabProps) => {
     return <p>Not found</p>;
   }
 
+  const name =
+    record.attributes.name && record.attributes.name.length > 0
+      ? record.attributes.name
+      : 'Unnamed';
+
   return (
     <div className="flex items-center space-x-2">
       <Avatar
         size="small"
         id={record.id}
-        name={record.attributes.name}
+        name={name}
         avatar={record.attributes.avatar}
       />
-      <span>{record.attributes.name}</span>
+      <span>{name}</span>
     </div>
   );
 };

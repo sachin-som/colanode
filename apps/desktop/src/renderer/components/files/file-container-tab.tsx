@@ -9,15 +9,20 @@ interface FileContainerTabProps {
 export const FileContainerTab = ({ fileId }: FileContainerTabProps) => {
   const workspace = useWorkspace();
 
-  const { data: file } = useQuery({
+  const { data, isPending } = useQuery({
     type: 'file_get',
     id: fileId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
 
+  if (isPending) {
+    return <p className="text-sm text-muted-foreground">Loading...</p>;
+  }
+
+  const file = data;
   if (!file) {
-    return <p>Not found</p>;
+    return <p className="text-sm text-muted-foreground">Not found</p>;
   }
 
   return (

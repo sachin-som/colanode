@@ -12,6 +12,7 @@ import { useLayout } from '@/renderer/contexts/layout';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { Spinner } from '@/renderer/components/ui/spinner';
 
 interface ChannelDeleteDialogProps {
   open: boolean;
@@ -67,6 +68,7 @@ export const ChannelDeleteDialog = ({
               });
             }}
           >
+            {isPending && <Spinner className="mr-1" />}
             Delete
           </Button>
         </AlertDialogFooter>

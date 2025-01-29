@@ -22,7 +22,6 @@ import {
 import { Dropzone } from '@/renderer/components/ui/dropzone';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useMutation } from '@/renderer/hooks/use-mutation';
 import { FolderLayoutType } from '@/shared/types/folders';
 import { toast } from '@/renderer/hooks/use-toast';
 
@@ -61,7 +60,6 @@ interface FolderBodyProps {
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {
   const workspace = useWorkspace();
-  const { mutate } = useMutation();
 
   const [layout, setLayout] = React.useState<FolderLayoutType>('grid');
   const isDialogOpenedRef = React.useRef(false);
@@ -75,7 +73,7 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
     }
 
     isDialogOpenedRef.current = true;
-    const result = await window.colanode.executeCommand({
+    const commandResult = await window.colanode.executeCommand({
       type: 'file_dialog_open',
       options: {
         properties: ['openFile'],
@@ -84,36 +82,35 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
       },
     });
 
-    if (result.canceled) {
+    if (commandResult.canceled) {
       isDialogOpenedRef.current = false;
       return;
     }
 
-    const filePath = result.filePaths[0];
+    const filePath = commandResult.filePaths[0];
 
     if (!filePath) {
       isDialogOpenedRef.current = false;
       return;
     }
 
-    mutate({
-      input: {
-        type: 'file_create',
-        accountId: workspace.accountId,
-        workspaceId: workspace.id,
-        filePath,
-        parentId: folder.id,
-        entryId: folder.id,
-        rootId: folder.rootId,
-      },
-      onError(error) {
-        toast({
-          title: 'Failed to upload file',
-          description: error.message,
-          variant: 'destructive',
-        });
-      },
+    const mutationResult = await window.colanode.executeMutation({
+      type: 'file_create',
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
+      filePath,
+      parentId: folder.id,
+      entryId: folder.id,
+      rootId: folder.rootId,
     });
+
+    if (!mutationResult.success) {
+      toast({
+        title: 'Failed to upload file',
+        description: mutationResult.error.message,
+        variant: 'destructive',
+      });
+    }
 
     isDialogOpenedRef.current = false;
   };

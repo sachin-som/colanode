@@ -13,7 +13,11 @@ interface SidebarMenuProps {
 export const SidebarMenu = ({ value, onChange }: SidebarMenuProps) => {
   return (
     <div className="flex flex-col h-full w-[65px] min-w-[65px] items-center bg-slate-100">
-      <div className="h-8 w-full app-drag-region"></div>
+      <div className="w-full h-8 flex gap-[8px] px-[6px] py-[7px]">
+        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+      </div>
       <SidebarMenuHeader />
       <div className="flex flex-col gap-1 mt-2 w-full p-2 items-center flex-grow">
         <SidebarMenuIcon

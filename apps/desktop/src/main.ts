@@ -2,7 +2,14 @@ import started from 'electron-squirrel-startup';
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import { createDebugger } from '@colanode/core';
 
-import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  protocol,
+  shell,
+  globalShortcut,
+} from 'electron';
 import path from 'path';
 
 import { mediator } from '@/main/mediator';
@@ -109,10 +116,6 @@ const createWindow = async () => {
     }
   });
 
-  mainWindow.on('close', () => {
-    eventBus.unsubscribe(subscriptionId);
-  });
-
   if (!protocol.isProtocolHandled('avatar')) {
     protocol.handle('avatar', (request) => {
       return handleAvatarRequest(request);
@@ -140,6 +143,15 @@ const createWindow = async () => {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
     return { action: 'deny' }; // Prevent default new-window behavior
+  });
+
+  globalShortcut.register('CommandOrControl+Shift+V', () => {
+    mainWindow.webContents.pasteAndMatchStyle();
+  });
+
+  mainWindow.on('close', () => {
+    eventBus.unsubscribe(subscriptionId);
+    globalShortcut.unregister('CommandOrControl+Shift+V');
   });
 
   debug('Window created');

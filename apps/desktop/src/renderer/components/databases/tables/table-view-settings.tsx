@@ -21,12 +21,12 @@ import {
   TooltipTrigger,
 } from '@/renderer/components/ui/tooltip';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { cn } from '@/shared/lib/utils';
 
 export const TableViewSettings = () => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const [open, setOpen] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -51,7 +51,7 @@ export const TableViewSettings = () => {
                     id={view.id}
                     name={view.name}
                     avatar={view.avatar}
-                    type={view.type}
+                    layout={view.layout}
                     className="size-4"
                   />
                 </Button>
@@ -62,7 +62,7 @@ export const TableViewSettings = () => {
                   id={view.id}
                   name={view.name}
                   avatar={view.avatar}
-                  type={view.type}
+                  layout={view.layout}
                   className="size-4"
                 />
               </Button>

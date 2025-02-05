@@ -1,8 +1,8 @@
-import { EntryRole, RecordEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Copy, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
+import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
 import { RecordDeleteDialog } from '@/renderer/components/records/record-delete-dialog';
 import {
   DropdownMenu,
@@ -13,17 +13,18 @@ import {
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface RecordSettingsProps {
-  record: RecordEntry;
-  role: EntryRole;
+  record: LocalRecordNode;
+  role: NodeRole;
 }
 
 export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
   const workspace = useWorkspace();
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
   const canDelete =
-    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
+    record.createdBy === workspace.userId || hasNodeRole(role, 'editor');
 
   return (
     <React.Fragment>
@@ -55,7 +56,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <EntryCollaboratorAudit
+            <NodeCollaboratorAudit
               collaboratorId={record.createdBy}
               date={record.createdAt}
             />
@@ -65,7 +66,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <EntryCollaboratorAudit
+                <NodeCollaboratorAudit
                   collaboratorId={record.updatedBy}
                   date={record.updatedAt}
                 />

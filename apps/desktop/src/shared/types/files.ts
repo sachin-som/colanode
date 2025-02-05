@@ -13,8 +13,8 @@ export type File = {
   id: string;
   type: FileType;
   parentId: string;
-  entryId: string;
   rootId: string;
+  revision: bigint;
   name: string;
   originalName: string;
   extension: string;
@@ -24,8 +24,13 @@ export type File = {
   createdBy: string;
   updatedAt: string | null;
   updatedBy: string | null;
+  downloadStatus: DownloadStatus;
+  downloadProgress: number;
+  downloadRetries: number;
+  uploadStatus: UploadStatus;
+  uploadProgress: number;
+  uploadRetries: number;
   status: FileStatus;
-  version: bigint;
 };
 
 export enum DownloadStatus {
@@ -41,33 +46,3 @@ export enum UploadStatus {
   Completed = 2,
   Failed = 3,
 }
-
-export type FileState = {
-  fileId: string;
-  downloadProgress: number;
-  downloadStatus: DownloadStatus;
-  downloadRetries: number;
-  uploadProgress: number;
-  uploadStatus: UploadStatus;
-  uploadRetries: number;
-  createdAt: string;
-  updatedAt: string | null;
-};
-
-export type FileWithState = File & {
-  downloadProgress: number;
-  downloadStatus: DownloadStatus;
-  uploadProgress: number;
-  uploadStatus: UploadStatus;
-};
-
-export type FileInteraction = {
-  fileId: string;
-  collaboratorId: string;
-  rootId: string;
-  lastSeenAt: string | null;
-  firstSeenAt: string | null;
-  lastOpenedAt: string | null;
-  firstOpenedAt: string | null;
-  version: bigint;
-};

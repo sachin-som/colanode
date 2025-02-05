@@ -17,7 +17,7 @@ export class FieldDeleteMutationHandler
   ): Promise<FieldDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
+    const result = await workspace.nodes.updateNode<DatabaseAttributes>(
       input.databaseId,
       (attributes) => {
         delete attributes.fields[input.fieldId];

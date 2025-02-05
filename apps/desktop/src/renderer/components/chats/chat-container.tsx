@@ -1,5 +1,3 @@
-import { ChatEntry } from '@colanode/core';
-
 import {
   Container,
   ContainerBody,
@@ -8,46 +6,43 @@ import {
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { ChatNotFound } from '@/renderer/components/chats/chat-not-found';
-import { EntryCollaboratorsPopover } from '@/renderer/components/collaborators/entry-collaborators-popover';
+import { NodeCollaboratorsPopover } from '@/renderer/components/collaborators/node-collaborators-popover';
 import { Conversation } from '@/renderer/components/messages/conversation';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
+import { LocalChatNode } from '@/shared/types/nodes';
 
 interface ChatContainerProps {
   chatId: string;
 }
 
 export const ChatContainer = ({ chatId }: ChatContainerProps) => {
-  const data = useEntryContainer<ChatEntry>(chatId);
+  const data = useNodeContainer<LocalChatNode>(chatId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <ChatNotFound />;
   }
 
-  const { entry, role } = data;
+  const { node, role } = data;
 
   return (
     <Container>
       <ContainerHeader>
         <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
         <ContainerSettings>
-          <EntryCollaboratorsPopover
-            entry={entry}
-            entries={[entry]}
-            role={role}
-          />
+          <NodeCollaboratorsPopover node={node} nodes={[node]} role={role} />
         </ContainerSettings>
       </ContainerHeader>
       <ContainerBody>
         <Conversation
-          conversationId={entry.id}
-          rootId={entry.rootId}
+          conversationId={node.id}
+          rootId={node.rootId}
           role={role}
         />
       </ContainerBody>

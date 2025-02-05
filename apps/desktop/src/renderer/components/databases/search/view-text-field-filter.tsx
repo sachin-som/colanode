@@ -1,5 +1,8 @@
-import { TextFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
-import { ChevronDown,Trash2 } from 'lucide-react';
+import {
+  TextFieldAttributes,
+  DatabaseViewFieldFilterAttributes,
+} from '@colanode/core';
+import { ChevronDown, Trash2 } from 'lucide-react';
 
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
 import { Button } from '@/renderer/components/ui/button';
@@ -15,19 +18,19 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { textFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewTextFieldFilterProps {
   field: TextFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewTextFieldFilter = ({
   field,
   filter,
 }: ViewTextFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     textFieldFilterOperators.find(

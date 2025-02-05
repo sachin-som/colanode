@@ -1,25 +1,26 @@
-import { ChatEntry } from '@colanode/core';
-
-import { SelectEntry } from '@/main/databases/workspace';
+import { SelectNode } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { mapEntry } from '@/main/lib/mappers';
+import { mapNode } from '@/main/lib/mappers';
 import { ChatListQueryInput } from '@/shared/queries/chats/chat-list';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
+import { LocalChatNode } from '@/shared/types/nodes';
 
 export class ChatListQueryHandler
   extends WorkspaceQueryHandlerBase
   implements QueryHandler<ChatListQueryInput>
 {
-  public async handleQuery(input: ChatListQueryInput): Promise<ChatEntry[]> {
+  public async handleQuery(
+    input: ChatListQueryInput
+  ): Promise<LocalChatNode[]> {
     const rows = await this.fetchChildren(input);
-    return rows.map(mapEntry) as ChatEntry[];
+    return rows.map(mapNode) as LocalChatNode[];
   }
 
   public async checkForChanges(
     event: Event,
     input: ChatListQueryInput,
-    output: ChatEntry[]
+    output: LocalChatNode[]
   ): Promise<ChangeCheckResult<ChatListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -33,12 +34,12 @@ export class ChatListQueryHandler
     }
 
     if (
-      event.type === 'entry_created' &&
+      event.type === 'node_created' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'chat'
+      event.node.type === 'chat'
     ) {
-      const newChildren = [...output, event.entry];
+      const newChildren = [...output, event.node];
       return {
         hasChanges: true,
         result: newChildren,
@@ -46,15 +47,15 @@ export class ChatListQueryHandler
     }
 
     if (
-      event.type === 'entry_updated' &&
+      event.type === 'node_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'chat'
+      event.node.type === 'chat'
     ) {
-      const entry = output.find((entry) => entry.id === event.entry.id);
-      if (entry) {
-        const newChildren = output.map((entry) =>
-          entry.id === event.entry.id ? (event.entry as ChatEntry) : entry
+      const node = output.find((node) => node.id === event.node.id);
+      if (node) {
+        const newChildren = output.map((node) =>
+          node.id === event.node.id ? (event.node as LocalChatNode) : node
         );
 
         return {
@@ -65,16 +66,14 @@ export class ChatListQueryHandler
     }
 
     if (
-      event.type === 'entry_deleted' &&
+      event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'chat'
+      event.node.type === 'chat'
     ) {
-      const entry = output.find((entry) => entry.id === event.entry.id);
-      if (entry) {
-        const newChildren = output.filter(
-          (entry) => entry.id !== event.entry.id
-        );
+      const node = output.find((node) => node.id === event.node.id);
+      if (node) {
+        const newChildren = output.filter((node) => node.id !== event.node.id);
         return {
           hasChanges: true,
           result: newChildren,
@@ -89,11 +88,11 @@ export class ChatListQueryHandler
 
   private async fetchChildren(
     input: ChatListQueryInput
-  ): Promise<SelectEntry[]> {
+  ): Promise<SelectNode[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const rows = await workspace.database
-      .selectFrom('entries')
+      .selectFrom('nodes')
       .selectAll()
       .where('parent_id', 'is', null)
       .where('type', '=', 'chat')

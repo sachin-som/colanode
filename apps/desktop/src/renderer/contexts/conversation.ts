@@ -1,16 +1,16 @@
-import { EntryRole } from '@colanode/core';
+import { NodeRole } from '@colanode/core';
 import { createContext, useContext } from 'react';
 
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface ConversationContext {
   id: string;
   rootId: string;
-  role: EntryRole;
+  role: NodeRole;
   canCreateMessage: boolean;
-  onReply: (message: MessageNode) => void;
+  onReply: (message: LocalMessageNode) => void;
   onLastMessageIdChange: (id: string) => void;
-  canDeleteMessage: (message: MessageNode) => boolean;
+  canDeleteMessage: (message: LocalMessageNode) => boolean;
 }
 
 export const ConversationContext = createContext<ConversationContext>(

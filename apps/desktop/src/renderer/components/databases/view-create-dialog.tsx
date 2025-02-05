@@ -62,7 +62,7 @@ const viewTypes: ViewTypeOption[] = [
 ];
 
 const boardGroupFields: FieldType[] = ['select'];
-const calendarGroupFields: FieldType[] = ['date', 'createdAt'];
+const calendarGroupFields: FieldType[] = ['date', 'created_at'];
 
 interface ViewCreateDialogProps {
   open: boolean;

@@ -1,9 +1,4 @@
-import {
-  LocalTransaction,
-  Mutation,
-  Entry,
-  TransactionOperation,
-} from '@colanode/core';
+import { LocalNodeTransaction, Mutation } from '@colanode/core';
 import { encodeState } from '@colanode/crdt';
 
 import {
@@ -16,33 +11,24 @@ import { SelectIcon } from '@/main/databases/icons';
 import { SelectWorkspace } from '@/main/databases/account';
 import {
   SelectFile,
-  SelectFileState,
-  SelectMessage,
-  SelectMessageReaction,
   SelectMutation,
-  SelectEntry,
-  SelectEntryTransaction,
+  SelectNode,
+  SelectNodeTransaction,
   SelectUser,
-  SelectMessageInteraction,
-  SelectFileInteraction,
-  SelectEntryInteraction,
+  SelectNodeInteraction,
+  SelectNodeReaction,
   SelectWorkspaceMetadata,
 } from '@/main/databases/workspace';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
-import { File, FileInteraction, FileState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 import {
   Workspace,
   WorkspaceMetadata,
   WorkspaceMetadataKey,
 } from '@/shared/types/workspaces';
-import {
-  MessageInteraction,
-  MessageNode,
-  MessageReaction,
-} from '@/shared/types/messages';
-import { EntryInteraction } from '@/shared/types/entries';
+import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
 import { Emoji } from '@/shared/types/emojis';
 import { Icon } from '@/shared/types/icons';
 import { AppMetadata, AppMetadataKey } from '@/shared/types/apps';
@@ -61,7 +47,7 @@ export const mapUser = (row: SelectUser): User => {
   };
 };
 
-export const mapEntry = (row: SelectEntry): Entry => {
+export const mapNode = (row: SelectNode): LocalNode => {
   return {
     id: row.id,
     type: row.type,
@@ -72,8 +58,9 @@ export const mapEntry = (row: SelectEntry): Entry => {
     createdBy: row.created_by,
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
-    transactionId: row.transaction_id,
-  };
+    localRevision: row.local_revision,
+    serverRevision: row.server_revision,
+  } as LocalNode;
 };
 
 export const mapAccount = (row: SelectAccount): Account => {
@@ -105,45 +92,16 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
   };
 };
 
-export const mapEntryTransaction = (
-  row: SelectEntryTransaction
-): LocalTransaction => {
-  if (row.operation === TransactionOperation.Create && row.data) {
-    return {
-      id: row.id,
-      entryId: row.entry_id,
-      rootId: row.root_id,
-      operation: TransactionOperation.Create,
-      data: encodeState(row.data),
-      createdAt: row.created_at,
-      createdBy: row.created_by,
-    };
-  }
-
-  if (row.operation === TransactionOperation.Update && row.data) {
-    return {
-      id: row.id,
-      entryId: row.entry_id,
-      rootId: row.root_id,
-      operation: TransactionOperation.Update,
-      data: encodeState(row.data),
-      createdAt: row.created_at,
-      createdBy: row.created_by,
-    };
-  }
-
-  if (row.operation === TransactionOperation.Delete) {
-    return {
-      id: row.id,
-      entryId: row.entry_id,
-      rootId: row.root_id,
-      operation: TransactionOperation.Delete,
-      createdAt: row.created_at,
-      createdBy: row.created_by,
-    };
-  }
-
-  throw new Error('Invalid transaction type');
+export const mapNodeTransaction = (
+  row: SelectNodeTransaction
+): LocalNodeTransaction => {
+  return {
+    id: row.id,
+    nodeId: row.node_id,
+    operation: row.operation,
+    data: encodeState(row.data),
+    createdAt: row.created_at,
+  };
 };
 
 export const mapMutation = (row: SelectMutation): Mutation => {
@@ -167,26 +125,9 @@ export const mapServer = (row: SelectServer): Server => {
   };
 };
 
-export const mapMessage = (row: SelectMessage): MessageNode => {
+export const mapNodeReaction = (row: SelectNodeReaction): NodeReaction => {
   return {
-    id: row.id,
-    type: row.type,
-    parentId: row.parent_id,
-    rootId: row.root_id,
-    attributes: JSON.parse(row.attributes),
-    createdAt: row.created_at,
-    createdBy: row.created_by,
-    updatedAt: row.updated_at,
-    updatedBy: row.updated_by,
-    version: row.version,
-  };
-};
-
-export const mapMessageReaction = (
-  row: SelectMessageReaction
-): MessageReaction => {
-  return {
-    messageId: row.message_id,
+    nodeId: row.node_id,
     collaboratorId: row.collaborator_id,
     reaction: row.reaction,
     rootId: row.root_id,
@@ -194,18 +135,18 @@ export const mapMessageReaction = (
   };
 };
 
-export const mapMessageInteraction = (
-  row: SelectMessageInteraction
-): MessageInteraction => {
+export const mapNodeInteraction = (
+  row: SelectNodeInteraction
+): NodeInteraction => {
   return {
-    messageId: row.message_id,
+    nodeId: row.node_id,
     collaboratorId: row.collaborator_id,
     rootId: row.root_id,
+    revision: row.revision,
     firstSeenAt: row.first_seen_at,
     lastSeenAt: row.last_seen_at,
     firstOpenedAt: row.first_opened_at,
     lastOpenedAt: row.last_opened_at,
-    version: row.version,
   };
 };
 
@@ -214,8 +155,8 @@ export const mapFile = (row: SelectFile): File => {
     id: row.id,
     type: row.type,
     parentId: row.parent_id,
-    entryId: row.entry_id,
     rootId: row.root_id,
+    revision: row.revision,
     name: row.name,
     originalName: row.original_name,
     extension: row.extension,
@@ -226,51 +167,12 @@ export const mapFile = (row: SelectFile): File => {
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
     status: row.status,
-    version: row.version,
-  };
-};
-
-export const mapFileState = (row: SelectFileState): FileState => {
-  return {
-    fileId: row.file_id,
-    downloadProgress: row.download_progress,
     downloadStatus: row.download_status,
+    downloadProgress: row.download_progress,
     downloadRetries: row.download_retries,
-    uploadProgress: row.upload_progress,
     uploadStatus: row.upload_status,
+    uploadProgress: row.upload_progress,
     uploadRetries: row.upload_retries,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-};
-
-export const mapFileInteraction = (
-  row: SelectFileInteraction
-): FileInteraction => {
-  return {
-    fileId: row.file_id,
-    collaboratorId: row.collaborator_id,
-    rootId: row.root_id,
-    lastSeenAt: row.last_seen_at,
-    firstSeenAt: row.first_seen_at,
-    lastOpenedAt: row.last_opened_at,
-    firstOpenedAt: row.first_opened_at,
-    version: row.version,
-  };
-};
-
-export const mapEntryInteraction = (
-  row: SelectEntryInteraction
-): EntryInteraction => {
-  return {
-    entryId: row.entry_id,
-    collaboratorId: row.collaborator_id,
-    rootId: row.root_id,
-    lastSeenAt: row.last_seen_at,
-    firstSeenAt: row.first_seen_at,
-    lastOpenedAt: row.last_opened_at,
-    firstOpenedAt: row.first_opened_at,
-    version: row.version,
   };
 };
 

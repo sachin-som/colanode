@@ -44,8 +44,8 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       .selectFrom('files')
       .selectAll()
       .where('root_id', '=', this.input.rootId)
-      .where('version', '>', this.cursor)
-      .orderBy('version', 'asc')
+      .where('revision', '>', this.cursor)
+      .orderBy('revision', 'asc')
       .limit(20)
       .execute();
 
@@ -60,7 +60,6 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       id: file.id,
       type: file.type,
       parentId: file.parent_id,
-      entryId: file.entry_id,
       rootId: file.root_id,
       workspaceId: file.workspace_id,
       name: file.name,
@@ -72,7 +71,7 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       createdBy: file.created_by,
       updatedAt: file.updated_at?.toISOString() ?? null,
       updatedBy: file.updated_by ?? null,
-      version: file.version.toString(),
+      revision: file.revision.toString(),
       status: file.status,
     }));
 
@@ -81,7 +80,7 @@ export class FileSynchronizer extends BaseSynchronizer<SyncFilesInput> {
       userId: this.user.userId,
       id: this.id,
       items: items.map((item) => ({
-        cursor: item.version,
+        cursor: item.revision,
         data: item,
       })),
     };

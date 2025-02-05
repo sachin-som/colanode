@@ -1,8 +1,7 @@
-import { RecordEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface RecordContainerTabProps {
   recordId: string;
@@ -11,14 +10,14 @@ interface RecordContainerTabProps {
 export const RecordContainerTab = ({ recordId }: RecordContainerTabProps) => {
   const workspace = useWorkspace();
 
-  const { data: entry } = useQuery({
-    type: 'entry_get',
-    entryId: recordId,
+  const { data: node } = useQuery({
+    type: 'node_get',
+    nodeId: recordId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
 
-  const record = entry as RecordEntry;
+  const record = node as LocalRecordNode;
   if (!record) {
     return <p>Not found</p>;
   }

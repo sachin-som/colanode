@@ -44,8 +44,8 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
       .selectFrom('collaborations')
       .selectAll()
       .where('collaborator_id', '=', this.user.userId)
-      .where('version', '>', this.cursor)
-      .orderBy('version', 'asc')
+      .where('revision', '>', this.cursor)
+      .orderBy('revision', 'asc')
       .limit(50)
       .execute();
 
@@ -58,7 +58,7 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
   ): SynchronizerOutputMessage<SyncCollaborationsInput> {
     const items: SyncCollaborationData[] = unsyncedCollaborations.map(
       (collaboration) => ({
-        entryId: collaboration.entry_id,
+        nodeId: collaboration.node_id,
         workspaceId: collaboration.workspace_id,
         collaboratorId: collaboration.collaborator_id,
         role: collaboration.role,
@@ -68,7 +68,7 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
         updatedAt: collaboration.updated_at?.toISOString() ?? null,
         deletedAt: collaboration.deleted_at?.toISOString() ?? null,
         deletedBy: collaboration.deleted_by ?? null,
-        version: collaboration.version.toString(),
+        revision: collaboration.revision.toString(),
       })
     );
 
@@ -77,7 +77,7 @@ export class CollaborationSynchronizer extends BaseSynchronizer<SyncCollaboratio
       userId: this.user.userId,
       id: this.id,
       items: items.map((item) => ({
-        cursor: item.version,
+        cursor: item.revision,
         data: item,
       })),
     };

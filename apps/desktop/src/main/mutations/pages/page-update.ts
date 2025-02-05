@@ -17,7 +17,7 @@ export class PageUpdateMutationHandler
   ): Promise<PageUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<PageAttributes>(
+    const result = await workspace.nodes.updateNode<PageAttributes>(
       input.pageId,
       (attributes) => {
         attributes.name = input.name;

@@ -117,7 +117,7 @@ export const RecordCollaboratorValue = ({
                           record.removeFieldValue(field);
                         } else {
                           record.updateFieldValue(field, {
-                            type: 'collaborator',
+                            type: 'string_array',
                             value: newCollaborators,
                           });
                         }
@@ -146,7 +146,7 @@ export const RecordCollaboratorValue = ({
                 record.removeFieldValue(field);
               } else {
                 record.updateFieldValue(field, {
-                  type: 'collaborator',
+                  type: 'string_array',
                   value: newCollaborators,
                 });
               }

@@ -1,5 +1,3 @@
-import { DatabaseEntry } from '@colanode/core';
-
 import { DatabaseNotFound } from '@/renderer/components/databases/database-not-found';
 import {
   Container,
@@ -8,30 +6,31 @@ import {
   ContainerSettings,
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
 import { DatabaseSettings } from '@/renderer/components/databases/database-settings';
 import { Database } from '@/renderer/components/databases/database';
 import { DatabaseViews } from '@/renderer/components/databases/database-views';
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 
 interface DatabaseContainerProps {
   databaseId: string;
 }
 
 export const DatabaseContainer = ({ databaseId }: DatabaseContainerProps) => {
-  const data = useEntryContainer<DatabaseEntry>(databaseId);
+  const data = useNodeContainer<LocalDatabaseNode>(databaseId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <DatabaseNotFound />;
   }
 
-  const { entry: database, role } = data;
+  const { node: database, role } = data;
 
   return (
     <Container>

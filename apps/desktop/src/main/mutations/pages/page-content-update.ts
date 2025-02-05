@@ -25,7 +25,7 @@ export class PageContentUpdateMutationHandler
       };
     }
 
-    const result = await workspace.entries.updateEntry<PageAttributes>(
+    const result = await workspace.nodes.updateNode<PageAttributes>(
       input.pageId,
       (attributes) => {
         const indexMap = new Map<string, string>();

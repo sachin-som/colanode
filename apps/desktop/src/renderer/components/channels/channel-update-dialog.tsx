@@ -1,5 +1,6 @@
-import { ChannelEntry, EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 
+import { LocalChannelNode } from '@/shared/types/nodes';
 import { ChannelForm } from '@/renderer/components/channels/channel-form';
 import {
   Dialog,
@@ -13,8 +14,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface ChannelUpdateDialogProps {
-  channel: ChannelEntry;
-  role: EntryRole;
+  channel: LocalChannelNode;
+  role: NodeRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,7 +28,7 @@ export const ChannelUpdateDialog = ({
 }: ChannelUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

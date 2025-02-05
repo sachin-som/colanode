@@ -3,10 +3,10 @@ import React from 'react';
 import { ViewFilters } from '@/renderer/components/databases/search/view-filters';
 import { ViewSorts } from '@/renderer/components/databases/search/view-sorts';
 import { Separator } from '@/renderer/components/ui/separator';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const ViewSearchBar = () => {
-  const view = useView();
+  const view = useDatabaseView();
 
   if (!view.isSearchBarOpened) {
     return null;

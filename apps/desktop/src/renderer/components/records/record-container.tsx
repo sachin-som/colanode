@@ -1,8 +1,6 @@
-import { RecordEntry } from '@colanode/core';
-
 import { RecordNotFound } from '@/renderer/components/records/record-not-found';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
 import {
   Container,
   ContainerBody,
@@ -12,25 +10,26 @@ import {
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { RecordBody } from '@/renderer/components/records/record-body';
 import { RecordSettings } from '@/renderer/components/records/record-settings';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface RecordContainerProps {
   recordId: string;
 }
 
 export const RecordContainer = ({ recordId }: RecordContainerProps) => {
-  const data = useEntryContainer<RecordEntry>(recordId);
+  const data = useNodeContainer<LocalRecordNode>(recordId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <RecordNotFound />;
   }
 
-  const { entry: record, role } = data;
+  const { node: record, role } = data;
 
   return (
     <Container>

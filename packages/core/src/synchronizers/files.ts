@@ -9,9 +9,9 @@ export type SyncFileData = {
   id: string;
   type: FileType;
   parentId: string;
-  entryId: string;
   rootId: string;
   workspaceId: string;
+  revision: string;
   name: string;
   originalName: string;
   mimeType: string;
@@ -22,7 +22,6 @@ export type SyncFileData = {
   createdBy: string;
   updatedAt: string | null;
   updatedBy: string | null;
-  version: string;
 };
 
 declare module '@colanode/core' {

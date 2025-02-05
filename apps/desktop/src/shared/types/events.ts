@@ -1,17 +1,12 @@
-import { Entry, Message } from '@colanode/core';
+import { Message } from '@colanode/core';
 
 import { AppMetadata } from '@/shared/types/apps';
-import { EntryInteraction } from '@/shared/types/entries';
-import {
-  MessageInteraction,
-  MessageNode,
-  MessageReaction,
-} from '@/shared/types/messages';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
-import { File, FileInteraction, FileState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
+import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
 
 export type UserCreatedEvent = {
   type: 'user_created';
@@ -34,74 +29,46 @@ export type UserDeletedEvent = {
   user: User;
 };
 
-export type EntryCreatedEvent = {
-  type: 'entry_created';
+export type NodeCreatedEvent = {
+  type: 'node_created';
   accountId: string;
   workspaceId: string;
-  entry: Entry;
+  node: LocalNode;
 };
 
-export type EntryUpdatedEvent = {
-  type: 'entry_updated';
+export type NodeUpdatedEvent = {
+  type: 'node_updated';
   accountId: string;
   workspaceId: string;
-  entry: Entry;
+  node: LocalNode;
 };
 
-export type EntryDeletedEvent = {
-  type: 'entry_deleted';
+export type NodeDeletedEvent = {
+  type: 'node_deleted';
   accountId: string;
   workspaceId: string;
-  entry: Entry;
+  node: LocalNode;
 };
 
-export type EntryInteractionUpdatedEvent = {
-  type: 'entry_interaction_updated';
+export type NodeInteractionUpdatedEvent = {
+  type: 'node_interaction_updated';
   accountId: string;
   workspaceId: string;
-  entryInteraction: EntryInteraction;
+  nodeInteraction: NodeInteraction;
 };
 
-export type MessageCreatedEvent = {
-  type: 'message_created';
+export type NodeReactionCreatedEvent = {
+  type: 'node_reaction_created';
   accountId: string;
   workspaceId: string;
-  message: MessageNode;
+  nodeReaction: NodeReaction;
 };
 
-export type MessageUpdatedEvent = {
-  type: 'message_updated';
+export type NodeReactionDeletedEvent = {
+  type: 'node_reaction_deleted';
   accountId: string;
   workspaceId: string;
-  message: MessageNode;
-};
-
-export type MessageDeletedEvent = {
-  type: 'message_deleted';
-  accountId: string;
-  workspaceId: string;
-  message: MessageNode;
-};
-
-export type MessageReactionCreatedEvent = {
-  type: 'message_reaction_created';
-  accountId: string;
-  workspaceId: string;
-  messageReaction: MessageReaction;
-};
-
-export type MessageReactionDeletedEvent = {
-  type: 'message_reaction_deleted';
-  accountId: string;
-  workspaceId: string;
-  messageReaction: MessageReaction;
-};
-
-export type MessageInteractionUpdatedEvent = {
-  type: 'message_interaction_updated';
-  accountId: string;
-  workspaceId: string;
-  messageInteraction: MessageInteraction;
+  nodeReaction: NodeReaction;
 };
 
 export type FileCreatedEvent = {
@@ -123,34 +90,6 @@ export type FileDeletedEvent = {
   accountId: string;
   workspaceId: string;
   file: File;
-};
-
-export type FileStateCreatedEvent = {
-  type: 'file_state_created';
-  accountId: string;
-  workspaceId: string;
-  fileState: FileState;
-};
-
-export type FileStateUpdatedEvent = {
-  type: 'file_state_updated';
-  accountId: string;
-  workspaceId: string;
-  fileState: FileState;
-};
-
-export type FileStateDeletedEvent = {
-  type: 'file_state_deleted';
-  accountId: string;
-  workspaceId: string;
-  fileState: FileState;
-};
-
-export type FileInteractionUpdatedEvent = {
-  type: 'file_interaction_updated';
-  accountId: string;
-  workspaceId: string;
-  fileInteraction: FileInteraction;
 };
 
 export type AccountCreatedEvent = {
@@ -207,14 +146,14 @@ export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
   accountId: string;
   workspaceId: string;
-  entryId: string;
+  nodeId: string;
 };
 
 export type CollaborationDeletedEvent = {
   type: 'collaboration_deleted';
   accountId: string;
   workspaceId: string;
-  entryId: string;
+  nodeId: string;
 };
 
 export type ServerAvailabilityChangedEvent = {
@@ -267,16 +206,12 @@ export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
   | UserDeletedEvent
-  | EntryCreatedEvent
-  | EntryUpdatedEvent
-  | EntryDeletedEvent
-  | EntryInteractionUpdatedEvent
-  | MessageCreatedEvent
-  | MessageUpdatedEvent
-  | MessageDeletedEvent
-  | MessageReactionCreatedEvent
-  | MessageReactionDeletedEvent
-  | MessageInteractionUpdatedEvent
+  | NodeCreatedEvent
+  | NodeUpdatedEvent
+  | NodeDeletedEvent
+  | NodeInteractionUpdatedEvent
+  | NodeReactionCreatedEvent
+  | NodeReactionDeletedEvent
   | AccountCreatedEvent
   | AccountUpdatedEvent
   | AccountDeletedEvent
@@ -288,10 +223,6 @@ export type Event =
   | FileCreatedEvent
   | FileUpdatedEvent
   | FileDeletedEvent
-  | FileStateCreatedEvent
-  | FileStateUpdatedEvent
-  | FileStateDeletedEvent
-  | FileInteractionUpdatedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
   | ServerAvailabilityChangedEvent

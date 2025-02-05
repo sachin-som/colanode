@@ -1,4 +1,4 @@
-import { EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 
@@ -14,7 +14,7 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 interface ConversationProps {
   conversationId: string;
   rootId: string;
-  role: EntryRole;
+  role: NodeRole;
 }
 
 export const Conversation = ({
@@ -72,8 +72,8 @@ export const Conversation = ({
     }
   };
 
-  const isAdmin = hasEntryRole(role, 'admin');
-  const canCreateMessage = hasEntryRole(role, 'commenter');
+  const isAdmin = hasNodeRole(role, 'admin');
+  const canCreateMessage = hasNodeRole(role, 'commenter');
 
   return (
     <ConversationContext.Provider

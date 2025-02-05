@@ -1,10 +1,10 @@
 import { ArrowDownAz } from 'lucide-react';
 
 import { ViewSortAddPopover } from '@/renderer/components/databases/search/view-sort-add-popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const ViewSortButton = () => {
-  const view = useView();
+  const view = useDatabaseView();
 
   if (view.sorts.length > 0) {
     return (

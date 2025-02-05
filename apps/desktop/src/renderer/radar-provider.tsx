@@ -84,42 +84,18 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             mentionsCount: 0,
           };
         },
-        markMessageAsSeen: (accountId, workspaceId, messageId) => {
+        markNodeAsSeen: (accountId, workspaceId, nodeId) => {
           window.colanode.executeMutation({
-            type: 'message_mark_seen',
-            messageId,
+            type: 'node_mark_seen',
+            nodeId,
             accountId,
             workspaceId,
           });
         },
-        markFileAsSeen: (accountId, workspaceId, fileId) => {
+        markNodeAsOpened: (accountId, workspaceId, nodeId) => {
           window.colanode.executeMutation({
-            type: 'file_mark_seen',
-            fileId,
-            accountId,
-            workspaceId,
-          });
-        },
-        markFileAsOpened: (accountId, workspaceId, fileId) => {
-          window.colanode.executeMutation({
-            type: 'file_mark_opened',
-            fileId,
-            accountId,
-            workspaceId,
-          });
-        },
-        markEntryAsSeen: (accountId, workspaceId, entryId) => {
-          window.colanode.executeMutation({
-            type: 'entry_mark_seen',
-            entryId,
-            accountId,
-            workspaceId,
-          });
-        },
-        markEntryAsOpened: (accountId, workspaceId, entryId) => {
-          window.colanode.executeMutation({
-            type: 'entry_mark_opened',
-            entryId,
+            type: 'node_mark_opened',
+            nodeId,
             accountId,
             workspaceId,
           });

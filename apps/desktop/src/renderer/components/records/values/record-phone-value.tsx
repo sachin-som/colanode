@@ -29,7 +29,7 @@ export const RecordPhoneValue = ({
           record.removeFieldValue(field);
         } else {
           record.updateFieldValue(field, {
-            type: 'phone',
+            type: 'string',
             value: newValue,
           });
         }

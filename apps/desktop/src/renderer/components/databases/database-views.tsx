@@ -5,23 +5,32 @@ import { View } from '@/renderer/components/databases/view';
 import { ScrollBar } from '@/renderer/components/ui/scroll-area';
 import { useDatabase } from '@/renderer/contexts/database';
 import { DatabaseViewsContext } from '@/renderer/contexts/database-views';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 export const DatabaseViews = () => {
+  const workspace = useWorkspace();
   const database = useDatabase();
-  const [activeViewId, setActiveViewId] = React.useState<string>(
-    database.views[0]?.id ?? ''
-  );
-  const activeView = database.views.find((view) => view.id === activeViewId);
+  const [activeViewId, setActiveViewId] = React.useState<string | null>(null);
+
+  const { data } = useQuery({
+    type: 'database_view_list',
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+    databaseId: database.id,
+  });
 
   React.useEffect(() => {
-    if (!activeView) {
-      setActiveViewId(database.views[0]?.id ?? '');
+    if (!activeViewId) {
+      setActiveViewId(data?.[0]?.id ?? null);
     }
-  }, [database.views, activeViewId]);
+  }, [data, activeViewId]);
 
+  const views = data ?? [];
+  const activeView = views.find((view) => view.id === activeViewId);
   return (
     <DatabaseViewsContext.Provider
-      value={{ views: database.views, activeViewId, setActiveViewId }}
+      value={{ views, activeViewId: activeViewId ?? '', setActiveViewId }}
     >
       <div className="h-full w-full overflow-y-auto">
         <ScrollAreaPrimitive.Root className="relative overflow-hidden">

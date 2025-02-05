@@ -4,7 +4,7 @@ import { useDrag } from 'react-dnd';
 
 import { RecordFieldValue } from '@/renderer/components/records/record-field-value';
 import { useRecord } from '@/renderer/contexts/record';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { useLayout } from '@/renderer/contexts/layout';
 
 interface DragResult {
@@ -14,7 +14,7 @@ interface DragResult {
 
 export const BoardViewRecordCard = () => {
   const layout = useLayout();
-  const view = useView();
+  const view = useDatabaseView();
   const record = useRecord();
 
   const [, drag] = useDrag({
@@ -34,7 +34,7 @@ export const BoardViewRecordCard = () => {
         }
 
         record.updateFieldValue(dropResult.field, {
-          type: 'select',
+          type: 'string',
           value: optionId,
         });
       }

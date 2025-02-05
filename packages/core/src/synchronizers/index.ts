@@ -1,14 +1,10 @@
-export * from './messages';
-export * from './entry-transactions';
+export * from './nodes';
 export * from './users';
 export * from './files';
-export * from './message-reactions';
-export * from './message-interactions';
-export * from './file-interactions';
-export * from './entry-interactions';
+export * from './node-reactions';
+export * from './node-interactions';
+export * from './node-tombstones';
 export * from './collaborations';
-export * from './message-tombstones';
-export * from './file-tombstones';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SynchronizerMap {}

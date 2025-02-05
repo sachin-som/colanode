@@ -1,5 +1,3 @@
-import { getIdType, IdType } from '@colanode/core';
-
 import { ChannelBreadcrumbItem } from '@/renderer/components/channels/channel-breadcrumb-item';
 import { ChatBreadcrumbItem } from '@/renderer/components/chats/chat-breadcrumb-item';
 import { DatabaseBreadcrumbItem } from '@/renderer/components/databases/database-breadcrumb-item';
@@ -9,35 +7,34 @@ import { RecordBreadcrumbItem } from '@/renderer/components/records/record-bread
 import { SpaceBreadcrumbItem } from '@/renderer/components/spaces/space-breadcrumb-item';
 import { FileBreadcrumbItem } from '@/renderer/components/files/file-breadcrumb-item';
 import { MessageBreadcrumbItem } from '@/renderer/components/messages/message-breadcrumb-item';
+import { LocalNode } from '@/shared/types/nodes';
 
 interface ContainerBreadcrumbItemProps {
-  id: string;
+  node: LocalNode;
 }
 
 export const ContainerBreadcrumbItem = ({
-  id,
+  node,
 }: ContainerBreadcrumbItemProps) => {
-  const idType = getIdType(id);
-
-  switch (idType) {
-    case IdType.Space:
-      return <SpaceBreadcrumbItem id={id} />;
-    case IdType.Channel:
-      return <ChannelBreadcrumbItem id={id} />;
-    case IdType.Chat:
-      return <ChatBreadcrumbItem id={id} />;
-    case IdType.Page:
-      return <PageBreadcrumbItem id={id} />;
-    case IdType.Database:
-      return <DatabaseBreadcrumbItem id={id} />;
-    case IdType.Record:
-      return <RecordBreadcrumbItem id={id} />;
-    case IdType.Folder:
-      return <FolderBreadcrumbItem id={id} />;
-    case IdType.File:
-      return <FileBreadcrumbItem id={id} />;
-    case IdType.Message:
-      return <MessageBreadcrumbItem id={id} />;
+  switch (node.type) {
+    case 'space':
+      return <SpaceBreadcrumbItem space={node} />;
+    case 'channel':
+      return <ChannelBreadcrumbItem channel={node} />;
+    case 'chat':
+      return <ChatBreadcrumbItem chat={node} />;
+    case 'page':
+      return <PageBreadcrumbItem page={node} />;
+    case 'database':
+      return <DatabaseBreadcrumbItem database={node} />;
+    case 'record':
+      return <RecordBreadcrumbItem record={node} />;
+    case 'folder':
+      return <FolderBreadcrumbItem folder={node} />;
+    case 'file':
+      return <FileBreadcrumbItem file={node} />;
+    case 'message':
+      return <MessageBreadcrumbItem message={node} />;
     default:
       return null;
   }

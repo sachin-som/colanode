@@ -1,6 +1,6 @@
 import {
   SelectFieldAttributes,
-  ViewFieldFilterAttributes,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
@@ -19,19 +19,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { selectFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewSelectFieldFilterProps {
   field: SelectFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewSelectFieldFilter = ({
   field,
   filter,
 }: ViewSelectFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
   const selectOptions = Object.values(field.options ?? {});
   const operator =
     selectFieldFilterOperators.find(

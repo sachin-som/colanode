@@ -4,6 +4,7 @@ import {
   generateNodeIndex,
   IdType,
 } from '@colanode/core';
+import { DatabaseViewAttributes } from '@colanode/core/src/registry/database-view';
 
 import { MutationHandler } from '@/main/lib/types';
 import {
@@ -22,10 +23,10 @@ export class DatabaseCreateMutationHandler
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const databaseId = generateId(IdType.Database);
-    const viewId = generateId(IdType.View);
+    const viewId = generateId(IdType.DatabaseView);
     const fieldId = generateId(IdType.Field);
 
-    const attributes: DatabaseAttributes = {
+    const databaseAttributes: DatabaseAttributes = {
       type: 'database',
       name: input.name,
       avatar: input.avatar,
@@ -38,20 +39,26 @@ export class DatabaseCreateMutationHandler
           name: 'Comment',
         },
       },
-      views: {
-        [viewId]: {
-          id: viewId,
-          type: 'table',
-          name: 'Default',
-          index: generateNodeIndex(null, null),
-        },
-      },
     };
 
-    await workspace.entries.createEntry({
+    const viewAttributes: DatabaseViewAttributes = {
+      type: 'database_view',
+      name: 'Default',
+      index: generateNodeIndex(null, null),
+      layout: 'table',
+      parentId: databaseId,
+    };
+
+    await workspace.nodes.createNode({
       id: databaseId,
-      attributes,
+      attributes: databaseAttributes,
       parentId: input.parentId,
+    });
+
+    await workspace.nodes.createNode({
+      id: viewId,
+      attributes: viewAttributes,
+      parentId: databaseId,
     });
 
     return {

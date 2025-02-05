@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
 import {
   CreateDownloadOutput,
-  hasEntryRole,
+  hasNodeRole,
   ApiErrorCode,
-  extractEntryRole,
+  extractNodeRole,
   FileStatus,
 } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { database } from '@/data/database';
-import { fetchEntry, mapEntry } from '@/lib/entries';
+import { fetchNode, mapNode } from '@/lib/nodes';
 import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { configuration } from '@/lib/configuration';
@@ -41,7 +41,7 @@ export const fileDownloadGetHandler = async (
     });
   }
 
-  const root = await fetchEntry(file.root_id);
+  const root = await fetchNode(file.root_id);
   if (!root) {
     return ResponseBuilder.badRequest(res, {
       code: ApiErrorCode.RootNotFound,
@@ -49,8 +49,8 @@ export const fileDownloadGetHandler = async (
     });
   }
 
-  const role = extractEntryRole(mapEntry(root), res.locals.user.id);
-  if (role === null || !hasEntryRole(role, 'viewer')) {
+  const role = extractNodeRole(mapNode(root), res.locals.user.id);
+  if (role === null || !hasNodeRole(role, 'viewer')) {
     return ResponseBuilder.forbidden(res, {
       code: ApiErrorCode.FileNoAccess,
       message: 'You do not have access to this file.',

@@ -11,8 +11,9 @@ import {
 } from '@/main/databases/workspace';
 import { getWorkspaceDirectoryPath } from '@/main/lib/utils';
 import { AccountService } from '@/main/services/accounts/account-service';
-import { EntryService } from '@/main/services/workspaces/entry-service';
-import { MessageService } from '@/main/services/workspaces/message-service';
+import { NodeService } from '@/main/services/workspaces/node-service';
+import { NodeInteractionService } from '@/main/services/workspaces/node-interaction-service';
+import { NodeReactionService } from '@/main/services/workspaces/node-reaction-service';
 import { FileService } from '@/main/services/workspaces/file-service';
 import { Workspace } from '@/shared/types/workspaces';
 import { MutationService } from '@/main/services/workspaces/mutation-service';
@@ -28,8 +29,9 @@ export class WorkspaceService {
 
   public readonly database: Kysely<WorkspaceDatabaseSchema>;
   public readonly account: AccountService;
-  public readonly entries: EntryService;
-  public readonly messages: MessageService;
+  public readonly nodes: NodeService;
+  public readonly nodeInteractions: NodeInteractionService;
+  public readonly nodeReactions: NodeReactionService;
   public readonly files: FileService;
   public readonly mutations: MutationService;
   public readonly users: UserService;
@@ -62,8 +64,9 @@ export class WorkspaceService {
       }),
     });
 
-    this.entries = new EntryService(this);
-    this.messages = new MessageService(this);
+    this.nodes = new NodeService(this);
+    this.nodeInteractions = new NodeInteractionService(this);
+    this.nodeReactions = new NodeReactionService(this);
     this.files = new FileService(this);
     this.mutations = new MutationService(this);
     this.users = new UserService(this);

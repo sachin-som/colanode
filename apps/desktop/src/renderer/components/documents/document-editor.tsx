@@ -73,7 +73,7 @@ interface DocumentEditorProps {
   documentId: string;
   rootId: string;
   content: JSONContent;
-  transactionId: string;
+  revision: bigint;
   canEdit: boolean;
   onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
@@ -83,7 +83,7 @@ export const DocumentEditor = ({
   documentId,
   rootId,
   content,
-  transactionId,
+  revision,
   canEdit,
   onUpdate,
   autoFocus,
@@ -91,7 +91,7 @@ export const DocumentEditor = ({
   const workspace = useWorkspace();
 
   const hasPendingChanges = React.useRef(false);
-  const transactionIdRef = React.useRef(transactionId);
+  const revisionRef = React.useRef(revision);
   const contentRef = React.useRef(content);
 
   const debouncedSave = React.useMemo(
@@ -209,7 +209,7 @@ export const DocumentEditor = ({
       return;
     }
 
-    if (transactionIdRef.current === transactionId) {
+    if (revisionRef.current === revision) {
       return;
     }
 
@@ -217,7 +217,7 @@ export const DocumentEditor = ({
       return;
     }
 
-    transactionIdRef.current = transactionId;
+    revisionRef.current = revision;
     contentRef.current = content;
 
     const relativeSelection = getRelativeSelection(editor);
@@ -226,7 +226,7 @@ export const DocumentEditor = ({
     if (relativeSelection != null) {
       restoreRelativeSelection(editor, relativeSelection);
     }
-  }, [content, transactionId]);
+  }, [content, revision]);
 
   return (
     <div className="min-h-[500px]">

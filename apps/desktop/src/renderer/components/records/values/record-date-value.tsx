@@ -22,7 +22,7 @@ export const RecordDateValue = ({ field, readOnly }: RecordDateValueProps) => {
           record.removeFieldValue(field);
         } else {
           record.updateFieldValue(field, {
-            type: 'date',
+            type: 'string',
             value: newValue.toISOString(),
           });
         }

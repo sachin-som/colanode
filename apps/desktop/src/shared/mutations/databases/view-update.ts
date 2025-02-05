@@ -1,11 +1,11 @@
-import { ViewAttributes } from '@colanode/core';
+import { DatabaseViewAttributes } from '@colanode/core';
 
 export type ViewUpdateMutationInput = {
   type: 'view_update';
   accountId: string;
   workspaceId: string;
-  databaseId: string;
-  view: ViewAttributes;
+  viewId: string;
+  view: DatabaseViewAttributes;
 };
 
 export type ViewUpdateMutationOutput = {

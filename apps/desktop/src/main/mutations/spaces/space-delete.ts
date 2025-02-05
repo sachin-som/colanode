@@ -13,7 +13,7 @@ export class SpaceDeleteMutationHandler
     input: SpaceDeleteMutationInput
   ): Promise<SpaceDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    await workspace.entries.deleteEntry(input.spaceId);
+    await workspace.nodes.deleteNode(input.spaceId);
 
     return {
       success: true,

@@ -1,8 +1,7 @@
-import { PageEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalPageNode } from '@/shared/types/nodes';
 
 interface PageContainerTabProps {
   pageId: string;
@@ -12,8 +11,8 @@ export const PageContainerTab = ({ pageId }: PageContainerTabProps) => {
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    type: 'entry_get',
-    entryId: pageId,
+    type: 'node_get',
+    nodeId: pageId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
@@ -22,7 +21,7 @@ export const PageContainerTab = ({ pageId }: PageContainerTabProps) => {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
 
-  const page = data as PageEntry;
+  const page = data as LocalPageNode;
   if (!page) {
     return <p className="text-sm text-muted-foreground">Not found</p>;
   }

@@ -1,4 +1,4 @@
-import { EntryRole, FolderEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 
 import { FolderForm } from '@/renderer/components/folders/folder-form';
 import {
@@ -11,10 +11,11 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 interface FolderUpdateDialogProps {
-  folder: FolderEntry;
-  role: EntryRole;
+  folder: LocalFolderNode;
+  role: NodeRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,7 +28,7 @@ export const FolderUpdateDialog = ({
 }: FolderUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

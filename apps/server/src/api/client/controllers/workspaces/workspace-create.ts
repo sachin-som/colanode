@@ -1,9 +1,9 @@
 import { WorkspaceCreateInput, ApiErrorCode } from '@colanode/core';
 import { Request, Response } from 'express';
 
-import { workspaceService } from '@/services/workspace-service';
 import { database } from '@/data/database';
 import { ResponseBuilder } from '@/lib/response-builder';
+import { createWorkspace } from '@/lib/workspaces';
 
 export const workspaceCreateHandler = async (
   req: Request,
@@ -31,6 +31,6 @@ export const workspaceCreateHandler = async (
     });
   }
 
-  const output = await workspaceService.createWorkspace(account, input);
+  const output = await createWorkspace(account, input);
   return ResponseBuilder.success(res, output);
 };

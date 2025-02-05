@@ -1,13 +1,13 @@
-import { MessageNode } from '@/shared/types/messages';
 import { NodeRenderer } from '@/renderer/editor/renderers/node';
 import { mapBlocksToContents } from '@/shared/lib/editor';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageContentProps {
-  message: MessageNode;
+  message: LocalMessageNode;
 }
 
 export const MessageContent = ({ message }: MessageContentProps) => {
-  const nodeBlocks = Object.values(message.attributes.blocks ?? {});
+  const nodeBlocks = Object.values(message.attributes.content ?? {});
   const contents = mapBlocksToContents(message.id, nodeBlocks);
 
   return (

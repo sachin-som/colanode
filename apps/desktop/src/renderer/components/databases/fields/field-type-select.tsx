@@ -35,11 +35,11 @@ const fieldTypes: FieldTypeOption[] = [
   },
   {
     name: 'Created Date & Time',
-    type: 'createdAt',
+    type: 'created_at',
   },
   {
     name: 'Created by user',
-    type: 'createdBy',
+    type: 'created_by',
   },
   {
     name: 'Date',
@@ -51,7 +51,7 @@ const fieldTypes: FieldTypeOption[] = [
   },
   {
     name: 'Multi Select',
-    type: 'multiSelect',
+    type: 'multi_select',
   },
   {
     name: 'Number',
@@ -79,11 +79,11 @@ const fieldTypes: FieldTypeOption[] = [
   },
   {
     name: 'Last Updated Date & Time',
-    type: 'updatedAt',
+    type: 'updated_at',
   },
   {
     name: 'Last Updated By',
-    type: 'updatedBy',
+    type: 'updated_by',
   },
 ];
 

@@ -6,10 +6,10 @@ import { FilePreviewOther } from '@/renderer/components/files/previews/file-prev
 import { FilePreviewVideo } from '@/renderer/components/files/previews/file-preview-video';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { getFileUrl } from '@/shared/lib/files';
-import { FileWithState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 
 interface FilePreviewProps {
-  file: FileWithState;
+  file: File;
 }
 
 export const FilePreview = ({ file }: FilePreviewProps) => {

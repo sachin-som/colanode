@@ -1,10 +1,5 @@
 import { FileType } from './files';
-import { MessageAttributes } from './messages';
-import {
-  LocalCreateTransaction,
-  LocalDeleteTransaction,
-  LocalUpdateTransaction,
-} from './transactions';
+import { LocalNodeTransaction } from './transactions';
 
 export type SyncMutationsInput = {
   mutations: Mutation[];
@@ -30,7 +25,6 @@ export type CreateFileMutationData = {
   id: string;
   type: FileType;
   parentId: string;
-  entryId: string;
   rootId: string;
   name: string;
   originalName: string;
@@ -45,150 +39,75 @@ export type CreateFileMutation = MutationBase & {
   data: CreateFileMutationData;
 };
 
-export type DeleteFileMutationData = {
+export type ApplyNodeTransactionMutation = MutationBase & {
+  type: 'apply_node_transaction';
+  data: LocalNodeTransaction;
+};
+
+export type DeleteNodeMutationData = {
   id: string;
   rootId: string;
   deletedAt: string;
 };
 
-export type DeleteFileMutation = MutationBase & {
-  type: 'delete_file';
-  data: DeleteFileMutationData;
+export type DeleteNodeMutation = MutationBase & {
+  type: 'delete_node';
+  data: DeleteNodeMutationData;
 };
 
-export type ApplyCreateTransactionMutation = MutationBase & {
-  type: 'apply_create_transaction';
-  data: LocalCreateTransaction;
-};
-
-export type ApplyUpdateTransactionMutation = MutationBase & {
-  type: 'apply_update_transaction';
-  data: LocalUpdateTransaction;
-};
-
-export type ApplyDeleteTransactionMutation = MutationBase & {
-  type: 'apply_delete_transaction';
-  data: LocalDeleteTransaction;
-};
-
-export type CreateMessageMutationData = {
-  id: string;
-  entryId: string;
-  parentId: string;
-  attributes: MessageAttributes;
-  rootId: string;
-  createdAt: string;
-};
-
-export type CreateMessageMutation = MutationBase & {
-  type: 'create_message';
-  data: CreateMessageMutationData;
-};
-
-export type DeleteMessageMutationData = {
-  id: string;
-  rootId: string;
-  deletedAt: string;
-};
-
-export type DeleteMessageMutation = MutationBase & {
-  type: 'delete_message';
-  data: DeleteMessageMutationData;
-};
-
-export type CreateMessageReactionMutationData = {
-  messageId: string;
+export type CreateNodeReactionMutationData = {
+  nodeId: string;
   reaction: string;
   rootId: string;
   createdAt: string;
 };
 
-export type CreateMessageReactionMutation = MutationBase & {
-  type: 'create_message_reaction';
-  data: CreateMessageReactionMutationData;
+export type CreateNodeReactionMutation = MutationBase & {
+  type: 'create_node_reaction';
+  data: CreateNodeReactionMutationData;
 };
 
-export type MarkMessageSeenMutationData = {
-  messageId: string;
-  collaboratorId: string;
-  seenAt: string;
-};
-
-export type MarkMessageSeenMutation = MutationBase & {
-  type: 'mark_message_seen';
-  data: MarkMessageSeenMutationData;
-};
-
-export type DeleteMessageReactionMutationData = {
-  messageId: string;
+export type DeleteNodeReactionMutationData = {
+  nodeId: string;
   reaction: string;
   rootId: string;
   deletedAt: string;
 };
 
-export type DeleteMessageReactionMutation = MutationBase & {
-  type: 'delete_message_reaction';
-  data: DeleteMessageReactionMutationData;
+export type DeleteNodeReactionMutation = MutationBase & {
+  type: 'delete_node_reaction';
+  data: DeleteNodeReactionMutationData;
 };
 
-export type MarkFileSeenMutationData = {
-  fileId: string;
+export type MarkNodeSeenMutationData = {
+  nodeId: string;
   collaboratorId: string;
   seenAt: string;
 };
 
-export type MarkFileSeenMutation = MutationBase & {
-  type: 'mark_file_seen';
-  data: MarkFileSeenMutationData;
+export type MarkNodeSeenMutation = MutationBase & {
+  type: 'mark_node_seen';
+  data: MarkNodeSeenMutationData;
 };
 
-export type MarkFileOpenedMutationData = {
-  fileId: string;
+export type MarkNodeOpenedMutationData = {
+  nodeId: string;
   collaboratorId: string;
   openedAt: string;
 };
 
-export type MarkFileOpenedMutation = MutationBase & {
-  type: 'mark_file_opened';
-  data: MarkFileOpenedMutationData;
-};
-
-export type MarkEntrySeenMutationData = {
-  entryId: string;
-  collaboratorId: string;
-  seenAt: string;
-};
-
-export type MarkEntrySeenMutation = MutationBase & {
-  type: 'mark_entry_seen';
-  data: MarkEntrySeenMutationData;
-};
-
-export type MarkEntryOpenedMutationData = {
-  entryId: string;
-  collaboratorId: string;
-  openedAt: string;
-};
-
-export type MarkEntryOpenedMutation = MutationBase & {
-  type: 'mark_entry_opened';
-  data: MarkEntryOpenedMutationData;
+export type MarkNodeOpenedMutation = MutationBase & {
+  type: 'mark_node_opened';
+  data: MarkNodeOpenedMutationData;
 };
 
 export type Mutation =
   | CreateFileMutation
-  | DeleteFileMutation
-  | ApplyCreateTransactionMutation
-  | ApplyUpdateTransactionMutation
-  | ApplyDeleteTransactionMutation
-  | CreateMessageMutation
-  | DeleteMessageMutation
-  | CreateMessageReactionMutation
-  | DeleteMessageReactionMutation
-  | MarkMessageSeenMutation
-  | MarkFileSeenMutation
-  | MarkFileOpenedMutation
-  | MarkEntrySeenMutation
-  | MarkEntryOpenedMutation;
+  | ApplyNodeTransactionMutation
+  | DeleteNodeMutation
+  | CreateNodeReactionMutation
+  | DeleteNodeReactionMutation
+  | MarkNodeSeenMutation
+  | MarkNodeOpenedMutation;
 
 export type MutationType = Mutation['type'];

@@ -5,6 +5,7 @@ export const createUsersTable: Migration = {
     await db.schema
       .createTable('users')
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('revision', 'integer', (col) => col.notNull())
       .addColumn('email', 'text', (col) => col.notNull())
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('avatar', 'text')
@@ -14,7 +15,6 @@ export const createUsersTable: Migration = {
       .addColumn('status', 'integer', (col) => col.notNull())
       .addColumn('created_at', 'text', (col) => col.notNull())
       .addColumn('updated_at', 'text')
-      .addColumn('version', 'integer')
       .execute();
   },
   down: async (db) => {

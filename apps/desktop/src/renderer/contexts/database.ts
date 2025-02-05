@@ -1,9 +1,8 @@
 import {
   FieldAttributes,
   FieldType,
-  EntryRole,
+  NodeRole,
   SelectOptionAttributes,
-  ViewAttributes,
 } from '@colanode/core';
 import { createContext, useContext } from 'react';
 
@@ -11,10 +10,9 @@ interface DatabaseContext {
   id: string;
   name: string;
   fields: FieldAttributes[];
-  views: ViewAttributes[];
   canEdit: boolean;
   canCreateRecord: boolean;
-  role: EntryRole;
+  role: NodeRole;
   createField: (type: FieldType, name: string) => void;
   renameField: (id: string, name: string) => void;
   deleteField: (id: string) => void;

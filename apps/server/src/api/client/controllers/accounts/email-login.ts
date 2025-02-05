@@ -3,10 +3,13 @@ import { AccountStatus, EmailLoginInput, ApiErrorCode } from '@colanode/core';
 import argon2 from '@node-rs/argon2';
 
 import { database } from '@/data/database';
-import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
 import { configuration } from '@/lib/configuration';
+import {
+  buildLoginSuccessOutput,
+  buildLoginVerifyOutput,
+} from '@/lib/accounts';
 
 export const emailLoginHandler = async (
   req: Request,
@@ -48,7 +51,7 @@ export const emailLoginHandler = async (
 
   if (account.status === AccountStatus.Unverified) {
     if (configuration.account.verificationType === 'email') {
-      const output = await accountService.buildLoginVerifyOutput(account);
+      const output = await buildLoginVerifyOutput(account);
       return ResponseBuilder.success(res, output);
     }
 
@@ -68,7 +71,7 @@ export const emailLoginHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginSuccessOutput(account, {
+  const output = await buildLoginSuccessOutput(account, {
     ip: res.locals.ip,
     platform: input.platform,
     version: input.version,

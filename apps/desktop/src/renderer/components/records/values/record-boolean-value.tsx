@@ -21,7 +21,7 @@ export const RecordBooleanValue = ({
 
   React.useEffect(() => {
     setInput(record.getBooleanValue(field));
-  }, [record.transactionId]);
+  }, [record.localRevision]);
 
   return (
     <div className="flex h-full w-full flex-row items-center justify-start p-0">

@@ -16,7 +16,7 @@ export class DatabaseUpdateMutationHandler
     input: DatabaseUpdateMutationInput
   ): Promise<DatabaseUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
+    const result = await workspace.nodes.updateNode<DatabaseAttributes>(
       input.databaseId,
       (attributes) => {
         attributes.name = input.name;

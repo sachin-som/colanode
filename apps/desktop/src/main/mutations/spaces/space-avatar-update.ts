@@ -17,7 +17,7 @@ export class SpaceAvatarUpdateMutationHandler
   ): Promise<SpaceAvatarUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<SpaceAttributes>(
+    const result = await workspace.nodes.updateNode<SpaceAttributes>(
       input.spaceId,
       (attributes) => {
         attributes.avatar = input.avatar;

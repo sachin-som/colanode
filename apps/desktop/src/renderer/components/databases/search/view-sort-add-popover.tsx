@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { isSortableField } from '@/shared/lib/databases';
 
 interface ViewSortAddPopoverProps {
@@ -24,7 +24,7 @@ interface ViewSortAddPopoverProps {
 
 export const ViewSortAddPopover = ({ children }: ViewSortAddPopoverProps) => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const [open, setOpen] = React.useState(false);
   const sortableFields = database.fields.filter(

@@ -25,7 +25,7 @@ export class RecordContentUpdateMutationHandler
       };
     }
 
-    const result = await workspace.entries.updateEntry<RecordAttributes>(
+    const result = await workspace.nodes.updateNode<RecordAttributes>(
       input.recordId,
       (attributes) => {
         const indexMap = new Map<string, string>();

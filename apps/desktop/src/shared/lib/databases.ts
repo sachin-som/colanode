@@ -6,13 +6,14 @@ import {
   generateNodeIndex,
   isStringArray,
   MultiSelectFieldAttributes,
-  RecordEntry,
   SelectFieldAttributes,
-  ViewFieldAttributes,
-  ViewFieldFilterAttributes,
-  ViewFilterAttributes,
-  ViewType,
+  DatabaseViewFieldAttributes,
+  DatabaseViewFilterAttributes,
+  DatabaseViewLayout,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
+
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 export const getDefaultFieldWidth = (type: FieldType): number => {
   if (!type) return 0;
@@ -69,8 +70,10 @@ export const getDefaultNameWidth = (): number => {
   return 300;
 };
 
-export const getDefaultViewFieldDisplay = (viewType: ViewType): boolean => {
-  return viewType === 'table';
+export const getDefaultViewFieldDisplay = (
+  layout: DatabaseViewLayout
+): boolean => {
+  return layout === 'table';
 };
 
 interface SelectOptionColor {
@@ -481,9 +484,9 @@ export const getFieldFilterOperators = (
       return booleanFieldFilterOperators;
     case 'collaborator':
       return collaboratorFieldFilterOperators;
-    case 'createdAt':
+    case 'created_at':
       return createdAtFieldFilterOperators;
-    case 'createdBy':
+    case 'created_by':
       return createdByFieldFilterOperators;
     case 'date':
       return dateFieldFilterOperators;
@@ -491,7 +494,7 @@ export const getFieldFilterOperators = (
       return emailFieldFilterOperators;
     case 'file':
       return fileFieldFilterOperators;
-    case 'multiSelect':
+    case 'multi_select':
       return multiSelectFieldFilterOperators;
     case 'number':
       return numberFieldFilterOperators;
@@ -509,19 +512,19 @@ export const getFieldFilterOperators = (
 };
 
 export const filterRecords = (
-  records: RecordEntry[],
-  filter: ViewFilterAttributes,
+  records: LocalRecordNode[],
+  filter: DatabaseViewFilterAttributes,
   field: FieldAttributes,
   currentUserId: string
-): RecordEntry[] => {
+): LocalRecordNode[] => {
   return records.filter((record) =>
     recordMatchesFilter(record, filter, field, currentUserId)
   );
 };
 
 const recordMatchesFilter = (
-  record: RecordEntry,
-  filter: ViewFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFilterAttributes,
   field: FieldAttributes,
   currentUserId: string
 ) => {
@@ -534,9 +537,9 @@ const recordMatchesFilter = (
       return recordMatchesBooleanFilter(record, filter, field);
     case 'collaborator':
       return recordMatchesCollaboratorFilter(record, filter, field);
-    case 'createdAt':
+    case 'created_at':
       return recordMatchesCreatedAtFilter(record, filter);
-    case 'createdBy':
+    case 'created_by':
       return recordMatchesCreatedByFilter(record, filter, currentUserId);
     case 'date':
       return recordMatchesDateFilter(record, filter, field);
@@ -544,7 +547,7 @@ const recordMatchesFilter = (
       return recordMatchesEmailFilter(record, filter, field);
     case 'file':
       return recordMatchesFileFilter(record, filter, field);
-    case 'multiSelect':
+    case 'multi_select':
       return recordMatchesMultiSelectFilter(record, filter, field);
     case 'number':
       return recordMatchesNumberFilter(record, filter, field);
@@ -562,8 +565,8 @@ const recordMatchesFilter = (
 };
 
 const recordMatchesBooleanFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -586,16 +589,16 @@ const recordMatchesBooleanFilter = (
 };
 
 const recordMatchesCollaboratorFilter = (
-  _: RecordEntry,
-  __: ViewFieldFilterAttributes,
+  _: LocalRecordNode,
+  __: DatabaseViewFilterAttributes,
   ___: FieldAttributes
 ) => {
   return false;
 };
 
 const recordMatchesCreatedAtFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes
 ) => {
   if (!filter.value) return false;
 
@@ -628,8 +631,8 @@ const recordMatchesCreatedAtFilter = (
 };
 
 const recordMatchesCreatedByFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   currentUserId: string
 ) => {
   const createdBy = record.createdBy;
@@ -661,8 +664,8 @@ const recordMatchesCreatedByFilter = (
 };
 
 const recordMatchesDateFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -674,7 +677,7 @@ const recordMatchesDateFilter = (
     return !!fieldValue;
   }
 
-  if (!fieldValue || fieldValue.type !== 'date') {
+  if (!fieldValue || fieldValue.type !== 'string') {
     return false;
   }
 
@@ -707,8 +710,8 @@ const recordMatchesDateFilter = (
 };
 
 const recordMatchesEmailFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -721,7 +724,7 @@ const recordMatchesEmailFilter = (
     return !!fieldValue;
   }
 
-  if (!fieldValue || fieldValue.type !== 'email') {
+  if (!fieldValue || fieldValue.type !== 'string') {
     return false;
   }
 
@@ -749,21 +752,21 @@ const recordMatchesEmailFilter = (
 };
 
 const recordMatchesFileFilter = (
-  _: RecordEntry,
-  __: ViewFieldFilterAttributes,
+  _: LocalRecordNode,
+  __: DatabaseViewFilterAttributes,
   ___: FieldAttributes
 ) => {
   return false;
 };
 
 const recordMatchesMultiSelectFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
   const selectValues =
-    fieldValue?.type === 'multiSelect' ? fieldValue.value : [];
+    fieldValue?.type === 'string_array' ? fieldValue.value : [];
 
   if (filter.operator === 'is_empty') {
     return selectValues.length === 0;
@@ -788,8 +791,8 @@ const recordMatchesMultiSelectFilter = (
 };
 
 const recordMatchesNumberFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -834,8 +837,8 @@ const recordMatchesNumberFilter = (
 };
 
 const recordMatchesPhoneFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -848,7 +851,7 @@ const recordMatchesPhoneFilter = (
     return !!fieldValue;
   }
 
-  if (!fieldValue || fieldValue.type !== 'phone') {
+  if (!fieldValue || fieldValue.type !== 'string') {
     return false;
   }
 
@@ -876,8 +879,8 @@ const recordMatchesPhoneFilter = (
 };
 
 const recordMatchesSelectFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -890,7 +893,7 @@ const recordMatchesSelectFilter = (
     return !!fieldValue;
   }
 
-  if (!fieldValue || fieldValue.type !== 'select') {
+  if (!fieldValue || fieldValue.type !== 'string') {
     return false;
   }
 
@@ -911,8 +914,8 @@ const recordMatchesSelectFilter = (
 };
 
 const recordMatchesTextFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -953,8 +956,8 @@ const recordMatchesTextFilter = (
 };
 
 const recordMatchesUrlFilter = (
-  record: RecordEntry,
-  filter: ViewFieldFilterAttributes,
+  record: LocalRecordNode,
+  filter: DatabaseViewFieldFilterAttributes,
   field: FieldAttributes
 ) => {
   const fieldValue = record.attributes.fields[field.id];
@@ -967,7 +970,7 @@ const recordMatchesUrlFilter = (
     return !!fieldValue;
   }
 
-  if (!fieldValue || fieldValue.type !== 'url') {
+  if (!fieldValue || fieldValue.type !== 'string') {
     return false;
   }
 
@@ -1004,7 +1007,7 @@ export const isSortableField = (field: FieldAttributes) => {
     field.type === 'text' ||
     field.type === 'number' ||
     field.type === 'date' ||
-    field.type === 'createdAt' ||
+    field.type === 'created_at' ||
     field.type === 'email' ||
     field.type === 'phone' ||
     field.type === 'select' ||
@@ -1014,7 +1017,7 @@ export const isSortableField = (field: FieldAttributes) => {
 
 export const generateViewFieldIndex = (
   databaseFields: FieldAttributes[],
-  viewFields: ViewFieldAttributes[],
+  viewFields: DatabaseViewFieldAttributes[],
   fieldId: string,
   after: string
 ): string | null => {
@@ -1089,7 +1092,7 @@ export const generateViewFieldIndex = (
 
 export const generateFieldValuesFromFilters = (
   fields: FieldAttributes[],
-  filters: ViewFilterAttributes[],
+  filters: DatabaseViewFilterAttributes[],
   userId: string
 ): Record<string, FieldValue> => {
   if (fields.length === 0 || filters.length === 0) {
@@ -1115,7 +1118,7 @@ export const generateFieldValuesFromFilters = (
 
 const generateValueFromFilter = (
   field: FieldAttributes,
-  filter: ViewFieldFilterAttributes,
+  filter: DatabaseViewFieldFilterAttributes,
   userId: string
 ): FieldValue | null => {
   switch (field.type) {
@@ -1134,7 +1137,7 @@ const generateValueFromFilter = (
     case 'file': {
       return generateFileValue(filter);
     }
-    case 'multiSelect': {
+    case 'multi_select': {
       return generateMultiSelectValue(field, filter);
     }
     case 'number': {
@@ -1158,7 +1161,7 @@ const generateValueFromFilter = (
 };
 
 const generateBooleanValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (filter.operator === 'is_true') {
     return { type: 'boolean', value: true };
@@ -1172,11 +1175,11 @@ const generateBooleanValue = (
 };
 
 const generateCollaboratorValue = (
-  filter: ViewFieldFilterAttributes,
+  filter: DatabaseViewFieldFilterAttributes,
   userId: string
 ): FieldValue | null => {
   if (filter.operator === 'is_me') {
-    return { type: 'collaborator', value: [userId] };
+    return { type: 'string_array', value: [userId] };
   }
 
   if (filter.operator === 'is_in' && Array.isArray(filter.value)) {
@@ -1185,78 +1188,78 @@ const generateCollaboratorValue = (
       return null;
     }
 
-    return { type: 'collaborator', value: [firstValue] };
+    return { type: 'string_array', value: [firstValue] };
   }
 
   if (filter.operator === 'is_not_empty') {
-    return { type: 'collaborator', value: [userId] };
+    return { type: 'string_array', value: [userId] };
   }
 
   return null;
 };
 
 const generateDateValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'string') {
     return null;
   }
 
   if (filter.operator === 'is_equal_to') {
-    return { type: 'date', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_on_or_after') {
-    return { type: 'date', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_on_or_before') {
-    return { type: 'date', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_after') {
     const date = new Date(filter.value);
     date.setDate(date.getDate() + 1);
-    return { type: 'date', value: date.toISOString() };
+    return { type: 'string', value: date.toISOString() };
   }
 
   if (filter.operator === 'is_before') {
     const date = new Date(filter.value);
     date.setDate(date.getDate() - 1);
-    return { type: 'date', value: date.toISOString() };
+    return { type: 'string', value: date.toISOString() };
   }
 
   if (filter.operator === 'is_not_empty') {
-    return { type: 'date', value: new Date().toISOString() };
+    return { type: 'string', value: new Date().toISOString() };
   }
 
   return null;
 };
 
 const generateEmailValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'string') {
     return null;
   }
 
   if (filter.operator === 'is_equal_to') {
-    return { type: 'email', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'contains') {
-    return { type: 'email', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_not_empty') {
-    return { type: 'email', value: '#' };
+    return { type: 'string', value: '#' };
   }
 
   return null;
 };
 
 const generateFileValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (filter.operator === 'is_in' && Array.isArray(filter.value)) {
     const firstValue = filter.value[0];
@@ -1264,7 +1267,7 @@ const generateFileValue = (
       return null;
     }
 
-    return { type: 'file', value: [firstValue] };
+    return { type: 'string_array', value: [firstValue] };
   }
 
   return null;
@@ -1272,7 +1275,7 @@ const generateFileValue = (
 
 const generateMultiSelectValue = (
   field: MultiSelectFieldAttributes,
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (filter.operator === 'is_in' && Array.isArray(filter.value)) {
     const firstValue = filter.value[0];
@@ -1280,7 +1283,7 @@ const generateMultiSelectValue = (
       return null;
     }
 
-    return { type: 'multiSelect', value: [firstValue] };
+    return { type: 'string_array', value: [firstValue] };
   }
 
   if (
@@ -1293,14 +1296,14 @@ const generateMultiSelectValue = (
       return null;
     }
 
-    return { type: 'multiSelect', value: [firstOption.id] };
+    return { type: 'string_array', value: [firstOption.id] };
   }
 
   return null;
 };
 
 const generateNumberValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'number') {
     return null;
@@ -1334,22 +1337,22 @@ const generateNumberValue = (
 };
 
 const generatePhoneValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'string') {
     return null;
   }
 
   if (filter.operator === 'is_equal_to') {
-    return { type: 'phone', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'contains') {
-    return { type: 'phone', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_not_empty') {
-    return { type: 'phone', value: '#' };
+    return { type: 'string', value: '#' };
   }
 
   return null;
@@ -1357,7 +1360,7 @@ const generatePhoneValue = (
 
 const generateSelectValue = (
   field: SelectFieldAttributes,
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (filter.operator === 'is_in' && Array.isArray(filter.value)) {
     const firstValue = filter.value[0];
@@ -1365,7 +1368,7 @@ const generateSelectValue = (
       return null;
     }
 
-    return { type: 'select', value: firstValue };
+    return { type: 'string', value: firstValue };
   }
 
   if (
@@ -1378,14 +1381,14 @@ const generateSelectValue = (
       return null;
     }
 
-    return { type: 'select', value: firstOption.id };
+    return { type: 'string', value: firstOption.id };
   }
 
   return null;
 };
 
 const generateTextValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'string') {
     return null;
@@ -1407,22 +1410,22 @@ const generateTextValue = (
 };
 
 const generateUrlValue = (
-  filter: ViewFieldFilterAttributes
+  filter: DatabaseViewFieldFilterAttributes
 ): FieldValue | null => {
   if (typeof filter.value !== 'string') {
     return null;
   }
 
   if (filter.operator === 'is_equal_to') {
-    return { type: 'url', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'contains') {
-    return { type: 'url', value: filter.value };
+    return { type: 'string', value: filter.value };
   }
 
   if (filter.operator === 'is_not_empty') {
-    return { type: 'url', value: '#' };
+    return { type: 'string', value: '#' };
   }
 
   return null;

@@ -1,14 +1,14 @@
 import { FileStatus } from '@colanode/core';
 
 import { MutationHandler } from '@/main/lib/types';
-import { mapFileState } from '@/main/lib/mappers';
+import { mapFile } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   FileDownloadMutationInput,
   FileDownloadMutationOutput,
 } from '@/shared/mutations/files/file-download';
-import { DownloadStatus, UploadStatus } from '@/shared/types/files';
+import { DownloadStatus } from '@/shared/types/files';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FileDownloadMutationHandler
@@ -40,55 +40,41 @@ export class FileDownloadMutationHandler
       );
     }
 
-    const existingFileState = await workspace.database
-      .selectFrom('file_states')
-      .selectAll()
-      .where('file_id', '=', input.fileId)
-      .executeTakeFirst();
-
     if (
-      existingFileState &&
-      existingFileState.download_status === DownloadStatus.Completed
+      file.download_status === DownloadStatus.Completed ||
+      file.download_status === DownloadStatus.Pending
     ) {
       return {
         success: true,
       };
     }
 
-    const fileState = await workspace.database
-      .insertInto('file_states')
+    const updatedFile = await workspace.database
+      .updateTable('files')
       .returningAll()
-      .values({
-        file_id: input.fileId,
+      .set({
         download_status: DownloadStatus.Pending,
         download_progress: 0,
         download_retries: 0,
-        upload_status: UploadStatus.None,
-        upload_progress: 0,
-        upload_retries: 0,
-        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
-      .onConflict((oc) =>
-        oc.doUpdateSet(() => ({
-          download_status: DownloadStatus.Pending,
-          download_progress: 0,
-          download_retries: 0,
-          updated_at: new Date().toISOString(),
-        }))
-      )
+      .where('id', '=', input.fileId)
       .executeTakeFirst();
 
-    if (!fileState) {
-      throw new Error('Failed to create file state.');
+    if (!updatedFile) {
+      throw new MutationError(
+        MutationErrorCode.FileNotFound,
+        'The file you are trying to download does not exist.'
+      );
     }
 
     workspace.files.triggerDownloads();
 
     eventBus.publish({
-      type: 'file_state_created',
+      type: 'file_updated',
       accountId: workspace.accountId,
       workspaceId: workspace.id,
-      fileState: mapFileState(fileState),
+      file: mapFile(updatedFile),
     });
 
     return {

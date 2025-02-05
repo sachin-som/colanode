@@ -1,10 +1,9 @@
 import {
   compareString,
   SortDirection,
-  ViewAttributes,
-  ViewFieldFilterAttributes,
-  ViewFilterAttributes,
-  ViewSortAttributes,
+  DatabaseViewFieldFilterAttributes,
+  DatabaseViewFilterAttributes,
+  DatabaseViewSortAttributes,
 } from '@colanode/core';
 import React from 'react';
 import { match } from 'ts-pattern';
@@ -13,7 +12,7 @@ import { BoardView } from '@/renderer/components/databases/boards/board-view';
 import { CalendarView } from '@/renderer/components/databases/calendars/calendar-view';
 import { TableView } from '@/renderer/components/databases/tables/table-view';
 import { useDatabase } from '@/renderer/contexts/database';
-import { ViewContext } from '@/renderer/contexts/view';
+import { DatabaseViewContext } from '@/renderer/contexts/database-view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useLayout } from '@/renderer/contexts/layout';
 import {
@@ -26,9 +25,10 @@ import {
 } from '@/shared/lib/databases';
 import { ViewField } from '@/shared/types/databases';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalDatabaseViewNode } from '@/shared/types/nodes';
 
 interface ViewProps {
-  view: ViewAttributes;
+  view: LocalDatabaseViewNode;
 }
 
 export const View = ({ view }: ViewProps) => {
@@ -39,18 +39,20 @@ export const View = ({ view }: ViewProps) => {
   const fields: ViewField[] = React.useMemo(() => {
     return database.fields
       .map((field) => {
-        const viewField = view.fields?.[field.id];
+        const viewField = view.attributes.fields?.[field.id];
 
         return {
           field,
-          display: viewField?.display ?? getDefaultViewFieldDisplay(view.type),
+          display:
+            viewField?.display ??
+            getDefaultViewFieldDisplay(view.attributes.layout),
           index: viewField?.index ?? field.index,
           width: viewField?.width ?? getDefaultFieldWidth(field.type),
         };
       })
       .filter((field) => field.display)
       .sort((a, b) => compareString(a.index, b.index));
-  }, [view.id, database.fields, view.fields]);
+  }, [view.id, database.fields, view.attributes.fields]);
 
   const [isSearchBarOpened, setIsSearchBarOpened] = React.useState(false);
   const [isSortsOpened, setIsSortsOpened] = React.useState(false);
@@ -59,31 +61,31 @@ export const View = ({ view }: ViewProps) => {
   );
 
   return (
-    <ViewContext.Provider
+    <DatabaseViewContext.Provider
       value={{
         id: view.id,
-        name: view.name,
-        avatar: view.avatar,
-        type: view.type,
+        name: view.attributes.name,
+        avatar: view.attributes.avatar,
+        layout: view.attributes.layout,
         fields,
-        filters: Object.values(view.filters ?? {}),
-        sorts: Object.values(view.sorts ?? {}),
-        groupBy: view.groupBy,
-        nameWidth: view.nameWidth ?? getDefaultNameWidth(),
+        filters: Object.values(view.attributes.filters ?? {}),
+        sorts: Object.values(view.attributes.sorts ?? {}),
+        groupBy: view.attributes.groupBy,
+        nameWidth: view.attributes.nameWidth ?? getDefaultNameWidth(),
         isSearchBarOpened,
         isSortsOpened,
         rename: async (name: string) => {
           if (!database.canEdit) return;
 
-          const viewCopy = { ...view };
-          viewCopy.name = name;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.name = name;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -97,15 +99,15 @@ export const View = ({ view }: ViewProps) => {
         updateAvatar: async (avatar: string) => {
           if (!database.canEdit) return;
 
-          const viewCopy = { ...view };
-          viewCopy.avatar = avatar;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.avatar = avatar;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -119,26 +121,26 @@ export const View = ({ view }: ViewProps) => {
         setFieldDisplay: async (id: string, display: boolean) => {
           if (!database.canEdit) return;
 
-          const viewField = view.fields?.[id];
+          const viewField = view.attributes.fields?.[id];
           if (viewField && viewField.display === display) return;
 
-          const viewCopy = { ...view };
-          viewCopy.fields = viewCopy.fields ?? {};
-          if (!viewCopy.fields[id]) {
-            viewCopy.fields[id] = {
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.fields = viewAttributes.fields ?? {};
+          if (!viewAttributes.fields[id]) {
+            viewAttributes.fields[id] = {
               id: id,
               display: display,
             };
           } else {
-            viewCopy.fields[id].display = display;
+            viewAttributes.fields[id].display = display;
           }
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -154,28 +156,28 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const viewField = view.fields?.[id];
+          const viewField = view.attributes.fields?.[id];
           if (viewField && viewField.width === width) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.fields = viewCopy.fields ?? {};
-          if (!viewCopy.fields[id]) {
-            viewCopy.fields[id] = {
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.fields = viewAttributes.fields ?? {};
+          if (!viewAttributes.fields[id]) {
+            viewAttributes.fields[id] = {
               id: id,
               width: width,
             };
           } else {
-            viewCopy.fields[id].width = width;
+            viewAttributes.fields[id].width = width;
           }
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -191,19 +193,19 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (view.nameWidth === width) {
+          if (view.attributes.nameWidth === width) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.nameWidth = width;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.nameWidth = width;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -221,7 +223,7 @@ export const View = ({ view }: ViewProps) => {
 
           const newIndex = generateViewFieldIndex(
             database.fields,
-            Object.values(view.fields ?? {}),
+            Object.values(view.attributes.fields ?? {}),
             id,
             after
           );
@@ -229,23 +231,23 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.fields = viewCopy.fields ?? {};
-          if (!viewCopy.fields[id]) {
-            viewCopy.fields[id] = {
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.fields = viewAttributes.fields ?? {};
+          if (!viewAttributes.fields[id]) {
+            viewAttributes.fields[id] = {
               id: id,
               index: newIndex,
             };
           } else {
-            viewCopy.fields[id].index = newIndex;
+            viewAttributes.fields[id].index = newIndex;
           }
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -263,7 +265,7 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (view.filters?.[fieldId]) {
+          if (view.attributes.filters?.[fieldId]) {
             setOpenedFieldFilters((prev) => [...prev, fieldId]);
             return;
           }
@@ -274,23 +276,23 @@ export const View = ({ view }: ViewProps) => {
           }
 
           const operators = getFieldFilterOperators(field.type);
-          const filter: ViewFieldFilterAttributes = {
+          const filter: DatabaseViewFieldFilterAttributes = {
             type: 'field',
             id: fieldId,
             fieldId,
             operator: operators[0]?.value ?? '',
           };
 
-          const viewCopy = { ...view };
-          viewCopy.filters = viewCopy.filters ?? {};
-          viewCopy.filters[fieldId] = filter;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.filters = viewAttributes.filters ?? {};
+          viewAttributes.filters[fieldId] = filter;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -303,25 +305,28 @@ export const View = ({ view }: ViewProps) => {
             setOpenedFieldFilters((prev) => [...prev, fieldId]);
           }
         },
-        updateFilter: async (id: string, filter: ViewFilterAttributes) => {
+        updateFilter: async (
+          id: string,
+          filter: DatabaseViewFilterAttributes
+        ) => {
           if (!database.canEdit) {
             return;
           }
 
-          if (!view.filters?.[id]) {
+          if (!view.attributes.filters?.[id]) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.filters = viewCopy.filters ?? {};
-          viewCopy.filters[id] = filter;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.filters = viewAttributes.filters ?? {};
+          viewAttributes.filters[id] = filter;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -339,20 +344,20 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.filters?.[id]) {
+          if (!view.attributes.filters?.[id]) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.filters = viewCopy.filters ?? {};
-          delete viewCopy.filters[id];
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.filters = viewAttributes.filters ?? {};
+          delete viewAttributes.filters[id];
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -370,7 +375,7 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const existingSort = view.sorts?.[fieldId];
+          const existingSort = view.attributes.sorts?.[fieldId];
           if (existingSort && existingSort.direction === direction) {
             return;
           }
@@ -380,22 +385,22 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          const sort: ViewSortAttributes = {
+          const sort: DatabaseViewSortAttributes = {
             id: fieldId,
             fieldId,
             direction,
           };
 
-          const viewCopy = { ...view };
-          viewCopy.sorts = viewCopy.sorts ?? {};
-          viewCopy.sorts[fieldId] = sort;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.sorts = viewAttributes.sorts ?? {};
+          viewAttributes.sorts[fieldId] = sort;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -409,25 +414,25 @@ export const View = ({ view }: ViewProps) => {
             setIsSortsOpened(true);
           }
         },
-        updateSort: async (id: string, sort: ViewSortAttributes) => {
+        updateSort: async (id: string, sort: DatabaseViewSortAttributes) => {
           if (!database.canEdit) {
             return;
           }
 
-          if (!view.sorts?.[id]) {
+          if (!view.attributes.sorts?.[id]) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.sorts = viewCopy.sorts ?? {};
-          viewCopy.sorts[id] = sort;
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.sorts = viewAttributes.sorts ?? {};
+          viewAttributes.sorts[id] = sort;
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -446,20 +451,20 @@ export const View = ({ view }: ViewProps) => {
             return;
           }
 
-          if (!view.sorts?.[id]) {
+          if (!view.attributes.sorts?.[id]) {
             return;
           }
 
-          const viewCopy = { ...view };
-          viewCopy.sorts = viewCopy.sorts ?? {};
-          delete viewCopy.sorts[id];
+          const viewAttributes = { ...view.attributes };
+          viewAttributes.sorts = viewAttributes.sorts ?? {};
+          delete viewAttributes.sorts[id];
 
           const result = await window.colanode.executeMutation({
             type: 'view_update',
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            databaseId: database.id,
-            view: viewCopy,
+            viewId: view.id,
+            view: viewAttributes,
           });
 
           if (!result.success) {
@@ -491,8 +496,9 @@ export const View = ({ view }: ViewProps) => {
         closeFieldFilter: (fieldId: string) => {
           setOpenedFieldFilters((prev) => prev.filter((id) => id !== fieldId));
         },
-        createRecord: async (filters?: ViewFilterAttributes[]) => {
-          const viewFilters = Object.values(view.filters ?? {}) ?? [];
+        createRecord: async (filters?: DatabaseViewFilterAttributes[]) => {
+          const viewFilters =
+            Object.values(view.attributes.filters ?? {}) ?? [];
           const extraFilters = filters ?? [];
 
           const allFilters = [...viewFilters, ...extraFilters];
@@ -522,11 +528,11 @@ export const View = ({ view }: ViewProps) => {
         },
       }}
     >
-      {match(view.type)
+      {match(view.attributes.layout)
         .with('table', () => <TableView />)
         .with('board', () => <BoardView />)
         .with('calendar', () => <CalendarView />)
         .exhaustive()}
-    </ViewContext.Provider>
+    </DatabaseViewContext.Provider>
   );
 };

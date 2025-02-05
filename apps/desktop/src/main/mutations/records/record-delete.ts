@@ -13,8 +13,7 @@ export class RecordDeleteMutationHandler
     input: RecordDeleteMutationInput
   ): Promise<RecordDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
-    await workspace.entries.deleteEntry(input.recordId);
+    await workspace.nodes.deleteNode(input.recordId);
 
     return {
       success: true,

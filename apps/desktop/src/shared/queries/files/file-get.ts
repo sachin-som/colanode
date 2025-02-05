@@ -1,4 +1,4 @@
-import { FileWithState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 
 export type FileGetQueryInput = {
   type: 'file_get';
@@ -11,7 +11,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     file_get: {
       input: FileGetQueryInput;
-      output: FileWithState | null;
+      output: File | null;
     };
   }
 }

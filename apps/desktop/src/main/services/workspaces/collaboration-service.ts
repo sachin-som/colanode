@@ -13,83 +13,63 @@ export class CollaborationService {
 
   public async syncServerCollaboration(collaboration: SyncCollaborationData) {
     this.debug(
-      `Applying server collaboration: ${collaboration.entryId} for workspace ${this.workspace.id}`
+      `Applying server collaboration: ${collaboration.nodeId} for workspace ${this.workspace.id}`
     );
 
     await this.workspace.database
       .insertInto('collaborations')
       .values({
-        entry_id: collaboration.entryId,
+        node_id: collaboration.nodeId,
         role: collaboration.role,
         created_at: collaboration.createdAt,
         updated_at: collaboration.updatedAt,
         deleted_at: collaboration.deletedAt,
-        version: BigInt(collaboration.version),
+        revision: BigInt(collaboration.revision),
       })
       .onConflict((oc) =>
         oc
-          .columns(['entry_id'])
+          .columns(['node_id'])
           .doUpdateSet({
             role: collaboration.role,
-            version: BigInt(collaboration.version),
+            revision: BigInt(collaboration.revision),
             updated_at: collaboration.updatedAt,
             deleted_at: collaboration.deletedAt,
           })
-          .where('version', '<', BigInt(collaboration.version))
+          .where('revision', '<', BigInt(collaboration.revision))
       )
       .execute();
 
     if (collaboration.deletedAt) {
       await this.workspace.database
-        .deleteFrom('entries')
-        .where('root_id', '=', collaboration.entryId)
+        .deleteFrom('nodes')
+        .where('root_id', '=', collaboration.nodeId)
         .execute();
 
       await this.workspace.database
-        .deleteFrom('entry_transactions')
-        .where('root_id', '=', collaboration.entryId)
-        .execute();
-
-      await this.workspace.database
-        .deleteFrom('entry_interactions')
-        .where('root_id', '=', collaboration.entryId)
-        .execute();
-
-      await this.workspace.database
-        .deleteFrom('messages')
-        .where('root_id', '=', collaboration.entryId)
-        .execute();
-
-      await this.workspace.database
-        .deleteFrom('message_reactions')
-        .where('root_id', '=', collaboration.entryId)
-        .execute();
-
-      await this.workspace.database
-        .deleteFrom('message_interactions')
-        .where('root_id', '=', collaboration.entryId)
+        .deleteFrom('node_interactions')
+        .where('root_id', '=', collaboration.nodeId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('files')
-        .where('root_id', '=', collaboration.entryId)
+        .where('root_id', '=', collaboration.nodeId)
         .execute();
 
       await this.workspace.database
-        .deleteFrom('file_interactions')
-        .where('root_id', '=', collaboration.entryId)
+        .deleteFrom('node_interactions')
+        .where('root_id', '=', collaboration.nodeId)
         .execute();
 
       eventBus.publish({
         type: 'collaboration_deleted',
         accountId: this.workspace.accountId,
         workspaceId: this.workspace.id,
-        entryId: collaboration.entryId,
+        nodeId: collaboration.nodeId,
       });
     } else {
       eventBus.publish({
         type: 'collaboration_created',
-        entryId: collaboration.entryId,
+        nodeId: collaboration.nodeId,
         accountId: this.workspace.accountId,
         workspaceId: this.workspace.id,
       });

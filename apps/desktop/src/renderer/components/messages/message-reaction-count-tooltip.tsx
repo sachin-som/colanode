@@ -1,14 +1,14 @@
-import { MessageNode, MessageReactionCount } from '@/shared/types/messages';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/renderer/components/ui/tooltip';
 import { MessageReactionCountTooltipContent } from '@/renderer/components/messages/message-reaction-count-tooltip-content';
+import { NodeReactionCount, LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageReactionCountTooltipProps {
-  message: MessageNode;
-  reactionCount: MessageReactionCount;
+  message: LocalMessageNode;
+  reactionCount: NodeReactionCount;
   children: React.ReactNode;
   onOpen: () => void;
 }

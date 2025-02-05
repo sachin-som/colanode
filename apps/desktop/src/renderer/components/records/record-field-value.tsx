@@ -28,9 +28,9 @@ export const RecordFieldValue = ({
   switch (field.type) {
     case 'boolean':
       return <RecordBooleanValue field={field} readOnly={readOnly} />;
-    case 'createdAt':
+    case 'created_at':
       return <RecordCreatedAtValue field={field} />;
-    case 'createdBy':
+    case 'created_by':
       return <RecordCreatedByValue field={field} />;
     case 'collaborator':
       return <RecordCollaboratorValue field={field} readOnly={readOnly} />;
@@ -38,7 +38,7 @@ export const RecordFieldValue = ({
       return <RecordDateValue field={field} readOnly={readOnly} />;
     case 'email':
       return <RecordEmailValue field={field} readOnly={readOnly} />;
-    case 'multiSelect':
+    case 'multi_select':
       return <RecordMultiSelectValue field={field} readOnly={readOnly} />;
     case 'number':
       return <RecordNumberValue field={field} readOnly={readOnly} />;
@@ -52,9 +52,9 @@ export const RecordFieldValue = ({
       return <RecordTextValue field={field} readOnly={readOnly} />;
     case 'url':
       return <RecordUrlValue field={field} readOnly={readOnly} />;
-    case 'updatedAt':
+    case 'updated_at':
       return <RecordUpdatedAtValue field={field} />;
-    case 'updatedBy':
+    case 'updated_by':
       return <RecordUpdatedByValue field={field} />;
     default:
       return null;

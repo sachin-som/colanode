@@ -13,7 +13,7 @@ export class DatabaseDeleteMutationHandler
     input: DatabaseDeleteMutationInput
   ): Promise<DatabaseDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    await workspace.entries.deleteEntry(input.databaseId);
+    await workspace.nodes.deleteNode(input.databaseId);
 
     return {
       success: true,

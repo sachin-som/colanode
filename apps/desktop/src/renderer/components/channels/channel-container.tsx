@@ -1,5 +1,4 @@
-import { ChannelEntry } from '@colanode/core';
-
+import { LocalChannelNode } from '@/shared/types/nodes';
 import { ChannelNotFound } from '@/renderer/components/channels/channel-not-found';
 import {
   Container,
@@ -8,29 +7,29 @@ import {
   ContainerSettings,
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
 import { ChannelSettings } from '@/renderer/components/channels/channel-settings';
 import { Conversation } from '@/renderer/components/messages/conversation';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
 
 interface ChannelContainerProps {
   channelId: string;
 }
 
 export const ChannelContainer = ({ channelId }: ChannelContainerProps) => {
-  const data = useEntryContainer<ChannelEntry>(channelId);
+  const data = useNodeContainer<LocalChannelNode>(channelId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <ChannelNotFound />;
   }
 
-  const { entry: channel, role } = data;
+  const { node: channel, role } = data;
 
   return (
     <Container>

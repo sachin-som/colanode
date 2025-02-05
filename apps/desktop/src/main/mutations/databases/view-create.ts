@@ -1,9 +1,8 @@
 import {
-  compareString,
-  DatabaseAttributes,
   generateId,
   generateNodeIndex,
   IdType,
+  DatabaseViewAttributes,
 } from '@colanode/core';
 
 import { MutationHandler } from '@/main/lib/types';
@@ -11,8 +10,8 @@ import {
   ViewCreateMutationInput,
   ViewCreateMutationOutput,
 } from '@/shared/mutations/databases/view-create';
-import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
+import { mapNode } from '@/main/lib/mappers';
 
 export class ViewCreateMutationHandler
   extends WorkspaceMutationHandlerBase
@@ -23,39 +22,40 @@ export class ViewCreateMutationHandler
   ): Promise<ViewCreateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const id = generateId(IdType.View);
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
-      input.databaseId,
-      (attributes) => {
-        const maxIndex = Object.values(attributes.views)
-          .map((view) => view.index)
-          .sort((a, b) => -compareString(a, b))[0];
+    const id = generateId(IdType.DatabaseView);
+    const otherViews = await workspace.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('parent_id', '=', input.databaseId)
+      .where('type', '=', 'database_view')
+      .execute();
 
-        attributes.views[id] = {
-          id: id,
-          type: input.viewType,
-          name: input.name,
-          groupBy: input.groupBy,
-          index: generateNodeIndex(maxIndex, null),
-        };
-
-        return attributes;
+    let maxIndex: string | null = null;
+    for (const otherView of otherViews) {
+      const view = mapNode(otherView);
+      if (view.attributes.type !== 'database_view') {
+        continue;
       }
-    );
 
-    if (result === 'unauthorized') {
-      throw new MutationError(
-        MutationErrorCode.ViewCreateForbidden,
-        "You don't have permission to create a view in this database."
-      );
+      const index = view.attributes.index;
+      if (maxIndex === null || index > maxIndex) {
+        maxIndex = index;
+      }
     }
 
-    if (result !== 'success') {
-      throw new MutationError(
-        MutationErrorCode.ViewCreateFailed,
-        'Something went wrong while creating the view.'
-      );
-    }
+    const attributes: DatabaseViewAttributes = {
+      type: 'database_view',
+      name: input.name,
+      index: generateNodeIndex(maxIndex, null),
+      layout: input.viewType,
+      parentId: input.databaseId,
+    };
+
+    await workspace.nodes.createNode({
+      id: id,
+      attributes: attributes,
+      parentId: input.databaseId,
+    });
 
     return {
       id: id,

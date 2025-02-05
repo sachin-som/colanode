@@ -1,4 +1,4 @@
-import { EntryRole, hasEntryRole, RecordEntry } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 import { useCallback } from 'react';
 
@@ -10,17 +10,18 @@ import { Separator } from '@/renderer/components/ui/separator';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
 import { RecordDatabase } from '@/renderer/components/records/record-database';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface RecordBodyProps {
-  record: RecordEntry;
-  role: EntryRole;
+  record: LocalRecordNode;
+  role: NodeRole;
 }
 
 export const RecordBody = ({ record, role }: RecordBodyProps) => {
   const workspace = useWorkspace();
 
   const canEdit =
-    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
+    record.createdBy === workspace.userId || hasNodeRole(role, 'editor');
 
   const handleUpdate = useCallback(
     async (before: JSONContent, after: JSONContent) => {
@@ -55,7 +56,7 @@ export const RecordBody = ({ record, role }: RecordBodyProps) => {
           entryId={record.id}
           rootId={record.rootId}
           content={record.attributes.content}
-          transactionId={record.transactionId}
+          revision={record.localRevision}
           canEdit={canEdit}
           onUpdate={handleUpdate}
           autoFocus={false}

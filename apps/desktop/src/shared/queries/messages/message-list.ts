@@ -1,4 +1,4 @@
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 export type MessageListQueryInput = {
   type: 'message_list';
@@ -13,7 +13,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     message_list: {
       input: MessageListQueryInput;
-      output: MessageNode[];
+      output: LocalMessageNode[];
     };
   }
 }

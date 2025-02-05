@@ -1,20 +1,14 @@
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalChatNode } from '@/shared/types/nodes';
 
 interface ChatBreadcrumbItemProps {
-  id: string;
+  chat: LocalChatNode;
 }
 
-export const ChatBreadcrumbItem = ({ id }: ChatBreadcrumbItemProps) => {
+export const ChatBreadcrumbItem = ({ chat }: ChatBreadcrumbItemProps) => {
   const workspace = useWorkspace();
-
-  const { data: chat } = useQuery({
-    type: 'entry_get',
-    entryId: id,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
 
   const userId =
     chat && chat.type === 'chat'
@@ -30,7 +24,7 @@ export const ChatBreadcrumbItem = ({ id }: ChatBreadcrumbItemProps) => {
     userId,
   });
 
-  if (!chat || !user) {
+  if (!user) {
     return null;
   }
 

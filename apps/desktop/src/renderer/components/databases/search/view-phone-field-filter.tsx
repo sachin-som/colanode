@@ -1,6 +1,6 @@
 import {
   PhoneFieldAttributes,
-  ViewFieldFilterAttributes,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
@@ -18,19 +18,19 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { phoneFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewPhoneFieldFilterProps {
   field: PhoneFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewPhoneFieldFilter = ({
   field,
   filter,
 }: ViewPhoneFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     phoneFieldFilterOperators.find(

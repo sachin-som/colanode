@@ -13,8 +13,7 @@ export class PageDeleteMutationHandler
     input: PageDeleteMutationInput
   ): Promise<PageDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
-    await workspace.entries.deleteEntry(input.pageId);
+    await workspace.nodes.deleteNode(input.pageId);
 
     return {
       success: true,

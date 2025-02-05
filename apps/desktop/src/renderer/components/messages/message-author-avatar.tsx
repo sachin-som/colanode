@@ -1,10 +1,10 @@
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageAuthorAvatarProps {
-  message: MessageNode;
+  message: LocalMessageNode;
   className?: string;
 }
 

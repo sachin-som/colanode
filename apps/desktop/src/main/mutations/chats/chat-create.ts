@@ -23,7 +23,7 @@ export class ChatCreateMutationHandler
 
     const query = sql<ChatRow>`
       SELECT id
-      FROM entries
+      FROM nodes
       WHERE type = 'chat'
       AND json_extract(attributes, '$.collaborators.${sql.raw(input.userId)}') is not null
       AND json_extract(attributes, '$.collaborators.${sql.raw(workspace.userId)}') is not null
@@ -46,7 +46,7 @@ export class ChatCreateMutationHandler
       },
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id,
       attributes,
       parentId: null,

@@ -1,18 +1,18 @@
-import { ViewFilterAttributes } from '@colanode/core';
+import { DatabaseViewFilterAttributes } from '@colanode/core';
 import { Plus } from 'lucide-react';
 
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 interface BoardViewRecordCreateCardProps {
-  filters: ViewFilterAttributes[];
+  filters: DatabaseViewFilterAttributes[];
 }
 
 export const BoardViewRecordCreateCard = ({
   filters,
 }: BoardViewRecordCreateCardProps) => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   if (!database.canCreateRecord) {
     return null;

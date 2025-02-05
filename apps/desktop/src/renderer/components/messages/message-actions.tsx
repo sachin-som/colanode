@@ -9,8 +9,8 @@ import { useConversation } from '@/renderer/contexts/conversation';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
-import { MessageNode } from '@/shared/types/messages';
 import { defaultEmojis } from '@/shared/lib/assets';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 const MessageAction = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -21,7 +21,7 @@ const MessageAction = ({ children }: { children: React.ReactNode }) => {
 };
 
 interface MessageActionsProps {
-  message: MessageNode;
+  message: LocalMessageNode;
 }
 
 export const MessageActions = ({ message }: MessageActionsProps) => {
@@ -40,8 +40,8 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
 
       mutate({
         input: {
-          type: 'message_reaction_create',
-          messageId: message.id,
+          type: 'node_reaction_create',
+          nodeId: message.id,
           accountId: workspace.accountId,
           workspaceId: workspace.id,
           reaction,
@@ -94,8 +94,8 @@ export const MessageActions = ({ message }: MessageActionsProps) => {
 
             mutate({
               input: {
-                type: 'message_reaction_create',
-                messageId: message.id,
+                type: 'node_reaction_create',
+                nodeId: message.id,
                 accountId: workspace.accountId,
                 workspaceId: workspace.id,
                 reaction,

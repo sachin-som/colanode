@@ -1,4 +1,4 @@
-import { SpaceEntry } from '@colanode/core';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 export type SpaceListQueryInput = {
   type: 'space_list';
@@ -12,7 +12,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     space_list: {
       input: SpaceListQueryInput;
-      output: SpaceEntry[];
+      output: LocalSpaceNode[];
     };
   }
 }

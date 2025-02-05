@@ -6,10 +6,10 @@ import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { formatBytes } from '@/shared/lib/files';
-import { FileWithState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 
 interface FileSidebarProps {
-  file: FileWithState;
+  file: File;
 }
 
 const FileMeta = ({ title, value }: { title: string; value: string }) => {

@@ -7,78 +7,107 @@ import { FolderAttributes, folderAttributesSchema } from './folder';
 import { PageAttributes, pageAttributesSchema } from './page';
 import { RecordAttributes, recordAttributesSchema } from './record';
 import { SpaceAttributes, spaceAttributesSchema } from './space';
+import { MessageAttributes, messageAttributesSchema } from './message';
+import {
+  DatabaseViewAttributes,
+  databaseViewAttributesSchema,
+} from './database-view';
+import { FileAttributes, fileAttributesSchema } from './file';
 
-type EntryBase = {
+type NodeBase = {
   id: string;
-  parentId: string | null;
+  parentId: string;
   rootId: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;
   updatedBy: string | null;
-  transactionId: string;
 };
 
-export type ChannelEntry = EntryBase & {
+export type ChannelNode = NodeBase & {
   type: 'channel';
   attributes: ChannelAttributes;
 };
 
-export type ChatEntry = EntryBase & {
+export type ChatNode = NodeBase & {
   type: 'chat';
   attributes: ChatAttributes;
 };
 
-export type DatabaseEntry = EntryBase & {
+export type DatabaseNode = NodeBase & {
   type: 'database';
   attributes: DatabaseAttributes;
 };
 
-export type FolderEntry = EntryBase & {
+export type DatabaseViewNode = NodeBase & {
+  type: 'database_view';
+  attributes: DatabaseViewAttributes;
+};
+
+export type FolderNode = NodeBase & {
   type: 'folder';
   attributes: FolderAttributes;
 };
 
-export type PageEntry = EntryBase & {
+export type PageNode = NodeBase & {
   type: 'page';
   attributes: PageAttributes;
 };
 
-export type RecordEntry = EntryBase & {
+export type RecordNode = NodeBase & {
   type: 'record';
   attributes: RecordAttributes;
 };
 
-export type SpaceEntry = EntryBase & {
+export type SpaceNode = NodeBase & {
   type: 'space';
   attributes: SpaceAttributes;
 };
 
-export type EntryType = EntryAttributes['type'];
+export type MessageNode = NodeBase & {
+  type: 'message';
+  attributes: MessageAttributes;
+};
 
-export type EntryAttributes =
+export type FileNode = NodeBase & {
+  type: 'file';
+  attributes: FileAttributes;
+};
+
+export type NodeType = NodeAttributes['type'];
+
+export type NodeAttributes =
   | SpaceAttributes
   | DatabaseAttributes
   | ChannelAttributes
   | ChatAttributes
   | FolderAttributes
   | PageAttributes
-  | RecordAttributes;
+  | RecordAttributes
+  | MessageAttributes
+  | FileAttributes
+  | DatabaseViewAttributes;
 
-export type Entry =
-  | ChannelEntry
-  | ChatEntry
-  | DatabaseEntry
-  | FolderEntry
-  | PageEntry
-  | RecordEntry
-  | SpaceEntry;
+export type Node =
+  | SpaceNode
+  | DatabaseNode
+  | DatabaseViewNode
+  | ChannelNode
+  | ChatNode
+  | FolderNode
+  | PageNode
+  | RecordNode
+  | MessageNode
+  | FileNode;
 
-export const entryAttributesSchema = z.discriminatedUnion('type', [
+export const nodeAttributesSchema = z.discriminatedUnion('type', [
   channelAttributesSchema,
   chatAttributesSchema,
   databaseAttributesSchema,
+  databaseViewAttributesSchema,
+  fileAttributesSchema,
   folderAttributesSchema,
+  messageAttributesSchema,
   pageAttributesSchema,
   recordAttributesSchema,
   spaceAttributesSchema,

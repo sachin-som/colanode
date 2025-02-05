@@ -1,11 +1,11 @@
 import { CircleX } from 'lucide-react';
 
-import { MessageNode } from '@/shared/types/messages';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageReplyBannerProps {
-  message: MessageNode;
+  message: LocalMessageNode;
   onCancel: () => void;
 }
 

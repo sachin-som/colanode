@@ -1,11 +1,10 @@
-import { FolderEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 interface FolderSidebarItemProps {
-  folder: FolderEntry;
+  folder: LocalFolderNode;
 }
 
 export const FolderSidebarItem = ({ folder }: FolderSidebarItemProps) => {

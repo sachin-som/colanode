@@ -1,5 +1,3 @@
-import { EntryOutput } from './entries.js';
-
 export type WorkspaceRole =
   | 'owner'
   | 'admin'
@@ -61,8 +59,4 @@ export type UsersInviteOutput = {
 
 export type UserRoleUpdateInput = {
   role: WorkspaceRole;
-};
-
-export type UserRoleUpdateOutput = {
-  user: EntryOutput;
 };

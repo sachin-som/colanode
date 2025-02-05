@@ -8,7 +8,7 @@ interface DocumentProps {
   entryId: string;
   rootId: string;
   content?: Record<string, Block> | null;
-  transactionId: string;
+  revision: bigint;
   canEdit: boolean;
   onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
@@ -18,7 +18,7 @@ export const Document = ({
   entryId,
   rootId,
   content,
-  transactionId,
+  revision,
   canEdit,
   onUpdate,
   autoFocus,
@@ -43,7 +43,7 @@ export const Document = ({
       documentId={entryId}
       rootId={rootId}
       content={tiptapContent}
-      transactionId={transactionId}
+      revision={revision}
       canEdit={canEdit}
       onUpdate={onUpdate}
       autoFocus={autoFocus}

@@ -1,4 +1,3 @@
-import { RecordEntry } from '@colanode/core';
 import React from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -12,10 +11,11 @@ import {
 } from '@/renderer/components/ui/command';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface RecordSearchProps {
   exclude?: string[];
-  onSelect: (record: RecordEntry) => void;
+  onSelect: (record: LocalRecordNode) => void;
   databaseId: string;
 }
 

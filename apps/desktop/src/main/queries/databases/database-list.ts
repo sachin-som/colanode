@@ -1,11 +1,12 @@
-import { compareString, DatabaseEntry } from '@colanode/core';
+import { compareString } from '@colanode/core';
 
-import { SelectEntry } from '@/main/databases/workspace';
+import { SelectNode } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { mapEntry } from '@/main/lib/mappers';
+import { mapNode } from '@/main/lib/mappers';
 import { DatabaseListQueryInput } from '@/shared/queries/databases/database-list';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 
 export class DatabaseListQueryHandler
   extends WorkspaceQueryHandlerBase
@@ -13,15 +14,16 @@ export class DatabaseListQueryHandler
 {
   public async handleQuery(
     input: DatabaseListQueryInput
-  ): Promise<DatabaseEntry[]> {
+  ): Promise<LocalDatabaseNode[]> {
     const databases = await this.fetchDatabases(input);
-    return this.buildDatabases(databases);
+    const databaseNodes = databases.map(mapNode) as LocalDatabaseNode[];
+    return databaseNodes.sort((a, b) => compareString(a.id, b.id));
   }
 
   public async checkForChanges(
     event: Event,
     input: DatabaseListQueryInput,
-    output: DatabaseEntry[]
+    output: LocalDatabaseNode[]
   ): Promise<ChangeCheckResult<DatabaseListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -35,10 +37,10 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'entry_created' &&
+      event.type === 'node_created' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'database'
+      event.node.type === 'database'
     ) {
       const newResult = await this.handleQuery(input);
 
@@ -49,20 +51,18 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'entry_updated' &&
+      event.type === 'node_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'database'
+      event.node.type === 'database'
     ) {
-      const database = output.find(
-        (database) => database.id === event.entry.id
-      );
+      const database = output.find((database) => database.id === event.node.id);
       if (database) {
-        const newResult = output.map((database) => {
-          if (database.id === event.entry.id) {
-            return event.entry as DatabaseEntry;
+        const newResult = output.map((node) => {
+          if (node.id === event.node.id) {
+            return event.node as LocalDatabaseNode;
           }
-          return database;
+          return node;
         });
 
         return {
@@ -73,14 +73,12 @@ export class DatabaseListQueryHandler
     }
 
     if (
-      event.type === 'entry_deleted' &&
+      event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'database'
+      event.node.type === 'database'
     ) {
-      const database = output.find(
-        (database) => database.id === event.entry.id
-      );
+      const database = output.find((node) => node.id === event.node.id);
 
       if (database) {
         const newOutput = await this.handleQuery(input);
@@ -98,30 +96,15 @@ export class DatabaseListQueryHandler
 
   private async fetchDatabases(
     input: DatabaseListQueryInput
-  ): Promise<SelectEntry[]> {
+  ): Promise<SelectNode[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const databases = await workspace.database
-      .selectFrom('entries')
+      .selectFrom('nodes')
       .where('type', '=', 'database')
       .selectAll()
       .execute();
 
     return databases;
   }
-
-  private buildDatabases = (rows: SelectEntry[]): DatabaseEntry[] => {
-    const entries = rows.map(mapEntry);
-    const databaseEntries: DatabaseEntry[] = [];
-
-    for (const entry of entries) {
-      if (entry.type !== 'database') {
-        continue;
-      }
-
-      databaseEntries.push(entry);
-    }
-
-    return databaseEntries.sort((a, b) => compareString(a.id, b.id));
-  };
 }

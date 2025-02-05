@@ -1,10 +1,10 @@
-import { ChannelEntry, EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import { ChannelDeleteDialog } from '@/renderer/components/channels/channel-delete-dialog';
 import { ChannelUpdateDialog } from '@/renderer/components/channels/channel-update-dialog';
-import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
+import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,18 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
+import { LocalChannelNode } from '@/shared/types/nodes';
 
 interface ChannelSettingsProps {
-  channel: ChannelEntry;
-  role: EntryRole;
+  channel: LocalChannelNode;
+  role: NodeRole;
 }
 
 export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEntryRole(role, 'editor');
-  const canDelete = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
+  const canDelete = hasNodeRole(role, 'editor');
 
   return (
     <React.Fragment>
@@ -84,7 +85,7 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <EntryCollaboratorAudit
+            <NodeCollaboratorAudit
               collaboratorId={channel.createdBy}
               date={channel.createdAt}
             />
@@ -94,7 +95,7 @@ export const ChannelSettings = ({ channel, role }: ChannelSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <EntryCollaboratorAudit
+                <NodeCollaboratorAudit
                   collaboratorId={channel.updatedBy}
                   date={channel.updatedAt}
                 />

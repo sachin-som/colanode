@@ -26,9 +26,9 @@ interface RecordContext {
   createdAt: string;
   updatedBy?: string | null;
   updatedAt?: string | null;
-  transactionId: string;
   databaseId: string;
   canEdit: boolean;
+  localRevision: bigint;
   updateFieldValue: (field: FieldAttributes, value: FieldValue) => void;
   removeFieldValue: (field: FieldAttributes) => void;
   getBooleanValue: (field: BooleanFieldAttributes) => boolean;

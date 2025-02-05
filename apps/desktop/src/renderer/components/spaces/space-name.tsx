@@ -1,10 +1,10 @@
-import { SpaceEntry } from '@colanode/core';
 import { useEffect, useRef } from 'react';
 
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceNameProps {
-  space: SpaceEntry;
+  space: LocalSpaceNode;
   readonly: boolean;
   onUpdate: (name: string) => void;
 }

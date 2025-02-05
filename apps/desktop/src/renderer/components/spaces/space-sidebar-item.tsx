@@ -1,4 +1,4 @@
-import { compareString, SpaceEntry } from '@colanode/core';
+import { compareString } from '@colanode/core';
 import {
   ChevronRight,
   Database,
@@ -34,9 +34,10 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { cn } from '@/shared/lib/utils';
 import { useLayout } from '@/renderer/contexts/layout';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceSidebarItemProps {
-  space: SpaceEntry;
+  space: LocalSpaceNode;
 }
 
 export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
@@ -44,8 +45,8 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
   const layout = useLayout();
 
   const { data } = useQuery({
-    type: 'entry_children_get',
-    entryId: space.id,
+    type: 'node_children_get',
+    nodeId: space.id,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
     types: ['page', 'channel', 'database', 'folder'],
@@ -151,7 +152,7 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
                         'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
                     )}
                   >
-                    <SidebarItem entry={child} />
+                    <SidebarItem node={child} />
                   </div>
                 </li>
               ))}

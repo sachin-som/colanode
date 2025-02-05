@@ -1,12 +1,12 @@
-import { MessageNode, MessageReactionCount } from '@/shared/types/messages';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useQueries } from '@/renderer/hooks/use-queries';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
+import { NodeReactionCount, LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageReactionCountTooltipContentProps {
-  message: MessageNode;
-  reactionCount: MessageReactionCount;
+  message: LocalMessageNode;
+  reactionCount: NodeReactionCount;
 }
 
 export const MessageReactionCountTooltipContent = ({
@@ -21,8 +21,8 @@ export const MessageReactionCountTooltipContent = ({
   });
 
   const { data: reactions } = useQuery({
-    type: 'message_reaction_list',
-    messageId: message.id,
+    type: 'node_reaction_list',
+    nodeId: message.id,
     reaction: reactionCount.reaction,
     accountId: workspace.accountId,
     workspaceId: workspace.id,

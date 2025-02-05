@@ -1,4 +1,4 @@
-import { RecordEntry, RelationFieldAttributes } from '@colanode/core';
+import { RecordNode, RelationFieldAttributes } from '@colanode/core';
 import { X } from 'lucide-react';
 import React from 'react';
 
@@ -21,7 +21,7 @@ interface RecordRelationValueProps {
   readOnly?: boolean;
 }
 
-const RelationBadge = ({ record }: { record: RecordEntry }) => {
+const RelationBadge = ({ record }: { record: RecordNode }) => {
   const name = record.attributes.name ?? 'Unnamed';
   return (
     <div className="flex flex-row items-center gap-1">
@@ -48,14 +48,14 @@ export const RecordRelationValue = ({
   const relationIds = record.getRelationValue(field) ?? [];
   const results = useQueries(
     relationIds.map((id) => ({
-      type: 'entry_get',
-      entryId: id,
+      type: 'node_get',
+      nodeId: id,
       accountId: workspace.accountId,
       workspaceId: workspace.id,
     }))
   );
 
-  const relations: RecordEntry[] = [];
+  const relations: RecordNode[] = [];
   for (const result of results) {
     if (result.data && result.data.type === 'record') {
       relations.push(result.data);
@@ -108,7 +108,7 @@ export const RecordRelationValue = ({
                           record.removeFieldValue(field);
                         } else {
                           record.updateFieldValue(field, {
-                            type: 'relation',
+                            type: 'string_array',
                             value: newRelations,
                           });
                         }
@@ -138,7 +138,7 @@ export const RecordRelationValue = ({
                 record.removeFieldValue(field);
               } else {
                 record.updateFieldValue(field, {
-                  type: 'relation',
+                  type: 'string_array',
                   value: newRelations,
                 });
               }

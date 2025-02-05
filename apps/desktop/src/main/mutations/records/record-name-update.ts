@@ -17,7 +17,7 @@ export class RecordNameUpdateMutationHandler
   ): Promise<RecordNameUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<RecordAttributes>(
+    const result = await workspace.nodes.updateNode<RecordAttributes>(
       input.recordId,
       (attributes) => {
         attributes.name = input.name;

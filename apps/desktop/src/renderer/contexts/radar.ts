@@ -23,30 +23,15 @@ interface RadarContext {
     workspaceId: string,
     entryId: string
   ) => ChannelReadState;
-  markMessageAsSeen: (
+  markNodeAsSeen: (
     accountId: string,
     workspaceId: string,
-    messageId: string
+    nodeId: string
   ) => void;
-  markFileAsSeen: (
+  markNodeAsOpened: (
     accountId: string,
     workspaceId: string,
-    fileId: string
-  ) => void;
-  markFileAsOpened: (
-    accountId: string,
-    workspaceId: string,
-    fileId: string
-  ) => void;
-  markEntryAsSeen: (
-    accountId: string,
-    workspaceId: string,
-    entryId: string
-  ) => void;
-  markEntryAsOpened: (
-    accountId: string,
-    workspaceId: string,
-    entryId: string
+    nodeId: string
   ) => void;
 }
 

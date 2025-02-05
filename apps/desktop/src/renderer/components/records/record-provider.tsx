@@ -1,23 +1,24 @@
-import { EntryRole, RecordEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import React from 'react';
 
 import { RecordContext } from '@/renderer/contexts/record';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 export const RecordProvider = ({
   record,
   role,
   children,
 }: {
-  record: RecordEntry;
-  role: EntryRole;
+  record: LocalRecordNode;
+  role: NodeRole;
   children: React.ReactNode;
 }) => {
   const workspace = useWorkspace();
 
   const canEdit =
-    record.createdBy === workspace.userId || hasEntryRole(role, 'editor');
+    record.createdBy === workspace.userId || hasNodeRole(role, 'editor');
 
   return (
     <RecordContext.Provider
@@ -31,6 +32,7 @@ export const RecordProvider = ({
         updatedBy: record.updatedBy,
         updatedAt: record.updatedAt,
         databaseId: record.attributes.databaseId,
+        localRevision: record.localRevision,
         canEdit,
         updateFieldValue: async (field, value) => {
           const result = await window.colanode.executeMutation({
@@ -77,7 +79,7 @@ export const RecordProvider = ({
         },
         getCollaboratorValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'collaborator') {
+          if (fieldValue?.type === 'string_array') {
             return fieldValue.value;
           }
 
@@ -85,7 +87,7 @@ export const RecordProvider = ({
         },
         getDateValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'date') {
+          if (fieldValue?.type === 'string') {
             return new Date(fieldValue.value);
           }
 
@@ -93,7 +95,7 @@ export const RecordProvider = ({
         },
         getEmailValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'email') {
+          if (fieldValue?.type === 'string') {
             return fieldValue.value;
           }
 
@@ -101,7 +103,7 @@ export const RecordProvider = ({
         },
         getFileValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'file') {
+          if (fieldValue?.type === 'string_array') {
             return fieldValue.value;
           }
 
@@ -109,7 +111,7 @@ export const RecordProvider = ({
         },
         getMultiSelectValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'multiSelect') {
+          if (fieldValue?.type === 'string_array') {
             return fieldValue.value;
           }
 
@@ -125,7 +127,7 @@ export const RecordProvider = ({
         },
         getPhoneValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'phone') {
+          if (fieldValue?.type === 'string') {
             return fieldValue.value;
           }
 
@@ -133,7 +135,7 @@ export const RecordProvider = ({
         },
         getRelationValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'relation') {
+          if (fieldValue?.type === 'string_array') {
             return fieldValue.value;
           }
 
@@ -141,7 +143,7 @@ export const RecordProvider = ({
         },
         getRollupValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'rollup') {
+          if (fieldValue?.type === 'string') {
             return fieldValue.value;
           }
 
@@ -149,7 +151,7 @@ export const RecordProvider = ({
         },
         getSelectValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'select') {
+          if (fieldValue?.type === 'string') {
             return fieldValue.value;
           }
 
@@ -165,13 +167,12 @@ export const RecordProvider = ({
         },
         getUrlValue: (field) => {
           const fieldValue = record.attributes.fields[field.id];
-          if (fieldValue?.type === 'url') {
+          if (fieldValue?.type === 'string') {
             return fieldValue.value;
           }
 
           return null;
         },
-        transactionId: record.transactionId,
       }}
     >
       {children}

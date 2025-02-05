@@ -10,10 +10,10 @@ import {
 import axios from 'axios';
 
 import { database } from '@/data/database';
-import { accountService } from '@/services/account-service';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { rateLimitService } from '@/services/rate-limit-service';
 import { configuration } from '@/lib/configuration';
+import { buildLoginSuccessOutput } from '@/lib/accounts';
 
 const GoogleUserInfoUrl = 'https://www.googleapis.com/oauth2/v1/userinfo';
 
@@ -76,14 +76,11 @@ export const loginWithGoogleHandler = async (
         .execute();
     }
 
-    const output = await accountService.buildLoginSuccessOutput(
-      existingAccount,
-      {
-        ip: res.locals.ip,
-        platform: input.platform,
-        version: input.version,
-      }
-    );
+    const output = await buildLoginSuccessOutput(existingAccount, {
+      ip: res.locals.ip,
+      platform: input.platform,
+      version: input.version,
+    });
     return ResponseBuilder.success(res, output);
   }
 
@@ -108,7 +105,7 @@ export const loginWithGoogleHandler = async (
     });
   }
 
-  const output = await accountService.buildLoginSuccessOutput(newAccount, {
+  const output = await buildLoginSuccessOutput(newAccount, {
     ip: res.locals.ip,
     platform: input.platform,
     version: input.version,

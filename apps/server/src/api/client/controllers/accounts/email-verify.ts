@@ -3,11 +3,11 @@ import { Request, Response } from 'express';
 
 import { database } from '@/data/database';
 import { ResponseBuilder } from '@/lib/response-builder';
-import { accountService } from '@/services/account-service';
+import { buildLoginSuccessOutput, verifyOtpCode } from '@/lib/accounts';
 
 export const emailVerifyHandler = async (req: Request, res: Response) => {
   const input: EmailVerifyInput = req.body;
-  const accountId = await accountService.verifyOtpCode(input.id, input.otp);
+  const accountId = await verifyOtpCode(input.id, input.otp);
 
   if (!accountId) {
     return ResponseBuilder.badRequest(res, {
@@ -32,7 +32,7 @@ export const emailVerifyHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const output = await accountService.buildLoginSuccessOutput(account, {
+  const output = await buildLoginSuccessOutput(account, {
     ip: res.locals.ip,
     platform: input.platform,
     version: input.version,

@@ -1,4 +1,3 @@
-import { ChannelEntry } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
@@ -7,9 +6,10 @@ import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
+import { LocalChannelNode } from '@/shared/types/nodes';
 
 interface ChannelSidebarItemProps {
-  channel: ChannelEntry;
+  channel: LocalChannelNode;
 }
 
 export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
@@ -31,7 +31,7 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markEntryAsSeen(workspace.accountId, workspace.id, channel.id);
+          radar.markNodeAsSeen(workspace.accountId, workspace.id, channel.id);
         }
       }}
       className={cn(

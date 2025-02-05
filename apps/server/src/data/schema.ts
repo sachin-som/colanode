@@ -1,13 +1,10 @@
 import {
   FileStatus,
   FileType,
-  EntryAttributes,
-  EntryRole,
-  EntryType,
+  NodeAttributes,
+  NodeRole,
+  NodeType,
   WorkspaceRole,
-  MessageType,
-  MessageAttributes,
-  TransactionOperation,
   UserStatus,
 } from '@colanode/core';
 import {
@@ -75,6 +72,7 @@ interface UserTable {
   id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   account_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
   email: ColumnType<string, string, string>;
   role: ColumnType<WorkspaceRole, WorkspaceRole, WorkspaceRole>;
   name: ColumnType<string, string, string>;
@@ -88,163 +86,111 @@ interface UserTable {
   updated_at: ColumnType<Date | null, Date | null, Date>;
   updated_by: ColumnType<string | null, string | null, string>;
   status: ColumnType<UserStatus, UserStatus, UserStatus>;
-  version: ColumnType<bigint, never, never>;
 }
 
 export type SelectUser = Selectable<UserTable>;
 export type CreateUser = Insertable<UserTable>;
 export type UpdateUser = Updateable<UserTable>;
 
-interface EntryTable {
+interface NodeTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<EntryType, never, never>;
+  type: ColumnType<NodeType, never, never>;
   parent_id: ColumnType<string | null, never, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  attributes: JSONColumnType<EntryAttributes, string | null, string | null>;
+  revision: ColumnType<bigint, never, never>;
+  attributes: JSONColumnType<NodeAttributes, string | null, string | null>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
-  created_by: ColumnType<string, string, never>;
   updated_by: ColumnType<string | null, string | null, string>;
-  transaction_id: ColumnType<string, string, string>;
 }
 
-export type SelectEntry = Selectable<EntryTable>;
-export type CreateEntry = Insertable<EntryTable>;
-export type UpdateEntry = Updateable<EntryTable>;
+export type SelectNode = Selectable<NodeTable>;
+export type CreateNode = Insertable<NodeTable>;
+export type UpdateNode = Updateable<NodeTable>;
 
-interface CollaborationTable {
-  entry_id: ColumnType<string, string, never>;
-  collaborator_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  role: ColumnType<EntryRole, EntryRole, EntryRole>;
-  created_at: ColumnType<Date, Date, never>;
-  created_by: ColumnType<string, string, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date | null>;
-  updated_by: ColumnType<string | null, string | null, string | null>;
-  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
-  deleted_by: ColumnType<string | null, string | null, string | null>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectCollaboration = Selectable<CollaborationTable>;
-export type CreateCollaboration = Insertable<CollaborationTable>;
-export type UpdateCollaboration = Updateable<CollaborationTable>;
-
-interface EntryTransactionTable {
-  id: ColumnType<string, string, never>;
-  entry_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  operation: ColumnType<TransactionOperation, TransactionOperation, never>;
-  data: ColumnType<Uint8Array | null, Uint8Array | null, Uint8Array | null>;
-  created_at: ColumnType<Date, Date, never>;
-  created_by: ColumnType<string, string, never>;
-  server_created_at: ColumnType<Date, Date, never>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectEntryTransaction = Selectable<EntryTransactionTable>;
-export type CreateEntryTransaction = Insertable<EntryTransactionTable>;
-export type UpdateEntryTransaction = Updateable<EntryTransactionTable>;
-
-interface EntryInteractionTable {
-  entry_id: ColumnType<string, string, never>;
+interface NodeInteractionTable {
+  node_id: ColumnType<string, string, never>;
   collaborator_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
   first_seen_at: ColumnType<Date | null, Date | null, Date | null>;
   last_seen_at: ColumnType<Date | null, Date | null, Date | null>;
   first_opened_at: ColumnType<Date | null, Date | null, Date | null>;
   last_opened_at: ColumnType<Date | null, Date | null, Date | null>;
-  version: ColumnType<bigint, never, never>;
 }
 
-export type SelectEntryInteraction = Selectable<EntryInteractionTable>;
-export type CreateEntryInteraction = Insertable<EntryInteractionTable>;
-export type UpdateEntryInteraction = Updateable<EntryInteractionTable>;
+export type SelectNodeInteraction = Selectable<NodeInteractionTable>;
+export type CreateNodeInteraction = Insertable<NodeInteractionTable>;
+export type UpdateNodeInteraction = Updateable<NodeInteractionTable>;
 
-interface EntryPathTable {
+interface NodeReactionTable {
+  node_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
+  reaction: ColumnType<string, string, string>;
+  created_at: ColumnType<Date, Date, Date>;
+  deleted_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectNodeReaction = Selectable<NodeReactionTable>;
+export type CreateNodeReaction = Insertable<NodeReactionTable>;
+export type UpdateNodeReaction = Updateable<NodeReactionTable>;
+
+interface NodeTombstoneTable {
+  id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
+  deleted_at: ColumnType<Date, Date, Date>;
+  deleted_by: ColumnType<string, string, never>;
+}
+
+export type SelectNodeTombstone = Selectable<NodeTombstoneTable>;
+export type CreateNodeTombstone = Insertable<NodeTombstoneTable>;
+export type UpdateNodeTombstone = Updateable<NodeTombstoneTable>;
+
+interface NodePathTable {
   ancestor_id: ColumnType<string, string, never>;
   descendant_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   level: ColumnType<number, number, number>;
 }
 
-export type SelectEntryPath = Selectable<EntryPathTable>;
-export type CreateEntryPath = Insertable<EntryPathTable>;
-export type UpdateEntryPath = Updateable<EntryPathTable>;
+export type SelectNodePath = Selectable<NodePathTable>;
+export type CreateNodePath = Insertable<NodePathTable>;
+export type UpdateNodePath = Updateable<NodePathTable>;
 
-interface MessageTable {
-  id: ColumnType<string, string, never>;
-  type: ColumnType<MessageType, never, never>;
-  parent_id: ColumnType<string, string, never>;
-  entry_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
+interface CollaborationTable {
+  node_id: ColumnType<string, string, never>;
+  collaborator_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  attributes: JSONColumnType<MessageAttributes, string, string>;
+  revision: ColumnType<bigint, never, never>;
+  role: ColumnType<NodeRole, NodeRole, NodeRole>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date>;
-  updated_by: ColumnType<string | null, string | null, string>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectMessage = Selectable<MessageTable>;
-export type CreateMessage = Insertable<MessageTable>;
-export type UpdateMessage = Updateable<MessageTable>;
-
-interface MessageReactionTable {
-  message_id: ColumnType<string, string, never>;
-  collaborator_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  reaction: ColumnType<string, string, string>;
-  created_at: ColumnType<Date, Date, Date>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
   deleted_at: ColumnType<Date | null, Date | null, Date | null>;
-  version: ColumnType<bigint, never, never>;
+  deleted_by: ColumnType<string | null, string | null, string | null>;
 }
 
-export type SelectMessageReaction = Selectable<MessageReactionTable>;
-export type CreateMessageReaction = Insertable<MessageReactionTable>;
-export type UpdateMessageReaction = Updateable<MessageReactionTable>;
-
-interface MessageInteractionTable {
-  message_id: ColumnType<string, string, never>;
-  collaborator_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  first_seen_at: ColumnType<Date | null, Date | null, Date | null>;
-  last_seen_at: ColumnType<Date | null, Date | null, Date | null>;
-  first_opened_at: ColumnType<Date | null, Date | null, Date | null>;
-  last_opened_at: ColumnType<Date | null, Date | null, Date | null>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectMessageInteraction = Selectable<MessageInteractionTable>;
-export type CreateMessageInteraction = Insertable<MessageInteractionTable>;
-export type UpdateMessageInteraction = Updateable<MessageInteractionTable>;
-
-interface MessageTombstoneTable {
-  id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  deleted_at: ColumnType<Date, Date, Date>;
-  deleted_by: ColumnType<string, string, never>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectMessageTombstone = Selectable<MessageTombstoneTable>;
-export type CreateMessageTombstone = Insertable<MessageTombstoneTable>;
-export type UpdateMessageTombstone = Updateable<MessageTombstoneTable>;
+export type SelectCollaboration = Selectable<CollaborationTable>;
+export type CreateCollaboration = Insertable<CollaborationTable>;
+export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface FileTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<FileType, FileType, FileType>;
   parent_id: ColumnType<string, string, never>;
-  entry_id: ColumnType<string, string, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
   name: ColumnType<string, string, never>;
   original_name: ColumnType<string, string, never>;
   mime_type: ColumnType<string, string, never>;
@@ -255,94 +201,22 @@ interface FileTable {
   updated_at: ColumnType<Date | null, Date | null, Date | null>;
   updated_by: ColumnType<string | null, string | null, string | null>;
   status: ColumnType<FileStatus, FileStatus, FileStatus>;
-  version: ColumnType<bigint, never, never>;
 }
 
 export type SelectFile = Selectable<FileTable>;
 export type CreateFile = Insertable<FileTable>;
 export type UpdateFile = Updateable<FileTable>;
 
-interface FileInteractionTable {
-  file_id: ColumnType<string, string, never>;
-  collaborator_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  first_seen_at: ColumnType<Date | null, Date | null, Date | null>;
-  last_seen_at: ColumnType<Date | null, Date | null, Date | null>;
-  first_opened_at: ColumnType<Date | null, Date | null, Date | null>;
-  last_opened_at: ColumnType<Date | null, Date | null, Date | null>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectFileInteraction = Selectable<FileInteractionTable>;
-export type CreateFileInteraction = Insertable<FileInteractionTable>;
-export type UpdateFileInteraction = Updateable<FileInteractionTable>;
-
-interface FileTombstoneTable {
-  id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  deleted_at: ColumnType<Date, Date, Date>;
-  deleted_by: ColumnType<string, string, never>;
-  version: ColumnType<bigint, never, never>;
-}
-
-export type SelectFileTombstone = Selectable<FileTombstoneTable>;
-export type CreateFileTombstone = Insertable<FileTombstoneTable>;
-export type UpdateFileTombstone = Updateable<FileTombstoneTable>;
-
-interface EntryEmbeddingTable {
-  entry_id: ColumnType<string, string, never>;
-  chunk: ColumnType<number, number, number>;
-  parent_id: ColumnType<string | null, string | null, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  text: ColumnType<string, string, string>;
-  embedding_vector: ColumnType<number[], number[], number[]>;
-  search_vector: ColumnType<never, never, never>;
-  created_at: ColumnType<Date, Date, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date | null>;
-}
-
-export type SelectEntryEmbedding = Selectable<EntryEmbeddingTable>;
-export type CreateEntryEmbedding = Insertable<EntryEmbeddingTable>;
-export type UpdateEntryEmbedding = Updateable<EntryEmbeddingTable>;
-
-interface MessageEmbeddingTable {
-  message_id: ColumnType<string, string, never>;
-  chunk: ColumnType<number, number, number>;
-  parent_id: ColumnType<string, string, never>;
-  entry_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  text: ColumnType<string, string, string>;
-  embedding_vector: ColumnType<number[], number[], number[]>;
-  search_vector: ColumnType<never, never, never>;
-  created_at: ColumnType<Date, Date, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date | null>;
-}
-
-export type SelectMessageEmbedding = Selectable<MessageEmbeddingTable>;
-export type CreateMessageEmbedding = Insertable<MessageEmbeddingTable>;
-export type UpdateMessageEmbedding = Updateable<MessageEmbeddingTable>;
-
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
   workspaces: WorkspaceTable;
   users: UserTable;
-  entries: EntryTable;
-  entry_transactions: EntryTransactionTable;
-  entry_interactions: EntryInteractionTable;
-  entry_paths: EntryPathTable;
-  messages: MessageTable;
-  message_reactions: MessageReactionTable;
-  message_interactions: MessageInteractionTable;
-  message_tombstones: MessageTombstoneTable;
-  files: FileTable;
-  file_interactions: FileInteractionTable;
-  file_tombstones: FileTombstoneTable;
+  nodes: NodeTable;
+  node_interactions: NodeInteractionTable;
+  node_reactions: NodeReactionTable;
+  node_paths: NodePathTable;
+  node_tombstones: NodeTombstoneTable;
   collaborations: CollaborationTable;
-  entry_embeddings: EntryEmbeddingTable;
-  message_embeddings: MessageEmbeddingTable;
+  files: FileTable;
 }

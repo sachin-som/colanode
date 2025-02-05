@@ -1,20 +1,21 @@
 import { useCallback } from 'react';
-import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { JSONContent } from '@tiptap/core';
 
 import { Document } from '@/renderer/components/documents/document';
 import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalPageNode } from '@/shared/types/nodes';
 
 interface PageBodyProps {
-  page: PageEntry;
-  role: EntryRole;
+  page: LocalPageNode;
+  role: NodeRole;
 }
 
 export const PageBody = ({ page, role }: PageBodyProps) => {
   const workspace = useWorkspace();
-  const canEdit = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
 
   const handleUpdate = useCallback(
     async (before: JSONContent, after: JSONContent) => {
@@ -44,7 +45,7 @@ export const PageBody = ({ page, role }: PageBodyProps) => {
         entryId={page.id}
         rootId={page.rootId}
         content={page.attributes.content}
-        transactionId={page.transactionId}
+        revision={page.localRevision}
         canEdit={canEdit}
         onUpdate={handleUpdate}
         autoFocus="start"

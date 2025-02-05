@@ -1,8 +1,7 @@
-import { DatabaseEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 
 interface DatabaseContainerTabProps {
   databaseId: string;
@@ -14,8 +13,8 @@ export const DatabaseContainerTab = ({
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    type: 'entry_get',
-    entryId: databaseId,
+    type: 'node_get',
+    nodeId: databaseId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
@@ -24,7 +23,7 @@ export const DatabaseContainerTab = ({
     return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
 
-  const database = data as DatabaseEntry;
+  const database = data as LocalDatabaseNode;
   if (!database) {
     return <p className="text-sm text-muted-foreground">Not found</p>;
   }

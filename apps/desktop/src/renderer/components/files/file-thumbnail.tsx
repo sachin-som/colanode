@@ -2,10 +2,10 @@ import { FileIcon } from '@/renderer/components/files/file-icon';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { getFileUrl } from '@/shared/lib/files';
 import { cn } from '@/shared/lib/utils';
-import { FileWithState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 
 interface FileThumbnailProps {
-  file: FileWithState;
+  file: File;
   className?: string;
 }
 

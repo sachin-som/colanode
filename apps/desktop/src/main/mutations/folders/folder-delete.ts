@@ -14,7 +14,7 @@ export class FolderDeleteMutationHandler
   ): Promise<FolderDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    await workspace.entries.deleteEntry(input.folderId);
+    await workspace.nodes.deleteNode(input.folderId);
 
     return {
       success: true,

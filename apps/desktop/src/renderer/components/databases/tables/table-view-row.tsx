@@ -1,22 +1,23 @@
-import { extractEntryRole, RecordEntry } from '@colanode/core';
+import { extractNodeRole } from '@colanode/core';
 
 import { TableViewNameCell } from '@/renderer/components/databases/tables/table-view-name-cell';
 import { RecordFieldValue } from '@/renderer/components/records/record-field-value';
 import { RecordProvider } from '@/renderer/components/records/record-provider';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 interface TableViewRowProps {
   index: number;
-  record: RecordEntry;
+  record: LocalRecordNode;
 }
 
 export const TableViewRow = ({ index, record }: TableViewRowProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
-  const view = useView();
-  const role = extractEntryRole(record, workspace.userId) ?? database.role;
+  const view = useDatabaseView();
+  const role = extractNodeRole(record, workspace.userId) ?? database.role;
 
   return (
     <RecordProvider record={record} role={role}>

@@ -1,4 +1,4 @@
-import { EntryRole } from '../registry/core';
+import { NodeRole } from '../registry/core';
 
 export type SyncCollaborationsInput = {
   type: 'collaborations';
@@ -6,16 +6,16 @@ export type SyncCollaborationsInput = {
 
 export type SyncCollaborationData = {
   collaboratorId: string;
-  entryId: string;
+  nodeId: string;
   workspaceId: string;
-  role: EntryRole;
+  role: NodeRole;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;
   updatedBy: string | null;
   deletedAt: string | null;
   deletedBy: string | null;
-  version: string;
+  revision: string;
 };
 
 declare module '@colanode/core' {

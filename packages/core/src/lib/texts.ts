@@ -1,6 +1,5 @@
 import { Block } from '../registry/block';
-import { EntryAttributes } from '../registry';
-import { MessageAttributes, MessageType } from '../types/messages';
+import { NodeAttributes } from '../registry';
 
 export type TextResult = {
   id: string;
@@ -8,9 +7,9 @@ export type TextResult = {
   text: string | null;
 };
 
-export const extractEntryText = (
+export const extractNodeText = (
   id: string,
-  attributes: EntryAttributes
+  attributes: NodeAttributes
 ): TextResult | undefined => {
   if (attributes.type === 'page') {
     return {
@@ -25,21 +24,6 @@ export const extractEntryText = (
       id,
       name: attributes.name,
       text: extractBlockTexts(id, attributes.content),
-    };
-  }
-
-  return undefined;
-};
-
-export const extractMessageText = (
-  id: string,
-  attributes: MessageAttributes
-): TextResult | undefined => {
-  if (attributes.type === MessageType.Standard) {
-    return {
-      id,
-      name: null,
-      text: extractBlockTexts(id, attributes.blocks),
     };
   }
 

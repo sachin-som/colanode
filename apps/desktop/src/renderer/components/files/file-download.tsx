@@ -3,11 +3,11 @@ import { Download } from 'lucide-react';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
-import { DownloadStatus, FileWithState } from '@/shared/types/files';
+import { DownloadStatus, File } from '@/shared/types/files';
 import { formatBytes } from '@/shared/lib/files';
 
 interface FileDownloadProps {
-  file: FileWithState;
+  file: File;
 }
 
 export const FileDownload = ({ file }: FileDownloadProps) => {

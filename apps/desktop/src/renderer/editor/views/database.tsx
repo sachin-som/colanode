@@ -12,8 +12,8 @@ export const DatabaseNodeView = ({ node }: NodeViewProps) => {
 
   const id = node.attrs.id;
   const { data } = useQuery({
-    type: 'entry_get',
-    entryId: id,
+    type: 'node_get',
+    nodeId: id,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });

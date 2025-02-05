@@ -1,10 +1,10 @@
-import { FileWithState } from '@/shared/types/files';
+import { File } from '@/shared/types/files';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { GridItem } from '@/renderer/components/folders/grids/grid-item';
 
 interface GridFileProps {
-  file: FileWithState;
+  file: File;
 }
 
 export const GridFile = ({ file }: GridFileProps) => {

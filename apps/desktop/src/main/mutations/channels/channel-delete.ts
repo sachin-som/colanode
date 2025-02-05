@@ -13,7 +13,7 @@ export class ChannelDeleteMutationHandler
     input: ChannelDeleteMutationInput
   ): Promise<ChannelDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    await workspace.entries.deleteEntry(input.channelId);
+    await workspace.nodes.deleteNode(input.channelId);
 
     return {
       success: true,

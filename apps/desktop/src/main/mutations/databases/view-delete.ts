@@ -1,7 +1,4 @@
-import { DatabaseAttributes } from '@colanode/core';
-
 import { MutationHandler } from '@/main/lib/types';
-import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewDeleteMutationInput,
   ViewDeleteMutationOutput,
@@ -16,35 +13,7 @@ export class ViewDeleteMutationHandler
     input: ViewDeleteMutationInput
   ): Promise<ViewDeleteMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
-      input.databaseId,
-      (attributes) => {
-        if (!attributes.views[input.viewId]) {
-          throw new MutationError(
-            MutationErrorCode.ViewNotFound,
-            'The view you are trying to delete does not exist.'
-          );
-        }
-
-        delete attributes.views[input.viewId];
-        return attributes;
-      }
-    );
-
-    if (result === 'unauthorized') {
-      throw new MutationError(
-        MutationErrorCode.ViewDeleteForbidden,
-        "You don't have permission to delete this view."
-      );
-    }
-
-    if (result !== 'success') {
-      throw new MutationError(
-        MutationErrorCode.ViewDeleteFailed,
-        'Something went wrong while deleting the view.'
-      );
-    }
+    await workspace.nodes.deleteNode(input.viewId);
 
     return {
       id: input.viewId,

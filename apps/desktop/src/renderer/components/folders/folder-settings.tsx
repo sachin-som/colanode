@@ -1,8 +1,8 @@
-import { EntryRole, FolderEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
+import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
 import { FolderDeleteDialog } from '@/renderer/components/folders/folder-delete-dialog';
 import { FolderUpdateDialog } from '@/renderer/components/folders/folder-update-dialog';
 import {
@@ -13,18 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 interface FolderSettingsProps {
-  folder: FolderEntry;
-  role: EntryRole;
+  folder: LocalFolderNode;
+  role: NodeRole;
 }
 
 export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEntryRole(role, 'editor');
-  const canDelete = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
+  const canDelete = hasNodeRole(role, 'editor');
 
   return (
     <React.Fragment>
@@ -84,7 +85,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <EntryCollaboratorAudit
+            <NodeCollaboratorAudit
               collaboratorId={folder.createdBy}
               date={folder.createdAt}
             />
@@ -94,7 +95,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <EntryCollaboratorAudit
+                <NodeCollaboratorAudit
                   collaboratorId={folder.updatedBy}
                   date={folder.updatedAt}
                 />

@@ -6,6 +6,9 @@ import {
   NodeType,
   WorkspaceRole,
   UserStatus,
+  DocumentType,
+  DocumentContent,
+  DocumentUpdateMergeMetadata,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -207,6 +210,42 @@ export type SelectFile = Selectable<FileTable>;
 export type CreateFile = Insertable<FileTable>;
 export type UpdateFile = Updateable<FileTable>;
 
+interface DocumentTable {
+  id: ColumnType<string, string, never>;
+  type: ColumnType<DocumentType, DocumentType, DocumentType>;
+  workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, bigint, bigint>;
+  content: JSONColumnType<DocumentContent, string, string>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date>;
+  updated_by: ColumnType<string | null, string | null, string>;
+}
+
+export type SelectDocument = Selectable<DocumentTable>;
+export type CreateDocument = Insertable<DocumentTable>;
+export type UpdateDocument = Updateable<DocumentTable>;
+
+interface DocumentUpdateTable {
+  id: ColumnType<string, string, never>;
+  document_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
+  data: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  merged_updates: ColumnType<
+    DocumentUpdateMergeMetadata[] | null,
+    string | null,
+    string | null
+  >;
+}
+
+export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
+export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
+export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
+
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
@@ -219,4 +258,6 @@ export interface DatabaseSchema {
   node_tombstones: NodeTombstoneTable;
   collaborations: CollaborationTable;
   files: FileTable;
+  documents: DocumentTable;
+  document_updates: DocumentUpdateTable;
 }

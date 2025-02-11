@@ -31,6 +31,7 @@ import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { UserGetQueryHandler } from '@/main/queries/users/user-get';
 import { SpaceListQueryHandler } from '@/main/queries/spaces/space-list';
 import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
+import { DocumentGetQueryHandler } from '@/main/queries/documents/document-get';
 import { WorkspaceMetadataListQueryHandler } from '@/main/queries/workspaces/workspace-metadata-list';
 import { QueryHandler } from '@/main/lib/types';
 import { QueryMap } from '@/shared/queries';
@@ -74,4 +75,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   chat_list: new ChatListQueryHandler(),
   space_list: new SpaceListQueryHandler(),
   workspace_metadata_list: new WorkspaceMetadataListQueryHandler(),
+  document_get: new DocumentGetQueryHandler(),
 };

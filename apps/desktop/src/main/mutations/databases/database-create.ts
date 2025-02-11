@@ -3,8 +3,8 @@ import {
   generateId,
   generateNodeIndex,
   IdType,
+  DatabaseViewAttributes,
 } from '@colanode/core';
-import { DatabaseViewAttributes } from '@colanode/core/src/registry/database-view';
 
 import { MutationHandler } from '@/main/lib/types';
 import {

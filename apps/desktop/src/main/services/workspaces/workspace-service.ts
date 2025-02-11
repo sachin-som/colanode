@@ -21,6 +21,7 @@ import { UserService } from '@/main/services/workspaces/user-service';
 import { CollaborationService } from '@/main/services/workspaces/collaboration-service';
 import { SyncService } from '@/main/services/workspaces/sync-service';
 import { RadarService } from '@/main/services/workspaces/radar-service';
+import { DocumentService } from '@/main/services/workspaces/document-service';
 import { eventBus } from '@/shared/lib/event-bus';
 
 export class WorkspaceService {
@@ -30,6 +31,7 @@ export class WorkspaceService {
   public readonly database: Kysely<WorkspaceDatabaseSchema>;
   public readonly account: AccountService;
   public readonly nodes: NodeService;
+  public readonly documents: DocumentService;
   public readonly nodeInteractions: NodeInteractionService;
   public readonly nodeReactions: NodeReactionService;
   public readonly files: FileService;
@@ -67,6 +69,7 @@ export class WorkspaceService {
     this.nodes = new NodeService(this);
     this.nodeInteractions = new NodeInteractionService(this);
     this.nodeReactions = new NodeReactionService(this);
+    this.documents = new DocumentService(this);
     this.files = new FileService(this);
     this.mutations = new MutationService(this);
     this.users = new UserService(this);

@@ -1,18 +1,13 @@
-import { z } from 'zod';
-
-import { ChannelAttributes, channelAttributesSchema } from './channel';
-import { ChatAttributes, chatAttributesSchema } from './chat';
-import { DatabaseAttributes, databaseAttributesSchema } from './database';
-import { FolderAttributes, folderAttributesSchema } from './folder';
-import { PageAttributes, pageAttributesSchema } from './page';
-import { RecordAttributes, recordAttributesSchema } from './record';
-import { SpaceAttributes, spaceAttributesSchema } from './space';
-import { MessageAttributes, messageAttributesSchema } from './message';
-import {
-  DatabaseViewAttributes,
-  databaseViewAttributesSchema,
-} from './database-view';
-import { FileAttributes, fileAttributesSchema } from './file';
+import { ChannelAttributes, channelModel } from './channel';
+import { ChatAttributes, chatModel } from './chat';
+import { DatabaseAttributes, databaseModel } from './database';
+import { FolderAttributes, folderModel } from './folder';
+import { PageAttributes, pageModel } from './page';
+import { RecordAttributes, recordModel } from './record';
+import { SpaceAttributes, spaceModel } from './space';
+import { MessageAttributes, messageModel } from './message';
+import { DatabaseViewAttributes, databaseViewModel } from './database-view';
+import { FileAttributes, fileModel } from './file';
 
 type NodeBase = {
   id: string;
@@ -100,15 +95,27 @@ export type Node =
   | MessageNode
   | FileNode;
 
-export const nodeAttributesSchema = z.discriminatedUnion('type', [
-  channelAttributesSchema,
-  chatAttributesSchema,
-  databaseAttributesSchema,
-  databaseViewAttributesSchema,
-  fileAttributesSchema,
-  folderAttributesSchema,
-  messageAttributesSchema,
-  pageAttributesSchema,
-  recordAttributesSchema,
-  spaceAttributesSchema,
-]);
+export const getNodeModel = (type: NodeType) => {
+  switch (type) {
+    case 'channel':
+      return channelModel;
+    case 'chat':
+      return chatModel;
+    case 'database':
+      return databaseModel;
+    case 'database_view':
+      return databaseViewModel;
+    case 'folder':
+      return folderModel;
+    case 'page':
+      return pageModel;
+    case 'record':
+      return recordModel;
+    case 'space':
+      return spaceModel;
+    case 'message':
+      return messageModel;
+    case 'file':
+      return fileModel;
+  }
+};

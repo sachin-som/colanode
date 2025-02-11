@@ -1,5 +1,4 @@
 import { FileType } from './files';
-import { LocalNodeTransaction } from './transactions';
 
 export type SyncMutationsInput = {
   mutations: Mutation[];
@@ -21,27 +20,32 @@ export type MutationBase = {
   createdAt: string;
 };
 
-export type CreateFileMutationData = {
+export type CreateNodeMutationData = {
   id: string;
-  type: FileType;
-  parentId: string;
-  rootId: string;
-  name: string;
-  originalName: string;
-  extension: string;
-  mimeType: string;
-  size: number;
+  createdAt: string;
+  data: string;
+};
+
+export type CreateNodeMutation = MutationBase & {
+  type: 'create_node';
+  data: CreateNodeMutationData;
+};
+
+export type ApplyNodeUpdateMutationData = {
+  id: string;
+  data: string;
+};
+
+export type UpdateNodeMutationData = {
+  id: string;
+  updateId: string;
+  data: string;
   createdAt: string;
 };
 
-export type CreateFileMutation = MutationBase & {
-  type: 'create_file';
-  data: CreateFileMutationData;
-};
-
-export type ApplyNodeTransactionMutation = MutationBase & {
-  type: 'apply_node_transaction';
-  data: LocalNodeTransaction;
+export type UpdateNodeMutation = MutationBase & {
+  type: 'update_node';
+  data: UpdateNodeMutationData;
 };
 
 export type DeleteNodeMutationData = {
@@ -101,13 +105,45 @@ export type MarkNodeOpenedMutation = MutationBase & {
   data: MarkNodeOpenedMutationData;
 };
 
+export type CreateFileMutationData = {
+  id: string;
+  type: FileType;
+  parentId: string;
+  rootId: string;
+  name: string;
+  originalName: string;
+  extension: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+};
+
+export type CreateFileMutation = MutationBase & {
+  type: 'create_file';
+  data: CreateFileMutationData;
+};
+
+export type UpdateDocumentMutationData = {
+  documentId: string;
+  updateId: string;
+  data: string;
+  createdAt: string;
+};
+
+export type UpdateDocumentMutation = MutationBase & {
+  type: 'update_document';
+  data: UpdateDocumentMutationData;
+};
+
 export type Mutation =
-  | CreateFileMutation
-  | ApplyNodeTransactionMutation
+  | CreateNodeMutation
+  | UpdateNodeMutation
   | DeleteNodeMutation
   | CreateNodeReactionMutation
   | DeleteNodeReactionMutation
   | MarkNodeSeenMutation
-  | MarkNodeOpenedMutation;
+  | MarkNodeOpenedMutation
+  | CreateFileMutation
+  | UpdateDocumentMutation;
 
 export type MutationType = Mutation['type'];

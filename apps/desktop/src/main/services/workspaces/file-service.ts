@@ -737,7 +737,7 @@ export class FileService {
     this.debug(`Server file ${file.id} has been synced`);
   }
 
-  public async revertFileCreation(fileId: string) {
+  public async revertFileCreate(fileId: string) {
     const deletedFile = await this.workspace.database
       .deleteFrom('files')
       .returningAll()

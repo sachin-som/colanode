@@ -32,7 +32,7 @@ export enum IdType {
   FilePlaceholder = 'fp',
   Device = 'de',
   Upload = 'up',
-  Transaction = 'tx',
+  Update = 'ud',
   Event = 'ev',
   Host = 'ht',
   Block = 'bl',

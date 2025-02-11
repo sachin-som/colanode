@@ -202,6 +202,21 @@ export type WorkspaceMetadataDeletedEvent = {
   metadata: WorkspaceMetadata;
 };
 
+export type DocumentUpdatedEvent = {
+  type: 'document_updated';
+  accountId: string;
+  workspaceId: string;
+  documentId: string;
+};
+
+export type DocumentUpdateCreatedEvent = {
+  type: 'document_update_created';
+  accountId: string;
+  workspaceId: string;
+  documentId: string;
+  updateId: string;
+};
+
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -234,4 +249,6 @@ export type Event =
   | AppMetadataUpdatedEvent
   | AppMetadataDeletedEvent
   | WorkspaceMetadataUpdatedEvent
-  | WorkspaceMetadataDeletedEvent;
+  | WorkspaceMetadataDeletedEvent
+  | DocumentUpdatedEvent
+  | DocumentUpdateCreatedEvent;

@@ -1,24 +1,24 @@
 import {
   generateId,
   IdType,
-  TransactionOperation,
   createDebugger,
   NodeAttributes,
   Node,
   canCreateNode,
-  nodeAttributesSchema,
   extractNodeText,
   canUpdateNode,
   canDeleteNode,
   DeleteNodeMutationData,
   SyncNodeData,
   SyncNodeTombstoneData,
-  LocalNodeTransaction,
+  getNodeModel,
+  CreateNodeMutationData,
+  UpdateNodeMutationData,
 } from '@colanode/core';
-import { decodeState, YDoc } from '@colanode/crdt';
+import { decodeState, encodeState, YDoc } from '@colanode/crdt';
 
 import { fetchNode } from '@/main/lib/utils';
-import { mapFile, mapNode, mapNodeTransaction } from '@/main/lib/mappers';
+import { mapFile, mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { SelectNode } from '@/main/databases/workspace';
@@ -84,18 +84,15 @@ export class NodeService {
       throw new Error('Insufficient permissions');
     }
 
+    const model = getNodeModel(input.attributes.type);
     const ydoc = new YDoc();
-    const update = ydoc.updateAttributes(
-      nodeAttributesSchema,
-      input.attributes
-    );
+    const update = ydoc.update(model.attributesSchema, input.attributes);
 
     if (!update) {
       throw new Error('Invalid attributes');
     }
 
     const createdAt = new Date().toISOString();
-    const transactionId = generateId(IdType.Transaction);
     const text = extractNodeText(input.id, input.attributes);
 
     const { createdNode, createdMutation } = await this.workspace.database
@@ -119,29 +116,33 @@ export class NodeService {
           throw new Error('Failed to create entry');
         }
 
-        const createdTransaction = await trx
-          .insertInto('node_transactions')
+        const createdState = await trx
+          .insertInto('node_states')
           .returningAll()
           .values({
-            id: transactionId,
-            node_id: input.id,
-            operation: TransactionOperation.Create,
-            data: update,
-            created_at: createdAt,
+            id: input.id,
+            state: update,
+            revision: BigInt(0),
           })
           .executeTakeFirst();
 
-        if (!createdTransaction) {
-          throw new Error('Failed to create transaction');
+        if (!createdState) {
+          throw new Error('Failed to create state');
         }
+
+        const mutationData: CreateNodeMutationData = {
+          id: input.id,
+          data: encodeState(update),
+          createdAt: createdAt,
+        };
 
         const createdMutation = await trx
           .insertInto('mutations')
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            type: 'apply_node_transaction',
-            data: JSON.stringify(mapNodeTransaction(createdTransaction)),
+            type: 'create_node',
+            data: JSON.stringify(mutationData),
             created_at: createdAt,
             retries: 0,
           })
@@ -216,10 +217,11 @@ export class NodeService {
     }
 
     const node = mapNode(nodeRow);
-    const transactionId = generateId(IdType.Transaction);
+    const updateId = generateId(IdType.Update);
     const updatedAt = new Date().toISOString();
     const updatedAttributes = updater(node.attributes as T);
 
+    const model = getNodeModel(updatedAttributes.type);
     const ydoc = new YDoc();
 
     const state = await this.workspace.database
@@ -232,20 +234,17 @@ export class NodeService {
       ydoc.applyUpdate(state.state);
     }
 
-    const transactions = await this.workspace.database
-      .selectFrom('node_transactions')
+    const updates = await this.workspace.database
+      .selectFrom('node_updates')
       .where('node_id', '=', nodeId)
       .selectAll()
       .execute();
 
-    for (const transaction of transactions) {
-      ydoc.applyUpdate(transaction.data);
+    for (const update of updates) {
+      ydoc.applyUpdate(update.data);
     }
 
-    const update = ydoc.updateAttributes(
-      nodeAttributesSchema,
-      updatedAttributes
-    );
+    const update = ydoc.update(model.attributesSchema, updatedAttributes);
 
     if (
       !canUpdateNode(
@@ -267,7 +266,7 @@ export class NodeService {
       return 'success';
     }
 
-    const attributes = ydoc.getAttributes<NodeAttributes>();
+    const attributes = ydoc.getObject<NodeAttributes>();
     const text = extractNodeText(nodeId, updatedAttributes);
 
     const localRevision = BigInt(node.localRevision) + BigInt(1);
@@ -288,32 +287,38 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!updatedNode) {
-          return { updatedNode: undefined };
+          throw new Error('Failed to update node');
         }
 
-        const createdTransaction = await trx
-          .insertInto('node_transactions')
+        const createdUpdate = await trx
+          .insertInto('node_updates')
           .returningAll()
           .values({
-            id: transactionId,
+            id: updateId,
             node_id: nodeId,
-            operation: TransactionOperation.Update,
             data: update,
             created_at: updatedAt,
           })
           .executeTakeFirst();
 
-        if (!createdTransaction) {
-          throw new Error('Failed to create transaction');
+        if (!createdUpdate) {
+          throw new Error('Failed to create update');
         }
+
+        const mutationData: UpdateNodeMutationData = {
+          id: nodeId,
+          updateId: updateId,
+          data: encodeState(update),
+          createdAt: updatedAt,
+        };
 
         const createdMutation = await trx
           .insertInto('mutations')
           .returningAll()
           .values({
             id: generateId(IdType.Mutation),
-            type: 'apply_node_transaction',
-            data: JSON.stringify(mapNodeTransaction(createdTransaction)),
+            type: 'update_node',
+            data: JSON.stringify(mutationData),
             created_at: updatedAt,
             retries: 0,
           })
@@ -400,7 +405,7 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!deletedNode) {
-          return { deletedNode: undefined };
+          throw new Error('Failed to delete node');
         }
 
         await trx
@@ -471,18 +476,7 @@ export class NodeService {
     const serverRevision = BigInt(node.revision);
 
     const ydoc = new YDoc(node.state);
-    const transactions = await this.workspace.database
-      .selectFrom('node_transactions')
-      .selectAll()
-      .where('node_id', '=', node.id)
-      .orderBy('id', 'asc')
-      .execute();
-
-    for (const transaction of transactions) {
-      ydoc.applyUpdate(transaction.data);
-    }
-
-    const attributes = ydoc.getAttributes<NodeAttributes>();
+    const attributes = ydoc.getObject<NodeAttributes>();
     const text = extractNodeText(node.id, attributes);
 
     const { createdNode } = await this.workspace.database
@@ -503,7 +497,7 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!createdNode) {
-          return { createdNode: undefined };
+          throw new Error('Failed to create node');
         }
 
         if (text) {
@@ -543,10 +537,14 @@ export class NodeService {
 
   public async updateServerNode(node: SyncNodeData): Promise<void> {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-      const result = await this.tryUpdateServerNode(node);
+      try {
+        const result = await this.tryUpdateServerNode(node);
 
-      if (result) {
-        return;
+        if (result) {
+          return;
+        }
+      } catch (error) {
+        this.debug(`Failed to update node ${node.id}: ${error}`);
       }
     }
   }
@@ -566,18 +564,18 @@ export class NodeService {
     }
 
     const ydoc = new YDoc(node.state);
-    const transactions = await this.workspace.database
-      .selectFrom('node_transactions')
+    const updates = await this.workspace.database
+      .selectFrom('node_updates')
       .selectAll()
       .where('node_id', '=', node.id)
       .orderBy('id', 'asc')
       .execute();
 
-    for (const transaction of transactions) {
-      ydoc.applyUpdate(transaction.data);
+    for (const update of updates) {
+      ydoc.applyUpdate(update.data);
     }
 
-    const attributes = ydoc.getAttributes<NodeAttributes>();
+    const attributes = ydoc.getObject<NodeAttributes>();
     const text = extractNodeText(node.id, attributes);
     const localRevision = BigInt(existingNode.local_revision) + BigInt(1);
 
@@ -599,7 +597,7 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!updatedNode) {
-          return { updatedNode: undefined };
+          throw new Error('Failed to update node');
         }
 
         await trx
@@ -657,7 +655,7 @@ export class NodeService {
           .executeTakeFirst();
 
         await trx
-          .deleteFrom('node_transactions')
+          .deleteFrom('node_updates')
           .where('node_id', '=', tombstone.id)
           .execute();
 
@@ -712,64 +710,40 @@ export class NodeService {
     }
   }
 
-  public async revertNodeTransaction(transaction: LocalNodeTransaction) {
-    if (transaction.operation === TransactionOperation.Create) {
-      return this.revertCreateTransaction(transaction);
-    } else if (transaction.operation === TransactionOperation.Update) {
-      return this.revertUpdateTransaction(transaction);
-    }
-  }
-
-  public async revertCreateTransaction(transaction: LocalNodeTransaction) {
+  public async revertNodeCreate(mutation: CreateNodeMutationData) {
     const node = await this.workspace.database
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', transaction.nodeId)
+      .where('id', '=', mutation.id)
       .executeTakeFirst();
 
     if (!node) {
       return;
     }
 
-    const transactionRow = await this.workspace.database
-      .selectFrom('node_transactions')
-      .selectAll()
-      .where('id', '=', transaction.id)
-      .executeTakeFirst();
-
-    if (!transactionRow) {
-      return;
-    }
-
     await this.workspace.database.transaction().execute(async (tx) => {
-      await tx
-        .deleteFrom('nodes')
-        .where('id', '=', transaction.nodeId)
-        .execute();
+      await tx.deleteFrom('nodes').where('id', '=', mutation.id).execute();
 
       await tx
-        .deleteFrom('node_transactions')
-        .where('node_id', '=', transaction.nodeId)
+        .deleteFrom('node_updates')
+        .where('node_id', '=', mutation.id)
         .execute();
 
       await tx
         .deleteFrom('node_interactions')
-        .where('node_id', '=', transaction.nodeId)
+        .where('node_id', '=', mutation.id)
         .execute();
 
-      await tx
-        .deleteFrom('texts')
-        .where('id', '=', transaction.nodeId)
-        .execute();
+      await tx.deleteFrom('texts').where('id', '=', mutation.id).execute();
 
       await tx
         .deleteFrom('node_reactions')
-        .where('node_id', '=', transaction.nodeId)
+        .where('node_id', '=', mutation.id)
         .execute();
 
       await tx
         .deleteFrom('node_states')
-        .where('id', '=', transaction.nodeId)
+        .where('id', '=', mutation.id)
         .execute();
     });
 
@@ -781,9 +755,9 @@ export class NodeService {
     });
   }
 
-  public async revertUpdateTransaction(transaction: LocalNodeTransaction) {
+  public async revertNodeUpdate(mutation: UpdateNodeMutationData) {
     for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-      const result = await this.tryRevertUpdateTransaction(transaction);
+      const result = await this.tryRevertNodeUpdate(mutation);
 
       if (result) {
         return;
@@ -791,66 +765,66 @@ export class NodeService {
     }
   }
 
-  private async tryRevertUpdateTransaction(
-    transaction: LocalNodeTransaction
+  private async tryRevertNodeUpdate(
+    mutation: UpdateNodeMutationData
   ): Promise<boolean> {
     const node = await this.workspace.database
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', transaction.nodeId)
+      .where('id', '=', mutation.id)
       .executeTakeFirst();
 
     if (!node) {
       // Make sure we don't have any data left behind
       await this.workspace.database
-        .deleteFrom('node_transactions')
-        .where('id', '=', transaction.id)
+        .deleteFrom('node_updates')
+        .where('id', '=', mutation.id)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_interactions')
-        .where('node_id', '=', transaction.nodeId)
+        .where('node_id', '=', mutation.id)
         .execute();
 
       await this.workspace.database
         .deleteFrom('texts')
-        .where('id', '=', transaction.nodeId)
+        .where('id', '=', mutation.id)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_reactions')
-        .where('node_id', '=', transaction.nodeId)
+        .where('node_id', '=', mutation.id)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_states')
-        .where('id', '=', transaction.nodeId)
+        .where('id', '=', mutation.id)
         .execute();
 
       return true;
     }
 
-    const transactionRow = await this.workspace.database
-      .selectFrom('node_transactions')
+    const updateRow = await this.workspace.database
+      .selectFrom('node_updates')
       .selectAll()
-      .where('id', '=', transaction.id)
+      .where('id', '=', mutation.id)
       .executeTakeFirst();
 
-    if (!transactionRow) {
+    if (!updateRow) {
       return true;
     }
 
-    const nodeTransactions = await this.workspace.database
-      .selectFrom('node_transactions')
+    const nodeUpdates = await this.workspace.database
+      .selectFrom('node_updates')
       .selectAll()
-      .where('node_id', '=', transaction.nodeId)
+      .where('node_id', '=', mutation.id)
       .orderBy('id', 'asc')
       .execute();
 
     const state = await this.workspace.database
       .selectFrom('node_states')
       .selectAll()
-      .where('id', '=', transaction.nodeId)
+      .where('id', '=', mutation.id)
       .executeTakeFirst();
 
     if (!state) {
@@ -858,18 +832,18 @@ export class NodeService {
     }
 
     const ydoc = new YDoc(state.state);
-    for (const nodeTransaction of nodeTransactions) {
-      if (nodeTransaction.id === transaction.id) {
+    for (const nodeUpdate of nodeUpdates) {
+      if (nodeUpdate.id === mutation.updateId) {
         continue;
       }
 
-      if (nodeTransaction.data) {
-        ydoc.applyUpdate(nodeTransaction.data);
+      if (nodeUpdate.data) {
+        ydoc.applyUpdate(nodeUpdate.data);
       }
     }
 
-    const attributes = ydoc.getAttributes<NodeAttributes>();
-    const text = extractNodeText(transaction.nodeId, attributes);
+    const attributes = ydoc.getObject<NodeAttributes>();
+    const text = extractNodeText(mutation.id, attributes);
 
     const updatedNode = await this.workspace.database
       .transaction()
@@ -880,7 +854,7 @@ export class NodeService {
           .set({
             attributes: JSON.stringify(attributes),
           })
-          .where('id', '=', transaction.nodeId)
+          .where('id', '=', mutation.id)
           .where('local_revision', '=', node.local_revision)
           .executeTakeFirst();
 
@@ -889,17 +863,14 @@ export class NodeService {
         }
 
         if (text !== undefined) {
-          await trx
-            .deleteFrom('texts')
-            .where('id', '=', transaction.nodeId)
-            .execute();
+          await trx.deleteFrom('texts').where('id', '=', mutation.id).execute();
         }
 
         if (text) {
           await trx
             .insertInto('texts')
             .values({
-              id: transaction.nodeId,
+              id: mutation.id,
               name: text.name,
               text: text.text,
             })
@@ -907,8 +878,8 @@ export class NodeService {
         }
 
         await trx
-          .deleteFrom('node_transactions')
-          .where('id', '=', transaction.id)
+          .deleteFrom('node_updates')
+          .where('id', '=', mutation.updateId)
           .execute();
       });
 
@@ -947,19 +918,19 @@ export class NodeService {
       return;
     }
 
-    const nodeTransactions = await this.workspace.database
-      .selectFrom('node_transactions')
+    const nodeUpdates = await this.workspace.database
+      .selectFrom('node_updates')
       .selectAll()
       .where('node_id', '=', mutation.id)
       .orderBy('id', 'asc')
       .execute();
 
     const ydoc = new YDoc(state.state);
-    for (const nodeTransaction of nodeTransactions) {
-      ydoc.applyUpdate(nodeTransaction.data);
+    for (const nodeUpdate of nodeUpdates) {
+      ydoc.applyUpdate(nodeUpdate.data);
     }
 
-    const attributes = ydoc.getAttributes<NodeAttributes>();
+    const attributes = ydoc.getObject<NodeAttributes>();
     const text = extractNodeText(mutation.id, attributes);
 
     const deletedNode = JSON.parse(tombstone.data) as SelectNode;

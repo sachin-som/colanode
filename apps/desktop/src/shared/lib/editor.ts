@@ -6,6 +6,7 @@ import {
   generateId,
   generateNodeIndex,
   IdType,
+  RichTextContent,
 } from '@colanode/core';
 import { Editor, JSONContent } from '@tiptap/core';
 import { Node as ProseMirrorNode, ResolvedPos } from '@tiptap/pm/model';
@@ -24,11 +25,20 @@ export const mapContentsToBlocks = (
   parentId: string,
   contents: JSONContent[],
   indexMap: Map<string, string>
-): Block[] => {
+): Record<string, Block> => {
   const blocks: Block[] = [];
   mapAndPushContentsToBlocks(contents, parentId, blocks, indexMap);
   validateBlocksIndexes(blocks);
-  return blocks;
+
+  const blocksRecord: Record<string, Block> = blocks.reduce(
+    (acc, block) => {
+      acc[block.id] = block;
+      return acc;
+    },
+    {} as Record<string, Block>
+  );
+
+  return blocksRecord;
 };
 
 const mapAndPushContentsToBlocks = (
@@ -107,6 +117,29 @@ const mapContentsToBlockLeafs = (
     });
   }
   return nodeBlocks;
+};
+
+export const buildEditorContent = (
+  documentId: string,
+  content: RichTextContent | null | undefined
+): JSONContent => {
+  const blocks = content && content.blocks ? Object.values(content.blocks) : [];
+  const contents = mapBlocksToContents(documentId, blocks);
+
+  if (contents.length === 0) {
+    contents.push({
+      type: 'paragraph',
+      content: [],
+      attrs: {
+        id: generateId(IdType.Block),
+      },
+    });
+  }
+
+  return {
+    type: 'doc',
+    content: contents,
+  };
 };
 
 export const mapBlocksToContents = (

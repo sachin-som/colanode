@@ -126,6 +126,19 @@ export type DeviceDeletedEvent = {
   deviceId: string;
 };
 
+export type DocumentUpdatedEvent = {
+  type: 'document_updated';
+  documentId: string;
+  workspaceId: string;
+};
+
+export type DocumentUpdateCreatedEvent = {
+  type: 'document_update_created';
+  documentId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
 export type Event =
   | NodeCreatedEvent
   | NodeUpdatedEvent
@@ -145,4 +158,6 @@ export type Event =
   | FileCreatedEvent
   | FileUpdatedEvent
   | FileDeletedEvent
-  | FileInteractionUpdatedEvent;
+  | FileInteractionUpdatedEvent
+  | DocumentUpdatedEvent
+  | DocumentUpdateCreatedEvent;

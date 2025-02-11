@@ -11,10 +11,7 @@ import { SelectAccount } from '@/data/schema';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { eventBus } from '@/lib/event-bus';
-import {
-  generateWelcomePageBlocks,
-  generateInitialMessageBlocks,
-} from '@/lib/blocks';
+import { generateInitialMessageBlocks } from '@/lib/blocks';
 import { createNode } from '@/lib/nodes';
 
 export const createWorkspace = async (
@@ -92,7 +89,6 @@ export const createWorkspace = async (
         type: 'page',
         name: 'Welcome',
         parentId: spaceId,
-        content: generateWelcomePageBlocks(pageId),
       },
       userId: userId,
       workspaceId: workspaceId,

@@ -1,5 +1,4 @@
 import {
-  Block,
   canCreateNode,
   EditorNodeTypes,
   generateId,
@@ -66,7 +65,7 @@ export class MessageCreateMutationHandler
     const blocks = mapContentsToBlocks(messageId, editorContent, new Map());
 
     // check if there are nested nodes (files, pages, folders etc.)
-    for (const block of blocks) {
+    for (const block of Object.values(blocks)) {
       if (block.type === EditorNodeTypes.FilePlaceholder) {
         const path = block.attrs?.path;
         const fileId = generateId(IdType.File);
@@ -79,19 +78,11 @@ export class MessageCreateMutationHandler
       }
     }
 
-    const blocksRecord = blocks.reduce(
-      (acc, block) => {
-        acc[block.id] = block;
-        return acc;
-      },
-      {} as Record<string, Block>
-    );
-
     const messageAttributes: MessageAttributes = {
       type: 'message',
       subtype: 'standard',
       parentId: input.parentId,
-      content: blocksRecord,
+      content: blocks,
       referenceId: input.referenceId,
     };
 

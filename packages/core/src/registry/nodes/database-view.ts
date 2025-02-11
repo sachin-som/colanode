@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import { NodeModel } from './core';
+
+import { NodeAttributes } from '.';
+
 export const databaseViewFieldAttributesSchema = z.object({
   id: z.string(),
   width: z.number().nullable().optional(),
@@ -83,3 +87,30 @@ export type DatabaseViewAttributes = z.infer<
   typeof databaseViewAttributesSchema
 >;
 export type DatabaseViewLayout = 'table' | 'board' | 'calendar';
+
+export const databaseViewModel: NodeModel = {
+  type: 'database_view',
+  attributesSchema: databaseViewAttributesSchema,
+  canCreate: async (context, _) => {
+    return context.hasEditorAccess();
+  },
+  canUpdate: async (context, _) => {
+    return context.hasEditorAccess();
+  },
+  canDelete: async (context, _) => {
+    return context.hasEditorAccess();
+  },
+  getName: function (
+    _: string,
+    attributes: NodeAttributes
+  ): string | null | undefined {
+    if (attributes.type !== 'database_view') {
+      return null;
+    }
+
+    return attributes.name;
+  },
+  getText: function (_: string, __: NodeAttributes): string | null | undefined {
+    return undefined;
+  },
+};

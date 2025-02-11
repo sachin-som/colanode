@@ -3,11 +3,12 @@ import {
   canDeleteNode,
   canUpdateNode,
   createDebugger,
+  CreateNodeMutationData,
   extractNodeCollaborators,
+  getNodeModel,
   Node,
   NodeAttributes,
-  nodeAttributesSchema,
-  TransactionOperation,
+  UpdateNodeMutationData,
 } from '@colanode/core';
 import { YDoc } from '@colanode/crdt';
 import { cloneDeep } from 'lodash-es';
@@ -20,8 +21,7 @@ import {
   SelectUser,
 } from '@/data/schema';
 import {
-  ApplyNodeTransactionInput,
-  ApplyNodeTransactionOutput,
+  ConcurrentUpdateResult,
   CreateNodeInput,
   CreateNodeOutput,
   DeleteNodeInput,
@@ -39,11 +39,6 @@ import { jobService } from '@/services/job-service';
 const debug = createDebugger('server:lib:nodes');
 
 const UPDATE_RETRIES_LIMIT = 10;
-
-type UpdateResult<T> = {
-  type: 'success' | 'error' | 'retry';
-  output: T | null;
-};
 
 export const mapNode = (node: SelectNode): Node => {
   return {
@@ -99,14 +94,15 @@ export const fetchNodeDescendants = async (
 export const createNode = async (
   input: CreateNodeInput
 ): Promise<CreateNodeOutput | null> => {
+  const model = getNodeModel(input.attributes.type);
   const ydoc = new YDoc();
-  const update = ydoc.updateAttributes(nodeAttributesSchema, input.attributes);
+  const update = ydoc.update(model.attributesSchema, input.attributes);
 
   if (!update) {
     return null;
   }
 
-  const attributes = ydoc.getAttributes<NodeAttributes>();
+  const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
   const state = ydoc.getState();
   const date = new Date();
@@ -204,26 +200,27 @@ export const updateNode = async (
 
 export const tryUpdateNode = async (
   input: UpdateNodeInput
-): Promise<UpdateResult<UpdateNodeOutput>> => {
+): Promise<ConcurrentUpdateResult<UpdateNodeOutput>> => {
   const node = await fetchNode(input.nodeId);
   if (!node) {
     return { type: 'error', output: null };
   }
 
+  const model = getNodeModel(node.type);
   const ydoc = new YDoc(node.state);
-  const currentAttributes = ydoc.getAttributes<NodeAttributes>();
+  const currentAttributes = ydoc.getObject<NodeAttributes>();
   const updatedAttributes = input.updater(cloneDeep(currentAttributes));
   if (!updatedAttributes) {
     return { type: 'error', output: null };
   }
 
-  const update = ydoc.updateAttributes(nodeAttributesSchema, updatedAttributes);
+  const update = ydoc.update(model.attributesSchema, updatedAttributes);
 
   if (!update) {
     return { type: 'success', output: null };
   }
 
-  const attributes = ydoc.getAttributes<NodeAttributes>();
+  const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
 
   const date = new Date();
@@ -306,29 +303,12 @@ export const tryUpdateNode = async (
   }
 };
 
-export const applyNodeTransaction = async (
+export const createNodeFromMutation = async (
   user: SelectUser,
-  input: ApplyNodeTransactionInput
-): Promise<ApplyNodeTransactionOutput | null> => {
-  if (input.operation === TransactionOperation.Create) {
-    return applyNodeCreateTransaction(user, input);
-  }
-
-  if (input.operation === TransactionOperation.Update) {
-    return applyNodeUpdateTransaction(user, input);
-  }
-
-  return null;
-};
-
-const applyNodeCreateTransaction = async (
-  user: SelectUser,
-  input: ApplyNodeTransactionInput
-): Promise<ApplyNodeTransactionOutput | null> => {
-  const ydoc = new YDoc();
-  ydoc.applyUpdate(input.data);
-
-  const attributes = ydoc.getAttributes<NodeAttributes>();
+  mutation: CreateNodeMutationData
+): Promise<CreateNodeOutput | null> => {
+  const ydoc = new YDoc(mutation.data);
+  const attributes = ydoc.getObject<NodeAttributes>();
   let root: SelectNode | null = null;
 
   if (attributes.type !== 'space' && attributes.type !== 'chat') {
@@ -356,11 +336,11 @@ const applyNodeCreateTransaction = async (
   }
 
   const createNode: CreateNode = {
-    id: input.nodeId,
-    root_id: root?.id ?? input.nodeId,
+    id: mutation.id,
+    root_id: root?.id ?? mutation.id,
     attributes: JSON.stringify(attributes),
     workspace_id: user.workspace_id,
-    created_at: input.createdAt,
+    created_at: new Date(mutation.createdAt),
     created_by: user.id,
     state: ydoc.getState(),
   };
@@ -369,7 +349,7 @@ const applyNodeCreateTransaction = async (
     extractNodeCollaborators(attributes)
   ).map(([userId, role]) => ({
     collaborator_id: userId,
-    node_id: input.nodeId,
+    node_id: mutation.id,
     workspace_id: user.workspace_id,
     role,
     created_at: new Date(),
@@ -405,8 +385,8 @@ const applyNodeCreateTransaction = async (
 
     eventBus.publish({
       type: 'node_created',
-      nodeId: input.nodeId,
-      rootId: root?.id ?? input.nodeId,
+      nodeId: mutation.id,
+      rootId: root?.id ?? mutation.id,
       workspaceId: user.workspace_id,
     });
 
@@ -414,7 +394,7 @@ const applyNodeCreateTransaction = async (
       eventBus.publish({
         type: 'collaboration_created',
         collaboratorId: createdCollaboration.collaborator_id,
-        nodeId: input.nodeId,
+        nodeId: mutation.id,
         workspaceId: user.workspace_id,
       });
     }
@@ -428,12 +408,12 @@ const applyNodeCreateTransaction = async (
   }
 };
 
-const applyNodeUpdateTransaction = async (
+export const updateNodeFromMutation = async (
   user: SelectUser,
-  input: ApplyNodeTransactionInput
-): Promise<ApplyNodeTransactionOutput | null> => {
+  mutation: UpdateNodeMutationData
+): Promise<UpdateNodeOutput | null> => {
   for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-    const result = await tryApplyNodeUpdateTransaction(user, input);
+    const result = await tryUpdateNodeFromMutation(user, mutation);
 
     if (result.type === 'success') {
       return result.output;
@@ -447,11 +427,11 @@ const applyNodeUpdateTransaction = async (
   return null;
 };
 
-const tryApplyNodeUpdateTransaction = async (
+const tryUpdateNodeFromMutation = async (
   user: SelectUser,
-  input: ApplyNodeTransactionInput
-): Promise<UpdateResult<ApplyNodeTransactionOutput>> => {
-  const node = await fetchNode(input.nodeId);
+  mutation: UpdateNodeMutationData
+): Promise<ConcurrentUpdateResult<UpdateNodeOutput>> => {
+  const node = await fetchNode(mutation.id);
   if (!node) {
     return { type: 'error', output: null };
   }
@@ -462,9 +442,9 @@ const tryApplyNodeUpdateTransaction = async (
   }
 
   const ydoc = new YDoc(node.state);
-  ydoc.applyUpdate(input.data);
+  ydoc.applyUpdate(mutation.data);
 
-  const attributes = ydoc.getAttributes<NodeAttributes>();
+  const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
 
   if (
@@ -496,11 +476,11 @@ const tryApplyNodeUpdateTransaction = async (
           .returningAll()
           .set({
             attributes: attributesJson,
-            updated_at: input.createdAt,
+            updated_at: new Date(mutation.createdAt),
             updated_by: user.id,
             state: ydoc.getState(),
           })
-          .where('id', '=', input.nodeId)
+          .where('id', '=', mutation.id)
           .where('revision', '=', node.revision)
           .executeTakeFirst();
 
@@ -511,7 +491,7 @@ const tryApplyNodeUpdateTransaction = async (
         const { createdCollaborations, updatedCollaborations } =
           await applyCollaboratorUpdates(
             trx,
-            input.nodeId,
+            mutation.id,
             user.id,
             user.workspace_id,
             collaboratorChanges
@@ -526,7 +506,7 @@ const tryApplyNodeUpdateTransaction = async (
 
     eventBus.publish({
       type: 'node_updated',
-      nodeId: input.nodeId,
+      nodeId: mutation.id,
       rootId: root.id,
       workspaceId: user.workspace_id,
     });
@@ -535,7 +515,7 @@ const tryApplyNodeUpdateTransaction = async (
       eventBus.publish({
         type: 'collaboration_created',
         collaboratorId: createdCollaboration.collaborator_id,
-        nodeId: input.nodeId,
+        nodeId: mutation.id,
         workspaceId: user.workspace_id,
       });
     }
@@ -544,7 +524,7 @@ const tryApplyNodeUpdateTransaction = async (
       eventBus.publish({
         type: 'collaboration_updated',
         collaboratorId: updatedCollaboration.collaborator_id,
-        nodeId: input.nodeId,
+        nodeId: mutation.id,
         workspaceId: user.workspace_id,
       });
     }

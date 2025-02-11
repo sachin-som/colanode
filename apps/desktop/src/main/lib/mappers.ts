@@ -1,5 +1,4 @@
-import { LocalNodeTransaction, Mutation } from '@colanode/core';
-import { encodeState } from '@colanode/crdt';
+import { Mutation } from '@colanode/core';
 
 import {
   SelectAccount,
@@ -13,7 +12,6 @@ import {
   SelectFile,
   SelectMutation,
   SelectNode,
-  SelectNodeTransaction,
   SelectUser,
   SelectNodeInteraction,
   SelectNodeReaction,
@@ -89,18 +87,6 @@ export const mapWorkspace = (row: SelectWorkspace): Workspace => {
     description: row.description,
     maxFileSize: row.max_file_size,
     storageLimit: row.storage_limit,
-  };
-};
-
-export const mapNodeTransaction = (
-  row: SelectNodeTransaction
-): LocalNodeTransaction => {
-  return {
-    id: row.id,
-    nodeId: row.node_id,
-    operation: row.operation,
-    data: encodeState(row.data),
-    createdAt: row.created_at,
   };
 };
 

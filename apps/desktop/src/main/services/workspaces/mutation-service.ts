@@ -144,17 +144,19 @@ export class MutationService {
       const mutation = mapMutation(mutationRow);
 
       if (mutation.type === 'create_file') {
-        await this.workspace.files.revertFileCreation(mutation.id);
-      } else if (mutation.type === 'apply_node_transaction') {
-        await this.workspace.nodes.revertNodeTransaction(mutation.data);
+        await this.workspace.files.revertFileCreate(mutation.id);
+      } else if (mutation.type === 'create_node') {
+        await this.workspace.nodes.revertNodeCreate(mutation.data);
+      } else if (mutation.type === 'update_node') {
+        await this.workspace.nodes.revertNodeUpdate(mutation.data);
       } else if (mutation.type === 'delete_node') {
         await this.workspace.nodes.revertNodeDelete(mutation.data);
       } else if (mutation.type === 'create_node_reaction') {
-        await this.workspace.nodeReactions.revertNodeReactionCreation(
+        await this.workspace.nodeReactions.revertNodeReactionCreate(
           mutation.data
         );
       } else if (mutation.type === 'delete_node_reaction') {
-        await this.workspace.nodeReactions.revertNodeReactionDeletion(
+        await this.workspace.nodeReactions.revertNodeReactionDelete(
           mutation.data
         );
       }
@@ -212,10 +214,23 @@ export class MutationService {
           }
 
           if (
-            previousMutation.type === 'apply_node_transaction' &&
+            previousMutation.type === 'create_node' &&
             previousMutation.data.id === mutation.data.id
           ) {
             deletedMutationIds.add(mutation.id);
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'update_node' &&
+            previousMutation.data.id === mutation.data.id
+          ) {
+            deletedMutationIds.add(mutation.id);
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'delete_node' &&
+            previousMutation.data.id === mutation.data.id
+          ) {
+            deletedMutationIds.add(previousMutation.id);
+          } else if (previousMutation.type === 'update_document') {
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'mark_node_seen' &&

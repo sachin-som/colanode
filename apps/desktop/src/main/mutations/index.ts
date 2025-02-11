@@ -1,5 +1,3 @@
-import { PageContentUpdateMutationHandler } from '@/main/mutations/pages/page-content-update';
-import { RecordContentUpdateMutationHandler } from '@/main/mutations/records/record-content-update';
 import { AccountLogoutMutationHandler } from '@/main/mutations/accounts/account-logout';
 import { AccountUpdateMutationHandler } from '@/main/mutations/accounts/account-update';
 import { AvatarUploadMutationHandler } from '@/main/mutations/avatars/avatar-upload';
@@ -60,6 +58,7 @@ import { UserRoleUpdateMutationHandler } from '@/main/mutations/users/user-role-
 import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite';
 import { WorkspaceMetadataSaveMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-save';
 import { WorkspaceMetadataDeleteMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-delete';
+import { DocumentUpdateMutationHandler } from '@/main/mutations/documents/document-update';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -90,13 +89,11 @@ export const mutationHandlerMap: MutationHandlerMap = {
   node_mark_seen: new NodeMarkSeenMutationHandler(),
   page_create: new PageCreateMutationHandler(),
   page_delete: new PageDeleteMutationHandler(),
-  page_content_update: new PageContentUpdateMutationHandler(),
   node_reaction_create: new NodeReactionCreateMutationHandler(),
   node_reaction_delete: new NodeReactionDeleteMutationHandler(),
   message_delete: new MessageDeleteMutationHandler(),
   record_create: new RecordCreateMutationHandler(),
   record_delete: new RecordDeleteMutationHandler(),
-  record_content_update: new RecordContentUpdateMutationHandler(),
   record_avatar_update: new RecordAvatarUpdateMutationHandler(),
   record_name_update: new RecordNameUpdateMutationHandler(),
   record_field_value_delete: new RecordFieldValueDeleteMutationHandler(),
@@ -130,4 +127,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   database_update: new DatabaseUpdateMutationHandler(),
   workspace_metadata_save: new WorkspaceMetadataSaveMutationHandler(),
   workspace_metadata_delete: new WorkspaceMetadataDeleteMutationHandler(),
+  document_update: new DocumentUpdateMutationHandler(),
 };

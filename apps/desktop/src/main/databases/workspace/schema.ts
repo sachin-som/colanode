@@ -4,7 +4,6 @@ import {
   MutationType,
   NodeType,
   WorkspaceRole,
-  TransactionOperation,
   UserStatus,
 } from '@colanode/core';
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
@@ -57,17 +56,16 @@ export type SelectNodeState = Selectable<NodeStateTable>;
 export type CreateNodeState = Insertable<NodeStateTable>;
 export type UpdateNodeState = Updateable<NodeStateTable>;
 
-interface NodeTransactionTable {
+interface NodeUpdateTable {
   id: ColumnType<string, string, never>;
   node_id: ColumnType<string, string, never>;
-  operation: ColumnType<TransactionOperation, TransactionOperation, never>;
   data: ColumnType<Uint8Array, Uint8Array, never>;
   created_at: ColumnType<string, string, never>;
 }
 
-export type SelectNodeTransaction = Selectable<NodeTransactionTable>;
-export type CreateNodeTransaction = Insertable<NodeTransactionTable>;
-export type UpdateNodeTransaction = Updateable<NodeTransactionTable>;
+export type SelectNodeUpdate = Selectable<NodeUpdateTable>;
+export type CreateNodeUpdate = Insertable<NodeUpdateTable>;
+export type UpdateNodeUpdate = Updateable<NodeUpdateTable>;
 
 interface NodeInteractionTable {
   node_id: ColumnType<string, string, never>;
@@ -193,12 +191,37 @@ export type SelectWorkspaceMetadata = Selectable<MetadataTable>;
 export type CreateWorkspaceMetadata = Insertable<MetadataTable>;
 export type UpdateWorkspaceMetadata = Updateable<MetadataTable>;
 
+interface DocumentTable {
+  id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, bigint, bigint>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
+  created_at: ColumnType<string, string, never>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectDocument = Selectable<DocumentTable>;
+export type CreateDocument = Insertable<DocumentTable>;
+export type UpdateDocument = Updateable<DocumentTable>;
+
+interface DocumentUpdateTable {
+  id: ColumnType<string, string, never>;
+  document_id: ColumnType<string, string, never>;
+  data: ColumnType<Uint8Array, Uint8Array, never>;
+  created_at: ColumnType<string, string, never>;
+}
+
+export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
+export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
+export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
+
 export interface WorkspaceDatabaseSchema {
   users: UserTable;
   nodes: NodeTable;
   node_states: NodeStateTable;
   node_interactions: NodeInteractionTable;
-  node_transactions: NodeTransactionTable;
+  node_updates: NodeUpdateTable;
   node_reactions: NodeReactionTable;
   collaborations: CollaborationTable;
   files: FileTable;
@@ -207,4 +230,6 @@ export interface WorkspaceDatabaseSchema {
   texts: TextTable;
   cursors: CursorTable;
   metadata: MetadataTable;
+  documents: DocumentTable;
+  document_updates: DocumentUpdateTable;
 }

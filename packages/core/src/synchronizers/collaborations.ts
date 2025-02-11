@@ -1,4 +1,4 @@
-import { NodeRole } from '../registry/core';
+import { NodeRole } from '../registry/nodes/core';
 
 export type SyncCollaborationsInput = {
   type: 'collaborations';

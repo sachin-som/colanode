@@ -14,6 +14,8 @@ import {
   SyncUserData,
   SyncCollaborationData,
   SyncFileData,
+  SyncDocumentUpdatesInput,
+  SyncDocumentUpdateData,
 } from '@colanode/core';
 
 import { Event } from '@/shared/types/events';
@@ -27,6 +29,7 @@ interface RootSynchronizers {
   nodeReactions: Synchronizer<SyncNodeReactionsInput>;
   nodeTombstones: Synchronizer<SyncNodeTombstonesInput>;
   files: Synchronizer<SyncFilesInput>;
+  documentUpdates: Synchronizer<SyncDocumentUpdatesInput>;
 }
 
 type SyncHandlers = {
@@ -37,6 +40,7 @@ type SyncHandlers = {
   nodeReactions: (data: SyncNodeReactionData) => Promise<void>;
   nodeTombstones: (data: SyncNodeTombstoneData) => Promise<void>;
   files: (data: SyncFileData) => Promise<void>;
+  documentUpdates: (data: SyncDocumentUpdateData) => Promise<void>;
 };
 
 export class SyncService {
@@ -73,6 +77,9 @@ export class SyncService {
         this.workspace.nodes
       ),
       files: this.workspace.files.syncServerFile.bind(this.workspace.files),
+      documentUpdates: this.workspace.documents.syncServerDocumentUpdate.bind(
+        this.workspace.documents
+      ),
     };
     eventBus.subscribe(this.handleEvent.bind(this));
   }
@@ -143,6 +150,7 @@ export class SyncService {
     rootSynchronizers.nodeReactions.destroy();
     rootSynchronizers.nodeTombstones.destroy();
     rootSynchronizers.files.destroy();
+    rootSynchronizers.documentUpdates.destroy();
   }
 
   private async initRootSynchronizers(rootId: string): Promise<void> {
@@ -184,6 +192,12 @@ export class SyncService {
         { type: 'files', rootId },
         `${rootId}_files`,
         this.syncHandlers.files
+      ),
+      documentUpdates: new Synchronizer(
+        this.workspace,
+        { type: 'document_updates', rootId },
+        `${rootId}_document_updates`,
+        this.syncHandlers.documentUpdates
       ),
     };
 

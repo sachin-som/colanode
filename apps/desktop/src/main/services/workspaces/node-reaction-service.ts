@@ -331,7 +331,7 @@ export class NodeReactionService {
     );
   }
 
-  public async revertNodeReactionCreation(
+  public async revertNodeReactionCreate(
     nodeReaction: CreateNodeReactionMutationData
   ) {
     const deletedNodeReaction = await this.workspace.database
@@ -354,7 +354,7 @@ export class NodeReactionService {
     });
   }
 
-  public async revertNodeReactionDeletion(
+  public async revertNodeReactionDelete(
     nodeReaction: DeleteNodeReactionMutationData
   ) {
     const tombstoneId = this.generateTombstoneId(

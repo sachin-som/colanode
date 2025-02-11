@@ -4,19 +4,26 @@ import {
   SyncMutationResult,
   SyncMutationStatus,
   Mutation,
-  ApplyNodeTransactionMutation,
+  CreateNodeMutation,
+  DeleteNodeMutation,
   CreateNodeReactionMutation,
   DeleteNodeReactionMutation,
   MarkNodeSeenMutation,
   MarkNodeOpenedMutation,
-  DeleteNodeMutation,
+  UpdateNodeMutation,
+  UpdateDocumentMutation,
 } from '@colanode/core';
 
 import { SelectUser } from '@/data/schema';
 import { ResponseBuilder } from '@/lib/response-builder';
-import { applyNodeTransaction, deleteNode } from '@/lib/nodes';
+import {
+  createNodeFromMutation,
+  updateNodeFromMutation,
+  deleteNode,
+} from '@/lib/nodes';
 import { createNodeReaction, deleteNodeReaction } from '@/lib/node-reactions';
 import { markNodeAsOpened, markNodeAsSeen } from '@/lib/node-interactions';
+import { updateDocumentFromMutation } from '@/lib/documents';
 
 export const mutationsSyncHandler = async (
   req: Request,
@@ -48,8 +55,10 @@ const handleMutation = async (
   user: SelectUser,
   mutation: Mutation
 ): Promise<SyncMutationStatus> => {
-  if (mutation.type === 'apply_node_transaction') {
-    return await handleApplyNodeTransaction(user, mutation);
+  if (mutation.type === 'create_node') {
+    return await handleCreateNode(user, mutation);
+  } else if (mutation.type === 'update_node') {
+    return await handleUpdateNode(user, mutation);
   } else if (mutation.type === 'delete_node') {
     return await handleDeleteNode(user, mutation);
   } else if (mutation.type === 'create_node_reaction') {
@@ -60,22 +69,31 @@ const handleMutation = async (
     return await handleMarkNodeSeen(user, mutation);
   } else if (mutation.type === 'mark_node_opened') {
     return await handleMarkNodeOpened(user, mutation);
+  } else if (mutation.type === 'update_document') {
+    return await handleUpdateDocument(user, mutation);
   } else {
     return 'error';
   }
 };
 
-const handleApplyNodeTransaction = async (
+const handleCreateNode = async (
   user: SelectUser,
-  mutation: ApplyNodeTransactionMutation
+  mutation: CreateNodeMutation
 ): Promise<SyncMutationStatus> => {
-  const output = await applyNodeTransaction(user, {
-    id: mutation.data.id,
-    nodeId: mutation.data.nodeId,
-    data: mutation.data.data,
-    createdAt: new Date(mutation.data.createdAt),
-    operation: mutation.data.operation,
-  });
+  const output = await createNodeFromMutation(user, mutation.data);
+
+  if (!output) {
+    return 'error';
+  }
+
+  return 'success';
+};
+
+const handleUpdateNode = async (
+  user: SelectUser,
+  mutation: UpdateNodeMutation
+): Promise<SyncMutationStatus> => {
+  const output = await updateNodeFromMutation(user, mutation.data);
 
   if (!output) {
     return 'error';
@@ -130,5 +148,13 @@ const handleMarkNodeOpened = async (
   mutation: MarkNodeOpenedMutation
 ): Promise<SyncMutationStatus> => {
   const output = await markNodeAsOpened(user, mutation);
+  return output ? 'success' : 'error';
+};
+
+const handleUpdateDocument = async (
+  user: SelectUser,
+  mutation: UpdateDocumentMutation
+): Promise<SyncMutationStatus> => {
+  const output = await updateDocumentFromMutation(user, mutation.data);
   return output ? 'success' : 'error';
 };

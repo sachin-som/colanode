@@ -1,6 +1,6 @@
-import { NodeAttributes, TransactionOperation } from '@colanode/core';
+import { NodeAttributes } from '@colanode/core';
 
-import { SelectNode } from '@/data/schema';
+import { SelectDocumentUpdate, SelectNode } from '@/data/schema';
 
 export type NodeCollaborator = {
   nodeId: string;
@@ -31,18 +31,6 @@ export type UpdateNodeOutput = {
   node: SelectNode;
 };
 
-export type ApplyNodeTransactionInput = {
-  id: string;
-  nodeId: string;
-  operation: TransactionOperation;
-  data: string | Uint8Array;
-  createdAt: Date;
-};
-
-export type ApplyNodeTransactionOutput = {
-  node: SelectNode;
-};
-
 export type DeleteNodeInput = {
   id: string;
   rootId: string;
@@ -51,4 +39,13 @@ export type DeleteNodeInput = {
 
 export type DeleteNodeOutput = {
   node: SelectNode;
+};
+
+export type UpdateDocumentOutput = {
+  update: SelectDocumentUpdate;
+};
+
+export type ConcurrentUpdateResult<T> = {
+  type: 'success' | 'error' | 'retry';
+  output: T | null;
 };

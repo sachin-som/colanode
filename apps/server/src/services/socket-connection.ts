@@ -28,6 +28,7 @@ import { NodeReactionSynchronizer } from '@/synchronizers/node-reactions';
 import { NodeTombstoneSynchronizer } from '@/synchronizers/node-tombstones';
 import { NodeInteractionSynchronizer } from '@/synchronizers/node-interactions';
 import { FileSynchronizer } from '@/synchronizers/files';
+import { DocumentUpdateSynchronizer } from '@/synchronizers/document-updates';
 
 type SocketUser = {
   user: ConnectedUser;
@@ -178,6 +179,17 @@ export class SocketConnection {
       }
 
       return new NodeTombstoneSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'document_updates') {
+      if (!user.rootIds.has(message.input.rootId)) {
+        return null;
+      }
+
+      return new DocumentUpdateSynchronizer(
         message.id,
         user.user,
         message.input,

@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 
 import {
+  fetchNode,
   fetchUserStorageUsed,
   getFileMetadata,
   getWorkspaceFilesDirectoryPath,
@@ -26,7 +27,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { EventLoop } from '@/main/lib/event-loop';
-import { SelectFile, SelectNode } from '@/main/databases/workspace';
+import { SelectFile } from '@/main/databases/workspace';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { formatBytes } from '@/shared/lib/files';
 
@@ -93,12 +94,7 @@ export class FileService {
     this.cleanupEventLoop.start();
   }
 
-  public async createFile(
-    path: string,
-    id: string,
-    parentId: string,
-    root: SelectNode
-  ): Promise<void> {
+  public async createFile(id: string, path: string): Promise<void> {
     const metadata = getFileMetadata(path);
     if (!metadata) {
       throw new MutationError(
@@ -132,13 +128,21 @@ export class FileService {
       );
     }
 
+    const node = await fetchNode(this.workspace.database, id);
+    if (!node || node.type !== 'file') {
+      throw new MutationError(
+        MutationErrorCode.NodeNotFound,
+        'There was an error while creating the file. Please make sure you have access to this node.'
+      );
+    }
+
     this.copyFileToWorkspace(path, id, metadata.extension);
 
     const mutationData: CreateFileMutationData = {
       id,
       type: metadata.type,
-      parentId: parentId,
-      rootId: root.id,
+      parentId: node.parent_id!,
+      rootId: node.root_id,
       name: metadata.name,
       originalName: metadata.name,
       extension: metadata.extension,
@@ -156,8 +160,8 @@ export class FileService {
           .values({
             id,
             type: metadata.type,
-            parent_id: parentId,
-            root_id: root.id,
+            parent_id: node.parent_id!,
+            root_id: node.root_id,
             name: metadata.name,
             original_name: metadata.name,
             mime_type: metadata.mimeType,

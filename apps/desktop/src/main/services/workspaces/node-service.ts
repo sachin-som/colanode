@@ -3,21 +3,19 @@ import {
   IdType,
   createDebugger,
   NodeAttributes,
-  Node,
-  canCreateNode,
-  extractNodeText,
-  canUpdateNode,
-  canDeleteNode,
   DeleteNodeMutationData,
   SyncNodeData,
   SyncNodeTombstoneData,
   getNodeModel,
   CreateNodeMutationData,
   UpdateNodeMutationData,
+  CanCreateNodeContext,
+  CanUpdateAttributesContext,
+  CanDeleteNodeContext,
 } from '@colanode/core';
 import { decodeState, encodeState, YDoc } from '@colanode/crdt';
 
-import { fetchNode } from '@/main/lib/utils';
+import { fetchNodeAncestors } from '@/main/lib/utils';
 import { mapFile, mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
@@ -49,42 +47,26 @@ export class NodeService {
   public async createNode(input: CreateNodeInput): Promise<SelectNode> {
     this.debug(`Creating ${Array.isArray(input) ? 'nodes' : 'node'}`);
 
-    let root: Node | null = null;
+    const ancestors = input.parentId
+      ? await fetchNodeAncestors(this.workspace.database, input.parentId)
+      : [];
 
-    if (input.parentId) {
-      const parent = await fetchNode(this.workspace.database, input.parentId);
+    const model = getNodeModel(input.attributes.type);
+    const canCreateNodeContext: CanCreateNodeContext = {
+      user: {
+        id: this.workspace.userId,
+        role: this.workspace.role,
+        workspaceId: this.workspace.id,
+        accountId: this.workspace.accountId,
+      },
+      ancestors: ancestors.map(mapNode),
+      attributes: input.attributes,
+    };
 
-      if (parent) {
-        if (parent.id === parent.root_id) {
-          root = mapNode(parent);
-        } else {
-          const rootRow = await fetchNode(
-            this.workspace.database,
-            parent.root_id
-          );
-          if (rootRow) {
-            root = mapNode(rootRow);
-          }
-        }
-      }
-    }
-
-    if (
-      !canCreateNode(
-        {
-          user: {
-            userId: this.workspace.userId,
-            role: this.workspace.role,
-          },
-          root: root,
-        },
-        input.attributes.type
-      )
-    ) {
+    if (!model.canCreate(canCreateNodeContext)) {
       throw new Error('Insufficient permissions');
     }
 
-    const model = getNodeModel(input.attributes.type);
     const ydoc = new YDoc();
     const update = ydoc.update(model.attributesSchema, input.attributes);
 
@@ -93,7 +75,7 @@ export class NodeService {
     }
 
     const createdAt = new Date().toISOString();
-    const text = extractNodeText(input.id, input.attributes);
+    const rootId = ancestors[0]?.id ?? input.id;
 
     const { createdNode, createdMutation } = await this.workspace.database
       .transaction()
@@ -103,7 +85,7 @@ export class NodeService {
           .returningAll()
           .values({
             id: input.id,
-            root_id: root?.id ?? input.id,
+            root_id: rootId,
             attributes: JSON.stringify(input.attributes),
             created_at: createdAt,
             created_by: this.workspace.userId,
@@ -150,13 +132,6 @@ export class NodeService {
 
         if (!createdMutation) {
           throw new Error('Failed to create mutation');
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({ id: input.id, name: text.name, text: text.text })
-            .execute();
         }
 
         return {
@@ -206,13 +181,9 @@ export class NodeService {
   ): Promise<UpdateNodeResult | null> {
     this.debug(`Updating node ${nodeId}`);
 
-    const nodeRow = await fetchNode(this.workspace.database, nodeId);
-    if (!nodeRow) {
-      return 'not_found';
-    }
-
-    const root = await fetchNode(this.workspace.database, nodeRow.root_id);
-    if (!root) {
+    const ancestors = await fetchNodeAncestors(this.workspace.database, nodeId);
+    const nodeRow = ancestors[ancestors.length - 1];
+    if (!nodeRow || nodeRow.id !== nodeId) {
       return 'not_found';
     }
 
@@ -222,7 +193,22 @@ export class NodeService {
     const updatedAttributes = updater(node.attributes as T);
 
     const model = getNodeModel(updatedAttributes.type);
-    const ydoc = new YDoc();
+
+    const canUpdateAttributesContext: CanUpdateAttributesContext = {
+      user: {
+        id: this.workspace.userId,
+        role: this.workspace.role,
+        workspaceId: this.workspace.id,
+        accountId: this.workspace.accountId,
+      },
+      ancestors: ancestors.map(mapNode),
+      node: node,
+      attributes: updatedAttributes,
+    };
+
+    if (!model.canUpdateAttributes(canUpdateAttributesContext)) {
+      return 'unauthorized';
+    }
 
     const state = await this.workspace.database
       .selectFrom('node_states')
@@ -230,15 +216,17 @@ export class NodeService {
       .selectAll()
       .executeTakeFirst();
 
-    if (state) {
-      ydoc.applyUpdate(state.state);
-    }
-
     const updates = await this.workspace.database
       .selectFrom('node_updates')
       .where('node_id', '=', nodeId)
       .selectAll()
       .execute();
+
+    const ydoc = new YDoc();
+
+    if (state) {
+      ydoc.applyUpdate(state.state);
+    }
 
     for (const update of updates) {
       ydoc.applyUpdate(update.data);
@@ -246,30 +234,13 @@ export class NodeService {
 
     const update = ydoc.update(model.attributesSchema, updatedAttributes);
 
-    if (
-      !canUpdateNode(
-        {
-          user: {
-            userId: this.workspace.userId,
-            role: this.workspace.role,
-          },
-          root: mapNode(root),
-          node: node,
-        },
-        updatedAttributes
-      )
-    ) {
-      return 'unauthorized';
-    }
-
     if (!update) {
       return 'success';
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
-    const text = extractNodeText(nodeId, updatedAttributes);
-
     const localRevision = BigInt(node.localRevision) + BigInt(1);
+
     const { updatedNode, createdMutation } = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -328,17 +299,6 @@ export class NodeService {
           throw new Error('Failed to create mutation');
         }
 
-        if (text !== undefined) {
-          await trx.deleteFrom('texts').where('id', '=', nodeId).execute();
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({ id: nodeId, name: text.name, text: text.text })
-            .execute();
-        }
-
         return {
           updatedNode,
           createdMutation,
@@ -372,26 +332,28 @@ export class NodeService {
   }
 
   public async deleteNode(nodeId: string) {
-    const node = await fetchNode(this.workspace.database, nodeId);
-    if (!node) {
-      throw new Error('Node not found');
+    const ancestors = await fetchNodeAncestors(this.workspace.database, nodeId);
+    const nodeRow = ancestors[ancestors.length - 1];
+    if (!nodeRow || nodeRow.id !== nodeId) {
+      return 'not_found';
     }
 
-    const root = await fetchNode(this.workspace.database, node.root_id);
-    if (!root) {
-      throw new Error('Root not found');
-    }
+    const node = mapNode(nodeRow);
 
-    if (
-      !canDeleteNode({
-        user: {
-          userId: this.workspace.userId,
-          role: this.workspace.role,
-        },
-        root: mapNode(root),
-        node: mapNode(node),
-      })
-    ) {
+    const model = getNodeModel(node.attributes.type);
+
+    const canDeleteNodeContext: CanDeleteNodeContext = {
+      user: {
+        id: this.workspace.userId,
+        role: this.workspace.role,
+        workspaceId: this.workspace.id,
+        accountId: this.workspace.accountId,
+      },
+      ancestors: ancestors.map(mapNode),
+      node: node,
+    };
+
+    if (!model.canDelete(canDeleteNodeContext)) {
       throw new Error('Insufficient permissions');
     }
 
@@ -419,7 +381,7 @@ export class NodeService {
 
         const deleteMutationData: DeleteNodeMutationData = {
           id: nodeId,
-          rootId: root.root_id,
+          rootId: node.rootId,
           deletedAt: new Date().toISOString(),
         };
 
@@ -477,7 +439,6 @@ export class NodeService {
 
     const ydoc = new YDoc(node.state);
     const attributes = ydoc.getObject<NodeAttributes>();
-    const text = extractNodeText(node.id, attributes);
 
     const { createdNode } = await this.workspace.database
       .transaction()
@@ -498,13 +459,6 @@ export class NodeService {
 
         if (!createdNode) {
           throw new Error('Failed to create node');
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({ id: node.id, name: text.name, text: text.text })
-            .execute();
         }
 
         await trx
@@ -576,7 +530,6 @@ export class NodeService {
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
-    const text = extractNodeText(node.id, attributes);
     const localRevision = BigInt(existingNode.local_revision) + BigInt(1);
 
     const { updatedNode } = await this.workspace.database
@@ -608,17 +561,6 @@ export class NodeService {
           })
           .where('id', '=', node.id)
           .executeTakeFirst();
-
-        if (text !== undefined) {
-          await trx.deleteFrom('texts').where('id', '=', node.id).execute();
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({ id: node.id, name: text.name, text: text.text })
-            .execute();
-        }
 
         return { updatedNode };
       });
@@ -664,8 +606,6 @@ export class NodeService {
           .where('id', '=', tombstone.id)
           .execute();
 
-        await trx.deleteFrom('texts').where('id', '=', tombstone.id).execute();
-
         await trx
           .deleteFrom('node_reactions')
           .where('node_id', '=', tombstone.id)
@@ -685,6 +625,16 @@ export class NodeService {
         await trx
           .deleteFrom('tombstones')
           .where('id', '=', tombstone.id)
+          .execute();
+
+        await trx
+          .deleteFrom('documents')
+          .where('id', '=', tombstone.id)
+          .executeTakeFirst();
+
+        await trx
+          .deleteFrom('document_updates')
+          .where('document_id', '=', tombstone.id)
           .execute();
 
         return { deletedNode, deletedFile };
@@ -734,8 +684,6 @@ export class NodeService {
         .where('node_id', '=', mutation.id)
         .execute();
 
-      await tx.deleteFrom('texts').where('id', '=', mutation.id).execute();
-
       await tx
         .deleteFrom('node_reactions')
         .where('node_id', '=', mutation.id)
@@ -744,6 +692,13 @@ export class NodeService {
       await tx
         .deleteFrom('node_states')
         .where('id', '=', mutation.id)
+        .execute();
+
+      await tx.deleteFrom('documents').where('id', '=', mutation.id).execute();
+
+      await tx
+        .deleteFrom('document_updates')
+        .where('document_id', '=', mutation.id)
         .execute();
     });
 
@@ -787,11 +742,6 @@ export class NodeService {
         .execute();
 
       await this.workspace.database
-        .deleteFrom('texts')
-        .where('id', '=', mutation.id)
-        .execute();
-
-      await this.workspace.database
         .deleteFrom('node_reactions')
         .where('node_id', '=', mutation.id)
         .execute();
@@ -799,6 +749,16 @@ export class NodeService {
       await this.workspace.database
         .deleteFrom('node_states')
         .where('id', '=', mutation.id)
+        .execute();
+
+      await this.workspace.database
+        .deleteFrom('documents')
+        .where('id', '=', mutation.id)
+        .execute();
+
+      await this.workspace.database
+        .deleteFrom('document_updates')
+        .where('document_id', '=', mutation.id)
         .execute();
 
       return true;
@@ -843,8 +803,6 @@ export class NodeService {
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
-    const text = extractNodeText(mutation.id, attributes);
-
     const updatedNode = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -860,21 +818,6 @@ export class NodeService {
 
         if (!updatedNode) {
           return undefined;
-        }
-
-        if (text !== undefined) {
-          await trx.deleteFrom('texts').where('id', '=', mutation.id).execute();
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({
-              id: mutation.id,
-              name: text.name,
-              text: text.text,
-            })
-            .execute();
         }
 
         await trx
@@ -931,9 +874,8 @@ export class NodeService {
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
-    const text = extractNodeText(mutation.id, attributes);
-
     const deletedNode = JSON.parse(tombstone.data) as SelectNode;
+
     const createdNode = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -962,21 +904,6 @@ export class NodeService {
           .deleteFrom('tombstones')
           .where('id', '=', mutation.id)
           .execute();
-
-        if (text !== undefined) {
-          await trx.deleteFrom('texts').where('id', '=', mutation.id).execute();
-        }
-
-        if (text) {
-          await trx
-            .insertInto('texts')
-            .values({
-              id: mutation.id,
-              name: text.name,
-              text: text.text,
-            })
-            .execute();
-        }
       });
 
     if (createdNode) {

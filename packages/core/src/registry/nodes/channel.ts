@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 import { NodeModel } from './core';
 
+import { extractNodeRole } from '../../lib/nodes';
+import { hasNodeRole } from '../../lib/permissions';
+
 import { NodeAttributes } from '.';
 
 export const channelAttributesSchema = z.object({
@@ -16,26 +19,59 @@ export type ChannelAttributes = z.infer<typeof channelAttributesSchema>;
 export const channelModel: NodeModel = {
   type: 'channel',
   attributesSchema: channelAttributesSchema,
-  canCreate: async (context, _) => {
-    return context.hasEditorAccess();
+  canCreate: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'editor');
   },
-  canUpdate: async (context, _) => {
-    return context.hasEditorAccess();
+  canUpdateAttributes: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'editor');
   },
-  canDelete: async (context, _) => {
-    return context.hasAdminAccess();
+  canUpdateDocument: () => {
+    return false;
   },
-  getName: function (
+  canDelete: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'admin');
+  },
+  getName: (
     _: string,
     attributes: NodeAttributes
-  ): string | null | undefined {
+  ): string | null | undefined => {
     if (attributes.type !== 'channel') {
       return null;
     }
 
     return attributes.name;
   },
-  getText: function (_: string, __: NodeAttributes): string | null | undefined {
+  getAttributesText: (): string | null | undefined => {
+    return undefined;
+  },
+  getDocumentText: (): string | null | undefined => {
     return undefined;
   },
 };

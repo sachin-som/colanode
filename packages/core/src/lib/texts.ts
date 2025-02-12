@@ -1,36 +1,6 @@
 import { Block } from '../registry/block';
-import { NodeAttributes } from '../registry/nodes';
 
-export type TextResult = {
-  id: string;
-  name: string | null;
-  text: string | null;
-};
-
-export const extractNodeText = (
-  id: string,
-  attributes: NodeAttributes
-): TextResult | undefined => {
-  // if (attributes.type === 'page') {
-  //   return {
-  //     id,
-  //     name: attributes.name,
-  //     text: extractBlockTexts(id, attributes.content),
-  //   };
-  // }
-
-  // if (attributes.type === 'record') {
-  //   return {
-  //     id,
-  //     name: attributes.name,
-  //     text: extractBlockTexts(id, attributes.content),
-  //   };
-  // }
-
-  return undefined;
-};
-
-const extractBlockTexts = (
+export const extractBlockTexts = (
   entryId: string,
   blocks: Record<string, Block> | undefined | null
 ): string | null => {

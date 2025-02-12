@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 import { NodeModel, nodeRoleEnum } from './core';
 
-import { NodeAttributes } from '.';
+import { extractNodeRole } from '../../lib/nodes';
+import { hasNodeRole, hasWorkspaceRole } from '../../lib/permissions';
 
 export const spaceAttributesSchema = z.object({
   type: z.literal('space'),
@@ -18,26 +19,72 @@ export type SpaceAttributes = z.infer<typeof spaceAttributesSchema>;
 export const spaceModel: NodeModel = {
   type: 'space',
   attributesSchema: spaceAttributesSchema,
-  canCreate: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canCreate: (context) => {
+    if (context.ancestors.length > 0) {
+      return false;
+    }
+
+    if (!hasWorkspaceRole(context.user.role, 'collaborator')) {
+      return false;
+    }
+
+    if (context.attributes.type !== 'space') {
+      return false;
+    }
+
+    const collaborators = context.attributes.collaborators;
+    if (Object.keys(collaborators).length === 0) {
+      return false;
+    }
+
+    if (collaborators[context.user.id] !== 'admin') {
+      return false;
+    }
+
+    return true;
   },
-  canUpdate: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canUpdateAttributes: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'admin');
   },
-  canDelete: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canUpdateDocument: () => {
+    return false;
   },
-  getName: function (
-    _: string,
-    attributes: NodeAttributes
-  ): string | null | undefined {
+  canDelete: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'admin');
+  },
+  getName: (_, attributes) => {
     if (attributes.type !== 'space') {
-      return null;
+      return undefined;
     }
 
     return attributes.name;
   },
-  getText: function (_: string, __: NodeAttributes): string | null | undefined {
+  getAttributesText: (id, attributes) => {
+    if (attributes.type !== 'space') {
+      return undefined;
+    }
+
+    return attributes.name;
+  },
+  getDocumentText: () => {
     return undefined;
   },
 };

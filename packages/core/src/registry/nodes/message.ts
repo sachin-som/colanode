@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { NodeModel } from './core';
 
 import { blockSchema } from '../block';
-
-import { NodeAttributes } from '.';
+import { extractBlockTexts } from '../../lib/texts';
+import { extractNodeRole } from '../../lib/nodes';
+import { hasNodeRole } from '../../lib/permissions';
 
 export const messageAttributesSchema = z.object({
   type: z.literal('message'),
@@ -20,26 +21,67 @@ export type MessageAttributes = z.infer<typeof messageAttributesSchema>;
 export const messageModel: NodeModel = {
   type: 'message',
   attributesSchema: messageAttributesSchema,
-  canCreate: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canCreate: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'collaborator');
   },
-  canUpdate: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canUpdateAttributes: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return context.node.createdBy === context.user.id;
   },
-  canDelete: async (context, _) => {
-    return context.hasCollaboratorAccess();
+  canUpdateDocument: () => {
+    return false;
   },
-  getName: function (
-    _: string,
-    attributes: NodeAttributes
-  ): string | null | undefined {
+  canDelete: (context) => {
+    if (context.ancestors.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.ancestors, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return (
+      context.node.createdBy === context.user.id || hasNodeRole(role, 'admin')
+    );
+  },
+  getName: (_, attributes) => {
     if (attributes.type !== 'message') {
-      return null;
+      return undefined;
     }
 
     return attributes.name;
   },
-  getText: function (_: string, __: NodeAttributes): string | null | undefined {
+  getAttributesText: (id, attributes) => {
+    if (attributes.type !== 'message') {
+      return undefined;
+    }
+
+    const text = extractBlockTexts(id, attributes.content);
+    if (!text) {
+      return null;
+    }
+
+    return text;
+  },
+  getDocumentText: () => {
     return undefined;
   },
 };

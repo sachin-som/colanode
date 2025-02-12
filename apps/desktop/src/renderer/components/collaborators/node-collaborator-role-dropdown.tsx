@@ -29,9 +29,9 @@ const roles: NodeCollaboratorRole[] = [
     enabled: true,
   },
   {
-    name: 'Commenter',
-    value: 'commenter',
-    description: 'Can message or comment on content',
+    name: 'Collaborator',
+    value: 'collaborator',
+    description: 'Can create records, messages or comments',
     enabled: true,
   },
   {

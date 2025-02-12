@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { NodeModel, nodeRoleEnum } from './core';
 
-import { NodeAttributes } from '.';
+import { hasWorkspaceRole } from '../../lib/permissions';
 
 export const chatAttributesSchema = z.object({
   type: z.literal('chat'),
@@ -14,19 +14,42 @@ export type ChatAttributes = z.infer<typeof chatAttributesSchema>;
 export const chatModel: NodeModel = {
   type: 'chat',
   attributesSchema: chatAttributesSchema,
-  canCreate: async (_, __) => {
+  canCreate: (context) => {
+    if (!hasWorkspaceRole(context.user.role, 'guest')) {
+      return false;
+    }
+
+    if (context.attributes.type !== 'chat') {
+      return false;
+    }
+
+    const collaborators = context.attributes.collaborators;
+    if (Object.keys(collaborators).length !== 2) {
+      return false;
+    }
+
+    if (!collaborators[context.user.id]) {
+      return false;
+    }
+
     return true;
   },
-  canUpdate: async (_, __) => {
+  canUpdateAttributes: () => {
     return false;
   },
-  canDelete: async (_, __) => {
+  canUpdateDocument: () => {
     return false;
   },
-  getName: function (_: string, __: NodeAttributes): string | null | undefined {
+  canDelete: () => {
+    return false;
+  },
+  getName: (): string | null | undefined => {
     return undefined;
   },
-  getText: function (_: string, __: NodeAttributes): string | null | undefined {
+  getAttributesText: (): string | null | undefined => {
+    return undefined;
+  },
+  getDocumentText: (): string | null | undefined => {
     return undefined;
   },
 };

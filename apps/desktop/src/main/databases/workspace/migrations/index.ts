@@ -10,11 +10,10 @@ import { createCollaborationsTable } from './00007-create-collaborations-table';
 import { createFilesTable } from './00008-create-files-table';
 import { createMutationsTable } from './00009-create-mutations-table';
 import { createTombstonesTable } from './00010-create-tombstones-table';
-import { createTextsTable } from './00011-create-texts-table';
-import { createCursorsTable } from './00012-create-cursors-table';
-import { createMetadataTable } from './00013-create-metadata-table';
-import { createDocumentsTable } from './00014-create-documents-table';
-import { createDocumentUpdatesTable } from './00015-create-document-updates-table';
+import { createDocumentsTable } from './00011-create-documents-table';
+import { createDocumentUpdatesTable } from './00012-create-document-updates-table';
+import { createCursorsTable } from './00013-create-cursors-table';
+import { createMetadataTable } from './00014-create-metadata-table';
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001-create-users-table': createUsersTable,
@@ -27,9 +26,8 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00008-create-files-table': createFilesTable,
   '00009-create-mutations-table': createMutationsTable,
   '00010-create-tombstones-table': createTombstonesTable,
-  '00011-create-texts-table': createTextsTable,
-  '00012-create-cursors-table': createCursorsTable,
-  '00013-create-metadata-table': createMetadataTable,
-  '00014-create-documents-table': createDocumentsTable,
-  '00015-create-document-updates-table': createDocumentUpdatesTable,
+  '00011-create-documents-table': createDocumentsTable,
+  '00012-create-document-updates-table': createDocumentUpdatesTable,
+  '00013-create-cursors-table': createCursorsTable,
+  '00014-create-metadata-table': createMetadataTable,
 };

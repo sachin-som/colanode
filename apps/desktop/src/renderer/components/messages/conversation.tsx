@@ -73,7 +73,7 @@ export const Conversation = ({
   };
 
   const isAdmin = hasNodeRole(role, 'admin');
-  const canCreateMessage = hasNodeRole(role, 'commenter');
+  const canCreateMessage = hasNodeRole(role, 'collaborator');
 
   return (
     <ConversationContext.Provider

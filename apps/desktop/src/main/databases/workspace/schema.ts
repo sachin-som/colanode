@@ -159,16 +159,6 @@ export type SelectTombsonte = Selectable<TombstoneTable>;
 export type CreateTombstone = Insertable<TombstoneTable>;
 export type UpdateTombstone = Updateable<TombstoneTable>;
 
-interface TextTable {
-  id: ColumnType<string, string, never>;
-  name: ColumnType<string | null, string | null, string | null>;
-  text: ColumnType<string | null, string | null, string | null>;
-}
-
-export type SelectText = Selectable<TextTable>;
-export type CreateText = Insertable<TextTable>;
-export type UpdateText = Updateable<TextTable>;
-
 interface CursorTable {
   key: ColumnType<string, string, never>;
   value: ColumnType<bigint, bigint, bigint>;
@@ -227,9 +217,8 @@ export interface WorkspaceDatabaseSchema {
   files: FileTable;
   mutations: MutationTable;
   tombstones: TombstoneTable;
-  texts: TextTable;
-  cursors: CursorTable;
-  metadata: MetadataTable;
   documents: DocumentTable;
   document_updates: DocumentUpdateTable;
+  cursors: CursorTable;
+  metadata: MetadataTable;
 }

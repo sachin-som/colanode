@@ -1,5 +1,3 @@
-import { sql } from 'kysely';
-
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { SelectUser } from '@/main/databases/workspace';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
@@ -82,26 +80,20 @@ export class UserSearchQueryHandler
     input: UserSearchQueryInput
   ): Promise<SelectUser[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-
     const exclude = input.exclude ?? [];
-    const query = sql<SelectUser>`
-      SELECT u.*
-      FROM users u
-      JOIN texts t ON u.id = t.id
-      WHERE u.id != ${workspace.userId}
-        AND t.name MATCH ${input.searchQuery + '*'}
-        ${
-          exclude.length > 0
-            ? sql`AND u.id NOT IN (${sql.join(
-                exclude.map((id) => sql`${id}`),
-                sql`, `
-              )})`
-            : sql``
-        }
-    `.compile(workspace.database);
 
-    const result = await workspace.database.executeQuery(query);
-    return result.rows;
+    let queryBuilder = workspace.database
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '!=', workspace.userId)
+      .where('name', 'like', `%${input.searchQuery}%`);
+
+    if (exclude.length > 0) {
+      queryBuilder = queryBuilder.where('id', 'not in', exclude);
+    }
+
+    const rows = await queryBuilder.execute();
+    return rows;
   }
 
   private async fetchUsers(input: UserSearchQueryInput): Promise<SelectUser[]> {

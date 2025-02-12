@@ -1,13 +1,17 @@
 import { z, ZodSchema } from 'zod';
 
 import { WorkspaceRole } from '../../types/workspaces';
-import { hasNodeRole } from '../../lib/permissions';
-import { extractNodeRole } from '../../lib/nodes';
+import { DocumentContent } from '../documents';
 
 import { Node, NodeAttributes } from '.';
 
-export type NodeRole = 'admin' | 'editor' | 'commenter' | 'viewer';
-export const nodeRoleEnum = z.enum(['admin', 'editor', 'commenter', 'viewer']);
+export type NodeRole = 'admin' | 'editor' | 'collaborator' | 'viewer';
+export const nodeRoleEnum = z.enum([
+  'admin',
+  'editor',
+  'collaborator',
+  'viewer',
+]);
 
 export interface NodeMutationUser {
   id: string;
@@ -16,54 +20,49 @@ export interface NodeMutationUser {
   accountId: string;
 }
 
-export class NodeMutationContext {
-  public readonly user: NodeMutationUser;
-  public readonly root: Node | null;
-  public readonly role: NodeRole | null;
+export type CanCreateNodeContext = {
+  user: NodeMutationUser;
+  ancestors: Node[];
+  attributes: NodeAttributes;
+};
 
-  constructor(user: NodeMutationUser, root: Node | null) {
-    this.user = user;
-    this.root = root;
-    this.role = root ? extractNodeRole(root, user.id) : null;
-  }
+export type CanUpdateAttributesContext = {
+  user: NodeMutationUser;
+  ancestors: Node[];
+  node: Node;
+  attributes: NodeAttributes;
+};
 
-  public hasAdminAccess = () => {
-    return this.role ? hasNodeRole(this.role, 'admin') : false;
-  };
+export type CanUpdateDocumentContext = {
+  user: NodeMutationUser;
+  ancestors: Node[];
+  node: Node;
+};
 
-  public hasEditorAccess = () => {
-    return this.role ? hasNodeRole(this.role, 'editor') : false;
-  };
-
-  public hasCollaboratorAccess = () => {
-    return this.role ? hasNodeRole(this.role, 'commenter') : false;
-  };
-
-  public hasViewerAccess = () => {
-    return this.role ? hasNodeRole(this.role, 'viewer') : false;
-  };
-}
+export type CanDeleteNodeContext = {
+  user: NodeMutationUser;
+  ancestors: Node[];
+  node: Node;
+};
 
 export interface NodeModel {
   type: string;
   attributesSchema: ZodSchema;
   documentSchema?: ZodSchema;
-  canCreate: (
-    context: NodeMutationContext,
-    attributes: NodeAttributes
-  ) => Promise<boolean>;
-  canUpdate: (
-    context: NodeMutationContext,
-    node: Node,
-    attributes: NodeAttributes
-  ) => Promise<boolean>;
-  canDelete: (context: NodeMutationContext, node: Node) => Promise<boolean>;
+  canCreate: (context: CanCreateNodeContext) => boolean;
+  canUpdateAttributes: (context: CanUpdateAttributesContext) => boolean;
+  canUpdateDocument: (context: CanUpdateDocumentContext) => boolean;
+  canDelete: (context: CanDeleteNodeContext) => boolean;
   getName: (
     id: string,
     attributes: NodeAttributes
   ) => string | null | undefined;
-  getText: (
+  getAttributesText: (
     id: string,
     attributes: NodeAttributes
+  ) => string | null | undefined;
+  getDocumentText: (
+    id: string,
+    content: DocumentContent
   ) => string | null | undefined;
 }

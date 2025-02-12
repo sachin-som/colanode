@@ -1,7 +1,7 @@
 import {
-  canCreateNode,
-  canDeleteNode,
-  canUpdateNode,
+  CanCreateNodeContext,
+  CanDeleteNodeContext,
+  CanUpdateAttributesContext,
   createDebugger,
   CreateNodeMutationData,
   extractNodeCollaborators,
@@ -309,35 +309,34 @@ export const createNodeFromMutation = async (
 ): Promise<CreateNodeOutput | null> => {
   const ydoc = new YDoc(mutation.data);
   const attributes = ydoc.getObject<NodeAttributes>();
-  let root: SelectNode | null = null;
+  const model = getNodeModel(attributes.type);
+
+  let parentId: string | null = null;
 
   if (attributes.type !== 'space' && attributes.type !== 'chat') {
-    const parent = await fetchNode(attributes.parentId);
-    if (!parent) {
-      return null;
-    }
-
-    root = await fetchNode(parent.root_id);
+    parentId = attributes.parentId;
   }
 
-  if (
-    !canCreateNode(
-      {
-        user: {
-          userId: user.id,
-          role: user.role,
-        },
-        root: root ? mapNode(root) : null,
-      },
-      attributes.type
-    )
-  ) {
+  const ancestors = parentId ? await fetchNodeAncestors(parentId) : [];
+  const canCreateNodeContext: CanCreateNodeContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      workspaceId: user.workspace_id,
+      accountId: user.account_id,
+    },
+    ancestors: ancestors.map(mapNode),
+    attributes,
+  };
+
+  if (!model.canCreate(canCreateNodeContext)) {
     return null;
   }
 
+  const rootId = ancestors[0]?.id ?? mutation.id;
   const createNode: CreateNode = {
     id: mutation.id,
-    root_id: root?.id ?? mutation.id,
+    root_id: rootId,
     attributes: JSON.stringify(attributes),
     workspace_id: user.workspace_id,
     created_at: new Date(mutation.createdAt),
@@ -386,7 +385,7 @@ export const createNodeFromMutation = async (
     eventBus.publish({
       type: 'node_created',
       nodeId: mutation.id,
-      rootId: root?.id ?? mutation.id,
+      rootId,
       workspaceId: user.workspace_id,
     });
 
@@ -431,35 +430,36 @@ const tryUpdateNodeFromMutation = async (
   user: SelectUser,
   mutation: UpdateNodeMutationData
 ): Promise<ConcurrentUpdateResult<UpdateNodeOutput>> => {
-  const node = await fetchNode(mutation.id);
-  if (!node) {
+  const ancestors = await fetchNodeAncestors(mutation.id);
+  if (ancestors.length === 0) {
     return { type: 'error', output: null };
   }
 
-  const root = await fetchNode(node.root_id);
-  if (!root) {
+  const node = ancestors[ancestors.length - 1];
+  if (!node || node.id !== mutation.id) {
     return { type: 'error', output: null };
   }
 
+  const model = getNodeModel(node.type);
   const ydoc = new YDoc(node.state);
   ydoc.applyUpdate(mutation.data);
 
   const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
 
-  if (
-    !canUpdateNode(
-      {
-        user: {
-          userId: user.id,
-          role: user.role,
-        },
-        root: mapNode(root),
-        node: mapNode(node),
-      },
-      attributes
-    )
-  ) {
+  const canUpdateNodeContext: CanUpdateAttributesContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      workspaceId: user.workspace_id,
+      accountId: user.account_id,
+    },
+    ancestors: ancestors.map(mapNode),
+    node: mapNode(node),
+    attributes,
+  };
+
+  if (!model.canUpdateAttributes(canUpdateNodeContext)) {
     return { type: 'error', output: null };
   }
 
@@ -507,7 +507,7 @@ const tryUpdateNodeFromMutation = async (
     eventBus.publish({
       type: 'node_updated',
       nodeId: mutation.id,
-      rootId: root.id,
+      rootId: node.root_id,
       workspaceId: user.workspace_id,
     });
 
@@ -544,26 +544,29 @@ export const deleteNode = async (
   user: SelectUser,
   input: DeleteNodeInput
 ): Promise<DeleteNodeOutput | null> => {
-  const node = await fetchNode(input.id);
-  if (!node) {
+  const ancestors = await fetchNodeAncestors(input.id);
+  if (ancestors.length === 0) {
     return null;
   }
 
-  const root = await fetchNode(node.root_id);
-  if (!root) {
+  const node = ancestors[ancestors.length - 1];
+  if (!node || node.id !== input.id) {
     return null;
   }
 
-  if (
-    !canDeleteNode({
-      user: {
-        userId: user.id,
-        role: user.role,
-      },
-      root: mapNode(root),
-      node: mapNode(node),
-    })
-  ) {
+  const model = getNodeModel(node.type);
+  const canDeleteNodeContext: CanDeleteNodeContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      workspaceId: user.workspace_id,
+      accountId: user.account_id,
+    },
+    ancestors: ancestors.map(mapNode),
+    node: mapNode(node),
+  };
+
+  if (!model.canDelete(canDeleteNodeContext)) {
     return null;
   }
 

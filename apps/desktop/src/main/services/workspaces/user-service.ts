@@ -50,16 +50,6 @@ export class UserService {
       )
       .executeTakeFirst();
 
-    await this.workspace.database
-      .deleteFrom('texts')
-      .where('id', '=', user.id)
-      .execute();
-
-    await this.workspace.database
-      .insertInto('texts')
-      .values({ id: user.id, name: user.name, text: null })
-      .execute();
-
     if (createdUser) {
       eventBus.publish({
         type: 'user_created',

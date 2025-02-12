@@ -6,10 +6,10 @@ import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { formatBytes } from '@/shared/lib/files';
-import { File } from '@/shared/types/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FileSidebarProps {
-  file: File;
+  file: LocalFileNode;
 }
 
 const FileMeta = ({ title, value }: { title: string; value: string }) => {
@@ -41,16 +41,16 @@ export const FileSidebar = ({ file }: FileSidebarProps) => {
         />
         <div
           className="line-clamp-3 break-words text-base font-medium"
-          title={file.name}
+          title={file.attributes.name}
         >
-          {file.name}
+          {file.attributes.name}
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <FileMeta title="Name" value={file.name} />
-        <FileMeta title="Type" value={file.mimeType} />
-        <FileMeta title="Size" value={formatBytes(file.size)} />
+        <FileMeta title="Name" value={file.attributes.name} />
+        <FileMeta title="Type" value={file.attributes.mimeType} />
+        <FileMeta title="Size" value={formatBytes(file.attributes.size)} />
         <FileMeta title="Created at" value={formatDate(file.createdAt)} />
 
         {user && (

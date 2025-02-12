@@ -1,4 +1,4 @@
-import { generateId, IdType, FileAttributes } from '@colanode/core';
+import { generateId, IdType } from '@colanode/core';
 
 import { MutationHandler } from '@/main/lib/types';
 import {
@@ -15,19 +15,9 @@ export class FileCreateMutationHandler
     input: FileCreateMutationInput
   ): Promise<FileCreateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    const attributes: FileAttributes = {
-      type: 'file',
-      parentId: input.parentId,
-    };
 
     const fileId = generateId(IdType.File);
-    await workspace.nodes.createNode({
-      id: fileId,
-      attributes,
-      parentId: input.parentId,
-    });
-
-    await workspace.files.createFile(fileId, input.filePath);
+    await workspace.files.createFile(fileId, input.parentId, input.filePath);
 
     return {
       id: fileId,

@@ -7,7 +7,7 @@ import { EmojiCategoryListQueryHandler } from '@/main/queries/emojis/emoji-categ
 import { EmojiSearchQueryHandler } from '@/main/queries/emojis/emoji-search';
 import { EmojiGetBySkinIdQueryHandler } from '@/main/queries/emojis/emoji-get-by-skin-id';
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
-import { FileGetQueryHandler } from '@/main/queries/files/file-get';
+import { FileStateGetQueryHandler } from '@/main/queries/files/file-state-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
 import { IconListQueryHandler } from '@/main/queries/icons/icon-list';
 import { IconSearchQueryHandler } from '@/main/queries/icons/icon-search';
@@ -71,7 +71,7 @@ export const queryHandlerMap: QueryHandlerMap = {
   database_view_list: new DatabaseViewListQueryHandler(),
   record_search: new RecordSearchQueryHandler(),
   user_get: new UserGetQueryHandler(),
-  file_get: new FileGetQueryHandler(),
+  file_state_get: new FileStateGetQueryHandler(),
   chat_list: new ChatListQueryHandler(),
   space_list: new SpaceListQueryHandler(),
   workspace_metadata_list: new WorkspaceMetadataListQueryHandler(),

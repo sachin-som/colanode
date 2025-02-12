@@ -9,7 +9,7 @@ import { SelectEmoji } from '@/main/databases/emojis';
 import { SelectIcon } from '@/main/databases/icons';
 import { SelectWorkspace } from '@/main/databases/account';
 import {
-  SelectFile,
+  SelectFileState,
   SelectMutation,
   SelectNode,
   SelectUser,
@@ -20,7 +20,7 @@ import {
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
-import { File } from '@/shared/types/files';
+import { FileState } from '@/shared/types/files';
 import {
   Workspace,
   WorkspaceMetadata,
@@ -136,29 +136,20 @@ export const mapNodeInteraction = (
   };
 };
 
-export const mapFile = (row: SelectFile): File => {
+export const mapFileState = (row: SelectFileState): FileState => {
   return {
     id: row.id,
-    type: row.type,
-    parentId: row.parent_id,
-    rootId: row.root_id,
-    revision: row.revision,
-    name: row.name,
-    originalName: row.original_name,
-    extension: row.extension,
-    mimeType: row.mime_type,
-    size: row.size,
-    createdAt: row.created_at,
-    createdBy: row.created_by,
-    updatedAt: row.updated_at,
-    updatedBy: row.updated_by,
-    status: row.status,
+    version: row.version,
     downloadStatus: row.download_status,
     downloadProgress: row.download_progress,
     downloadRetries: row.download_retries,
+    downloadStartedAt: row.download_started_at,
+    downloadCompletedAt: row.download_completed_at,
     uploadStatus: row.upload_status,
     uploadProgress: row.upload_progress,
     uploadRetries: row.upload_retries,
+    uploadStartedAt: row.upload_started_at,
+    uploadCompletedAt: row.upload_completed_at,
   };
 };
 

@@ -1,4 +1,4 @@
-import { FileType } from './files';
+import { FileSubtype } from './files';
 
 export type SyncMutationsInput = {
   mutations: Mutation[];
@@ -107,7 +107,7 @@ export type MarkNodeOpenedMutation = MutationBase & {
 
 export type CreateFileMutationData = {
   id: string;
-  type: FileType;
+  type: FileSubtype;
   parentId: string;
   rootId: string;
   name: string;

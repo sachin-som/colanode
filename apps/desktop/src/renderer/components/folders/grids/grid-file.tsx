@@ -1,10 +1,10 @@
-import { File } from '@/shared/types/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 import { FileContextMenu } from '@/renderer/components/files/file-context-menu';
 import { FileThumbnail } from '@/renderer/components/files/file-thumbnail';
 import { GridItem } from '@/renderer/components/folders/grids/grid-item';
 
 interface GridFileProps {
-  file: File;
+  file: LocalFileNode;
 }
 
 export const GridFile = ({ file }: GridFileProps) => {
@@ -16,9 +16,9 @@ export const GridFile = ({ file }: GridFileProps) => {
         </div>
         <p
           className="line-clamp-2 w-full break-words text-center text-xs text-foreground/80"
-          title={file.name}
+          title={file.attributes.name}
         >
-          {file.name}
+          {file.attributes.name}
         </p>
       </GridItem>
     </FileContextMenu>

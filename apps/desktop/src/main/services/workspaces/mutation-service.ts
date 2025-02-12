@@ -143,9 +143,7 @@ export class MutationService {
     for (const mutationRow of invalidMutations) {
       const mutation = mapMutation(mutationRow);
 
-      if (mutation.type === 'create_file') {
-        await this.workspace.files.revertFileCreate(mutation.id);
-      } else if (mutation.type === 'create_node') {
+      if (mutation.type === 'create_node') {
         await this.workspace.nodes.revertNodeCreate(mutation.data);
       } else if (mutation.type === 'update_node') {
         await this.workspace.nodes.revertNodeUpdate(mutation.data);

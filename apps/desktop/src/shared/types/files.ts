@@ -1,4 +1,4 @@
-import { FileStatus, FileType } from '@colanode/core';
+import { FileSubtype } from '@colanode/core';
 
 export type FileMetadata = {
   path: string;
@@ -6,31 +6,22 @@ export type FileMetadata = {
   extension: string;
   name: string;
   size: number;
-  type: FileType;
+  type: FileSubtype;
 };
 
-export type File = {
+export type FileState = {
   id: string;
-  type: FileType;
-  parentId: string;
-  rootId: string;
-  revision: bigint;
-  name: string;
-  originalName: string;
-  extension: string;
-  mimeType: string;
-  size: number;
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string | null;
-  updatedBy: string | null;
-  downloadStatus: DownloadStatus;
-  downloadProgress: number;
-  downloadRetries: number;
-  uploadStatus: UploadStatus;
-  uploadProgress: number;
-  uploadRetries: number;
-  status: FileStatus;
+  version: string;
+  downloadStatus: DownloadStatus | null;
+  downloadProgress: number | null;
+  downloadRetries: number | null;
+  downloadStartedAt: string | null;
+  downloadCompletedAt: string | null;
+  uploadStatus: UploadStatus | null;
+  uploadProgress: number | null;
+  uploadRetries: number | null;
+  uploadStartedAt: string | null;
+  uploadCompletedAt: string | null;
 };
 
 export enum DownloadStatus {

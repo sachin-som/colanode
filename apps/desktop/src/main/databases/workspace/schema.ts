@@ -1,6 +1,4 @@
 import {
-  FileStatus,
-  FileType,
   MutationType,
   NodeType,
   WorkspaceRole,
@@ -108,34 +106,61 @@ export type SelectCollaboration = Selectable<CollaborationTable>;
 export type CreateCollaboration = Insertable<CollaborationTable>;
 export type UpdateCollaboration = Updateable<CollaborationTable>;
 
-interface FileTable {
+interface DocumentTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<FileType, FileType, FileType>;
-  parent_id: ColumnType<string, string, string>;
-  root_id: ColumnType<string, string, string>;
   revision: ColumnType<bigint, bigint, bigint>;
-  name: ColumnType<string, string, string>;
-  original_name: ColumnType<string, string, string>;
-  mime_type: ColumnType<string, string, string>;
-  extension: ColumnType<string, string, string>;
-  size: ColumnType<number, number, number>;
-  created_by: ColumnType<string, string, never>;
-  updated_by: ColumnType<string | null, string | null, string | null>;
-  deleted_at: ColumnType<string | null, never, string | null>;
-  download_status: ColumnType<DownloadStatus, DownloadStatus, DownloadStatus>;
-  download_progress: ColumnType<number, number, number>;
-  download_retries: ColumnType<number, number, number>;
-  upload_status: ColumnType<UploadStatus, UploadStatus, UploadStatus>;
-  upload_progress: ColumnType<number, number, number>;
-  upload_retries: ColumnType<number, number, number>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<string, string, never>;
-  updated_at: ColumnType<string | null, string | null, string>;
-  status: ColumnType<FileStatus, FileStatus, FileStatus>;
+  created_by: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+  updated_by: ColumnType<string | null, string | null, string | null>;
 }
 
-export type SelectFile = Selectable<FileTable>;
-export type CreateFile = Insertable<FileTable>;
-export type UpdateFile = Updateable<FileTable>;
+export type SelectDocument = Selectable<DocumentTable>;
+export type CreateDocument = Insertable<DocumentTable>;
+export type UpdateDocument = Updateable<DocumentTable>;
+
+interface DocumentUpdateTable {
+  id: ColumnType<string, string, never>;
+  document_id: ColumnType<string, string, never>;
+  data: ColumnType<Uint8Array, Uint8Array, never>;
+  created_at: ColumnType<string, string, never>;
+}
+
+export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
+export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
+export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
+
+interface FileStateTable {
+  id: ColumnType<string, string, never>;
+  version: ColumnType<string, string, string>;
+  download_status: ColumnType<
+    DownloadStatus | null,
+    DownloadStatus | null,
+    DownloadStatus | null
+  >;
+  download_progress: ColumnType<number | null, number | null, number | null>;
+  download_retries: ColumnType<number | null, number | null, number | null>;
+  download_started_at: ColumnType<string | null, string | null, string | null>;
+  download_completed_at: ColumnType<
+    string | null,
+    string | null,
+    string | null
+  >;
+  upload_status: ColumnType<
+    UploadStatus | null,
+    UploadStatus | null,
+    UploadStatus | null
+  >;
+  upload_progress: ColumnType<number | null, number | null, number | null>;
+  upload_retries: ColumnType<number | null, number | null, number | null>;
+  upload_started_at: ColumnType<string | null, string | null, string | null>;
+  upload_completed_at: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectFileState = Selectable<FileStateTable>;
+export type CreateFileState = Insertable<FileStateTable>;
+export type UpdateFileState = Updateable<FileStateTable>;
 
 interface MutationTable {
   id: ColumnType<string, string, never>;
@@ -181,31 +206,6 @@ export type SelectWorkspaceMetadata = Selectable<MetadataTable>;
 export type CreateWorkspaceMetadata = Insertable<MetadataTable>;
 export type UpdateWorkspaceMetadata = Updateable<MetadataTable>;
 
-interface DocumentTable {
-  id: ColumnType<string, string, never>;
-  revision: ColumnType<bigint, bigint, bigint>;
-  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
-  created_at: ColumnType<string, string, never>;
-  created_by: ColumnType<string, string, never>;
-  updated_at: ColumnType<string | null, string | null, string | null>;
-  updated_by: ColumnType<string | null, string | null, string | null>;
-}
-
-export type SelectDocument = Selectable<DocumentTable>;
-export type CreateDocument = Insertable<DocumentTable>;
-export type UpdateDocument = Updateable<DocumentTable>;
-
-interface DocumentUpdateTable {
-  id: ColumnType<string, string, never>;
-  document_id: ColumnType<string, string, never>;
-  data: ColumnType<Uint8Array, Uint8Array, never>;
-  created_at: ColumnType<string, string, never>;
-}
-
-export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
-export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
-export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
-
 export interface WorkspaceDatabaseSchema {
   users: UserTable;
   nodes: NodeTable;
@@ -214,11 +214,11 @@ export interface WorkspaceDatabaseSchema {
   node_updates: NodeUpdateTable;
   node_reactions: NodeReactionTable;
   collaborations: CollaborationTable;
-  files: FileTable;
-  mutations: MutationTable;
-  tombstones: TombstoneTable;
   documents: DocumentTable;
   document_updates: DocumentUpdateTable;
+  file_states: FileStateTable;
+  mutations: MutationTable;
+  tombstones: TombstoneTable;
   cursors: CursorTable;
   metadata: MetadataTable;
 }

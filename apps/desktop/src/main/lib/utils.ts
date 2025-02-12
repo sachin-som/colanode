@@ -1,8 +1,9 @@
-import { extractFileType } from '@colanode/core';
+import { extractFileSubtype } from '@colanode/core';
 import {
   DeleteResult,
   InsertResult,
   Kysely,
+  sql,
   Transaction,
   UpdateResult,
 } from 'kysely';
@@ -100,7 +101,7 @@ export const getFileMetadata = (filePath: string): FileMetadata | null => {
   }
 
   const stats = fs.statSync(filePath);
-  const type = extractFileType(mimeType);
+  const type = extractFileSubtype(mimeType);
 
   return {
     path: filePath,
@@ -162,8 +163,11 @@ export const fetchUserStorageUsed = async (
   userId: string
 ): Promise<bigint> => {
   const storageUsedRow = await database
-    .selectFrom('files')
-    .select(({ fn }) => [fn.sum('size').as('storage_used')])
+    .selectFrom('nodes')
+    .select(({ fn }) => [
+      fn.sum(sql`json_extract(attributes, '$.size')`).as('storage_used'),
+    ])
+    .where('type', '=', 'file')
     .where('created_by', '=', userId)
     .executeTakeFirst();
 

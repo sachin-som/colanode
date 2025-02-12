@@ -5,7 +5,7 @@ import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
-import { File } from '@/shared/types/files';
+import { FileState } from '@/shared/types/files';
 import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
 
 export type UserCreatedEvent = {
@@ -71,25 +71,11 @@ export type NodeReactionDeletedEvent = {
   nodeReaction: NodeReaction;
 };
 
-export type FileCreatedEvent = {
-  type: 'file_created';
+export type FileStateUpdatedEvent = {
+  type: 'file_state_updated';
   accountId: string;
   workspaceId: string;
-  file: File;
-};
-
-export type FileUpdatedEvent = {
-  type: 'file_updated';
-  accountId: string;
-  workspaceId: string;
-  file: File;
-};
-
-export type FileDeletedEvent = {
-  type: 'file_deleted';
-  accountId: string;
-  workspaceId: string;
-  file: File;
+  fileState: FileState;
 };
 
 export type AccountCreatedEvent = {
@@ -235,9 +221,7 @@ export type Event =
   | WorkspaceDeletedEvent
   | ServerCreatedEvent
   | ServerUpdatedEvent
-  | FileCreatedEvent
-  | FileUpdatedEvent
-  | FileDeletedEvent
+  | FileStateUpdatedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
   | ServerAvailabilityChangedEvent

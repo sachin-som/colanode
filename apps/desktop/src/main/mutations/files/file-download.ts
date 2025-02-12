@@ -1,7 +1,7 @@
 import { FileStatus } from '@colanode/core';
 
 import { MutationHandler } from '@/main/lib/types';
-import { mapFile } from '@/main/lib/mappers';
+import { mapFileState, mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/shared/mutations/files/file-download';
 import { DownloadStatus } from '@/shared/types/files';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 export class FileDownloadMutationHandler
   extends WorkspaceMutationHandlerBase
@@ -20,48 +21,64 @@ export class FileDownloadMutationHandler
   ): Promise<FileDownloadMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspace.database
-      .selectFrom('files')
+    const node = await workspace.database
+      .selectFrom('nodes')
       .selectAll()
       .where('id', '=', input.fileId)
       .executeTakeFirst();
 
-    if (!file) {
+    if (!node) {
       throw new MutationError(
         MutationErrorCode.FileNotFound,
         'The file you are trying to download does not exist.'
       );
     }
 
-    if (file.status !== FileStatus.Ready) {
+    const file = mapNode(node) as LocalFileNode;
+    if (file.attributes.status !== FileStatus.Ready) {
       throw new MutationError(
         MutationErrorCode.FileNotReady,
         'The file you are trying to download is not uploaded by the author yet.'
       );
     }
 
+    const fileState = await workspace.database
+      .selectFrom('file_states')
+      .selectAll()
+      .where('id', '=', input.fileId)
+      .executeTakeFirst();
+
     if (
-      file.download_status === DownloadStatus.Completed ||
-      file.download_status === DownloadStatus.Pending
+      fileState?.download_status === DownloadStatus.Completed ||
+      fileState?.download_status === DownloadStatus.Pending
     ) {
       return {
         success: true,
       };
     }
 
-    const updatedFile = await workspace.database
-      .updateTable('files')
+    const updatedFileState = await workspace.database
+      .insertInto('file_states')
       .returningAll()
-      .set({
+      .values({
+        id: input.fileId,
+        version: file.attributes.version,
         download_status: DownloadStatus.Pending,
         download_progress: 0,
         download_retries: 0,
-        updated_at: new Date().toISOString(),
+        download_started_at: new Date().toISOString(),
       })
-      .where('id', '=', input.fileId)
+      .onConflict((oc) =>
+        oc.columns(['id']).doUpdateSet({
+          download_status: DownloadStatus.Pending,
+          download_progress: 0,
+          download_retries: 0,
+          download_started_at: new Date().toISOString(),
+        })
+      )
       .executeTakeFirst();
 
-    if (!updatedFile) {
+    if (!updatedFileState) {
       throw new MutationError(
         MutationErrorCode.FileNotFound,
         'The file you are trying to download does not exist.'
@@ -71,10 +88,10 @@ export class FileDownloadMutationHandler
     workspace.files.triggerDownloads();
 
     eventBus.publish({
-      type: 'file_updated',
+      type: 'file_state_updated',
       accountId: workspace.accountId,
       workspaceId: workspace.id,
-      file: mapFile(updatedFile),
+      fileState: mapFileState(updatedFileState),
     });
 
     return {

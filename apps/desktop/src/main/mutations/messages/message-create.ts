@@ -1,6 +1,5 @@
 import {
   EditorNodeTypes,
-  FileAttributes,
   generateId,
   IdType,
   MessageAttributes,
@@ -65,18 +64,7 @@ export class MessageCreateMutationHandler
     });
 
     for (const file of filesToCreate) {
-      const fileAttributes: FileAttributes = {
-        type: 'file',
-        parentId: messageId,
-      };
-
-      await workspace.nodes.createNode({
-        id: file.id,
-        attributes: fileAttributes,
-        parentId: messageId,
-      });
-
-      await workspace.files.createFile(file.id, file.path);
+      await workspace.files.createFile(file.id, messageId, file.path);
     }
 
     return {

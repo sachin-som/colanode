@@ -51,11 +51,6 @@ export class CollaborationService {
         .execute();
 
       await this.workspace.database
-        .deleteFrom('files')
-        .where('root_id', '=', collaboration.nodeId)
-        .execute();
-
-      await this.workspace.database
         .deleteFrom('node_interactions')
         .where('root_id', '=', collaboration.nodeId)
         .execute();

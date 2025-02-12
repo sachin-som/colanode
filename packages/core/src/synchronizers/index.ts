@@ -1,6 +1,5 @@
 export * from './nodes';
 export * from './users';
-export * from './files';
 export * from './node-reactions';
 export * from './node-interactions';
 export * from './node-tombstones';

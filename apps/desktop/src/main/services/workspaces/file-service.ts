@@ -1,12 +1,12 @@
 import {
   CompleteUploadOutput,
   CreateDownloadOutput,
-  CreateFileMutationData,
   CreateUploadOutput,
+  FileAttributes,
   FileStatus,
   IdType,
-  SyncFileData,
   createDebugger,
+  extractFileSubtype,
   generateId,
 } from '@colanode/core';
 import axios from 'axios';
@@ -22,14 +22,15 @@ import {
   getWorkspaceFilesDirectoryPath,
   getWorkspaceTempFilesDirectoryPath,
 } from '@/main/lib/utils';
-import { mapFile, mapNode } from '@/main/lib/mappers';
+import { mapFileState, mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { EventLoop } from '@/main/lib/event-loop';
-import { SelectFile } from '@/main/databases/workspace';
+import { SelectFileState, SelectNode } from '@/main/databases/workspace';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import { formatBytes } from '@/shared/lib/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 const UPLOAD_RETRIES_LIMIT = 10;
 const DOWNLOAD_RETRIES_LIMIT = 10;
@@ -94,7 +95,11 @@ export class FileService {
     this.cleanupEventLoop.start();
   }
 
-  public async createFile(id: string, path: string): Promise<void> {
+  public async createFile(
+    id: string,
+    parentId: string,
+    path: string
+  ): Promise<void> {
     const metadata = getFileMetadata(path);
     if (!metadata) {
       throw new MutationError(
@@ -128,8 +133,8 @@ export class FileService {
       );
     }
 
-    const node = await fetchNode(this.workspace.database, id);
-    if (!node || node.type !== 'file') {
+    const node = await fetchNode(this.workspace.database, parentId);
+    if (!node) {
       throw new MutationError(
         MutationErrorCode.NodeNotFound,
         'There was an error while creating the file. Please make sure you have access to this node.'
@@ -138,79 +143,70 @@ export class FileService {
 
     this.copyFileToWorkspace(path, id, metadata.extension);
 
-    const mutationData: CreateFileMutationData = {
-      id,
-      type: metadata.type,
-      parentId: node.parent_id!,
-      rootId: node.root_id,
+    const attributes: FileAttributes = {
+      type: 'file',
+      subtype: extractFileSubtype(metadata.mimeType),
+      parentId: parentId,
       name: metadata.name,
       originalName: metadata.name,
       extension: metadata.extension,
       mimeType: metadata.mimeType,
       size: metadata.size,
-      createdAt: new Date().toISOString(),
+      status: FileStatus.Pending,
+      version: generateId(IdType.Version),
     };
 
-    const createdFile = await this.workspace.database
-      .transaction()
-      .execute(async (tx) => {
-        const createdFile = await tx
-          .insertInto('files')
-          .returningAll()
-          .values({
-            id,
-            type: metadata.type,
-            parent_id: node.parent_id!,
-            root_id: node.root_id,
-            name: metadata.name,
-            original_name: metadata.name,
-            mime_type: metadata.mimeType,
-            size: metadata.size,
-            extension: metadata.extension,
-            created_at: new Date().toISOString(),
-            created_by: this.workspace.userId,
-            status: FileStatus.Pending,
-            revision: 0n,
-            download_status: DownloadStatus.Completed,
-            download_progress: 100,
-            download_retries: 0,
-            upload_status: UploadStatus.Pending,
-            upload_progress: 0,
-            upload_retries: 0,
-          })
-          .executeTakeFirst();
+    await this.workspace.nodes.createNode({
+      id: id,
+      attributes: attributes,
+      parentId: parentId,
+    });
 
-        if (!createdFile) {
-          throw new Error('Failed to create file.');
-        }
+    const createdFileState = await this.workspace.database
+      .insertInto('file_states')
+      .returningAll()
+      .values({
+        id: id,
+        version: attributes.version,
+        download_progress: 100,
+        download_status: DownloadStatus.Completed,
+        download_completed_at: new Date().toISOString(),
+        upload_progress: 0,
+        upload_status: UploadStatus.Pending,
+        upload_retries: 0,
+        upload_started_at: new Date().toISOString(),
+      })
+      .executeTakeFirst();
 
-        await tx
-          .insertInto('mutations')
-          .values({
-            id: generateId(IdType.Mutation),
-            type: 'create_file',
-            data: JSON.stringify(mutationData),
-            created_at: new Date().toISOString(),
-            retries: 0,
-          })
-          .execute();
-
-        return createdFile;
-      });
-
-    if (createdFile) {
-      this.workspace.mutations.triggerSync();
-
-      eventBus.publish({
-        type: 'file_created',
-        accountId: this.workspace.accountId,
-        workspaceId: this.workspace.id,
-        file: mapFile(createdFile),
-      });
+    if (!createdFileState) {
+      throw new MutationError(
+        MutationErrorCode.FileCreateFailed,
+        'Failed to create file state'
+      );
     }
+
+    eventBus.publish({
+      type: 'file_state_updated',
+      accountId: this.workspace.accountId,
+      workspaceId: this.workspace.id,
+      fileState: mapFileState(createdFileState),
+    });
+
+    this.triggerUploads();
   }
 
-  public copyFileToWorkspace(
+  public async deleteFile(node: SelectNode): Promise<void> {
+    const file = mapNode(node);
+
+    if (file.type !== 'file') {
+      return;
+    }
+
+    const filePath = this.buildFilePath(file.id, file.attributes.extension);
+    fs.rmSync(filePath, { force: true });
+  }
+
+  private copyFileToWorkspace(
     filePath: string,
     fileId: string,
     fileExtension: string
@@ -231,13 +227,6 @@ export class FileService {
     if (fileDirectory === this.tempFilesDir) {
       fs.rmSync(filePath);
     }
-  }
-
-  public deleteFile(id: string, extension: string): void {
-    const filePath = this.buildFilePath(id, extension);
-
-    this.debug(`Deleting file ${filePath}`);
-    fs.rmSync(filePath, { force: true });
   }
 
   public triggerUploads(): void {
@@ -262,7 +251,7 @@ export class FileService {
     this.debug(`Uploading files for workspace ${this.workspace.id}`);
 
     const uploads = await this.workspace.database
-      .selectFrom('files')
+      .selectFrom('file_states')
       .selectAll()
       .where('upload_status', '=', UploadStatus.Pending)
       .execute();
@@ -276,71 +265,77 @@ export class FileService {
     }
   }
 
-  private async uploadFile(file: SelectFile): Promise<void> {
-    if (file.upload_retries >= UPLOAD_RETRIES_LIMIT) {
+  private async uploadFile(state: SelectFileState): Promise<void> {
+    if (state.upload_retries && state.upload_retries >= UPLOAD_RETRIES_LIMIT) {
       this.debug(
-        `File ${file.id} upload retries limit reached, marking as failed`
+        `File ${state.id} upload retries limit reached, marking as failed`
       );
 
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set({
           upload_status: UploadStatus.Failed,
-          updated_at: new Date().toISOString(),
+          upload_retries: state.upload_retries + 1,
         })
-        .where('id', '=', file.id)
+        .where('id', '=', state.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
 
       return;
     }
 
-    if (file.revision === BigInt(0)) {
+    const node = await this.workspace.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', state.id)
+      .executeTakeFirst();
+
+    if (!node) {
+      return;
+    }
+
+    const file = mapNode(node) as LocalFileNode;
+    if (node.server_revision === BigInt(0)) {
       // file is not synced with the server, we need to wait for the sync to complete
       return;
     }
 
-    if (file.status === FileStatus.Ready) {
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+    if (file.attributes.status === FileStatus.Ready) {
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set({
           upload_status: UploadStatus.Completed,
           upload_progress: 100,
-          updated_at: new Date().toISOString(),
+          upload_completed_at: new Date().toISOString(),
         })
         .where('id', '=', file.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
 
       return;
     }
 
-    const filePath = this.buildFilePath(file.id, file.extension);
+    const filePath = this.buildFilePath(file.id, file.attributes.extension);
 
     if (!fs.existsSync(filePath)) {
-      await this.workspace.database
-        .deleteFrom('files')
-        .where('id', '=', file.id)
-        .execute();
-
       this.debug(`File ${file.id} not found, deleting from database`);
       return;
     }
@@ -360,11 +355,13 @@ export class FileService {
       let lastProgress = 0;
       await axios.put(presignedUrl, fileStream, {
         headers: {
-          'Content-Type': file.mime_type,
-          'Content-Length': file.size,
+          'Content-Type': file.attributes.mimeType,
+          'Content-Length': file.attributes.size,
         },
         onUploadProgress: async (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded / file.size) * 100);
+          const progress = Math.round(
+            (progressEvent.loaded / file.attributes.size) * 100
+          );
 
           if (progress >= lastProgress) {
             return;
@@ -372,25 +369,24 @@ export class FileService {
 
           lastProgress = progress;
 
-          const updatedFile = await this.workspace.database
-            .updateTable('files')
+          const updatedFileState = await this.workspace.database
+            .updateTable('file_states')
             .returningAll()
             .set({
               upload_progress: progress,
-              updated_at: new Date().toISOString(),
             })
             .where('id', '=', file.id)
             .executeTakeFirst();
 
-          if (!updatedFile) {
+          if (!updatedFileState) {
             return;
           }
 
           eventBus.publish({
-            type: 'file_updated',
+            type: 'file_state_updated',
             accountId: this.workspace.accountId,
             workspaceId: this.workspace.id,
-            file: mapFile(updatedFile),
+            fileState: mapFileState(updatedFileState),
           });
         },
       });
@@ -400,41 +396,41 @@ export class FileService {
         {}
       );
 
-      const finalFile = await this.workspace.database
-        .updateTable('files')
+      const finalFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set({
           upload_status: UploadStatus.Completed,
           upload_progress: 100,
-          updated_at: new Date().toISOString(),
+          upload_completed_at: new Date().toISOString(),
         })
         .where('id', '=', file.id)
         .executeTakeFirst();
 
-      if (finalFile) {
+      if (finalFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(finalFile),
+          fileState: mapFileState(finalFileState),
         });
       }
 
       this.debug(`File ${file.id} uploaded successfully`);
     } catch {
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set((eb) => ({ upload_retries: eb('upload_retries', '+', 1) }))
         .where('id', '=', file.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
     }
@@ -448,7 +444,7 @@ export class FileService {
     this.debug(`Downloading files for workspace ${this.workspace.id}`);
 
     const downloads = await this.workspace.database
-      .selectFrom('files')
+      .selectFrom('file_states')
       .selectAll()
       .where('download_status', '=', DownloadStatus.Pending)
       .execute();
@@ -462,41 +458,73 @@ export class FileService {
     }
   }
 
-  private async downloadFile(file: SelectFile): Promise<void> {
-    if (file.download_retries >= DOWNLOAD_RETRIES_LIMIT) {
+  private async downloadFile(fileState: SelectFileState): Promise<void> {
+    if (
+      fileState.download_retries &&
+      fileState.download_retries >= DOWNLOAD_RETRIES_LIMIT
+    ) {
       this.debug(
-        `File ${file.id} download retries limit reached, marking as failed`
+        `File ${fileState.id} download retries limit reached, marking as failed`
       );
 
-      await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
+        .returningAll()
         .set({
           download_status: DownloadStatus.Failed,
-          updated_at: new Date().toISOString(),
+          download_retries: fileState.download_retries + 1,
         })
-        .where('id', '=', file.id)
-        .execute();
+        .where('id', '=', fileState.id)
+        .executeTakeFirst();
+
+      if (updatedFileState) {
+        eventBus.publish({
+          type: 'file_state_updated',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          fileState: mapFileState(updatedFileState),
+        });
+      }
+
+      return;
     }
 
-    const filePath = this.buildFilePath(file.id, file.extension);
+    const node = await this.workspace.database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', fileState.id)
+      .executeTakeFirst();
+
+    if (!node) {
+      return;
+    }
+
+    const file = mapNode(node) as LocalFileNode;
+
+    if (node.server_revision === BigInt(0)) {
+      // file is not synced with the server, we need to wait for the sync to complete
+      return;
+    }
+
+    const filePath = this.buildFilePath(file.id, file.attributes.extension);
     if (fs.existsSync(filePath)) {
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set({
           download_status: DownloadStatus.Completed,
           download_progress: 100,
-          updated_at: new Date().toISOString(),
+          download_completed_at: new Date().toISOString(),
         })
-        .where('id', '=', file.id)
+        .where('id', '=', fileState.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
 
@@ -519,7 +547,7 @@ export class FileService {
           responseType: 'stream',
           onDownloadProgress: async (progressEvent) => {
             const progress = Math.round(
-              (progressEvent.loaded / file.size) * 100
+              (progressEvent.loaded / file.attributes.size) * 100
             );
 
             if (progress <= lastProgress) {
@@ -528,22 +556,21 @@ export class FileService {
 
             lastProgress = progress;
 
-            const updatedFile = await this.workspace.database
-              .updateTable('files')
+            const updatedFileState = await this.workspace.database
+              .updateTable('file_states')
               .returningAll()
               .set({
                 download_progress: progress,
-                updated_at: new Date().toISOString(),
               })
-              .where('id', '=', file.id)
+              .where('id', '=', fileState.id)
               .executeTakeFirst();
 
-            if (updatedFile) {
+            if (updatedFileState) {
               eventBus.publish({
-                type: 'file_updated',
+                type: 'file_state_updated',
                 accountId: this.workspace.accountId,
                 workspaceId: this.workspace.id,
-                file: mapFile(updatedFile),
+                fileState: mapFileState(updatedFileState),
               });
             }
           },
@@ -552,39 +579,39 @@ export class FileService {
           response.data.pipe(fileStream);
         });
 
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set({
           download_status: DownloadStatus.Completed,
           download_progress: 100,
-          updated_at: new Date().toISOString(),
+          download_completed_at: new Date().toISOString(),
         })
-        .where('id', '=', file.id)
+        .where('id', '=', fileState.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
     } catch {
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
+      const updatedFileState = await this.workspace.database
+        .updateTable('file_states')
         .returningAll()
         .set((eb) => ({ download_retries: eb('download_retries', '+', 1) }))
-        .where('id', '=', file.id)
+        .where('id', '=', fileState.id)
         .executeTakeFirst();
 
-      if (updatedFile) {
+      if (updatedFileState) {
         eventBus.publish({
-          type: 'file_updated',
+          type: 'file_state_updated',
           accountId: this.workspace.accountId,
           workspaceId: this.workspace.id,
-          file: mapFile(updatedFile),
+          fileState: mapFileState(updatedFileState),
         });
       }
     }
@@ -604,15 +631,15 @@ export class FileService {
       }
 
       const fileIds = Object.keys(fileIdMap);
-      const files = await this.workspace.database
-        .selectFrom('files')
+      const fileStates = await this.workspace.database
+        .selectFrom('file_states')
         .select(['id'])
         .where('id', 'in', fileIds)
         .execute();
 
       for (const fileId of fileIds) {
-        const file = files.find((f) => f.id === fileId);
-        if (!file) {
+        const fileState = fileStates.find((f) => f.id === fileId);
+        if (fileState) {
           continue;
         }
 
@@ -645,160 +672,6 @@ export class FileService {
         }
       }
     }
-  }
-
-  public async syncServerFile(file: SyncFileData): Promise<void> {
-    const existingFile = await this.workspace.database
-      .selectFrom('files')
-      .selectAll()
-      .where('id', '=', file.id)
-      .executeTakeFirst();
-
-    const revision = BigInt(file.revision);
-    if (existingFile) {
-      if (existingFile.revision === revision) {
-        this.debug(`Server file ${file.id} is already synced`);
-        return;
-      }
-
-      const updatedFile = await this.workspace.database
-        .updateTable('files')
-        .returningAll()
-        .set({
-          name: file.name,
-          original_name: file.originalName,
-          mime_type: file.mimeType,
-          extension: file.extension,
-          size: file.size,
-          parent_id: file.parentId,
-          root_id: file.rootId,
-          status: file.status,
-          type: file.type,
-          updated_at: file.updatedAt ?? undefined,
-          updated_by: file.updatedBy ?? undefined,
-          revision,
-        })
-        .where('id', '=', file.id)
-        .executeTakeFirst();
-
-      if (!updatedFile) {
-        return;
-      }
-
-      eventBus.publish({
-        type: 'file_updated',
-        accountId: this.workspace.accountId,
-        workspaceId: this.workspace.id,
-        file: mapFile(updatedFile),
-      });
-
-      this.triggerUploads();
-      this.triggerDownloads();
-
-      this.debug(`Server file ${file.id} has been synced`);
-      return;
-    }
-
-    const createdFile = await this.workspace.database
-      .insertInto('files')
-      .returningAll()
-      .values({
-        id: file.id,
-        revision,
-        type: file.type,
-        parent_id: file.parentId,
-        root_id: file.rootId,
-        name: file.name,
-        original_name: file.originalName,
-        mime_type: file.mimeType,
-        extension: file.extension,
-        size: file.size,
-        created_at: file.createdAt,
-        created_by: file.createdBy,
-        updated_at: file.updatedAt,
-        updated_by: file.updatedBy,
-        status: file.status,
-        download_progress: 0,
-        download_retries: 0,
-        upload_progress: 0,
-        upload_retries: 0,
-        download_status: DownloadStatus.None,
-        upload_status: UploadStatus.None,
-      })
-      .executeTakeFirst();
-
-    if (!createdFile) {
-      return;
-    }
-
-    eventBus.publish({
-      type: 'file_created',
-      accountId: this.workspace.accountId,
-      workspaceId: this.workspace.id,
-      file: mapFile(createdFile),
-    });
-
-    this.debug(`Server file ${file.id} has been synced`);
-  }
-
-  public async revertFileCreate(fileId: string) {
-    const deletedFile = await this.workspace.database
-      .deleteFrom('files')
-      .returningAll()
-      .where('id', '=', fileId)
-      .executeTakeFirst();
-
-    if (!deletedFile) {
-      return;
-    }
-
-    const deletedNode = await this.workspace.database
-      .deleteFrom('nodes')
-      .returningAll()
-      .where('id', '=', deletedFile.parent_id)
-      .executeTakeFirst();
-
-    if (!deletedNode) {
-      return;
-    }
-
-    await this.workspace.database
-      .deleteFrom('node_states')
-      .where('id', '=', deletedNode.id)
-      .execute();
-
-    await this.workspace.database
-      .deleteFrom('node_interactions')
-      .where('node_id', '=', deletedNode.id)
-      .execute();
-
-    await this.workspace.database
-      .deleteFrom('node_reactions')
-      .where('node_id', '=', deletedNode.id)
-      .execute();
-
-    const filePath = path.join(
-      this.filesDir,
-      `${fileId}${deletedFile.extension}`
-    );
-
-    if (fs.existsSync(filePath)) {
-      fs.rmSync(filePath, { force: true });
-    }
-
-    eventBus.publish({
-      type: 'file_deleted',
-      accountId: this.workspace.accountId,
-      workspaceId: this.workspace.id,
-      file: mapFile(deletedFile),
-    });
-
-    eventBus.publish({
-      type: 'node_deleted',
-      accountId: this.workspace.accountId,
-      workspaceId: this.workspace.id,
-      node: mapNode(deletedNode),
-    });
   }
 
   private buildFilePath(id: string, extension: string): string {

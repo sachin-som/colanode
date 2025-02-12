@@ -7,9 +7,16 @@ import { hasNodeRole } from '../../lib/permissions';
 
 export const fileAttributesSchema = z.object({
   type: z.literal('file'),
-  name: z.string().optional(),
+  subtype: z.string(),
   parentId: z.string(),
   index: z.string().optional(),
+  name: z.string(),
+  originalName: z.string(),
+  mimeType: z.string(),
+  extension: z.string(),
+  size: z.number(),
+  version: z.string(),
+  status: z.number(),
 });
 
 export type FileAttributes = z.infer<typeof fileAttributesSchema>;

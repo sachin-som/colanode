@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
 
-import { File } from '@/shared/types/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FolderContext {
   id: string;
   name: string;
-  files: File[];
+  files: LocalFileNode[];
   onClick: (event: React.MouseEvent<HTMLElement>, id: string) => void;
   onDoubleClick: (event: React.MouseEvent<HTMLElement>, id: string) => void;
   onMove: (entryId: string, targetId: string) => void;

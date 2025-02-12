@@ -4,7 +4,6 @@ import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useQuery } from '@/renderer/hooks/use-query';
 import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FileBodyProps {
@@ -13,20 +12,6 @@ interface FileBodyProps {
 
 export const FileBody = ({ file }: FileBodyProps) => {
   const workspace = useWorkspace();
-  const { data, isPending } = useQuery({
-    type: 'file_get',
-    id: file.id,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
-
-  if (isPending) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
-  }
-
-  if (!data) {
-    return <p className="text-sm text-muted-foreground">Not found</p>;
-  }
 
   return (
     <div className="flex h-full max-h-full w-full flex-row items-center gap-2">
@@ -40,8 +25,8 @@ export const FileBody = ({ file }: FileBodyProps) => {
                 type: 'file_open',
                 accountId: workspace.accountId,
                 workspaceId: workspace.id,
-                fileId: data.id,
-                extension: data.extension,
+                fileId: file.id,
+                extension: file.attributes.extension,
               })
             }
           >
@@ -49,11 +34,11 @@ export const FileBody = ({ file }: FileBodyProps) => {
           </Button>
         </div>
         <div className="flex w-full max-w-full flex-grow items-center justify-center overflow-hidden p-10">
-          <FilePreview file={data} />
+          <FilePreview file={file} />
         </div>
       </div>
       <div className="h-full w-72 min-w-72 overflow-hidden border-l border-gray-100 p-2 pl-3">
-        <FileSidebar file={data} />
+        <FileSidebar file={file} />
       </div>
     </div>
   );

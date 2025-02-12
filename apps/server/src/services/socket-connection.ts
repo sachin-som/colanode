@@ -27,7 +27,6 @@ import { NodeSynchronizer } from '@/synchronizers/nodes';
 import { NodeReactionSynchronizer } from '@/synchronizers/node-reactions';
 import { NodeTombstoneSynchronizer } from '@/synchronizers/node-tombstones';
 import { NodeInteractionSynchronizer } from '@/synchronizers/node-interactions';
-import { FileSynchronizer } from '@/synchronizers/files';
 import { DocumentUpdateSynchronizer } from '@/synchronizers/document-updates';
 
 type SocketUser = {
@@ -147,12 +146,6 @@ export class SocketConnection {
         message.input,
         cursor
       );
-    } else if (message.input.type === 'files') {
-      if (!user.rootIds.has(message.input.rootId)) {
-        return null;
-      }
-
-      return new FileSynchronizer(message.id, user.user, message.input, cursor);
     } else if (message.input.type === 'nodes') {
       if (!user.rootIds.has(message.input.rootId)) {
         return null;

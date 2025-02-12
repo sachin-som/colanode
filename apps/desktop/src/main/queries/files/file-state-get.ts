@@ -1,23 +1,25 @@
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { mapFile } from '@/main/lib/mappers';
-import { FileGetQueryInput } from '@/shared/queries/files/file-get';
+import { mapFileState } from '@/main/lib/mappers';
+import { FileStateGetQueryInput } from '@/shared/queries/files/file-state-get';
 import { Event } from '@/shared/types/events';
-import { File } from '@/shared/types/files';
+import { FileState } from '@/shared/types/files';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 
-export class FileGetQueryHandler
+export class FileStateGetQueryHandler
   extends WorkspaceQueryHandlerBase
-  implements QueryHandler<FileGetQueryInput>
+  implements QueryHandler<FileStateGetQueryInput>
 {
-  public async handleQuery(input: FileGetQueryInput): Promise<File | null> {
-    return await this.fetchFile(input);
+  public async handleQuery(
+    input: FileStateGetQueryInput
+  ): Promise<FileState | null> {
+    return await this.fetchFileState(input);
   }
 
   public async checkForChanges(
     event: Event,
-    input: FileGetQueryInput,
-    _: File | null
-  ): Promise<ChangeCheckResult<FileGetQueryInput>> {
+    input: FileStateGetQueryInput,
+    _: FileState | null
+  ): Promise<ChangeCheckResult<FileStateGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
       event.workspace.accountId === input.accountId &&
@@ -30,10 +32,10 @@ export class FileGetQueryHandler
     }
 
     if (
-      event.type === 'file_created' &&
+      event.type === 'file_state_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.file.id === input.id
+      event.fileState.id === input.id
     ) {
       const output = await this.handleQuery(input);
       return {
@@ -43,22 +45,10 @@ export class FileGetQueryHandler
     }
 
     if (
-      event.type === 'file_updated' &&
+      event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.file.id === input.id
-    ) {
-      return {
-        hasChanges: true,
-        result: event.file,
-      };
-    }
-
-    if (
-      event.type === 'file_deleted' &&
-      event.accountId === input.accountId &&
-      event.workspaceId === input.workspaceId &&
-      event.file.id === input.id
+      event.node.id === input.id
     ) {
       return {
         hasChanges: true,
@@ -71,19 +61,21 @@ export class FileGetQueryHandler
     };
   }
 
-  private async fetchFile(input: FileGetQueryInput): Promise<File | null> {
+  private async fetchFileState(
+    input: FileStateGetQueryInput
+  ): Promise<FileState | null> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const file = await workspace.database
-      .selectFrom('files')
+    const fileState = await workspace.database
+      .selectFrom('file_states')
       .selectAll()
       .where('id', '=', input.id)
       .executeTakeFirst();
 
-    if (!file || file.deleted_at) {
+    if (!fileState) {
       return null;
     }
 
-    return mapFile(file);
+    return mapFileState(fileState);
   }
 }

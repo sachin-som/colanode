@@ -16,7 +16,7 @@ import {
 import { decodeState, encodeState, YDoc } from '@colanode/crdt';
 
 import { fetchNodeTree } from '@/main/lib/utils';
-import { mapFile, mapNode } from '@/main/lib/mappers';
+import { mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { SelectNode } from '@/main/databases/workspace';
@@ -587,7 +587,7 @@ export class NodeService {
       `Applying server delete transaction ${tombstone.id} for node ${tombstone.id}`
     );
 
-    const { deletedNode, deletedFile } = await this.workspace.database
+    const { deletedNode } = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
         const deletedNode = await trx
@@ -616,12 +616,6 @@ export class NodeService {
           .where('node_id', '=', tombstone.id)
           .execute();
 
-        const deletedFile = await trx
-          .deleteFrom('files')
-          .returningAll()
-          .where('id', '=', tombstone.id)
-          .executeTakeFirst();
-
         await trx
           .deleteFrom('tombstones')
           .where('id', '=', tombstone.id)
@@ -637,18 +631,8 @@ export class NodeService {
           .where('document_id', '=', tombstone.id)
           .execute();
 
-        return { deletedNode, deletedFile };
+        return { deletedNode };
       });
-
-    if (deletedFile) {
-      this.workspace.files.deleteFile(deletedFile.id, deletedFile.extension);
-      eventBus.publish({
-        type: 'file_deleted',
-        accountId: this.workspace.accountId,
-        workspaceId: this.workspace.id,
-        file: mapFile(deletedFile),
-      });
-    }
 
     if (deletedNode) {
       eventBus.publish({
@@ -701,6 +685,10 @@ export class NodeService {
         .where('document_id', '=', mutation.id)
         .execute();
     });
+
+    if (node.type === 'file') {
+      await this.workspace.files.deleteFile(node);
+    }
 
     eventBus.publish({
       type: 'node_deleted',

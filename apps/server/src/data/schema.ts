@@ -1,6 +1,4 @@
 import {
-  FileStatus,
-  FileType,
   NodeAttributes,
   NodeRole,
   NodeType,
@@ -187,29 +185,6 @@ export type SelectCollaboration = Selectable<CollaborationTable>;
 export type CreateCollaboration = Insertable<CollaborationTable>;
 export type UpdateCollaboration = Updateable<CollaborationTable>;
 
-interface FileTable {
-  id: ColumnType<string, string, never>;
-  type: ColumnType<FileType, FileType, FileType>;
-  parent_id: ColumnType<string, string, never>;
-  root_id: ColumnType<string, string, never>;
-  workspace_id: ColumnType<string, string, never>;
-  revision: ColumnType<bigint, never, never>;
-  name: ColumnType<string, string, never>;
-  original_name: ColumnType<string, string, never>;
-  mime_type: ColumnType<string, string, never>;
-  extension: ColumnType<string, string, never>;
-  size: ColumnType<number, number, never>;
-  created_at: ColumnType<Date, Date, never>;
-  created_by: ColumnType<string, string, never>;
-  updated_at: ColumnType<Date | null, Date | null, Date | null>;
-  updated_by: ColumnType<string | null, string | null, string | null>;
-  status: ColumnType<FileStatus, FileStatus, FileStatus>;
-}
-
-export type SelectFile = Selectable<FileTable>;
-export type CreateFile = Insertable<FileTable>;
-export type UpdateFile = Updateable<FileTable>;
-
 interface DocumentTable {
   id: ColumnType<string, string, never>;
   type: ColumnType<DocumentType, DocumentType, DocumentType>;
@@ -257,7 +232,6 @@ export interface DatabaseSchema {
   node_paths: NodePathTable;
   node_tombstones: NodeTombstoneTable;
   collaborations: CollaborationTable;
-  files: FileTable;
   documents: DocumentTable;
   document_updates: DocumentUpdateTable;
 }

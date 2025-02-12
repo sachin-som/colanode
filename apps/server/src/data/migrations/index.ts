@@ -10,9 +10,8 @@ import { createNodeInteractionsTable } from './00007-create-node-interactions-ta
 import { createNodeTombstonesTable } from './00008-create-node-tombstones-table';
 import { createNodePathsTable } from './00009-create-node-paths-table';
 import { createCollaborationsTable } from './00010-create-collaborations-table';
-import { createFilesTable } from './00011-create-files-table';
-import { createDocumentsTable } from './00012-create-documents-table';
-import { createDocumentUpdatesTable } from './00013-create-document-updates-table';
+import { createDocumentsTable } from './00011-create-documents-table';
+import { createDocumentUpdatesTable } from './00012-create-document-updates-table';
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
@@ -25,7 +24,6 @@ export const databaseMigrations: Record<string, Migration> = {
   '00008_create_node_tombstones_table': createNodeTombstonesTable,
   '00009_create_node_paths_table': createNodePathsTable,
   '00010_create_collaborations_table': createCollaborationsTable,
-  '00011_create_files_table': createFilesTable,
-  '00012_create_documents_table': createDocumentsTable,
-  '00013_create_document_updates_table': createDocumentUpdatesTable,
+  '00011_create_documents_table': createDocumentsTable,
+  '00012_create_document_updates_table': createDocumentUpdatesTable,
 };

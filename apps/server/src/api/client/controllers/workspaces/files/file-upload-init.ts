@@ -11,6 +11,8 @@ import { database } from '@/data/database';
 import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { configuration } from '@/lib/configuration';
+import { mapNode } from '@/lib/nodes';
+import { buildFilePath } from '@/lib/files';
 
 export const fileUploadInitHandler = async (
   req: Request,
@@ -19,20 +21,20 @@ export const fileUploadInitHandler = async (
   const workspaceId = req.params.workspaceId as string;
   const input = req.body as CreateUploadInput;
 
-  const file = await database
-    .selectFrom('files')
+  const node = await database
+    .selectFrom('nodes')
     .selectAll()
     .where('id', '=', input.fileId)
     .executeTakeFirst();
 
-  if (!file) {
+  if (!node) {
     return ResponseBuilder.notFound(res, {
       code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
     });
   }
 
-  if (file.created_by !== res.locals.user.id) {
+  if (node.created_by !== res.locals.user.id) {
     return ResponseBuilder.forbidden(res, {
       code: ApiErrorCode.FileOwnerMismatch,
       message: 'You do not have access to this file.',
@@ -40,12 +42,20 @@ export const fileUploadInitHandler = async (
   }
 
   //generate presigned url for upload
-  const path = `files/${workspaceId}/${input.fileId}${file.extension}`;
+  const file = mapNode(node);
+  if (file.type !== 'file') {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
+      message: 'This node is not a file.',
+    });
+  }
+
+  const path = buildFilePath(workspaceId, input.fileId, file.attributes);
   const command = new PutObjectCommand({
     Bucket: configuration.fileS3.bucketName,
     Key: path,
-    ContentLength: file.size,
-    ContentType: file.mime_type,
+    ContentLength: file.attributes.size,
+    ContentType: file.attributes.mimeType,
   });
 
   const expiresIn = 60 * 60 * 4; // 4 hours

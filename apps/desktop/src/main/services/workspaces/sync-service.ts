@@ -5,7 +5,6 @@ import {
   SyncNodesInput,
   SyncNodeInteractionsInput,
   SyncNodeReactionsInput,
-  SyncFilesInput,
   SyncNodeTombstonesInput,
   SyncNodeInteractionData,
   SyncNodeReactionData,
@@ -13,7 +12,6 @@ import {
   SyncNodeData,
   SyncUserData,
   SyncCollaborationData,
-  SyncFileData,
   SyncDocumentUpdatesInput,
   SyncDocumentUpdateData,
 } from '@colanode/core';
@@ -28,7 +26,6 @@ interface RootSynchronizers {
   nodeInteractions: Synchronizer<SyncNodeInteractionsInput>;
   nodeReactions: Synchronizer<SyncNodeReactionsInput>;
   nodeTombstones: Synchronizer<SyncNodeTombstonesInput>;
-  files: Synchronizer<SyncFilesInput>;
   documentUpdates: Synchronizer<SyncDocumentUpdatesInput>;
 }
 
@@ -39,7 +36,6 @@ type SyncHandlers = {
   nodeInteractions: (data: SyncNodeInteractionData) => Promise<void>;
   nodeReactions: (data: SyncNodeReactionData) => Promise<void>;
   nodeTombstones: (data: SyncNodeTombstoneData) => Promise<void>;
-  files: (data: SyncFileData) => Promise<void>;
   documentUpdates: (data: SyncDocumentUpdateData) => Promise<void>;
 };
 
@@ -76,7 +72,6 @@ export class SyncService {
       nodeTombstones: this.workspace.nodes.syncServerNodeDelete.bind(
         this.workspace.nodes
       ),
-      files: this.workspace.files.syncServerFile.bind(this.workspace.files),
       documentUpdates: this.workspace.documents.syncServerDocumentUpdate.bind(
         this.workspace.documents
       ),
@@ -149,7 +144,6 @@ export class SyncService {
     rootSynchronizers.nodeInteractions.destroy();
     rootSynchronizers.nodeReactions.destroy();
     rootSynchronizers.nodeTombstones.destroy();
-    rootSynchronizers.files.destroy();
     rootSynchronizers.documentUpdates.destroy();
   }
 
@@ -186,12 +180,6 @@ export class SyncService {
         { type: 'node_tombstones', rootId },
         `${rootId}_node_tombstones`,
         this.syncHandlers.nodeTombstones
-      ),
-      files: new Synchronizer(
-        this.workspace,
-        { type: 'files', rootId },
-        `${rootId}_files`,
-        this.syncHandlers.files
       ),
       documentUpdates: new Synchronizer(
         this.workspace,

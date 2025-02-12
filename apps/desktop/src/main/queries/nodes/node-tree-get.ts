@@ -46,6 +46,21 @@ export class NodeTreeGetQueryHandler
     }
 
     if (
+      event.type === 'node_updated' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId
+    ) {
+      const node = output.find((n) => n.id === event.node.id);
+      if (node) {
+        const newResult = await this.handleQuery(input);
+        return {
+          hasChanges: true,
+          result: newResult,
+        };
+      }
+    }
+
+    if (
       event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId

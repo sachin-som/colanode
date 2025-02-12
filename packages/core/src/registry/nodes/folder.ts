@@ -18,11 +18,11 @@ export const folderModel: NodeModel = {
   type: 'folder',
   attributesSchema: folderAttributesSchema,
   canCreate: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
@@ -30,11 +30,11 @@ export const folderModel: NodeModel = {
     return hasNodeRole(role, 'editor');
   },
   canUpdateAttributes: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
@@ -45,11 +45,11 @@ export const folderModel: NodeModel = {
     return false;
   },
   canDelete: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }

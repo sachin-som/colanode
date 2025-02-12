@@ -15,7 +15,7 @@ import {
 } from '@colanode/core';
 import { decodeState, encodeState, YDoc } from '@colanode/crdt';
 
-import { fetchNodeAncestors } from '@/main/lib/utils';
+import { fetchNodeTree } from '@/main/lib/utils';
 import { mapFile, mapNode } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
@@ -47,8 +47,8 @@ export class NodeService {
   public async createNode(input: CreateNodeInput): Promise<SelectNode> {
     this.debug(`Creating ${Array.isArray(input) ? 'nodes' : 'node'}`);
 
-    const ancestors = input.parentId
-      ? await fetchNodeAncestors(this.workspace.database, input.parentId)
+    const tree = input.parentId
+      ? await fetchNodeTree(this.workspace.database, input.parentId)
       : [];
 
     const model = getNodeModel(input.attributes.type);
@@ -59,7 +59,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      ancestors: ancestors.map(mapNode),
+      tree: tree.map(mapNode),
       attributes: input.attributes,
     };
 
@@ -75,7 +75,7 @@ export class NodeService {
     }
 
     const createdAt = new Date().toISOString();
-    const rootId = ancestors[0]?.id ?? input.id;
+    const rootId = tree[0]?.id ?? input.id;
 
     const { createdNode, createdMutation } = await this.workspace.database
       .transaction()
@@ -181,8 +181,8 @@ export class NodeService {
   ): Promise<UpdateNodeResult | null> {
     this.debug(`Updating node ${nodeId}`);
 
-    const ancestors = await fetchNodeAncestors(this.workspace.database, nodeId);
-    const nodeRow = ancestors[ancestors.length - 1];
+    const tree = await fetchNodeTree(this.workspace.database, nodeId);
+    const nodeRow = tree[tree.length - 1];
     if (!nodeRow || nodeRow.id !== nodeId) {
       return 'not_found';
     }
@@ -201,7 +201,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      ancestors: ancestors.map(mapNode),
+      tree: tree.map(mapNode),
       node: node,
       attributes: updatedAttributes,
     };
@@ -332,8 +332,8 @@ export class NodeService {
   }
 
   public async deleteNode(nodeId: string) {
-    const ancestors = await fetchNodeAncestors(this.workspace.database, nodeId);
-    const nodeRow = ancestors[ancestors.length - 1];
+    const tree = await fetchNodeTree(this.workspace.database, nodeId);
+    const nodeRow = tree[tree.length - 1];
     if (!nodeRow || nodeRow.id !== nodeId) {
       return 'not_found';
     }
@@ -349,7 +349,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      ancestors: ancestors.map(mapNode),
+      tree: tree.map(mapNode),
       node: node,
     };
 

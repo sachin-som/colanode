@@ -112,13 +112,13 @@ export const getFileMetadata = (filePath: string): FileMetadata | null => {
   };
 };
 
-export const fetchNodeAncestors = async (
+export const fetchNodeTree = async (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
   nodeId: string
 ): Promise<SelectNode[]> => {
-  return database
+  const nodes = await database
     .withRecursive('ancestor_nodes', (cte) =>
       cte
         .selectFrom('nodes')
@@ -138,6 +138,8 @@ export const fetchNodeAncestors = async (
     .selectFrom('ancestor_nodes')
     .selectAll()
     .execute();
+
+  return nodes.reverse();
 };
 
 export const fetchNode = (

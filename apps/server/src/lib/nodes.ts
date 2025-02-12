@@ -64,9 +64,7 @@ export const fetchNode = async (nodeId: string): Promise<SelectNode | null> => {
   return result ?? null;
 };
 
-export const fetchNodeAncestors = async (
-  nodeId: string
-): Promise<SelectNode[]> => {
+export const fetchNodeTree = async (nodeId: string): Promise<SelectNode[]> => {
   const result = await database
     .selectFrom('nodes')
     .selectAll()
@@ -317,7 +315,7 @@ export const createNodeFromMutation = async (
     parentId = attributes.parentId;
   }
 
-  const ancestors = parentId ? await fetchNodeAncestors(parentId) : [];
+  const tree = parentId ? await fetchNodeTree(parentId) : [];
   const canCreateNodeContext: CanCreateNodeContext = {
     user: {
       id: user.id,
@@ -325,7 +323,7 @@ export const createNodeFromMutation = async (
       workspaceId: user.workspace_id,
       accountId: user.account_id,
     },
-    ancestors: ancestors.map(mapNode),
+    tree: tree.map(mapNode),
     attributes,
   };
 
@@ -333,7 +331,7 @@ export const createNodeFromMutation = async (
     return null;
   }
 
-  const rootId = ancestors[0]?.id ?? mutation.id;
+  const rootId = tree[0]?.id ?? mutation.id;
   const createNode: CreateNode = {
     id: mutation.id,
     root_id: rootId,
@@ -430,12 +428,12 @@ const tryUpdateNodeFromMutation = async (
   user: SelectUser,
   mutation: UpdateNodeMutationData
 ): Promise<ConcurrentUpdateResult<UpdateNodeOutput>> => {
-  const ancestors = await fetchNodeAncestors(mutation.id);
-  if (ancestors.length === 0) {
+  const tree = await fetchNodeTree(mutation.id);
+  if (tree.length === 0) {
     return { type: 'error', output: null };
   }
 
-  const node = ancestors[ancestors.length - 1];
+  const node = tree[tree.length - 1];
   if (!node || node.id !== mutation.id) {
     return { type: 'error', output: null };
   }
@@ -454,7 +452,7 @@ const tryUpdateNodeFromMutation = async (
       workspaceId: user.workspace_id,
       accountId: user.account_id,
     },
-    ancestors: ancestors.map(mapNode),
+    tree: tree.map(mapNode),
     node: mapNode(node),
     attributes,
   };
@@ -544,12 +542,12 @@ export const deleteNode = async (
   user: SelectUser,
   input: DeleteNodeInput
 ): Promise<DeleteNodeOutput | null> => {
-  const ancestors = await fetchNodeAncestors(input.id);
-  if (ancestors.length === 0) {
+  const tree = await fetchNodeTree(input.id);
+  if (tree.length === 0) {
     return null;
   }
 
-  const node = ancestors[ancestors.length - 1];
+  const node = tree[tree.length - 1];
   if (!node || node.id !== input.id) {
     return null;
   }
@@ -562,7 +560,7 @@ export const deleteNode = async (
       workspaceId: user.workspace_id,
       accountId: user.account_id,
     },
-    ancestors: ancestors.map(mapNode),
+    tree: tree.map(mapNode),
     node: mapNode(node),
   };
 

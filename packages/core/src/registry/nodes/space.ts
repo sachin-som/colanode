@@ -20,7 +20,7 @@ export const spaceModel: NodeModel = {
   type: 'space',
   attributesSchema: spaceAttributesSchema,
   canCreate: (context) => {
-    if (context.ancestors.length > 0) {
+    if (context.tree.length > 0) {
       return false;
     }
 
@@ -44,11 +44,11 @@ export const spaceModel: NodeModel = {
     return true;
   },
   canUpdateAttributes: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
@@ -59,11 +59,11 @@ export const spaceModel: NodeModel = {
     return false;
   },
   canDelete: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }

@@ -18,16 +18,16 @@ export const fileModel: NodeModel = {
   type: 'file',
   attributesSchema: fileAttributesSchema,
   canCreate: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
 
-    const parent = context.ancestors[context.ancestors.length - 1]!;
+    const parent = context.tree[context.tree.length - 1]!;
     if (parent.type === 'message') {
       return hasNodeRole(role, 'collaborator');
     }
@@ -35,16 +35,16 @@ export const fileModel: NodeModel = {
     return hasNodeRole(role, 'editor');
   },
   canUpdateAttributes: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
 
-    const parent = context.ancestors[context.ancestors.length - 1]!;
+    const parent = context.tree[context.tree.length - 1]!;
     if (parent.type === 'message') {
       return parent.createdBy === context.user.id || hasNodeRole(role, 'admin');
     }
@@ -55,16 +55,16 @@ export const fileModel: NodeModel = {
     return false;
   },
   canDelete: (context) => {
-    if (context.ancestors.length === 0) {
+    if (context.tree.length === 0) {
       return false;
     }
 
-    const role = extractNodeRole(context.ancestors, context.user.id);
+    const role = extractNodeRole(context.tree, context.user.id);
     if (!role) {
       return false;
     }
 
-    const parent = context.ancestors[context.ancestors.length - 1]!;
+    const parent = context.tree[context.tree.length - 1]!;
     if (parent.type === 'message') {
       return parent.createdBy === context.user.id || hasNodeRole(role, 'admin');
     }

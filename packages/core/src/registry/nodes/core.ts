@@ -22,26 +22,26 @@ export interface NodeMutationUser {
 
 export type CanCreateNodeContext = {
   user: NodeMutationUser;
-  ancestors: Node[];
+  tree: Node[];
   attributes: NodeAttributes;
 };
 
 export type CanUpdateAttributesContext = {
   user: NodeMutationUser;
-  ancestors: Node[];
+  tree: Node[];
   node: Node;
   attributes: NodeAttributes;
 };
 
 export type CanUpdateDocumentContext = {
   user: NodeMutationUser;
-  ancestors: Node[];
+  tree: Node[];
   node: Node;
 };
 
 export type CanDeleteNodeContext = {
   user: NodeMutationUser;
-  ancestors: Node[];
+  tree: Node[];
   node: Node;
 };
 

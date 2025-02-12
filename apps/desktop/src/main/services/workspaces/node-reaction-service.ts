@@ -210,7 +210,7 @@ export class NodeReactionService {
           .values({
             id: tombstoneId,
             data: JSON.stringify(deletedNodeReaction),
-            created_at: new Date().toISOString(),
+            deleted_at: new Date().toISOString(),
           })
           .executeTakeFirst();
 

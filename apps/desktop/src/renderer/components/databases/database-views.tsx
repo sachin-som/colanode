@@ -20,14 +20,15 @@ export const DatabaseViews = () => {
     databaseId: database.id,
   });
 
-  React.useEffect(() => {
-    if (!activeViewId) {
-      setActiveViewId(data?.[0]?.id ?? null);
-    }
-  }, [data, activeViewId]);
-
   const views = data ?? [];
   const activeView = views.find((view) => view.id === activeViewId);
+
+  React.useEffect(() => {
+    if (views.length > 0 && !views.some((view) => view.id === activeViewId)) {
+      setActiveViewId(views[0]?.id ?? null);
+    }
+  }, [views, activeViewId]);
+
   return (
     <DatabaseViewsContext.Provider
       value={{ views, activeViewId: activeViewId ?? '', setActiveViewId }}

@@ -152,7 +152,7 @@ export type UpdateMutation = Updateable<MutationTable>;
 interface TombstoneTable {
   id: ColumnType<string, string, never>;
   data: ColumnType<string, string, never>;
-  created_at: ColumnType<string, string, never>;
+  deleted_at: ColumnType<string, string, never>;
 }
 
 export type SelectTombsonte = Selectable<TombstoneTable>;

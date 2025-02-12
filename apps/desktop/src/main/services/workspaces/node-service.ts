@@ -375,7 +375,7 @@ export class NodeService {
           .values({
             id: deletedNode.id,
             data: JSON.stringify(deletedNode),
-            created_at: new Date().toISOString(),
+            deleted_at: new Date().toISOString(),
           })
           .execute();
 

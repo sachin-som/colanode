@@ -49,6 +49,7 @@ export class ViewCreateMutationHandler
       index: generateNodeIndex(maxIndex, null),
       layout: input.viewType,
       parentId: input.databaseId,
+      groupBy: input.groupBy,
     };
 
     await workspace.nodes.createNode({

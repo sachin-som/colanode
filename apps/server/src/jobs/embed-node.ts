@@ -1,12 +1,11 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
-import { extractBlockTexts, NodeAttributes, FieldValue } from '@colanode/core';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CreateNodeEmbedding } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
-import { JobHandler } from '@/types/jobs';
+import { getNodeModel } from '@colanode/core';
 
 export type EmbedNodeInput = {
   type: 'embed_node';
@@ -21,58 +20,39 @@ declare module '@/types/jobs' {
   }
 }
 
-const formatFieldValue = (fieldValue: FieldValue): string => {
-  switch (fieldValue.type) {
-    case 'boolean':
-      return `${fieldValue.value ? 'Yes' : 'No'}`;
-    case 'string_array':
-      return (fieldValue.value as string[]).join(', ');
-    case 'number':
-    case 'string':
-    case 'text':
-      return String(fieldValue.value);
-    default:
-      return '';
-  }
-};
-
 const extractNodeText = async (
   nodeId: string,
-  attributes: NodeAttributes
+  node: Awaited<ReturnType<typeof fetchNode>>
 ): Promise<string> => {
-  switch (attributes.type) {
-    case 'message':
-      return extractBlockTexts(nodeId, attributes.content) ?? '';
-    case 'record': {
-      const sections: string[] = [];
+  if (!node) return '';
 
-      // Fetch the database node to get its name
-      const databaseNode = await fetchNode(attributes.databaseId);
-      const databaseName =
-        databaseNode?.attributes.type === 'database'
-          ? databaseNode.attributes.name
-          : attributes.databaseId;
+  // Get the node model to use its text extraction methods
+  const nodeModel = getNodeModel(node.attributes.type);
+  if (!nodeModel) return '';
 
-      // Add field context with database name
-      sections.push(`Field "${attributes.name}" in database "${databaseName}"`);
+  const sections: string[] = [];
 
-      // Process field value
-      Object.entries(attributes.fields).forEach(([fieldName, fieldValue]) => {
-        if (!fieldValue || !('type' in fieldValue)) {
-          return;
-        }
-
-        const value = formatFieldValue(fieldValue as FieldValue);
-        if (value) {
-          sections.push(value);
-        }
-      });
-
-      return sections.join('\n');
-    }
-    default:
-      return '';
+  // Get the node's name if available
+  const nodeName = nodeModel.getName(nodeId, node.attributes);
+  if (nodeName) {
+    sections.push(`${node.attributes.type} "${nodeName}"`);
   }
+
+  // Get text from attributes (this handles message content, record fields, etc.)
+  const attributesText = nodeModel.getAttributesText(nodeId, node.attributes);
+  if (attributesText) {
+    sections.push(attributesText);
+  }
+
+  // For records, add database context
+  if (node.attributes.type === 'record') {
+    const databaseNode = await fetchNode(node.attributes.databaseId);
+    if (databaseNode?.attributes.type === 'database') {
+      sections.push(`In database "${databaseNode.attributes.name}"`);
+    }
+  }
+
+  return sections.filter(Boolean).join('\n');
 };
 
 export const embedNodeHandler = async (input: {
@@ -89,12 +69,13 @@ export const embedNodeHandler = async (input: {
     return;
   }
 
-  // Skip page nodes (document content is handled separately in the embed document job)
-  if (node.type === 'page') {
+  // Skip nodes that are handled by document embeddings
+  const nodeModel = getNodeModel(node.attributes.type);
+  if (!nodeModel || nodeModel.documentSchema) {
     return;
   }
 
-  const text = await extractNodeText(node.id, node.attributes);
+  const text = await extractNodeText(nodeId, node);
   if (!text || text.trim() === '') {
     await database
       .deleteFrom('node_embeddings')

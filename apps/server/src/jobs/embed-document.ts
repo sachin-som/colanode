@@ -6,6 +6,7 @@ import { CreateDocumentEmbedding } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { DocumentContent, extractBlockTexts } from '@colanode/core';
+import { getNodeModel } from '@colanode/core';
 
 export type EmbedDocumentInput = {
   type: 'embed_document';
@@ -20,58 +21,48 @@ declare module '@/types/jobs' {
   }
 }
 
-const getNodeDisplayName = (
-  node: Awaited<ReturnType<typeof fetchNode>>
-): string => {
-  if (!node) {
-    return '';
-  }
-
-  switch (node.attributes.type) {
-    case 'page':
-    case 'database':
-    case 'folder':
-    case 'database_view':
-      return node.attributes.name;
-    case 'record':
-      return node.attributes.name;
-    default:
-      return '';
-  }
-};
-
 const extractDocumentText = async (
   documentId: string,
   content: DocumentContent
 ): Promise<string> => {
   const sections: string[] = [];
 
-  if (documentId) {
-    const node = await fetchNode(documentId);
-    if (!node) return '';
+  const node = await fetchNode(documentId);
+  if (!node) {
+    return '';
+  }
 
-    const nodeName = getNodeDisplayName(node);
+  const nodeModel = getNodeModel(node.attributes.type);
+  if (!nodeModel) {
+    return '';
+  }
 
-    if (node.attributes.type === 'record') {
-      const databaseNode = await fetchNode(node.attributes.databaseId);
-      const databaseName =
-        databaseNode?.attributes.type === 'database'
-          ? databaseNode.attributes.name
-          : node.attributes.databaseId;
+  const nodeName = nodeModel.getName(documentId, node.attributes);
+  if (nodeName) {
+    sections.push(`${node.attributes.type} "${nodeName}"`);
+  }
 
-      sections.push(`Record "${nodeName}" in database "${databaseName}"`);
-    } else if (nodeName) {
-      sections.push(`${node.attributes.type} "${nodeName}"`);
+  const attributesText = nodeModel.getAttributesText(
+    documentId,
+    node.attributes
+  );
+  if (attributesText) {
+    sections.push(attributesText);
+  }
+
+  const documentText = nodeModel.getDocumentText(documentId, content);
+  if (documentText) {
+    sections.push(documentText);
+  } else {
+    // Fallback to block text extraction if the model doesn't handle it
+    const blocksText = extractBlockTexts(documentId, content.blocks);
+    if (blocksText) {
+      sections.push('Content:');
+      sections.push(blocksText);
     }
   }
 
-  const blocksText = extractBlockTexts(documentId, content.blocks);
-  if (blocksText) {
-    sections.push('Content:');
-    sections.push(blocksText);
-  }
-
-  return sections.join('\n\n');
+  return sections.filter(Boolean).join('\n\n');
 };
 
 export const embedDocumentHandler = async (input: {
@@ -91,6 +82,14 @@ export const embedDocumentHandler = async (input: {
     .executeTakeFirst();
 
   if (!document) {
+    return;
+  }
+
+  const node = await fetchNode(documentId);
+  if (!node) return;
+
+  const nodeModel = getNodeModel(node.attributes.type);
+  if (!nodeModel?.documentSchema) {
     return;
   }
 

@@ -4,87 +4,38 @@ import { database } from '@/data/database';
 import { addContextToChunk } from '@/services/llm-service';
 import {
   DocumentContent,
+  getNodeModel,
+  Node,
   NodeAttributes,
-  MessageAttributes,
-  ChatAttributes,
-  ChannelAttributes,
-  RecordAttributes,
-  DatabaseAttributes,
-  extractBlockTexts,
 } from '@colanode/core';
+import type { SelectNode, SelectDocument, SelectUser } from '@/data/schema';
 
-type BaseNodeMetadata = {
+type BaseMetadata = {
   id: string;
   type: string;
-  attributes: NodeAttributes;
+  name?: string;
   createdAt: Date;
   createdBy: string;
   author?: { id: string; name: string };
-};
-
-type MessageNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'message';
   parentContext?: {
-    type: 'chat' | 'channel';
-    name?: string;
-    collaborators?: Array<{ id: string; name: string }>;
-  };
-  referencedMessage?: {
     id: string;
-    content: string;
-    author?: { id: string; name: string };
+    type: string;
+    name?: string;
   };
-};
-
-type ChatNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'chat';
-  collaborators: Array<{ id: string; name: string }>;
-};
-
-type ChannelNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'channel';
   collaborators?: Array<{ id: string; name: string }>;
 };
 
-type RecordNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'record';
-  databaseName?: string;
-};
-
-type DatabaseNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'database';
-};
-
-type PageNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'page';
-  parentName?: string;
-};
-
-type FileNodeMetadata = BaseNodeMetadata & {
-  nodeType: 'file';
-};
-
-type NodeMetadata = {
+export type NodeMetadata = {
   type: 'node';
-  node:
-    | MessageNodeMetadata
-    | ChatNodeMetadata
-    | ChannelNodeMetadata
-    | RecordNodeMetadata
-    | DatabaseNodeMetadata
-    | PageNodeMetadata
-    | FileNodeMetadata;
+  metadata: BaseMetadata & {
+    fields?: Record<string, unknown> | null;
+  };
 };
 
-type DocumentMetadata = {
+export type DocumentMetadata = {
   type: 'document';
-  document: {
-    id: string;
+  metadata: BaseMetadata & {
     content: DocumentContent;
-    createdAt: Date;
-    nodeType?: string;
-    nodeName?: string;
-    parentNodeName?: string;
   };
 };
 
@@ -104,6 +55,7 @@ export class ChunkingService {
     const docs = await splitter.createDocuments([text]);
     let chunks = docs.map((doc) => doc.pageContent);
     chunks = chunks.filter((c) => c.trim().length > 10);
+
     if (configuration.ai.chunking.enhanceWithContext) {
       const enrichedMetadata = await this.fetchMetadata(metadata);
       const enriched: string[] = [];
@@ -125,301 +77,173 @@ export class ChunkingService {
     }
 
     if (metadata.type === 'node') {
-      const node = await database
+      const node = (await database
         .selectFrom('nodes')
         .selectAll()
         .where('id', '=', metadata.id)
-        .executeTakeFirst();
+        .executeTakeFirst()) as SelectNode | undefined;
       if (!node) {
         return undefined;
       }
 
-      const attributes = node.attributes as NodeAttributes;
-      const author = await database
-        .selectFrom('users')
-        .select(['id', 'name'])
-        .where('id', '=', node.created_by)
-        .executeTakeFirst();
-
-      const baseMetadata: BaseNodeMetadata = {
-        id: node.id,
-        type: attributes.type,
-        attributes,
-        createdAt: node.created_at,
-        createdBy: node.created_by,
-        author: author ?? undefined,
-      };
-
-      switch (attributes.type) {
-        case 'message': {
-          const messageMetadata: MessageNodeMetadata = {
-            ...baseMetadata,
-            nodeType: 'message',
-          };
-
-          // If message has a reference, fetch it
-          if (attributes.referenceId) {
-            const referencedNode = await database
-              .selectFrom('nodes')
-              .selectAll()
-              .where('id', '=', attributes.referenceId)
-              .executeTakeFirst();
-
-            if (
-              referencedNode &&
-              referencedNode.attributes.type === 'message'
-            ) {
-              const refAttributes =
-                referencedNode.attributes as MessageAttributes;
-              const refAuthor = await database
-                .selectFrom('users')
-                .select(['id', 'name'])
-                .where('id', '=', referencedNode.created_by)
-                .executeTakeFirst();
-
-              messageMetadata.referencedMessage = {
-                id: referencedNode.id,
-                content:
-                  extractBlockTexts(referencedNode.id, refAttributes.content) ??
-                  '',
-                author: refAuthor ?? undefined,
-              };
-            }
-          }
-
-          // Get parent context (chat or channel) if available
-          if (node.parent_id) {
-            const parentNode = await database
-              .selectFrom('nodes')
-              .selectAll()
-              .where('id', '=', node.parent_id)
-              .executeTakeFirst();
-
-            if (parentNode) {
-              switch (parentNode.attributes.type) {
-                case 'chat': {
-                  const chatAttributes =
-                    parentNode.attributes as ChatAttributes;
-                  messageMetadata.parentContext = {
-                    type: 'chat',
-                  };
-
-                  // Fetch chat collaborators
-                  if (chatAttributes.collaborators) {
-                    const collaborators = await database
-                      .selectFrom('users')
-                      .select(['id', 'name'])
-                      .where(
-                        'id',
-                        'in',
-                        Object.keys(chatAttributes.collaborators)
-                      )
-                      .execute();
-                    messageMetadata.parentContext.collaborators = collaborators;
-                  }
-                  break;
-                }
-                case 'channel': {
-                  const channelAttributes =
-                    parentNode.attributes as ChannelAttributes;
-                  messageMetadata.parentContext = {
-                    type: 'channel',
-                    name: channelAttributes.name,
-                  };
-
-                  // Fetch channel collaborators if they exist
-                  if (
-                    'collaborators' in channelAttributes &&
-                    channelAttributes.collaborators
-                  ) {
-                    const collaborators = await database
-                      .selectFrom('users')
-                      .select(['id', 'name'])
-                      .where(
-                        'id',
-                        'in',
-                        Object.keys(channelAttributes.collaborators)
-                      )
-                      .execute();
-                    messageMetadata.parentContext.collaborators = collaborators;
-                  }
-                  break;
-                }
-              }
-            }
-          }
-
-          return { type: 'node', node: messageMetadata };
-        }
-
-        case 'chat': {
-          const chatAttributes = attributes as ChatAttributes;
-          let collaborators: Array<{ id: string; name: string }> = [];
-          if (chatAttributes.collaborators) {
-            collaborators = await database
-              .selectFrom('users')
-              .select(['id', 'name'])
-              .where('id', 'in', Object.keys(chatAttributes.collaborators))
-              .execute();
-          }
-
-          return {
-            type: 'node',
-            node: {
-              ...baseMetadata,
-              nodeType: 'chat',
-              collaborators,
-            },
-          };
-        }
-
-        case 'channel': {
-          const channelAttributes = attributes as ChannelAttributes;
-          let collaborators: Array<{ id: string; name: string }> | undefined;
-
-          // Only fetch collaborators if the channel has them
-          if (
-            'collaborators' in channelAttributes &&
-            channelAttributes.collaborators
-          ) {
-            collaborators = await database
-              .selectFrom('users')
-              .select(['id', 'name'])
-              .where('id', 'in', Object.keys(channelAttributes.collaborators))
-              .execute();
-          }
-
-          return {
-            type: 'node',
-            node: {
-              ...baseMetadata,
-              nodeType: 'channel',
-              collaborators,
-            },
-          };
-        }
-
-        case 'record': {
-          const recordAttributes = attributes as RecordAttributes;
-          const recordMetadata: RecordNodeMetadata = {
-            ...baseMetadata,
-            nodeType: 'record',
-          };
-
-          // Fetch database name
-          const databaseNode = await database
-            .selectFrom('nodes')
-            .selectAll()
-            .where('id', '=', recordAttributes.databaseId)
-            .executeTakeFirst();
-
-          if (databaseNode?.attributes.type === 'database') {
-            const dbAttributes = databaseNode.attributes as DatabaseAttributes;
-            recordMetadata.databaseName = dbAttributes.name;
-          }
-
-          return { type: 'node', node: recordMetadata };
-        }
-
-        case 'database': {
-          return {
-            type: 'node',
-            node: {
-              ...baseMetadata,
-              nodeType: 'database',
-            },
-          };
-        }
-
-        case 'page': {
-          const pageMetadata: PageNodeMetadata = {
-            ...baseMetadata,
-            nodeType: 'page',
-          };
-
-          // Get parent folder/space name for context
-          if (node.parent_id) {
-            const parentNode = await database
-              .selectFrom('nodes')
-              .selectAll()
-              .where('id', '=', node.parent_id)
-              .executeTakeFirst();
-
-            if (parentNode && 'name' in parentNode.attributes) {
-              pageMetadata.parentName = parentNode.attributes.name;
-            }
-          }
-
-          return { type: 'node', node: pageMetadata };
-        }
-
-        case 'file': {
-          return {
-            type: 'node',
-            node: {
-              ...baseMetadata,
-              nodeType: 'file',
-            },
-          };
-        }
-
-        default:
-          return {
-            type: 'node',
-            node: {
-              ...baseMetadata,
-              nodeType: attributes.type as any,
-            },
-          };
-      }
+      return this.buildNodeMetadata(node);
     } else {
-      // For documents, fetch both document and its associated node
-      const document = await database
+      const document = (await database
         .selectFrom('documents')
         .selectAll()
         .where('id', '=', metadata.id)
-        .executeTakeFirst();
+        .executeTakeFirst()) as SelectDocument | undefined;
       if (!document) {
         return undefined;
       }
 
-      const documentMetadata: DocumentMetadata = {
-        type: 'document',
-        document: {
-          id: document.id,
-          content: document.content,
-          createdAt: document.created_at,
-        },
-      };
-
-      // Try to fetch associated node for additional context
-      const node = await database
+      const node = (await database
         .selectFrom('nodes')
         .selectAll()
         .where('id', '=', document.id)
-        .executeTakeFirst();
+        .executeTakeFirst()) as SelectNode | undefined;
 
-      if (node) {
-        documentMetadata.document.nodeType = node.attributes.type;
-        if ('name' in node.attributes) {
-          documentMetadata.document.nodeName = node.attributes.name;
+      return this.buildDocumentMetadata(document, node);
+    }
+  }
+
+  private async buildNodeMetadata(node: SelectNode): Promise<NodeMetadata> {
+    const nodeModel = getNodeModel(node.attributes.type);
+    if (!nodeModel) {
+      throw new Error(`No model found for node type: ${node.attributes.type}`);
+    }
+
+    const baseMetadata = await this.buildBaseMetadata(node);
+
+    // Add collaborators if the node type supports them
+    if ('collaborators' in node.attributes) {
+      baseMetadata.collaborators = await this.fetchCollaborators(
+        Object.keys(
+          (
+            node.attributes as NodeAttributes & {
+              collaborators: Record<string, string>;
+            }
+          ).collaborators
+        )
+      );
+    }
+
+    // Add parent context if needed
+    if (node.parent_id) {
+      const parentContext = await this.buildParentContext(node);
+      if (parentContext) {
+        baseMetadata.parentContext = parentContext;
+      }
+    }
+
+    return {
+      type: 'node',
+      metadata: {
+        ...baseMetadata,
+        fields: 'fields' in node.attributes ? node.attributes.fields : null,
+      },
+    };
+  }
+
+  private async buildDocumentMetadata(
+    document: SelectDocument,
+    node?: SelectNode
+  ): Promise<DocumentMetadata> {
+    let baseMetadata: BaseMetadata = {
+      id: document.id,
+      type: 'document',
+      createdAt: document.created_at,
+      createdBy: document.created_by,
+    };
+
+    if (node) {
+      const nodeModel = getNodeModel(node.attributes.type);
+      if (nodeModel) {
+        const nodeName = nodeModel.getName(node.id, node.attributes);
+        if (nodeName) {
+          baseMetadata.name = nodeName;
         }
 
+        // Add parent context if available
         if (node.parent_id) {
-          const parentNode = await database
-            .selectFrom('nodes')
-            .selectAll()
-            .where('id', '=', node.parent_id)
-            .executeTakeFirst();
-
-          if (parentNode && 'name' in parentNode.attributes) {
-            documentMetadata.document.parentNodeName =
-              parentNode.attributes.name;
+          const parentContext = await this.buildParentContext(node);
+          if (parentContext) {
+            baseMetadata.parentContext = parentContext;
           }
         }
       }
-
-      return documentMetadata;
     }
+
+    return {
+      type: 'document',
+      metadata: {
+        ...baseMetadata,
+        content: document.content,
+      },
+    };
+  }
+
+  private async buildBaseMetadata(node: SelectNode): Promise<BaseMetadata> {
+    const nodeModel = getNodeModel(node.attributes.type);
+    const nodeName = nodeModel?.getName(node.id, node.attributes);
+
+    const author = (await database
+      .selectFrom('users')
+      .select(['id', 'name'])
+      .where('id', '=', node.created_by)
+      .executeTakeFirst()) as SelectUser | undefined;
+
+    return {
+      id: node.id,
+      type: node.attributes.type,
+      name: nodeName ?? undefined,
+      createdAt: node.created_at,
+      createdBy: node.created_by,
+      author: author ?? undefined,
+    };
+  }
+
+  private async buildParentContext(
+    node: SelectNode
+  ): Promise<BaseMetadata['parentContext'] | undefined> {
+    const parentNode = (await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', node.parent_id)
+      .executeTakeFirst()) as SelectNode | undefined;
+
+    if (!parentNode) {
+      return undefined;
+    }
+
+    const parentModel = getNodeModel(parentNode.attributes.type);
+    if (!parentModel) {
+      return undefined;
+    }
+
+    const parentName = parentModel.getName(
+      parentNode.id,
+      parentNode.attributes
+    );
+
+    return {
+      id: parentNode.id,
+      type: parentNode.attributes.type,
+      name: parentName ?? undefined,
+    };
+  }
+
+  private async fetchCollaborators(
+    collaboratorIds: string[]
+  ): Promise<Array<{ id: string; name: string }>> {
+    if (!collaboratorIds.length) {
+      return [];
+    }
+
+    return database
+      .selectFrom('users')
+      .select(['id', 'name'])
+      .where('id', 'in', collaboratorIds)
+      .execute() as Promise<Array<{ id: string; name: string }>>;
   }
 }

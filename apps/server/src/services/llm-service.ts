@@ -7,7 +7,12 @@ import { HumanMessage } from '@langchain/core/messages';
 import { configuration } from '@/lib/configuration';
 import { Document } from '@langchain/core/documents';
 import { z } from 'zod';
-import { NodeAttributes } from '@colanode/core';
+import { NodeAttributes, NodeType } from '@colanode/core';
+import type {
+  ChunkingMetadata,
+  NodeMetadata,
+  DocumentMetadata,
+} from '@/services/chunking-service';
 
 // Use proper Zod schemas and updated prompt templates
 
@@ -237,38 +242,162 @@ export async function assessUserIntent(
     : 'retrieve';
 }
 
-export async function addContextToChunk(
-  chunk: string,
-  fullText: string,
-  metadata?: any
-): Promise<string> {
-  try {
-    const task = 'contextEnhancer';
-    const model = getChatModel(task);
-    // Choose a prompt variant based on metadata type (node/document) if available.
-    const promptTemplate = PromptTemplate.fromTemplate(
-      `Using the following context information:
-{contextInfo}
+interface NodeContextData {
+  metadata: {
+    type: NodeType;
+    name?: string;
+    author?: { id: string; name: string };
+    parentContext?: {
+      type: string;
+      name?: string;
+    };
+    collaborators?: Array<{ id: string; name: string }>;
+    fields?: Record<string, unknown>;
+  };
+}
+
+const getNodeContextPrompt = (metadata: NodeMetadata): string => {
+  const basePrompt = `Given the following context about a {nodeType}:
+Name: {name}
+Created by: {authorName}
+{additionalContext}
 
 Full content:
 {fullText}
 
-Given this chunk:
+Current chunk:
 {chunk}
 
-Generate a short (50–100 tokens) contextual prefix (do not repeat the chunk) and prepend it to the chunk.`
+Generate a brief (50-100 tokens) contextual prefix that:
+1. Explains what this chunk is part of
+2. Provides relevant context from the metadata
+3. Makes the chunk more understandable in isolation
+Do not repeat the chunk content. Return only the contextual prefix.`;
+
+  const getCollaboratorNames = (
+    collaborators?: Array<{ id: string; name: string }>
+  ) => collaborators?.map((c) => c.name).join(', ') ?? 'unknown';
+
+  switch (metadata.metadata.type) {
+    case 'message':
+      return basePrompt.replace(
+        '{additionalContext}',
+        `In: ${metadata.metadata.parentContext?.type ?? 'unknown'} "${metadata.metadata.parentContext?.name ?? 'unknown'}"
+Participants: ${getCollaboratorNames(metadata.metadata.collaborators)}`
+      );
+
+    case 'record':
+      return basePrompt.replace(
+        '{additionalContext}',
+        `Database: ${metadata.metadata.parentContext?.name ?? 'unknown'}
+Fields: ${Object.keys(metadata.metadata.fields ?? {}).join(', ')}`
+      );
+
+    case 'page':
+      return basePrompt.replace(
+        '{additionalContext}',
+        `Location: ${metadata.metadata.parentContext?.name ? `in ${metadata.metadata.parentContext.name}` : 'root level'}`
+      );
+
+    case 'database':
+      return basePrompt.replace(
+        '{additionalContext}',
+        `Fields: ${Object.keys(metadata.metadata.fields ?? {}).join(', ')}`
+      );
+
+    case 'channel':
+      return basePrompt.replace(
+        '{additionalContext}',
+        `Type: Channel
+Members: ${getCollaboratorNames(metadata.metadata.collaborators)}`
+      );
+
+    default:
+      return basePrompt.replace('{additionalContext}', '');
+  }
+};
+
+interface PromptVariables {
+  nodeType: string;
+  name: string;
+  authorName: string;
+  fullText: string;
+  chunk: string;
+  [key: string]: string;
+}
+
+const documentContextPrompt = PromptTemplate.fromTemplate(
+  `Given the following context about a document:
+Type: {nodeType}
+Name: {name}
+Parent: {parentName}
+Created by: {authorName}
+
+Full content:
+{fullText}
+
+Current chunk:
+{chunk}
+
+Generate a brief (50-100 tokens) contextual prefix that:
+1. Explains what this document is
+2. Provides relevant context about its location and purpose
+3. Makes the chunk more understandable in isolation
+Do not repeat the chunk content. Return only the contextual prefix.`
+);
+
+export async function addContextToChunk(
+  chunk: string,
+  fullText: string,
+  metadata?: ChunkingMetadata
+): Promise<string> {
+  try {
+    if (!metadata) {
+      return chunk;
+    }
+
+    const task = 'contextEnhancer';
+    const model = getChatModel(task);
+
+    let prompt: string;
+    let promptVars: PromptVariables;
+
+    if (metadata.type === 'node') {
+      prompt = getNodeContextPrompt(metadata);
+      promptVars = {
+        nodeType: metadata.metadata.type,
+        name: metadata.metadata.name ?? 'Untitled',
+        authorName: metadata.metadata.author?.name ?? 'Unknown',
+        fullText,
+        chunk,
+      };
+    } else {
+      prompt = await documentContextPrompt.format({
+        nodeType: metadata.metadata.type,
+        name: metadata.metadata.name ?? 'Untitled',
+        parentName: metadata.metadata.parentContext?.name ?? 'Unknown',
+        authorName: metadata.metadata.author?.name ?? 'Unknown',
+        fullText,
+        chunk,
+      });
+      promptVars = {
+        nodeType: metadata.metadata.type,
+        name: metadata.metadata.name ?? 'Untitled',
+        authorName: metadata.metadata.author?.name ?? 'Unknown',
+        fullText,
+        chunk,
+      };
+    }
+
+    const formattedPrompt = Object.entries(promptVars).reduce(
+      (acc, [key, value]) => acc.replace(`{${key}}`, value),
+      prompt
     );
-    const contextInfo = metadata
-      ? `Type: ${metadata.type}, Name: ${metadata.name || 'N/A'}, Parent: ${metadata.parentName || 'N/A'}, Space: ${metadata.spaceName || 'N/A'}`
-      : 'No additional context available.';
-    const prompt = await promptTemplate.format({
-      contextInfo,
-      fullText,
-      chunk,
-    });
+
     const response = await model.invoke([
-      new HumanMessage({ content: prompt }),
+      new HumanMessage({ content: formattedPrompt }),
     ]);
+
     const prefix = (response.content.toString() || '').trim();
     return prefix ? `${prefix}\n\n${chunk}` : chunk;
   } catch (err) {

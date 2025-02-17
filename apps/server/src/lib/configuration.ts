@@ -102,6 +102,7 @@ export interface AiConfiguration {
     contextEnhancer: AIModelConfiguration;
     noContext: AIModelConfiguration;
     intentRecognition: AIModelConfiguration;
+    databaseFilter: AIModelConfiguration;
   };
   embedding: {
     provider: AIProvider;
@@ -277,6 +278,14 @@ export const configuration: Configuration = {
         modelName: getOptionalEnv('INTENT_RECOGNITION_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('INTENT_RECOGNITION_TEMPERATURE') || '0.3'
+        ),
+      },
+      databaseFilter: {
+        provider: (getOptionalEnv('DATABASE_FILTER_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('DATABASE_FILTER_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('DATABASE_FILTER_TEMPERATURE') || '0.3'
         ),
       },
     },

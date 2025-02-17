@@ -4,6 +4,9 @@ import {
   generateNodeIndex,
   getNodeModel,
   NodeAttributes,
+  DatabaseNode,
+  RecordNode,
+  DatabaseAttributes,
 } from '@colanode/core';
 import { Document } from '@langchain/core/documents';
 import { StateGraph, Annotation } from '@langchain/langgraph';
@@ -19,10 +22,12 @@ import {
   generateFinalAnswer,
   generateNoContextAnswer,
   assessUserIntent,
+  generateDatabaseFilters,
 } from '@/services/llm-service';
 import { CallbackHandler } from 'langfuse-langchain';
 import { fetchNode } from '@/lib/nodes';
 import { sql } from 'kysely';
+import { recordsRetrievalService } from '@/services/records-retrieval-service';
 
 // ---------------------------------------------------------------------
 // Job Input & Type Definitions
@@ -67,6 +72,21 @@ const ResponseState = Annotation.Root({
   citations: Annotation<Array<{ sourceId: string; quote: string }>>(),
   originalMessage: Annotation<any>(),
   intent: Annotation<'retrieve' | 'no_context'>(),
+  databaseContext: Annotation<
+    Array<{
+      id: string;
+      name: string;
+      fields: Record<string, { type: string; name: string }>;
+      sampleRecords: any[];
+    }>
+  >(),
+  databaseFilters: Annotation<{
+    shouldFilter: boolean;
+    filters: Array<{
+      databaseId: string;
+      filters: any[]; // DatabaseViewFilterAttributes[]
+    }>;
+  }>(),
 });
 
 // ---------------------------------------------------------------------
@@ -123,7 +143,59 @@ async function fetchContextDocuments(state: typeof ResponseState.State) {
       state.userId
     ),
   ]);
-  return { contextDocuments: [...nodeResults, ...documentResults] };
+
+  let databaseResults: Document[] = [];
+
+  // If we have database filters, fetch the filtered records
+  if (state.databaseFilters.shouldFilter) {
+    const filteredRecords = await Promise.all(
+      state.databaseFilters.filters.map(async (filter) => {
+        const records = await recordsRetrievalService.retrieveByFilters(
+          filter.databaseId,
+          state.workspaceId,
+          state.userId,
+          {
+            filters: filter.filters,
+            sorts: [],
+            page: 1,
+            count: 10, // Fetch top 10 matching records
+          }
+        );
+
+        // Get the database node to access its name
+        const dbNode = await fetchNode(filter.databaseId);
+        if (!dbNode || dbNode.type !== 'database') return [];
+
+        const dbAttributes = dbNode.attributes as DatabaseAttributes;
+
+        // Convert records to Documents
+        return records.map((record) => {
+          const recordNode = record as unknown as RecordNode;
+          return new Document({
+            pageContent: `Database Record from ${dbAttributes.name}:\n${Object.entries(
+              recordNode.attributes.fields || {}
+            )
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('\n')}`,
+            metadata: {
+              id: record.id,
+              type: 'record',
+              createdAt: record.created_at,
+              author: record.created_by,
+              databaseId: filter.databaseId,
+            },
+          });
+        });
+      })
+    );
+
+    // Flatten the array of arrays into a single array
+    databaseResults = filteredRecords.flat();
+  }
+
+  return {
+    contextDocuments: [...nodeResults, ...documentResults, ...databaseResults],
+  };
 }
 
 async function fetchChatHistory(state: typeof ResponseState.State) {
@@ -240,6 +312,80 @@ async function generateResponse(state: typeof ResponseState.State) {
   };
 }
 
+async function fetchDatabaseContext(state: typeof ResponseState.State) {
+  // Fetch all databases the user has access to
+  const databases = await database
+    .selectFrom('nodes as n')
+    .innerJoin('collaborations as c', 'c.node_id', 'n.root_id')
+    .where('n.type', '=', 'database')
+    .where('n.workspace_id', '=', state.workspaceId)
+    .where('c.collaborator_id', '=', state.userId)
+    .where('c.deleted_at', 'is', null)
+    .selectAll()
+    .execute();
+
+  // For each database, fetch schema and sample records
+  const databaseContext = await Promise.all(
+    databases.map(async (db) => {
+      const dbNode = db as unknown as DatabaseNode;
+      // Get sample records
+      const sampleRecords = await recordsRetrievalService.retrieveByFilters(
+        db.id,
+        state.workspaceId,
+        state.userId,
+        {
+          filters: [],
+          sorts: [],
+          page: 1,
+          count: 5, // Fetch 5 sample records
+        }
+      );
+
+      // Extract field information from database attributes
+      const fields = dbNode.attributes.fields || {};
+      const formattedFields = Object.entries(fields).reduce(
+        (acc, [id, field]) => ({
+          ...acc,
+          [id]: {
+            type: field.type,
+            name: field.name,
+          },
+        }),
+        {}
+      );
+
+      return {
+        id: db.id,
+        name: dbNode.attributes.name || 'Untitled Database',
+        fields: formattedFields,
+        sampleRecords,
+      };
+    })
+  );
+
+  return { databaseContext };
+}
+
+async function generateDatabaseFilterAttributes(
+  state: typeof ResponseState.State
+) {
+  if (state.intent === 'no_context' || !state.databaseContext.length) {
+    return {
+      databaseFilters: {
+        shouldFilter: false,
+        filters: [],
+      },
+    };
+  }
+
+  const filters = await generateDatabaseFilters({
+    query: state.userInput,
+    databases: state.databaseContext,
+  });
+
+  return { databaseFilters: filters };
+}
+
 // ---------------------------------------------------------------------
 // Build the Response Chain Graph
 // ---------------------------------------------------------------------
@@ -252,13 +398,17 @@ const assistantResponseChain = new StateGraph(ResponseState)
   .addNode('generateResponse', generateResponse)
   .addNode('assessIntent', assessIntent)
   .addNode('generateNoContextResponse', generateNoContextResponse)
+  .addNode('fetchDatabaseContext', fetchDatabaseContext)
+  .addNode('generateDatabaseFilterAttributes', generateDatabaseFilterAttributes)
   .addEdge('__start__', 'fetchChatHistory')
   .addEdge('fetchChatHistory', 'assessIntent')
   .addConditionalEdges('assessIntent', (state) => {
     return state.intent === 'no_context'
       ? 'generateNoContextResponse'
-      : 'generateRewrittenQuery';
+      : 'fetchDatabaseContext';
   })
+  .addEdge('fetchDatabaseContext', 'generateDatabaseFilterAttributes')
+  .addEdge('generateDatabaseFilterAttributes', 'generateRewrittenQuery')
   .addEdge('generateRewrittenQuery', 'fetchContextDocuments')
   .addEdge('fetchContextDocuments', 'rerankContextDocuments')
   .addEdge('rerankContextDocuments', 'selectRelevantDocuments')

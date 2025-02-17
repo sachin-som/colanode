@@ -35,6 +35,18 @@ const citedAnswerSchema = z.object({
 });
 type CitedAnswer = z.infer<typeof citedAnswerSchema>;
 
+const databaseFilterSchema = z.object({
+  shouldFilter: z.boolean(),
+  filters: z.array(
+    z.object({
+      databaseId: z.string(),
+      filters: z.array(z.any()), // Using any for DatabaseViewFilterAttributes since it's complex
+    })
+  ),
+});
+
+type DatabaseFilterResult = z.infer<typeof databaseFilterSchema>;
+
 export function getChatModel(
   task: keyof typeof configuration.ai.models
 ): ChatOpenAI | ChatGoogleGenerativeAI {
@@ -148,6 +160,49 @@ User Query:
 {question}
 
 Return only the answer.`
+);
+
+const databaseFilterPrompt = ChatPromptTemplate.fromTemplate(
+  `You are an expert at analyzing natural language queries and converting them into structured database filters.
+
+Available Databases:
+{databasesInfo}
+
+User Query:
+{query}
+
+Your task is to:
+1. Determine if this query is asking or makes sense to answer by filtering/searching databases
+2. If yes, generate appropriate filter attributes for each relevant database
+3. If no, return shouldFilter: false
+
+Return a JSON object with:
+- shouldFilter: boolean
+- filters: array of objects with:
+  - databaseId: string
+  - filters: array of DatabaseViewFilterAttributes
+
+Only include databases that are relevant to the query.
+For each filter, use the exact field IDs from the database schema.
+Use appropriate operators based on field types.
+
+Example Response:
+{
+  "shouldFilter": true,
+  "filters": [
+    {
+      "databaseId": "db1",
+      "filters": [
+        {
+          "type": "field",
+          "fieldId": "field1",
+          "operator": "contains",
+          "value": "search term"
+        }
+      ]
+    }
+  ]
+}`
 );
 
 export async function rewriteQuery(query: string): Promise<string> {
@@ -409,4 +464,44 @@ export async function addContextToChunk(
     console.error('Error in addContextToChunk:', err);
     return chunk;
   }
+}
+
+export async function generateDatabaseFilters(args: {
+  query: string;
+  databases: Array<{
+    id: string;
+    name: string;
+    fields: Record<string, { type: string; name: string }>;
+    sampleRecords: any[];
+  }>;
+}): Promise<DatabaseFilterResult> {
+  const task = 'databaseFilter';
+  const model = getChatModel(task).withStructuredOutput(databaseFilterSchema);
+
+  // Format database information for the prompt
+  const databasesInfo = args.databases
+    .map(
+      (db) => `
+Database: ${db.name} (ID: ${db.id})
+Fields:
+${Object.entries(db.fields)
+  .map(([id, field]) => `- ${field.name} (ID: ${id}, Type: ${field.type})`)
+  .join('\n')}
+
+Sample Records:
+${db.sampleRecords
+  .map(
+    (record, i) =>
+      `${i + 1}. ${Object.entries(record.attributes.fields)
+        .map(([fieldId, value]) => `${db.fields[fieldId]?.name}: ${value}`)
+        .join(', ')}`
+  )
+  .join('\n')}
+`
+    )
+    .join('\n\n');
+
+  return databaseFilterPrompt
+    .pipe(model)
+    .invoke({ query: args.query, databasesInfo });
 }

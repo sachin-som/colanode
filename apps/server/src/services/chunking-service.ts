@@ -12,7 +12,6 @@ import type { SelectNode, SelectDocument, SelectUser } from '@/data/schema';
 
 type BaseMetadata = {
   id: string;
-  type: string;
   name?: string;
   createdAt: Date;
   createdBy: string;
@@ -21,22 +20,23 @@ type BaseMetadata = {
     id: string;
     type: string;
     name?: string;
+    path?: string;
   };
-  collaborators?: Array<{ id: string; name: string }>;
+  collaborators?: Array<{ id: string; name: string; role: string }>;
+  lastUpdated?: Date;
+  updatedBy?: { id: string; name: string };
+  workspace?: { id: string; name: string };
 };
 
-export type NodeMetadata = {
+export type NodeMetadata = BaseMetadata & {
   type: 'node';
-  metadata: BaseMetadata & {
-    fields?: Record<string, unknown> | null;
-  };
+  nodeType: string;
+  fields?: Record<string, unknown> | null;
 };
 
-export type DocumentMetadata = {
+export type DocumentMetadata = BaseMetadata & {
   type: 'document';
-  metadata: BaseMetadata & {
-    content: DocumentContent;
-  };
+  content: DocumentContent;
 };
 
 export type ChunkingMetadata = NodeMetadata | DocumentMetadata;
@@ -44,7 +44,7 @@ export type ChunkingMetadata = NodeMetadata | DocumentMetadata;
 export class ChunkingService {
   public async chunkText(
     text: string,
-    metadata?: { type: 'node' | 'document'; id: string }
+    metadata?: { type: 'node' | 'document'; node: SelectNode }
   ): Promise<string[]> {
     const chunkSize = configuration.ai.chunking.defaultChunkSize;
     const chunkOverlap = configuration.ai.chunking.defaultOverlap;
@@ -70,40 +70,25 @@ export class ChunkingService {
 
   private async fetchMetadata(metadata?: {
     type: 'node' | 'document';
-    id: string;
+    node: SelectNode;
   }): Promise<ChunkingMetadata | undefined> {
     if (!metadata) {
       return undefined;
     }
 
     if (metadata.type === 'node') {
-      const node = (await database
-        .selectFrom('nodes')
-        .selectAll()
-        .where('id', '=', metadata.id)
-        .executeTakeFirst()) as SelectNode | undefined;
-      if (!node) {
-        return undefined;
-      }
-
-      return this.buildNodeMetadata(node);
+      return this.buildNodeMetadata(metadata.node);
     } else {
       const document = (await database
         .selectFrom('documents')
         .selectAll()
-        .where('id', '=', metadata.id)
+        .where('id', '=', metadata.node.id)
         .executeTakeFirst()) as SelectDocument | undefined;
       if (!document) {
         return undefined;
       }
 
-      const node = (await database
-        .selectFrom('nodes')
-        .selectAll()
-        .where('id', '=', document.id)
-        .executeTakeFirst()) as SelectNode | undefined;
-
-      return this.buildDocumentMetadata(document, node);
+      return this.buildDocumentMetadata(document, metadata.node);
     }
   }
 
@@ -138,10 +123,9 @@ export class ChunkingService {
 
     return {
       type: 'node',
-      metadata: {
-        ...baseMetadata,
-        fields: 'fields' in node.attributes ? node.attributes.fields : null,
-      },
+      nodeType: node.attributes.type,
+      fields: 'fields' in node.attributes ? node.attributes.fields : null,
+      ...baseMetadata,
     };
   }
 
@@ -151,7 +135,6 @@ export class ChunkingService {
   ): Promise<DocumentMetadata> {
     let baseMetadata: BaseMetadata = {
       id: document.id,
-      type: 'document',
       createdAt: document.created_at,
       createdBy: document.created_by,
     };
@@ -172,14 +155,18 @@ export class ChunkingService {
           }
         }
       }
+
+      return {
+        type: 'document',
+        content: document.content,
+        ...baseMetadata,
+      };
     }
 
     return {
       type: 'document',
-      metadata: {
-        ...baseMetadata,
-        content: document.content,
-      },
+      content: document.content,
+      ...baseMetadata,
     };
   }
 
@@ -187,30 +174,46 @@ export class ChunkingService {
     const nodeModel = getNodeModel(node.attributes.type);
     const nodeName = nodeModel?.getName(node.id, node.attributes);
 
-    const author = (await database
+    const author = await database
       .selectFrom('users')
       .select(['id', 'name'])
       .where('id', '=', node.created_by)
-      .executeTakeFirst()) as SelectUser | undefined;
+      .executeTakeFirst();
+
+    const updatedBy = node.updated_by
+      ? await database
+          .selectFrom('users')
+          .select(['id', 'name'])
+          .where('id', '=', node.updated_by)
+          .executeTakeFirst()
+      : undefined;
+
+    const workspace = await database
+      .selectFrom('workspaces')
+      .select(['id', 'name'])
+      .where('id', '=', node.workspace_id)
+      .executeTakeFirst();
 
     return {
       id: node.id,
-      type: node.attributes.type,
-      name: nodeName ?? undefined,
+      name: nodeName ?? '',
       createdAt: node.created_at,
       createdBy: node.created_by,
       author: author ?? undefined,
+      lastUpdated: node.updated_at ?? undefined,
+      updatedBy: updatedBy ?? undefined,
+      workspace: workspace ?? undefined,
     };
   }
 
   private async buildParentContext(
     node: SelectNode
   ): Promise<BaseMetadata['parentContext'] | undefined> {
-    const parentNode = (await database
+    const parentNode = await database
       .selectFrom('nodes')
       .selectAll()
       .where('id', '=', node.parent_id)
-      .executeTakeFirst()) as SelectNode | undefined;
+      .executeTakeFirst();
 
     if (!parentNode) {
       return undefined;
@@ -226,24 +229,58 @@ export class ChunkingService {
       parentNode.attributes
     );
 
+    // Get the full path by traversing up the tree
+    const pathNodes = await database
+      .selectFrom('node_paths')
+      .innerJoin('nodes', 'nodes.id', 'node_paths.ancestor_id')
+      .select(['nodes.id', 'nodes.attributes'])
+      .where('node_paths.descendant_id', '=', node.id)
+      .orderBy('node_paths.level', 'asc')
+      .execute();
+
+    const path = pathNodes
+      .map((n) => {
+        const model = getNodeModel(n.attributes.type);
+        return model?.getName(n.id, n.attributes) ?? 'Untitled';
+      })
+      .join(' / ');
+
     return {
       id: parentNode.id,
       type: parentNode.attributes.type,
       name: parentName ?? undefined,
+      path,
     };
   }
 
   private async fetchCollaborators(
     collaboratorIds: string[]
-  ): Promise<Array<{ id: string; name: string }>> {
+  ): Promise<Array<{ id: string; name: string; role: string }>> {
     if (!collaboratorIds.length) {
       return [];
     }
 
-    return database
+    const collaborators = await database
       .selectFrom('users')
       .select(['id', 'name'])
       .where('id', 'in', collaboratorIds)
-      .execute() as Promise<Array<{ id: string; name: string }>>;
+      .execute();
+
+    // Get roles for each collaborator
+    return Promise.all(
+      collaborators.map(async (c) => {
+        const collaboration = await database
+          .selectFrom('collaborations')
+          .select(['role'])
+          .where('collaborator_id', '=', c.id)
+          .executeTakeFirst();
+
+        return {
+          id: c.id,
+          name: c.name,
+          role: collaboration?.role ?? 'unknown',
+        };
+      })
+    );
   }
 }

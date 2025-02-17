@@ -7,14 +7,10 @@ import { HumanMessage } from '@langchain/core/messages';
 import { configuration } from '@/lib/configuration';
 import { Document } from '@langchain/core/documents';
 import { z } from 'zod';
-import { NodeAttributes, NodeType } from '@colanode/core';
 import type {
   ChunkingMetadata,
   NodeMetadata,
-  DocumentMetadata,
 } from '@/services/chunking-service';
-
-// Use proper Zod schemas and updated prompt templates
 
 const rerankedDocumentsSchema = z.object({
   rankings: z.array(
@@ -242,24 +238,13 @@ export async function assessUserIntent(
     : 'retrieve';
 }
 
-interface NodeContextData {
-  metadata: {
-    type: NodeType;
-    name?: string;
-    author?: { id: string; name: string };
-    parentContext?: {
-      type: string;
-      name?: string;
-    };
-    collaborators?: Array<{ id: string; name: string }>;
-    fields?: Record<string, unknown>;
-  };
-}
-
 const getNodeContextPrompt = (metadata: NodeMetadata): string => {
   const basePrompt = `Given the following context about a {nodeType}:
 Name: {name}
-Created by: {authorName}
+Created by: {authorName} on {createdAt}
+Last updated: {lastUpdated} by {updatedByName}
+Location: {path}
+Workspace: {workspaceName}
 {additionalContext}
 
 Full content:
@@ -274,42 +259,56 @@ Generate a brief (50-100 tokens) contextual prefix that:
 3. Makes the chunk more understandable in isolation
 Do not repeat the chunk content. Return only the contextual prefix.`;
 
-  const getCollaboratorNames = (
-    collaborators?: Array<{ id: string; name: string }>
-  ) => collaborators?.map((c) => c.name).join(', ') ?? 'unknown';
+  const getCollaboratorInfo = (
+    collaborators?: Array<{ id: string; name: string; role: string }>
+  ) => {
+    if (!collaborators?.length) return 'No collaborators';
+    return collaborators.map((c) => `${c.name} (${c.role})`).join(', ');
+  };
 
-  switch (metadata.metadata.type) {
+  const formatDate = (date?: Date) => {
+    if (!date) return 'unknown';
+    return new Date(date).toLocaleString();
+  };
+
+  switch (metadata.nodeType) {
     case 'message':
       return basePrompt.replace(
         '{additionalContext}',
-        `In: ${metadata.metadata.parentContext?.type ?? 'unknown'} "${metadata.metadata.parentContext?.name ?? 'unknown'}"
-Participants: ${getCollaboratorNames(metadata.metadata.collaborators)}`
+        `In: ${metadata.parentContext?.type ?? 'unknown'} "${metadata.parentContext?.name ?? 'unknown'}"
+Path: ${metadata.parentContext?.path ?? 'unknown'}
+Participants: ${getCollaboratorInfo(metadata.collaborators)}`
       );
 
     case 'record':
       return basePrompt.replace(
         '{additionalContext}',
-        `Database: ${metadata.metadata.parentContext?.name ?? 'unknown'}
-Fields: ${Object.keys(metadata.metadata.fields ?? {}).join(', ')}`
+        `Database: ${metadata.parentContext?.name ?? 'unknown'}
+Path: ${metadata.parentContext?.path ?? 'unknown'}
+Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}`
       );
 
     case 'page':
       return basePrompt.replace(
         '{additionalContext}',
-        `Location: ${metadata.metadata.parentContext?.name ? `in ${metadata.metadata.parentContext.name}` : 'root level'}`
+        `Location: ${metadata.parentContext?.path ?? 'root level'}
+Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
       );
 
     case 'database':
       return basePrompt.replace(
         '{additionalContext}',
-        `Fields: ${Object.keys(metadata.metadata.fields ?? {}).join(', ')}`
+        `Path: ${metadata.parentContext?.path ?? 'root level'}
+Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}
+Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
       );
 
     case 'channel':
       return basePrompt.replace(
         '{additionalContext}',
         `Type: Channel
-Members: ${getCollaboratorNames(metadata.metadata.collaborators)}`
+Path: ${metadata.parentContext?.path ?? 'root level'}
+Members: ${getCollaboratorInfo(metadata.collaborators)}`
       );
 
     default:
@@ -321,6 +320,11 @@ interface PromptVariables {
   nodeType: string;
   name: string;
   authorName: string;
+  createdAt: string;
+  lastUpdated: string;
+  updatedByName: string;
+  path: string;
+  workspaceName: string;
   fullText: string;
   chunk: string;
   [key: string]: string;
@@ -330,8 +334,10 @@ const documentContextPrompt = PromptTemplate.fromTemplate(
   `Given the following context about a document:
 Type: {nodeType}
 Name: {name}
-Parent: {parentName}
-Created by: {authorName}
+Location: {path}
+Created by: {authorName} on {createdAt}
+Last updated: {lastUpdated} by {updatedByName}
+Workspace: {workspaceName}
 
 Full content:
 {fullText}
@@ -362,31 +368,30 @@ export async function addContextToChunk(
     let prompt: string;
     let promptVars: PromptVariables;
 
+    const formatDate = (date?: Date) => {
+      if (!date) return 'unknown';
+      return new Date(date).toLocaleString();
+    };
+
+    const baseVars = {
+      nodeType: metadata.type === 'node' ? metadata.nodeType : metadata.type,
+      name: metadata.name ?? 'Untitled',
+      authorName: metadata.author?.name ?? 'Unknown',
+      createdAt: formatDate(metadata.createdAt),
+      lastUpdated: formatDate(metadata.lastUpdated),
+      updatedByName: metadata.updatedBy?.name ?? 'Unknown',
+      path: metadata.parentContext?.path ?? 'root level',
+      workspaceName: metadata.workspace?.name ?? 'Unknown Workspace',
+      fullText,
+      chunk,
+    };
+
     if (metadata.type === 'node') {
       prompt = getNodeContextPrompt(metadata);
-      promptVars = {
-        nodeType: metadata.metadata.type,
-        name: metadata.metadata.name ?? 'Untitled',
-        authorName: metadata.metadata.author?.name ?? 'Unknown',
-        fullText,
-        chunk,
-      };
+      promptVars = baseVars;
     } else {
-      prompt = await documentContextPrompt.format({
-        nodeType: metadata.metadata.type,
-        name: metadata.metadata.name ?? 'Untitled',
-        parentName: metadata.metadata.parentContext?.name ?? 'Unknown',
-        authorName: metadata.metadata.author?.name ?? 'Unknown',
-        fullText,
-        chunk,
-      });
-      promptVars = {
-        nodeType: metadata.metadata.type,
-        name: metadata.metadata.name ?? 'Untitled',
-        authorName: metadata.metadata.author?.name ?? 'Unknown',
-        fullText,
-        chunk,
-      };
+      prompt = await documentContextPrompt.format(baseVars);
+      promptVars = baseVars;
     }
 
     const formattedPrompt = Object.entries(promptVars).reduce(

@@ -52,12 +52,17 @@ export class NodeRetrievalService {
     const results = await database
       .selectFrom('node_embeddings')
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
+      .innerJoin('collaborations', (join) =>
+        join
+          .onRef('collaborations.node_id', '=', 'node_embeddings.root_id')
+          .on('collaborations.collaborator_id', '=', sql.lit(userId))
+          .on('collaborations.deleted_at', 'is', null)
+      )
       .select((eb) => [
         'node_embeddings.node_id as id',
         'node_embeddings.text',
         'nodes.created_at',
         'node_embeddings.chunk as chunk_index',
-        // Wrap raw expression to satisfy type:
         sql<number>`('[${embedding.join(',')}]'::vector) <=> node_embeddings.embedding_vector`.as(
           'similarity'
         ),
@@ -92,6 +97,12 @@ export class NodeRetrievalService {
     const results = await database
       .selectFrom('node_embeddings')
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
+      .innerJoin('collaborations', (join) =>
+        join
+          .onRef('collaborations.node_id', '=', 'node_embeddings.root_id')
+          .on('collaborations.collaborator_id', '=', sql.lit(userId))
+          .on('collaborations.deleted_at', 'is', null)
+      )
       .select((eb) => [
         'node_embeddings.node_id as id',
         'node_embeddings.text',

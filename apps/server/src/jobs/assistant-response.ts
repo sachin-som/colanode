@@ -110,7 +110,8 @@ export const assistantResponseHandler = async (
     );
     const documentDocs = await documentRetrievalService.retrieve(
       rewrittenQuery,
-      workspaceId
+      workspaceId,
+      user.id
     );
     const allContext = [...nodeDocs, ...documentDocs];
     const reranked = await rerankDocuments(

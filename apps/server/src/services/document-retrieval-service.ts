@@ -23,6 +23,7 @@ export class DocumentRetrievalService {
   public async retrieve(
     query: string,
     workspaceId: string,
+    userId: string,
     limit = configuration.ai.retrieval.hybridSearch.maxResults
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
@@ -30,20 +31,34 @@ export class DocumentRetrievalService {
     const semanticResults = await this.semanticSearch(
       embedding,
       workspaceId,
+      userId,
       limit
     );
-    const keywordResults = await this.keywordSearch(query, workspaceId, limit);
+    const keywordResults = await this.keywordSearch(
+      query,
+      workspaceId,
+      userId,
+      limit
+    );
     return this.combineSearchResults(semanticResults, keywordResults);
   }
 
   private async semanticSearch(
     embedding: number[],
     workspaceId: string,
+    userId: string,
     limit: number
   ): Promise<SearchResult[]> {
     const results = await database
       .selectFrom('document_embeddings')
       .innerJoin('documents', 'documents.id', 'document_embeddings.document_id')
+      .innerJoin('nodes', 'nodes.id', 'documents.id')
+      .innerJoin('collaborations', (join) =>
+        join
+          .onRef('collaborations.node_id', '=', 'nodes.root_id')
+          .on('collaborations.collaborator_id', '=', sql.lit(userId))
+          .on('collaborations.deleted_at', 'is', null)
+      )
       .select((eb) => [
         'document_embeddings.document_id as id',
         'document_embeddings.text',
@@ -77,11 +92,19 @@ export class DocumentRetrievalService {
   private async keywordSearch(
     query: string,
     workspaceId: string,
+    userId: string,
     limit: number
   ): Promise<SearchResult[]> {
     const results = await database
       .selectFrom('document_embeddings')
       .innerJoin('documents', 'documents.id', 'document_embeddings.document_id')
+      .innerJoin('nodes', 'nodes.id', 'documents.id')
+      .innerJoin('collaborations', (join) =>
+        join
+          .onRef('collaborations.node_id', '=', 'nodes.root_id')
+          .on('collaborations.collaborator_id', '=', sql.lit(userId))
+          .on('collaborations.deleted_at', 'is', null)
+      )
       .select((eb) => [
         'document_embeddings.document_id as id',
         'document_embeddings.text',

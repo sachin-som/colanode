@@ -2,7 +2,7 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { CreateDocumentEmbedding } from '@/data/schema';
+import { CreateDocumentEmbedding, SelectNode } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { DocumentContent, extractBlockTexts } from '@colanode/core';
@@ -22,47 +22,26 @@ declare module '@/types/jobs' {
 }
 
 const extractDocumentText = async (
-  documentId: string,
+  node: SelectNode,
   content: DocumentContent
 ): Promise<string> => {
-  const sections: string[] = [];
-
-  const node = await fetchNode(documentId);
-  if (!node) {
-    return '';
-  }
-
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel) {
     return '';
   }
 
-  const nodeName = nodeModel.getName(documentId, node.attributes);
-  if (nodeName) {
-    sections.push(`${node.attributes.type} "${nodeName}"`);
-  }
-
-  const attributesText = nodeModel.getAttributesText(
-    documentId,
-    node.attributes
-  );
-  if (attributesText) {
-    sections.push(attributesText);
-  }
-
-  const documentText = nodeModel.getDocumentText(documentId, content);
+  const documentText = nodeModel.getDocumentText(node.id, content);
   if (documentText) {
-    sections.push(documentText);
+    return documentText;
   } else {
     // Fallback to block text extraction if the model doesn't handle it
-    const blocksText = extractBlockTexts(documentId, content.blocks);
+    const blocksText = extractBlockTexts(node.id, content.blocks);
     if (blocksText) {
-      sections.push('Content:');
-      sections.push(blocksText);
+      return blocksText;
     }
   }
 
-  return sections.filter(Boolean).join('\n\n');
+  return '';
 };
 
 export const embedDocumentHandler = async (input: {
@@ -93,7 +72,7 @@ export const embedDocumentHandler = async (input: {
     return;
   }
 
-  const text = await extractDocumentText(documentId, document.content);
+  const text = await extractDocumentText(node, document.content);
   if (!text || text.trim() === '') {
     await database
       .deleteFrom('document_embeddings')
@@ -105,7 +84,7 @@ export const embedDocumentHandler = async (input: {
   const chunkingService = new ChunkingService();
   const chunks = await chunkingService.chunkText(text, {
     type: 'document',
-    id: documentId,
+    node: node,
   });
   const embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,

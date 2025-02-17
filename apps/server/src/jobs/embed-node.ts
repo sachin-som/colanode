@@ -26,33 +26,15 @@ const extractNodeText = async (
 ): Promise<string> => {
   if (!node) return '';
 
-  // Get the node model to use its text extraction methods
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel) return '';
 
-  const sections: string[] = [];
-
-  // Get the node's name if available
-  const nodeName = nodeModel.getName(nodeId, node.attributes);
-  if (nodeName) {
-    sections.push(`${node.attributes.type} "${nodeName}"`);
-  }
-
-  // Get text from attributes (this handles message content, record fields, etc.)
   const attributesText = nodeModel.getAttributesText(nodeId, node.attributes);
   if (attributesText) {
-    sections.push(attributesText);
+    return attributesText;
   }
 
-  // For records, add database context
-  if (node.attributes.type === 'record') {
-    const databaseNode = await fetchNode(node.attributes.databaseId);
-    if (databaseNode?.attributes.type === 'database') {
-      sections.push(`In database "${databaseNode.attributes.name}"`);
-    }
-  }
-
-  return sections.filter(Boolean).join('\n');
+  return '';
 };
 
 export const embedNodeHandler = async (input: {
@@ -87,7 +69,7 @@ export const embedNodeHandler = async (input: {
   const chunkingService = new ChunkingService();
   const chunks = await chunkingService.chunkText(text, {
     type: 'node',
-    id: nodeId,
+    node,
   });
   const embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,

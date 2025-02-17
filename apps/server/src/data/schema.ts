@@ -221,6 +221,38 @@ export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
 export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
 export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
 
+interface NodeEmbeddingTable {
+  node_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  parent_id: ColumnType<string | null, string | null, string | null>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectNodeEmbedding = Selectable<NodeEmbeddingTable>;
+export type CreateNodeEmbedding = Insertable<NodeEmbeddingTable>;
+export type UpdateNodeEmbedding = Updateable<NodeEmbeddingTable>;
+
+interface DocumentEmbeddingTable {
+  document_id: ColumnType<string, string, never>;
+  chunk: ColumnType<number, number, number>;
+  workspace_id: ColumnType<string, string, never>;
+  text: ColumnType<string, string, string>;
+  embedding_vector: ColumnType<number[], number[], number[]>;
+  search_vector: ColumnType<never, never, never>;
+  created_at: ColumnType<Date, Date, never>;
+  updated_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectDocumentEmbedding = Selectable<DocumentEmbeddingTable>;
+export type CreateDocumentEmbedding = Insertable<DocumentEmbeddingTable>;
+export type UpdateDocumentEmbedding = Updateable<DocumentEmbeddingTable>;
+
 export interface DatabaseSchema {
   accounts: AccountTable;
   devices: DeviceTable;
@@ -234,4 +266,6 @@ export interface DatabaseSchema {
   collaborations: CollaborationTable;
   documents: DocumentTable;
   document_updates: DocumentUpdateTable;
+  node_embeddings: NodeEmbeddingTable;
+  document_embeddings: DocumentEmbeddingTable;
 }

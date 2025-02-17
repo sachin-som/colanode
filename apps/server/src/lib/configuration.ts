@@ -69,26 +69,63 @@ export interface SmtpConfiguration {
   };
 }
 
+export type AIProvider = 'openai' | 'google';
+
+export interface AIProviderConfiguration {
+  apiKey: string;
+  enabled?: boolean;
+}
+
+export interface AIModelConfiguration {
+  provider: AIProvider;
+  modelName: string;
+  temperature: number;
+}
+
 export interface AiConfiguration {
   enabled: boolean;
   entryEmbedDelay: number;
-  openai: OpenAiConfiguration;
+  providers: {
+    openai: AIProviderConfiguration;
+    google: AIProviderConfiguration;
+  };
+  langfuse: {
+    publicKey: string;
+    secretKey: string;
+    baseUrl: string;
+  };
+  models: {
+    queryRewrite: AIModelConfiguration;
+    response: AIModelConfiguration;
+    rerank: AIModelConfiguration;
+    summarization: AIModelConfiguration;
+    contextEnhancer: AIModelConfiguration;
+    noContext: AIModelConfiguration;
+    intentRecognition: AIModelConfiguration;
+  };
+  embedding: {
+    provider: AIProvider;
+    apiKey: string;
+    modelName: string;
+    dimensions: number;
+    batchSize: number;
+  };
   chunking: ChunkingConfiguration;
-}
-
-export interface OpenAiConfiguration {
-  apiKey: string;
-  embeddingModel: string;
-  embeddingDimensions: number;
-  embeddingBatchSize: number;
+  retrieval: RetrievalConfiguration;
 }
 
 export interface ChunkingConfiguration {
   defaultChunkSize: number;
   defaultOverlap: number;
   enhanceWithContext: boolean;
-  contextEnhancerModel: string;
-  contextEnhancerTemperature: number;
+}
+
+export interface RetrievalConfiguration {
+  hybridSearch: {
+    semanticSearchWeight: number;
+    keywordSearchWeight: number;
+    maxResults: number;
+  };
 }
 
 const getRequiredEnv = (env: string): string => {
@@ -172,15 +209,84 @@ export const configuration: Configuration = {
     entryEmbedDelay: parseInt(
       getOptionalEnv('AI_ENTRY_EMBED_DELAY') || '60000'
     ),
-    openai: {
-      apiKey: getOptionalEnv('OPENAI_API_KEY') || '',
-      embeddingModel: getOptionalEnv('OPENAI_EMBEDDING_MODEL') || '',
-      embeddingDimensions: parseInt(
-        getOptionalEnv('OPENAI_EMBEDDING_DIMENSIONS') || '2000'
-      ),
-      embeddingBatchSize: parseInt(
-        getOptionalEnv('OPENAI_EMBEDDING_BATCH_SIZE') || '50'
-      ),
+    providers: {
+      openai: {
+        apiKey: getOptionalEnv('OPENAI_API_KEY') || '',
+        enabled: getOptionalEnv('OPENAI_ENABLED') === 'true',
+      },
+      google: {
+        apiKey: getOptionalEnv('GOOGLE_API_KEY') || '',
+        enabled: getOptionalEnv('GOOGLE_ENABLED') === 'true',
+      },
+    },
+    langfuse: {
+      publicKey: getOptionalEnv('LANGFUSE_PUBLIC_KEY') || '',
+      secretKey: getOptionalEnv('LANGFUSE_SECRET_KEY') || '',
+      baseUrl:
+        getOptionalEnv('LANGFUSE_BASE_URL') || 'https://cloud.langfuse.com',
+    },
+    models: {
+      queryRewrite: {
+        provider: (getOptionalEnv('QUERY_REWRITE_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('QUERY_REWRITE_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('QUERY_REWRITE_TEMPERATURE') || '0.3'
+        ),
+      },
+      response: {
+        provider: (getOptionalEnv('RESPONSE_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('RESPONSE_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('RESPONSE_TEMPERATURE') || '0.3'
+        ),
+      },
+      rerank: {
+        provider: (getOptionalEnv('RERANK_PROVIDER') || 'openai') as AIProvider,
+        modelName: getOptionalEnv('RERANK_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(getOptionalEnv('RERANK_TEMPERATURE') || '0.3'),
+      },
+      summarization: {
+        provider: (getOptionalEnv('SUMMARIZATION_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('SUMMARIZATION_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('SUMMARIZATION_TEMPERATURE') || '0.3'
+        ),
+      },
+      contextEnhancer: {
+        provider: (getOptionalEnv('CHUNK_CONTEXT_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('CHUNK_CONTEXT_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('CHUNK_CONTEXT_TEMPERATURE') || '0.3'
+        ),
+      },
+      noContext: {
+        provider: (getOptionalEnv('NO_CONTEXT_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('NO_CONTEXT_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('NO_CONTEXT_TEMPERATURE') || '0.3'
+        ),
+      },
+      intentRecognition: {
+        provider: (getOptionalEnv('INTENT_RECOGNITION_PROVIDER') ||
+          'openai') as AIProvider,
+        modelName: getOptionalEnv('INTENT_RECOGNITION_MODEL') || 'gpt-4o-mini',
+        temperature: parseFloat(
+          getOptionalEnv('INTENT_RECOGNITION_TEMPERATURE') || '0.3'
+        ),
+      },
+    },
+    embedding: {
+      provider: (getOptionalEnv('EMBEDDING_PROVIDER') ||
+        'openai') as AIProvider,
+      modelName: getOptionalEnv('EMBEDDING_MODEL') || 'text-embedding-3-large',
+      dimensions: parseInt(getOptionalEnv('EMBEDDING_DIMENSIONS') || '2000'),
+      apiKey: getOptionalEnv('EMBEDDING_API_KEY') || '',
+      batchSize: parseInt(getOptionalEnv('EMBEDDING_BATCH_SIZE') || '50'),
     },
     chunking: {
       defaultChunkSize: parseInt(
@@ -191,11 +297,19 @@ export const configuration: Configuration = {
       ),
       enhanceWithContext:
         getOptionalEnv('CHUNK_ENHANCE_WITH_CONTEXT') === 'true',
-      contextEnhancerModel:
-        getOptionalEnv('CHUNK_CONTEXT_ENHANCER_MODEL') || 'gpt-4o-mini',
-      contextEnhancerTemperature: parseFloat(
-        getOptionalEnv('CHUNK_CONTEXT_ENHANCER_TEMPERATURE') || '0.3'
-      ),
+    },
+    retrieval: {
+      hybridSearch: {
+        semanticSearchWeight: parseFloat(
+          getOptionalEnv('RETRIEVAL_HYBRID_SEARCH_SEMANTIC_WEIGHT') || '0.7'
+        ),
+        keywordSearchWeight: parseFloat(
+          getOptionalEnv('RETRIEVAL_HYBRID_SEARCH_KEYWORD_WEIGHT') || '0.3'
+        ),
+        maxResults: parseInt(
+          getOptionalEnv('RETRIEVAL_HYBRID_SEARCH_MAX_RESULTS') || '20'
+        ),
+      },
     },
   },
 };

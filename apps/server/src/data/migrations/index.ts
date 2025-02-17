@@ -12,6 +12,9 @@ import { createNodePathsTable } from './00009-create-node-paths-table';
 import { createCollaborationsTable } from './00010-create-collaborations-table';
 import { createDocumentsTable } from './00011-create-documents-table';
 import { createDocumentUpdatesTable } from './00012-create-document-updates-table';
+import { createNodeEmbeddingsTable } from './00014-create-node-embeddings-table';
+import { createDocumentEmbeddingsTable } from './00015-create-document-embeddings-table';
+import { createVectorExtension } from './00013-create-vector-extension';
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
@@ -26,4 +29,7 @@ export const databaseMigrations: Record<string, Migration> = {
   '00010_create_collaborations_table': createCollaborationsTable,
   '00011_create_documents_table': createDocumentsTable,
   '00012_create_document_updates_table': createDocumentUpdatesTable,
+  '00013_create_vector_extension': createVectorExtension,
+  '00014_create_node_embeddings_table': createNodeEmbeddingsTable,
+  '00015_create_document_embeddings_table': createDocumentEmbeddingsTable,
 };

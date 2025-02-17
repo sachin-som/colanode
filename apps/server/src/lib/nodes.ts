@@ -35,6 +35,7 @@ import {
   checkCollaboratorChanges,
 } from '@/lib/collaborations';
 import { jobService } from '@/services/job-service';
+import { configuration } from '@/lib/configuration';
 
 const debug = createDebugger('server:lib:nodes');
 
@@ -169,6 +170,18 @@ export const createNode = async (
       });
     }
 
+    // Schedule node embedding
+    await jobService.addJob(
+      {
+        type: 'embed_node',
+        nodeId: input.nodeId,
+      },
+      {
+        jobId: `embed_node:${input.nodeId}`,
+        delay: configuration.ai.entryEmbedDelay,
+      }
+    );
+
     return {
       node: createdNode,
     };
@@ -290,6 +303,18 @@ export const tryUpdateNode = async (
       });
     }
 
+    // Schedule node embedding
+    await jobService.addJob(
+      {
+        type: 'embed_node',
+        nodeId: input.nodeId,
+      },
+      {
+        jobId: `embed_node:${input.nodeId}`,
+        delay: configuration.ai.entryEmbedDelay,
+      }
+    );
+
     return {
       type: 'success',
       output: {
@@ -395,6 +420,18 @@ export const createNodeFromMutation = async (
         workspaceId: user.workspace_id,
       });
     }
+
+    // Schedule node embedding
+    await jobService.addJob(
+      {
+        type: 'embed_node',
+        nodeId: mutation.id,
+      },
+      {
+        jobId: `embed_node:${mutation.id}`,
+        delay: configuration.ai.entryEmbedDelay,
+      }
+    );
 
     return {
       node: createdNode,
@@ -526,6 +563,18 @@ const tryUpdateNodeFromMutation = async (
         workspaceId: user.workspace_id,
       });
     }
+
+    // Schedule node embedding
+    await jobService.addJob(
+      {
+        type: 'embed_node',
+        nodeId: mutation.id,
+      },
+      {
+        jobId: `embed_node:${mutation.id}`,
+        delay: configuration.ai.entryEmbedDelay,
+      }
+    );
 
     return {
       type: 'success',

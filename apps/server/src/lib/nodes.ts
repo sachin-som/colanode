@@ -170,17 +170,7 @@ export const createNode = async (
       });
     }
 
-    // Schedule node embedding
-    await jobService.addJob(
-      {
-        type: 'embed_node',
-        nodeId: input.nodeId,
-      },
-      {
-        jobId: `embed_node:${input.nodeId}`,
-        delay: configuration.ai.entryEmbedDelay,
-      }
-    );
+    await scheduleNodeEmbedding(input.nodeId);
 
     return {
       node: createdNode,
@@ -303,17 +293,7 @@ export const tryUpdateNode = async (
       });
     }
 
-    // Schedule node embedding
-    await jobService.addJob(
-      {
-        type: 'embed_node',
-        nodeId: input.nodeId,
-      },
-      {
-        jobId: `embed_node:${input.nodeId}`,
-        delay: configuration.ai.entryEmbedDelay,
-      }
-    );
+    await scheduleNodeEmbedding(input.nodeId);
 
     return {
       type: 'success',
@@ -421,17 +401,7 @@ export const createNodeFromMutation = async (
       });
     }
 
-    // Schedule node embedding
-    await jobService.addJob(
-      {
-        type: 'embed_node',
-        nodeId: mutation.id,
-      },
-      {
-        jobId: `embed_node:${mutation.id}`,
-        delay: configuration.ai.entryEmbedDelay,
-      }
-    );
+    await scheduleNodeEmbedding(mutation.id);
 
     return {
       node: createdNode,
@@ -564,17 +534,7 @@ const tryUpdateNodeFromMutation = async (
       });
     }
 
-    // Schedule node embedding
-    await jobService.addJob(
-      {
-        type: 'embed_node',
-        nodeId: mutation.id,
-      },
-      {
-        jobId: `embed_node:${mutation.id}`,
-        delay: configuration.ai.entryEmbedDelay,
-      }
-    );
+    await scheduleNodeEmbedding(mutation.id);
 
     return {
       type: 'success',
@@ -699,3 +659,16 @@ export const deleteNode = async (
     node: deletedNode,
   };
 };
+
+async function scheduleNodeEmbedding(nodeId: string) {
+  await jobService.addJob(
+    {
+      type: 'embed_node',
+      nodeId,
+    },
+    {
+      jobId: `embed_node:${nodeId}`,
+      delay: configuration.ai.nodeEmbedDelay,
+    }
+  );
+}

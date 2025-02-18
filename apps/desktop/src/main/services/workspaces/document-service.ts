@@ -1,5 +1,7 @@
 import {
+  CanUpdateDocumentContext,
   createDebugger,
+  DocumentContent,
   generateId,
   getNodeModel,
   IdType,
@@ -10,6 +12,8 @@ import { encodeState, YDoc } from '@colanode/crdt';
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { eventBus } from '@/shared/lib/event-bus';
+import { fetchNodeTree } from '@/main/lib/utils';
+import { mapNode } from '@/main/lib/mappers';
 
 const UPDATE_RETRIES_LIMIT = 10;
 
@@ -22,12 +26,12 @@ export class DocumentService {
   }
 
   public async updateDocument(id: string, update: Uint8Array) {
-    const node = await this.workspace.database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', id)
-      .executeTakeFirst();
+    const tree = await fetchNodeTree(this.workspace.database, id);
+    if (!tree) {
+      throw new Error('Node not found');
+    }
 
+    const node = tree[tree.length - 1];
     if (!node) {
       throw new Error('Node not found');
     }
@@ -35,6 +39,21 @@ export class DocumentService {
     const model = getNodeModel(node.type);
     if (!model.documentSchema) {
       throw new Error('Node does not have a document schema');
+    }
+
+    const context: CanUpdateDocumentContext = {
+      user: {
+        id: this.workspace.userId,
+        role: this.workspace.role,
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+      },
+      node: mapNode(node),
+      tree: tree.map((node) => mapNode(node)),
+    };
+
+    if (!model.canUpdateDocument(context)) {
+      throw new Error('User does not have permission to update document');
     }
 
     const document = await this.workspace.database
@@ -56,6 +75,11 @@ export class DocumentService {
     }
 
     ydoc.applyUpdate(update);
+
+    const content = ydoc.getObject<DocumentContent>();
+    if (!model.documentSchema.safeParse(content).success) {
+      throw new Error('Invalid document state');
+    }
 
     const updateId = generateId(IdType.Update);
     const updatedAt = new Date().toISOString();
@@ -120,6 +144,35 @@ export class DocumentService {
     if (createdMutation) {
       this.workspace.mutations.triggerSync();
     }
+  }
+
+  public async revertDocumentUpdate(data: UpdateDocumentMutationData) {
+    const update = await this.workspace.database
+      .selectFrom('document_updates')
+      .selectAll()
+      .where('id', '=', data.updateId)
+      .executeTakeFirst();
+
+    if (!update) {
+      return;
+    }
+
+    const deletedUpdate = await this.workspace.database
+      .deleteFrom('document_updates')
+      .where('id', '=', update.id)
+      .executeTakeFirst();
+
+    if (!deletedUpdate) {
+      return;
+    }
+
+    eventBus.publish({
+      type: 'document_update_deleted',
+      accountId: this.workspace.accountId,
+      workspaceId: this.workspace.id,
+      documentId: data.documentId,
+      updateId: data.updateId,
+    });
   }
 
   public async syncServerDocumentUpdate(data: SyncDocumentUpdateData) {

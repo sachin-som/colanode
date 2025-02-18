@@ -157,6 +157,8 @@ export class MutationService {
         await this.workspace.nodeReactions.revertNodeReactionDelete(
           mutation.data
         );
+      } else if (mutation.type === 'update_document') {
+        await this.workspace.documents.revertDocumentUpdate(mutation.data);
       }
     }
 
@@ -248,11 +250,6 @@ export class MutationService {
           } else if (
             previousMutation.type === 'delete_node_reaction' &&
             previousMutation.data.nodeId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'create_file' &&
-            previousMutation.data.id === mutation.data.id
           ) {
             deletedMutationIds.add(previousMutation.id);
           }

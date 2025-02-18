@@ -203,6 +203,14 @@ export type DocumentUpdateCreatedEvent = {
   updateId: string;
 };
 
+export type DocumentUpdateDeletedEvent = {
+  type: 'document_update_deleted';
+  accountId: string;
+  workspaceId: string;
+  documentId: string;
+  updateId: string;
+};
+
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -235,4 +243,5 @@ export type Event =
   | WorkspaceMetadataUpdatedEvent
   | WorkspaceMetadataDeletedEvent
   | DocumentUpdatedEvent
-  | DocumentUpdateCreatedEvent;
+  | DocumentUpdateCreatedEvent
+  | DocumentUpdateDeletedEvent;

@@ -106,6 +106,19 @@ export class DocumentGetQueryHandler
     }
 
     if (
+      event.type === 'document_update_deleted' &&
+      event.accountId === input.accountId &&
+      event.workspaceId === input.workspaceId &&
+      event.documentId === input.documentId
+    ) {
+      const newOutput = await this.handleQuery(input);
+      return {
+        hasChanges: true,
+        result: newOutput,
+      };
+    }
+
+    if (
       event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&

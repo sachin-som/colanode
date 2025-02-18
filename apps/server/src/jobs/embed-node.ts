@@ -2,7 +2,7 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { CreateNodeEmbedding } from '@/data/schema';
+import { CreateNodeEmbedding, SelectNode } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { getNodeModel } from '@colanode/core';
@@ -20,16 +20,17 @@ declare module '@/types/jobs' {
   }
 }
 
-const extractNodeText = async (
-  nodeId: string,
-  node: Awaited<ReturnType<typeof fetchNode>>
-): Promise<string> => {
-  if (!node) return '';
+const extractNodeText = (node: SelectNode): string => {
+  if (!node) {
+    return '';
+  }
 
   const nodeModel = getNodeModel(node.attributes.type);
-  if (!nodeModel) return '';
+  if (!nodeModel) {
+    return '';
+  }
 
-  const attributesText = nodeModel.getAttributesText(nodeId, node.attributes);
+  const attributesText = nodeModel.getAttributesText(node.id, node.attributes);
   if (attributesText) {
     return attributesText;
   }
@@ -51,13 +52,13 @@ export const embedNodeHandler = async (input: {
     return;
   }
 
-  // Skip nodes that are handled by document embeddings
   const nodeModel = getNodeModel(node.attributes.type);
+  // Skip nodes that are handled by embed documents job
   if (!nodeModel || nodeModel.documentSchema) {
     return;
   }
 
-  const text = await extractNodeText(nodeId, node);
+  const text = extractNodeText(node);
   if (!text || text.trim() === '') {
     await database
       .deleteFrom('node_embeddings')
@@ -67,7 +68,7 @@ export const embedNodeHandler = async (input: {
   }
 
   const chunkingService = new ChunkingService();
-  const chunks = await chunkingService.chunkText(text, {
+  const textChunks = await chunkingService.chunkText(text, {
     type: 'node',
     node,
   });
@@ -84,18 +85,24 @@ export const embedNodeHandler = async (input: {
     .execute();
 
   const embeddingsToCreateOrUpdate: CreateNodeEmbedding[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    if (!chunk) continue;
+  for (let i = 0; i < textChunks.length; i++) {
+    const textChunk = textChunks[i];
+    if (!textChunk) {
+      continue;
+    }
+
     const existing = existingEmbeddings.find((e) => e.chunk === i);
-    if (existing && existing.text === chunk) continue;
+    if (existing && existing.text === textChunk) {
+      continue;
+    }
+
     embeddingsToCreateOrUpdate.push({
       node_id: nodeId,
       chunk: i,
       parent_id: node.parent_id,
       root_id: node.root_id,
       workspace_id: node.workspace_id,
-      text: chunk,
+      text: textChunk,
       embedding_vector: [],
       created_at: new Date(),
     });

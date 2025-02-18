@@ -2,41 +2,36 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
 import { addContextToChunk } from '@/services/llm-service';
-import {
-  DocumentContent,
-  getNodeModel,
-  Node,
-  NodeAttributes,
-} from '@colanode/core';
-import type { SelectNode, SelectDocument, SelectUser } from '@/data/schema';
+import { DocumentContent, getNodeModel, NodeType } from '@colanode/core';
+import type { SelectNode, SelectDocument } from '@/data/schema';
 
 type BaseMetadata = {
   id: string;
   name?: string;
   createdAt: Date;
   createdBy: string;
+  updatedAt?: Date | null;
+  updatedBy?: string | null;
   author?: { id: string; name: string };
+  lastAuthor?: { id: string; name: string };
   parentContext?: {
     id: string;
     type: string;
     name?: string;
     path?: string;
   };
-  collaborators?: Array<{ id: string; name: string; role: string }>;
-  lastUpdated?: Date;
-  updatedBy?: { id: string; name: string };
+  collaborators?: Array<{ id: string; name: string }>;
   workspace?: { id: string; name: string };
 };
 
 export type NodeMetadata = BaseMetadata & {
   type: 'node';
-  nodeType: string;
+  nodeType: NodeType;
   fields?: Record<string, unknown> | null;
 };
 
 export type DocumentMetadata = BaseMetadata & {
   type: 'document';
-  content: DocumentContent;
 };
 
 export type ChunkingMetadata = NodeMetadata | DocumentMetadata;
@@ -52,19 +47,26 @@ export class ChunkingService {
       chunkSize,
       chunkOverlap,
     });
+
     const docs = await splitter.createDocuments([text]);
     let chunks = docs.map((doc) => doc.pageContent);
-    chunks = chunks.filter((c) => c.trim().length > 10);
+    chunks = chunks.filter((c) => c.trim().length > 5); // We skip chunks that are 5 characters or less
 
     if (configuration.ai.chunking.enhanceWithContext) {
       const enrichedMetadata = await this.fetchMetadata(metadata);
       const enriched: string[] = [];
       for (const chunk of chunks) {
-        const c = await addContextToChunk(chunk, text, enrichedMetadata);
-        enriched.push(c);
+        const enrichedChunk = await addContextToChunk(
+          chunk,
+          text,
+          enrichedMetadata
+        );
+        enriched.push(enrichedChunk);
       }
+
       return enriched;
     }
+
     return chunks;
   }
 
@@ -79,11 +81,11 @@ export class ChunkingService {
     if (metadata.type === 'node') {
       return this.buildNodeMetadata(metadata.node);
     } else {
-      const document = (await database
+      const document = await database
         .selectFrom('documents')
         .selectAll()
         .where('id', '=', metadata.node.id)
-        .executeTakeFirst()) as SelectDocument | undefined;
+        .executeTakeFirst();
       if (!document) {
         return undefined;
       }
@@ -92,28 +94,27 @@ export class ChunkingService {
     }
   }
 
-  private async buildNodeMetadata(node: SelectNode): Promise<NodeMetadata> {
+  private async buildNodeMetadata(
+    node: SelectNode
+  ): Promise<NodeMetadata | undefined> {
     const nodeModel = getNodeModel(node.attributes.type);
     if (!nodeModel) {
-      throw new Error(`No model found for node type: ${node.attributes.type}`);
+      return undefined;
     }
 
     const baseMetadata = await this.buildBaseMetadata(node);
+    if (!baseMetadata) {
+      return undefined;
+    }
 
     // Add collaborators if the node type supports them
     if ('collaborators' in node.attributes) {
       baseMetadata.collaborators = await this.fetchCollaborators(
-        Object.keys(
-          (
-            node.attributes as NodeAttributes & {
-              collaborators: Record<string, string>;
-            }
-          ).collaborators
-        )
+        Object.keys(node.attributes.collaborators)
       );
     }
 
-    // Add parent context if needed
+    // Add parent context if the node has a parent
     if (node.parent_id) {
       const parentContext = await this.buildParentContext(node);
       if (parentContext) {
@@ -132,47 +133,48 @@ export class ChunkingService {
   private async buildDocumentMetadata(
     document: SelectDocument,
     node?: SelectNode
-  ): Promise<DocumentMetadata> {
+  ): Promise<DocumentMetadata | undefined> {
     let baseMetadata: BaseMetadata = {
       id: document.id,
       createdAt: document.created_at,
       createdBy: document.created_by,
     };
 
-    if (node) {
-      const nodeModel = getNodeModel(node.attributes.type);
-      if (nodeModel) {
-        const nodeName = nodeModel.getName(node.id, node.attributes);
-        if (nodeName) {
-          baseMetadata.name = nodeName;
-        }
+    if (!node) {
+      return undefined;
+    }
 
-        // Add parent context if available
-        if (node.parent_id) {
-          const parentContext = await this.buildParentContext(node);
-          if (parentContext) {
-            baseMetadata.parentContext = parentContext;
-          }
-        }
+    const nodeModel = getNodeModel(node.attributes.type);
+    if (nodeModel) {
+      const nodeName = nodeModel.getName(node.id, node.attributes);
+      if (nodeName) {
+        baseMetadata.name = nodeName;
       }
 
-      return {
-        type: 'document',
-        content: document.content,
-        ...baseMetadata,
-      };
+      // Add parent context if available
+      if (node.parent_id) {
+        const parentContext = await this.buildParentContext(node);
+        if (parentContext) {
+          baseMetadata.parentContext = parentContext;
+        }
+      }
     }
 
     return {
       type: 'document',
-      content: document.content,
       ...baseMetadata,
     };
   }
 
-  private async buildBaseMetadata(node: SelectNode): Promise<BaseMetadata> {
+  private async buildBaseMetadata(
+    node: SelectNode
+  ): Promise<BaseMetadata | undefined> {
     const nodeModel = getNodeModel(node.attributes.type);
-    const nodeName = nodeModel?.getName(node.id, node.attributes);
+    if (!nodeModel) {
+      return undefined;
+    }
+
+    const nodeName = nodeModel.getName(node.id, node.attributes);
 
     const author = await database
       .selectFrom('users')
@@ -180,7 +182,7 @@ export class ChunkingService {
       .where('id', '=', node.created_by)
       .executeTakeFirst();
 
-    const updatedBy = node.updated_by
+    const lastAuthor = node.updated_by
       ? await database
           .selectFrom('users')
           .select(['id', 'name'])
@@ -199,10 +201,11 @@ export class ChunkingService {
       name: nodeName ?? '',
       createdAt: node.created_at,
       createdBy: node.created_by,
-      author: author ?? undefined,
-      lastUpdated: node.updated_at ?? undefined,
-      updatedBy: updatedBy ?? undefined,
-      workspace: workspace ?? undefined,
+      updatedAt: node.updated_at,
+      updatedBy: node.updated_by,
+      author: author,
+      lastAuthor: lastAuthor,
+      workspace: workspace,
     };
   }
 
@@ -255,7 +258,7 @@ export class ChunkingService {
 
   private async fetchCollaborators(
     collaboratorIds: string[]
-  ): Promise<Array<{ id: string; name: string; role: string }>> {
+  ): Promise<Array<{ id: string; name: string }>> {
     if (!collaboratorIds.length) {
       return [];
     }
@@ -266,21 +269,9 @@ export class ChunkingService {
       .where('id', 'in', collaboratorIds)
       .execute();
 
-    // Get roles for each collaborator
-    return Promise.all(
-      collaborators.map(async (c) => {
-        const collaboration = await database
-          .selectFrom('collaborations')
-          .select(['role'])
-          .where('collaborator_id', '=', c.id)
-          .executeTakeFirst();
-
-        return {
-          id: c.id,
-          name: c.name,
-          role: collaboration?.role ?? 'unknown',
-        };
-      })
-    );
+    return collaborators.map((c) => ({
+      id: c.id,
+      name: c.name,
+    }));
   }
 }

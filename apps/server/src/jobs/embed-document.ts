@@ -34,7 +34,7 @@ const extractDocumentText = async (
   if (documentText) {
     return documentText;
   } else {
-    // Fallback to block text extraction if the model doesn't handle it
+    // Fallback to block text extraction if the node model doesn't handle it
     const blocksText = extractBlockTexts(node.id, content.blocks);
     if (blocksText) {
       return blocksText;
@@ -53,19 +53,19 @@ export const embedDocumentHandler = async (input: {
   }
 
   const { documentId } = input;
-
   const document = await database
     .selectFrom('documents')
     .select(['id', 'content', 'workspace_id', 'created_at'])
     .where('id', '=', documentId)
     .executeTakeFirst();
-
   if (!document) {
     return;
   }
 
   const node = await fetchNode(documentId);
-  if (!node) return;
+  if (!node) {
+    return;
+  }
 
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel?.documentSchema) {
@@ -82,7 +82,7 @@ export const embedDocumentHandler = async (input: {
   }
 
   const chunkingService = new ChunkingService();
-  const chunks = await chunkingService.chunkText(text, {
+  const textChunks = await chunkingService.chunkText(text, {
     type: 'document',
     node: node,
   });
@@ -99,16 +99,16 @@ export const embedDocumentHandler = async (input: {
     .execute();
 
   const embeddingsToCreateOrUpdate: CreateDocumentEmbedding[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    if (!chunk) continue;
+  for (let i = 0; i < textChunks.length; i++) {
+    const textChunk = textChunks[i];
+    if (!textChunk) continue;
     const existing = existingEmbeddings.find((e) => e.chunk === i);
-    if (existing && existing.text === chunk) continue;
+    if (existing && existing.text === textChunk) continue;
     embeddingsToCreateOrUpdate.push({
       document_id: documentId,
       chunk: i,
       workspace_id: document.workspace_id,
-      text: chunk,
+      text: textChunk,
       embedding_vector: [],
       created_at: new Date(),
     });

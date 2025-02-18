@@ -1,9 +1,8 @@
-// Updated llm-service.ts
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate, ChatPromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { HumanMessage } from '@langchain/core/messages';
+import { SystemMessage } from '@langchain/core/messages';
 import { configuration } from '@/lib/configuration';
 import { Document } from '@langchain/core/documents';
 import { z } from 'zod';
@@ -297,8 +296,8 @@ const getNodeContextPrompt = (metadata: NodeMetadata): string => {
   const basePrompt = `Given the following context about a {nodeType}:
 Name: {name}
 Created by: {authorName} on {createdAt}
-Last updated: {lastUpdated} by {updatedByName}
-Location: {path}
+Last updated: {updatedAt} by {lastAuthorName}
+Path: {path}
 Workspace: {workspaceName}
 {additionalContext}
 
@@ -314,17 +313,8 @@ Generate a brief (50-100 tokens) contextual prefix that:
 3. Makes the chunk more understandable in isolation
 Do not repeat the chunk content. Return only the contextual prefix.`;
 
-  const getCollaboratorInfo = (
-    collaborators?: Array<{ id: string; name: string; role: string }>
-  ) => {
-    if (!collaborators?.length) return 'No collaborators';
-    return collaborators.map((c) => `${c.name} (${c.role})`).join(', ');
-  };
-
-  const formatDate = (date?: Date) => {
-    if (!date) return 'unknown';
-    return new Date(date).toLocaleString();
-  };
+  const collaborators =
+    metadata.collaborators?.map((c) => `${c.name}`).join(', ') ?? '';
 
   switch (metadata.nodeType) {
     case 'message':
@@ -332,7 +322,7 @@ Do not repeat the chunk content. Return only the contextual prefix.`;
         '{additionalContext}',
         `In: ${metadata.parentContext?.type ?? 'unknown'} "${metadata.parentContext?.name ?? 'unknown'}"
 Path: ${metadata.parentContext?.path ?? 'unknown'}
-Participants: ${getCollaboratorInfo(metadata.collaborators)}`
+Participants: ${collaborators}`
       );
 
     case 'record':
@@ -347,7 +337,7 @@ Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}`
       return basePrompt.replace(
         '{additionalContext}',
         `Location: ${metadata.parentContext?.path ?? 'root level'}
-Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
+Collaborators: ${collaborators}`
       );
 
     case 'database':
@@ -355,7 +345,7 @@ Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
         '{additionalContext}',
         `Path: ${metadata.parentContext?.path ?? 'root level'}
 Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}
-Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
+Collaborators: ${collaborators}`
       );
 
     case 'channel':
@@ -363,7 +353,7 @@ Collaborators: ${getCollaboratorInfo(metadata.collaborators)}`
         '{additionalContext}',
         `Type: Channel
 Path: ${metadata.parentContext?.path ?? 'root level'}
-Members: ${getCollaboratorInfo(metadata.collaborators)}`
+Members: ${collaborators}`
       );
 
     default:
@@ -374,10 +364,10 @@ Members: ${getCollaboratorInfo(metadata.collaborators)}`
 interface PromptVariables {
   nodeType: string;
   name: string;
-  authorName: string;
   createdAt: string;
-  lastUpdated: string;
-  updatedByName: string;
+  updatedAt: string;
+  authorName: string;
+  lastAuthorName: string;
   path: string;
   workspaceName: string;
   fullText: string;
@@ -391,7 +381,7 @@ Type: {nodeType}
 Name: {name}
 Location: {path}
 Created by: {authorName} on {createdAt}
-Last updated: {lastUpdated} by {updatedByName}
+Last updated: {updatedAt} by {lastAuthorName}
 Workspace: {workspaceName}
 
 Full content:
@@ -413,6 +403,14 @@ export async function addContextToChunk(
   metadata?: ChunkingMetadata
 ): Promise<string> {
   try {
+    if (!chunk || chunk.trim() === '') {
+      return chunk;
+    }
+
+    if (!fullText || fullText.trim() === '') {
+      return chunk;
+    }
+
     if (!metadata) {
       return chunk;
     }
@@ -425,21 +423,23 @@ export async function addContextToChunk(
 
     const formatDate = (date?: Date) => {
       if (!date) return 'unknown';
-      return new Date(date).toLocaleString();
+      return new Date(date).toUTCString();
     };
 
     const baseVars = {
       nodeType: metadata.type === 'node' ? metadata.nodeType : metadata.type,
       name: metadata.name ?? 'Untitled',
-      authorName: metadata.author?.name ?? 'Unknown',
       createdAt: formatDate(metadata.createdAt),
-      lastUpdated: formatDate(metadata.lastUpdated),
-      updatedByName: metadata.updatedBy?.name ?? 'Unknown',
-      path: metadata.parentContext?.path ?? 'root level',
+      updatedAt: metadata.updatedAt ? formatDate(metadata.updatedAt) : '',
+      authorName: metadata.author?.name ?? 'Unknown',
+      lastAuthorName: metadata.lastAuthor?.name ?? '',
+      path: metadata.parentContext?.path ?? '',
       workspaceName: metadata.workspace?.name ?? 'Unknown Workspace',
       fullText,
       chunk,
     };
+
+    //TODO: if metadata is empty, use a default context prompt for chunk
 
     if (metadata.type === 'node') {
       prompt = getNodeContextPrompt(metadata);
@@ -455,7 +455,7 @@ export async function addContextToChunk(
     );
 
     const response = await model.invoke([
-      new HumanMessage({ content: formattedPrompt }),
+      new SystemMessage({ content: formattedPrompt }),
     ]);
 
     const prefix = (response.content.toString() || '').trim();

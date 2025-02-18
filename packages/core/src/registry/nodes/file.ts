@@ -78,6 +78,9 @@ export const fileModel: NodeModel = {
 
     return hasNodeRole(role, 'editor');
   },
+  canReact: () => {
+    return false;
+  },
   getName: (_, attributes) => {
     if (attributes.type !== 'file') {
       return null;

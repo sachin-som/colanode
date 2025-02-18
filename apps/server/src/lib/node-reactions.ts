@@ -1,49 +1,47 @@
 import {
-  canCreateNodeReaction,
-  canDeleteNodeReaction,
+  CanReactNodeContext,
   CreateNodeReactionMutation,
   DeleteNodeReactionMutation,
+  getNodeModel,
 } from '@colanode/core';
 
 import { eventBus } from '@/lib/event-bus';
 import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
-import { mapNode } from '@/lib/nodes';
+import { fetchNodeTree, mapNode } from '@/lib/nodes';
 
 export const createNodeReaction = async (
   user: SelectUser,
   mutation: CreateNodeReactionMutation
 ): Promise<boolean> => {
-  const node = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where('id', '=', mutation.data.nodeId)
-    .executeTakeFirst();
+  const tree = await fetchNodeTree(mutation.data.nodeId);
+  if (!tree) {
+    return false;
+  }
 
+  const node = tree[tree.length - 1]!;
   if (!node) {
     return false;
   }
 
-  const root = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where('id', '=', node.root_id)
-    .executeTakeFirst();
-
+  const root = tree[0]!;
   if (!root) {
     return false;
   }
 
-  if (
-    !canCreateNodeReaction({
-      user: {
-        userId: user.id,
-        role: user.role,
-      },
-      root: mapNode(root),
-      node: mapNode(node),
-    })
-  ) {
+  const model = getNodeModel(node.type);
+  const context: CanReactNodeContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      accountId: user.account_id,
+      workspaceId: user.workspace_id,
+    },
+    tree: tree.map(mapNode),
+    node: mapNode(node),
+  };
+
+  if (!model.canReact(context)) {
     return false;
   }
 
@@ -85,36 +83,34 @@ export const deleteNodeReaction = async (
   user: SelectUser,
   mutation: DeleteNodeReactionMutation
 ): Promise<boolean> => {
-  const node = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where('id', '=', mutation.data.nodeId)
-    .executeTakeFirst();
+  const tree = await fetchNodeTree(mutation.data.nodeId);
+  if (!tree) {
+    return false;
+  }
 
+  const node = tree[tree.length - 1]!;
   if (!node) {
     return false;
   }
 
-  const root = await database
-    .selectFrom('nodes')
-    .selectAll()
-    .where('id', '=', node.root_id)
-    .executeTakeFirst();
-
+  const root = tree[0]!;
   if (!root) {
     return false;
   }
 
-  if (
-    !canDeleteNodeReaction({
-      user: {
-        userId: user.id,
-        role: user.role,
-      },
-      root: mapNode(root),
-      node: mapNode(node),
-    })
-  ) {
+  const model = getNodeModel(node.type);
+  const context: CanReactNodeContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      accountId: user.account_id,
+      workspaceId: user.workspace_id,
+    },
+    tree: tree.map(mapNode),
+    node: mapNode(node),
+  };
+
+  if (!model.canReact(context)) {
     return false;
   }
 

@@ -58,6 +58,9 @@ export const databaseModel: NodeModel = {
 
     return hasNodeRole(role, 'editor');
   },
+  canReact: () => {
+    return false;
+  },
   getName: (_, attributes) => {
     if (attributes.type !== 'database') {
       return undefined;

@@ -70,6 +70,9 @@ export const spaceModel: NodeModel = {
 
     return hasNodeRole(role, 'admin');
   },
+  canReact: () => {
+    return false;
+  },
   getName: (_, attributes) => {
     if (attributes.type !== 'space') {
       return undefined;

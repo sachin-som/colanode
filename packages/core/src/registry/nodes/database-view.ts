@@ -131,6 +131,9 @@ export const databaseViewModel: NodeModel = {
 
     return hasNodeRole(role, 'editor');
   },
+  canReact: () => {
+    return false;
+  },
   getName: (_, attributes) => {
     if (attributes.type !== 'database_view') {
       return undefined;

@@ -58,6 +58,9 @@ export const channelModel: NodeModel = {
 
     return hasNodeRole(role, 'admin');
   },
+  canReact: () => {
+    return false;
+  },
   getName: (
     _: string,
     attributes: NodeAttributes

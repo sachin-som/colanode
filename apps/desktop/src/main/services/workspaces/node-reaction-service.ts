@@ -1,13 +1,14 @@
 import {
-  canCreateNodeReaction,
   createDebugger,
   CreateNodeReactionMutation,
   CreateNodeReactionMutationData,
   DeleteNodeReactionMutation,
   DeleteNodeReactionMutationData,
   generateId,
+  getNodeModel,
   IdType,
   SyncNodeReactionData,
+  CanReactNodeContext,
 } from '@colanode/core';
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
@@ -15,7 +16,7 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { mapNode, mapNodeReaction } from '@/main/lib/mappers';
 import { SelectNodeReaction } from '@/main/databases/workspace';
 import { MutationErrorCode, MutationError } from '@/shared/mutations';
-import { fetchNode } from '@/main/lib/utils';
+import { fetchNodeTree } from '@/main/lib/utils';
 
 export class NodeReactionService {
   private readonly debug = createDebugger('desktop:service:node-reaction');
@@ -26,19 +27,6 @@ export class NodeReactionService {
   }
 
   public async createNodeReaction(nodeId: string, reaction: string) {
-    const node = await this.workspace.database
-      .selectFrom('nodes')
-      .selectAll()
-      .where('id', '=', nodeId)
-      .executeTakeFirst();
-
-    if (!node) {
-      throw new MutationError(
-        MutationErrorCode.NodeNotFound,
-        'Node not found or has been deleted.'
-      );
-    }
-
     const existingNodeReaction = await this.workspace.database
       .selectFrom('node_reactions')
       .selectAll()
@@ -53,24 +41,35 @@ export class NodeReactionService {
       };
     }
 
-    const root = await fetchNode(this.workspace.database, node.root_id);
-    if (!root) {
+    const tree = await fetchNodeTree(this.workspace.database, nodeId);
+    if (!tree) {
       throw new MutationError(
-        MutationErrorCode.RootNotFound,
-        'There was an error while fetching the root. Please make sure you have access to this root.'
+        MutationErrorCode.NodeNotFound,
+        'Node not found or has been deleted.'
       );
     }
 
-    if (
-      !canCreateNodeReaction({
-        user: {
-          userId: this.workspace.userId,
-          role: this.workspace.role,
-        },
-        node: mapNode(node),
-        root: mapNode(root),
-      })
-    ) {
+    const node = tree[tree.length - 1]!;
+    if (!node) {
+      throw new MutationError(
+        MutationErrorCode.NodeNotFound,
+        'Node not found or has been deleted.'
+      );
+    }
+
+    const model = getNodeModel(node.type);
+    const context: CanReactNodeContext = {
+      user: {
+        id: this.workspace.userId,
+        role: this.workspace.role,
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+      },
+      tree: tree.map(mapNode),
+      node: mapNode(node),
+    };
+
+    if (!model.canReact(context)) {
       throw new MutationError(
         MutationErrorCode.NodeReactionCreateForbidden,
         "You don't have permission to react to this node."

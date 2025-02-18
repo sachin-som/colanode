@@ -62,6 +62,18 @@ export const messageModel: NodeModel = {
       context.node.createdBy === context.user.id || hasNodeRole(role, 'admin')
     );
   },
+  canReact: (context) => {
+    if (context.tree.length === 0) {
+      return false;
+    }
+
+    const role = extractNodeRole(context.tree, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'viewer');
+  },
   getName: (_, attributes) => {
     if (attributes.type !== 'message') {
       return undefined;

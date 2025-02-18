@@ -43,6 +43,9 @@ export const chatModel: NodeModel = {
   canDelete: () => {
     return false;
   },
+  canReact: () => {
+    return false;
+  },
   getName: (): string | null | undefined => {
     return undefined;
   },

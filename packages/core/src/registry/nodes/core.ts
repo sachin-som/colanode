@@ -45,6 +45,12 @@ export type CanDeleteNodeContext = {
   node: Node;
 };
 
+export interface CanReactNodeContext {
+  user: NodeMutationUser;
+  tree: Node[];
+  node: Node;
+}
+
 export interface NodeModel {
   type: string;
   attributesSchema: ZodSchema;
@@ -53,6 +59,7 @@ export interface NodeModel {
   canUpdateAttributes: (context: CanUpdateAttributesContext) => boolean;
   canUpdateDocument: (context: CanUpdateDocumentContext) => boolean;
   canDelete: (context: CanDeleteNodeContext) => boolean;
+  canReact: (context: CanReactNodeContext) => boolean;
   getName: (
     id: string,
     attributes: NodeAttributes

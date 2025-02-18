@@ -10,6 +10,8 @@ import { SelectUser } from '@/data/schema';
 import { ConcurrentUpdateResult, UpdateDocumentOutput } from '@/types/nodes';
 import { eventBus } from '@/lib/event-bus';
 import { fetchNode } from '@/lib/nodes';
+import { jobService } from '@/services/job-service';
+import { configuration } from './configuration';
 
 const debug = createDebugger('server:lib:documents');
 
@@ -170,6 +172,8 @@ const tryUpdateDocumentFromMutation = async (
       workspaceId: user.workspace_id,
     });
 
+    await scheduleDocumentEmbedding(mutation.documentId);
+
     return {
       type: 'success',
       output: {
@@ -181,3 +185,16 @@ const tryUpdateDocumentFromMutation = async (
     return { type: 'retry', output: null };
   }
 };
+
+async function scheduleDocumentEmbedding(documentId: string) {
+  await jobService.addJob(
+    {
+      type: 'embed_document',
+      documentId,
+    },
+    {
+      jobId: `embed_document:${documentId}`,
+      delay: configuration.ai.embedDelay,
+    }
+  );
+}

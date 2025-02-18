@@ -84,7 +84,7 @@ export interface AIModelConfiguration {
 
 export interface AiConfiguration {
   enabled: boolean;
-  nodeEmbedDelay: number;
+  embedDelay: number;
   providers: {
     openai: AIProviderConfiguration;
     google: AIProviderConfiguration;
@@ -207,7 +207,7 @@ export const configuration: Configuration = {
   },
   ai: {
     enabled: getOptionalEnv('AI_ENABLED') === 'true',
-    nodeEmbedDelay: parseInt(getOptionalEnv('AI_NODE_EMBED_DELAY') || '10000'),
+    embedDelay: parseInt(getOptionalEnv('AI_EMBED_DELAY') || '10000'),
     providers: {
       openai: {
         apiKey: getOptionalEnv('OPENAI_API_KEY') || '',

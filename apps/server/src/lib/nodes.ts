@@ -668,7 +668,7 @@ async function scheduleNodeEmbedding(nodeId: string) {
     },
     {
       jobId: `embed_node:${nodeId}`,
-      delay: configuration.ai.nodeEmbedDelay,
+      delay: configuration.ai.embedDelay,
     }
   );
 }

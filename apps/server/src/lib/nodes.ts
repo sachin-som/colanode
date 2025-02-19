@@ -5,19 +5,21 @@ import {
   createDebugger,
   CreateNodeMutationData,
   extractNodeCollaborators,
+  generateId,
   getNodeModel,
+  IdType,
   Node,
   NodeAttributes,
   UpdateNodeMutationData,
 } from '@colanode/core';
-import { YDoc } from '@colanode/crdt';
+import { decodeState, YDoc } from '@colanode/crdt';
 import { cloneDeep } from 'lodash-es';
 
 import { database } from '@/data/database';
 import {
   CreateCollaboration,
-  CreateNode,
   SelectNode,
+  SelectNodeUpdate,
   SelectUser,
 } from '@/data/schema';
 import {
@@ -64,6 +66,19 @@ export const fetchNode = async (nodeId: string): Promise<SelectNode | null> => {
   return result ?? null;
 };
 
+export const fetchNodeUpdates = async (
+  nodeId: string
+): Promise<SelectNodeUpdate[]> => {
+  const result = await database
+    .selectFrom('node_updates')
+    .selectAll()
+    .where('node_id', '=', nodeId)
+    .orderBy('id', 'desc')
+    .execute();
+
+  return result;
+};
+
 export const fetchNodeTree = async (nodeId: string): Promise<SelectNode[]> => {
   const result = await database
     .selectFrom('nodes')
@@ -104,16 +119,7 @@ export const createNode = async (
   const attributesJson = JSON.stringify(attributes);
   const state = ydoc.getState();
   const date = new Date();
-
-  const createNode: CreateNode = {
-    id: input.nodeId,
-    root_id: input.rootId,
-    workspace_id: input.workspaceId,
-    attributes: attributesJson,
-    created_at: date,
-    created_by: input.userId,
-    state: state,
-  };
+  const updateId = generateId(IdType.Update);
 
   const collaborationsToCreate: CreateCollaboration[] = Object.entries(
     extractNodeCollaborators(attributes)
@@ -130,10 +136,36 @@ export const createNode = async (
     const { createdNode, createdCollaborations } = await database
       .transaction()
       .execute(async (trx) => {
+        const createdNodeUpdate = await trx
+          .insertInto('node_updates')
+          .returningAll()
+          .values({
+            id: updateId,
+            node_id: input.nodeId,
+            root_id: input.rootId,
+            workspace_id: input.workspaceId,
+            data: state,
+            created_at: date,
+            created_by: input.userId,
+          })
+          .executeTakeFirst();
+
+        if (!createdNodeUpdate) {
+          throw new Error('Failed to create node update');
+        }
+
         const createdNode = await trx
           .insertInto('nodes')
           .returningAll()
-          .values(createNode)
+          .values({
+            id: input.nodeId,
+            root_id: input.rootId,
+            workspace_id: input.workspaceId,
+            attributes: attributesJson,
+            created_at: date,
+            created_by: input.userId,
+            revision: createdNodeUpdate.revision,
+          })
           .executeTakeFirst();
 
         if (!createdNode) {
@@ -204,14 +236,19 @@ export const tryUpdateNode = async (
     return { type: 'error', output: null };
   }
 
-  const model = getNodeModel(node.type);
-  const ydoc = new YDoc(node.state);
+  const nodeUpdates = await fetchNodeUpdates(input.nodeId);
+  const ydoc = new YDoc();
+  for (const nodeUpdate of nodeUpdates) {
+    ydoc.applyUpdate(nodeUpdate.data);
+  }
+
   const currentAttributes = ydoc.getObject<NodeAttributes>();
   const updatedAttributes = input.updater(cloneDeep(currentAttributes));
   if (!updatedAttributes) {
     return { type: 'error', output: null };
   }
 
+  const model = getNodeModel(node.type);
   const update = ydoc.update(model.attributesSchema, updatedAttributes);
 
   if (!update) {
@@ -220,9 +257,8 @@ export const tryUpdateNode = async (
 
   const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
-
   const date = new Date();
-  const state = ydoc.getState();
+  const updateId = generateId(IdType.Update);
 
   const collaboratorChanges = checkCollaboratorChanges(
     node.attributes,
@@ -232,6 +268,24 @@ export const tryUpdateNode = async (
   try {
     const { updatedNode, createdCollaborations, updatedCollaborations } =
       await database.transaction().execute(async (trx) => {
+        const createdNodeUpdate = await trx
+          .insertInto('node_updates')
+          .returningAll()
+          .values({
+            id: updateId,
+            node_id: input.nodeId,
+            root_id: node.root_id,
+            workspace_id: node.workspace_id,
+            data: update,
+            created_at: date,
+            created_by: input.userId,
+          })
+          .executeTakeFirst();
+
+        if (!createdNodeUpdate) {
+          throw new Error('Failed to create node update');
+        }
+
         const updatedNode = await trx
           .updateTable('nodes')
           .returningAll()
@@ -239,7 +293,7 @@ export const tryUpdateNode = async (
             attributes: attributesJson,
             updated_at: date,
             updated_by: input.userId,
-            state: state,
+            revision: createdNodeUpdate.revision,
           })
           .where('id', '=', input.nodeId)
           .where('revision', '=', node.revision)
@@ -331,22 +385,12 @@ export const createNodeFromMutation = async (
     return null;
   }
 
-  const rootId = tree[0]?.id ?? mutation.id;
-  const createNode: CreateNode = {
-    id: mutation.id,
-    root_id: rootId,
-    attributes: JSON.stringify(attributes),
-    workspace_id: user.workspace_id,
-    created_at: new Date(mutation.createdAt),
-    created_by: user.id,
-    state: ydoc.getState(),
-  };
-
+  const rootId = tree[0]?.id ?? mutation.nodeId;
   const collaborationsToCreate: CreateCollaboration[] = Object.entries(
     extractNodeCollaborators(attributes)
   ).map(([userId, role]) => ({
     collaborator_id: userId,
-    node_id: mutation.id,
+    node_id: mutation.nodeId,
     workspace_id: user.workspace_id,
     role,
     created_at: new Date(),
@@ -357,10 +401,36 @@ export const createNodeFromMutation = async (
     const { createdNode, createdCollaborations } = await database
       .transaction()
       .execute(async (trx) => {
+        const createdNodeUpdate = await trx
+          .insertInto('node_updates')
+          .returningAll()
+          .values({
+            id: mutation.updateId,
+            node_id: mutation.nodeId,
+            root_id: rootId,
+            workspace_id: user.workspace_id,
+            data: ydoc.getState(),
+            created_at: new Date(mutation.createdAt),
+            created_by: user.id,
+          })
+          .executeTakeFirst();
+
+        if (!createdNodeUpdate) {
+          throw new Error('Failed to create node update');
+        }
+
         const createdNode = await trx
           .insertInto('nodes')
           .returningAll()
-          .values(createNode)
+          .values({
+            id: mutation.nodeId,
+            root_id: rootId,
+            attributes: JSON.stringify(attributes),
+            workspace_id: user.workspace_id,
+            created_at: new Date(mutation.createdAt),
+            created_by: user.id,
+            revision: createdNodeUpdate.revision,
+          })
           .executeTakeFirst();
 
         if (!createdNode) {
@@ -382,7 +452,7 @@ export const createNodeFromMutation = async (
 
     eventBus.publish({
       type: 'node_created',
-      nodeId: mutation.id,
+      nodeId: mutation.nodeId,
       rootId,
       workspaceId: user.workspace_id,
     });
@@ -391,7 +461,7 @@ export const createNodeFromMutation = async (
       eventBus.publish({
         type: 'collaboration_created',
         collaboratorId: createdCollaboration.collaborator_id,
-        nodeId: mutation.id,
+        nodeId: mutation.nodeId,
         workspaceId: user.workspace_id,
       });
     }
@@ -428,19 +498,24 @@ const tryUpdateNodeFromMutation = async (
   user: SelectUser,
   mutation: UpdateNodeMutationData
 ): Promise<ConcurrentUpdateResult<UpdateNodeOutput>> => {
-  const tree = await fetchNodeTree(mutation.id);
+  const tree = await fetchNodeTree(mutation.nodeId);
   if (tree.length === 0) {
     return { type: 'error', output: null };
   }
 
   const node = tree[tree.length - 1];
-  if (!node || node.id !== mutation.id) {
+  if (!node || node.id !== mutation.nodeId) {
     return { type: 'error', output: null };
   }
 
-  const model = getNodeModel(node.type);
-  const ydoc = new YDoc(node.state);
-  ydoc.applyUpdate(mutation.data);
+  const nodeUpdates = await fetchNodeUpdates(mutation.nodeId);
+  const ydoc = new YDoc();
+  for (const nodeUpdate of nodeUpdates) {
+    ydoc.applyUpdate(nodeUpdate.data);
+  }
+
+  const update = decodeState(mutation.data);
+  ydoc.applyUpdate(update);
 
   const attributes = ydoc.getObject<NodeAttributes>();
   const attributesJson = JSON.stringify(attributes);
@@ -457,6 +532,7 @@ const tryUpdateNodeFromMutation = async (
     attributes,
   };
 
+  const model = getNodeModel(node.type);
   if (!model.canUpdateAttributes(canUpdateNodeContext)) {
     return { type: 'error', output: null };
   }
@@ -469,6 +545,24 @@ const tryUpdateNodeFromMutation = async (
   try {
     const { updatedNode, createdCollaborations, updatedCollaborations } =
       await database.transaction().execute(async (trx) => {
+        const createdNodeUpdate = await trx
+          .insertInto('node_updates')
+          .returningAll()
+          .values({
+            id: mutation.updateId,
+            node_id: mutation.nodeId,
+            root_id: node.root_id,
+            workspace_id: user.workspace_id,
+            data: update,
+            created_at: new Date(mutation.createdAt),
+            created_by: user.id,
+          })
+          .executeTakeFirst();
+
+        if (!createdNodeUpdate) {
+          throw new Error('Failed to create node update');
+        }
+
         const updatedNode = await trx
           .updateTable('nodes')
           .returningAll()
@@ -476,9 +570,9 @@ const tryUpdateNodeFromMutation = async (
             attributes: attributesJson,
             updated_at: new Date(mutation.createdAt),
             updated_by: user.id,
-            state: ydoc.getState(),
+            revision: createdNodeUpdate.revision,
           })
-          .where('id', '=', mutation.id)
+          .where('id', '=', mutation.nodeId)
           .where('revision', '=', node.revision)
           .executeTakeFirst();
 
@@ -489,7 +583,7 @@ const tryUpdateNodeFromMutation = async (
         const { createdCollaborations, updatedCollaborations } =
           await applyCollaboratorUpdates(
             trx,
-            mutation.id,
+            mutation.nodeId,
             user.id,
             user.workspace_id,
             collaboratorChanges
@@ -504,7 +598,7 @@ const tryUpdateNodeFromMutation = async (
 
     eventBus.publish({
       type: 'node_updated',
-      nodeId: mutation.id,
+      nodeId: mutation.nodeId,
       rootId: node.root_id,
       workspaceId: user.workspace_id,
     });
@@ -513,7 +607,7 @@ const tryUpdateNodeFromMutation = async (
       eventBus.publish({
         type: 'collaboration_created',
         collaboratorId: createdCollaboration.collaborator_id,
-        nodeId: mutation.id,
+        nodeId: mutation.nodeId,
         workspaceId: user.workspace_id,
       });
     }
@@ -522,7 +616,7 @@ const tryUpdateNodeFromMutation = async (
       eventBus.publish({
         type: 'collaboration_updated',
         collaboratorId: updatedCollaboration.collaborator_id,
-        nodeId: mutation.id,
+        nodeId: mutation.nodeId,
         workspaceId: user.workspace_id,
       });
     }
@@ -542,13 +636,13 @@ export const deleteNode = async (
   user: SelectUser,
   input: DeleteNodeInput
 ): Promise<DeleteNodeOutput | null> => {
-  const tree = await fetchNodeTree(input.id);
+  const tree = await fetchNodeTree(input.nodeId);
   if (tree.length === 0) {
     return null;
   }
 
   const node = tree[tree.length - 1];
-  if (!node || node.id !== input.id) {
+  if (!node || node.id !== input.nodeId) {
     return null;
   }
 
@@ -574,7 +668,7 @@ export const deleteNode = async (
       const deletedNode = await trx
         .deleteFrom('nodes')
         .returningAll()
-        .where('id', '=', input.id)
+        .where('id', '=', input.nodeId)
         .executeTakeFirst();
 
       if (!deletedNode) {
@@ -598,13 +692,18 @@ export const deleteNode = async (
       }
 
       await trx
+        .deleteFrom('node_updates')
+        .where('node_id', '=', input.nodeId)
+        .execute();
+
+      await trx
         .deleteFrom('node_reactions')
-        .where('node_id', '=', input.id)
+        .where('node_id', '=', input.nodeId)
         .execute();
 
       await trx
         .deleteFrom('node_interactions')
-        .where('node_id', '=', input.id)
+        .where('node_id', '=', input.nodeId)
         .execute();
 
       const updatedCollaborations = await trx
@@ -614,7 +713,7 @@ export const deleteNode = async (
           deleted_by: user.id,
         })
         .returningAll()
-        .where('node_id', '=', input.id)
+        .where('node_id', '=', input.nodeId)
         .execute();
 
       return {
@@ -625,7 +724,7 @@ export const deleteNode = async (
 
   eventBus.publish({
     type: 'node_deleted',
-    nodeId: input.id,
+    nodeId: input.nodeId,
     rootId: node.root_id,
     workspaceId: user.workspace_id,
   });
@@ -634,14 +733,14 @@ export const deleteNode = async (
     eventBus.publish({
       type: 'collaboration_updated',
       collaboratorId: updatedCollaboration.collaborator_id,
-      nodeId: input.id,
+      nodeId: input.nodeId,
       workspaceId: user.workspace_id,
     });
   }
 
   await jobService.addJob({
     type: 'clean_node_data',
-    nodeId: input.id,
+    nodeId: input.nodeId,
     workspaceId: user.workspace_id,
     userId: user.id,
   });

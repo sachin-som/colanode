@@ -2,14 +2,14 @@ import {
   createDebugger,
   SyncCollaborationsInput,
   SyncUsersInput,
-  SyncNodesInput,
+  SyncNodesUpdatesInput,
   SyncNodeInteractionsInput,
   SyncNodeReactionsInput,
   SyncNodeTombstonesInput,
   SyncNodeInteractionData,
   SyncNodeReactionData,
   SyncNodeTombstoneData,
-  SyncNodeData,
+  SyncNodeUpdateData,
   SyncUserData,
   SyncCollaborationData,
   SyncDocumentUpdatesInput,
@@ -22,7 +22,7 @@ import { Synchronizer } from '@/main/services/workspaces/synchronizer';
 import { eventBus } from '@/shared/lib/event-bus';
 
 interface RootSynchronizers {
-  nodes: Synchronizer<SyncNodesInput>;
+  nodeUpdates: Synchronizer<SyncNodesUpdatesInput>;
   nodeInteractions: Synchronizer<SyncNodeInteractionsInput>;
   nodeReactions: Synchronizer<SyncNodeReactionsInput>;
   nodeTombstones: Synchronizer<SyncNodeTombstonesInput>;
@@ -32,7 +32,7 @@ interface RootSynchronizers {
 type SyncHandlers = {
   users: (data: SyncUserData) => Promise<void>;
   collaborations: (data: SyncCollaborationData) => Promise<void>;
-  nodes: (data: SyncNodeData) => Promise<void>;
+  nodeUpdates: (data: SyncNodeUpdateData) => Promise<void>;
   nodeInteractions: (data: SyncNodeInteractionData) => Promise<void>;
   nodeReactions: (data: SyncNodeReactionData) => Promise<void>;
   nodeTombstones: (data: SyncNodeTombstoneData) => Promise<void>;
@@ -61,7 +61,9 @@ export class SyncService {
         this.workspace.collaborations.syncServerCollaboration.bind(
           this.workspace.collaborations
         ),
-      nodes: this.workspace.nodes.syncServerNode.bind(this.workspace.nodes),
+      nodeUpdates: this.workspace.nodes.syncServerNodeUpdate.bind(
+        this.workspace.nodes
+      ),
       nodeInteractions:
         this.workspace.nodeInteractions.syncServerNodeInteraction.bind(
           this.workspace.nodes
@@ -140,7 +142,7 @@ export class SyncService {
   }
 
   private destroyRootSynchronizers(rootSynchronizers: RootSynchronizers): void {
-    rootSynchronizers.nodes.destroy();
+    rootSynchronizers.nodeUpdates.destroy();
     rootSynchronizers.nodeInteractions.destroy();
     rootSynchronizers.nodeReactions.destroy();
     rootSynchronizers.nodeTombstones.destroy();
@@ -157,11 +159,11 @@ export class SyncService {
     );
 
     const rootSynchronizers = {
-      nodes: new Synchronizer(
+      nodeUpdates: new Synchronizer(
         this.workspace,
-        { type: 'nodes', rootId },
-        `${rootId}_nodes`,
-        this.syncHandlers.nodes
+        { type: 'nodes_updates', rootId },
+        `${rootId}_nodes_updates`,
+        this.syncHandlers.nodeUpdates
       ),
       nodeInteractions: new Synchronizer(
         this.workspace,

@@ -4,7 +4,7 @@ import {
   createDebugger,
   NodeAttributes,
   DeleteNodeMutationData,
-  SyncNodeData,
+  SyncNodeUpdateData,
   SyncNodeTombstoneData,
   getNodeModel,
   CreateNodeMutationData,
@@ -74,6 +74,7 @@ export class NodeService {
       throw new Error('Invalid attributes');
     }
 
+    const updateId = generateId(IdType.Update);
     const createdAt = new Date().toISOString();
     const rootId = tree[0]?.id ?? input.id;
     const nodeText = model.extractNodeText(input.id, input.attributes);
@@ -99,22 +100,24 @@ export class NodeService {
           throw new Error('Failed to create entry');
         }
 
-        const createdState = await trx
-          .insertInto('node_states')
+        const createdNodeUpdate = await trx
+          .insertInto('node_updates')
           .returningAll()
           .values({
-            id: input.id,
-            state: update,
-            revision: BigInt(0),
+            id: updateId,
+            node_id: input.id,
+            data: update,
+            created_at: createdAt,
           })
           .executeTakeFirst();
 
-        if (!createdState) {
-          throw new Error('Failed to create state');
+        if (!createdNodeUpdate) {
+          throw new Error('Failed to create node update');
         }
 
         const mutationData: CreateNodeMutationData = {
-          id: input.id,
+          nodeId: input.id,
+          updateId: updateId,
           data: encodeState(update),
           createdAt: createdAt,
         };
@@ -203,8 +206,6 @@ export class NodeService {
     const updatedAt = new Date().toISOString();
     const updatedAttributes = updater(node.attributes as T);
 
-    const model = getNodeModel(updatedAttributes.type);
-
     const canUpdateAttributesContext: CanUpdateAttributesContext = {
       user: {
         id: this.workspace.userId,
@@ -217,29 +218,25 @@ export class NodeService {
       attributes: updatedAttributes,
     };
 
+    const model = getNodeModel(updatedAttributes.type);
     if (!model.canUpdateAttributes(canUpdateAttributesContext)) {
       return 'unauthorized';
     }
 
-    const state = await this.workspace.database
+    const nodeState = await this.workspace.database
       .selectFrom('node_states')
       .where('id', '=', nodeId)
       .selectAll()
       .executeTakeFirst();
 
-    const updates = await this.workspace.database
+    const nodeUpdates = await this.workspace.database
       .selectFrom('node_updates')
       .where('node_id', '=', nodeId)
       .selectAll()
       .execute();
 
-    const ydoc = new YDoc();
-
-    if (state) {
-      ydoc.applyUpdate(state.state);
-    }
-
-    for (const update of updates) {
+    const ydoc = new YDoc(nodeState?.state);
+    for (const update of nodeUpdates) {
       ydoc.applyUpdate(update.data);
     }
 
@@ -289,7 +286,7 @@ export class NodeService {
         }
 
         const mutationData: UpdateNodeMutationData = {
-          id: nodeId,
+          nodeId: nodeId,
           updateId: updateId,
           data: encodeState(update),
           createdAt: updatedAt,
@@ -400,7 +397,7 @@ export class NodeService {
           .execute();
 
         const deleteMutationData: DeleteNodeMutationData = {
-          id: nodeId,
+          nodeId: nodeId,
           rootId: node.rootId,
           deletedAt: new Date().toISOString(),
         };
@@ -440,28 +437,42 @@ export class NodeService {
     }
   }
 
-  public async syncServerNode(node: SyncNodeData) {
-    const existingNode = await this.workspace.database
-      .selectFrom('nodes')
-      .where('id', '=', node.id)
-      .selectAll()
-      .executeTakeFirst();
+  public async syncServerNodeUpdate(update: SyncNodeUpdateData) {
+    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
+      try {
+        const existingNode = await this.workspace.database
+          .selectFrom('nodes')
+          .where('id', '=', update.nodeId)
+          .selectAll()
+          .executeTakeFirst();
 
-    if (!existingNode) {
-      return this.createServerNode(node);
-    } else {
-      return this.updateServerNode(node);
+        if (!existingNode) {
+          const result = await this.tryCreateServerNode(update);
+          if (result) {
+            return;
+          }
+        } else {
+          const result = await this.tryUpdateServerNode(existingNode, update);
+          if (result) {
+            return;
+          }
+        }
+      } catch (error) {
+        this.debug(`Failed to update node ${update.id}: ${error}`);
+      }
     }
   }
 
-  private async createServerNode(node: SyncNodeData): Promise<void> {
-    const serverRevision = BigInt(node.revision);
+  private async tryCreateServerNode(
+    update: SyncNodeUpdateData
+  ): Promise<boolean> {
+    const serverRevision = BigInt(update.revision);
 
-    const ydoc = new YDoc(node.state);
+    const ydoc = new YDoc(update.state);
     const attributes = ydoc.getObject<NodeAttributes>();
 
     const model = getNodeModel(attributes.type);
-    const nodeText = model.extractNodeText(node.id, attributes);
+    const nodeText = model.extractNodeText(update.id, attributes);
 
     const { createdNode } = await this.workspace.database
       .transaction()
@@ -470,11 +481,11 @@ export class NodeService {
           .insertInto('nodes')
           .returningAll()
           .values({
-            id: node.id,
-            root_id: node.rootId,
+            id: update.nodeId,
+            root_id: update.rootId,
             attributes: JSON.stringify(attributes),
-            created_at: node.createdAt,
-            created_by: node.createdBy,
+            created_at: update.createdAt,
+            created_by: update.createdBy,
             local_revision: 0n,
             server_revision: serverRevision,
           })
@@ -488,9 +499,9 @@ export class NodeService {
           .insertInto('node_states')
           .returningAll()
           .values({
-            id: node.id,
+            id: update.nodeId,
             revision: serverRevision,
-            state: decodeState(node.state),
+            state: decodeState(update.state),
           })
           .executeTakeFirst();
 
@@ -498,7 +509,7 @@ export class NodeService {
           await trx
             .insertInto('node_texts')
             .values({
-              id: node.id,
+              id: update.nodeId,
               name: nodeText.name,
               attributes: nodeText.attributes,
             })
@@ -509,8 +520,8 @@ export class NodeService {
       });
 
     if (!createdNode) {
-      this.debug(`Failed to create node ${node.id}`);
-      return;
+      this.debug(`Failed to create node ${update.nodeId}`);
+      return false;
     }
 
     this.debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
@@ -521,44 +532,30 @@ export class NodeService {
       workspaceId: this.workspace.id,
       node: mapNode(createdNode),
     });
+
+    return true;
   }
 
-  public async updateServerNode(node: SyncNodeData): Promise<void> {
-    for (let count = 0; count < UPDATE_RETRIES_LIMIT; count++) {
-      try {
-        const result = await this.tryUpdateServerNode(node);
+  private async tryUpdateServerNode(
+    existingNode: SelectNode,
+    update: SyncNodeUpdateData
+  ): Promise<boolean> {
+    const serverRevision = BigInt(update.revision);
 
-        if (result) {
-          return;
-        }
-      } catch (error) {
-        this.debug(`Failed to update node ${node.id}: ${error}`);
-      }
-    }
-  }
-
-  private async tryUpdateServerNode(node: SyncNodeData): Promise<boolean> {
-    const serverRevision = BigInt(node.revision);
-
-    const existingNode = await this.workspace.database
-      .selectFrom('nodes')
-      .where('id', '=', node.id)
+    const nodeState = await this.workspace.database
+      .selectFrom('node_states')
+      .where('id', '=', existingNode.id)
       .selectAll()
       .executeTakeFirst();
 
-    if (!existingNode) {
-      await this.createServerNode(node);
-      return true;
-    }
-
-    const ydoc = new YDoc(node.state);
     const updates = await this.workspace.database
       .selectFrom('node_updates')
       .selectAll()
-      .where('node_id', '=', node.id)
+      .where('node_id', '=', existingNode.id)
       .orderBy('id', 'asc')
       .execute();
 
+    const ydoc = new YDoc(nodeState?.state);
     for (const update of updates) {
       ydoc.applyUpdate(update.data);
     }
@@ -567,7 +564,10 @@ export class NodeService {
     const localRevision = BigInt(existingNode.local_revision) + BigInt(1);
 
     const model = getNodeModel(attributes.type);
-    const nodeText = model.extractNodeText(node.id, attributes);
+    const nodeText = model.extractNodeText(existingNode.id, attributes);
+
+    const mergedUpdateIds = update.mergedUpdates?.map((u) => u.id) ?? [];
+    const updatesToDelete = [update.id, ...mergedUpdateIds];
 
     const { updatedNode } = await this.workspace.database
       .transaction()
@@ -577,12 +577,12 @@ export class NodeService {
           .returningAll()
           .set({
             attributes: JSON.stringify(attributes),
-            updated_at: node.updatedAt,
-            updated_by: node.updatedBy,
+            updated_at: update.createdAt,
+            updated_by: update.createdBy,
             local_revision: localRevision,
             server_revision: serverRevision,
           })
-          .where('id', '=', node.id)
+          .where('id', '=', existingNode.id)
           .where('local_revision', '=', existingNode.local_revision)
           .executeTakeFirst();
 
@@ -590,23 +590,43 @@ export class NodeService {
           throw new Error('Failed to update node');
         }
 
-        await trx
-          .updateTable('node_states')
-          .set({
+        const upsertedState = await trx
+          .insertInto('node_states')
+          .returningAll()
+          .values({
+            id: existingNode.id,
             revision: serverRevision,
-            state: decodeState(node.state),
+            state: decodeState(update.state),
           })
-          .where('id', '=', node.id)
+          .onConflict((cb) =>
+            cb
+              .doUpdateSet({
+                revision: serverRevision,
+                state: decodeState(update.state),
+              })
+              .where('revision', '=', BigInt(nodeState?.revision ?? 0))
+          )
           .executeTakeFirst();
+
+        if (!upsertedState) {
+          throw new Error('Failed to update node state');
+        }
 
         if (nodeText) {
           await trx
             .insertInto('node_texts')
             .values({
-              id: node.id,
+              id: existingNode.id,
               name: nodeText.name,
               attributes: nodeText.attributes,
             })
+            .execute();
+        }
+
+        if (updatesToDelete.length > 0) {
+          await trx
+            .deleteFrom('node_updates')
+            .where('id', 'in', updatesToDelete)
             .execute();
         }
 
@@ -614,7 +634,7 @@ export class NodeService {
       });
 
     if (!updatedNode) {
-      this.debug(`Failed to update node ${node.id}`);
+      this.debug(`Failed to update node ${existingNode.id}`);
       return false;
     }
 
@@ -701,7 +721,7 @@ export class NodeService {
     const node = await this.workspace.database
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.nodeId)
       .executeTakeFirst();
 
     if (!node) {
@@ -709,33 +729,36 @@ export class NodeService {
     }
 
     await this.workspace.database.transaction().execute(async (tx) => {
-      await tx.deleteFrom('nodes').where('id', '=', mutation.id).execute();
+      await tx.deleteFrom('nodes').where('id', '=', mutation.nodeId).execute();
 
       await tx
         .deleteFrom('node_updates')
-        .where('node_id', '=', mutation.id)
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await tx
         .deleteFrom('node_interactions')
-        .where('node_id', '=', mutation.id)
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await tx
         .deleteFrom('node_reactions')
-        .where('node_id', '=', mutation.id)
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await tx
         .deleteFrom('node_states')
-        .where('id', '=', mutation.id)
+        .where('id', '=', mutation.nodeId)
         .execute();
 
-      await tx.deleteFrom('documents').where('id', '=', mutation.id).execute();
+      await tx
+        .deleteFrom('documents')
+        .where('id', '=', mutation.nodeId)
+        .execute();
 
       await tx
         .deleteFrom('document_updates')
-        .where('document_id', '=', mutation.id)
+        .where('document_id', '=', mutation.nodeId)
         .execute();
     });
 
@@ -767,39 +790,39 @@ export class NodeService {
     const node = await this.workspace.database
       .selectFrom('nodes')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.nodeId)
       .executeTakeFirst();
 
     if (!node) {
       // Make sure we don't have any data left behind
       await this.workspace.database
         .deleteFrom('node_updates')
-        .where('id', '=', mutation.id)
+        .where('id', '=', mutation.updateId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_interactions')
-        .where('node_id', '=', mutation.id)
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_reactions')
-        .where('node_id', '=', mutation.id)
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('node_states')
-        .where('id', '=', mutation.id)
+        .where('id', '=', mutation.nodeId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('documents')
-        .where('id', '=', mutation.id)
+        .where('id', '=', mutation.nodeId)
         .execute();
 
       await this.workspace.database
         .deleteFrom('document_updates')
-        .where('document_id', '=', mutation.id)
+        .where('document_id', '=', mutation.nodeId)
         .execute();
 
       return true;
@@ -808,7 +831,7 @@ export class NodeService {
     const updateRow = await this.workspace.database
       .selectFrom('node_updates')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.updateId)
       .executeTakeFirst();
 
     if (!updateRow) {
@@ -818,21 +841,17 @@ export class NodeService {
     const nodeUpdates = await this.workspace.database
       .selectFrom('node_updates')
       .selectAll()
-      .where('node_id', '=', mutation.id)
+      .where('node_id', '=', mutation.nodeId)
       .orderBy('id', 'asc')
       .execute();
 
     const state = await this.workspace.database
       .selectFrom('node_states')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.nodeId)
       .executeTakeFirst();
 
-    if (!state) {
-      return true;
-    }
-
-    const ydoc = new YDoc(state.state);
+    const ydoc = new YDoc(state?.state);
     for (const nodeUpdate of nodeUpdates) {
       if (nodeUpdate.id === mutation.updateId) {
         continue;
@@ -858,7 +877,7 @@ export class NodeService {
             attributes: JSON.stringify(attributes),
             local_revision: localRevision,
           })
-          .where('id', '=', mutation.id)
+          .where('id', '=', mutation.nodeId)
           .where('local_revision', '=', node.local_revision)
           .executeTakeFirst();
 
@@ -901,7 +920,7 @@ export class NodeService {
     const tombstone = await this.workspace.database
       .selectFrom('tombstones')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.nodeId)
       .executeTakeFirst();
 
     if (!tombstone) {
@@ -911,21 +930,17 @@ export class NodeService {
     const state = await this.workspace.database
       .selectFrom('node_states')
       .selectAll()
-      .where('id', '=', mutation.id)
+      .where('id', '=', mutation.nodeId)
       .executeTakeFirst();
-
-    if (!state) {
-      return;
-    }
 
     const nodeUpdates = await this.workspace.database
       .selectFrom('node_updates')
       .selectAll()
-      .where('node_id', '=', mutation.id)
+      .where('node_id', '=', mutation.nodeId)
       .orderBy('id', 'asc')
       .execute();
 
-    const ydoc = new YDoc(state.state);
+    const ydoc = new YDoc(state?.state);
     for (const nodeUpdate of nodeUpdates) {
       ydoc.applyUpdate(nodeUpdate.data);
     }
@@ -959,7 +974,7 @@ export class NodeService {
 
         await trx
           .deleteFrom('tombstones')
-          .where('id', '=', mutation.id)
+          .where('id', '=', mutation.nodeId)
           .execute();
       });
 

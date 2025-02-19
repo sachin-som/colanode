@@ -19,7 +19,8 @@ export type MutationBase = {
 };
 
 export type CreateNodeMutationData = {
-  id: string;
+  nodeId: string;
+  updateId: string;
   createdAt: string;
   data: string;
 };
@@ -29,13 +30,8 @@ export type CreateNodeMutation = MutationBase & {
   data: CreateNodeMutationData;
 };
 
-export type ApplyNodeUpdateMutationData = {
-  id: string;
-  data: string;
-};
-
 export type UpdateNodeMutationData = {
-  id: string;
+  nodeId: string;
   updateId: string;
   data: string;
   createdAt: string;
@@ -47,7 +43,7 @@ export type UpdateNodeMutation = MutationBase & {
 };
 
 export type DeleteNodeMutationData = {
-  id: string;
+  nodeId: string;
   rootId: string;
   deletedAt: string;
 };

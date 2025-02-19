@@ -468,7 +468,7 @@ export class NodeService {
   ): Promise<boolean> {
     const serverRevision = BigInt(update.revision);
 
-    const ydoc = new YDoc(update.state);
+    const ydoc = new YDoc(update.data);
     const attributes = ydoc.getObject<NodeAttributes>();
 
     const model = getNodeModel(attributes.type);
@@ -501,7 +501,7 @@ export class NodeService {
           .values({
             id: update.nodeId,
             revision: serverRevision,
-            state: decodeState(update.state),
+            state: decodeState(update.data),
           })
           .executeTakeFirst();
 
@@ -540,15 +540,13 @@ export class NodeService {
     existingNode: SelectNode,
     update: SyncNodeUpdateData
   ): Promise<boolean> {
-    const serverRevision = BigInt(update.revision);
-
     const nodeState = await this.workspace.database
       .selectFrom('node_states')
       .where('id', '=', existingNode.id)
       .selectAll()
       .executeTakeFirst();
 
-    const updates = await this.workspace.database
+    const nodeUpdates = await this.workspace.database
       .selectFrom('node_updates')
       .selectAll()
       .where('node_id', '=', existingNode.id)
@@ -556,8 +554,17 @@ export class NodeService {
       .execute();
 
     const ydoc = new YDoc(nodeState?.state);
-    for (const update of updates) {
-      ydoc.applyUpdate(update.data);
+    ydoc.applyUpdate(update.data);
+
+    const serverRevision = BigInt(update.revision);
+    const serverState = ydoc.getState();
+
+    for (const nodeUpdate of nodeUpdates) {
+      if (nodeUpdate.id === update.id) {
+        continue;
+      }
+
+      ydoc.applyUpdate(nodeUpdate.data);
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
@@ -596,13 +603,13 @@ export class NodeService {
           .values({
             id: existingNode.id,
             revision: serverRevision,
-            state: decodeState(update.state),
+            state: serverState,
           })
           .onConflict((cb) =>
             cb
               .doUpdateSet({
                 revision: serverRevision,
-                state: decodeState(update.state),
+                state: serverState,
               })
               .where('revision', '=', BigInt(nodeState?.revision ?? 0))
           )

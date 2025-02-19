@@ -11,7 +11,7 @@ export type SyncNodeUpdateData = {
   rootId: string;
   workspaceId: string;
   revision: string;
-  state: string;
+  data: string;
   createdAt: string;
   createdBy: string;
   mergedUpdates: UpdateMergeMetadata[] | null | undefined;

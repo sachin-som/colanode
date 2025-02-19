@@ -65,7 +65,7 @@ export class NodeUpdatesSynchronizer extends BaseSynchronizer<SyncNodesUpdatesIn
           rootId: nodeUpdate.root_id,
           workspaceId: nodeUpdate.workspace_id,
           revision: nodeUpdate.revision.toString(),
-          state: encodeState(nodeUpdate.data),
+          data: encodeState(nodeUpdate.data),
           createdAt: nodeUpdate.created_at.toISOString(),
           createdBy: nodeUpdate.created_by,
           mergedUpdates: nodeUpdate.merged_updates,

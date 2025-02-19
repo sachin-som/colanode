@@ -10,6 +10,13 @@ import type {
   ChunkingMetadata,
   NodeMetadata,
 } from '@/services/chunking-service';
+import { CallbackHandler } from 'langfuse-langchain';
+
+const langfuseCallback = new CallbackHandler({
+  publicKey: configuration.ai.langfuse.publicKey,
+  secretKey: configuration.ai.langfuse.secretKey,
+  baseUrl: configuration.ai.langfuse.baseUrl,
+});
 
 const rerankedDocumentsSchema = z.object({
   rankings: z.array(
@@ -186,22 +193,32 @@ For each filter, use the exact field IDs from the database schema.
 Use appropriate operators based on field types.
 
 Example Response:
-{
+{{
   "shouldFilter": true,
   "filters": [
-    {
+    {{
       "databaseId": "db1",
       "filters": [
-        {
+        {{
           "type": "field",
           "fieldId": "field1",
           "operator": "contains",
           "value": "search term"
-        }
+        }}
       ]
-    }
+    }}
   ]
-}`
+}}
+
+Return a JSON object with:
+- shouldFilter: boolean
+- filters: array of objects with:
+  - databaseId: string
+  - filters: array of DatabaseViewFilterAttributes
+
+Only include databases that are relevant to the query.
+For each filter, use the exact field IDs from the database schema.
+Use appropriate operators based on field types.`
 );
 
 export async function rewriteQuery(query: string): Promise<string> {
@@ -454,9 +471,12 @@ export async function addContextToChunk(
       prompt
     );
 
-    const response = await model.invoke([
-      new SystemMessage({ content: formattedPrompt }),
-    ]);
+    const response = await model.invoke(
+      [new SystemMessage({ content: formattedPrompt })],
+      {
+        callbacks: [langfuseCallback],
+      }
+    );
 
     const prefix = (response.content.toString() || '').trim();
     return prefix ? `${prefix}\n\n${chunk}` : chunk;

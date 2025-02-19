@@ -9,7 +9,7 @@ import { hasNodeRole } from '../../lib/permissions';
 
 export const messageAttributesSchema = z.object({
   type: z.literal('message'),
-  subtype: z.enum(['standard']),
+  subtype: z.enum(['standard', 'question', 'answer']),
   name: z.string().optional(),
   parentId: z.string(),
   referenceId: z.string().nullable().optional(),

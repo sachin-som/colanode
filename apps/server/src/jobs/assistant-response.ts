@@ -506,7 +506,7 @@ export const assistantResponseHandler: JobHandler<
 // ---------------------------------------------------------------------
 async function createAndPublishResponse(
   response: string,
-  citations: Array<{ sourceId: string; quote: string }>,
+  citations: Array<{ sourceId: string; quote: string }> | undefined,
   originalMessage: any,
   workspaceId: string
 ) {
@@ -515,7 +515,7 @@ async function createAndPublishResponse(
 
   const messageAttributes: NodeAttributes = {
     type: 'message',
-    subtype: 'standard',
+    subtype: 'answer',
     parentId: originalMessage.parent_id || originalMessage.id,
     content: {
       [blockId]: {
@@ -525,7 +525,7 @@ async function createAndPublishResponse(
         index: generateNodeIndex(),
         parentId: id,
       },
-      ...citations.reduce((acc, citation) => {
+      ...(citations?.reduce((acc, citation) => {
         const citationBlockId = generateId(IdType.Block);
         return {
           ...acc,
@@ -540,7 +540,7 @@ async function createAndPublishResponse(
             parentId: id,
           },
         };
-      }, {}),
+      }, {}) || {}),
     },
   };
 

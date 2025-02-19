@@ -9,6 +9,7 @@ import {
   Node,
   NodeAttributes,
   UpdateNodeMutationData,
+  MessageAttributes,
 } from '@colanode/core';
 import { YDoc } from '@colanode/crdt';
 import { cloneDeep } from 'lodash-es';
@@ -170,7 +171,18 @@ export const createNode = async (
       });
     }
 
-    await scheduleNodeEmbedding(input.nodeId);
+    await scheduleNodeEmbedding(createdNode);
+
+    if (
+      attributes.type === 'message' &&
+      (attributes as MessageAttributes).subtype === 'question'
+    ) {
+      await jobService.addJob({
+        type: 'assistant_response',
+        messageId: input.nodeId,
+        workspaceId: input.workspaceId,
+      });
+    }
 
     return {
       node: createdNode,
@@ -293,7 +305,7 @@ export const tryUpdateNode = async (
       });
     }
 
-    await scheduleNodeEmbedding(input.nodeId);
+    await scheduleNodeEmbedding(updatedNode);
 
     return {
       type: 'success',
@@ -401,7 +413,7 @@ export const createNodeFromMutation = async (
       });
     }
 
-    await scheduleNodeEmbedding(mutation.id);
+    await scheduleNodeEmbedding(createdNode);
 
     return {
       node: createdNode,
@@ -534,7 +546,7 @@ const tryUpdateNodeFromMutation = async (
       });
     }
 
-    await scheduleNodeEmbedding(mutation.id);
+    await scheduleNodeEmbedding(updatedNode);
 
     return {
       type: 'success',
@@ -660,15 +672,28 @@ export const deleteNode = async (
   };
 };
 
-async function scheduleNodeEmbedding(nodeId: string) {
+const scheduleNodeEmbedding = async (node: SelectNode) => {
+  if (node.type === 'message') {
+    const attributes = node.attributes as MessageAttributes;
+    if (attributes.subtype === 'question' || attributes.subtype === 'answer') {
+      return;
+    }
+  }
+
+  const jobOptions: { jobId: string; delay?: number } = {
+    jobId: `embed_node:${node.id}`,
+  };
+
+  // Only add delay for non-message nodes
+  if (node.type !== 'message') {
+    jobOptions.delay = configuration.ai.embedDelay;
+  }
+
   await jobService.addJob(
     {
       type: 'embed_node',
-      nodeId,
+      nodeId: node.id,
     },
-    {
-      jobId: `embed_node:${nodeId}`,
-      delay: configuration.ai.embedDelay,
-    }
+    jobOptions
   );
-}
+};

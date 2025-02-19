@@ -63,7 +63,7 @@ export class NodeRetrievalService {
         'node_embeddings.text',
         'nodes.created_at',
         'node_embeddings.chunk as chunk_index',
-        sql<number>`('[${embedding.join(',')}]'::vector) <=> node_embeddings.embedding_vector`.as(
+        sql<number>`${sql.raw(`'[${embedding}]'::vector`)} <=> node_embeddings.embedding_vector`.as(
           'similarity'
         ),
       ])

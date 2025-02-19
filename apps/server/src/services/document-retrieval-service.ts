@@ -64,7 +64,7 @@ export class DocumentRetrievalService {
         'document_embeddings.text',
         'documents.created_at',
         'document_embeddings.chunk as chunk_index',
-        sql<number>`('[${embedding.join(',')}]'::vector) <=> document_embeddings.embedding_vector`.as(
+        sql<number>`${sql.raw(`'[${embedding}]'::vector`)} <=> document_embeddings.embedding_vector`.as(
           'similarity'
         ),
       ])

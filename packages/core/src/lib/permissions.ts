@@ -1,4 +1,4 @@
-import { extractNodeRole, Node, WorkspaceRole, NodeRole } from '../index';
+import { WorkspaceRole, NodeRole } from '../index';
 
 export type UserInput = {
   userId: string;
@@ -64,38 +64,4 @@ export const hasNodeRole = (currentRole: NodeRole, targetRole: NodeRole) => {
   }
 
   return false;
-};
-
-export type CanCreateNodeReactionInput = {
-  user: UserInput;
-  root: Node;
-  node: Node;
-};
-
-export const canCreateNodeReaction = (
-  input: CanCreateNodeReactionInput
-): boolean => {
-  const rootRole = extractNodeRole(input.root, input.user.userId);
-  if (!rootRole) {
-    return false;
-  }
-
-  return hasNodeRole(rootRole, 'viewer');
-};
-
-export type CanDeleteNodeReactionInput = {
-  user: UserInput;
-  root: Node;
-  node: Node;
-};
-
-export const canDeleteNodeReaction = (
-  input: CanDeleteNodeReactionInput
-): boolean => {
-  const rootRole = extractNodeRole(input.root, input.user.userId);
-  if (!rootRole) {
-    return false;
-  }
-
-  return hasNodeRole(rootRole, 'viewer');
 };

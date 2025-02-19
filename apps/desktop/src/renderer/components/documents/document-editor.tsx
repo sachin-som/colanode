@@ -73,27 +73,40 @@ import {
   buildEditorContent,
 } from '@/shared/lib/editor';
 import { LocalNode } from '@/shared/types/nodes';
-import { Document } from '@/shared/types/documents';
+import { DocumentState, DocumentUpdate } from '@/shared/types/documents';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface DocumentEditorProps {
   node: LocalNode;
-  document: Document | null | undefined;
+  state: DocumentState | null | undefined;
+  updates: DocumentUpdate[];
   canEdit: boolean;
   autoFocus?: FocusPosition;
 }
 
+const buildYDoc = (
+  state: DocumentState | null | undefined,
+  updates: DocumentUpdate[]
+) => {
+  const ydoc = new YDoc(state?.state);
+  for (const update of updates) {
+    ydoc.applyUpdate(update.data);
+  }
+  return ydoc;
+};
+
 export const DocumentEditor = ({
   node,
-  document,
+  state,
+  updates,
   canEdit,
   autoFocus,
 }: DocumentEditorProps) => {
   const workspace = useWorkspace();
 
   const hasPendingChanges = React.useRef(false);
-  const revisionRef = React.useRef(document?.revision ?? 0);
-  const ydocRef = React.useRef<YDoc>(new YDoc(document?.state));
+  const revisionRef = React.useRef(state?.revision ?? 0);
+  const ydocRef = React.useRef<YDoc>(buildYDoc(state, updates));
 
   const debouncedSave = React.useMemo(
     () =>
@@ -248,7 +261,7 @@ export const DocumentEditor = ({
       return;
     }
 
-    if (!document) {
+    if (!state) {
       return;
     }
 
@@ -256,12 +269,12 @@ export const DocumentEditor = ({
       return;
     }
 
-    if (revisionRef.current === document?.revision) {
+    if (revisionRef.current === state?.revision) {
       return;
     }
 
     const beforeContent = ydocRef.current.getObject<RichTextContent>();
-    ydocRef.current.applyUpdate(document.state);
+    ydocRef.current.applyUpdate(state.state);
     const afterContent = ydocRef.current.getObject<RichTextContent>();
 
     if (isEqual(beforeContent, afterContent)) {
@@ -269,7 +282,7 @@ export const DocumentEditor = ({
     }
 
     const editorContent = buildEditorContent(node.id, afterContent);
-    revisionRef.current = document.revision;
+    revisionRef.current = state.revision;
 
     const relativeSelection = getRelativeSelection(editor);
     editor.chain().setContent(editorContent).run();
@@ -277,7 +290,7 @@ export const DocumentEditor = ({
     if (relativeSelection != null) {
       restoreRelativeSelection(editor, relativeSelection);
     }
-  }, [document?.revision]);
+  }, [state?.revision]);
 
   return (
     <div className="min-h-[500px]">

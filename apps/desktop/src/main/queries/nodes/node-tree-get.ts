@@ -3,7 +3,6 @@ import { NodeTreeGetQueryInput } from '@/shared/queries/nodes/node-tree-get';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { fetchNodeTree } from '@/main/lib/utils';
-import { mapNode } from '@/main/lib/mappers';
 import { LocalNode } from '@/shared/types/nodes';
 
 export class NodeTreeGetQueryHandler
@@ -12,8 +11,8 @@ export class NodeTreeGetQueryHandler
 {
   public async handleQuery(input: NodeTreeGetQueryInput): Promise<LocalNode[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    const rows = await fetchNodeTree(workspace.database, input.nodeId);
-    return rows.map(mapNode);
+    const tree = await fetchNodeTree(workspace.database, input.nodeId);
+    return tree;
   }
 
   public async checkForChanges(

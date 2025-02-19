@@ -78,17 +78,17 @@ export const fileModel: NodeModel = {
 
     return hasNodeRole(role, 'editor');
   },
-  getName: (_, attributes) => {
+  canReact: () => {
+    return false;
+  },
+  extractNodeText: (_, attributes) => {
     if (attributes.type !== 'file') {
-      return null;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: () => {
-    return undefined;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

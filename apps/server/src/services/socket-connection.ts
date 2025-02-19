@@ -23,7 +23,7 @@ import { ConnectedUser } from '@/types/users';
 import { BaseSynchronizer } from '@/synchronizers/base';
 import { UserSynchronizer } from '@/synchronizers/users';
 import { CollaborationSynchronizer } from '@/synchronizers/collaborations';
-import { NodeSynchronizer } from '@/synchronizers/nodes';
+import { NodeUpdatesSynchronizer } from '@/synchronizers/node-updates';
 import { NodeReactionSynchronizer } from '@/synchronizers/node-reactions';
 import { NodeTombstoneSynchronizer } from '@/synchronizers/node-tombstones';
 import { NodeInteractionSynchronizer } from '@/synchronizers/node-interactions';
@@ -146,12 +146,17 @@ export class SocketConnection {
         message.input,
         cursor
       );
-    } else if (message.input.type === 'nodes') {
+    } else if (message.input.type === 'nodes_updates') {
       if (!user.rootIds.has(message.input.rootId)) {
         return null;
       }
 
-      return new NodeSynchronizer(message.id, user.user, message.input, cursor);
+      return new NodeUpdatesSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
     } else if (message.input.type === 'node_reactions') {
       return new NodeReactionSynchronizer(
         message.id,

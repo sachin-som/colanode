@@ -32,7 +32,7 @@ export type UpdateNodeOutput = {
 };
 
 export type DeleteNodeInput = {
-  id: string;
+  nodeId: string;
   rootId: string;
   deletedAt: string;
 };

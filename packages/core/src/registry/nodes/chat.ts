@@ -43,13 +43,10 @@ export const chatModel: NodeModel = {
   canDelete: () => {
     return false;
   },
-  getName: (): string | null | undefined => {
-    return undefined;
+  canReact: () => {
+    return false;
   },
-  getAttributesText: (): string | null | undefined => {
-    return undefined;
-  },
-  getDocumentText: (): string | null | undefined => {
-    return undefined;
+  extractNodeText: () => {
+    return null;
   },
 };

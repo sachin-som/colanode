@@ -1,4 +1,4 @@
-export * from './nodes';
+export * from './nodes-updates';
 export * from './users';
 export * from './node-reactions';
 export * from './node-interactions';

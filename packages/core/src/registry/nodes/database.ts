@@ -58,17 +58,17 @@ export const databaseModel: NodeModel = {
 
     return hasNodeRole(role, 'editor');
   },
-  getName: (_, attributes) => {
+  canReact: () => {
+    return false;
+  },
+  extractNodeText: (_, attributes) => {
     if (attributes.type !== 'database') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: () => {
-    return undefined;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

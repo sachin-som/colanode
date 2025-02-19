@@ -6,7 +6,7 @@ import {
   UserStatus,
   DocumentType,
   DocumentContent,
-  DocumentUpdateMergeMetadata,
+  UpdateMergeMetadata,
 } from '@colanode/core';
 import {
   ColumnType,
@@ -99,9 +99,8 @@ interface NodeTable {
   parent_id: ColumnType<string | null, never, never>;
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
-  revision: ColumnType<bigint, never, never>;
+  revision: ColumnType<bigint, bigint, bigint>;
   attributes: JSONColumnType<NodeAttributes, string | null, string | null>;
-  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<Date | null, Date | null, Date>;
@@ -111,6 +110,26 @@ interface NodeTable {
 export type SelectNode = Selectable<NodeTable>;
 export type CreateNode = Insertable<NodeTable>;
 export type UpdateNode = Updateable<NodeTable>;
+
+interface NodeUpdateTable {
+  id: ColumnType<string, string, never>;
+  node_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  workspace_id: ColumnType<string, string, never>;
+  revision: ColumnType<bigint, never, never>;
+  data: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
+  created_at: ColumnType<Date, Date, never>;
+  created_by: ColumnType<string, string, never>;
+  merged_updates: ColumnType<
+    UpdateMergeMetadata[] | null,
+    string | null,
+    string | null
+  >;
+}
+
+export type SelectNodeUpdate = Selectable<NodeUpdateTable>;
+export type CreateNodeUpdate = Insertable<NodeUpdateTable>;
+export type UpdateNodeUpdate = Updateable<NodeUpdateTable>;
 
 interface NodeInteractionTable {
   node_id: ColumnType<string, string, never>;
@@ -187,7 +206,7 @@ export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface DocumentTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<DocumentType, DocumentType, DocumentType>;
+  type: ColumnType<DocumentType, never, never>;
   workspace_id: ColumnType<string, string, never>;
   revision: ColumnType<bigint, bigint, bigint>;
   content: JSONColumnType<DocumentContent, string, string>;
@@ -211,7 +230,7 @@ interface DocumentUpdateTable {
   created_at: ColumnType<Date, Date, never>;
   created_by: ColumnType<string, string, never>;
   merged_updates: ColumnType<
-    DocumentUpdateMergeMetadata[] | null,
+    UpdateMergeMetadata[] | null,
     string | null,
     string | null
   >;
@@ -259,6 +278,7 @@ export interface DatabaseSchema {
   workspaces: WorkspaceTable;
   users: UserTable;
   nodes: NodeTable;
+  node_updates: NodeUpdateTable;
   node_interactions: NodeInteractionTable;
   node_reactions: NodeReactionTable;
   node_paths: NodePathTable;

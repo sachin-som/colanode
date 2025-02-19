@@ -16,6 +16,9 @@ import {
   SelectNodeInteraction,
   SelectNodeReaction,
   SelectWorkspaceMetadata,
+  SelectDocument,
+  SelectDocumentState,
+  SelectDocumentUpdate,
 } from '@/main/databases/workspace';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
@@ -30,6 +33,11 @@ import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
 import { Emoji } from '@/shared/types/emojis';
 import { Icon } from '@/shared/types/icons';
 import { AppMetadata, AppMetadataKey } from '@/shared/types/apps';
+import {
+  Document,
+  DocumentState,
+  DocumentUpdate,
+} from '@/shared/types/documents';
 
 export const mapUser = (row: SelectUser): User => {
   return {
@@ -59,6 +67,37 @@ export const mapNode = (row: SelectNode): LocalNode => {
     localRevision: row.local_revision,
     serverRevision: row.server_revision,
   } as LocalNode;
+};
+
+export const mapDocument = (row: SelectDocument): Document => {
+  return {
+    id: row.id,
+    localRevision: row.local_revision,
+    serverRevision: row.server_revision,
+    content: JSON.parse(row.content),
+    createdAt: row.created_at,
+    createdBy: row.created_by,
+    updatedAt: row.updated_at,
+    updatedBy: row.updated_by,
+  };
+};
+
+export const mapDocumentState = (row: SelectDocumentState): DocumentState => {
+  return {
+    id: row.id,
+    revision: row.revision,
+    state: row.state,
+  };
+};
+
+export const mapDocumentUpdate = (
+  row: SelectDocumentUpdate
+): DocumentUpdate => {
+  return {
+    id: row.id,
+    documentId: row.document_id,
+    data: row.data,
+  };
 };
 
 export const mapAccount = (row: SelectAccount): Account => {
@@ -183,6 +222,7 @@ export const mapAppMetadata = (row: SelectAppMetadata): AppMetadata => {
     updatedAt: row.updated_at,
   };
 };
+
 export const mapWorkspaceMetadata = (
   row: SelectWorkspaceMetadata
 ): WorkspaceMetadata => {

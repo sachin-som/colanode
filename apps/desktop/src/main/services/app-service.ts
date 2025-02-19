@@ -3,11 +3,13 @@ import SQLite from 'better-sqlite3';
 import { ApiErrorCode, createDebugger } from '@colanode/core';
 import ms from 'ms';
 import axios from 'axios';
+import semver from 'semver';
 
+import fs from 'fs';
 import { app } from 'electron';
 
 import { AppDatabaseSchema, appDatabaseMigrations } from '@/main/databases/app';
-import { appDatabasePath } from '@/main/lib/utils';
+import { accountsDirectoryPath, appDatabasePath } from '@/main/lib/utils';
 import { mapServer, mapAccount } from '@/main/lib/mappers';
 import { MetadataService } from '@/main/services/metadata-service';
 import { AccountService } from '@/main/services/accounts/account-service';
@@ -75,6 +77,11 @@ export class AppService {
     });
 
     await migrator.migrateToLatest();
+
+    const version = await this.metadata.get('version');
+    if (version && semver.lt(version.value, '0.1.0')) {
+      await this.deleteAllData();
+    }
 
     await this.metadata.set('version', this.version);
     await this.metadata.set('platform', process.platform as AppPlatform);
@@ -263,6 +270,21 @@ export class AppService {
           error
         );
       }
+    }
+  }
+
+  private async deleteAllData(): Promise<void> {
+    await this.database.deleteFrom('accounts').execute();
+    await this.database.deleteFrom('metadata').execute();
+    await this.database.deleteFrom('deleted_tokens').execute();
+
+    if (fs.existsSync(accountsDirectoryPath)) {
+      fs.rmSync(accountsDirectoryPath, {
+        recursive: true,
+        force: true,
+        maxRetries: 3,
+        retryDelay: 1000,
+      });
     }
   }
 }

@@ -93,6 +93,16 @@ export type SelectNodeReaction = Selectable<NodeReactionTable>;
 export type CreateNodeReaction = Insertable<NodeReactionTable>;
 export type UpdateNodeReaction = Updateable<NodeReactionTable>;
 
+interface NodeTextTable {
+  id: ColumnType<string, string, never>;
+  name: ColumnType<string | null, string | null, string | null>;
+  attributes: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectNodeText = Selectable<NodeTextTable>;
+export type CreateNodeText = Insertable<NodeTextTable>;
+export type UpdateNodeText = Updateable<NodeTextTable>;
+
 interface CollaborationTable {
   node_id: ColumnType<string, string, never>;
   role: ColumnType<string, string, string>;
@@ -108,8 +118,10 @@ export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface DocumentTable {
   id: ColumnType<string, string, never>;
-  revision: ColumnType<bigint, bigint, bigint>;
-  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
+  type: ColumnType<DocumentType, never, never>;
+  local_revision: ColumnType<bigint, bigint, bigint>;
+  server_revision: ColumnType<bigint, bigint, bigint>;
+  content: ColumnType<string, string, string>;
   created_at: ColumnType<string, string, never>;
   created_by: ColumnType<string, string, never>;
   updated_at: ColumnType<string | null, string | null, string | null>;
@@ -119,6 +131,16 @@ interface DocumentTable {
 export type SelectDocument = Selectable<DocumentTable>;
 export type CreateDocument = Insertable<DocumentTable>;
 export type UpdateDocument = Updateable<DocumentTable>;
+
+interface DocumentStateTable {
+  id: ColumnType<string, string, never>;
+  state: ColumnType<Uint8Array, Uint8Array, Uint8Array>;
+  revision: ColumnType<bigint, bigint, bigint>;
+}
+
+export type SelectDocumentState = Selectable<DocumentStateTable>;
+export type CreateDocumentState = Insertable<DocumentStateTable>;
+export type UpdateDocumentState = Updateable<DocumentStateTable>;
 
 interface DocumentUpdateTable {
   id: ColumnType<string, string, never>;
@@ -130,6 +152,15 @@ interface DocumentUpdateTable {
 export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
 export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
 export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
+
+interface DocumentTextTable {
+  id: ColumnType<string, string, never>;
+  text: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectDocumentText = Selectable<DocumentTextTable>;
+export type CreateDocumentText = Insertable<DocumentTextTable>;
+export type UpdateDocumentText = Updateable<DocumentTextTable>;
 
 interface FileStateTable {
   id: ColumnType<string, string, never>;
@@ -213,9 +244,12 @@ export interface WorkspaceDatabaseSchema {
   node_interactions: NodeInteractionTable;
   node_updates: NodeUpdateTable;
   node_reactions: NodeReactionTable;
-  collaborations: CollaborationTable;
+  node_texts: NodeTextTable;
   documents: DocumentTable;
+  document_states: DocumentStateTable;
   document_updates: DocumentUpdateTable;
+  document_texts: DocumentTextTable;
+  collaborations: CollaborationTable;
   file_states: FileStateTable;
   mutations: MutationTable;
   tombstones: TombstoneTable;

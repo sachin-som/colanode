@@ -67,21 +67,17 @@ export const pageModel: NodeModel = {
 
     return hasNodeRole(role, 'admin');
   },
-  getName: (_, attributes) => {
+  canReact: () => {
+    return false;
+  },
+  extractNodeText: (id, attributes) => {
     if (attributes.type !== 'page') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: (id, attributes) => {
-    if (attributes.type !== 'page') {
-      return undefined;
-    }
-
-    return attributes.name;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

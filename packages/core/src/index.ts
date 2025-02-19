@@ -32,4 +32,4 @@ export * from './lib/texts';
 export * from './lib/permissions';
 export * from './types/api';
 export * from './lib/debugger';
-export * from './types/documents';
+export * from './types/crdt';

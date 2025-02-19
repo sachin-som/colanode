@@ -1,6 +1,8 @@
 import {
+  CanUpdateDocumentContext,
   createDebugger,
   DocumentContent,
+  getNodeModel,
   UpdateDocumentMutationData,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
@@ -9,7 +11,7 @@ import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { ConcurrentUpdateResult, UpdateDocumentOutput } from '@/types/nodes';
 import { eventBus } from '@/lib/event-bus';
-import { fetchNode } from '@/lib/nodes';
+import { fetchNodeTree, mapNode } from '@/lib/nodes';
 import { jobService } from '@/services/job-service';
 import { configuration } from './configuration';
 
@@ -40,13 +42,33 @@ const tryUpdateDocumentFromMutation = async (
   user: SelectUser,
   mutation: UpdateDocumentMutationData
 ): Promise<ConcurrentUpdateResult<UpdateDocumentOutput>> => {
-  const node = await fetchNode(mutation.documentId);
+  const tree = await fetchNodeTree(mutation.documentId);
+  if (!tree) {
+    return { type: 'error', output: null };
+  }
+
+  const node = tree[tree.length - 1];
   if (!node) {
     return { type: 'error', output: null };
   }
 
-  const root = await fetchNode(node.root_id);
-  if (!root) {
+  const model = getNodeModel(node.type);
+  if (!model.documentSchema) {
+    return { type: 'error', output: null };
+  }
+
+  const context: CanUpdateDocumentContext = {
+    user: {
+      id: user.id,
+      role: user.role,
+      workspaceId: user.workspace_id,
+      accountId: user.account_id,
+    },
+    node: mapNode(node),
+    tree: tree.map((node) => mapNode(node)),
+  };
+
+  if (!model.canUpdateDocument(context)) {
     return { type: 'error', output: null };
   }
 
@@ -69,6 +91,10 @@ const tryUpdateDocumentFromMutation = async (
 
   ydoc.applyUpdate(mutation.data);
   const content = ydoc.getObject<DocumentContent>();
+
+  if (!model.documentSchema.safeParse(content).success) {
+    return { type: 'error', output: null };
+  }
 
   try {
     const { updatedDocument, createdDocumentUpdate } = await database
@@ -139,7 +165,6 @@ const tryUpdateDocumentFromMutation = async (
           .values({
             id: mutation.documentId,
             workspace_id: user.workspace_id,
-            type: 'rich_text',
             content: JSON.stringify(content),
             created_at: new Date(mutation.createdAt),
             created_by: user.id,

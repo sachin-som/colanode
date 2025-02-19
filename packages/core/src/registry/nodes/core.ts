@@ -1,7 +1,6 @@
 import { z, ZodSchema } from 'zod';
 
 import { WorkspaceRole } from '../../types/workspaces';
-import { DocumentContent } from '../documents';
 
 import { Node, NodeAttributes } from '.';
 
@@ -45,6 +44,17 @@ export type CanDeleteNodeContext = {
   node: Node;
 };
 
+export interface CanReactNodeContext {
+  user: NodeMutationUser;
+  tree: Node[];
+  node: Node;
+}
+
+export type NodeText = {
+  name: string | null | undefined;
+  attributes: string | null | undefined;
+};
+
 export interface NodeModel {
   type: string;
   attributesSchema: ZodSchema;
@@ -53,16 +63,6 @@ export interface NodeModel {
   canUpdateAttributes: (context: CanUpdateAttributesContext) => boolean;
   canUpdateDocument: (context: CanUpdateDocumentContext) => boolean;
   canDelete: (context: CanDeleteNodeContext) => boolean;
-  getName: (
-    id: string,
-    attributes: NodeAttributes
-  ) => string | null | undefined;
-  getAttributesText: (
-    id: string,
-    attributes: NodeAttributes
-  ) => string | null | undefined;
-  getDocumentText: (
-    id: string,
-    content: DocumentContent
-  ) => string | null | undefined;
+  canReact: (context: CanReactNodeContext) => boolean;
+  extractNodeText: (id: string, attributes: NodeAttributes) => NodeText | null;
 }

@@ -1,4 +1,9 @@
+import { DocumentContent } from '../registry/documents';
 import { Block } from '../registry/block';
+
+export const extractDocumentText = (id: string, content: DocumentContent) => {
+  return extractBlockTexts(id, content.blocks);
+};
 
 export const extractBlockTexts = (
   entryId: string,

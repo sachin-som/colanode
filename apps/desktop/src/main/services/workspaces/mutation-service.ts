@@ -157,6 +157,8 @@ export class MutationService {
         await this.workspace.nodeReactions.revertNodeReactionDelete(
           mutation.data
         );
+      } else if (mutation.type === 'update_document') {
+        await this.workspace.documents.revertDocumentUpdate(mutation.data);
       }
     }
 
@@ -213,46 +215,41 @@ export class MutationService {
 
           if (
             previousMutation.type === 'create_node' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(mutation.id);
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'update_node' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(mutation.id);
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'delete_node' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           } else if (previousMutation.type === 'update_document') {
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'mark_node_seen' &&
-            previousMutation.data.nodeId === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'mark_node_opened' &&
-            previousMutation.data.nodeId === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'create_node_reaction' &&
-            previousMutation.data.nodeId === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           } else if (
             previousMutation.type === 'delete_node_reaction' &&
-            previousMutation.data.nodeId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'create_file' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           }

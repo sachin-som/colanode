@@ -107,7 +107,7 @@ const handleDeleteNode = async (
   mutation: DeleteNodeMutation
 ): Promise<SyncMutationStatus> => {
   const output = await deleteNode(user, {
-    id: mutation.data.id,
+    nodeId: mutation.data.nodeId,
     rootId: mutation.data.rootId,
     deletedAt: mutation.data.deletedAt,
   });

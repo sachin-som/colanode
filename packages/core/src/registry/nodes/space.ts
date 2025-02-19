@@ -70,21 +70,17 @@ export const spaceModel: NodeModel = {
 
     return hasNodeRole(role, 'admin');
   },
-  getName: (_, attributes) => {
+  canReact: () => {
+    return false;
+  },
+  extractNodeText: (_, attributes) => {
     if (attributes.type !== 'space') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: (id, attributes) => {
-    if (attributes.type !== 'space') {
-      return undefined;
-    }
-
-    return attributes.name;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

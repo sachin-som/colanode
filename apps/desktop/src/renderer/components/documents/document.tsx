@@ -14,22 +14,34 @@ interface DocumentProps {
 export const Document = ({ node, canEdit, autoFocus }: DocumentProps) => {
   const workspace = useWorkspace();
 
-  const { data, isPending } = useQuery({
-    type: 'document_get',
+  const { data: documentState, isPending: isDocumentStatePending } = useQuery({
+    type: 'document_state_get',
     documentId: node.id,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
 
-  if (isPending) {
+  const { data: documentUpdates, isPending: isDocumentUpdatesPending } =
+    useQuery({
+      type: 'document_updates_list',
+      documentId: node.id,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
+    });
+
+  if (isDocumentStatePending || isDocumentUpdatesPending) {
     return null;
   }
+
+  const state = documentState ?? null;
+  const updates = documentUpdates ?? [];
 
   return (
     <DocumentEditor
       key={node.id}
       node={node}
-      document={data}
+      state={state}
+      updates={updates}
       canEdit={canEdit}
       autoFocus={autoFocus}
     />

@@ -1,36 +1,36 @@
-import { Document } from '@/shared/types/documents';
+import { DocumentState } from '@/shared/types/documents';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
 import { Event } from '@/shared/types/events';
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
-import { DocumentGetQueryInput } from '@/shared/queries/documents/document-get';
-import { mapDocument } from '@/main/lib/mappers';
+import { DocumentStateGetQueryInput } from '@/shared/queries/documents/document-state-get';
+import { mapDocumentState } from '@/main/lib/mappers';
 
-export class DocumentGetQueryHandler
+export class DocumentStateGetQueryHandler
   extends WorkspaceQueryHandlerBase
-  implements QueryHandler<DocumentGetQueryInput>
+  implements QueryHandler<DocumentStateGetQueryInput>
 {
   public async handleQuery(
-    input: DocumentGetQueryInput
-  ): Promise<Document | null> {
+    input: DocumentStateGetQueryInput
+  ): Promise<DocumentState | null> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    const document = await workspace.database
-      .selectFrom('documents')
+    const documentState = await workspace.database
+      .selectFrom('document_states')
       .selectAll()
       .where('id', '=', input.documentId)
       .executeTakeFirst();
 
-    if (!document) {
+    if (!documentState) {
       return null;
     }
 
-    return mapDocument(document);
+    return mapDocumentState(documentState);
   }
 
   public async checkForChanges(
     event: Event,
-    input: DocumentGetQueryInput,
-    _: Document | null
-  ): Promise<ChangeCheckResult<DocumentGetQueryInput>> {
+    input: DocumentStateGetQueryInput,
+    _: DocumentState | null
+  ): Promise<ChangeCheckResult<DocumentStateGetQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
       event.workspace.accountId === input.accountId &&
@@ -43,14 +43,14 @@ export class DocumentGetQueryHandler
     }
 
     if (
-      event.type === 'document_updated' &&
+      event.type === 'document_state_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.document.id === input.documentId
+      event.documentState.id === input.documentId
     ) {
       return {
         hasChanges: true,
-        result: event.document,
+        result: event.documentState,
       };
     }
 

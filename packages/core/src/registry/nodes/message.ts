@@ -62,26 +62,28 @@ export const messageModel: NodeModel = {
       context.node.createdBy === context.user.id || hasNodeRole(role, 'admin')
     );
   },
-  getName: (_, attributes) => {
-    if (attributes.type !== 'message') {
-      return undefined;
+  canReact: (context) => {
+    if (context.tree.length === 0) {
+      return false;
     }
 
-    return attributes.name;
+    const role = extractNodeRole(context.tree, context.user.id);
+    if (!role) {
+      return false;
+    }
+
+    return hasNodeRole(role, 'viewer');
   },
-  getAttributesText: (id, attributes) => {
+  extractNodeText: (id, attributes) => {
     if (attributes.type !== 'message') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    const text = extractBlockTexts(id, attributes.content);
-    if (!text) {
-      return null;
-    }
+    const attributesText = extractBlockTexts(id, attributes.content);
 
-    return text;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: attributesText,
+    };
   },
 };

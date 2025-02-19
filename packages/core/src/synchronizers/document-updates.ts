@@ -1,4 +1,4 @@
-import { DocumentUpdateMergeMetadata } from '../types/documents';
+import { UpdateMergeMetadata } from '../types/crdt';
 
 export type SyncDocumentUpdatesInput = {
   type: 'document_updates';
@@ -12,7 +12,7 @@ export type SyncDocumentUpdateData = {
   revision: string;
   createdBy: string;
   createdAt: string;
-  mergedUpdates: DocumentUpdateMergeMetadata[] | null | undefined;
+  mergedUpdates: UpdateMergeMetadata[] | null | undefined;
 };
 
 declare module '@colanode/core' {

@@ -7,6 +7,11 @@ import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
 import { FileState } from '@/shared/types/files';
 import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
+import {
+  Document,
+  DocumentState,
+  DocumentUpdate,
+} from '@/shared/types/documents';
 
 export type UserCreatedEvent = {
   type: 'user_created';
@@ -192,11 +197,32 @@ export type DocumentUpdatedEvent = {
   type: 'document_updated';
   accountId: string;
   workspaceId: string;
+  document: Document;
+};
+
+export type DocumentDeletedEvent = {
+  type: 'document_deleted';
+  accountId: string;
+  workspaceId: string;
   documentId: string;
+};
+
+export type DocumentStateUpdatedEvent = {
+  type: 'document_state_updated';
+  accountId: string;
+  workspaceId: string;
+  documentState: DocumentState;
 };
 
 export type DocumentUpdateCreatedEvent = {
   type: 'document_update_created';
+  accountId: string;
+  workspaceId: string;
+  documentUpdate: DocumentUpdate;
+};
+
+export type DocumentUpdateDeletedEvent = {
+  type: 'document_update_deleted';
   accountId: string;
   workspaceId: string;
   documentId: string;
@@ -235,4 +261,7 @@ export type Event =
   | WorkspaceMetadataUpdatedEvent
   | WorkspaceMetadataDeletedEvent
   | DocumentUpdatedEvent
-  | DocumentUpdateCreatedEvent;
+  | DocumentDeletedEvent
+  | DocumentStateUpdatedEvent
+  | DocumentUpdateCreatedEvent
+  | DocumentUpdateDeletedEvent;

@@ -27,6 +27,7 @@ export const FileThumbnail = ({ file, className }: FileThumbnailProps) => {
       file.id,
       file.attributes.extension
     );
+
     return (
       <img
         src={url}
@@ -36,5 +37,10 @@ export const FileThumbnail = ({ file, className }: FileThumbnailProps) => {
     );
   }
 
-  return <FileIcon mimeType={file.attributes.mimeType} className="size-10" />;
+  return (
+    <FileIcon
+      mimeType={file.attributes.mimeType}
+      className={cn('size-10', className)}
+    />
+  );
 };

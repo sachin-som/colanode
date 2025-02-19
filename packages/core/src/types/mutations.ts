@@ -1,5 +1,3 @@
-import { FileSubtype } from './files';
-
 export type SyncMutationsInput = {
   mutations: Mutation[];
 };
@@ -21,7 +19,8 @@ export type MutationBase = {
 };
 
 export type CreateNodeMutationData = {
-  id: string;
+  nodeId: string;
+  updateId: string;
   createdAt: string;
   data: string;
 };
@@ -31,13 +30,8 @@ export type CreateNodeMutation = MutationBase & {
   data: CreateNodeMutationData;
 };
 
-export type ApplyNodeUpdateMutationData = {
-  id: string;
-  data: string;
-};
-
 export type UpdateNodeMutationData = {
-  id: string;
+  nodeId: string;
   updateId: string;
   data: string;
   createdAt: string;
@@ -49,7 +43,7 @@ export type UpdateNodeMutation = MutationBase & {
 };
 
 export type DeleteNodeMutationData = {
-  id: string;
+  nodeId: string;
   rootId: string;
   deletedAt: string;
 };
@@ -105,24 +99,6 @@ export type MarkNodeOpenedMutation = MutationBase & {
   data: MarkNodeOpenedMutationData;
 };
 
-export type CreateFileMutationData = {
-  id: string;
-  type: FileSubtype;
-  parentId: string;
-  rootId: string;
-  name: string;
-  originalName: string;
-  extension: string;
-  mimeType: string;
-  size: number;
-  createdAt: string;
-};
-
-export type CreateFileMutation = MutationBase & {
-  type: 'create_file';
-  data: CreateFileMutationData;
-};
-
 export type UpdateDocumentMutationData = {
   documentId: string;
   updateId: string;
@@ -143,7 +119,6 @@ export type Mutation =
   | DeleteNodeReactionMutation
   | MarkNodeSeenMutation
   | MarkNodeOpenedMutation
-  | CreateFileMutation
   | UpdateDocumentMutation;
 
 export type MutationType = Mutation['type'];

@@ -6,14 +6,14 @@ export const extractDocumentText = (id: string, content: DocumentContent) => {
 };
 
 export const extractBlockTexts = (
-  entryId: string,
+  nodeId: string,
   blocks: Record<string, Block> | undefined | null
 ): string | null => {
   if (!blocks) {
     return null;
   }
 
-  const result = collectBlockText(entryId, blocks);
+  const result = collectBlockText(nodeId, blocks);
   return result.length > 0 ? result : null;
 };
 

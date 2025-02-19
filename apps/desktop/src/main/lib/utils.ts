@@ -148,12 +148,12 @@ export const fetchNode = async (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
-  entryId: string
+  nodeId: string
 ): Promise<LocalNode | undefined> => {
   const node = await database
     .selectFrom('nodes')
     .selectAll()
-    .where('id', '=', entryId)
+    .where('id', '=', nodeId)
     .executeTakeFirst();
 
   return node ? mapNode(node) : undefined;

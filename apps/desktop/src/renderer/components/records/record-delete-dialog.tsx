@@ -17,11 +17,11 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 interface RecordDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entryId: string;
+  recordId: string;
 }
 
 export const RecordDeleteDialog = ({
-  entryId,
+  recordId,
   open,
   onOpenChange,
 }: RecordDeleteDialogProps) => {
@@ -50,13 +50,13 @@ export const RecordDeleteDialog = ({
               mutate({
                 input: {
                   type: 'record_delete',
-                  recordId: entryId,
+                  recordId: recordId,
                   accountId: workspace.accountId,
                   workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  layout.close(entryId);
+                  layout.close(recordId);
                 },
                 onError(error) {
                   toast({

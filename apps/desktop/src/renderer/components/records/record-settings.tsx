@@ -76,7 +76,7 @@ export const RecordSettings = ({ record, role }: RecordSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <RecordDeleteDialog
-        entryId={record.id}
+        recordId={record.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

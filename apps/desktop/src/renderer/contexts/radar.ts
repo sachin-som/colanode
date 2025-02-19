@@ -16,12 +16,12 @@ interface RadarContext {
   getChatState: (
     accountId: string,
     workspaceId: string,
-    entryId: string
+    chatId: string
   ) => ChatReadState;
   getChannelState: (
     accountId: string,
     workspaceId: string,
-    entryId: string
+    channelId: string
   ) => ChannelReadState;
   markNodeAsSeen: (
     accountId: string,

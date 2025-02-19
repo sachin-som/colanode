@@ -18,10 +18,3 @@ export const EditorNodeTypes = {
 };
 
 export type SortDirection = 'asc' | 'desc';
-
-export const EntryRoles = {
-  Admin: 'admin',
-  Editor: 'editor',
-  Collaborator: 'collaborator',
-  Viewer: 'viewer',
-};

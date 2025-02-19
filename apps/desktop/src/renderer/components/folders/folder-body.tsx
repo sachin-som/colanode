@@ -101,8 +101,6 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
       workspaceId: workspace.id,
       filePath,
       parentId: folder.id,
-      entryId: folder.id,
-      rootId: folder.rootId,
     });
 
     if (!mutationResult.success) {

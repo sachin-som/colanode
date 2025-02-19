@@ -22,8 +22,10 @@ export const appPath = app.getPath('userData');
 
 export const appDatabasePath = path.join(appPath, 'app.db');
 
+export const accountsDirectoryPath = path.join(appPath, 'accounts');
+
 export const getAccountDirectoryPath = (accountId: string): string => {
-  return path.join(appPath, 'accounts', accountId);
+  return path.join(accountsDirectoryPath, accountId);
 };
 
 export const getWorkspaceDirectoryPath = (

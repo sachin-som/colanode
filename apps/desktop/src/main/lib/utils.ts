@@ -13,11 +13,10 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 
-import {
-  SelectNode,
-  WorkspaceDatabaseSchema,
-} from '@/main/databases/workspace';
+import { WorkspaceDatabaseSchema } from '@/main/databases/workspace';
 import { FileMetadata } from '@/shared/types/files';
+import { LocalNode } from '@/shared/types/nodes';
+import { mapNode } from '@/main/lib/mappers';
 
 export const appPath = app.getPath('userData');
 
@@ -118,7 +117,7 @@ export const fetchNodeTree = async (
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
   nodeId: string
-): Promise<SelectNode[]> => {
+): Promise<LocalNode[]> => {
   const nodes = await database
     .withRecursive('ancestor_nodes', (cte) =>
       cte
@@ -140,20 +139,22 @@ export const fetchNodeTree = async (
     .selectAll()
     .execute();
 
-  return nodes.reverse();
+  return nodes.reverse().map(mapNode);
 };
 
-export const fetchNode = (
+export const fetchNode = async (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
   entryId: string
-): Promise<SelectNode | undefined> => {
-  return database
+): Promise<LocalNode | undefined> => {
+  const node = await database
     .selectFrom('nodes')
     .selectAll()
     .where('id', '=', entryId)
     .executeTakeFirst();
+
+  return node ? mapNode(node) : undefined;
 };
 
 export const fetchUserStorageUsed = async (

@@ -20,7 +20,6 @@ export class NodeMarkOpenedMutationHandler
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const node = await fetchNode(workspace.database, input.nodeId);
-
     if (!node) {
       return {
         success: false,
@@ -63,7 +62,7 @@ export class NodeMarkOpenedMutationHandler
             last_opened_at: lastOpenedAt,
             first_opened_at: firstOpenedAt,
             revision: 0n,
-            root_id: node.root_id,
+            root_id: node.rootId,
           })
           .onConflict((b) =>
             b.columns(['node_id', 'collaborator_id']).doUpdateSet({

@@ -46,13 +46,7 @@ export const chatModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  getName: (): string | null | undefined => {
-    return undefined;
-  },
-  getAttributesText: (): string | null | undefined => {
-    return undefined;
-  },
-  getDocumentText: (): string | null | undefined => {
-    return undefined;
+  extractNodeText: () => {
+    return null;
   },
 };

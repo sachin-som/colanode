@@ -1,11 +1,13 @@
-import { Migration } from 'kysely';
+import { Migration, sql } from 'kysely';
 
 export const createDocumentsTable: Migration = {
   up: async (db) => {
     await db.schema
       .createTable('documents')
       .addColumn('id', 'varchar(30)', (col) => col.notNull().primaryKey())
-      .addColumn('type', 'varchar(30)', (col) => col.notNull())
+      .addColumn('type', 'varchar(30)', (col) =>
+        col.generatedAlwaysAs(sql`(content->>'type')::VARCHAR(30)`).stored()
+      )
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('revision', 'bigint', (col) => col.notNull())
       .addColumn('content', 'jsonb', (col) => col.notNull())

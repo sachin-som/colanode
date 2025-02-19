@@ -74,26 +74,16 @@ export const messageModel: NodeModel = {
 
     return hasNodeRole(role, 'viewer');
   },
-  getName: (_, attributes) => {
+  extractNodeText: (id, attributes) => {
     if (attributes.type !== 'message') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: (id, attributes) => {
-    if (attributes.type !== 'message') {
-      return undefined;
-    }
+    const attributesText = extractBlockTexts(id, attributes.content);
 
-    const text = extractBlockTexts(id, attributes.content);
-    if (!text) {
-      return null;
-    }
-
-    return text;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: attributesText,
+    };
   },
 };

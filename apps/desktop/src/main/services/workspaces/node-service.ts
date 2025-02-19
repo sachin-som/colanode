@@ -59,7 +59,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      tree: tree.map(mapNode),
+      tree: tree,
       attributes: input.attributes,
     };
 
@@ -76,6 +76,7 @@ export class NodeService {
 
     const createdAt = new Date().toISOString();
     const rootId = tree[0]?.id ?? input.id;
+    const nodeText = model.extractNodeText(input.id, input.attributes);
 
     const { createdNode, createdMutation } = await this.workspace.database
       .transaction()
@@ -134,6 +135,17 @@ export class NodeService {
           throw new Error('Failed to create mutation');
         }
 
+        if (nodeText) {
+          await trx
+            .insertInto('node_texts')
+            .values({
+              id: input.id,
+              name: nodeText.name,
+              attributes: nodeText.attributes,
+            })
+            .execute();
+        }
+
         return {
           createdNode,
           createdMutation,
@@ -182,12 +194,11 @@ export class NodeService {
     this.debug(`Updating node ${nodeId}`);
 
     const tree = await fetchNodeTree(this.workspace.database, nodeId);
-    const nodeRow = tree[tree.length - 1];
-    if (!nodeRow || nodeRow.id !== nodeId) {
+    const node = tree[tree.length - 1];
+    if (!node || node.id !== nodeId) {
       return 'not_found';
     }
 
-    const node = mapNode(nodeRow);
     const updateId = generateId(IdType.Update);
     const updatedAt = new Date().toISOString();
     const updatedAttributes = updater(node.attributes as T);
@@ -201,7 +212,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      tree: tree.map(mapNode),
+      tree: tree,
       node: node,
       attributes: updatedAttributes,
     };
@@ -240,6 +251,7 @@ export class NodeService {
 
     const attributes = ydoc.getObject<NodeAttributes>();
     const localRevision = BigInt(node.localRevision) + BigInt(1);
+    const nodeText = model.extractNodeText(nodeId, node.attributes);
 
     const { updatedNode, createdMutation } = await this.workspace.database
       .transaction()
@@ -299,6 +311,17 @@ export class NodeService {
           throw new Error('Failed to create mutation');
         }
 
+        if (nodeText) {
+          await trx
+            .insertInto('node_texts')
+            .values({
+              id: nodeId,
+              name: nodeText.name,
+              attributes: nodeText.attributes,
+            })
+            .execute();
+        }
+
         return {
           updatedNode,
           createdMutation,
@@ -333,15 +356,12 @@ export class NodeService {
 
   public async deleteNode(nodeId: string) {
     const tree = await fetchNodeTree(this.workspace.database, nodeId);
-    const nodeRow = tree[tree.length - 1];
-    if (!nodeRow || nodeRow.id !== nodeId) {
+    const node = tree[tree.length - 1];
+    if (!node || node.id !== nodeId) {
       return 'not_found';
     }
 
-    const node = mapNode(nodeRow);
-
     const model = getNodeModel(node.attributes.type);
-
     const canDeleteNodeContext: CanDeleteNodeContext = {
       user: {
         id: this.workspace.userId,
@@ -349,7 +369,7 @@ export class NodeService {
         workspaceId: this.workspace.id,
         accountId: this.workspace.accountId,
       },
-      tree: tree.map(mapNode),
+      tree: tree,
       node: node,
     };
 
@@ -440,6 +460,9 @@ export class NodeService {
     const ydoc = new YDoc(node.state);
     const attributes = ydoc.getObject<NodeAttributes>();
 
+    const model = getNodeModel(attributes.type);
+    const nodeText = model.extractNodeText(node.id, attributes);
+
     const { createdNode } = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -470,6 +493,17 @@ export class NodeService {
             state: decodeState(node.state),
           })
           .executeTakeFirst();
+
+        if (nodeText) {
+          await trx
+            .insertInto('node_texts')
+            .values({
+              id: node.id,
+              name: nodeText.name,
+              attributes: nodeText.attributes,
+            })
+            .execute();
+        }
 
         return { createdNode };
       });
@@ -532,6 +566,9 @@ export class NodeService {
     const attributes = ydoc.getObject<NodeAttributes>();
     const localRevision = BigInt(existingNode.local_revision) + BigInt(1);
 
+    const model = getNodeModel(attributes.type);
+    const nodeText = model.extractNodeText(node.id, attributes);
+
     const { updatedNode } = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -561,6 +598,17 @@ export class NodeService {
           })
           .where('id', '=', node.id)
           .executeTakeFirst();
+
+        if (nodeText) {
+          await trx
+            .insertInto('node_texts')
+            .values({
+              id: node.id,
+              name: nodeText.name,
+              attributes: nodeText.attributes,
+            })
+            .execute();
+        }
 
         return { updatedNode };
       });
@@ -629,6 +677,11 @@ export class NodeService {
         await trx
           .deleteFrom('document_updates')
           .where('document_id', '=', tombstone.id)
+          .execute();
+
+        await trx
+          .deleteFrom('node_texts')
+          .where('id', '=', tombstone.id)
           .execute();
 
         return { deletedNode };
@@ -791,6 +844,10 @@ export class NodeService {
     }
 
     const attributes = ydoc.getObject<NodeAttributes>();
+    const model = getNodeModel(attributes.type);
+    const nodeText = model.extractNodeText(node.id, attributes);
+    const localRevision = BigInt(node.local_revision) + BigInt(1);
+
     const updatedNode = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
@@ -799,6 +856,7 @@ export class NodeService {
           .returningAll()
           .set({
             attributes: JSON.stringify(attributes),
+            local_revision: localRevision,
           })
           .where('id', '=', mutation.id)
           .where('local_revision', '=', node.local_revision)
@@ -812,6 +870,17 @@ export class NodeService {
           .deleteFrom('node_updates')
           .where('id', '=', mutation.updateId)
           .execute();
+
+        if (nodeText) {
+          await trx
+            .insertInto('node_texts')
+            .values({
+              id: node.id,
+              name: nodeText.name,
+              attributes: nodeText.attributes,
+            })
+            .execute();
+        }
       });
 
     if (updatedNode) {

@@ -13,7 +13,7 @@ import {
 
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { eventBus } from '@/shared/lib/event-bus';
-import { mapNode, mapNodeReaction } from '@/main/lib/mappers';
+import { mapNodeReaction } from '@/main/lib/mappers';
 import { SelectNodeReaction } from '@/main/databases/workspace';
 import { MutationErrorCode, MutationError } from '@/shared/mutations';
 import { fetchNodeTree } from '@/main/lib/utils';
@@ -65,8 +65,8 @@ export class NodeReactionService {
         accountId: this.workspace.accountId,
         workspaceId: this.workspace.id,
       },
-      tree: tree.map(mapNode),
-      node: mapNode(node),
+      tree: tree,
+      node: node,
     };
 
     if (!model.canReact(context)) {
@@ -86,7 +86,7 @@ export class NodeReactionService {
             node_id: nodeId,
             collaborator_id: this.workspace.userId,
             reaction,
-            root_id: node.root_id,
+            root_id: node.rootId,
             revision: 0n,
             created_at: new Date().toISOString(),
           })
@@ -104,7 +104,7 @@ export class NodeReactionService {
           data: {
             nodeId,
             reaction,
-            rootId: node.root_id,
+            rootId: node.rootId,
             createdAt: new Date().toISOString(),
           },
         };

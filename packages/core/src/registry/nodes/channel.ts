@@ -61,20 +61,14 @@ export const channelModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  getName: (
-    _: string,
-    attributes: NodeAttributes
-  ): string | null | undefined => {
+  extractNodeText: (_: string, attributes: NodeAttributes) => {
     if (attributes.type !== 'channel') {
-      return null;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: (): string | null | undefined => {
-    return undefined;
-  },
-  getDocumentText: (): string | null | undefined => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

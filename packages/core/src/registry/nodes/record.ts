@@ -85,21 +85,14 @@ export const recordModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  getName: (_, attributes) => {
+  extractNodeText: (id, attributes) => {
     if (attributes.type !== 'record') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: (id, attributes) => {
-    if (attributes.type !== 'record') {
-      return undefined;
-    }
-
-    return attributes.name;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

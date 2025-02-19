@@ -187,7 +187,7 @@ export type UpdateCollaboration = Updateable<CollaborationTable>;
 
 interface DocumentTable {
   id: ColumnType<string, string, never>;
-  type: ColumnType<DocumentType, DocumentType, DocumentType>;
+  type: ColumnType<DocumentType, never, never>;
   workspace_id: ColumnType<string, string, never>;
   revision: ColumnType<bigint, bigint, bigint>;
   content: JSONColumnType<DocumentContent, string, string>;

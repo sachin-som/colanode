@@ -163,7 +163,6 @@ const tryUpdateDocumentFromMutation = async (
           .values({
             id: mutation.documentId,
             workspace_id: user.workspace_id,
-            type: 'rich_text',
             content: JSON.stringify(content),
             created_at: new Date(mutation.createdAt),
             created_by: user.id,

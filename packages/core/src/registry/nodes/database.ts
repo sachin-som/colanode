@@ -61,17 +61,14 @@ export const databaseModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  getName: (_, attributes) => {
+  extractNodeText: (_, attributes) => {
     if (attributes.type !== 'database') {
-      return undefined;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: () => {
-    return undefined;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

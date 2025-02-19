@@ -81,17 +81,14 @@ export const fileModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  getName: (_, attributes) => {
+  extractNodeText: (_, attributes) => {
     if (attributes.type !== 'file') {
-      return null;
+      throw new Error('Invalid node type');
     }
 
-    return attributes.name;
-  },
-  getAttributesText: () => {
-    return undefined;
-  },
-  getDocumentText: () => {
-    return undefined;
+    return {
+      name: attributes.name,
+      attributes: null,
+    };
   },
 };

@@ -63,7 +63,7 @@ export class NodeMarkSeenMutationHandler
             last_seen_at: lastSeenAt,
             first_seen_at: firstSeenAt,
             revision: 0n,
-            root_id: node.root_id,
+            root_id: node.rootId,
           })
           .onConflict((b) =>
             b.columns(['node_id', 'collaborator_id']).doUpdateSet({

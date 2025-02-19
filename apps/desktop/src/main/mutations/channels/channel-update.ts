@@ -17,7 +17,7 @@ export class ChannelUpdateMutationHandler
   ): Promise<ChannelUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<ChannelAttributes>(
+    const result = await workspace.nodes.updateNode<ChannelAttributes>(
       input.channelId,
       (attributes) => {
         attributes.name = input.name;

@@ -17,7 +17,7 @@ export class SpaceDescriptionUpdateMutationHandler
   ): Promise<SpaceDescriptionUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<SpaceAttributes>(
+    const result = await workspace.nodes.updateNode<SpaceAttributes>(
       input.spaceId,
       (attributes) => {
         attributes.description = input.description;

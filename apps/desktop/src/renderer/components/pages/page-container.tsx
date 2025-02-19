@@ -1,8 +1,6 @@
-import { PageEntry } from '@colanode/core';
-
 import { PageNotFound } from '@/renderer/components/pages/page-not-found';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
 import { PageSettings } from '@/renderer/components/pages/page-settings';
 import {
   Container,
@@ -12,25 +10,26 @@ import {
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { PageBody } from '@/renderer/components/pages/page-body';
+import { LocalPageNode } from '@/shared/types/nodes';
 
 interface PageContainerProps {
   pageId: string;
 }
 
 export const PageContainer = ({ pageId }: PageContainerProps) => {
-  const data = useEntryContainer<PageEntry>(pageId);
+  const data = useNodeContainer<LocalPageNode>(pageId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <PageNotFound />;
   }
 
-  const { entry: page, role } = data;
+  const { node: page, role } = data;
 
   return (
     <Container>

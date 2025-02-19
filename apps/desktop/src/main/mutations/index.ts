@@ -1,5 +1,3 @@
-import { PageContentUpdateMutationHandler } from '@/main/mutations/pages/page-content-update';
-import { RecordContentUpdateMutationHandler } from '@/main/mutations/records/record-content-update';
 import { AccountLogoutMutationHandler } from '@/main/mutations/accounts/account-logout';
 import { AccountUpdateMutationHandler } from '@/main/mutations/accounts/account-update';
 import { AvatarUploadMutationHandler } from '@/main/mutations/avatars/avatar-upload';
@@ -19,22 +17,19 @@ import { FieldNameUpdateMutationHandler } from '@/main/mutations/databases/field
 import { FileCreateMutationHandler } from '@/main/mutations/files/file-create';
 import { FileDeleteMutationHandler } from '@/main/mutations/files/file-delete';
 import { FileDownloadMutationHandler } from '@/main/mutations/files/file-download';
-import { FileMarkOpenedMutationHandler } from '@/main/mutations/files/file-mark-opened';
-import { FileMarkSeenMutationHandler } from '@/main/mutations/files/file-mark-seen';
 import { FileSaveTempMutationHandler } from '@/main/mutations/files/file-save-temp';
 import { FolderCreateMutationHandler } from '@/main/mutations/folders/folder-create';
 import { FolderUpdateMutationHandler } from '@/main/mutations/folders/folder-update';
 import { FolderDeleteMutationHandler } from '@/main/mutations/folders/folder-delete';
 import { MessageCreateMutationHandler } from '@/main/mutations/messages/message-create';
 import { MessageDeleteMutationHandler } from '@/main/mutations/messages/message-delete';
-import { EntryCollaboratorCreateMutationHandler } from '@/main/mutations/entries/entry-collaborator-create';
-import { EntryCollaboratorDeleteMutationHandler } from '@/main/mutations/entries/entry-collaborator-delete';
-import { EntryCollaboratorUpdateMutationHandler } from '@/main/mutations/entries/entry-collaborator-update';
-import { EntryMarkOpenedMutationHandler } from '@/main/mutations/entries/entry-mark-opened';
-import { EntryMarkSeenMutationHandler } from '@/main/mutations/entries/entry-mark-seen';
-import { MessageReactionCreateMutationHandler } from '@/main/mutations/messages/message-reaction-create';
-import { MessageReactionDeleteMutationHandler } from '@/main/mutations/messages/message-reaction-delete';
-import { MessageMarkSeenMutationHandler } from '@/main/mutations/messages/message-mark-seen';
+import { NodeCollaboratorCreateMutationHandler } from '@/main/mutations/nodes/node-collaborator-create';
+import { NodeCollaboratorDeleteMutationHandler } from '@/main/mutations/nodes/node-collaborator-delete';
+import { NodeCollaboratorUpdateMutationHandler } from '@/main/mutations/nodes/node-collaborator-update';
+import { NodeMarkOpenedMutationHandler } from '@/main/mutations/nodes/node-mark-opened';
+import { NodeMarkSeenMutationHandler } from '@/main/mutations/nodes/node-mark-seen';
+import { NodeReactionCreateMutationHandler } from '@/main/mutations/nodes/node-reaction-create';
+import { NodeReactionDeleteMutationHandler } from '@/main/mutations/nodes/node-reaction-delete';
 import { PageCreateMutationHandler } from '@/main/mutations/pages/page-create';
 import { PageUpdateMutationHandler } from '@/main/mutations/pages/page-update';
 import { PageDeleteMutationHandler } from '@/main/mutations/pages/page-delete';
@@ -63,6 +58,7 @@ import { UserRoleUpdateMutationHandler } from '@/main/mutations/users/user-role-
 import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite';
 import { WorkspaceMetadataSaveMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-save';
 import { WorkspaceMetadataDeleteMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-delete';
+import { DocumentUpdateMutationHandler } from '@/main/mutations/documents/document-update';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -86,21 +82,18 @@ export const mutationHandlerMap: MutationHandlerMap = {
   message_create: new MessageCreateMutationHandler(),
   file_delete: new FileDeleteMutationHandler(),
   folder_delete: new FolderDeleteMutationHandler(),
-  entry_collaborator_create: new EntryCollaboratorCreateMutationHandler(),
-  entry_collaborator_delete: new EntryCollaboratorDeleteMutationHandler(),
-  entry_collaborator_update: new EntryCollaboratorUpdateMutationHandler(),
-  entry_mark_opened: new EntryMarkOpenedMutationHandler(),
-  entry_mark_seen: new EntryMarkSeenMutationHandler(),
+  node_collaborator_create: new NodeCollaboratorCreateMutationHandler(),
+  node_collaborator_delete: new NodeCollaboratorDeleteMutationHandler(),
+  node_collaborator_update: new NodeCollaboratorUpdateMutationHandler(),
+  node_mark_opened: new NodeMarkOpenedMutationHandler(),
+  node_mark_seen: new NodeMarkSeenMutationHandler(),
   page_create: new PageCreateMutationHandler(),
   page_delete: new PageDeleteMutationHandler(),
-  page_content_update: new PageContentUpdateMutationHandler(),
-  message_reaction_create: new MessageReactionCreateMutationHandler(),
-  message_reaction_delete: new MessageReactionDeleteMutationHandler(),
-  message_mark_seen: new MessageMarkSeenMutationHandler(),
+  node_reaction_create: new NodeReactionCreateMutationHandler(),
+  node_reaction_delete: new NodeReactionDeleteMutationHandler(),
   message_delete: new MessageDeleteMutationHandler(),
   record_create: new RecordCreateMutationHandler(),
   record_delete: new RecordDeleteMutationHandler(),
-  record_content_update: new RecordContentUpdateMutationHandler(),
   record_avatar_update: new RecordAvatarUpdateMutationHandler(),
   record_name_update: new RecordNameUpdateMutationHandler(),
   record_field_value_delete: new RecordFieldValueDeleteMutationHandler(),
@@ -120,8 +113,6 @@ export const mutationHandlerMap: MutationHandlerMap = {
   folder_create: new FolderCreateMutationHandler(),
   file_create: new FileCreateMutationHandler(),
   file_download: new FileDownloadMutationHandler(),
-  file_mark_opened: new FileMarkOpenedMutationHandler(),
-  file_mark_seen: new FileMarkSeenMutationHandler(),
   file_save_temp: new FileSaveTempMutationHandler(),
   space_avatar_update: new SpaceAvatarUpdateMutationHandler(),
   space_description_update: new SpaceDescriptionUpdateMutationHandler(),
@@ -136,4 +127,5 @@ export const mutationHandlerMap: MutationHandlerMap = {
   database_update: new DatabaseUpdateMutationHandler(),
   workspace_metadata_save: new WorkspaceMetadataSaveMutationHandler(),
   workspace_metadata_delete: new WorkspaceMetadataDeleteMutationHandler(),
+  document_update: new DocumentUpdateMutationHandler(),
 };

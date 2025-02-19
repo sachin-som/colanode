@@ -13,7 +13,7 @@ import {
 } from '@/renderer/components/ui/popover';
 import { Separator } from '@/renderer/components/ui/separator';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { isFilterableField, isSortableField } from '@/shared/lib/databases';
 import { cn } from '@/shared/lib/utils';
 import { ViewField } from '@/shared/types/databases';
@@ -26,7 +26,7 @@ export const TableViewFieldHeader = ({
   viewField,
 }: TableViewFieldHeaderProps) => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const [openPopover, setOpenPopover] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);

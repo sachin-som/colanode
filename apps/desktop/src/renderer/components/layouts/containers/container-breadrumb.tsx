@@ -15,9 +15,10 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 import { useLayout } from '@/renderer/contexts/layout';
 import { ContainerBreadcrumbItem } from '@/renderer/components/layouts/containers/container-breadcrumb-item';
+import { LocalNode } from '@/shared/types/nodes';
 
 interface ContainerBreadcrumbProps {
-  breadcrumb: string[];
+  breadcrumb: LocalNode[];
 }
 
 export const ContainerBreadcrumb = ({
@@ -28,7 +29,7 @@ export const ContainerBreadcrumb = ({
   // Show ellipsis if we have more than 3 nodes (first + last two)
   const showEllipsis = breadcrumb.length > 3;
 
-  // Get visible entries: first entry + last two entries
+  // Get visible entries: first node + last two entries
   const visibleItems = showEllipsis
     ? [breadcrumb[0], ...breadcrumb.slice(-2)]
     : breadcrumb;
@@ -47,15 +48,15 @@ export const ContainerBreadcrumb = ({
           const isFirst = index === 0;
 
           return (
-            <React.Fragment key={item}>
+            <React.Fragment key={item.id}>
               {!isFirst && <BreadcrumbSeparator />}
               <BreadcrumbItem
                 className="hover:cursor-pointer hover:text-foreground"
                 onClick={() => {
-                  layout.openLeft(item);
+                  layout.openLeft(item.id);
                 }}
               >
-                <ContainerBreadcrumbItem id={item} />
+                <ContainerBreadcrumbItem node={item} />
               </BreadcrumbItem>
               {showEllipsis && isFirst && (
                 <React.Fragment>
@@ -69,13 +70,13 @@ export const ContainerBreadcrumb = ({
                         {ellipsisItems.map((ellipsisItem) => {
                           return (
                             <DropdownMenuItem
-                              key={ellipsisItem}
+                              key={ellipsisItem.id}
                               onClick={() => {
-                                layout.openLeft(ellipsisItem);
+                                layout.openLeft(ellipsisItem.id);
                               }}
                             >
                               <BreadcrumbItem className="hover:cursor-pointer hover:text-foreground">
-                                <ContainerBreadcrumbItem id={ellipsisItem} />
+                                <ContainerBreadcrumbItem node={ellipsisItem} />
                               </BreadcrumbItem>
                             </DropdownMenuItem>
                           );

@@ -1,51 +1,48 @@
-import { Block } from '@colanode/core';
-import { FocusPosition, JSONContent } from '@tiptap/core';
+import { FocusPosition } from '@tiptap/core';
 
 import { DocumentEditor } from '@/renderer/components/documents/document-editor';
-import { mapBlocksToContents } from '@/shared/lib/editor';
+import { LocalNode } from '@/shared/types/nodes';
+import { useQuery } from '@/renderer/hooks/use-query';
+import { useWorkspace } from '@/renderer/contexts/workspace';
 
 interface DocumentProps {
-  entryId: string;
-  rootId: string;
-  content?: Record<string, Block> | null;
-  transactionId: string;
+  node: LocalNode;
   canEdit: boolean;
-  onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
 }
 
-export const Document = ({
-  entryId,
-  rootId,
-  content,
-  transactionId,
-  canEdit,
-  onUpdate,
-  autoFocus,
-}: DocumentProps) => {
-  const entryBlocks = Object.values(content ?? {});
-  const contents = mapBlocksToContents(entryId, entryBlocks);
+export const Document = ({ node, canEdit, autoFocus }: DocumentProps) => {
+  const workspace = useWorkspace();
 
-  if (!contents.length) {
-    contents.push({
-      type: 'paragraph',
+  const { data: documentState, isPending: isDocumentStatePending } = useQuery({
+    type: 'document_state_get',
+    documentId: node.id,
+    accountId: workspace.accountId,
+    workspaceId: workspace.id,
+  });
+
+  const { data: documentUpdates, isPending: isDocumentUpdatesPending } =
+    useQuery({
+      type: 'document_updates_list',
+      documentId: node.id,
+      accountId: workspace.accountId,
+      workspaceId: workspace.id,
     });
+
+  if (isDocumentStatePending || isDocumentUpdatesPending) {
+    return null;
   }
 
-  const tiptapContent = {
-    type: 'doc',
-    content: contents,
-  };
+  const state = documentState ?? null;
+  const updates = documentUpdates ?? [];
 
   return (
     <DocumentEditor
-      key={entryId}
-      documentId={entryId}
-      rootId={rootId}
-      content={tiptapContent}
-      transactionId={transactionId}
+      key={node.id}
+      node={node}
+      state={state}
+      updates={updates}
       canEdit={canEdit}
-      onUpdate={onUpdate}
       autoFocus={autoFocus}
     />
   );

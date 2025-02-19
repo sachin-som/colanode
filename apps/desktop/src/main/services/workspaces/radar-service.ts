@@ -10,9 +10,9 @@ import {
 import {
   CollaborationCreatedEvent,
   CollaborationDeletedEvent,
-  MessageCreatedEvent,
-  MessageDeletedEvent,
-  MessageInteractionUpdatedEvent,
+  NodeCreatedEvent,
+  NodeDeletedEvent,
+  NodeInteractionUpdatedEvent,
   Event,
 } from '@/shared/types/events';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -90,7 +90,7 @@ export class RadarService {
       .execute();
 
     for (const collaboration of collaborations) {
-      this.collaborations.set(collaboration.entry_id, collaboration);
+      this.collaborations.set(collaboration.node_id, collaboration);
     }
 
     if (this.collaborations.size === 0) {
@@ -98,33 +98,33 @@ export class RadarService {
     }
 
     const unreadMessagesRows = await this.workspace.database
-      .selectFrom('messages as message')
-      .leftJoin('message_interactions as message_interactions', (join) =>
+      .selectFrom('nodes as node')
+      .leftJoin('node_interactions as node_interactions', (join) =>
         join
-          .onRef('message.id', '=', 'message_interactions.message_id')
-          .on(
-            'message_interactions.collaborator_id',
-            '=',
-            this.workspace.userId
-          )
+          .onRef('node.id', '=', 'node_interactions.node_id')
+          .on('node_interactions.collaborator_id', '=', this.workspace.userId)
       )
-      .innerJoin('entry_interactions as entry_interactions', (join) =>
+      .innerJoin('node_interactions as parent_interactions', (join) =>
         join
-          .onRef('message.entry_id', '=', 'entry_interactions.entry_id')
-          .on('entry_interactions.collaborator_id', '=', this.workspace.userId)
+          .onRef('node.parent_id', '=', 'parent_interactions.node_id')
+          .on('parent_interactions.collaborator_id', '=', this.workspace.userId)
       )
-      .select(['message.id as message_id', 'message.entry_id as entry_id'])
-      .where('message.created_by', '!=', this.workspace.userId)
-      .where('message_interactions.last_seen_at', 'is', null)
-      .where('entry_interactions.last_seen_at', 'is not', null)
-      .whereRef('message.created_at', '>=', 'entry_interactions.first_seen_at')
+      .select(['node.id as node_id', 'node.parent_id as parent_id'])
+      .where('node.created_by', '!=', this.workspace.userId)
+      .where('node_interactions.last_seen_at', 'is', null)
+      .where('parent_interactions.last_seen_at', 'is not', null)
+      .whereRef('node.created_at', '>=', 'parent_interactions.first_seen_at')
       .execute();
 
     for (const unreadMessageRow of unreadMessagesRows) {
-      this.unreadMessages.set(unreadMessageRow.message_id, {
-        messageId: unreadMessageRow.message_id,
-        parentId: unreadMessageRow.entry_id,
-        parentIdType: getIdType(unreadMessageRow.entry_id),
+      if (!unreadMessageRow.parent_id) {
+        continue;
+      }
+
+      this.unreadMessages.set(unreadMessageRow.node_id, {
+        messageId: unreadMessageRow.node_id,
+        parentId: unreadMessageRow.parent_id,
+        parentIdType: getIdType(unreadMessageRow.parent_id),
       });
     }
   }
@@ -134,12 +134,12 @@ export class RadarService {
   }
 
   private async handleEvent(event: Event) {
-    if (event.type === 'message_interaction_updated') {
-      await this.handleMessageInteractionUpdated(event);
-    } else if (event.type === 'message_created') {
-      await this.handleMessageCreated(event);
-    } else if (event.type === 'message_deleted') {
-      await this.handleMessageDeleted(event);
+    if (event.type === 'node_interaction_updated') {
+      await this.handleNodeInteractionUpdated(event);
+    } else if (event.type === 'node_created') {
+      await this.handleNodeCreated(event);
+    } else if (event.type === 'node_deleted') {
+      await this.handleNodeDeleted(event);
     } else if (event.type === 'collaboration_created') {
       await this.handleCollaborationCreated(event);
     } else if (event.type === 'collaboration_deleted') {
@@ -147,10 +147,10 @@ export class RadarService {
     }
   }
 
-  private async handleMessageInteractionUpdated(
-    event: MessageInteractionUpdatedEvent
+  private async handleNodeInteractionUpdated(
+    event: NodeInteractionUpdatedEvent
   ): Promise<void> {
-    const interaction = event.messageInteraction;
+    const interaction = event.nodeInteraction;
     if (
       event.accountId !== this.workspace.accountId ||
       event.workspaceId !== this.workspace.id ||
@@ -160,9 +160,9 @@ export class RadarService {
     }
 
     if (interaction.lastSeenAt) {
-      const unreadMessage = this.unreadMessages.get(interaction.messageId);
+      const unreadMessage = this.unreadMessages.get(interaction.nodeId);
       if (unreadMessage) {
-        this.unreadMessages.delete(interaction.messageId);
+        this.unreadMessages.delete(interaction.nodeId);
         eventBus.publish({
           type: 'radar_data_updated',
         });
@@ -171,10 +171,12 @@ export class RadarService {
     }
   }
 
-  private async handleMessageCreated(
-    event: MessageCreatedEvent
-  ): Promise<void> {
-    const message = event.message;
+  private async handleNodeCreated(event: NodeCreatedEvent): Promise<void> {
+    if (event.node.type !== 'message') {
+      return;
+    }
+
+    const message = event.node;
     if (message.createdBy === this.workspace.userId) {
       return;
     }
@@ -193,9 +195,9 @@ export class RadarService {
     }
 
     const messageInteraction = await this.workspace.database
-      .selectFrom('message_interactions')
+      .selectFrom('node_interactions')
       .selectAll()
-      .where('message_id', '=', message.id)
+      .where('node_id', '=', message.id)
       .where('collaborator_id', '=', this.workspace.userId)
       .executeTakeFirst();
 
@@ -214,10 +216,8 @@ export class RadarService {
     });
   }
 
-  private async handleMessageDeleted(
-    event: MessageDeletedEvent
-  ): Promise<void> {
-    const message = event.message;
+  private async handleNodeDeleted(event: NodeDeletedEvent): Promise<void> {
+    const message = event.node;
     if (message.createdBy === this.workspace.userId) {
       return;
     }
@@ -238,19 +238,19 @@ export class RadarService {
     const collaboration = await this.workspace.database
       .selectFrom('collaborations')
       .selectAll()
-      .where('entry_id', '=', event.entryId)
+      .where('node_id', '=', event.nodeId)
       .executeTakeFirst();
 
     if (!collaboration) {
       return;
     }
 
-    this.collaborations.set(event.entryId, collaboration);
+    this.collaborations.set(event.nodeId, collaboration);
   }
 
   private async handleCollaborationDeleted(
     event: CollaborationDeletedEvent
   ): Promise<void> {
-    this.collaborations.delete(event.entryId);
+    this.collaborations.delete(event.nodeId);
   }
 }

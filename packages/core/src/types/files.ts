@@ -14,7 +14,7 @@ export type CompleteUploadOutput = {
   success: boolean;
 };
 
-export type FileType = 'image' | 'video' | 'audio' | 'pdf' | 'other';
+export type FileSubtype = 'image' | 'video' | 'audio' | 'pdf' | 'other';
 
 export enum FileStatus {
   Pending = 0,

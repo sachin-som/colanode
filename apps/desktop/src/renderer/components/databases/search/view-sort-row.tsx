@@ -1,4 +1,4 @@
-import { FieldAttributes, ViewSortAttributes } from '@colanode/core';
+import { FieldAttributes, DatabaseViewSortAttributes } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
@@ -9,15 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 interface ViewSortProps {
-  sort: ViewSortAttributes;
+  sort: DatabaseViewSortAttributes;
   field: FieldAttributes;
 }
 
 export const ViewSortRow = ({ sort, field }: ViewSortProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   return (
     <div className="flex flex-row items-center gap-3 text-sm">

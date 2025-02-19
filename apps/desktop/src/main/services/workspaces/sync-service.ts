@@ -2,26 +2,18 @@ import {
   createDebugger,
   SyncCollaborationsInput,
   SyncUsersInput,
-  SyncEntryTransactionsInput,
-  SyncEntryInteractionsInput,
-  SyncMessagesInput,
-  SyncMessageInteractionsInput,
-  SyncMessageReactionsInput,
-  SyncFilesInput,
-  SyncFileInteractionsInput,
-  SyncFileTombstonesInput,
-  SyncMessageTombstonesInput,
-  SyncEntryTransactionData,
-  SyncMessageTombstoneData,
-  SyncMessageInteractionData,
-  SyncEntryInteractionData,
-  SyncMessageData,
-  SyncMessageReactionData,
-  SyncFileInteractionData,
-  SyncFileTombstoneData,
-  SyncFileData,
+  SyncNodesUpdatesInput,
+  SyncNodeInteractionsInput,
+  SyncNodeReactionsInput,
+  SyncNodeTombstonesInput,
+  SyncNodeInteractionData,
+  SyncNodeReactionData,
+  SyncNodeTombstoneData,
+  SyncNodeUpdateData,
   SyncUserData,
   SyncCollaborationData,
+  SyncDocumentUpdatesInput,
+  SyncDocumentUpdateData,
 } from '@colanode/core';
 
 import { Event } from '@/shared/types/events';
@@ -30,29 +22,21 @@ import { Synchronizer } from '@/main/services/workspaces/synchronizer';
 import { eventBus } from '@/shared/lib/event-bus';
 
 interface RootSynchronizers {
-  entryTransactions: Synchronizer<SyncEntryTransactionsInput>;
-  entryInteractions: Synchronizer<SyncEntryInteractionsInput>;
-  messages: Synchronizer<SyncMessagesInput>;
-  messageInteractions: Synchronizer<SyncMessageInteractionsInput>;
-  messageReactions: Synchronizer<SyncMessageReactionsInput>;
-  messageTombstones: Synchronizer<SyncMessageTombstonesInput>;
-  files: Synchronizer<SyncFilesInput>;
-  fileInteractions: Synchronizer<SyncFileInteractionsInput>;
-  fileTombstones: Synchronizer<SyncFileTombstonesInput>;
+  nodeUpdates: Synchronizer<SyncNodesUpdatesInput>;
+  nodeInteractions: Synchronizer<SyncNodeInteractionsInput>;
+  nodeReactions: Synchronizer<SyncNodeReactionsInput>;
+  nodeTombstones: Synchronizer<SyncNodeTombstonesInput>;
+  documentUpdates: Synchronizer<SyncDocumentUpdatesInput>;
 }
 
 type SyncHandlers = {
   users: (data: SyncUserData) => Promise<void>;
   collaborations: (data: SyncCollaborationData) => Promise<void>;
-  entry_transactions: (data: SyncEntryTransactionData) => Promise<void>;
-  entry_interactions: (data: SyncEntryInteractionData) => Promise<void>;
-  messages: (data: SyncMessageData) => Promise<void>;
-  message_interactions: (data: SyncMessageInteractionData) => Promise<void>;
-  message_reactions: (data: SyncMessageReactionData) => Promise<void>;
-  message_tombstones: (data: SyncMessageTombstoneData) => Promise<void>;
-  files: (data: SyncFileData) => Promise<void>;
-  file_interactions: (data: SyncFileInteractionData) => Promise<void>;
-  file_tombstones: (data: SyncFileTombstoneData) => Promise<void>;
+  nodeUpdates: (data: SyncNodeUpdateData) => Promise<void>;
+  nodeInteractions: (data: SyncNodeInteractionData) => Promise<void>;
+  nodeReactions: (data: SyncNodeReactionData) => Promise<void>;
+  nodeTombstones: (data: SyncNodeTombstoneData) => Promise<void>;
+  documentUpdates: (data: SyncDocumentUpdateData) => Promise<void>;
 };
 
 export class SyncService {
@@ -77,33 +61,21 @@ export class SyncService {
         this.workspace.collaborations.syncServerCollaboration.bind(
           this.workspace.collaborations
         ),
-      entry_transactions: this.workspace.entries.applyServerTransaction.bind(
-        this.workspace.entries
+      nodeUpdates: this.workspace.nodes.syncServerNodeUpdate.bind(
+        this.workspace.nodes
       ),
-      entry_interactions:
-        this.workspace.entries.syncServerEntryInteraction.bind(
-          this.workspace.entries
+      nodeInteractions:
+        this.workspace.nodeInteractions.syncServerNodeInteraction.bind(
+          this.workspace.nodes
         ),
-      messages: this.workspace.messages.syncServerMessage.bind(
-        this.workspace.messages
+      nodeReactions: this.workspace.nodeReactions.syncServerNodeReaction.bind(
+        this.workspace.nodes
       ),
-      message_interactions:
-        this.workspace.messages.syncServerMessageInteraction.bind(
-          this.workspace.messages
-        ),
-      message_reactions: this.workspace.messages.syncServerMessageReaction.bind(
-        this.workspace.messages
+      nodeTombstones: this.workspace.nodes.syncServerNodeDelete.bind(
+        this.workspace.nodes
       ),
-      message_tombstones:
-        this.workspace.messages.syncServerMessageTombstone.bind(
-          this.workspace.messages
-        ),
-      files: this.workspace.files.syncServerFile.bind(this.workspace.files),
-      file_interactions: this.workspace.files.syncServerFileInteraction.bind(
-        this.workspace.files
-      ),
-      file_tombstones: this.workspace.files.syncServerFileTombstone.bind(
-        this.workspace.files
+      documentUpdates: this.workspace.documents.syncServerDocumentUpdate.bind(
+        this.workspace.documents
       ),
     };
     eventBus.subscribe(this.handleEvent.bind(this));
@@ -115,13 +87,13 @@ export class SyncService {
       event.accountId === this.workspace.accountId &&
       event.workspaceId === this.workspace.id
     ) {
-      this.initRootSynchronizers(event.entryId);
+      this.initRootSynchronizers(event.nodeId);
     } else if (
       event.type === 'collaboration_deleted' &&
       event.accountId === this.workspace.accountId &&
       event.workspaceId === this.workspace.id
     ) {
-      this.removeRootSynchronizers(event.entryId);
+      this.removeRootSynchronizers(event.nodeId);
     }
   }
 
@@ -156,7 +128,7 @@ export class SyncService {
       .execute();
 
     for (const collaboration of collaborations) {
-      await this.initRootSynchronizers(collaboration.entry_id);
+      await this.initRootSynchronizers(collaboration.node_id);
     }
   }
 
@@ -170,15 +142,11 @@ export class SyncService {
   }
 
   private destroyRootSynchronizers(rootSynchronizers: RootSynchronizers): void {
-    rootSynchronizers.entryTransactions.destroy();
-    rootSynchronizers.entryInteractions.destroy();
-    rootSynchronizers.messages.destroy();
-    rootSynchronizers.messageInteractions.destroy();
-    rootSynchronizers.messageReactions.destroy();
-    rootSynchronizers.messageTombstones.destroy();
-    rootSynchronizers.files.destroy();
-    rootSynchronizers.fileInteractions.destroy();
-    rootSynchronizers.fileTombstones.destroy();
+    rootSynchronizers.nodeUpdates.destroy();
+    rootSynchronizers.nodeInteractions.destroy();
+    rootSynchronizers.nodeReactions.destroy();
+    rootSynchronizers.nodeTombstones.destroy();
+    rootSynchronizers.documentUpdates.destroy();
   }
 
   private async initRootSynchronizers(rootId: string): Promise<void> {
@@ -191,59 +159,35 @@ export class SyncService {
     );
 
     const rootSynchronizers = {
-      entryTransactions: new Synchronizer(
+      nodeUpdates: new Synchronizer(
         this.workspace,
-        { type: 'entry_transactions', rootId },
-        `${rootId}_entry_transactions`,
-        this.syncHandlers.entry_transactions
+        { type: 'nodes_updates', rootId },
+        `${rootId}_nodes_updates`,
+        this.syncHandlers.nodeUpdates
       ),
-      entryInteractions: new Synchronizer(
+      nodeInteractions: new Synchronizer(
         this.workspace,
-        { type: 'entry_interactions', rootId },
-        `${rootId}_entry_interactions`,
-        this.syncHandlers.entry_interactions
+        { type: 'node_interactions', rootId },
+        `${rootId}_node_interactions`,
+        this.syncHandlers.nodeInteractions
       ),
-      messages: new Synchronizer(
+      nodeReactions: new Synchronizer(
         this.workspace,
-        { type: 'messages', rootId },
-        `${rootId}_messages`,
-        this.syncHandlers.messages
+        { type: 'node_reactions', rootId },
+        `${rootId}_node_reactions`,
+        this.syncHandlers.nodeReactions
       ),
-      messageInteractions: new Synchronizer(
+      nodeTombstones: new Synchronizer(
         this.workspace,
-        { type: 'message_interactions', rootId },
-        `${rootId}_message_interactions`,
-        this.syncHandlers.message_interactions
+        { type: 'node_tombstones', rootId },
+        `${rootId}_node_tombstones`,
+        this.syncHandlers.nodeTombstones
       ),
-      messageReactions: new Synchronizer(
+      documentUpdates: new Synchronizer(
         this.workspace,
-        { type: 'message_reactions', rootId },
-        `${rootId}_message_reactions`,
-        this.syncHandlers.message_reactions
-      ),
-      messageTombstones: new Synchronizer(
-        this.workspace,
-        { type: 'message_tombstones', rootId },
-        `${rootId}_message_tombstones`,
-        this.syncHandlers.message_tombstones
-      ),
-      files: new Synchronizer(
-        this.workspace,
-        { type: 'files', rootId },
-        `${rootId}_files`,
-        this.syncHandlers.files
-      ),
-      fileInteractions: new Synchronizer(
-        this.workspace,
-        { type: 'file_interactions', rootId },
-        `${rootId}_file_interactions`,
-        this.syncHandlers.file_interactions
-      ),
-      fileTombstones: new Synchronizer(
-        this.workspace,
-        { type: 'file_tombstones', rootId },
-        `${rootId}_file_tombstones`,
-        this.syncHandlers.file_tombstones
+        { type: 'document_updates', rootId },
+        `${rootId}_document_updates`,
+        this.syncHandlers.documentUpdates
       ),
     };
 

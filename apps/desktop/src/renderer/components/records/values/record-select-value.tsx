@@ -28,7 +28,7 @@ export const RecordSelectValue = ({
 
   React.useEffect(() => {
     setSelectedValue(record.getSelectValue(field));
-  }, [record.transactionId]);
+  }, [record.localRevision]);
 
   const selectedOption = field.options?.[selectedValue ?? ''];
 
@@ -75,7 +75,7 @@ export const RecordSelectValue = ({
               record.removeFieldValue(field);
             } else {
               record.updateFieldValue(field, {
-                type: 'select',
+                type: 'string',
                 value: id,
               });
             }

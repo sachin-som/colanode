@@ -1,5 +1,3 @@
-import { SpaceEntry } from '@colanode/core';
-
 import {
   Container,
   ContainerBody,
@@ -7,28 +5,29 @@ import {
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
 import { SpaceNotFound } from '@/renderer/components/spaces/space-not-found';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
 import { SpaceBody } from '@/renderer/components/spaces/space-body';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceContainerProps {
   spaceId: string;
 }
 
 export const SpaceContainer = ({ spaceId }: SpaceContainerProps) => {
-  const data = useEntryContainer<SpaceEntry>(spaceId);
+  const data = useNodeContainer<LocalSpaceNode>(spaceId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <SpaceNotFound />;
   }
 
-  const { entry, role } = data;
+  const { node, role } = data;
 
   return (
     <Container>
@@ -36,7 +35,7 @@ export const SpaceContainer = ({ spaceId }: SpaceContainerProps) => {
         <ContainerBreadcrumb breadcrumb={data.breadcrumb} />
       </ContainerHeader>
       <ContainerBody>
-        <SpaceBody space={entry} role={role} />
+        <SpaceBody space={node} role={role} />
       </ContainerBody>
     </Container>
   );

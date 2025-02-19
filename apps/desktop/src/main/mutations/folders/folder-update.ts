@@ -17,7 +17,7 @@ export class FolderUpdateMutationHandler
   ): Promise<FolderUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<FolderAttributes>(
+    const result = await workspace.nodes.updateNode<FolderAttributes>(
       input.folderId,
       (attributes) => {
         attributes.name = input.name;

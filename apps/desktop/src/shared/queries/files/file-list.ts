@@ -1,4 +1,4 @@
-import { FileWithState } from '@/shared/types/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 export type FileListQueryInput = {
   type: 'file_list';
@@ -13,7 +13,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     file_list: {
       input: FileListQueryInput;
-      output: FileWithState[];
+      output: LocalFileNode[];
     };
   }
 }

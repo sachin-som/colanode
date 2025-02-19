@@ -143,28 +143,22 @@ export class MutationService {
     for (const mutationRow of invalidMutations) {
       const mutation = mapMutation(mutationRow);
 
-      if (mutation.type === 'create_file') {
-        await this.workspace.files.revertFileCreation(mutation.id);
-      } else if (mutation.type === 'delete_file') {
-        await this.workspace.files.revertFileDeletion(mutation.id);
-      } else if (mutation.type === 'apply_create_transaction') {
-        await this.workspace.entries.revertCreateTransaction(mutation.data);
-      } else if (mutation.type === 'apply_update_transaction') {
-        await this.workspace.entries.revertUpdateTransaction(mutation.data);
-      } else if (mutation.type === 'apply_delete_transaction') {
-        await this.workspace.entries.revertDeleteTransaction(mutation.data);
-      } else if (mutation.type === 'create_message') {
-        await this.workspace.messages.revertMessageCreation(mutation.data.id);
-      } else if (mutation.type === 'delete_message') {
-        await this.workspace.messages.revertMessageDeletion(mutation.data.id);
-      } else if (mutation.type === 'create_message_reaction') {
-        await this.workspace.messages.revertMessageReactionCreation(
+      if (mutation.type === 'create_node') {
+        await this.workspace.nodes.revertNodeCreate(mutation.data);
+      } else if (mutation.type === 'update_node') {
+        await this.workspace.nodes.revertNodeUpdate(mutation.data);
+      } else if (mutation.type === 'delete_node') {
+        await this.workspace.nodes.revertNodeDelete(mutation.data);
+      } else if (mutation.type === 'create_node_reaction') {
+        await this.workspace.nodeReactions.revertNodeReactionCreate(
           mutation.data
         );
-      } else if (mutation.type === 'delete_message_reaction') {
-        await this.workspace.messages.revertMessageReactionDeletion(
+      } else if (mutation.type === 'delete_node_reaction') {
+        await this.workspace.nodeReactions.revertNodeReactionDelete(
           mutation.data
         );
+      } else if (mutation.type === 'update_document') {
+        await this.workspace.documents.revertDocumentUpdate(mutation.data);
       }
     }
 
@@ -212,7 +206,7 @@ export class MutationService {
         continue;
       }
 
-      if (mutation.type === 'apply_delete_transaction') {
+      if (mutation.type === 'delete_node') {
         for (let j = i - 1; j >= 0; j--) {
           const previousMutation = mutations[j];
           if (!previousMutation) {
@@ -220,54 +214,47 @@ export class MutationService {
           }
 
           if (
-            previousMutation.type === 'apply_create_transaction' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.type === 'create_node' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(mutation.id);
             deletedMutationIds.add(previousMutation.id);
           } else if (
-            previousMutation.type === 'apply_update_transaction' &&
-            previousMutation.data.id === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'mark_entry_opened' &&
-            previousMutation.data.entryId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'mark_entry_seen' &&
-            previousMutation.data.entryId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          }
-        }
-      } else if (mutation.type === 'delete_file') {
-        for (let j = i - 1; j >= 0; j--) {
-          const previousMutation = mutations[j];
-          if (!previousMutation) {
-            continue;
-          }
-
-          if (
-            previousMutation.type === 'create_file' &&
-            previousMutation.data.id === mutation.data.id
+            previousMutation.type === 'update_node' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(mutation.id);
             deletedMutationIds.add(previousMutation.id);
           } else if (
-            previousMutation.type === 'mark_file_seen' &&
-            previousMutation.data.fileId === mutation.data.id
+            previousMutation.type === 'delete_node' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
+          ) {
+            deletedMutationIds.add(previousMutation.id);
+          } else if (previousMutation.type === 'update_document') {
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'mark_node_seen' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           } else if (
-            previousMutation.type === 'mark_file_opened' &&
-            previousMutation.data.fileId === mutation.data.id
+            previousMutation.type === 'mark_node_opened' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
+          ) {
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'create_node_reaction' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
+          ) {
+            deletedMutationIds.add(previousMutation.id);
+          } else if (
+            previousMutation.type === 'delete_node_reaction' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           }
         }
-      } else if (mutation.type === 'delete_message') {
+      } else if (mutation.type === 'delete_node_reaction') {
         for (let j = i - 1; j >= 0; j--) {
           const previousMutation = mutations[j];
           if (!previousMutation) {
@@ -275,51 +262,21 @@ export class MutationService {
           }
 
           if (
-            previousMutation.type === 'create_message' &&
-            previousMutation.data.id === mutation.data.id
-          ) {
-            deletedMutationIds.add(mutation.id);
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'mark_message_seen' &&
-            previousMutation.data.messageId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'create_message_reaction' &&
-            previousMutation.data.messageId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          } else if (
-            previousMutation.type === 'delete_message_reaction' &&
-            previousMutation.data.messageId === mutation.data.id
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          }
-        }
-      } else if (mutation.type === 'delete_message_reaction') {
-        for (let j = i - 1; j >= 0; j--) {
-          const previousMutation = mutations[j];
-          if (!previousMutation) {
-            continue;
-          }
-
-          if (
-            previousMutation.type === 'create_message_reaction' &&
-            previousMutation.data.messageId === mutation.data.messageId &&
+            previousMutation.type === 'create_node_reaction' &&
+            previousMutation.data.nodeId === mutation.data.nodeId &&
             previousMutation.data.reaction === mutation.data.reaction
           ) {
             deletedMutationIds.add(mutation.id);
             deletedMutationIds.add(previousMutation.id);
           } else if (
-            previousMutation.type === 'delete_message_reaction' &&
-            previousMutation.data.messageId === mutation.data.messageId &&
+            previousMutation.type === 'delete_node_reaction' &&
+            previousMutation.data.nodeId === mutation.data.nodeId &&
             previousMutation.data.reaction === mutation.data.reaction
           ) {
             deletedMutationIds.add(previousMutation.id);
           }
         }
-      } else if (mutation.type === 'mark_entry_seen') {
+      } else if (mutation.type === 'mark_node_seen') {
         for (let j = i - 1; j >= 0; j--) {
           const previousMutation = mutations[j];
           if (!previousMutation) {
@@ -327,13 +284,13 @@ export class MutationService {
           }
 
           if (
-            previousMutation.type === 'mark_entry_seen' &&
-            previousMutation.data.entryId === mutation.data.entryId
+            previousMutation.type === 'mark_node_seen' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           }
         }
-      } else if (mutation.type === 'mark_entry_opened') {
+      } else if (mutation.type === 'mark_node_opened') {
         for (let j = i - 1; j >= 0; j--) {
           const previousMutation = mutations[j];
           if (!previousMutation) {
@@ -341,50 +298,8 @@ export class MutationService {
           }
 
           if (
-            previousMutation.type === 'mark_entry_opened' &&
-            previousMutation.data.entryId === mutation.data.entryId
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          }
-        }
-      } else if (mutation.type === 'mark_file_seen') {
-        for (let j = i - 1; j >= 0; j--) {
-          const previousMutation = mutations[j];
-          if (!previousMutation) {
-            continue;
-          }
-
-          if (
-            previousMutation.type === 'mark_file_seen' &&
-            previousMutation.data.fileId === mutation.data.fileId
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          }
-        }
-      } else if (mutation.type === 'mark_file_opened') {
-        for (let j = i - 1; j >= 0; j--) {
-          const previousMutation = mutations[j];
-          if (!previousMutation) {
-            continue;
-          }
-
-          if (
-            previousMutation.type === 'mark_file_opened' &&
-            previousMutation.data.fileId === mutation.data.fileId
-          ) {
-            deletedMutationIds.add(previousMutation.id);
-          }
-        }
-      } else if (mutation.type === 'mark_message_seen') {
-        for (let j = i - 1; j >= 0; j--) {
-          const previousMutation = mutations[j];
-          if (!previousMutation) {
-            continue;
-          }
-
-          if (
-            previousMutation.type === 'mark_message_seen' &&
-            previousMutation.data.messageId === mutation.data.messageId
+            previousMutation.type === 'mark_node_opened' &&
+            previousMutation.data.nodeId === mutation.data.nodeId
           ) {
             deletedMutationIds.add(previousMutation.id);
           }

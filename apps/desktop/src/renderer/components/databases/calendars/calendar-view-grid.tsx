@@ -2,7 +2,7 @@ import {
   FieldAttributes,
   isSameDay,
   toUTCDate,
-  ViewFilterAttributes,
+  DatabaseViewFilterAttributes,
 } from '@colanode/core';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React from 'react';
@@ -11,9 +11,9 @@ import { DayPicker, DayProps } from 'react-day-picker';
 import { CalendarViewDay } from '@/renderer/components/databases/calendars/calendar-view-day';
 import { buttonVariants } from '@/renderer/components/ui/button';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { useRecordsQuery } from '@/renderer/hooks/user-records-query';
+import { useRecordsQuery } from '@/renderer/hooks/use-records-query';
 import { filterRecords } from '@/shared/lib/databases';
 import { cn, getDisplayedDates } from '@/shared/lib/utils';
 
@@ -24,12 +24,12 @@ interface CalendarViewGridProps {
 export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
   const workspace = useWorkspace();
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const [month, setMonth] = React.useState(new Date());
   const { first, last } = getDisplayedDates(month);
 
-  const filters: ViewFilterAttributes[] = [
+  const filters: DatabaseViewFilterAttributes[] = [
     ...view.filters,
     {
       id: 'start_date',
@@ -89,7 +89,7 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
           <ChevronRight className="size-4" {...props} />
         ),
         Day: (props: DayProps) => {
-          const filter: ViewFilterAttributes = {
+          const filter: DatabaseViewFilterAttributes = {
             id: 'calendar_filter',
             type: 'field',
             fieldId: field.id,
@@ -105,7 +105,8 @@ export const CalendarViewGrid = ({ field }: CalendarViewGridProps) => {
           );
 
           const canCreate =
-            (field.type === 'createdAt' && isSameDay(props.date, new Date())) ||
+            (field.type === 'created_at' &&
+              isSameDay(props.date, new Date())) ||
             field.type === 'date';
 
           const onCreate =

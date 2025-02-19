@@ -36,16 +36,16 @@ export class YDoc {
     }
   }
 
-  public updateAttributes(
+  public update(
     schema: ZodSchema,
-    attributes: z.infer<typeof schema>
+    object: z.infer<typeof schema>
   ): Uint8Array | null {
-    if (!schema.safeParse(attributes).success) {
-      throw new Error('Invalid attributes', schema.safeParse(attributes).error);
+    if (!schema.safeParse(object).success) {
+      throw new Error('Invalid object', schema.safeParse(object).error);
     }
 
-    const attributesSchema = this.extractType(schema, attributes);
-    if (!(attributesSchema instanceof z.ZodObject)) {
+    const objectSchema = this.extractType(schema, object);
+    if (!(objectSchema instanceof z.ZodObject)) {
       throw new Error('Schema must be a ZodObject');
     }
 
@@ -56,13 +56,13 @@ export class YDoc {
 
     this.doc.on('update', onUpdateCallback);
 
-    const attributesMap = this.doc.getMap('attributes');
+    const objectMap = this.doc.getMap('object');
     this.doc.transact(() => {
-      this.applyObjectChanges(attributesSchema, attributes, attributesMap);
+      this.applyObjectChanges(objectSchema, object, objectMap);
 
-      const parseResult = schema.safeParse(attributesMap.toJSON());
+      const parseResult = schema.safeParse(objectMap.toJSON());
       if (!parseResult.success) {
-        throw new Error('Invalid attributes', parseResult.error);
+        throw new Error('Invalid object', parseResult.error);
       }
     });
 
@@ -84,10 +84,10 @@ export class YDoc {
     return update;
   }
 
-  public getAttributes<T>(): T {
-    const attributesMap = this.doc.getMap('attributes');
-    const attributes = attributesMap.toJSON() as T;
-    return attributes;
+  public getObject<T>(): T {
+    const objectMap = this.doc.getMap('object');
+    const object = objectMap.toJSON() as T;
+    return object;
   }
 
   public applyUpdate(update: Uint8Array | string) {

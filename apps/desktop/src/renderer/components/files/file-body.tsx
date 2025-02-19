@@ -4,10 +4,10 @@ import { FilePreview } from '@/renderer/components/files/file-preview';
 import { FileSidebar } from '@/renderer/components/files/file-sidebar';
 import { Button } from '@/renderer/components/ui/button';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { FileWithState } from '@/shared/types/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FileBodyProps {
-  file: FileWithState;
+  file: LocalFileNode;
 }
 
 export const FileBody = ({ file }: FileBodyProps) => {
@@ -26,7 +26,7 @@ export const FileBody = ({ file }: FileBodyProps) => {
                 accountId: workspace.accountId,
                 workspaceId: workspace.id,
                 fileId: file.id,
-                extension: file.extension,
+                extension: file.attributes.extension,
               })
             }
           >

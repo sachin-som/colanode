@@ -1,4 +1,7 @@
-import { UrlFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
+import {
+  UrlFieldAttributes,
+  DatabaseViewFieldFilterAttributes,
+} from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
@@ -15,19 +18,19 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { SmartTextInput } from '@/renderer/components/ui/smart-text-input';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { urlFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewUrlFieldFilterProps {
   field: UrlFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewUrlFieldFilter = ({
   field,
   filter,
 }: ViewUrlFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     urlFieldFilterOperators.find(

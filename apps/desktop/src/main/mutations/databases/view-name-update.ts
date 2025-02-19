@@ -1,12 +1,12 @@
-import { DatabaseAttributes } from '@colanode/core';
+import { DatabaseViewAttributes } from '@colanode/core';
 
 import { MutationHandler } from '@/main/lib/types';
-import { MutationError, MutationErrorCode } from '@/shared/mutations';
 import {
   ViewNameUpdateMutationInput,
   ViewNameUpdateMutationOutput,
 } from '@/shared/mutations/databases/view-name-update';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
+import { MutationErrorCode, MutationError } from '@/shared/mutations';
 
 export class ViewNameUpdateMutationHandler
   extends WorkspaceMutationHandlerBase
@@ -17,18 +17,10 @@ export class ViewNameUpdateMutationHandler
   ): Promise<ViewNameUpdateMutationOutput> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
-      input.databaseId,
+    const result = await workspace.nodes.updateNode<DatabaseViewAttributes>(
+      input.viewId,
       (attributes) => {
-        const view = attributes.views[input.viewId];
-        if (!view) {
-          throw new MutationError(
-            MutationErrorCode.ViewNotFound,
-            'The view you are trying to update the name of does not exist.'
-          );
-        }
-
-        view.name = input.name;
+        attributes.name = input.name;
         return attributes;
       }
     );

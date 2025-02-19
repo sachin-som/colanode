@@ -1,4 +1,4 @@
-import { createDebugger, SyncUserData, UserStatus } from '@colanode/core';
+import { createDebugger, SyncUserData } from '@colanode/core';
 
 import { mapUser } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
@@ -26,7 +26,7 @@ export class UserService {
         name: user.name,
         avatar: user.avatar,
         role: user.role,
-        version: BigInt(user.version),
+        revision: BigInt(user.revision),
         created_at: user.createdAt,
         updated_at: user.updatedAt,
         status: user.status,
@@ -43,22 +43,12 @@ export class UserService {
             custom_avatar: user.customAvatar,
             role: user.role,
             status: user.status,
-            version: BigInt(user.version),
+            revision: BigInt(user.revision),
             updated_at: user.updatedAt,
           })
-          .where('version', '<', BigInt(user.version))
+          .where('revision', '<', BigInt(user.revision))
       )
       .executeTakeFirst();
-
-    await this.workspace.database
-      .deleteFrom('texts')
-      .where('id', '=', user.id)
-      .execute();
-
-    await this.workspace.database
-      .insertInto('texts')
-      .values({ id: user.id, name: user.name, text: null })
-      .execute();
 
     if (createdUser) {
       eventBus.publish({

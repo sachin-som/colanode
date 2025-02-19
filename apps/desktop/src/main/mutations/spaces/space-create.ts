@@ -48,7 +48,7 @@ export class SpaceCreateMutationHandler
       description: input.description,
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id: spaceId,
       attributes: spaceAttributes,
       parentId: null,
@@ -61,7 +61,7 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id: pageId,
       attributes: pageAttributes,
       parentId: spaceId,
@@ -74,7 +74,7 @@ export class SpaceCreateMutationHandler
       parentId: spaceId,
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id: channelId,
       attributes: channelAttributes,
       parentId: spaceId,

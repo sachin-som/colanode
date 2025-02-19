@@ -1,20 +1,21 @@
-import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import React from 'react';
 
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 import { DatabaseContext } from '@/renderer/contexts/database';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface DatabaseProps {
-  database: DatabaseEntry;
-  role: EntryRole;
+  database: LocalDatabaseNode;
+  role: NodeRole;
   children: React.ReactNode;
 }
 
 export const Database = ({ database, role, children }: DatabaseProps) => {
   const workspace = useWorkspace();
-  const canEdit = hasEntryRole(role, 'editor');
-  const canCreateRecord = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
+  const canCreateRecord = hasNodeRole(role, 'editor');
 
   return (
     <DatabaseContext.Provider
@@ -23,7 +24,6 @@ export const Database = ({ database, role, children }: DatabaseProps) => {
         name: database.attributes.name,
         role,
         fields: Object.values(database.attributes.fields),
-        views: Object.values(database.attributes.views),
         canEdit,
         canCreateRecord,
         createField: async (type, name) => {

@@ -11,6 +11,7 @@ import { FileContainer } from '@/renderer/components/files/file-container';
 import { FolderContainer } from '@/renderer/components/folders/folder-container';
 import { PageContainer } from '@/renderer/components/pages/page-container';
 import { RecordContainer } from '@/renderer/components/records/record-container';
+import { MessageContainer } from '@/renderer/components/messages/message-container';
 
 interface ContainerTabContentProps {
   tab: ContainerTab;
@@ -34,6 +35,7 @@ export const ContainerTabContent = ({ tab }: ContainerTabContentProps) => {
         .with(IdType.Chat, () => <ChatContainer chatId={tab.path} />)
         .with(IdType.Folder, () => <FolderContainer folderId={tab.path} />)
         .with(IdType.File, () => <FileContainer fileId={tab.path} />)
+        .with(IdType.Message, () => <MessageContainer messageId={tab.path} />)
         .otherwise(() => null)}
     </TabsContent>
   );

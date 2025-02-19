@@ -38,7 +38,7 @@ export const RecordUrlValue = ({ field, readOnly }: RecordUrlValueProps) => {
               record.removeFieldValue(field);
             } else {
               record.updateFieldValue(field, {
-                type: 'url',
+                type: 'string',
                 value: newValue,
               });
             }

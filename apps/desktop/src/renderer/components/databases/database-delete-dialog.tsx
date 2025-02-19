@@ -17,11 +17,11 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 interface DatabaseDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entryId: string;
+  databaseId: string;
 }
 
 export const DatabaseDeleteDialog = ({
-  entryId,
+  databaseId,
   open,
   onOpenChange,
 }: DatabaseDeleteDialogProps) => {
@@ -50,13 +50,13 @@ export const DatabaseDeleteDialog = ({
               mutate({
                 input: {
                   type: 'database_delete',
-                  databaseId: entryId,
+                  databaseId,
                   accountId: workspace.accountId,
                   workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  layout.close(entryId);
+                  layout.close(databaseId);
                 },
                 onError(error) {
                   toast({

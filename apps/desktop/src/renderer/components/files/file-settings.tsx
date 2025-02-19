@@ -1,6 +1,6 @@
 import { Copy, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
-import { EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 
 import { FileDeleteDialog } from '@/renderer/components/files/file-delete-dialog';
 import {
@@ -9,20 +9,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
-import { FileWithState } from '@/shared/types/files';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FileSettingsProps {
-  file: FileWithState;
-  role: EntryRole;
+  file: LocalFileNode;
+  role: NodeRole;
 }
 
 export const FileSettings = ({ file, role }: FileSettingsProps) => {
   const workspace = useWorkspace();
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const canDelete =
-    file.parentId === file.entryId &&
-    (file.createdBy === workspace.userId || hasEntryRole(role, 'editor'));
+    file.parentId === file.parentId &&
+    (file.createdBy === workspace.userId || hasNodeRole(role, 'editor'));
 
   return (
     <React.Fragment>

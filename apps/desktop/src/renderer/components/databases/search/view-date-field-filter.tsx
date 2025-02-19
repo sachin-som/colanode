@@ -1,4 +1,7 @@
-import { DateFieldAttributes, ViewFieldFilterAttributes } from '@colanode/core';
+import {
+  DateFieldAttributes,
+  DatabaseViewFieldFilterAttributes,
+} from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
 import { FieldIcon } from '@/renderer/components/databases/fields/field-icon';
@@ -15,19 +18,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { dateFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewDateFieldFilterProps {
   field: DateFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewDateFieldFilter = ({
   field,
   filter,
 }: ViewDateFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     dateFieldFilterOperators.find(

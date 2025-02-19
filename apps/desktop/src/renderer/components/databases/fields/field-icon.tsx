@@ -26,9 +26,9 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <SquareCheck className={className} />;
     case 'collaborator':
       return <User className={className} />;
-    case 'createdAt':
+    case 'created_at':
       return <Calendar className={className} />;
-    case 'createdBy':
+    case 'created_by':
       return <User className={className} />;
     case 'date':
       return <Calendar className={className} />;
@@ -36,7 +36,7 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <Mail className={className} />;
     case 'file':
       return <File className={className} />;
-    case 'multiSelect':
+    case 'multi_select':
       return <ListChecks className={className} />;
     case 'number':
       return <Hash className={className} />;
@@ -50,9 +50,9 @@ export const FieldIcon = ({ type, className }: FieldIconProps) => {
       return <Text className={className} />;
     case 'url':
       return <Link className={className} />;
-    case 'updatedAt':
+    case 'updated_at':
       return <Calendar className={className} />;
-    case 'updatedBy':
+    case 'updated_by':
       return <User className={className} />;
     default:
       return <ShieldQuestion className={className} />;

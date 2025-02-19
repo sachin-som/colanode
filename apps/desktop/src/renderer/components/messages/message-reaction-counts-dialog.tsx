@@ -11,13 +11,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/renderer/components/ui/tabs';
-import { MessageNode, MessageReactionCount } from '@/shared/types/messages';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { MessageReactionCountsDialogList } from '@/renderer/components/messages/message-reaction-counts-dialog-list';
+import { NodeReactionCount, LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageReactionCountsDialogProps {
-  message: MessageNode;
-  reactionCounts: MessageReactionCount[];
+  message: LocalMessageNode;
+  reactionCounts: NodeReactionCount[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

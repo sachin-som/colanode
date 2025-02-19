@@ -9,11 +9,11 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const ViewSorts = () => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   return (
     <Popover

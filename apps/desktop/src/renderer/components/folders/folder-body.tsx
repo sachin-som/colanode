@@ -1,4 +1,4 @@
-import { EntryRole, FolderEntry } from '@colanode/core';
+import { NodeRole } from '@colanode/core';
 import {
   Check,
   Filter,
@@ -24,6 +24,7 @@ import { ScrollArea } from '@/renderer/components/ui/scroll-area';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { FolderLayoutType } from '@/shared/types/folders';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 export type FolderLayoutOption = {
   value: FolderLayoutType;
@@ -54,8 +55,8 @@ export const folderLayouts: FolderLayoutOption[] = [
 ];
 
 interface FolderBodyProps {
-  folder: FolderEntry;
-  role: EntryRole;
+  folder: LocalFolderNode;
+  role: NodeRole;
 }
 
 export const FolderBody = ({ folder }: FolderBodyProps) => {
@@ -100,8 +101,6 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
       workspaceId: workspace.id,
       filePath,
       parentId: folder.id,
-      entryId: folder.id,
-      rootId: folder.rootId,
     });
 
     if (!mutationResult.success) {

@@ -8,6 +8,8 @@ import {
 } from '@tiptap/react';
 import { debounce, isEqual } from 'lodash-es';
 import React from 'react';
+import { YDoc } from '@colanode/crdt';
+import { RichTextContent, richTextContentSchema } from '@colanode/core';
 
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import {
@@ -67,45 +69,96 @@ import { ToolbarMenu, ActionMenu } from '@/renderer/editor/menus';
 import {
   restoreRelativeSelection,
   getRelativeSelection,
+  mapContentsToBlocks,
+  buildEditorContent,
 } from '@/shared/lib/editor';
+import { LocalNode } from '@/shared/types/nodes';
+import { DocumentState, DocumentUpdate } from '@/shared/types/documents';
+import { toast } from '@/renderer/hooks/use-toast';
 
 interface DocumentEditorProps {
-  documentId: string;
-  rootId: string;
-  content: JSONContent;
-  transactionId: string;
+  node: LocalNode;
+  state: DocumentState | null | undefined;
+  updates: DocumentUpdate[];
   canEdit: boolean;
-  onUpdate: (before: JSONContent, after: JSONContent) => void;
   autoFocus?: FocusPosition;
 }
 
+const buildYDoc = (
+  state: DocumentState | null | undefined,
+  updates: DocumentUpdate[]
+) => {
+  const ydoc = new YDoc(state?.state);
+  for (const update of updates) {
+    ydoc.applyUpdate(update.data);
+  }
+  return ydoc;
+};
+
 export const DocumentEditor = ({
-  documentId,
-  rootId,
-  content,
-  transactionId,
+  node,
+  state,
+  updates,
   canEdit,
-  onUpdate,
   autoFocus,
 }: DocumentEditorProps) => {
   const workspace = useWorkspace();
 
   const hasPendingChanges = React.useRef(false);
-  const transactionIdRef = React.useRef(transactionId);
-  const contentRef = React.useRef(content);
+  const revisionRef = React.useRef(state?.revision ?? 0);
+  const ydocRef = React.useRef<YDoc>(buildYDoc(state, updates));
 
   const debouncedSave = React.useMemo(
     () =>
-      debounce((content: JSONContent) => {
-        const before = contentRef.current;
-        const after = content;
+      debounce(async (content: JSONContent) => {
+        const beforeContent = ydocRef.current.getObject<RichTextContent>();
+        const beforeBlocks = beforeContent?.blocks;
+        const indexMap = new Map<string, string>();
+        if (beforeBlocks) {
+          for (const [key, value] of Object.entries(beforeBlocks)) {
+            indexMap.set(key, value.index);
+          }
+        }
 
-        contentRef.current = content;
+        const afterBlocks = mapContentsToBlocks(
+          node.id,
+          content.content ?? [],
+          indexMap
+        );
+
+        const afterContent: RichTextContent = {
+          type: 'rich_text',
+          blocks: afterBlocks,
+        };
+
+        const update = ydocRef.current.update(
+          richTextContentSchema,
+          afterContent
+        );
+
         hasPendingChanges.current = false;
 
-        onUpdate(before, after);
+        if (!update) {
+          return;
+        }
+
+        const result = await window.colanode.executeMutation({
+          type: 'document_update',
+          accountId: workspace.accountId,
+          workspaceId: workspace.id,
+          documentId: node.id,
+          update,
+        });
+
+        if (!result.success) {
+          toast({
+            title: 'Failed to save changes',
+            description: result.error.message,
+            variant: 'destructive',
+          });
+        }
       }, 500),
-    [onUpdate]
+    [node.id]
   );
 
   const editor = useEditor(
@@ -119,8 +172,8 @@ export const DocumentEditor = ({
           context: {
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            documentId,
-            rootId,
+            documentId: node.id,
+            rootId: node.rootId,
           },
         }),
         TextNode,
@@ -165,10 +218,10 @@ export const DocumentEditor = ({
             FolderCommand,
           ],
           context: {
-            documentId,
+            documentId: node.id,
             accountId: workspace.accountId,
             workspaceId: workspace.id,
-            rootId,
+            rootId: node.rootId,
           },
         }),
         BoldMark,
@@ -186,7 +239,10 @@ export const DocumentEditor = ({
           spellCheck: 'false',
         },
       },
-      content: content,
+      content: buildEditorContent(
+        node.id,
+        ydocRef.current.getObject<RichTextContent>()
+      ),
       editable: canEdit,
       shouldRerenderOnTransaction: false,
       autofocus: autoFocus,
@@ -197,7 +253,7 @@ export const DocumentEditor = ({
         }
       },
     },
-    [documentId]
+    [node.id]
   );
 
   React.useEffect(() => {
@@ -205,28 +261,36 @@ export const DocumentEditor = ({
       return;
     }
 
+    if (!state) {
+      return;
+    }
+
     if (hasPendingChanges.current) {
       return;
     }
 
-    if (transactionIdRef.current === transactionId) {
+    if (revisionRef.current === state?.revision) {
       return;
     }
 
-    if (isEqual(content, contentRef.current)) {
+    const beforeContent = ydocRef.current.getObject<RichTextContent>();
+    ydocRef.current.applyUpdate(state.state);
+    const afterContent = ydocRef.current.getObject<RichTextContent>();
+
+    if (isEqual(beforeContent, afterContent)) {
       return;
     }
 
-    transactionIdRef.current = transactionId;
-    contentRef.current = content;
+    const editorContent = buildEditorContent(node.id, afterContent);
+    revisionRef.current = state.revision;
 
     const relativeSelection = getRelativeSelection(editor);
-    editor.chain().setContent(content).run();
+    editor.chain().setContent(editorContent).run();
 
     if (relativeSelection != null) {
       restoreRelativeSelection(editor, relativeSelection);
     }
-  }, [content, transactionId]);
+  }, [state?.revision]);
 
   return (
     <div className="min-h-[500px]">

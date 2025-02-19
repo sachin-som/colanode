@@ -17,8 +17,8 @@ export const ChatContainerTab = ({
   const radar = useRadar();
 
   const { data: chat, isPending: isChatPending } = useQuery({
-    type: 'entry_get',
-    entryId: chatId,
+    type: 'node_get',
+    nodeId: chatId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });

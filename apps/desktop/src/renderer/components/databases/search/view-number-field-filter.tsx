@@ -1,6 +1,6 @@
 import {
   NumberFieldAttributes,
-  ViewFieldFilterAttributes,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
@@ -18,19 +18,19 @@ import {
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
 import { SmartNumberInput } from '@/renderer/components/ui/smart-number-input';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { numberFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewNumberFieldFilterProps {
   field: NumberFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewNumberFieldFilter = ({
   field,
   filter,
 }: ViewNumberFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     numberFieldFilterOperators.find(

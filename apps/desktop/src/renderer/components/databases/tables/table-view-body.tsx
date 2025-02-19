@@ -1,11 +1,11 @@
 import { TableViewEmptyPlaceholder } from '@/renderer/components/databases/tables/table-view-empty-placeholder';
 import { TableViewLoadMoreRow } from '@/renderer/components/databases/tables/table-view-load-more-row';
 import { TableViewRow } from '@/renderer/components/databases/tables/table-view-row';
-import { useView } from '@/renderer/contexts/view';
-import { useRecordsQuery } from '@/renderer/hooks/user-records-query';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
+import { useRecordsQuery } from '@/renderer/hooks/use-records-query';
 
 export const TableViewBody = () => {
-  const view = useView();
+  const view = useDatabaseView();
   const { records, hasMore, loadMore, isPending } = useRecordsQuery(
     view.filters,
     view.sorts

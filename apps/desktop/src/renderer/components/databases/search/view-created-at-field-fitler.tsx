@@ -1,6 +1,6 @@
 import {
   CreatedAtFieldAttributes,
-  ViewFieldFilterAttributes,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
@@ -18,19 +18,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { dateFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewCreatedAtFieldFilterProps {
   field: CreatedAtFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewCreatedAtFieldFilter = ({
   field,
   filter,
 }: ViewCreatedAtFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     dateFieldFilterOperators.find(

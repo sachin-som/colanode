@@ -1,10 +1,9 @@
-import { ChannelEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useRadar } from '@/renderer/contexts/radar';
 import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { LocalChannelNode } from '@/shared/types/nodes';
 
 interface ChannelContainerTabProps {
   channelId: string;
@@ -19,8 +18,8 @@ export const ChannelContainerTab = ({
   const radar = useRadar();
 
   const { data, isPending } = useQuery({
-    type: 'entry_get',
-    entryId: channelId,
+    type: 'node_get',
+    nodeId: channelId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
@@ -29,7 +28,7 @@ export const ChannelContainerTab = ({
     return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
 
-  const channel = data as ChannelEntry;
+  const channel = data as LocalChannelNode;
   if (!channel) {
     return <p className="text-sm text-muted-foreground">Not found</p>;
   }

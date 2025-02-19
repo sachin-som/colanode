@@ -1,30 +1,30 @@
 import {
   BooleanFieldAttributes,
   CreatedAtFieldAttributes,
-  DatabaseEntry,
+  DatabaseNode,
   DateFieldAttributes,
   EmailFieldAttributes,
   FieldAttributes,
   isStringArray,
-  MultiSelectFieldAttributes,
   NumberFieldAttributes,
   PhoneFieldAttributes,
-  RecordEntry,
   SelectFieldAttributes,
   TextFieldAttributes,
   UrlFieldAttributes,
-  ViewFieldFilterAttributes,
-  ViewFilterAttributes,
-  ViewSortAttributes,
+  DatabaseViewFieldFilterAttributes,
+  DatabaseViewFilterAttributes,
+  DatabaseViewSortAttributes,
+  MultiSelectFieldAttributes,
 } from '@colanode/core';
 import { sql } from 'kysely';
 
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { mapEntry } from '@/main/lib/mappers';
+import { mapNode } from '@/main/lib/mappers';
 import { RecordListQueryInput } from '@/shared/queries/records/record-list';
 import { Event } from '@/shared/types/events';
-import { SelectEntry } from '@/main/databases/workspace';
+import { SelectNode } from '@/main/databases/workspace';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 export class RecordListQueryHandler
   extends WorkspaceQueryHandlerBase
@@ -32,15 +32,15 @@ export class RecordListQueryHandler
 {
   public async handleQuery(
     input: RecordListQueryInput
-  ): Promise<RecordEntry[]> {
+  ): Promise<LocalRecordNode[]> {
     const rows = await this.fetchRecords(input);
-    return this.buildRecords(rows);
+    return rows.map(mapNode) as LocalRecordNode[];
   }
 
   public async checkForChanges(
     event: Event,
     input: RecordListQueryInput,
-    output: RecordEntry[]
+    output: LocalRecordNode[]
   ): Promise<ChangeCheckResult<RecordListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -54,10 +54,10 @@ export class RecordListQueryHandler
     }
 
     if (
-      event.type === 'entry_created' &&
+      event.type === 'node_created' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'record'
+      event.node.type === 'record'
     ) {
       const newResult = await this.handleQuery(input);
       return {
@@ -67,13 +67,13 @@ export class RecordListQueryHandler
     }
 
     if (
-      event.type === 'entry_updated' &&
+      event.type === 'node_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId
     ) {
       if (
-        event.entry.type === 'record' &&
-        event.entry.attributes.databaseId === input.databaseId
+        event.node.type === 'record' &&
+        event.node.attributes.databaseId === input.databaseId
       ) {
         if (input.filters.length > 0 || input.sorts.length > 0) {
           const newResult = await this.handleQuery(input);
@@ -83,11 +83,11 @@ export class RecordListQueryHandler
           };
         }
 
-        const record = output.find((record) => record.id === event.entry.id);
+        const record = output.find((record) => record.id === event.node.id);
         if (record) {
           const newResult = output.map((record) => {
-            if (record.id === event.entry.id) {
-              return event.entry as RecordEntry;
+            if (record.id === event.node.id) {
+              return event.node as LocalRecordNode;
             }
             return record;
           });
@@ -100,8 +100,8 @@ export class RecordListQueryHandler
       }
 
       if (
-        event.entry.type === 'database' &&
-        event.entry.id === input.databaseId
+        event.node.type === 'database' &&
+        event.node.id === input.databaseId
       ) {
         const newResult = await this.handleQuery(input);
         return {
@@ -112,13 +112,13 @@ export class RecordListQueryHandler
     }
 
     if (
-      event.type === 'entry_deleted' &&
+      event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId
     ) {
       if (
-        event.entry.type === 'record' &&
-        event.entry.attributes.databaseId === input.databaseId
+        event.node.type === 'record' &&
+        event.node.attributes.databaseId === input.databaseId
       ) {
         const newResult = await this.handleQuery(input);
         return {
@@ -128,8 +128,8 @@ export class RecordListQueryHandler
       }
 
       if (
-        event.entry.type === 'database' &&
-        event.entry.id === input.databaseId
+        event.node.type === 'database' &&
+        event.node.id === input.databaseId
       ) {
         return {
           hasChanges: true,
@@ -145,7 +145,7 @@ export class RecordListQueryHandler
 
   private async fetchRecords(
     input: RecordListQueryInput
-  ): Promise<SelectEntry[]> {
+  ): Promise<SelectNode[]> {
     const database = await this.fetchDatabase(input);
     const filterQuery = this.buildFiltersQuery(
       input.filters,
@@ -153,12 +153,12 @@ export class RecordListQueryHandler
     );
 
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
-    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'e."id" ASC'}`;
+    const orderByQuery = `ORDER BY ${input.sorts.length > 0 ? this.buildSortOrdersQuery(input.sorts, database.attributes.fields) : 'n."id" ASC'}`;
     const offset = (input.page - 1) * input.count;
-    const query = sql<SelectEntry>`
-        SELECT e.*
-        FROM entries e
-        WHERE e.parent_id = ${input.databaseId} AND e.type = 'record' ${sql.raw(filterQuery)}
+    const query = sql<SelectNode>`
+        SELECT n.*
+        FROM nodes n
+        WHERE n.parent_id = ${input.databaseId} AND n.type = 'record' ${sql.raw(filterQuery)}
         ${sql.raw(orderByQuery)}
         LIMIT ${sql.lit(input.count)}
         OFFSET ${sql.lit(offset)}
@@ -168,28 +168,13 @@ export class RecordListQueryHandler
     return result.rows;
   }
 
-  private buildRecords = (rows: SelectEntry[]): RecordEntry[] => {
-    const entries = rows.map(mapEntry);
-    const recordEntries: RecordEntry[] = [];
-
-    for (const entry of entries) {
-      if (entry.type !== 'record') {
-        continue;
-      }
-
-      recordEntries.push(entry);
-    }
-
-    return recordEntries;
-  };
-
   private async fetchDatabase(
     input: RecordListQueryInput
-  ): Promise<DatabaseEntry> {
+  ): Promise<DatabaseNode> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const row = await workspace.database
-      .selectFrom('entries')
+      .selectFrom('nodes')
       .where('id', '=', input.databaseId)
       .selectAll()
       .executeTakeFirst();
@@ -198,12 +183,12 @@ export class RecordListQueryHandler
       throw new Error('Database not found');
     }
 
-    const database = mapEntry(row) as DatabaseEntry;
+    const database = mapNode(row) as DatabaseNode;
     return database;
   }
 
   private buildFiltersQuery = (
-    filters: ViewFilterAttributes[],
+    filters: DatabaseViewFilterAttributes[],
     fields: Record<string, FieldAttributes>
   ): string => {
     if (filters.length === 0) {
@@ -222,7 +207,7 @@ export class RecordListQueryHandler
   };
 
   private buildFilterQuery = (
-    filter: ViewFilterAttributes,
+    filter: DatabaseViewFilterAttributes,
     fields: Record<string, FieldAttributes>
   ): string | null => {
     if (filter.type === 'group') {
@@ -239,9 +224,9 @@ export class RecordListQueryHandler
         return this.buildBooleanFilterQuery(filter, field);
       case 'collaborator':
         return null;
-      case 'createdAt':
+      case 'created_at':
         return this.buildCreatedAtFilterQuery(filter, field);
-      case 'createdBy':
+      case 'created_by':
         return null;
       case 'date':
         return this.buildDateFilterQuery(filter, field);
@@ -249,7 +234,7 @@ export class RecordListQueryHandler
         return this.buildEmailFilterQuery(filter, field);
       case 'file':
         return null;
-      case 'multiSelect':
+      case 'multi_select':
         return this.buildMultiSelectFilterQuery(filter, field);
       case 'number':
         return this.buildNumberFilterQuery(filter, field);
@@ -267,22 +252,22 @@ export class RecordListQueryHandler
   };
 
   private buildBooleanFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: BooleanFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_true') {
-      return `json_extract(e.attributes, '$.fields.${field.id}.value') = true`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') = true`;
     }
 
     if (filter.operator === 'is_false') {
-      return `(json_extract(e.attributes, '$.fields.${field.id}.value') = false OR json_extract(e.attributes, '$.fields.${field.id}.value') IS NULL)`;
+      return `(json_extract(n.attributes, '$.fields.${field.id}.value') = false OR json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL)`;
     }
 
     return null;
   };
 
   private buildNumberFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: NumberFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -331,11 +316,11 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} ${value}`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} ${value}`;
   };
 
   private buildTextFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: TextFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -389,11 +374,11 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildEmailFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: EmailFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -447,11 +432,11 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildPhoneFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: PhoneFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -505,11 +490,11 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildUrlFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: UrlFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -563,11 +548,11 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${operator} '${formattedValue}'`;
   };
 
   private buildSelectFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: SelectFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -589,24 +574,24 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `json_extract(e.attributes, '$.fields.${field.id}.value') IN (${values})`;
+        return `json_extract(n.attributes, '$.fields.${field.id}.value') IN (${values})`;
       case 'is_not_in':
-        return `json_extract(e.attributes, '$.fields.${field.id}.value') NOT IN (${values})`;
+        return `json_extract(n.attributes, '$.fields.${field.id}.value') NOT IN (${values})`;
       default:
         return null;
     }
   };
 
   private buildMultiSelectFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: MultiSelectFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
-      return `json_extract(e.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(e.attributes, '$.fields.${field.id}.value')) = 0`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NULL OR json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) = 0`;
     }
 
     if (filter.operator === 'is_not_empty') {
-      return `json_extract(e.attributes, '$.fields.${field.id}.value') IS NOT NULL AND json_array_length(json_extract(e.attributes, '$.fields.${field.id}.value')) > 0`;
+      return `json_extract(n.attributes, '$.fields.${field.id}.value') IS NOT NULL AND json_array_length(json_extract(n.attributes, '$.fields.${field.id}.value')) > 0`;
     }
 
     if (!isStringArray(filter.value)) {
@@ -620,16 +605,16 @@ export class RecordListQueryHandler
     const values = this.joinIds(filter.value);
     switch (filter.operator) {
       case 'is_in':
-        return `EXISTS (SELECT 1 FROM json_each(json_extract(e.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
+        return `EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       case 'is_not_in':
-        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(e.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
+        return `NOT EXISTS (SELECT 1 FROM json_each(json_extract(n.attributes, '$.fields.${field.id}.value')) WHERE json_each.value IN (${values}))`;
       default:
         return null;
     }
   };
 
   private buildDateFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     field: DateFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
@@ -683,19 +668,19 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `DATE(json_extract(e.attributes, '$.fields.${field.id}.value')) ${operator} '${dateString}'`;
+    return `DATE(json_extract(n.attributes, '$.fields.${field.id}.value')) ${operator} '${dateString}'`;
   };
 
   private buildCreatedAtFilterQuery = (
-    filter: ViewFieldFilterAttributes,
+    filter: DatabaseViewFieldFilterAttributes,
     _: CreatedAtFieldAttributes
   ): string | null => {
     if (filter.operator === 'is_empty') {
-      return `e.created_at IS NULL`;
+      return `n.created_at IS NULL`;
     }
 
     if (filter.operator === 'is_not_empty') {
-      return `e.created_at IS NOT NULL`;
+      return `n.created_at IS NOT NULL`;
     }
 
     if (filter.value === null) {
@@ -741,15 +726,15 @@ export class RecordListQueryHandler
       return null;
     }
 
-    return `DATE(e.created_at) ${operator} '${dateString}'`;
+    return `DATE(n.created_at) ${operator} '${dateString}'`;
   };
 
   private buildIsEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(e.attributes, '$.fields.${fieldId}.value') IS NULL`;
+    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NULL`;
   };
 
   private buildIsNotEmptyFilterQuery = (fieldId: string): string => {
-    return `json_extract(e.attributes, '$.fields.${fieldId}.value') IS NOT NULL`;
+    return `json_extract(n.attributes, '$.fields.${fieldId}.value') IS NOT NULL`;
   };
 
   private joinIds = (ids: string[]): string => {
@@ -757,7 +742,7 @@ export class RecordListQueryHandler
   };
 
   private buildSortOrdersQuery = (
-    sorts: ViewSortAttributes[],
+    sorts: DatabaseViewSortAttributes[],
     fields: Record<string, FieldAttributes>
   ): string => {
     return sorts
@@ -767,7 +752,7 @@ export class RecordListQueryHandler
   };
 
   private buildSortOrderQuery = (
-    sort: ViewSortAttributes,
+    sort: DatabaseViewSortAttributes,
     fields: Record<string, FieldAttributes>
   ): string | null => {
     const field = fields[sort.fieldId];
@@ -775,14 +760,14 @@ export class RecordListQueryHandler
       return null;
     }
 
-    if (field.type === 'createdAt') {
-      return `e.created_at ${sort.direction}`;
+    if (field.type === 'created_at') {
+      return `n.created_at ${sort.direction}`;
     }
 
-    if (field.type === 'createdBy') {
-      return `e.created_by_id ${sort.direction}`;
+    if (field.type === 'created_by') {
+      return `n.created_by_id ${sort.direction}`;
     }
 
-    return `json_extract(e.attributes, '$.fields.${field.id}.value') ${sort.direction}`;
+    return `json_extract(n.attributes, '$.fields.${field.id}.value') ${sort.direction}`;
   };
 }

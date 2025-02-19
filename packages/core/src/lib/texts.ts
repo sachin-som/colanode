@@ -1,60 +1,19 @@
+import { DocumentContent } from '../registry/documents';
 import { Block } from '../registry/block';
-import { EntryAttributes } from '../registry';
-import { MessageAttributes, MessageType } from '../types/messages';
 
-export type TextResult = {
-  id: string;
-  name: string | null;
-  text: string | null;
+export const extractDocumentText = (id: string, content: DocumentContent) => {
+  return extractBlockTexts(id, content.blocks);
 };
 
-export const extractEntryText = (
-  id: string,
-  attributes: EntryAttributes
-): TextResult | undefined => {
-  if (attributes.type === 'page') {
-    return {
-      id,
-      name: attributes.name,
-      text: extractBlockTexts(id, attributes.content),
-    };
-  }
-
-  if (attributes.type === 'record') {
-    return {
-      id,
-      name: attributes.name,
-      text: extractBlockTexts(id, attributes.content),
-    };
-  }
-
-  return undefined;
-};
-
-export const extractMessageText = (
-  id: string,
-  attributes: MessageAttributes
-): TextResult | undefined => {
-  if (attributes.type === MessageType.Standard) {
-    return {
-      id,
-      name: null,
-      text: extractBlockTexts(id, attributes.blocks),
-    };
-  }
-
-  return undefined;
-};
-
-const extractBlockTexts = (
-  entryId: string,
+export const extractBlockTexts = (
+  nodeId: string,
   blocks: Record<string, Block> | undefined | null
 ): string | null => {
   if (!blocks) {
     return null;
   }
 
-  const result = collectBlockText(entryId, blocks);
+  const result = collectBlockText(nodeId, blocks);
   return result.length > 0 ? result : null;
 };
 

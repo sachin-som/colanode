@@ -1,5 +1,3 @@
-import { FolderEntry } from '@colanode/core';
-
 import { FolderNotFound } from '@/renderer/components/folders/folder-not-found';
 import {
   Container,
@@ -8,29 +6,30 @@ import {
   ContainerSettings,
 } from '@/renderer/components/ui/container';
 import { ContainerBreadcrumb } from '@/renderer/components/layouts/containers/container-breadrumb';
-import { useEntryContainer } from '@/renderer/hooks/use-entry-container';
-import { useEntryRadar } from '@/renderer/hooks/use-entry-radar';
+import { useNodeContainer } from '@/renderer/hooks/use-node-container';
+import { useNodeRadar } from '@/renderer/hooks/use-node-radar';
 import { FolderSettings } from '@/renderer/components/folders/folder-settings';
 import { FolderBody } from '@/renderer/components/folders/folder-body';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 interface FolderContainerProps {
   folderId: string;
 }
 
 export const FolderContainer = ({ folderId }: FolderContainerProps) => {
-  const data = useEntryContainer<FolderEntry>(folderId);
+  const data = useNodeContainer<LocalFolderNode>(folderId);
 
-  useEntryRadar(data.entry);
+  useNodeRadar(data.node);
 
   if (data.isPending) {
     return null;
   }
 
-  if (!data.entry) {
+  if (!data.node) {
     return <FolderNotFound />;
   }
 
-  const { entry: folder, role } = data;
+  const { node: folder, role } = data;
 
   return (
     <Container>

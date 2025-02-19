@@ -9,15 +9,16 @@ import { MessageTime } from '@/renderer/components/messages/message-time';
 import { MessageReference } from '@/renderer/components/messages/message-reference';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
+
 interface MessageProps {
-  message: MessageNode;
-  previousMessage?: MessageNode | null;
+  message: LocalMessageNode;
+  previousMessage?: LocalMessageNode | null;
 }
 
 const shouldDisplayAuthor = (
-  message: MessageNode,
-  previousMessage?: MessageNode | null
+  message: LocalMessageNode,
+  previousMessage?: LocalMessageNode | null
 ) => {
   if (!previousMessage) {
     return true;
@@ -61,7 +62,7 @@ export const Message = ({ message, previousMessage }: MessageProps) => {
           rootMargin="50px"
           onChange={(inView) => {
             if (inView) {
-              radar.markMessageAsSeen(
+              radar.markNodeAsSeen(
                 workspace.accountId,
                 workspace.id,
                 message.id

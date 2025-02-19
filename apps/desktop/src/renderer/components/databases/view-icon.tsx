@@ -6,7 +6,7 @@ interface ViewIconProps {
   id: string;
   name: string;
   avatar: string | null | undefined;
-  type: 'table' | 'board' | 'calendar';
+  layout: 'table' | 'board' | 'calendar';
   className?: string;
 }
 
@@ -14,22 +14,22 @@ export const ViewIcon = ({
   id,
   name,
   avatar,
-  type,
+  layout,
   className,
 }: ViewIconProps) => {
   if (avatar) {
     return <Avatar id={id} name={name} avatar={avatar} className={className} />;
   }
 
-  if (type === 'table') {
+  if (layout === 'table') {
     return <Table className={className} />;
   }
 
-  if (type === 'calendar') {
+  if (layout === 'calendar') {
     return <Calendar className={className} />;
   }
 
-  if (type === 'board') {
+  if (layout === 'board') {
     return <SquareKanban className={className} />;
   }
 

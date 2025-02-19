@@ -1,4 +1,4 @@
-import { RecordEntry } from '@colanode/core';
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 export type RecordSearchQueryInput = {
   type: 'record_search';
@@ -13,7 +13,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     record_search: {
       input: RecordSearchQueryInput;
-      output: RecordEntry[];
+      output: LocalRecordNode[];
     };
   }
 }

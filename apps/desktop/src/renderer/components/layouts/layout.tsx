@@ -4,7 +4,7 @@ import { ContainerTabs } from '@/renderer/components/layouts/containers/containe
 import { ContainerBlank } from '@/renderer/components/layouts/containers/container-blank';
 import { Sidebar } from '@/renderer/components/layouts/sidebars/sidebar';
 import { LayoutContext } from '@/renderer/contexts/layout';
-import { useLayoutState } from '@/renderer/hooks/user-layout-state';
+import { useLayoutState } from '@/renderer/hooks/use-layout-state';
 import { useWindowSize } from '@/renderer/hooks/use-window-size';
 import { percentToNumber } from '@/shared/lib/utils';
 

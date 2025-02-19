@@ -7,20 +7,17 @@ import { EmojiCategoryListQueryHandler } from '@/main/queries/emojis/emoji-categ
 import { EmojiSearchQueryHandler } from '@/main/queries/emojis/emoji-search';
 import { EmojiGetBySkinIdQueryHandler } from '@/main/queries/emojis/emoji-get-by-skin-id';
 import { FileListQueryHandler } from '@/main/queries/files/file-list';
-import { FileGetQueryHandler } from '@/main/queries/files/file-get';
+import { FileStateGetQueryHandler } from '@/main/queries/files/file-state-get';
 import { FileMetadataGetQueryHandler } from '@/main/queries/files/file-metadata-get';
-import { FileBreadcrumbGetQueryHandler } from '@/main/queries/files/file-breadcrumb-get';
 import { IconListQueryHandler } from '@/main/queries/icons/icon-list';
 import { IconSearchQueryHandler } from '@/main/queries/icons/icon-search';
 import { IconCategoryListQueryHandler } from '@/main/queries/icons/icon-category-list';
-import { MessageGetQueryHandler } from '@/main/queries/messages/message-get';
 import { MessageListQueryHandler } from '@/main/queries/messages/message-list';
-import { MessageReactionsListQueryHandler } from '@/main/queries/messages/message-reaction-list';
-import { MessageReactionsAggregateQueryHandler } from '@/main/queries/messages/message-reactions-aggregate';
-import { MessageBreadcrumbGetQueryHandler } from '@/main/queries/messages/message-breadcrumb-get';
-import { EntryChildrenGetQueryHandler } from '@/main/queries/entries/entry-children-get';
-import { EntryGetQueryHandler } from '@/main/queries/entries/entry-get';
-import { EntryBreadcrumbGetQueryHandler } from '@/main/queries/entries/entry-breadcrumb-get';
+import { NodeReactionsListQueryHandler } from '@/main/queries/nodes/node-reaction-list';
+import { NodeReactionsAggregateQueryHandler } from '@/main/queries/nodes/node-reactions-aggregate';
+import { NodeChildrenGetQueryHandler } from '@/main/queries/nodes/node-children-get';
+import { NodeGetQueryHandler } from '@/main/queries/nodes/node-get';
+import { NodeTreeGetQueryHandler } from '@/main/queries/nodes/node-tree-get';
 import { RadarDataGetQueryHandler } from '@/main/queries/interactions/radar-data-get';
 import { RecordListQueryHandler } from '@/main/queries/records/record-list';
 import { ServerListQueryHandler } from '@/main/queries/servers/server-list';
@@ -29,10 +26,14 @@ import { WorkspaceGetQueryHandler } from '@/main/queries/workspaces/workspace-ge
 import { WorkspaceListQueryHandler } from '@/main/queries/workspaces/workspace-list';
 import { UserListQueryHandler } from '@/main/queries/users/user-list';
 import { DatabaseListQueryHandler } from '@/main/queries/databases/database-list';
+import { DatabaseViewListQueryHandler } from '@/main/queries/databases/database-view-list';
 import { RecordSearchQueryHandler } from '@/main/queries/records/record-search';
 import { UserGetQueryHandler } from '@/main/queries/users/user-get';
 import { SpaceListQueryHandler } from '@/main/queries/spaces/space-list';
 import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
+import { DocumentGetQueryHandler } from '@/main/queries/documents/document-get';
+import { DocumentStateGetQueryHandler } from '@/main/queries/documents/document-state-get';
+import { DocumentUpdatesListQueryHandler } from '@/main/queries/documents/document-update-list';
 import { WorkspaceMetadataListQueryHandler } from '@/main/queries/workspaces/workspace-metadata-list';
 import { QueryHandler } from '@/main/lib/types';
 import { QueryMap } from '@/shared/queries';
@@ -45,12 +46,10 @@ export const queryHandlerMap: QueryHandlerMap = {
   app_metadata_list: new AppMetadataListQueryHandler(),
   account_list: new AccountListQueryHandler(),
   message_list: new MessageListQueryHandler(),
-  message_reaction_list: new MessageReactionsListQueryHandler(),
-  message_reactions_aggregate: new MessageReactionsAggregateQueryHandler(),
-  message_get: new MessageGetQueryHandler(),
-  message_breadcrumb_get: new MessageBreadcrumbGetQueryHandler(),
-  entry_get: new EntryGetQueryHandler(),
-  entry_breadcrumb_get: new EntryBreadcrumbGetQueryHandler(),
+  node_reaction_list: new NodeReactionsListQueryHandler(),
+  node_reactions_aggregate: new NodeReactionsAggregateQueryHandler(),
+  node_get: new NodeGetQueryHandler(),
+  node_tree_get: new NodeTreeGetQueryHandler(),
   record_list: new RecordListQueryHandler(),
   server_list: new ServerListQueryHandler(),
   user_search: new UserSearchQueryHandler(),
@@ -65,17 +64,20 @@ export const queryHandlerMap: QueryHandlerMap = {
   icon_list: new IconListQueryHandler(),
   icon_search: new IconSearchQueryHandler(),
   icon_category_list: new IconCategoryListQueryHandler(),
-  entry_children_get: new EntryChildrenGetQueryHandler(),
+  node_children_get: new NodeChildrenGetQueryHandler(),
   radar_data_get: new RadarDataGetQueryHandler(),
   file_metadata_get: new FileMetadataGetQueryHandler(),
-  file_breadcrumb_get: new FileBreadcrumbGetQueryHandler(),
   account_get: new AccountGetQueryHandler(),
   workspace_get: new WorkspaceGetQueryHandler(),
   database_list: new DatabaseListQueryHandler(),
+  database_view_list: new DatabaseViewListQueryHandler(),
   record_search: new RecordSearchQueryHandler(),
   user_get: new UserGetQueryHandler(),
-  file_get: new FileGetQueryHandler(),
+  file_state_get: new FileStateGetQueryHandler(),
   chat_list: new ChatListQueryHandler(),
   space_list: new SpaceListQueryHandler(),
   workspace_metadata_list: new WorkspaceMetadataListQueryHandler(),
+  document_get: new DocumentGetQueryHandler(),
+  document_state_get: new DocumentStateGetQueryHandler(),
+  document_updates_list: new DocumentUpdatesListQueryHandler(),
 };

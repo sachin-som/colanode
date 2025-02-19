@@ -28,7 +28,7 @@ export const RecordMultiSelectValue = ({
 
   React.useEffect(() => {
     setSelectedValues(record.getMultiSelectValue(field));
-  }, [record.transactionId]);
+  }, [record.localRevision]);
 
   const selectOptions = Object.values(field.options ?? {});
   const selectedOptions = selectOptions.filter((option) =>
@@ -81,7 +81,7 @@ export const RecordMultiSelectValue = ({
               record.removeFieldValue(field);
             } else {
               record.updateFieldValue(field, {
-                type: 'multiSelect',
+                type: 'string_array',
                 value: newValues,
               });
             }

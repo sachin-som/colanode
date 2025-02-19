@@ -3,24 +3,28 @@ import { Download } from 'lucide-react';
 import { Spinner } from '@/renderer/components/ui/spinner';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { toast } from '@/renderer/hooks/use-toast';
-import { DownloadStatus, FileWithState } from '@/shared/types/files';
+import { DownloadStatus, FileState } from '@/shared/types/files';
 import { formatBytes } from '@/shared/lib/files';
+import { LocalFileNode } from '@/shared/types/nodes';
 
 interface FileDownloadProps {
-  file: FileWithState;
+  file: LocalFileNode;
+  state: FileState | null | undefined;
 }
 
-export const FileDownload = ({ file }: FileDownloadProps) => {
+export const FileDownload = ({ file, state }: FileDownloadProps) => {
   const workspace = useWorkspace();
 
-  const isDownloading = file.downloadStatus === DownloadStatus.Pending;
+  const isDownloading = state?.downloadStatus === DownloadStatus.Pending;
 
   return (
     <div className="flex h-full w-full items-center justify-center">
       {isDownloading ? (
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Spinner className="size-8" />
-          <p className="text-sm">Downloading file ({file.downloadProgress}%)</p>
+          <p className="text-sm">
+            Downloading file ({state?.downloadProgress}%)
+          </p>
         </div>
       ) : (
         <div
@@ -50,7 +54,8 @@ export const FileDownload = ({ file }: FileDownloadProps) => {
             File is not downloaded in your device. Click to download.
           </p>
           <p className="text-xs text-muted-foreground">
-            {formatBytes(file.size)} - {file.mimeType}
+            {formatBytes(file.attributes.size)} -{' '}
+            {file.attributes.mimeType.split('/')[1]}
           </p>
         </div>
       )}

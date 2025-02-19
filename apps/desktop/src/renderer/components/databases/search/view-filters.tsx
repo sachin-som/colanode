@@ -12,11 +12,11 @@ import { ViewSelectFieldFilter } from '@/renderer/components/databases/search/vi
 import { ViewTextFieldFilter } from '@/renderer/components/databases/search/view-text-field-filter';
 import { ViewUrlFieldFilter } from '@/renderer/components/databases/search/view-url-field-filter';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const ViewFilters = () => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   return (
     <div className="flex flex-row items-center gap-2">
@@ -45,7 +45,7 @@ export const ViewFilters = () => {
               );
             case 'collaborator':
               return null;
-            case 'createdAt':
+            case 'created_at':
               return (
                 <ViewCreatedAtFieldFilter
                   key={filter.id}
@@ -53,7 +53,7 @@ export const ViewFilters = () => {
                   filter={filter}
                 />
               );
-            case 'createdBy':
+            case 'created_by':
               return null;
             case 'date':
               return (
@@ -73,7 +73,7 @@ export const ViewFilters = () => {
               );
             case 'file':
               return null;
-            case 'multiSelect':
+            case 'multi_select':
               return (
                 <ViewMultiSelectFieldFilter
                   key={filter.id}

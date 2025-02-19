@@ -1,8 +1,8 @@
-import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
+import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
 import { PageDeleteDialog } from '@/renderer/components/pages/page-delete-dialog';
 import { PageUpdateDialog } from '@/renderer/components/pages/page-update-dialog';
 import {
@@ -13,18 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/renderer/components/ui/dropdown-menu';
+import { LocalPageNode } from '@/shared/types/nodes';
 
 interface PageSettingsProps {
-  page: PageEntry;
-  role: EntryRole;
+  page: LocalPageNode;
+  role: NodeRole;
 }
 
 export const PageSettings = ({ page, role }: PageSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEntryRole(role, 'editor');
-  const canDelete = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
+  const canDelete = hasNodeRole(role, 'editor');
 
   return (
     <React.Fragment>
@@ -84,7 +85,7 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <EntryCollaboratorAudit
+            <NodeCollaboratorAudit
               collaboratorId={page.createdBy}
               date={page.createdAt}
             />
@@ -94,7 +95,7 @@ export const PageSettings = ({ page, role }: PageSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <EntryCollaboratorAudit
+                <NodeCollaboratorAudit
                   collaboratorId={page.updatedBy}
                   date={page.updatedAt}
                 />

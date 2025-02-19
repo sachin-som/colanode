@@ -1,77 +1,43 @@
-import { EntryType } from '@colanode/core';
-
-export type EntryCreatedEvent = {
-  type: 'entry_created';
-  entryId: string;
-  entryType: EntryType;
+export type NodeCreatedEvent = {
+  type: 'node_created';
+  nodeId: string;
   rootId: string;
   workspaceId: string;
 };
 
-export type EntryUpdatedEvent = {
-  type: 'entry_updated';
-  entryId: string;
-  entryType: EntryType;
+export type NodeUpdatedEvent = {
+  type: 'node_updated';
+  nodeId: string;
   rootId: string;
   workspaceId: string;
 };
 
-export type EntryDeletedEvent = {
-  type: 'entry_deleted';
-  entryId: string;
-  entryType: EntryType;
+export type NodeDeletedEvent = {
+  type: 'node_deleted';
+  nodeId: string;
   rootId: string;
   workspaceId: string;
 };
 
-export type EntryInteractionUpdatedEvent = {
-  type: 'entry_interaction_updated';
-  entryId: string;
+export type NodeInteractionUpdatedEvent = {
+  type: 'node_interaction_updated';
+  nodeId: string;
   collaboratorId: string;
   rootId: string;
   workspaceId: string;
 };
 
-export type MessageCreatedEvent = {
-  type: 'message_created';
-  messageId: string;
-  rootId: string;
-  workspaceId: string;
-};
-
-export type MessageUpdatedEvent = {
-  type: 'message_updated';
-  messageId: string;
-  rootId: string;
-  workspaceId: string;
-};
-
-export type MessageDeletedEvent = {
-  type: 'message_deleted';
-  messageId: string;
-  rootId: string;
-  workspaceId: string;
-};
-
-export type MessageReactionCreatedEvent = {
-  type: 'message_reaction_created';
-  messageId: string;
+export type NodeReactionCreatedEvent = {
+  type: 'node_reaction_created';
+  nodeId: string;
   collaboratorId: string;
   rootId: string;
   workspaceId: string;
 };
 
-export type MessageReactionDeletedEvent = {
-  type: 'message_reaction_deleted';
-  messageId: string;
-  collaboratorId: string;
-  rootId: string;
-  workspaceId: string;
-};
-
-export type MessageInteractionUpdatedEvent = {
-  type: 'message_interaction_updated';
-  messageId: string;
+export type NodeReactionDeletedEvent = {
+  type: 'node_reaction_deleted';
+  nodeId: string;
   collaboratorId: string;
   rootId: string;
   workspaceId: string;
@@ -80,14 +46,14 @@ export type MessageInteractionUpdatedEvent = {
 export type CollaborationCreatedEvent = {
   type: 'collaboration_created';
   collaboratorId: string;
-  entryId: string;
+  nodeId: string;
   workspaceId: string;
 };
 
 export type CollaborationUpdatedEvent = {
   type: 'collaboration_updated';
   collaboratorId: string;
-  entryId: string;
+  nodeId: string;
   workspaceId: string;
 };
 
@@ -160,13 +126,28 @@ export type DeviceDeletedEvent = {
   deviceId: string;
 };
 
+export type DocumentUpdatedEvent = {
+  type: 'document_updated';
+  documentId: string;
+  workspaceId: string;
+};
+
+export type DocumentUpdateCreatedEvent = {
+  type: 'document_update_created';
+  documentId: string;
+  rootId: string;
+  workspaceId: string;
+};
+
 export type Event =
-  | EntryCreatedEvent
-  | EntryUpdatedEvent
-  | EntryDeletedEvent
+  | NodeCreatedEvent
+  | NodeUpdatedEvent
+  | NodeDeletedEvent
   | CollaborationCreatedEvent
   | CollaborationUpdatedEvent
-  | EntryInteractionUpdatedEvent
+  | NodeInteractionUpdatedEvent
+  | NodeReactionCreatedEvent
+  | NodeReactionDeletedEvent
   | UserCreatedEvent
   | UserUpdatedEvent
   | AccountUpdatedEvent
@@ -178,9 +159,5 @@ export type Event =
   | FileUpdatedEvent
   | FileDeletedEvent
   | FileInteractionUpdatedEvent
-  | MessageCreatedEvent
-  | MessageUpdatedEvent
-  | MessageDeletedEvent
-  | MessageReactionCreatedEvent
-  | MessageReactionDeletedEvent
-  | MessageInteractionUpdatedEvent;
+  | DocumentUpdatedEvent
+  | DocumentUpdateCreatedEvent;

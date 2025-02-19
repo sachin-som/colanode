@@ -1,8 +1,9 @@
-import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Copy, Image, LetterText, Settings, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { EntryCollaboratorAudit } from '@/renderer/components/collaborators/entry-collaborator-audit';
+import { LocalDatabaseNode } from '@/shared/types/nodes';
+import { NodeCollaboratorAudit } from '@/renderer/components/collaborators/node-collaborator-audit';
 import { DatabaseDeleteDialog } from '@/renderer/components/databases/database-delete-dialog';
 import { DatabaseUpdateDialog } from '@/renderer/components/databases/database-update-dialog';
 import {
@@ -15,16 +16,16 @@ import {
 } from '@/renderer/components/ui/dropdown-menu';
 
 interface DatabaseSettingsProps {
-  database: DatabaseEntry;
-  role: EntryRole;
+  database: LocalDatabaseNode;
+  role: NodeRole;
 }
 
 export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
   const [showUpdateDialog, setShowUpdateDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteModal] = React.useState(false);
 
-  const canEdit = hasEntryRole(role, 'editor');
-  const canDelete = hasEntryRole(role, 'admin');
+  const canEdit = hasNodeRole(role, 'editor');
+  const canDelete = hasNodeRole(role, 'admin');
 
   return (
     <React.Fragment>
@@ -84,7 +85,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Created by</DropdownMenuLabel>
           <DropdownMenuItem>
-            <EntryCollaboratorAudit
+            <NodeCollaboratorAudit
               collaboratorId={database.createdBy}
               date={database.createdAt}
             />
@@ -94,7 +95,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Last updated by</DropdownMenuLabel>
               <DropdownMenuItem>
-                <EntryCollaboratorAudit
+                <NodeCollaboratorAudit
                   collaboratorId={database.updatedBy}
                   date={database.updatedAt}
                 />
@@ -104,7 +105,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <DatabaseDeleteDialog
-        entryId={database.id}
+        databaseId={database.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

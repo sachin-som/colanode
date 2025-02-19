@@ -1,10 +1,10 @@
 import { Filter } from 'lucide-react';
 
 import { ViewFilterAddPopover } from '@/renderer/components/databases/search/view-filter-add-popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const ViewFilterButton = () => {
-  const view = useView();
+  const view = useDatabaseView();
 
   if (view.filters.length > 0) {
     return (

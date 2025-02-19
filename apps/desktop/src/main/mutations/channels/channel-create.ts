@@ -18,7 +18,7 @@ export class ChannelCreateMutationHandler
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const space = await workspace.database
-      .selectFrom('entries')
+      .selectFrom('nodes')
       .selectAll()
       .where('id', '=', input.spaceId)
       .executeTakeFirst();
@@ -38,7 +38,7 @@ export class ChannelCreateMutationHandler
       parentId: input.spaceId,
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id,
       attributes,
       parentId: input.spaceId,

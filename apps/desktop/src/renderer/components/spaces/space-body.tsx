@@ -1,7 +1,7 @@
-import { EntryRole, hasEntryRole, SpaceEntry } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 import { Info, Trash2, Users } from 'lucide-react';
 
-import { EntryCollaborators } from '@/renderer/components/collaborators/entry-collaborators';
+import { NodeCollaborators } from '@/renderer/components/collaborators/node-collaborators';
 import { SpaceDeleteForm } from '@/renderer/components/spaces/space-delete-form';
 import {
   Tabs,
@@ -11,16 +11,17 @@ import {
 } from '@/renderer/components/ui/tabs';
 import { useLayout } from '@/renderer/contexts/layout';
 import { SpaceGeneralTab } from '@/renderer/components/spaces/space-general-tab';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceBodyProps {
-  space: SpaceEntry;
-  role: EntryRole;
+  space: LocalSpaceNode;
+  role: NodeRole;
 }
 
 export const SpaceBody = ({ space, role }: SpaceBodyProps) => {
   const layout = useLayout();
-  const canEdit = hasEntryRole(role, 'admin');
-  const canDelete = hasEntryRole(role, 'admin');
+  const canEdit = hasNodeRole(role, 'admin');
+  const canDelete = hasNodeRole(role, 'admin');
 
   return (
     <Tabs
@@ -68,7 +69,7 @@ export const SpaceBody = ({ space, role }: SpaceBodyProps) => {
           className="focus-visible:ring-0 focus-visible:ring-offset-0"
           value="collaborators"
         >
-          <EntryCollaborators entry={space} entries={[space]} role={role} />
+          <NodeCollaborators node={space} nodes={[space]} role={role} />
         </TabsContent>
         {canDelete && (
           <TabsContent

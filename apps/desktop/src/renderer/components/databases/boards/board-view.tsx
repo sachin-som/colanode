@@ -7,21 +7,21 @@ import { ViewSearchBar } from '@/renderer/components/databases/search/view-searc
 import { ViewSortButton } from '@/renderer/components/databases/search/view-sort-button';
 import { ViewTabs } from '@/renderer/components/databases/view-tabs';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const BoardView = () => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const groupByField = database.fields.find(
     (field) => field.id === view.groupBy
   );
 
-  if (!groupByField || groupByField.type !== 'select') {
-    return null;
-  }
+  const selectOptions =
+    groupByField && groupByField.type === 'select'
+      ? Object.values(groupByField.options ?? {})
+      : [];
 
-  const selectOptions = Object.values(groupByField.options ?? {});
   return (
     <React.Fragment>
       <div className="flex flex-row justify-between border-b">
@@ -34,15 +34,17 @@ export const BoardView = () => {
       </div>
       <ViewSearchBar />
       <div className="mt-2 flex w-full min-w-full max-w-full flex-row gap-2 overflow-auto pr-5">
-        {selectOptions.map((option) => {
-          return (
-            <BoardViewColumn
-              key={option.id}
-              field={groupByField}
-              option={option}
-            />
-          );
-        })}
+        {groupByField &&
+          groupByField.type === 'select' &&
+          selectOptions.map((option) => {
+            return (
+              <BoardViewColumn
+                key={option.id}
+                field={groupByField}
+                option={option}
+              />
+            );
+          })}
       </div>
     </React.Fragment>
   );

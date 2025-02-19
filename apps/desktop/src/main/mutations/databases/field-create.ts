@@ -1,5 +1,6 @@
 import {
   compareString,
+  DatabaseAttributes,
   FieldAttributes,
   FieldType,
   generateId,
@@ -13,7 +14,7 @@ import {
   FieldCreateMutationOutput,
 } from '@/shared/mutations/databases/field-create';
 import { MutationError, MutationErrorCode } from '@/shared/mutations';
-import { fetchEntry } from '@/main/lib/utils';
+import { fetchNode } from '@/main/lib/utils';
 import { WorkspaceMutationHandlerBase } from '@/main/mutations/workspace-mutation-handler-base';
 
 export class FieldCreateMutationHandler
@@ -33,7 +34,7 @@ export class FieldCreateMutationHandler
         );
       }
 
-      const relationDatabase = await fetchEntry(
+      const relationDatabase = await fetchNode(
         workspace.database,
         input.relationDatabaseId
       );
@@ -47,13 +48,9 @@ export class FieldCreateMutationHandler
     }
 
     const fieldId = generateId(IdType.Field);
-    const result = await workspace.entries.updateEntry(
+    const result = await workspace.nodes.updateNode<DatabaseAttributes>(
       input.databaseId,
       (attributes) => {
-        if (attributes.type !== 'database') {
-          throw new Error('Invalid node type');
-        }
-
         const maxIndex = Object.values(attributes.fields)
           .map((field) => field.index)
           .sort((a, b) => -compareString(a, b))[0];

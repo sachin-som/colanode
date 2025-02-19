@@ -1,17 +1,17 @@
 import React from 'react';
 import { InView } from 'react-intersection-observer';
 
-import { MessageNode, MessageReactionCount } from '@/shared/types/messages';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQueries } from '@/renderer/hooks/use-queries';
-import { MessageReactionListQueryInput } from '@/shared/queries/messages/message-reaction-list';
+import { NodeReactionCount, LocalMessageNode } from '@/shared/types/nodes';
+import { NodeReactionListQueryInput } from '@/shared/queries/nodes/node-reaction-list';
 
 const REACTIONS_PER_PAGE = 20;
 
 interface MessageReactionCountsDialogListProps {
-  message: MessageNode;
-  reactionCount: MessageReactionCount;
+  message: LocalMessageNode;
+  reactionCount: NodeReactionCount;
 }
 
 export const MessageReactionCountsDialogList = ({
@@ -21,11 +21,11 @@ export const MessageReactionCountsDialogList = ({
   const workspace = useWorkspace();
 
   const [lastPage, setLastPage] = React.useState<number>(1);
-  const inputs: MessageReactionListQueryInput[] = Array.from({
+  const inputs: NodeReactionListQueryInput[] = Array.from({
     length: lastPage,
   }).map((_, i) => ({
-    type: 'message_reaction_list',
-    messageId: message.id,
+    type: 'node_reaction_list',
+    nodeId: message.id,
     reaction: reactionCount.reaction,
     accountId: workspace.accountId,
     workspaceId: workspace.id,

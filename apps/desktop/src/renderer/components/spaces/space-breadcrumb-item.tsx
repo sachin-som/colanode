@@ -1,27 +1,11 @@
-import { SpaceEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { useQuery } from '@/renderer/hooks/use-query';
-import { useWorkspace } from '@/renderer/contexts/workspace';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceBreadcrumbItemProps {
-  id: string;
+  space: LocalSpaceNode;
 }
 
-export const SpaceBreadcrumbItem = ({ id }: SpaceBreadcrumbItemProps) => {
-  const workspace = useWorkspace();
-  const { data } = useQuery({
-    type: 'entry_get',
-    entryId: id,
-    accountId: workspace.accountId,
-    workspaceId: workspace.id,
-  });
-
-  if (!data) {
-    return null;
-  }
-
-  const space = data as SpaceEntry;
+export const SpaceBreadcrumbItem = ({ space }: SpaceBreadcrumbItemProps) => {
   return (
     <div className="flex items-center space-x-2">
       <Avatar

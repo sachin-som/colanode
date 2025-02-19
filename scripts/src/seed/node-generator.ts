@@ -2,21 +2,28 @@ import {
   Block,
   generateId,
   IdType,
-  EntryAttributes,
-  EntryRole,
+  NodeAttributes,
+  NodeRole,
   generateNodeIndex,
-  ViewAttributes,
   FieldAttributes,
   SelectOptionAttributes,
   DatabaseAttributes,
   FieldValue,
-  ViewFilterAttributes,
-  ApplyCreateTransactionMutation,
-  LocalCreateTransaction,
-  CreateMessageMutation,
-  entryAttributesSchema,
-  MessageType,
-  TransactionOperation,
+  DatabaseViewFilterAttributes,
+  Mutation,
+  CreateNodeMutationData,
+  DocumentContent,
+  documentContentSchema,
+  UpdateDocumentMutationData,
+  NodeModel,
+  spaceModel,
+  channelModel,
+  chatModel,
+  pageModel,
+  messageModel,
+  databaseModel,
+  databaseViewModel,
+  recordModel,
 } from '@colanode/core';
 import { encodeState, YDoc } from '@colanode/crdt';
 import { faker } from '@faker-js/faker';
@@ -45,20 +52,11 @@ export class NodeGenerator {
       'The general space',
       '01jhzbzq5d9why53gcew16ybh6es'
     );
-    this.buildPage(spaceId, 'Welcome', spaceId, '01jhzbzt92e67eva4ptspwtx7xes');
-    this.buildPage(
-      spaceId,
-      'Resources',
-      spaceId,
-      '01jhzbzt96tp281z0tqtc0mg0tes'
-    );
-    this.buildPage(spaceId, 'Guide', spaceId, '01jhzbzta4qewnx5kn8jv3d3nyes');
-    this.buildChannel(
-      spaceId,
-      'Announcements',
-      spaceId,
-      '01jhzbzspgp8r6tj9k3733bw24es'
-    );
+
+    this.buildPage('Welcome', spaceId, '01jhzbzt92e67eva4ptspwtx7xes');
+    this.buildPage('Resources', spaceId, '01jhzbzt96tp281z0tqtc0mg0tes');
+    this.buildPage('Guide', spaceId, '01jhzbzta4qewnx5kn8jv3d3nyes');
+    this.buildChannel('Announcements', spaceId, '01jhzbzspgp8r6tj9k3733bw24es');
   }
 
   private buildProductSpace() {
@@ -67,20 +65,10 @@ export class NodeGenerator {
       'The product space',
       '01jhzbzves59xk8zqpzsaj7jmhes'
     );
-    this.buildChannel(
-      spaceId,
-      'Discussions',
-      spaceId,
-      '01jhzbzkw7e9khk5p32rxj1q31es'
-    );
-    this.buildChannel(
-      spaceId,
-      'Alerts',
-      spaceId,
-      '01jhzbzr7m2zrjxe60d88v6ryyes'
-    );
-    this.buildPage(spaceId, 'Roadmap', spaceId, '01jhzbzrctc3zbj7542a3pfdzves');
-    this.buildTasksDatabase(spaceId, spaceId);
+    this.buildChannel('Discussions', spaceId, '01jhzbzkw7e9khk5p32rxj1q31es');
+    this.buildChannel('Alerts', spaceId, '01jhzbzr7m2zrjxe60d88v6ryyes');
+    this.buildPage('Roadmap', spaceId, '01jhzbzrctc3zbj7542a3pfdzves');
+    this.buildTasksDatabase(spaceId);
   }
 
   private buildBusinessSpace() {
@@ -89,9 +77,9 @@ export class NodeGenerator {
       'The business space',
       '01jhzbzv0xhvx0dzx63qv6ahkzes'
     );
-    this.buildPage(spaceId, 'Notes', spaceId, '01jhzbztvzghvzhnt6wh75c0x8es');
-    this.buildClientsDatabase(spaceId, spaceId);
-    this.buildMeetingsDatabase(spaceId, spaceId);
+    this.buildPage('Notes', spaceId, '01jhzbztvzghvzhnt6wh75c0x8es');
+    this.buildClientsDatabase(spaceId);
+    this.buildMeetingsDatabase(spaceId);
   }
 
   private buildChats() {
@@ -103,12 +91,12 @@ export class NodeGenerator {
 
   private buildSpace(name: string, description: string, avatar: string) {
     const spaceId = generateId(IdType.Space);
-    const collaborators: Record<string, EntryRole> = {};
+    const collaborators: Record<string, NodeRole> = {};
     for (const user of this.users) {
       collaborators[user.userId] = 'admin';
     }
 
-    const spaceAttributes: EntryAttributes = {
+    const spaceAttributes: NodeAttributes = {
       type: 'space',
       name,
       description,
@@ -118,32 +106,19 @@ export class NodeGenerator {
     };
 
     const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
+    const createSpaceMutation = this.buildCreateNodeMutation(
       spaceId,
-      spaceId,
-      user.userId,
-      spaceAttributes
+      spaceAttributes,
+      spaceModel
     );
+    user.mutations.push(createSpaceMutation);
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    user.mutations.push(mutation);
     return spaceId;
   }
 
-  private buildChannel(
-    rootId: string,
-    name: string,
-    parentId: string,
-    avatar: string
-  ) {
+  private buildChannel(name: string, parentId: string, avatar: string) {
     const channelId = generateId(IdType.Channel);
-    const channelAttributes: EntryAttributes = {
+    const channelAttributes: NodeAttributes = {
       type: 'channel',
       name,
       parentId,
@@ -151,29 +126,20 @@ export class NodeGenerator {
     };
 
     const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
+    const createChannelMutation = this.buildCreateNodeMutation(
       channelId,
-      user.userId,
-      channelAttributes
+      channelAttributes,
+      channelModel
     );
+    user.mutations.push(createChannelMutation);
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    user.mutations.push(mutation);
-
-    this.buidMessages(rootId, channelId, MESSAGES_PER_CONVERSATION, this.users);
+    this.buidMessages(channelId, MESSAGES_PER_CONVERSATION, this.users);
   }
 
   private buildChat(user: User) {
     const mainUser = this.getMainUser();
     const chatId = generateId(IdType.Chat);
-    const chatAttributes: EntryAttributes = {
+    const chatAttributes: NodeAttributes = {
       type: 'chat',
       collaborators: {
         [mainUser.userId]: 'admin',
@@ -181,97 +147,72 @@ export class NodeGenerator {
       },
     };
 
-    const createTransaction = this.buildCreateTransaction(
+    const createChatMutation = this.buildCreateNodeMutation(
       chatId,
-      chatId,
-      mainUser.userId,
-      chatAttributes
+      chatAttributes,
+      chatModel
     );
+    mainUser.mutations.push(createChatMutation);
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    mainUser.mutations.push(mutation);
-
-    this.buidMessages(chatId, chatId, MESSAGES_PER_CONVERSATION, [
-      mainUser,
-      user,
-    ]);
+    this.buidMessages(chatId, MESSAGES_PER_CONVERSATION, [mainUser, user]);
   }
 
-  private buildPage(
-    rootId: string,
-    name: string,
-    parentId: string,
-    avatar: string
-  ) {
+  private buildPage(name: string, parentId: string, avatar: string) {
     const pageId = generateId(IdType.Page);
-    const pageAttributes: EntryAttributes = {
+    const pageAttributes: NodeAttributes = {
       type: 'page',
       name,
       parentId,
-      content: this.buildDocumentContent(pageId),
       avatar,
     };
 
-    const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
-      pageId,
-      user.userId,
-      pageAttributes
-    );
-
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
+    const documentContent: DocumentContent = {
+      type: 'rich_text',
+      blocks: this.buildDocumentBlocks(pageId),
     };
 
-    user.mutations.push(mutation);
+    const user = this.getMainUser();
+
+    const createPageMutation = this.buildCreateNodeMutation(
+      pageId,
+      pageAttributes,
+      pageModel
+    );
+    user.mutations.push(createPageMutation);
+
+    const createDocumentMutation = this.buildCreateDocumentMutation(
+      pageId,
+      documentContent
+    );
+    user.mutations.push(createDocumentMutation);
   }
 
-  private buidMessages(
-    rootId: string,
-    conversationId: string,
-    count: number,
-    users: User[]
-  ) {
+  private buidMessages(conversationId: string, count: number, users: User[]) {
     for (let i = 0; i < count; i++) {
-      this.buildMessage(rootId, conversationId, users);
+      this.buildMessage(conversationId, users);
     }
   }
 
-  private buildMessage(rootId: string, conversationId: string, users: User[]) {
+  private buildMessage(conversationId: string, users: User[]) {
     const messageId = generateId(IdType.Message);
     const user = this.getRandomUser(users);
 
-    const mutation: CreateMessageMutation = {
-      type: 'create_message',
-      id: generateId(IdType.Mutation),
-      data: {
-        id: messageId,
-        entryId: conversationId,
-        parentId: conversationId,
-        rootId,
-        attributes: {
-          type: MessageType.Standard,
-          blocks: this.buildMessageContent(messageId),
-        },
-        createdAt: new Date().toISOString(),
-      },
-      createdAt: new Date().toISOString(),
+    const messageAttributes: NodeAttributes = {
+      type: 'message',
+      parentId: conversationId,
+      subtype: 'standard',
+      content: this.buildMessageContent(messageId),
     };
 
-    user.mutations.push(mutation);
+    const createMessageMutation = this.buildCreateNodeMutation(
+      messageId,
+      messageAttributes,
+      messageModel
+    );
+    user.mutations.push(createMessageMutation);
   }
 
-  private buildTasksDatabase(rootId: string, parentId: string) {
+  private buildTasksDatabase(parentId: string) {
     const databaseId = generateId(IdType.Database);
 
     const newStatusOption: SelectOptionAttributes = {
@@ -352,7 +293,7 @@ export class NodeGenerator {
 
     const teamsField: FieldAttributes = {
       id: generateId(IdType.Field),
-      type: 'multiSelect',
+      type: 'multi_select',
       name: 'Teams',
       index: generateNodeIndex(statusField.index),
       options: {
@@ -399,40 +340,7 @@ export class NodeGenerator {
       index: generateNodeIndex(releaseDateField.index),
     };
 
-    const allTasksView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'table',
-      name: 'All Tasks',
-      index: generateNodeIndex(),
-    };
-
-    const activeTasksFilter: ViewFilterAttributes = {
-      id: generateId(IdType.ViewFilter),
-      type: 'field',
-      fieldId: statusField.id,
-      value: [activeStatusOption.id],
-      operator: 'is_in',
-    };
-
-    const activeTasksView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'table',
-      name: 'Active Tasks',
-      filters: {
-        [activeTasksFilter.id]: activeTasksFilter,
-      },
-      index: generateNodeIndex(),
-    };
-
-    const kanbanView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'board',
-      name: 'Kanban',
-      index: generateNodeIndex(),
-      groupBy: statusField.id,
-    };
-
-    const databaseAttributes: EntryAttributes = {
+    const databaseAttributes: NodeAttributes = {
       type: 'database',
       parentId,
       name: 'Tasks',
@@ -446,39 +354,78 @@ export class NodeGenerator {
         [releaseDateField.id]: releaseDateField,
         [commentsField.id]: commentsField,
       },
-      views: {
-        [allTasksView.id]: allTasksView,
-        [activeTasksView.id]: activeTasksView,
-        [kanbanView.id]: kanbanView,
-      },
     };
 
     const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
-      databaseId,
-      user.userId,
-      databaseAttributes
-    );
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    user.mutations.push(mutation);
-
-    this.buildRecords(
-      rootId,
+    const createDatabaseMutation = this.buildCreateNodeMutation(
       databaseId,
       databaseAttributes,
-      RECORDS_PER_DATABASE
+      databaseModel
     );
+    user.mutations.push(createDatabaseMutation);
+
+    const allTasksViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'table',
+      name: 'All Tasks',
+      index: generateNodeIndex(),
+      parentId: databaseId,
+    };
+
+    const createAllTasksViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      allTasksViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createAllTasksViewMutation);
+
+    const activeTasksFilter: DatabaseViewFilterAttributes = {
+      id: generateId(IdType.ViewFilter),
+      type: 'field',
+      fieldId: statusField.id,
+      value: [activeStatusOption.id],
+      operator: 'is_in',
+    };
+
+    const activeTasksViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'table',
+      name: 'Active Tasks',
+      filters: {
+        [activeTasksFilter.id]: activeTasksFilter,
+      },
+      index: generateNodeIndex(),
+      parentId: databaseId,
+    };
+
+    const createActiveTasksViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      activeTasksViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createActiveTasksViewMutation);
+
+    const kanbanViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'board',
+      name: 'Kanban',
+      index: generateNodeIndex(),
+      parentId: databaseId,
+      groupBy: statusField.id,
+    };
+
+    const createKanbanViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      kanbanViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createKanbanViewMutation);
+
+    this.buildRecords(databaseId, databaseAttributes, RECORDS_PER_DATABASE);
   }
 
-  private buildClientsDatabase(rootId: string, parentId: string) {
+  private buildClientsDatabase(parentId: string) {
     const databaseId = generateId(IdType.Database);
 
     const newLeadStatusOption: SelectOptionAttributes = {
@@ -589,7 +536,7 @@ export class NodeGenerator {
 
     const sectorField: FieldAttributes = {
       id: generateId(IdType.Field),
-      type: 'multiSelect',
+      type: 'multi_select',
       name: 'Sector',
       index: generateNodeIndex(statusField.index),
       options: {
@@ -638,40 +585,7 @@ export class NodeGenerator {
       index: generateNodeIndex(startDateField.index),
     };
 
-    const allTasksView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'table',
-      name: 'All Clients',
-      index: generateNodeIndex(),
-    };
-
-    const activeTasksFilter: ViewFilterAttributes = {
-      id: generateId(IdType.ViewFilter),
-      type: 'field',
-      fieldId: statusField.id,
-      value: [newLeadStatusOption.id],
-      operator: 'is_in',
-    };
-
-    const activeTasksView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'table',
-      name: 'Active Clients',
-      filters: {
-        [activeTasksFilter.id]: activeTasksFilter,
-      },
-      index: generateNodeIndex(),
-    };
-
-    const kanbanView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'board',
-      name: 'Board',
-      index: generateNodeIndex(),
-      groupBy: statusField.id,
-    };
-
-    const databaseAttributes: EntryAttributes = {
+    const databaseAttributes: NodeAttributes = {
       type: 'database',
       parentId,
       name: 'Clients',
@@ -685,39 +599,78 @@ export class NodeGenerator {
         [startDateField.id]: startDateField,
         [commentsField.id]: commentsField,
       },
-      views: {
-        [allTasksView.id]: allTasksView,
-        [activeTasksView.id]: activeTasksView,
-        [kanbanView.id]: kanbanView,
-      },
     };
 
     const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
-      databaseId,
-      user.userId,
-      databaseAttributes
-    );
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    user.mutations.push(mutation);
-
-    this.buildRecords(
-      rootId,
+    const createDatabaseMutation = this.buildCreateNodeMutation(
       databaseId,
       databaseAttributes,
-      RECORDS_PER_DATABASE
+      databaseModel
     );
+    user.mutations.push(createDatabaseMutation);
+
+    const allClientsViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'table',
+      name: 'All Clients',
+      index: generateNodeIndex(),
+      parentId: databaseId,
+    };
+
+    const createAllClientsViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      allClientsViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createAllClientsViewMutation);
+
+    const activeClientsFilter: DatabaseViewFilterAttributes = {
+      id: generateId(IdType.ViewFilter),
+      type: 'field',
+      fieldId: statusField.id,
+      value: [newLeadStatusOption.id],
+      operator: 'is_in',
+    };
+
+    const activeClientsViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'table',
+      name: 'Active Clients',
+      filters: {
+        [activeClientsFilter.id]: activeClientsFilter,
+      },
+      index: generateNodeIndex(),
+      parentId: databaseId,
+    };
+
+    const createActiveClientsViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      activeClientsViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createActiveClientsViewMutation);
+
+    const kanbanViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'board',
+      name: 'Board',
+      index: generateNodeIndex(),
+      parentId: databaseId,
+      groupBy: statusField.id,
+    };
+
+    const createKanbanViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      kanbanViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createKanbanViewMutation);
+
+    this.buildRecords(databaseId, databaseAttributes, RECORDS_PER_DATABASE);
   }
 
-  private buildMeetingsDatabase(rootId: string, parentId: string) {
+  private buildMeetingsDatabase(parentId: string) {
     const databaseId = generateId(IdType.Database);
 
     const techTagSelectOption: SelectOptionAttributes = {
@@ -764,7 +717,7 @@ export class NodeGenerator {
 
     const tagsField: FieldAttributes = {
       id: generateId(IdType.Field),
-      type: 'multiSelect',
+      type: 'multi_select',
       name: 'Tags',
       index: generateNodeIndex(),
       options: {
@@ -791,22 +744,7 @@ export class NodeGenerator {
       index: generateNodeIndex(attendeesField.index),
     };
 
-    const calendarView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'calendar',
-      name: 'Calendar',
-      index: generateNodeIndex(),
-      groupBy: dateField.id,
-    };
-
-    const tableView: ViewAttributes = {
-      id: generateId(IdType.View),
-      type: 'table',
-      name: 'Table',
-      index: generateNodeIndex(calendarView.index),
-    };
-
-    const databaseAttributes: EntryAttributes = {
+    const databaseAttributes: NodeAttributes = {
       type: 'database',
       parentId,
       name: 'Meetings',
@@ -816,59 +754,69 @@ export class NodeGenerator {
         [attendeesField.id]: attendeesField,
         [dateField.id]: dateField,
       },
-      views: {
-        [calendarView.id]: calendarView,
-        [tableView.id]: tableView,
-      },
     };
 
     const user = this.getMainUser();
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
-      databaseId,
-      user.userId,
-      databaseAttributes
-    );
-
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
-    };
-
-    user.mutations.push(mutation);
-
-    this.buildRecords(
-      rootId,
+    const createDatabaseMutation = this.buildCreateNodeMutation(
       databaseId,
       databaseAttributes,
-      RECORDS_PER_DATABASE
+      databaseModel
     );
+    user.mutations.push(createDatabaseMutation);
+
+    const calendarViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'calendar',
+      name: 'Calendar',
+      index: generateNodeIndex(),
+      parentId: databaseId,
+      groupBy: dateField.id,
+    };
+
+    const createCalendarViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      calendarViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createCalendarViewMutation);
+
+    const tableViewAttributes: NodeAttributes = {
+      type: 'database_view',
+      layout: 'table',
+      name: 'Table',
+      index: generateNodeIndex(calendarViewAttributes.index),
+      parentId: databaseId,
+    };
+
+    const createTableViewMutation = this.buildCreateNodeMutation(
+      generateId(IdType.DatabaseView),
+      tableViewAttributes,
+      databaseViewModel
+    );
+    user.mutations.push(createTableViewMutation);
+
+    this.buildRecords(databaseId, databaseAttributes, RECORDS_PER_DATABASE);
   }
 
   private buildRecords(
-    rootId: string,
     databaseId: string,
     databaseAttributes: DatabaseAttributes,
     count: number
   ) {
     for (let i = 0; i < count; i++) {
-      this.buildRecord(rootId, databaseId, databaseAttributes);
+      this.buildRecord(databaseId, databaseAttributes);
     }
   }
 
   private buildRecord(
-    rootId: string,
     databaseId: string,
     databaseAttributes: DatabaseAttributes
   ) {
     const recordId = generateId(IdType.Record);
-    const recordAttributes: EntryAttributes = {
+    const recordAttributes: NodeAttributes = {
       type: 'record',
       parentId: databaseId,
       databaseId,
-      content: this.buildDocumentContent(recordId),
       name: faker.lorem.sentence(),
       fields: {},
     };
@@ -881,21 +829,23 @@ export class NodeGenerator {
     }
 
     const user = this.getRandomUser(this.users);
-    const createTransaction = this.buildCreateTransaction(
-      rootId,
+    const createRecordMutation = this.buildCreateNodeMutation(
       recordId,
-      user.userId,
-      recordAttributes
+      recordAttributes,
+      recordModel
     );
+    user.mutations.push(createRecordMutation);
 
-    const mutation: ApplyCreateTransactionMutation = {
-      type: 'apply_create_transaction',
-      id: generateId(IdType.Mutation),
-      data: createTransaction,
-      createdAt: new Date().toISOString(),
+    const documentContent: DocumentContent = {
+      type: 'rich_text',
+      blocks: this.buildDocumentBlocks(recordId),
     };
 
-    user.mutations.push(mutation);
+    const createDocumentMutation = this.buildCreateDocumentMutation(
+      recordId,
+      documentContent
+    );
+    user.mutations.push(createDocumentMutation);
   }
 
   private getRandomUser(users: User[]): User {
@@ -911,26 +861,54 @@ export class NodeGenerator {
     return this.users[0]!;
   }
 
-  private buildCreateTransaction(
-    rootId: string,
-    entryId: string,
-    userId: string,
-    attributes: EntryAttributes
-  ): LocalCreateTransaction {
+  private buildCreateNodeMutation(
+    nodeId: string,
+    attributes: NodeAttributes,
+    model: NodeModel
+  ): Mutation {
     const ydoc = new YDoc();
-    const update = ydoc.updateAttributes(entryAttributesSchema, attributes);
+    const update = ydoc.update(model.attributesSchema, attributes);
     if (!update) {
       throw new Error('Failed to create transaction');
     }
 
-    return {
-      id: generateId(IdType.Transaction),
-      operation: TransactionOperation.Create,
-      data: encodeState(update),
-      entryId,
-      rootId,
+    const data: CreateNodeMutationData = {
+      nodeId: nodeId,
+      updateId: generateId(IdType.Update),
       createdAt: new Date().toISOString(),
-      createdBy: userId,
+      data: encodeState(update),
+    };
+
+    return {
+      id: generateId(IdType.Mutation),
+      type: 'create_node',
+      data: data,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  private buildCreateDocumentMutation(
+    documentId: string,
+    content: DocumentContent
+  ): Mutation {
+    const ydoc = new YDoc();
+    const update = ydoc.update(documentContentSchema, content);
+    if (!update) {
+      throw new Error('Failed to create transaction');
+    }
+
+    const data: UpdateDocumentMutationData = {
+      documentId,
+      updateId: generateId(IdType.Update),
+      createdAt: new Date().toISOString(),
+      data: encodeState(update),
+    };
+
+    return {
+      id: generateId(IdType.Mutation),
+      type: 'update_document',
+      data: data,
+      createdAt: new Date().toISOString(),
     };
   }
 
@@ -944,7 +922,7 @@ export class NodeGenerator {
     };
   }
 
-  private buildDocumentContent(pageId: string): Record<string, Block> {
+  private buildDocumentBlocks(pageId: string): Record<string, Block> {
     const nrOfParagraphs = Math.floor(Math.random() * 10) + 1;
     const blocks: Record<string, Block> = {};
     for (let i = 0; i < nrOfParagraphs; i++) {
@@ -974,20 +952,20 @@ export class NodeGenerator {
       };
     } else if (field.type === 'collaborator') {
       return {
-        type: 'collaborator',
+        type: 'string_array',
         value: [this.getRandomUser(this.users).userId],
       };
     } else if (field.type === 'date') {
       return {
-        type: 'date',
+        type: 'string',
         value: faker.date.past().toISOString(),
       };
     } else if (field.type === 'email') {
       return {
-        type: 'email',
+        type: 'string',
         value: faker.internet.email(),
       };
-    } else if (field.type === 'multiSelect') {
+    } else if (field.type === 'multi_select') {
       const options = Object.values(field.options ?? {});
       const randomOption = options[Math.floor(Math.random() * options.length)];
       if (!randomOption) {
@@ -995,7 +973,7 @@ export class NodeGenerator {
       }
 
       return {
-        type: 'multiSelect',
+        type: 'string_array',
         value: [randomOption.id],
       };
     } else if (field.type === 'number') {
@@ -1005,7 +983,7 @@ export class NodeGenerator {
       };
     } else if (field.type === 'phone') {
       return {
-        type: 'phone',
+        type: 'string',
         value: faker.phone.number(),
       };
     } else if (field.type === 'select') {
@@ -1016,7 +994,7 @@ export class NodeGenerator {
       }
 
       return {
-        type: 'select',
+        type: 'string',
         value: randomOption.id,
       };
     } else if (field.type === 'text') {
@@ -1026,7 +1004,7 @@ export class NodeGenerator {
       };
     } else if (field.type === 'url') {
       return {
-        type: 'url',
+        type: 'string',
         value: faker.internet.url(),
       };
     }

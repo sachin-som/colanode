@@ -5,9 +5,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/renderer/components/ui/tooltip';
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
+
 interface MessageTimeProps {
-  message: MessageNode;
+  message: LocalMessageNode;
 }
 
 export const MessageTime = ({ message }: MessageTimeProps) => {

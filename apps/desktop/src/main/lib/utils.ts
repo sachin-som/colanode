@@ -1,8 +1,9 @@
-import { extractFileType, getIdType, IdType } from '@colanode/core';
+import { extractFileSubtype } from '@colanode/core';
 import {
   DeleteResult,
   InsertResult,
   Kysely,
+  sql,
   Transaction,
   UpdateResult,
 } from 'kysely';
@@ -12,18 +13,19 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 
-import {
-  SelectEntry,
-  WorkspaceDatabaseSchema,
-} from '@/main/databases/workspace';
+import { WorkspaceDatabaseSchema } from '@/main/databases/workspace';
 import { FileMetadata } from '@/shared/types/files';
+import { LocalNode } from '@/shared/types/nodes';
+import { mapNode } from '@/main/lib/mappers';
 
 export const appPath = app.getPath('userData');
 
 export const appDatabasePath = path.join(appPath, 'app.db');
 
+export const accountsDirectoryPath = path.join(appPath, 'accounts');
+
 export const getAccountDirectoryPath = (accountId: string): string => {
-  return path.join(appPath, 'accounts', accountId);
+  return path.join(accountsDirectoryPath, accountId);
 };
 
 export const getWorkspaceDirectoryPath = (
@@ -100,7 +102,7 @@ export const getFileMetadata = (filePath: string): FileMetadata | null => {
   }
 
   const stats = fs.statSync(filePath);
-  const type = extractFileType(mimeType);
+  const type = extractFileSubtype(mimeType);
 
   return {
     path: filePath,
@@ -112,37 +114,49 @@ export const getFileMetadata = (filePath: string): FileMetadata | null => {
   };
 };
 
-export const fetchEntryAncestors = (
+export const fetchNodeTree = async (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
-  entryId: string
-): Promise<SelectEntry[]> => {
-  return database
-    .selectFrom('entries')
-    .selectAll()
-    .where(
-      'id',
-      'in',
-      database
-        .selectFrom('entry_paths')
-        .select('ancestor_id')
-        .where('descendant_id', '=', entryId)
+  nodeId: string
+): Promise<LocalNode[]> => {
+  const nodes = await database
+    .withRecursive('ancestor_nodes', (cte) =>
+      cte
+        .selectFrom('nodes')
+        .selectAll('nodes')
+        .where('id', '=', nodeId)
+        .unionAll(
+          cte
+            .selectFrom('nodes as parent')
+            .selectAll('parent')
+            .innerJoin(
+              'ancestor_nodes as child',
+              'parent.id',
+              'child.parent_id'
+            )
+        )
     )
+    .selectFrom('ancestor_nodes')
+    .selectAll()
     .execute();
+
+  return nodes.reverse().map(mapNode);
 };
 
-export const fetchEntry = (
+export const fetchNode = async (
   database:
     | Kysely<WorkspaceDatabaseSchema>
     | Transaction<WorkspaceDatabaseSchema>,
-  entryId: string
-): Promise<SelectEntry | undefined> => {
-  return database
-    .selectFrom('entries')
+  nodeId: string
+): Promise<LocalNode | undefined> => {
+  const node = await database
+    .selectFrom('nodes')
     .selectAll()
-    .where('id', '=', entryId)
+    .where('id', '=', nodeId)
     .executeTakeFirst();
+
+  return node ? mapNode(node) : undefined;
 };
 
 export const fetchUserStorageUsed = async (
@@ -152,83 +166,13 @@ export const fetchUserStorageUsed = async (
   userId: string
 ): Promise<bigint> => {
   const storageUsedRow = await database
-    .selectFrom('files')
-    .select(({ fn }) => [fn.sum('size').as('storage_used')])
+    .selectFrom('nodes')
+    .select(({ fn }) => [
+      fn.sum(sql`json_extract(attributes, '$.size')`).as('storage_used'),
+    ])
+    .where('type', '=', 'file')
     .where('created_by', '=', userId)
     .executeTakeFirst();
 
   return BigInt(storageUsedRow?.storage_used ?? 0);
-};
-
-export const fetchEntryBreadcrumb = async (
-  database: Kysely<WorkspaceDatabaseSchema>,
-  entryId: string
-): Promise<string[]> => {
-  const rows = await database
-    .selectFrom('entry_paths')
-    .select('ancestor_id')
-    .where('descendant_id', '=', entryId)
-    .orderBy('level', 'desc')
-    .execute();
-
-  return rows.map((row) => row.ancestor_id);
-};
-
-export const fetchMessageBreadcrumb = async (
-  database: Kysely<WorkspaceDatabaseSchema>,
-  messageId: string
-): Promise<string[]> => {
-  const message = await database
-    .selectFrom('messages')
-    .select('parent_id')
-    .where('id', '=', messageId)
-    .executeTakeFirst();
-
-  if (!message) {
-    return [];
-  }
-
-  const parentIdType = getIdType(message.parent_id);
-  if (parentIdType === IdType.Message) {
-    const messageBreadcrumb = await fetchMessageBreadcrumb(
-      database,
-      message.parent_id
-    );
-
-    return [...messageBreadcrumb, messageId];
-  }
-
-  const entryBreadcrumb = await fetchEntryBreadcrumb(
-    database,
-    message.parent_id
-  );
-  return [...entryBreadcrumb, messageId];
-};
-
-export const fetchFileBreadcrumb = async (
-  database: Kysely<WorkspaceDatabaseSchema>,
-  fileId: string
-): Promise<string[]> => {
-  const file = await database
-    .selectFrom('files')
-    .select('parent_id')
-    .where('id', '=', fileId)
-    .executeTakeFirst();
-
-  if (!file) {
-    return [];
-  }
-
-  const parentIdType = getIdType(file.parent_id);
-  if (parentIdType === IdType.Message) {
-    const messageBreadcrumb = await fetchMessageBreadcrumb(
-      database,
-      file.parent_id
-    );
-
-    return [...messageBreadcrumb, fileId];
-  }
-
-  const entryBreadcrumb = await fetchEntryBreadcrumb(database, file.parent_id);
-  return [...entryBreadcrumb, fileId];
 };

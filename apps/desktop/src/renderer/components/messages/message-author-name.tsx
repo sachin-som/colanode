@@ -1,10 +1,10 @@
-import { MessageNode } from '@/shared/types/messages';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { cn } from '@/shared/lib/utils';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageAuthorNameProps {
-  message: MessageNode;
+  message: LocalMessageNode;
   className?: string;
 }
 

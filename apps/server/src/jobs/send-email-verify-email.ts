@@ -1,4 +1,4 @@
-import { accountService } from '@/services/account-service';
+import { sendEmailVerifyEmail } from '@/lib/accounts';
 import { JobHandler } from '@/types/jobs';
 
 export type SendEmailVerifyEmailInput = {
@@ -18,5 +18,5 @@ export const sendEmailVerifyEmailHandler: JobHandler<
   SendEmailVerifyEmailInput
 > = async (input) => {
   const { otpId } = input;
-  await accountService.sendEmailVerifyEmail(otpId);
+  await sendEmailVerifyEmail(otpId);
 };

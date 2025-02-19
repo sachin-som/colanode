@@ -1,10 +1,10 @@
-import { SpaceEntry } from '@colanode/core';
 import { useEffect, useRef } from 'react';
 
 import { SmartTextarea } from '@/renderer/components/ui/smart-textarea';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 interface SpaceDescriptionProps {
-  space: SpaceEntry;
+  space: LocalSpaceNode;
   readonly: boolean;
   onUpdate: (description: string) => void;
 }

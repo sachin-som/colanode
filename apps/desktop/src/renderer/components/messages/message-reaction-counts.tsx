@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { MessageNode } from '@/shared/types/messages';
 import { EmojiElement } from '@/renderer/components/emojis/emoji-element';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
@@ -9,9 +8,10 @@ import { toast } from '@/renderer/hooks/use-toast';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { MessageReactionCountTooltip } from '@/renderer/components/messages/message-reaction-count-tooltip';
 import { MessageReactionCountsDialog } from '@/renderer/components/messages/message-reaction-counts-dialog';
+import { LocalMessageNode } from '@/shared/types/nodes';
 
 interface MessageReactionCountsProps {
-  message: MessageNode;
+  message: LocalMessageNode;
 }
 
 export const MessageReactionCounts = ({
@@ -23,8 +23,8 @@ export const MessageReactionCounts = ({
   const { mutate, isPending } = useMutation();
 
   const { data } = useQuery({
-    type: 'message_reactions_aggregate',
-    messageId: message.id,
+    type: 'node_reactions_aggregate',
+    nodeId: message.id,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
@@ -66,8 +66,8 @@ export const MessageReactionCounts = ({
                 if (hasReacted) {
                   mutate({
                     input: {
-                      type: 'message_reaction_delete',
-                      messageId: message.id,
+                      type: 'node_reaction_delete',
+                      nodeId: message.id,
                       accountId: workspace.accountId,
                       workspaceId: workspace.id,
                       rootId: message.rootId,
@@ -84,8 +84,8 @@ export const MessageReactionCounts = ({
                 } else {
                   mutate({
                     input: {
-                      type: 'message_reaction_create',
-                      messageId: message.id,
+                      type: 'node_reaction_create',
+                      nodeId: message.id,
                       accountId: workspace.accountId,
                       workspaceId: workspace.id,
                       rootId: message.rootId,

@@ -1,10 +1,9 @@
-import { ViewAttributes } from '@colanode/core';
-
+import { LocalDatabaseViewNode } from '@/shared/types/nodes';
 import { ViewIcon } from '@/renderer/components/databases/view-icon';
 import { cn } from '@/shared/lib/utils';
 
 interface ViewTabProps {
-  view: ViewAttributes;
+  view: LocalDatabaseViewNode;
   isActive: boolean;
   onClick: () => void;
 }
@@ -22,12 +21,12 @@ export const ViewTab = ({ view, isActive, onClick }: ViewTabProps) => {
     >
       <ViewIcon
         id={view.id}
-        name={view.name}
-        avatar={view.avatar}
-        type={view.type}
+        name={view.attributes.name}
+        avatar={view.attributes.avatar}
+        layout={view.attributes.layout}
         className="size-4"
       />
-      {view.name}
+      {view.attributes.name}
     </div>
   );
 };

@@ -15,7 +15,7 @@ export type SyncUserData = {
   customAvatar: string | null;
   createdAt: string;
   updatedAt: string | null;
-  version: string;
+  revision: string;
   status: UserStatus;
 };
 

@@ -1,8 +1,9 @@
-import { ViewAttributes } from '@colanode/core';
 import { createContext, useContext } from 'react';
 
+import { LocalDatabaseViewNode } from '@/shared/types/nodes';
+
 interface DatabaseViewsContext {
-  views: ViewAttributes[];
+  views: LocalDatabaseViewNode[];
   activeViewId: string;
   setActiveViewId: (viewId: string) => void;
 }

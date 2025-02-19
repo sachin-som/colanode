@@ -7,11 +7,11 @@ import { ViewSearchBar } from '@/renderer/components/databases/search/view-searc
 import { ViewSortButton } from '@/renderer/components/databases/search/view-sort-button';
 import { ViewTabs } from '@/renderer/components/databases/view-tabs';
 import { useDatabase } from '@/renderer/contexts/database';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 
 export const CalendarView = () => {
   const database = useDatabase();
-  const view = useView();
+  const view = useDatabaseView();
 
   const groupByField = database.fields.find(
     (field) => field.id === view.groupBy

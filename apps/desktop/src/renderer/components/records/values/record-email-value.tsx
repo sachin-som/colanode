@@ -25,7 +25,7 @@ export const RecordEmailValue = ({
           record.removeFieldValue(field);
         } else {
           record.updateFieldValue(field, {
-            type: 'email',
+            type: 'string',
             value: newValue,
           });
         }

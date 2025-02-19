@@ -1,5 +1,6 @@
-import { DatabaseEntry, EntryRole, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 import { DatabaseForm } from '@/renderer/components/databases/database-form';
 import {
   Dialog,
@@ -13,8 +14,8 @@ import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 
 interface DatabaseUpdateDialogProps {
-  database: DatabaseEntry;
-  role: EntryRole;
+  database: LocalDatabaseNode;
+  role: NodeRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,7 +28,7 @@ export const DatabaseUpdateDialog = ({
 }: DatabaseUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

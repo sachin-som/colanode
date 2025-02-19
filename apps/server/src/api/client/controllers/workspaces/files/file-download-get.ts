@@ -1,56 +1,60 @@
 import { Request, Response } from 'express';
 import {
   CreateDownloadOutput,
-  hasEntryRole,
+  hasNodeRole,
   ApiErrorCode,
-  extractEntryRole,
+  extractNodeRole,
   FileStatus,
 } from '@colanode/core';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { database } from '@/data/database';
-import { fetchEntry, mapEntry } from '@/lib/entries';
+import { fetchNodeTree, mapNode } from '@/lib/nodes';
 import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
 import { configuration } from '@/lib/configuration';
+import { buildFilePath } from '@/lib/files';
 
 export const fileDownloadGetHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const workspaceId = req.params.workspaceId as string;
   const fileId = req.params.fileId as string;
 
-  const file = await database
-    .selectFrom('files')
-    .selectAll()
-    .where('id', '=', fileId)
-    .executeTakeFirst();
-
-  if (!file) {
+  const tree = await fetchNodeTree(fileId);
+  if (tree.length === 0) {
     return ResponseBuilder.badRequest(res, {
       code: ApiErrorCode.FileNotFound,
       message: 'File not found.',
     });
   }
 
-  if (file.status !== FileStatus.Ready) {
+  const nodes = tree.map((node) => mapNode(node));
+  const file = nodes[nodes.length - 1]!;
+  if (!file || file.id !== fileId) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
+      message: 'File not found.',
+    });
+  }
+
+  if (file.type !== 'file') {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
+      message: 'This node is not a file.',
+    });
+  }
+
+  if (file.attributes.status !== FileStatus.Ready) {
     return ResponseBuilder.badRequest(res, {
       code: ApiErrorCode.FileNotReady,
       message: 'File is not ready to be downloaded.',
     });
   }
 
-  const root = await fetchEntry(file.root_id);
-  if (!root) {
-    return ResponseBuilder.badRequest(res, {
-      code: ApiErrorCode.RootNotFound,
-      message: 'Root not found.',
-    });
-  }
-
-  const role = extractEntryRole(mapEntry(root), res.locals.user.id);
-  if (role === null || !hasEntryRole(role, 'viewer')) {
+  const role = extractNodeRole(nodes, res.locals.user.id);
+  if (role === null || !hasNodeRole(role, 'viewer')) {
     return ResponseBuilder.forbidden(res, {
       code: ApiErrorCode.FileNoAccess,
       message: 'You do not have access to this file.',
@@ -58,7 +62,7 @@ export const fileDownloadGetHandler = async (
   }
 
   //generate presigned url for download
-  const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
+  const path = buildFilePath(workspaceId, file.id, file.attributes);
   const command = new GetObjectCommand({
     Bucket: configuration.fileS3.bucketName,
     Key: path,

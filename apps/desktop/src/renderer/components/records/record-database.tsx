@@ -1,12 +1,13 @@
-import { DatabaseEntry, EntryRole } from '@colanode/core';
+import { NodeRole } from '@colanode/core';
 
 import { Database } from '@/renderer/components/databases/database';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useWorkspace } from '@/renderer/contexts/workspace';
+import { LocalDatabaseNode } from '@/shared/types/nodes';
 
 interface RecordDatabaseProps {
   id: string;
-  role: EntryRole;
+  role: NodeRole;
   children: React.ReactNode;
 }
 
@@ -14,10 +15,10 @@ export const RecordDatabase = ({ id, role, children }: RecordDatabaseProps) => {
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    type: 'entry_get',
+    type: 'node_get',
     accountId: workspace.accountId,
     workspaceId: workspace.id,
-    entryId: id,
+    nodeId: id,
   });
 
   if (isPending) {
@@ -29,7 +30,7 @@ export const RecordDatabase = ({ id, role, children }: RecordDatabaseProps) => {
   }
 
   return (
-    <Database database={data as DatabaseEntry} role={role}>
+    <Database database={data as LocalDatabaseNode} role={role}>
       {children}
     </Database>
   );

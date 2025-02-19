@@ -17,11 +17,11 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 interface FolderDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entryId: string;
+  folderId: string;
 }
 
 export const FolderDeleteDialog = ({
-  entryId,
+  folderId,
   open,
   onOpenChange,
 }: FolderDeleteDialogProps) => {
@@ -50,13 +50,13 @@ export const FolderDeleteDialog = ({
               mutate({
                 input: {
                   type: 'folder_delete',
-                  folderId: entryId,
+                  folderId: folderId,
                   accountId: workspace.accountId,
                   workspaceId: workspace.id,
                 },
                 onSuccess() {
                   onOpenChange(false);
-                  layout.close(entryId);
+                  layout.close(folderId);
                 },
                 onError(error) {
                   toast({

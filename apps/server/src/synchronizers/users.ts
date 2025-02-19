@@ -44,8 +44,8 @@ export class UserSynchronizer extends BaseSynchronizer<SyncUsersInput> {
       .selectFrom('users')
       .selectAll()
       .where('workspace_id', '=', this.user.workspaceId)
-      .where('version', '>', this.cursor)
-      .orderBy('version', 'asc')
+      .where('revision', '>', this.cursor)
+      .orderBy('revision', 'asc')
       .limit(50)
       .execute();
 
@@ -67,7 +67,7 @@ export class UserSynchronizer extends BaseSynchronizer<SyncUsersInput> {
       customAvatar: user.custom_avatar,
       createdAt: user.created_at.toISOString(),
       updatedAt: user.updated_at?.toISOString() ?? null,
-      version: user.version.toString(),
+      revision: user.revision.toString(),
       status: user.status,
     }));
 
@@ -76,7 +76,7 @@ export class UserSynchronizer extends BaseSynchronizer<SyncUsersInput> {
       userId: this.user.userId,
       id: this.id,
       items: items.map((item) => ({
-        cursor: item.version,
+        cursor: item.revision,
         data: item,
       })),
     };

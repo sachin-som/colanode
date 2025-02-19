@@ -1,6 +1,6 @@
-import { ChatEntry } from '@colanode/core';
 import { InView } from 'react-intersection-observer';
 
+import { LocalChatNode } from '@/shared/types/nodes';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
 import { useRadar } from '@/renderer/contexts/radar';
@@ -10,7 +10,7 @@ import { useLayout } from '@/renderer/contexts/layout';
 import { cn } from '@/shared/lib/utils';
 
 interface ChatSidebarItemProps {
-  chat: ChatEntry;
+  chat: LocalChatNode;
 }
 
 export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
@@ -48,7 +48,7 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
       rootMargin="20px"
       onChange={(inView) => {
         if (inView) {
-          radar.markEntryAsSeen(workspace.accountId, workspace.id, chat.id);
+          radar.markNodeAsSeen(workspace.accountId, workspace.id, chat.id);
         }
       }}
       className={cn(

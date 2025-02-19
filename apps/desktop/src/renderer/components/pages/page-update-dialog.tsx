@@ -1,4 +1,4 @@
-import { EntryRole, PageEntry, hasEntryRole } from '@colanode/core';
+import { NodeRole, hasNodeRole } from '@colanode/core';
 
 import { PageForm } from '@/renderer/components/pages/page-form';
 import {
@@ -11,10 +11,11 @@ import {
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
+import { LocalPageNode } from '@/shared/types/nodes';
 
 interface PageUpdateDialogProps {
-  page: PageEntry;
-  role: EntryRole;
+  page: LocalPageNode;
+  role: NodeRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,7 +28,7 @@ export const PageUpdateDialog = ({
 }: PageUpdateDialogProps) => {
   const workspace = useWorkspace();
   const { mutate, isPending } = useMutation();
-  const canEdit = hasEntryRole(role, 'editor');
+  const canEdit = hasNodeRole(role, 'editor');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

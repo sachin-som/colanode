@@ -24,7 +24,7 @@ export class PageCreateMutationHandler
       name: input.name,
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id,
       attributes,
       parentId: input.parentId,

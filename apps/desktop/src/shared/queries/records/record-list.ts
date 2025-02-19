@@ -1,14 +1,15 @@
 import {
-  RecordEntry,
-  ViewFilterAttributes,
-  ViewSortAttributes,
+  DatabaseViewFilterAttributes,
+  DatabaseViewSortAttributes,
 } from '@colanode/core';
+
+import { LocalRecordNode } from '@/shared/types/nodes';
 
 export type RecordListQueryInput = {
   type: 'record_list';
   databaseId: string;
-  filters: ViewFilterAttributes[];
-  sorts: ViewSortAttributes[];
+  filters: DatabaseViewFilterAttributes[];
+  sorts: DatabaseViewSortAttributes[];
   page: number;
   count: number;
   accountId: string;
@@ -19,7 +20,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     record_list: {
       input: RecordListQueryInput;
-      output: RecordEntry[];
+      output: LocalRecordNode[];
     };
   }
 }

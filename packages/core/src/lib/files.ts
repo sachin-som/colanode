@@ -1,6 +1,6 @@
-import { FileType } from '../types/files';
+import { FileSubtype } from '../types/files';
 
-export const extractFileType = (mimeType: string): FileType => {
+export const extractFileSubtype = (mimeType: string): FileSubtype => {
   if (mimeType.startsWith('image/')) {
     return 'image';
   }

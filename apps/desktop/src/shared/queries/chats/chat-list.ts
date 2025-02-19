@@ -1,4 +1,4 @@
-import { ChatEntry } from '@colanode/core';
+import { LocalChatNode } from '@/shared/types/nodes';
 
 export type ChatListQueryInput = {
   type: 'chat_list';
@@ -12,7 +12,7 @@ declare module '@/shared/queries' {
   interface QueryMap {
     chat_list: {
       input: ChatListQueryInput;
-      output: ChatEntry[];
+      output: LocalChatNode[];
     };
   }
 }

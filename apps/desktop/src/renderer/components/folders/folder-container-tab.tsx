@@ -1,8 +1,7 @@
-import { FolderEntry } from '@colanode/core';
-
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { LocalFolderNode } from '@/shared/types/nodes';
 
 interface FolderContainerTabProps {
   folderId: string;
@@ -12,8 +11,8 @@ export const FolderContainerTab = ({ folderId }: FolderContainerTabProps) => {
   const workspace = useWorkspace();
 
   const { data, isPending } = useQuery({
-    type: 'entry_get',
-    entryId: folderId,
+    type: 'node_get',
+    nodeId: folderId,
     accountId: workspace.accountId,
     workspaceId: workspace.id,
   });
@@ -22,7 +21,7 @@ export const FolderContainerTab = ({ folderId }: FolderContainerTabProps) => {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
 
-  const folder = data as FolderEntry;
+  const folder = data as LocalFolderNode;
   if (!folder) {
     return <p className="text-sm text-muted-foreground">Not found</p>;
   }

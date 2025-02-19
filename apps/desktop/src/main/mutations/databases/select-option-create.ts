@@ -24,7 +24,7 @@ export class SelectOptionCreateMutationHandler
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const id = generateId(IdType.SelectOption);
-    const result = await workspace.entries.updateEntry<DatabaseAttributes>(
+    const result = await workspace.nodes.updateNode<DatabaseAttributes>(
       input.databaseId,
       (attributes) => {
         const field = attributes.fields[input.fieldId];
@@ -35,7 +35,7 @@ export class SelectOptionCreateMutationHandler
           );
         }
 
-        if (field.type !== 'select' && field.type !== 'multiSelect') {
+        if (field.type !== 'multi_select' && field.type !== 'select') {
           throw new MutationError(
             MutationErrorCode.FieldTypeInvalid,
             'The field you are trying to create a select option in is not a "Select" or "Multi-Select" field.'

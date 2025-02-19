@@ -1,6 +1,6 @@
 import {
   BooleanFieldAttributes,
-  ViewFieldFilterAttributes,
+  DatabaseViewFieldFilterAttributes,
 } from '@colanode/core';
 import { ChevronDown, Trash2 } from 'lucide-react';
 
@@ -17,19 +17,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/renderer/components/ui/popover';
-import { useView } from '@/renderer/contexts/view';
+import { useDatabaseView } from '@/renderer/contexts/database-view';
 import { booleanFieldFilterOperators } from '@/shared/lib/databases';
 
 interface ViewBooleanFieldFilterProps {
   field: BooleanFieldAttributes;
-  filter: ViewFieldFilterAttributes;
+  filter: DatabaseViewFieldFilterAttributes;
 }
 
 export const ViewBooleanFieldFilter = ({
   field,
   filter,
 }: ViewBooleanFieldFilterProps) => {
-  const view = useView();
+  const view = useDatabaseView();
 
   const operator =
     booleanFieldFilterOperators.find(

@@ -25,7 +25,7 @@ export class RecordCreateMutationHandler
       fields: input.fields ?? {},
     };
 
-    await workspace.entries.createEntry({
+    await workspace.nodes.createNode({
       id,
       attributes,
       parentId: input.databaseId,

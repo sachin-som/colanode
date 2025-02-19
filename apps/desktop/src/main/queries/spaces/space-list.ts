@@ -1,25 +1,26 @@
-import { SpaceEntry } from '@colanode/core';
-
 import { WorkspaceQueryHandlerBase } from '@/main/queries/workspace-query-handler-base';
 import { ChangeCheckResult, QueryHandler } from '@/main/lib/types';
-import { mapEntry } from '@/main/lib/mappers';
+import { mapNode } from '@/main/lib/mappers';
 import { SpaceListQueryInput } from '@/shared/queries/spaces/space-list';
 import { Event } from '@/shared/types/events';
-import { SelectEntry } from '@/main/databases/workspace';
+import { SelectNode } from '@/main/databases/workspace';
+import { LocalSpaceNode } from '@/shared/types/nodes';
 
 export class SpaceListQueryHandler
   extends WorkspaceQueryHandlerBase
   implements QueryHandler<SpaceListQueryInput>
 {
-  public async handleQuery(input: SpaceListQueryInput): Promise<SpaceEntry[]> {
+  public async handleQuery(
+    input: SpaceListQueryInput
+  ): Promise<LocalSpaceNode[]> {
     const rows = await this.fetchChildren(input);
-    return rows.map(mapEntry) as SpaceEntry[];
+    return rows.map(mapNode) as LocalSpaceNode[];
   }
 
   public async checkForChanges(
     event: Event,
     input: SpaceListQueryInput,
-    output: SpaceEntry[]
+    output: LocalSpaceNode[]
   ): Promise<ChangeCheckResult<SpaceListQueryInput>> {
     if (
       event.type === 'workspace_deleted' &&
@@ -33,12 +34,12 @@ export class SpaceListQueryHandler
     }
 
     if (
-      event.type === 'entry_created' &&
+      event.type === 'node_created' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'space'
+      event.node.type === 'space'
     ) {
-      const newChildren = [...output, event.entry];
+      const newChildren = [...output, event.node];
       return {
         hasChanges: true,
         result: newChildren,
@@ -46,15 +47,15 @@ export class SpaceListQueryHandler
     }
 
     if (
-      event.type === 'entry_updated' &&
+      event.type === 'node_updated' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'space'
+      event.node.type === 'space'
     ) {
-      const entry = output.find((entry) => entry.id === event.entry.id);
-      if (entry) {
-        const newChildren = output.map((entry) =>
-          entry.id === event.entry.id ? (event.entry as SpaceEntry) : entry
+      const node = output.find((n) => n.id === event.node.id);
+      if (node) {
+        const newChildren = output.map((n) =>
+          n.id === event.node.id ? (event.node as LocalSpaceNode) : n
         );
 
         return {
@@ -65,16 +66,14 @@ export class SpaceListQueryHandler
     }
 
     if (
-      event.type === 'entry_deleted' &&
+      event.type === 'node_deleted' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId &&
-      event.entry.type === 'space'
+      event.node.type === 'space'
     ) {
-      const entry = output.find((entry) => entry.id === event.entry.id);
-      if (entry) {
-        const newChildren = output.filter(
-          (entry) => entry.id !== event.entry.id
-        );
+      const node = output.find((n) => n.id === event.node.id);
+      if (node) {
+        const newChildren = output.filter((n) => n.id !== event.node.id);
         return {
           hasChanges: true,
           result: newChildren,
@@ -89,13 +88,12 @@ export class SpaceListQueryHandler
 
   private async fetchChildren(
     input: SpaceListQueryInput
-  ): Promise<SelectEntry[]> {
+  ): Promise<SelectNode[]> {
     const workspace = this.getWorkspace(input.accountId, input.workspaceId);
 
     const rows = await workspace.database
-      .selectFrom('entries')
+      .selectFrom('nodes')
       .selectAll()
-      .where('parent_id', 'is', null)
       .where('type', '=', 'space')
       .execute();
 

@@ -19,9 +19,10 @@ import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { editorHasContent } from '@/shared/lib/editor';
-import { MessageNode } from '@/shared/types/messages';
+import { LocalMessageNode } from '@/shared/types/nodes';
+
 export interface MessageCreateRefProps {
-  setReplyTo: (replyTo: MessageNode) => void;
+  setReplyTo: (replyTo: LocalMessageNode) => void;
 }
 
 export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
@@ -33,7 +34,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
 
     const messageEditorRef = React.useRef<MessageEditorRefProps>(null);
     const [content, setContent] = React.useState<JSONContent | null>(null);
-    const [replyTo, setReplyTo] = React.useState<MessageNode | null>(null);
+    const [replyTo, setReplyTo] = React.useState<LocalMessageNode | null>(null);
 
     const hasContent = content != null && editorHasContent(content);
 
@@ -66,7 +67,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
       mutate({
         input: {
           type: 'message_create',
-          conversationId: conversation.id,
+          parentId: conversation.id,
           content: content,
           accountId: workspace.accountId,
           workspaceId: workspace.id,

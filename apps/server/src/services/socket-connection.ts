@@ -23,15 +23,11 @@ import { ConnectedUser } from '@/types/users';
 import { BaseSynchronizer } from '@/synchronizers/base';
 import { UserSynchronizer } from '@/synchronizers/users';
 import { CollaborationSynchronizer } from '@/synchronizers/collaborations';
-import { FileSynchronizer } from '@/synchronizers/files';
-import { MessageSynchronizer } from '@/synchronizers/messages';
-import { MessageReactionSynchronizer } from '@/synchronizers/message-reactions';
-import { EntryTransactionSynchronizer } from '@/synchronizers/entry-transactions';
-import { MessageInteractionSynchronizer } from '@/synchronizers/message-interactions';
-import { EntryInteractionSynchronizer } from '@/synchronizers/entry-interactions';
-import { FileInteractionSynchronizer } from '@/synchronizers/file-interactions';
-import { FileTombstoneSynchronizer } from '@/synchronizers/file-tombstones';
-import { MessageTombstoneSynchronizer } from '@/synchronizers/message-tombstones';
+import { NodeUpdatesSynchronizer } from '@/synchronizers/node-updates';
+import { NodeReactionSynchronizer } from '@/synchronizers/node-reactions';
+import { NodeTombstoneSynchronizer } from '@/synchronizers/node-tombstones';
+import { NodeInteractionSynchronizer } from '@/synchronizers/node-interactions';
+import { DocumentUpdateSynchronizer } from '@/synchronizers/document-updates';
 
 type SocketUser = {
   user: ConnectedUser;
@@ -150,79 +146,48 @@ export class SocketConnection {
         message.input,
         cursor
       );
-    } else if (message.input.type === 'files') {
+    } else if (message.input.type === 'nodes_updates') {
       if (!user.rootIds.has(message.input.rootId)) {
         return null;
       }
 
-      return new FileSynchronizer(message.id, user.user, message.input, cursor);
-    } else if (message.input.type === 'messages') {
+      return new NodeUpdatesSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'node_reactions') {
+      return new NodeReactionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'node_interactions') {
+      return new NodeInteractionSynchronizer(
+        message.id,
+        user.user,
+        message.input,
+        cursor
+      );
+    } else if (message.input.type === 'node_tombstones') {
       if (!user.rootIds.has(message.input.rootId)) {
         return null;
       }
 
-      return new MessageSynchronizer(
+      return new NodeTombstoneSynchronizer(
         message.id,
         user.user,
         message.input,
         cursor
       );
-    } else if (message.input.type === 'message_reactions') {
-      return new MessageReactionSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'entry_transactions') {
-      return new EntryTransactionSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'message_interactions') {
+    } else if (message.input.type === 'document_updates') {
       if (!user.rootIds.has(message.input.rootId)) {
         return null;
       }
 
-      return new MessageInteractionSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'entry_interactions') {
-      if (!user.rootIds.has(message.input.rootId)) {
-        return null;
-      }
-
-      return new EntryInteractionSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'file_interactions') {
-      if (!user.rootIds.has(message.input.rootId)) {
-        return null;
-      }
-
-      return new FileInteractionSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'file_tombstones') {
-      return new FileTombstoneSynchronizer(
-        message.id,
-        user.user,
-        message.input,
-        cursor
-      );
-    } else if (message.input.type === 'message_tombstones') {
-      return new MessageTombstoneSynchronizer(
+      return new DocumentUpdateSynchronizer(
         message.id,
         user.user,
         message.input,
@@ -297,7 +262,7 @@ export class SocketConnection {
         continue;
       }
 
-      rootIds.add(collaboration.entry_id);
+      rootIds.add(collaboration.node_id);
     }
 
     const socketUser: SocketUser = {
@@ -357,7 +322,7 @@ export class SocketConnection {
       return;
     }
 
-    user.rootIds.add(event.entryId);
+    user.rootIds.add(event.nodeId);
   }
 
   private async handleCollaborationUpdatedEvent(
@@ -372,13 +337,13 @@ export class SocketConnection {
       .selectFrom('collaborations')
       .selectAll()
       .where('collaborator_id', '=', event.collaboratorId)
-      .where('entry_id', '=', event.entryId)
+      .where('node_id', '=', event.nodeId)
       .executeTakeFirst();
 
     if (!collaboration || collaboration.deleted_at) {
-      user.rootIds.delete(event.entryId);
+      user.rootIds.delete(event.nodeId);
     } else {
-      user.rootIds.add(event.entryId);
+      user.rootIds.add(event.nodeId);
     }
   }
 

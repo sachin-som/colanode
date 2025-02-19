@@ -15,6 +15,7 @@ import { RecordContainerTab } from '@/renderer/components/records/record-contain
 import { FolderContainerTab } from '@/renderer/components/folders/folder-container-tab';
 import { ChatContainerTab } from '@/renderer/components/chats/chat-container-tab';
 import { PageContainerTab } from '@/renderer/components/pages/page-container-tab';
+import { MessageContainerTab } from '@/renderer/components/messages/message-container-tab';
 
 interface ContainerTabTriggerProps {
   tab: ContainerTab;
@@ -99,6 +100,9 @@ export const ContainerTabTrigger = ({
           ))
           .with(IdType.Folder, () => <FolderContainerTab folderId={tab.path} />)
           .with(IdType.File, () => <FileContainerTab fileId={tab.path} />)
+          .with(IdType.Message, () => (
+            <MessageContainerTab messageId={tab.path} />
+          ))
           .otherwise(() => null)}
       </div>
       <div

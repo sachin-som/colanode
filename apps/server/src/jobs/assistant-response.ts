@@ -219,10 +219,10 @@ async function fetchChatHistory(state: typeof ResponseState.State) {
       (message) =>
         new Document({
           pageContent:
-            getNodeModel(message.attributes.type)?.getAttributesText(
+            getNodeModel(message.attributes.type)?.extractNodeText(
               message.id,
               message.attributes
-            ) || '',
+            )?.attributes || '',
           metadata: {
             id: message.id,
             type: 'message',
@@ -443,18 +443,23 @@ export const assistantResponseHandler: JobHandler<
   }
 
   const message = await fetchNode(messageId);
-  if (!message) return;
+  if (!message) {
+    return;
+  }
 
   const messageModel = getNodeModel(message.attributes.type);
-  if (!messageModel) return;
+  if (!messageModel) {
+    return;
+  }
 
-  const messageText = messageModel.getAttributesText(
+  const messageText = messageModel.extractNodeText(
     message.id,
     message.attributes
   );
-  if (!messageText) return;
+  if (!messageText || !messageText.attributes) {
+    return;
+  }
 
-  // Fetch user and workspace details only ONCE
   const [user, workspace] = await Promise.all([
     database
       .selectFrom('users')
@@ -463,12 +468,14 @@ export const assistantResponseHandler: JobHandler<
       .executeTakeFirst(),
     fetchWorkspaceDetails(workspaceId),
   ]);
-  if (!user || !workspace) return;
+  if (!user || !workspace) {
+    return;
+  }
 
   try {
     const chainResult = await assistantResponseChain.invoke(
       {
-        userInput: messageText,
+        userInput: messageText.attributes,
         workspaceId,
         userId: user.id,
         userDetails: {
@@ -554,11 +561,13 @@ async function createAndPublishResponse(
       attributes: JSON.stringify(messageAttributes),
       created_by: 'colanode_ai',
       created_at: new Date(),
-      state: Buffer.from([]),
+      revision: BigInt(0),
     })
     .executeTakeFirst();
 
-  if (!createdMessage) return;
+  if (!createdMessage) {
+    return;
+  }
 
   eventBus.publish({
     type: 'node_created',

@@ -2,10 +2,10 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { ChunkingService } from '@/services/chunking-service';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { CreateDocumentEmbedding, SelectNode } from '@/data/schema';
+import { CreateDocumentEmbedding } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
-import { DocumentContent, extractBlockTexts } from '@colanode/core';
+import { extractDocumentText } from '@colanode/core';
 import { getNodeModel } from '@colanode/core';
 
 export type EmbedDocumentInput = {
@@ -20,29 +20,6 @@ declare module '@/types/jobs' {
     };
   }
 }
-
-const extractDocumentText = async (
-  node: SelectNode,
-  content: DocumentContent
-): Promise<string> => {
-  const nodeModel = getNodeModel(node.attributes.type);
-  if (!nodeModel) {
-    return '';
-  }
-
-  const documentText = nodeModel.getDocumentText(node.id, content);
-  if (documentText) {
-    return documentText;
-  } else {
-    // Fallback to block text extraction if the node model doesn't handle it
-    const blocksText = extractBlockTexts(node.id, content.blocks);
-    if (blocksText) {
-      return blocksText;
-    }
-  }
-
-  return '';
-};
 
 export const embedDocumentHandler = async (input: {
   type: 'embed_document';
@@ -72,7 +49,7 @@ export const embedDocumentHandler = async (input: {
     return;
   }
 
-  const text = await extractDocumentText(node, document.content);
+  const text = extractDocumentText(node.id, document.content);
   if (!text || text.trim() === '') {
     await database
       .deleteFrom('document_embeddings')

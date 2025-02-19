@@ -30,12 +30,20 @@ const extractNodeText = (node: SelectNode): string => {
     return '';
   }
 
-  const attributesText = nodeModel.getAttributesText(node.id, node.attributes);
-  if (attributesText) {
-    return attributesText;
+  const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+  if (!nodeText) {
+    return '';
   }
 
-  return '';
+  const textParts: string[] = [];
+  if (nodeText.name) {
+    textParts.push(nodeText.name);
+  }
+  if (nodeText.attributes) {
+    textParts.push(nodeText.attributes);
+  }
+
+  return textParts.join('\n').trim();
 };
 
 export const embedNodeHandler = async (input: {

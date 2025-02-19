@@ -211,7 +211,7 @@ const tryUpdateDocumentFromMutation = async (
   }
 };
 
-async function scheduleDocumentEmbedding(documentId: string) {
+const scheduleDocumentEmbedding = async (documentId: string) => {
   await jobService.addJob(
     {
       type: 'embed_document',
@@ -219,7 +219,7 @@ async function scheduleDocumentEmbedding(documentId: string) {
     },
     {
       jobId: `embed_document:${documentId}`,
-      delay: configuration.ai.embedDelay,
+      delay: configuration.ai.documentEmbeddingDelay,
     }
   );
-}
+};

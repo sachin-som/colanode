@@ -2,12 +2,12 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
 import { addContextToChunk } from '@/services/llm-service';
-import { DocumentContent, getNodeModel, NodeType } from '@colanode/core';
+import { getNodeModel, NodeType } from '@colanode/core';
 import type { SelectNode, SelectDocument } from '@/data/schema';
 
 type BaseMetadata = {
   id: string;
-  name?: string;
+  name?: string | null;
   createdAt: Date;
   createdBy: string;
   updatedAt?: Date | null;
@@ -146,9 +146,9 @@ export class ChunkingService {
 
     const nodeModel = getNodeModel(node.attributes.type);
     if (nodeModel) {
-      const nodeName = nodeModel.getName(node.id, node.attributes);
-      if (nodeName) {
-        baseMetadata.name = nodeName;
+      const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+      if (nodeText) {
+        baseMetadata.name = nodeText.name;
       }
 
       // Add parent context if available
@@ -174,7 +174,10 @@ export class ChunkingService {
       return undefined;
     }
 
-    const nodeName = nodeModel.getName(node.id, node.attributes);
+    const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+    if (!nodeText || !nodeText.name) {
+      return undefined;
+    }
 
     const author = await database
       .selectFrom('users')
@@ -198,7 +201,7 @@ export class ChunkingService {
 
     return {
       id: node.id,
-      name: nodeName ?? '',
+      name: nodeText.name,
       createdAt: node.created_at,
       createdBy: node.created_by,
       updatedAt: node.updated_at,
@@ -227,7 +230,7 @@ export class ChunkingService {
       return undefined;
     }
 
-    const parentName = parentModel.getName(
+    const parentText = parentModel.extractNodeText(
       parentNode.id,
       parentNode.attributes
     );
@@ -244,14 +247,14 @@ export class ChunkingService {
     const path = pathNodes
       .map((n) => {
         const model = getNodeModel(n.attributes.type);
-        return model?.getName(n.id, n.attributes) ?? 'Untitled';
+        return model?.extractNodeText(n.id, n.attributes)?.name ?? 'Untitled';
       })
       .join(' / ');
 
     return {
       id: parentNode.id,
       type: parentNode.attributes.type,
-      name: parentName ?? undefined,
+      name: parentText?.name ?? undefined,
       path,
     };
   }

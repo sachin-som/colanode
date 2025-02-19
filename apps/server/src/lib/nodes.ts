@@ -785,7 +785,7 @@ const scheduleNodeEmbedding = async (node: SelectNode) => {
 
   // Only add delay for non-message nodes
   if (node.type !== 'message') {
-    jobOptions.delay = configuration.ai.embedDelay;
+    jobOptions.delay = configuration.ai.nodeEmbeddingDelay;
   }
 
   await jobService.addJob(

@@ -240,6 +240,24 @@ export type SelectDocumentUpdate = Selectable<DocumentUpdateTable>;
 export type CreateDocumentUpdate = Insertable<DocumentUpdateTable>;
 export type UpdateDocumentUpdate = Updateable<DocumentUpdateTable>;
 
+interface UploadTable {
+  file_id: ColumnType<string, string, never>;
+  upload_id: ColumnType<string, string, string>;
+  workspace_id: ColumnType<string, string, never>;
+  root_id: ColumnType<string, string, never>;
+  mime_type: ColumnType<string, string, string>;
+  size: ColumnType<number, number, number>;
+  path: ColumnType<string, string, string>;
+  version_id: ColumnType<string, string, string>;
+  created_at: ColumnType<Date, Date, Date>;
+  created_by: ColumnType<string, string, string>;
+  uploaded_at: ColumnType<Date | null, Date | null, Date | null>;
+}
+
+export type SelectUpload = Selectable<UploadTable>;
+export type CreateUpload = Insertable<UploadTable>;
+export type UpdateUpload = Updateable<UploadTable>;
+
 interface NodeEmbeddingTable {
   node_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
@@ -286,6 +304,7 @@ export interface DatabaseSchema {
   collaborations: CollaborationTable;
   documents: DocumentTable;
   document_updates: DocumentUpdateTable;
+  uploads: UploadTable;
   node_embeddings: NodeEmbeddingTable;
   document_embeddings: DocumentEmbeddingTable;
 }

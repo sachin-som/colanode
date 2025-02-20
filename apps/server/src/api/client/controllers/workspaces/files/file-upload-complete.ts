@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import { HeadObjectCommand } from '@aws-sdk/client-s3';
 import { FileStatus, ApiErrorCode } from '@colanode/core';
 
 import { database } from '@/data/database';
-import { fileS3 } from '@/data/storage';
 import { ResponseBuilder } from '@/lib/response-builder';
-import { configuration } from '@/lib/configuration';
 import { mapNode, updateNode } from '@/lib/nodes';
-import { buildFilePath } from '@/lib/files';
+import { fetchFileMetadata } from '@/lib/files';
 
 export const fileUploadCompleteHandler = async (
   req: Request,
@@ -15,6 +12,7 @@ export const fileUploadCompleteHandler = async (
 ): Promise<void> => {
   const workspaceId = req.params.workspaceId as string;
   const fileId = req.params.fileId as string;
+  const uploadId = req.body.uploadId as string;
 
   const node = await database
     .selectFrom('nodes')
@@ -64,35 +62,46 @@ export const fileUploadCompleteHandler = async (
     });
   }
 
-  const path = buildFilePath(workspaceId, file.id, file.attributes);
-  // check if the file exists in the bucket
-  const command = new HeadObjectCommand({
-    Bucket: configuration.fileS3.bucketName,
-    Key: path,
-  });
+  const upload = await database
+    .selectFrom('uploads')
+    .selectAll()
+    .where('file_id', '=', fileId)
+    .executeTakeFirst();
 
-  try {
-    const headObject = await fileS3.send(command);
-
-    // Verify file size matches expected size
-    if (headObject.ContentLength !== file.attributes.size) {
-      return ResponseBuilder.badRequest(res, {
-        code: ApiErrorCode.FileSizeMismatch,
-        message: 'Uploaded file size does not match expected size',
-      });
-    }
-
-    // Verify mime type matches expected type
-    if (headObject.ContentType !== file.attributes.mimeType) {
-      return ResponseBuilder.badRequest(res, {
-        code: ApiErrorCode.FileMimeTypeMismatch,
-        message: 'Uploaded file type does not match expected type',
-      });
-    }
-  } catch {
+  if (!upload) {
     return ResponseBuilder.badRequest(res, {
-      code: ApiErrorCode.FileError,
-      message: 'File upload verification failed',
+      code: ApiErrorCode.FileUploadNotFound,
+      message: 'Upload not found.',
+    });
+  }
+
+  if (upload.file_id !== fileId || upload.upload_id !== uploadId) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileUploadNotFound,
+      message: 'Upload not found.',
+    });
+  }
+
+  const path = upload.path;
+  const metadata = await fetchFileMetadata(path);
+  if (metadata === null) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileNotFound,
+      message: 'File not found.',
+    });
+  }
+
+  if (metadata.size !== file.attributes.size) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileSizeMismatch,
+      message: 'Uploaded file size does not match expected size',
+    });
+  }
+
+  if (metadata.mimeType !== file.attributes.mimeType) {
+    return ResponseBuilder.badRequest(res, {
+      code: ApiErrorCode.FileMimeTypeMismatch,
+      message: 'Uploaded file type does not match expected type',
     });
   }
 
@@ -116,6 +125,14 @@ export const fileUploadCompleteHandler = async (
       message: 'Failed to complete file upload.',
     });
   }
+
+  await database
+    .updateTable('uploads')
+    .set({
+      uploaded_at: new Date(),
+    })
+    .where('file_id', '=', fileId)
+    .execute();
 
   return ResponseBuilder.success(res, {
     success: true,

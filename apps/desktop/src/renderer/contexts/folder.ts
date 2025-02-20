@@ -8,7 +8,7 @@ interface FolderContext {
   files: LocalFileNode[];
   onClick: (event: React.MouseEvent<HTMLElement>, id: string) => void;
   onDoubleClick: (event: React.MouseEvent<HTMLElement>, id: string) => void;
-  onMove: (entryId: string, targetId: string) => void;
+  onMove: (nodeId: string, targetId: string) => void;
 }
 
 export const FolderContext = createContext<FolderContext>({} as FolderContext);

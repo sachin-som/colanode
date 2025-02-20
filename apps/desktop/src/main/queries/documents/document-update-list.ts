@@ -16,7 +16,7 @@ export class DocumentUpdatesListQueryHandler
     const documentUpdates = await workspace.database
       .selectFrom('document_updates')
       .selectAll()
-      .where('id', '=', input.documentId)
+      .where('document_id', '=', input.documentId)
       .execute();
 
     if (!documentUpdates) {

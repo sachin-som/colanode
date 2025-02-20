@@ -105,7 +105,7 @@ export const FolderSettings = ({ folder, role }: FolderSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <FolderDeleteDialog
-        entryId={folder.id}
+        folderId={folder.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

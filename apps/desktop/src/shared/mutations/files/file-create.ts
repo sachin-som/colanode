@@ -3,8 +3,6 @@ export type FileCreateMutationInput = {
   accountId: string;
   workspaceId: string;
   parentId: string;
-  entryId: string;
-  rootId: string;
   filePath: string;
 };
 

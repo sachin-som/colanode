@@ -52,10 +52,10 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
             hasUnseenChanges: false,
           };
         },
-        getChatState: (accountId, workspaceId, entryId) => {
+        getChatState: (accountId, workspaceId, chatId) => {
           const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
-            const chatState = workspaceState.nodeStates[entryId];
+            const chatState = workspaceState.nodeStates[chatId];
             if (chatState && chatState.type === 'chat') {
               return chatState;
             }
@@ -63,15 +63,15 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
 
           return {
             type: 'chat',
-            chatId: entryId,
+            chatId: chatId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };
         },
-        getChannelState: (accountId, workspaceId, entryId) => {
+        getChannelState: (accountId, workspaceId, channelId) => {
           const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
-            const channelState = workspaceState.nodeStates[entryId];
+            const channelState = workspaceState.nodeStates[channelId];
             if (channelState && channelState.type === 'channel') {
               return channelState;
             }
@@ -79,7 +79,7 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
 
           return {
             type: 'channel',
-            channelId: entryId,
+            channelId: channelId,
             unseenMessagesCount: 0,
             mentionsCount: 0,
           };

@@ -105,7 +105,7 @@ export const DatabaseSettings = ({ database, role }: DatabaseSettingsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
       <DatabaseDeleteDialog
-        entryId={database.id}
+        databaseId={database.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteModal}
       />

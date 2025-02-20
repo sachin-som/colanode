@@ -393,7 +393,9 @@ export class FileService {
 
       await this.workspace.account.client.put<CompleteUploadOutput>(
         `/v1/workspaces/${this.workspace.id}/files/${file.id}`,
-        {}
+        {
+          uploadId: data.uploadId,
+        }
       );
 
       const finalFileState = await this.workspace.database

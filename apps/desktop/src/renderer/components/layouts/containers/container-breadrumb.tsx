@@ -29,7 +29,7 @@ export const ContainerBreadcrumb = ({
   // Show ellipsis if we have more than 3 nodes (first + last two)
   const showEllipsis = breadcrumb.length > 3;
 
-  // Get visible entries: first entry + last two entries
+  // Get visible entries: first node + last two entries
   const visibleItems = showEllipsis
     ? [breadcrumb[0], ...breadcrumb.slice(-2)]
     : breadcrumb;

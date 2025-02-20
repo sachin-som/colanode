@@ -107,7 +107,7 @@ export class NodeMarkSeenMutationHandler
       });
 
     if (!createdInteraction || !createdMutation) {
-      throw new Error('Failed to create entry interaction');
+      throw new Error('Failed to create node interaction');
     }
 
     workspace.mutations.triggerSync();

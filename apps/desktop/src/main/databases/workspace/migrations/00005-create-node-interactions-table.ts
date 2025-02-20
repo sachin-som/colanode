@@ -19,6 +19,6 @@ export const createNodeInteractionsTable: Migration = {
       .execute();
   },
   down: async (db) => {
-    await db.schema.dropTable('entry_interactions').execute();
+    await db.schema.dropTable('node_interactions').execute();
   },
 };

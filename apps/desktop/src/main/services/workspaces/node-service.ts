@@ -97,7 +97,7 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!createdNode) {
-          throw new Error('Failed to create entry');
+          throw new Error('Failed to create node');
         }
 
         const createdNodeUpdate = await trx
@@ -156,7 +156,7 @@ export class NodeService {
       });
 
     if (!createdNode) {
-      throw new Error('Failed to create entry');
+      throw new Error('Failed to create node');
     }
 
     this.debug(`Created node ${createdNode.id} with type ${createdNode.type}`);

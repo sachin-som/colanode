@@ -28,14 +28,14 @@ export class NodeCollaboratorUpdateMutationHandler
     if (result === 'unauthorized') {
       throw new MutationError(
         MutationErrorCode.NodeCollaboratorUpdateForbidden,
-        "You don't have permission to update collaborators for this entry."
+        "You don't have permission to update collaborators for this node."
       );
     }
 
     if (result !== 'success') {
       throw new MutationError(
         MutationErrorCode.NodeCollaboratorUpdateFailed,
-        'Something went wrong while updating collaborators for the entry.'
+        'Something went wrong while updating collaborators for the node.'
       );
     }
 

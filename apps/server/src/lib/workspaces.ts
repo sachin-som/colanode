@@ -7,11 +7,15 @@ import {
   UserStatus,
 } from '@colanode/core';
 
+import { createDocument } from '@/lib/documents';
 import { SelectAccount } from '@/data/schema';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { eventBus } from '@/lib/event-bus';
-import { generateInitialMessageBlocks } from '@/lib/blocks';
+import {
+  generateInitialMessageBlocks,
+  generateWelcomePageBlocks,
+} from '@/lib/blocks';
 import { createNode } from '@/lib/nodes';
 
 export const createWorkspace = async (
@@ -90,6 +94,16 @@ export const createWorkspace = async (
         name: 'Welcome',
         parentId: spaceId,
       },
+      userId: userId,
+      workspaceId: workspaceId,
+    });
+
+    await createDocument({
+      content: {
+        type: 'rich_text',
+        blocks: generateWelcomePageBlocks(pageId),
+      },
+      nodeId: pageId,
       userId: userId,
       workspaceId: workspaceId,
     });

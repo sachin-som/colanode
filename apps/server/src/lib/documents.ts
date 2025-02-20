@@ -2,7 +2,9 @@ import {
   CanUpdateDocumentContext,
   createDebugger,
   DocumentContent,
+  generateId,
   getNodeModel,
+  IdType,
   UpdateDocumentMutationData,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
@@ -11,11 +13,98 @@ import { database } from '@/data/database';
 import { SelectUser } from '@/data/schema';
 import { ConcurrentUpdateResult, UpdateDocumentOutput } from '@/types/nodes';
 import { eventBus } from '@/lib/event-bus';
-import { fetchNodeTree, mapNode } from '@/lib/nodes';
+import { fetchNode, fetchNodeTree, mapNode } from '@/lib/nodes';
+import { CreateDocumentInput, CreateDocumentOutput } from '@/types/documents';
 
 const debug = createDebugger('server:lib:documents');
 
 const UPDATE_RETRIES_LIMIT = 10;
+
+export const createDocument = async (
+  input: CreateDocumentInput
+): Promise<CreateDocumentOutput | null> => {
+  const node = await fetchNode(input.nodeId);
+  if (!node) {
+    return null;
+  }
+
+  const model = getNodeModel(node.type);
+  if (!model.documentSchema) {
+    return null;
+  }
+
+  const ydoc = new YDoc();
+  const update = ydoc.update(model.documentSchema, input.content);
+  if (!update) {
+    return null;
+  }
+
+  const content = ydoc.getObject<DocumentContent>();
+  const { createdDocument, createdDocumentUpdate } = await database
+    .transaction()
+    .execute(async (trx) => {
+      const createdDocumentUpdate = await trx
+        .insertInto('document_updates')
+        .returningAll()
+        .values({
+          id: generateId(IdType.Update),
+          document_id: input.nodeId,
+          workspace_id: input.workspaceId,
+          root_id: node.root_id,
+          data: update,
+          created_at: new Date(),
+          created_by: input.userId,
+        })
+        .executeTakeFirst();
+
+      if (!createdDocumentUpdate) {
+        throw new Error('Failed to create document update');
+      }
+
+      const createdDocument = await trx
+        .insertInto('documents')
+        .returningAll()
+        .values({
+          id: input.nodeId,
+          workspace_id: input.workspaceId,
+          content: JSON.stringify(content),
+          created_at: new Date(),
+          created_by: input.userId,
+          revision: createdDocumentUpdate.revision,
+        })
+        .executeTakeFirst();
+
+      if (!createdDocument) {
+        throw new Error('Failed to create document');
+      }
+
+      return {
+        createdDocument,
+        createdDocumentUpdate,
+      };
+    });
+
+  if (!createdDocument || !createdDocumentUpdate) {
+    return null;
+  }
+
+  eventBus.publish({
+    type: 'document_updated',
+    documentId: input.nodeId,
+    workspaceId: input.workspaceId,
+  });
+
+  eventBus.publish({
+    type: 'document_update_created',
+    documentId: input.nodeId,
+    rootId: node.root_id,
+    workspaceId: input.workspaceId,
+  });
+
+  return {
+    document: createdDocument,
+  };
+};
 
 export const updateDocumentFromMutation = async (
   user: SelectUser,

@@ -2,7 +2,7 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
 import { addContextToChunk } from '@/services/llm-service';
-import { getNodeModel, NodeType } from '@colanode/core';
+import { getNodeModel, NodeType, FieldAttributes } from '@colanode/core';
 import type { SelectNode, SelectDocument } from '@/data/schema';
 
 type BaseMetadata = {
@@ -27,7 +27,7 @@ type BaseMetadata = {
 export type NodeMetadata = BaseMetadata & {
   type: 'node';
   nodeType: NodeType;
-  fields?: Record<string, unknown> | null;
+  fieldInfo?: Record<string, { type: string; name: string }>;
 };
 
 export type DocumentMetadata = BaseMetadata & {
@@ -122,10 +122,33 @@ export class ChunkingService {
       }
     }
 
+    // For record nodes, fetch the database schema to provide field context
+    let fieldInfo: Record<string, { type: string; name: string }> | undefined;
+    if (node.attributes.type === 'record') {
+      const databaseNode = await database
+        .selectFrom('nodes')
+        .selectAll()
+        .where('id', '=', node.attributes.databaseId)
+        .executeTakeFirst();
+
+      if (databaseNode?.attributes.type === 'database') {
+        fieldInfo = Object.entries(databaseNode.attributes.fields).reduce(
+          (acc, [fieldId, field]) => ({
+            ...acc,
+            [fieldId]: {
+              type: (field as FieldAttributes).type,
+              name: (field as FieldAttributes).name,
+            },
+          }),
+          {} as Record<string, { type: string; name: string }>
+        );
+      }
+    }
+
     return {
       type: 'node',
       nodeType: node.attributes.type,
-      fields: 'fields' in node.attributes ? node.attributes.fields : null,
+      fieldInfo,
       ...baseMetadata,
     };
   }
@@ -175,7 +198,7 @@ export class ChunkingService {
     }
 
     const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
-    if (!nodeText || !nodeText.name) {
+    if (!nodeText) {
       return undefined;
     }
 
@@ -201,7 +224,7 @@ export class ChunkingService {
 
     return {
       id: node.id,
-      name: nodeText.name,
+      name: nodeText.name ?? node.attributes.type,
       createdAt: node.created_at,
       createdBy: node.created_by,
       updatedAt: node.updated_at,
@@ -235,19 +258,19 @@ export class ChunkingService {
       parentNode.attributes
     );
 
-    // Get the full path by traversing up the tree
+    // Get the full path by traversing up the tree, ordered from root to leaf
     const pathNodes = await database
       .selectFrom('node_paths')
       .innerJoin('nodes', 'nodes.id', 'node_paths.ancestor_id')
       .select(['nodes.id', 'nodes.attributes'])
       .where('node_paths.descendant_id', '=', node.id)
-      .orderBy('node_paths.level', 'asc')
+      .orderBy('node_paths.level', 'desc')
       .execute();
 
     const path = pathNodes
       .map((n) => {
         const model = getNodeModel(n.attributes.type);
-        return model?.extractNodeText(n.id, n.attributes)?.name ?? 'Untitled';
+        return model?.extractNodeText(n.id, n.attributes)?.name ?? '';
       })
       .join(' / ');
 

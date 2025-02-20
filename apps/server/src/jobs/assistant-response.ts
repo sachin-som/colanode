@@ -26,12 +26,8 @@ import {
 } from '@/services/llm-service';
 import { CallbackHandler } from 'langfuse-langchain';
 import { fetchNode } from '@/lib/nodes';
-import { sql } from 'kysely';
 import { recordsRetrievalService } from '@/services/records-retrieval-service';
 
-// ---------------------------------------------------------------------
-// Job Input & Type Definitions
-// ---------------------------------------------------------------------
 export type AssistantResponseInput = {
   type: 'assistant_response';
   messageId: string;
@@ -84,41 +80,41 @@ const ResponseState = Annotation.Root({
     shouldFilter: boolean;
     filters: Array<{
       databaseId: string;
-      filters: any[]; // DatabaseViewFilterAttributes[]
+      filters: any[];
     }>;
   }>(),
 });
 
 // ---------------------------------------------------------------------
-// Chain Node Functions with Improved Naming
+// Chain Node Functions
 // ---------------------------------------------------------------------
-async function generateRewrittenQuery(state: typeof ResponseState.State) {
+const generateRewrittenQuery = async (state: typeof ResponseState.State) => {
   const rewritten = await rewriteQuery(state.userInput);
   return { rewrittenQuery: rewritten };
-}
+};
 
-async function assessIntent(state: typeof ResponseState.State) {
+const assessIntent = async (state: typeof ResponseState.State) => {
   const formattedChatHistory = state.chatHistory
     .map((doc) => {
       const timestamp = doc.metadata.createdAt
         ? new Date(doc.metadata.createdAt).toLocaleString()
         : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'Unknown User';
+      const authorName = doc.metadata.authorName || 'User';
       return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
     })
     .join('\n');
 
   const intent = await assessUserIntent(state.userInput, formattedChatHistory);
   return { intent };
-}
+};
 
-async function generateNoContextResponse(state: typeof ResponseState.State) {
+const generateNoContextResponse = async (state: typeof ResponseState.State) => {
   const formattedChatHistory = state.chatHistory
     .map((doc) => {
       const timestamp = doc.metadata.createdAt
         ? new Date(doc.metadata.createdAt).toLocaleString()
         : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'Unknown User';
+      const authorName = doc.metadata.authorName || 'User';
       return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
     })
     .join('\n');
@@ -128,9 +124,9 @@ async function generateNoContextResponse(state: typeof ResponseState.State) {
     formattedChatHistory
   );
   return { finalAnswer: answer };
-}
+};
 
-async function fetchContextDocuments(state: typeof ResponseState.State) {
+const fetchContextDocuments = async (state: typeof ResponseState.State) => {
   const [nodeResults, documentResults] = await Promise.all([
     nodeRetrievalService.retrieve(
       state.rewrittenQuery,
@@ -146,7 +142,6 @@ async function fetchContextDocuments(state: typeof ResponseState.State) {
 
   let databaseResults: Document[] = [];
 
-  // If we have database filters, fetch the filtered records
   if (state.databaseFilters.shouldFilter) {
     const filteredRecords = await Promise.all(
       state.databaseFilters.filters.map(async (filter) => {
@@ -158,17 +153,12 @@ async function fetchContextDocuments(state: typeof ResponseState.State) {
             filters: filter.filters,
             sorts: [],
             page: 1,
-            count: 10, // Fetch top 10 matching records
+            count: 10,
           }
         );
-
-        // Get the database node to access its name
         const dbNode = await fetchNode(filter.databaseId);
         if (!dbNode || dbNode.type !== 'database') return [];
-
         const dbAttributes = dbNode.attributes as DatabaseAttributes;
-
-        // Convert records to Documents
         return records.map((record) => {
           const recordNode = record as unknown as RecordNode;
           return new Document({
@@ -188,80 +178,78 @@ async function fetchContextDocuments(state: typeof ResponseState.State) {
         });
       })
     );
-
-    // Flatten the array of arrays into a single array
     databaseResults = filteredRecords.flat();
   }
 
   return {
     contextDocuments: [...nodeResults, ...documentResults, ...databaseResults],
   };
-}
+};
 
-async function fetchChatHistory(state: typeof ResponseState.State) {
+const fetchChatHistory = async (state: typeof ResponseState.State) => {
   const messages = await database
     .selectFrom('nodes')
-    .innerJoin('collaborations', (join) =>
-      join
-        .onRef('collaborations.node_id', '=', 'nodes.root_id')
-        .on('collaborations.collaborator_id', '=', sql.lit(state.userId))
-        .on('collaborations.deleted_at', 'is', null)
-    )
-    .where('nodes.parent_id', '=', state.parentMessageId)
-    .where('nodes.type', '=', 'message')
-    .where('nodes.id', '!=', state.currentMessageId)
-    .orderBy('nodes.created_at', 'asc')
+    .where('parent_id', '=', state.parentMessageId)
+    .where('type', '=', 'message')
+    .where('id', '!=', state.currentMessageId)
+    .where('workspace_id', '=', state.workspaceId)
+    .orderBy('created_at', 'asc')
     .selectAll()
     .execute();
 
   return {
-    chatHistory: messages.map(
-      (message) =>
-        new Document({
-          pageContent:
-            getNodeModel(message.attributes.type)?.extractNodeText(
-              message.id,
-              message.attributes
-            )?.attributes || '',
-          metadata: {
-            id: message.id,
-            type: 'message',
-            createdAt: message.created_at,
-            author: message.created_by,
-            authorName: message.created_by === 'colanode_ai' ? 'You' : 'User',
-          },
-        })
-    ),
+    chatHistory: messages.map((message) => {
+      const isAI = message.created_by === 'colanode_ai';
+      // Extract text using the node model's extractor for clean output
+      const extracted = getNodeModel(message.attributes.type)?.extractNodeText(
+        message.id,
+        message.attributes
+      );
+      const text = extracted ? extracted.attributes : '';
+      return new Document({
+        pageContent: text || '',
+        metadata: {
+          id: message.id,
+          type: 'message',
+          createdAt: message.created_at,
+          author: message.created_by,
+          authorName: isAI ? 'Colanode AI' : 'User',
+        },
+      });
+    }),
   };
-}
+};
 
-async function rerankContextDocuments(state: typeof ResponseState.State) {
-  const reranked = await rerankContext(
-    state.contextDocuments,
+const rerankContextDocuments = async (state: typeof ResponseState.State) => {
+  const reranked = await rerankDocuments(
+    state.contextDocuments.map((doc) => ({
+      content: doc.pageContent,
+      type: doc.metadata.type,
+      sourceId: doc.metadata.id,
+    })),
     state.rewrittenQuery
   );
   return { rerankedContext: reranked };
-}
+};
 
-async function selectRelevantDocuments(state: typeof ResponseState.State) {
+const selectRelevantDocuments = async (state: typeof ResponseState.State) => {
   const topDocs = selectTopContext(
     state.rerankedContext,
     5,
     state.contextDocuments
   );
   return { topContext: topDocs };
-}
+};
 
-// Add new helper function to fetch workspace details
-async function fetchWorkspaceDetails(workspaceId: string) {
+const fetchWorkspaceDetails = async (workspaceId: string) => {
   return database
     .selectFrom('workspaces')
     .where('id', '=', workspaceId)
     .select(['name', 'id'])
     .executeTakeFirst();
-}
+};
 
-async function generateResponse(state: typeof ResponseState.State) {
+const generateResponse = async (state: typeof ResponseState.State) => {
   const workspace = await fetchWorkspaceDetails(state.workspaceId);
 
   const formattedChatHistory = state.chatHistory
@@ -269,29 +257,26 @@ async function generateResponse(state: typeof ResponseState.State) {
       const timestamp = doc.metadata.createdAt
         ? new Date(doc.metadata.createdAt).toLocaleString()
         : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'Unknown User';
+      const authorName = doc.metadata.authorName || 'User';
       return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
     })
     .join('\n');
 
-  const formattedMessages = state.topContext
-    .filter((doc) => doc.metadata.type === 'message')
+  const formattedContext = state.topContext
     .map((doc) => {
-      const timestamp = doc.metadata.createdAt
+      const timestamp = doc.metadata?.createdAt
         ? new Date(doc.metadata.createdAt).toLocaleString()
         : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'Unknown User';
-      return `- [Source ${doc.metadata.id}]\n- Author: ${authorName}\n- Time: ${timestamp}\n- Content: ${doc.pageContent}\n`;
-    })
-    .join('\n');
-
-  const formattedDocuments = state.topContext
-    .filter((doc) => doc.metadata.type === 'document')
-    .map((doc) => {
-      const timestamp = doc.metadata.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      return `- [Source ${doc.metadata.id}]\n- Time: ${timestamp}\n- Content: ${doc.pageContent}\n`;
+      const authorName = doc.metadata?.author || 'Unknown';
+      let contextHeader = `Source ID: ${doc.metadata.id}\nAuthor: ${authorName}\nTime: ${timestamp}`;
+      if (
+        doc.metadata?.type === 'node' &&
+        doc.metadata.nodeType === 'record' &&
+        doc.metadata.parentContext?.name
+      ) {
+        contextHeader += `\nDatabase: ${doc.metadata.parentContext.name}`;
+      }
+      return `${contextHeader}\nContent: "${doc.pageContent}"\n`;
     })
     .join('\n');
 
@@ -301,8 +286,8 @@ async function generateResponse(state: typeof ResponseState.State) {
     userName: state.userDetails.name,
     userEmail: state.userDetails.email,
     formattedChatHistory,
-    formattedMessages,
-    formattedDocuments,
+    formattedMessages: '',
+    formattedDocuments: formattedContext,
     question: state.userInput,
   });
 
@@ -310,10 +295,9 @@ async function generateResponse(state: typeof ResponseState.State) {
     finalAnswer: result.answer,
     citations: result.citations,
   };
-}
+};
 
-async function fetchDatabaseContext(state: typeof ResponseState.State) {
-  // Fetch all databases the user has access to
+const fetchDatabaseContext = async (state: typeof ResponseState.State) => {
   const databases = await database
     .selectFrom('nodes as n')
     .innerJoin('collaborations as c', 'c.node_id', 'n.root_id')
@@ -324,11 +308,9 @@ async function fetchDatabaseContext(state: typeof ResponseState.State) {
     .selectAll()
     .execute();
 
-  // For each database, fetch schema and sample records
   const databaseContext = await Promise.all(
     databases.map(async (db) => {
       const dbNode = db as unknown as DatabaseNode;
-      // Get sample records
       const sampleRecords = await recordsRetrievalService.retrieveByFilters(
         db.id,
         state.workspaceId,
@@ -337,11 +319,9 @@ async function fetchDatabaseContext(state: typeof ResponseState.State) {
           filters: [],
           sorts: [],
           page: 1,
-          count: 5, // Fetch 5 sample records
+          count: 5,
         }
       );
-
-      // Extract field information from database attributes
       const fields = dbNode.attributes.fields || {};
       const formattedFields = Object.entries(fields).reduce(
         (acc, [id, field]) => ({
@@ -353,7 +333,6 @@ async function fetchDatabaseContext(state: typeof ResponseState.State) {
         }),
         {}
       );
-
       return {
         id: db.id,
         name: dbNode.attributes.name || 'Untitled Database',
@@ -364,11 +343,11 @@ async function fetchDatabaseContext(state: typeof ResponseState.State) {
   );
 
   return { databaseContext };
-}
+};
 
-async function generateDatabaseFilterAttributes(
+const generateDatabaseFilterAttributes = async (
   state: typeof ResponseState.State
-) {
+) => {
   if (state.intent === 'no_context' || !state.databaseContext.length) {
     return {
       databaseFilters: {
@@ -384,10 +363,46 @@ async function generateDatabaseFilterAttributes(
   });
 
   return { databaseFilters: filters };
-}
+};
+
+const selectTopContext = (
+  reranked: {
+    index: number;
+    score: number;
+    type: string;
+    sourceId: string;
+  }[],
+  max: number,
+  contextDocuments: Document[]
+): Document[] => {
+  if (reranked.length === 0) return [];
+  const maxScore = Math.max(...reranked.map((item) => item.score));
+  const threshold = maxScore * 0.5;
+  return reranked
+    .filter((item) => item.score >= threshold && item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max)
+    .map((item) => {
+      if (item.index >= 0 && item.index < contextDocuments.length) {
+        const doc = contextDocuments[item.index];
+        if (!doc) {
+          return undefined;
+        }
+
+        if (
+          doc.metadata.id === item.sourceId &&
+          doc.metadata.type === item.type
+        ) {
+          return doc;
+        }
+      }
+      return undefined;
+    })
+    .filter((doc): doc is Document => doc !== undefined);
+};
 
 // ---------------------------------------------------------------------
-// Build the Response Chain Graph
+// Response Chain Graph
 // ---------------------------------------------------------------------
 const assistantResponseChain = new StateGraph(ResponseState)
   .addNode('generateRewrittenQuery', generateRewrittenQuery)
@@ -405,10 +420,8 @@ const assistantResponseChain = new StateGraph(ResponseState)
   .addConditionalEdges('assessIntent', (state) => {
     return state.intent === 'no_context'
       ? 'generateNoContextResponse'
-      : 'fetchDatabaseContext';
+      : 'generateRewrittenQuery';
   })
-  .addEdge('fetchDatabaseContext', 'generateDatabaseFilterAttributes')
-  .addEdge('generateDatabaseFilterAttributes', 'generateRewrittenQuery')
   .addEdge('generateRewrittenQuery', 'fetchContextDocuments')
   .addEdge('fetchContextDocuments', 'rerankContextDocuments')
   .addEdge('rerankContextDocuments', 'selectRelevantDocuments')
@@ -417,9 +430,6 @@ const assistantResponseChain = new StateGraph(ResponseState)
   .addEdge('generateNoContextResponse', '__end__')
   .compile();
 
-// ---------------------------------------------------------------------
-// Initialize Langfuse Callback Handler
-// ---------------------------------------------------------------------
 const langfuseCallback = new CallbackHandler({
   publicKey: configuration.ai.langfuse.publicKey,
   secretKey: configuration.ai.langfuse.secretKey,
@@ -479,13 +489,14 @@ export const assistantResponseHandler: JobHandler<
         workspaceId,
         userId: user.id,
         userDetails: {
-          name: user.name || 'Unknown User',
+          name: user.name || 'User',
           email: user.email || 'unknown@example.com',
         },
         parentMessageId: message.parent_id || message.id,
         currentMessageId: message.id,
         originalMessage: message,
         intent: 'retrieve',
+        databaseFilters: { shouldFilter: false, filters: [] },
       },
       { callbacks: [langfuseCallback] }
     );
@@ -508,22 +519,19 @@ export const assistantResponseHandler: JobHandler<
   }
 };
 
-// ---------------------------------------------------------------------
-// Helper Functions
-// ---------------------------------------------------------------------
-async function createAndPublishResponse(
+const createAndPublishResponse = async (
   response: string,
   citations: Array<{ sourceId: string; quote: string }> | undefined,
   originalMessage: any,
   workspaceId: string
-) {
+) => {
   const id = generateId(IdType.Message);
   const blockId = generateId(IdType.Block);
 
   const messageAttributes: NodeAttributes = {
     type: 'message',
     subtype: 'answer',
-    parentId: originalMessage.parent_id || originalMessage.id,
+    parentId: originalMessage.parent_id,
     content: {
       [blockId]: {
         id: blockId,
@@ -575,49 +583,4 @@ async function createAndPublishResponse(
     rootId: createdMessage.root_id,
     workspaceId: createdMessage.workspace_id,
   });
-}
-
-async function rerankContext(context: Document[], query: string) {
-  const documentsToRerank = context.map((doc) => ({
-    content: doc.pageContent,
-    type: doc.metadata.type,
-    sourceId: doc.metadata.id,
-  }));
-
-  return await rerankDocuments(documentsToRerank, query);
-}
-
-function selectTopContext(
-  reranked: {
-    index: number;
-    score: number;
-    type: string;
-    sourceId: string;
-  }[],
-  max: number,
-  contextDocuments: Document[]
-): Document[] {
-  if (reranked.length === 0) return [];
-
-  const maxScore = Math.max(...reranked.map((item) => item.score));
-  const threshold = maxScore * 0.5;
-
-  return reranked
-    .filter((item) => item.score >= threshold && item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, max)
-    .map((item) => {
-      if (item.index >= 0 && item.index < contextDocuments.length) {
-        const doc = contextDocuments[item.index];
-        if (!doc) return undefined;
-        if (
-          doc.metadata.id === item.sourceId &&
-          doc.metadata.type === item.type
-        ) {
-          return doc;
-        }
-      }
-      return undefined;
-    })
-    .filter((doc): doc is Document => doc !== undefined);
-}
+};

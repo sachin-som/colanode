@@ -6,6 +6,7 @@ import { CreateNodeEmbedding, SelectNode } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { getNodeModel } from '@colanode/core';
+import { FieldValue, DatabaseAttributes } from '@colanode/core';
 
 export type EmbedNodeInput = {
   type: 'embed_node';
@@ -20,30 +21,74 @@ declare module '@/types/jobs' {
   }
 }
 
-const extractNodeText = (node: SelectNode): string => {
+const extractNodeText = async (
+  node: SelectNode
+): Promise<string | null | undefined> => {
   if (!node) {
-    return '';
+    return;
   }
 
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel) {
-    return '';
+    return;
   }
 
   const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
   if (!nodeText) {
-    return '';
+    return;
   }
 
-  const textParts: string[] = [];
-  if (nodeText.name) {
-    textParts.push(nodeText.name);
-  }
-  if (nodeText.attributes) {
-    textParts.push(nodeText.attributes);
+  if (node.attributes.type === 'record') {
+    const fields = node.attributes.fields;
+    if (!fields) {
+      return;
+    }
+
+    const databaseNode = await database
+      .selectFrom('nodes')
+      .selectAll()
+      .where('id', '=', node.attributes.databaseId)
+      .executeTakeFirst();
+
+    if (!databaseNode) {
+      return;
+    }
+
+    const databaseAttrs = databaseNode.attributes as DatabaseAttributes;
+    const fieldTexts = Object.entries(fields)
+      .map(([fieldId, field]) => {
+        const typedField = field as FieldValue;
+        const fieldInfo = databaseAttrs.fields[fieldId];
+        if (!fieldInfo) {
+          return null;
+        }
+
+        let valueText = '';
+        switch (typedField.type) {
+          case 'string':
+          case 'text':
+            valueText = typedField.value.toString();
+            break;
+          case 'number':
+            valueText = typedField.value.toString();
+            break;
+          case 'boolean':
+            valueText = typedField.value ? 'Yes' : 'No';
+            break;
+          case 'string_array':
+            valueText = typedField.value.join(', ');
+            break;
+          default:
+            break;
+        }
+        return `${fieldInfo.name}: ${valueText}`;
+      })
+      .filter(Boolean);
+
+    return `Name: ${nodeText.name || 'Untitled Record'}\n${fieldTexts.join('\n')}`;
   }
 
-  return textParts.join('\n').trim();
+  return nodeText.attributes;
 };
 
 export const embedNodeHandler = async (input: {
@@ -56,17 +101,18 @@ export const embedNodeHandler = async (input: {
 
   const { nodeId } = input;
   const node = await fetchNode(nodeId);
+
   if (!node) {
     return;
   }
 
   const nodeModel = getNodeModel(node.attributes.type);
-  // Skip nodes that are handled by embed documents job
-  if (!nodeModel || nodeModel.documentSchema) {
+  // Skip page nodes since they store content in documents
+  if (!nodeModel || node.attributes.type === 'page') {
     return;
   }
 
-  const text = extractNodeText(node);
+  const text = await extractNodeText(node);
   if (!text || text.trim() === '') {
     await database
       .deleteFrom('node_embeddings')

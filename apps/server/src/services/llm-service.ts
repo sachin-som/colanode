@@ -53,9 +53,9 @@ const databaseFilterSchema = z.object({
 
 type DatabaseFilterResult = z.infer<typeof databaseFilterSchema>;
 
-export function getChatModel(
+export const getChatModel = (
   task: keyof typeof configuration.ai.models
-): ChatOpenAI | ChatGoogleGenerativeAI {
+): ChatOpenAI | ChatGoogleGenerativeAI => {
   const modelConfig = configuration.ai.models[task];
   if (!configuration.ai.enabled) {
     throw new Error('AI is disabled.');
@@ -80,7 +80,7 @@ export function getChatModel(
     default:
       throw new Error(`Unsupported AI provider: ${modelConfig.provider}`);
   }
-}
+};
 
 // Updated prompt templates using type-safe node types and context
 const queryRewritePrompt = PromptTemplate.fromTemplate(
@@ -124,25 +124,31 @@ Return an array of rankings in JSON format.`
 
 const answerPrompt = ChatPromptTemplate.fromTemplate(
   `You are Colanode's AI assistant.
-  
+
 CURRENT TIME: {currentTimestamp}
 WORKSPACE: {workspaceName}
 USER: {userName} ({userEmail})
-  
+
 CONVERSATION HISTORY:
 {formattedChatHistory}
-  
-RELATED CONTEXT:
-Messages:
-{formattedMessages}
-Documents:
+
+RELEVANT CONTEXT:
 {formattedDocuments}
-  
+
 USER QUERY:
 {question}
-  
-Provide a clear, professional answer. Then, in a separate citations array, list exact quotes (with source IDs) used to form your answer.
-Return the result as JSON with keys "answer" and "citations".`
+
+Based solely on the conversation history and the relevant context above, provide a clear and professional answer to the user's query. In your answer, include exact quotes from the provided context that support your answer.
+
+Return your response as a JSON object with the following structure:
+{{
+  "answer": <your answer as a string>,
+  "citations": [
+    {{ "sourceId": <source id>, "quote": <exact quote from the context> }},
+    ...
+  ]
+}}
+`
 );
 
 const intentRecognitionPrompt = PromptTemplate.fromTemplate(
@@ -221,33 +227,33 @@ For each filter, use the exact field IDs from the database schema.
 Use appropriate operators based on field types.`
 );
 
-export async function rewriteQuery(query: string): Promise<string> {
+export const rewriteQuery = async (query: string): Promise<string> => {
   const task = 'queryRewrite';
   const model = getChatModel(task);
   return queryRewritePrompt
     .pipe(model)
     .pipe(new StringOutputParser())
     .invoke({ query });
-}
+};
 
-export async function summarizeDocument(
+export const summarizeDocument = async (
   document: Document,
   query: string
-): Promise<string> {
+): Promise<string> => {
   const task = 'summarization';
   const model = getChatModel(task);
   return summarizationPrompt
     .pipe(model)
     .pipe(new StringOutputParser())
     .invoke({ text: document.pageContent, query });
-}
+};
 
-export async function rerankDocuments(
+export const rerankDocuments = async (
   documents: { content: string; type: string; sourceId: string }[],
   query: string
 ): Promise<
   Array<{ index: number; score: number; type: string; sourceId: string }>
-> {
+> => {
   const task = 'rerank';
   const model = getChatModel(task).withStructuredOutput(
     rerankedDocumentsSchema
@@ -262,9 +268,9 @@ export async function rerankDocuments(
     .pipe(model)
     .invoke({ query, context: formattedContext })) as RerankedDocuments;
   return result.rankings;
-}
+};
 
-export async function generateFinalAnswer(promptArgs: {
+export const generateFinalAnswer = async (promptArgs: {
   currentTimestamp: string;
   workspaceName: string;
   userName: string;
@@ -276,28 +282,28 @@ export async function generateFinalAnswer(promptArgs: {
 }): Promise<{
   answer: string;
   citations: Array<{ sourceId: string; quote: string }>;
-}> {
+}> => {
   const task = 'response';
   const model = getChatModel(task).withStructuredOutput(citedAnswerSchema);
   return (await answerPrompt.pipe(model).invoke(promptArgs)) as CitedAnswer;
-}
+};
 
-export async function generateNoContextAnswer(
+export const generateNoContextAnswer = async (
   query: string,
   chatHistory: string = ''
-): Promise<string> {
+): Promise<string> => {
   const task = 'noContext';
   const model = getChatModel(task);
   return noContextPrompt
     .pipe(model)
     .pipe(new StringOutputParser())
     .invoke({ question: query, formattedChatHistory: chatHistory });
-}
+};
 
-export async function assessUserIntent(
+export const assessUserIntent = async (
   query: string,
   chatHistory: string
-): Promise<'retrieve' | 'no_context'> {
+): Promise<'retrieve' | 'no_context'> => {
   const task = 'intentRecognition';
   const model = getChatModel(task);
   const result = await intentRecognitionPrompt
@@ -307,75 +313,78 @@ export async function assessUserIntent(
   return result.trim().toLowerCase() === 'no_context'
     ? 'no_context'
     : 'retrieve';
-}
+};
 
 const getNodeContextPrompt = (metadata: NodeMetadata): string => {
-  const basePrompt = `Given the following context about a {nodeType}:
-Name: {name}
-Created by: {authorName} on {createdAt}
-Last updated: {updatedAt} by {lastAuthorName}
-Path: {path}
-Workspace: {workspaceName}
-{additionalContext}
+  const metadataLines = [
+    metadata.name && `Name: ${metadata.name}`,
+    metadata.author?.name &&
+      `Created by: ${metadata.author.name} on ${metadata.createdAt}`,
+    metadata.lastAuthor?.name &&
+      metadata.updatedAt &&
+      `Last updated: ${metadata.updatedAt} by ${metadata.lastAuthor.name}`,
+    metadata.parentContext?.path && `Path: ${metadata.parentContext.path}`,
+    metadata.workspace?.name && `Workspace: ${metadata.workspace.name}`,
+  ].filter(Boolean);
 
-Full content:
-{fullText}
-
-Current chunk:
-{chunk}
-
-Generate a brief (50-100 tokens) contextual prefix that:
-1. Explains what this chunk is part of
-2. Provides relevant context from the metadata
-3. Makes the chunk more understandable in isolation
-Do not repeat the chunk content. Return only the contextual prefix.`;
-
-  const collaborators =
-    metadata.collaborators?.map((c) => `${c.name}`).join(', ') ?? '';
+  let additionalLines: string[] = [];
+  const collaborators = metadata.collaborators
+    ?.filter((c) => c.name)
+    .map((c) => c.name)
+    .join(', ');
 
   switch (metadata.nodeType) {
+    case 'page':
+      if (collaborators) {
+        additionalLines.push(`Collaborators: ${collaborators}`);
+      }
+      break;
+
     case 'message':
-      return basePrompt.replace(
-        '{additionalContext}',
-        `In: ${metadata.parentContext?.type ?? 'unknown'} "${metadata.parentContext?.name ?? 'unknown'}"
-Path: ${metadata.parentContext?.path ?? 'unknown'}
-Participants: ${collaborators}`
-      );
+      if (metadata.parentContext?.type || metadata.parentContext?.name) {
+        additionalLines.push(
+          `In: ${metadata.parentContext.type ?? 'channel'} "${metadata.parentContext.name ?? 'Untitled'}"`
+        );
+      }
+      if (collaborators) {
+        additionalLines.push(`Participants: ${collaborators}`);
+      }
+      break;
 
     case 'record':
-      return basePrompt.replace(
-        '{additionalContext}',
-        `Database: ${metadata.parentContext?.name ?? 'unknown'}
-Path: ${metadata.parentContext?.path ?? 'unknown'}
-Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}`
-      );
-
-    case 'page':
-      return basePrompt.replace(
-        '{additionalContext}',
-        `Location: ${metadata.parentContext?.path ?? 'root level'}
-Collaborators: ${collaborators}`
-      );
-
-    case 'database':
-      return basePrompt.replace(
-        '{additionalContext}',
-        `Path: ${metadata.parentContext?.path ?? 'root level'}
-Fields: ${Object.keys(metadata.fields ?? {}).join(', ')}
-Collaborators: ${collaborators}`
-      );
-
-    case 'channel':
-      return basePrompt.replace(
-        '{additionalContext}',
-        `Type: Channel
-Path: ${metadata.parentContext?.path ?? 'root level'}
-Members: ${collaborators}`
-      );
-
-    default:
-      return basePrompt.replace('{additionalContext}', '');
+      if (metadata.parentContext?.name) {
+        additionalLines.push(`Database: ${metadata.parentContext.name}`);
+      }
+      if (metadata.fieldInfo) {
+        const fieldDescriptions = Object.entries(metadata.fieldInfo)
+          .map(([fieldId, info]) => `${info.name} (${info.type})`)
+          .join(', ');
+        additionalLines.push(`Fields: ${fieldDescriptions}`);
+      }
+      break;
   }
+
+  const contextLines = [...metadataLines, ...additionalLines].filter(Boolean);
+  const contextSection = `Given the following context about a ${metadata.nodeType === 'record' ? 'database record' : metadata.nodeType}:
+${contextLines.join('\n')}`;
+
+  const contentSection =
+    metadata.nodeType === 'record'
+      ? `\n\nContent:\n{chunk}`
+      : `\n\nFull content:\n{fullText}\n\nCurrent chunk:\n{chunk}`;
+
+  const instructionsSection =
+    metadata.nodeType === 'record'
+      ? `\n\nGenerate a brief (50-100 tokens) contextual prefix that:
+1. Explains what this record represents
+2. Highlights key information from its fields
+3. Provides relevant context about which database it belongs to`
+      : `\n\nGenerate a brief (50-100 tokens) contextual prefix that:
+1. Explains what this chunk is part of
+2. Provides relevant context from the metadata
+3. Makes the chunk more understandable in isolation`;
+
+  return `${contextSection}${contentSection}${instructionsSection}\nDo not repeat the content. Return only the contextual prefix.`;
 };
 
 interface PromptVariables {
@@ -414,11 +423,11 @@ Generate a brief (50-100 tokens) contextual prefix that:
 Do not repeat the chunk content. Return only the contextual prefix.`
 );
 
-export async function addContextToChunk(
+export const addContextToChunk = async (
   chunk: string,
   fullText: string,
   metadata?: ChunkingMetadata
-): Promise<string> {
+): Promise<string> => {
   try {
     if (!chunk || chunk.trim() === '') {
       return chunk;
@@ -484,9 +493,9 @@ export async function addContextToChunk(
     console.error('Error in addContextToChunk:', err);
     return chunk;
   }
-}
+};
 
-export async function generateDatabaseFilters(args: {
+export const generateDatabaseFilters = async (args: {
   query: string;
   databases: Array<{
     id: string;
@@ -494,7 +503,7 @@ export async function generateDatabaseFilters(args: {
     fields: Record<string, { type: string; name: string }>;
     sampleRecords: any[];
   }>;
-}): Promise<DatabaseFilterResult> {
+}): Promise<DatabaseFilterResult> => {
   const task = 'databaseFilter';
   const model = getChatModel(task).withStructuredOutput(databaseFilterSchema);
 
@@ -524,4 +533,4 @@ ${db.sampleRecords
   return databaseFilterPrompt
     .pipe(model)
     .invoke({ query: args.query, databasesInfo });
-}
+};

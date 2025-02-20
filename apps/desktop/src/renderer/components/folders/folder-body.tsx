@@ -31,6 +31,7 @@ export type FolderLayoutOption = {
   name: string;
   description: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  enabled: boolean;
 };
 
 export const folderLayouts: FolderLayoutOption[] = [
@@ -39,18 +40,21 @@ export const folderLayouts: FolderLayoutOption[] = [
     value: 'grid',
     description: 'Show files in grid layout',
     icon: LayoutGrid,
+    enabled: true,
   },
   {
     name: 'List',
     value: 'list',
     description: 'Show files in list layout',
     icon: List,
+    enabled: false,
   },
   {
     name: 'Gallery',
     value: 'gallery',
     description: 'Show files in gallery layout',
     icon: GalleryVertical,
+    enabled: false,
   },
 ];
 
@@ -146,6 +150,7 @@ export const FolderBody = ({ folder }: FolderBodyProps) => {
                   <DropdownMenuItem
                     key={item.value}
                     onClick={() => setLayout(item.value)}
+                    disabled={!item.enabled}
                   >
                     <div className="flex w-full flex-row items-center gap-2">
                       <item.icon className="size-4" />

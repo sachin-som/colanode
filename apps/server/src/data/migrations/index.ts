@@ -14,6 +14,8 @@ import { createCollaborationsTable } from './00011-create-collaborations-table';
 import { createDocumentsTable } from './00012-create-documents-table';
 import { createDocumentUpdatesTable } from './00013-create-document-updates-table';
 import { createUploadsTable } from './00014-create-uploads-table';
+import { createNodePathsIndexes } from './00015-create-node-paths-indexes';
+import { createUserAccountIdIndex } from './00016-create-user-account-id-index';
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
@@ -30,4 +32,6 @@ export const databaseMigrations: Record<string, Migration> = {
   '00012_create_documents_table': createDocumentsTable,
   '00013_create_document_updates_table': createDocumentUpdatesTable,
   '00014_create_uploads_table': createUploadsTable,
+  '00015_create_node_paths_indexes': createNodePathsIndexes,
+  '00016_create_user_account_id_index': createUserAccountIdIndex,
 };

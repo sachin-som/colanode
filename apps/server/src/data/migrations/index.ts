@@ -13,6 +13,7 @@ import { createNodePathsTable } from './00010-create-node-paths-table';
 import { createCollaborationsTable } from './00011-create-collaborations-table';
 import { createDocumentsTable } from './00012-create-documents-table';
 import { createDocumentUpdatesTable } from './00013-create-document-updates-table';
+import { createUploadsTable } from './00014-create-uploads-table';
 
 export const databaseMigrations: Record<string, Migration> = {
   '00001_create_accounts_table': createAccountsTable,
@@ -28,4 +29,5 @@ export const databaseMigrations: Record<string, Migration> = {
   '00011_create_collaborations_table': createCollaborationsTable,
   '00012_create_documents_table': createDocumentsTable,
   '00013_create_document_updates_table': createDocumentUpdatesTable,
+  '00014_create_uploads_table': createUploadsTable,
 };

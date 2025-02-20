@@ -37,6 +37,7 @@ import {
   checkCollaboratorChanges,
 } from '@/lib/collaborations';
 import { jobService } from '@/services/job-service';
+import { deleteFile } from '@/lib/files';
 
 const debug = createDebugger('server:lib:nodes');
 
@@ -721,6 +722,23 @@ export const deleteNode = async (
         updatedCollaborations,
       };
     });
+
+  if (deletedNode.type === 'file') {
+    const upload = await database
+      .selectFrom('uploads')
+      .selectAll()
+      .where('file_id', '=', input.nodeId)
+      .executeTakeFirst();
+
+    if (upload) {
+      await deleteFile(upload.path);
+
+      await database
+        .deleteFrom('uploads')
+        .where('file_id', '=', input.nodeId)
+        .execute();
+    }
+  }
 
   eventBus.publish({
     type: 'node_deleted',

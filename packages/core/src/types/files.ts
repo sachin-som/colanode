@@ -4,6 +4,7 @@ export type CreateUploadInput = {
 
 export type CreateUploadOutput = {
   url: string;
+  uploadId: string;
 };
 
 export type CreateDownloadOutput = {

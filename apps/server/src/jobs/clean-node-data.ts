@@ -4,6 +4,7 @@ import { database } from '@/data/database';
 import { JobHandler } from '@/types/jobs';
 import { eventBus } from '@/lib/event-bus';
 import { CreateNodeTombstone } from '@/data/schema';
+import { deleteFile } from '@/lib/files';
 
 const BATCH_SIZE = 100;
 
@@ -94,6 +95,23 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
           .execute();
       });
 
+      const uploads = await database
+        .selectFrom('uploads')
+        .selectAll()
+        .where('file_id', 'in', nodeIds)
+        .execute();
+
+      if (uploads.length > 0) {
+        for (const upload of uploads) {
+          await deleteFile(upload.path);
+        }
+
+        await database
+          .deleteFrom('uploads')
+          .where('file_id', 'in', nodeIds)
+          .execute();
+      }
+
       for (const node of descendants) {
         eventBus.publish({
           type: 'node_deleted',
@@ -114,70 +132,3 @@ const deleteChildren = async (parentIds: string[], userId: string) => {
 
   return deletedNodeIds;
 };
-
-// const deleteFiles = async (entryIds: string[], userId: string) => {
-//   let hasMore = true;
-//   while (hasMore) {
-//     try {
-//       const files = await database
-//         .selectFrom('files')
-//         .selectAll()
-//         .where('entry_id', 'in', entryIds)
-//         .orderBy('id', 'asc')
-//         .limit(BATCH_SIZE)
-//         .execute();
-
-//       if (files.length === 0) {
-//         hasMore = false;
-//         break;
-//       }
-
-//       const fileIds: string[] = files.map((m) => m.id);
-//       const fileTombstonesToCreate: CreateFileTombstone[] = files.map(
-//         (file) => ({
-//           id: file.id,
-//           root_id: file.root_id,
-//           workspace_id: file.workspace_id,
-//           deleted_at: new Date(),
-//           deleted_by: userId,
-//         })
-//       );
-
-//       await database.transaction().execute(async (trx) => {
-//         await trx.deleteFrom('files').where('id', 'in', fileIds).execute();
-
-//         await trx
-//           .deleteFrom('file_interactions')
-//           .where('file_id', 'in', fileIds)
-//           .execute();
-
-//         await trx
-//           .insertInto('file_tombstones')
-//           .values(fileTombstonesToCreate)
-//           .execute();
-//       });
-
-//       for (const file of files) {
-//         eventBus.publish({
-//           type: 'file_deleted',
-//           fileId: file.id,
-//           rootId: file.root_id,
-//           workspaceId: file.workspace_id,
-//         });
-
-//         const path = `files/${file.workspace_id}/${file.id}${file.extension}`;
-//         const command = new DeleteObjectCommand({
-//           Bucket: configuration.fileS3.bucketName,
-//           Key: path,
-//         });
-
-//         await fileS3.send(command);
-//       }
-
-//       hasMore = files.length === BATCH_SIZE;
-//     } catch (error) {
-//       debug(`Error deleting files for ${entryIds}: ${error}`);
-//       hasMore = false;
-//     }
-//   }
-// };

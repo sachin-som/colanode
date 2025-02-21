@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
-import { ChunkingService } from '@/services/chunking-service';
+import { chunkText } from '@/lib/chunking';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CreateDocumentEmbedding } from '@/data/schema';
@@ -7,6 +7,7 @@ import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { extractDocumentText } from '@colanode/core';
 import { getNodeModel } from '@colanode/core';
+import { enrichChunk } from '@/services/llm-service';
 
 export type EmbedDocumentInput = {
   type: 'embed_document';
@@ -58,11 +59,14 @@ export const embedDocumentHandler = async (input: {
     return;
   }
 
-  const chunkingService = new ChunkingService();
-  const textChunks = await chunkingService.chunkText(text, {
-    type: 'document',
-    node: node,
-  });
+  const textChunks = await chunkText(
+    text,
+    {
+      type: 'document',
+      node: node,
+    },
+    enrichChunk
+  );
   const embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,
     modelName: configuration.ai.embedding.modelName,

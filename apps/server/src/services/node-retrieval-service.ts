@@ -3,15 +3,7 @@ import { Document } from '@langchain/core/documents';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { sql } from 'kysely';
-
-type SearchResult = {
-  id: string;
-  text: string;
-  score: number;
-  type: 'semantic' | 'keyword';
-  createdAt?: Date;
-  chunkIndex: number;
-};
+import { SearchResult } from '@/types/retrieval';
 
 export class NodeRetrievalService {
   private embeddings = new OpenAIEmbeddings({

@@ -177,6 +177,7 @@ async function fetchWorkspaceDetails(workspaceId: string) {
 
 async function generateResponse(state: AssistantChainState) {
   const workspace = await fetchWorkspaceDetails(state.workspaceId);
+
   const formattedChatHistory = state.chatHistory
     .map((doc) => {
       const timestamp = doc.metadata.createdAt
@@ -186,12 +187,13 @@ async function generateResponse(state: AssistantChainState) {
       return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
     })
     .join('\n');
+
   const formattedContext = state.topContext
     .map((doc) => {
       const timestamp = doc.metadata?.createdAt
         ? new Date(doc.metadata.createdAt).toLocaleString()
         : 'Unknown time';
-      const authorName = doc.metadata?.author || 'Unknown';
+      const authorName = doc.metadata?.author?.name || 'Unknown';
       let contextHeader = `Source ID: ${doc.metadata.id}\nAuthor: ${authorName}\nTime: ${timestamp}`;
       if (
         doc.metadata?.type === 'node' &&
@@ -214,6 +216,7 @@ async function generateResponse(state: AssistantChainState) {
     formattedDocuments: formattedContext,
     question: state.userInput,
   });
+
   return { finalAnswer: result.answer, citations: result.citations };
 }
 
@@ -256,6 +259,7 @@ async function fetchDatabaseContext(state: AssistantChainState) {
       };
     })
   );
+
   return { databaseContext };
 }
 
@@ -283,6 +287,7 @@ function selectTopContext(
   if (reranked.length === 0) return [];
   const maxScore = Math.max(...reranked.map((item) => item.score));
   const threshold = maxScore * 0.5;
+
   return reranked
     .filter((item) => item.score >= threshold && item.score > 0)
     .sort((a, b) => b.score - a.score)

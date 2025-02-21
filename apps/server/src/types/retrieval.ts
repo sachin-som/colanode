@@ -4,5 +4,6 @@ export type SearchResult = {
   score: number;
   type: 'semantic' | 'keyword';
   createdAt?: Date;
+  createdBy?: string;
   chunkIndex: number;
 };

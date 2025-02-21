@@ -19,19 +19,24 @@ export class NodeRetrievalService {
     limit = configuration.ai.retrieval.hybridSearch.maxResults
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
-    if (!embedding) return [];
+    if (!embedding) {
+      return [];
+    }
+
     const semanticResults = await this.semanticSearch(
       embedding,
       workspaceId,
       userId,
       limit
     );
+
     const keywordResults = await this.keywordSearch(
       query,
       workspaceId,
       userId,
       limit
     );
+
     return this.combineSearchResults(semanticResults, keywordResults);
   }
 
@@ -54,6 +59,7 @@ export class NodeRetrievalService {
         'node_embeddings.node_id as id',
         'node_embeddings.text',
         'nodes.created_at',
+        'nodes.created_by',
         'node_embeddings.chunk as chunk_index',
         sql<number>`${sql.raw(`'[${embedding}]'::vector`)} <=> node_embeddings.embedding_vector`.as(
           'similarity'
@@ -64,6 +70,7 @@ export class NodeRetrievalService {
         'node_embeddings.node_id',
         'node_embeddings.text',
         'nodes.created_at',
+        'nodes.created_by',
         'node_embeddings.chunk',
       ])
       .orderBy('similarity', 'asc')
@@ -76,6 +83,7 @@ export class NodeRetrievalService {
       score: result.similarity,
       type: 'semantic',
       createdAt: result.created_at,
+      createdBy: result.created_by,
       chunkIndex: result.chunk_index,
     }));
   }
@@ -99,6 +107,7 @@ export class NodeRetrievalService {
         'node_embeddings.node_id as id',
         'node_embeddings.text',
         'nodes.created_at',
+        'nodes.created_by',
         'node_embeddings.chunk as chunk_index',
         sql<number>`ts_rank(node_embeddings.search_vector, websearch_to_tsquery('english', ${query}))`.as(
           'rank'
@@ -113,6 +122,7 @@ export class NodeRetrievalService {
         'node_embeddings.node_id',
         'node_embeddings.text',
         'nodes.created_at',
+        'nodes.created_by',
         'node_embeddings.chunk',
       ])
       .orderBy('rank', 'desc')
@@ -125,14 +135,15 @@ export class NodeRetrievalService {
       score: result.rank,
       type: 'keyword',
       createdAt: result.created_at,
+      createdBy: result.created_by,
       chunkIndex: result.chunk_index,
     }));
   }
 
-  private combineSearchResults(
+  private async combineSearchResults(
     semanticResults: SearchResult[],
     keywordResults: SearchResult[]
-  ): Document[] {
+  ): Promise<Document[]> {
     const { semanticSearchWeight, keywordSearchWeight } =
       configuration.ai.retrieval.hybridSearch;
     const maxSemanticScore = Math.max(
@@ -140,9 +151,11 @@ export class NodeRetrievalService {
       1
     );
     const maxKeywordScore = Math.max(...keywordResults.map((r) => r.score), 1);
+
     const combined = new Map<string, SearchResult & { finalScore: number }>();
     const createKey = (result: SearchResult) =>
       `${result.id}-${result.chunkIndex}`;
+
     const calculateRecencyBoost = (
       createdAt: Date | undefined | null
     ): number => {
@@ -181,21 +194,50 @@ export class NodeRetrievalService {
       }
     });
 
+    // Fetch all unique author IDs from the results
+    const authorIds = Array.from(
+      new Set(
+        Array.from(combined.values())
+          .map((r) => r.createdBy)
+          .filter((id): id is string => id !== undefined && id !== null)
+      )
+    );
+
+    // Bulk fetch author information
+    const authors =
+      authorIds.length > 0
+        ? await database
+            .selectFrom('users')
+            .select(['id', 'name'])
+            .where('id', 'in', authorIds)
+            .execute()
+        : [];
+
+    const authorMap = new Map(authors.map((author) => [author.id, author]));
+
     return Array.from(combined.values())
       .sort((a, b) => b.finalScore - a.finalScore)
-      .map(
-        (result) =>
-          new Document({
-            pageContent: result.text,
-            metadata: {
-              id: result.id,
-              score: result.finalScore,
-              createdAt: result.createdAt,
-              type: 'node',
-              chunkIndex: result.chunkIndex,
-            },
-          })
-      );
+      .map((result) => {
+        const author = result.createdBy
+          ? authorMap.get(result.createdBy)
+          : null;
+        return new Document({
+          pageContent: result.text,
+          metadata: {
+            id: result.id,
+            score: result.finalScore,
+            createdAt: result.createdAt,
+            type: 'node',
+            chunkIndex: result.chunkIndex,
+            author: author
+              ? {
+                  id: author.id,
+                  name: author.name || 'Anonymous',
+                }
+              : null,
+          },
+        });
+      });
   }
 }
 

@@ -18,44 +18,56 @@ import { recordsRetrievalService } from '@/services/records-retrieval-service';
 import { getNodeModel } from '@colanode/core';
 import { AssistantChainState, ResponseState } from '@/types/assistant';
 
-/* ---------------------------------------------------------------------
-   Chain Node Functions
---------------------------------------------------------------------- */
+function formatChatHistory(docs: Document[]): string {
+  return docs
+    .map((doc) => {
+      const time = doc.metadata.createdAt
+        ? new Date(doc.metadata.createdAt).toLocaleString()
+        : 'Unknown time';
+      const author = doc.metadata.authorName || 'User';
+      return `- [${time}] ${author}: ${doc.pageContent}`;
+    })
+    .join('\n');
+}
+
+function formatContextDocuments(docs: Document[]): string {
+  return docs
+    .map((doc) => {
+      const time = doc.metadata?.createdAt
+        ? new Date(doc.metadata.createdAt).toLocaleString()
+        : 'Unknown time';
+      const author = doc.metadata?.author?.name || 'Unknown';
+      let header = `Source ID: ${doc.metadata.id}\nAuthor: ${author}\nTime: ${time}`;
+      if (
+        doc.metadata?.type === 'node' &&
+        doc.metadata.nodeType === 'record' &&
+        doc.metadata.parentContext?.name
+      ) {
+        header += `\nDatabase: ${doc.metadata.parentContext.name}`;
+      }
+      return `${header}\nContent: "${doc.pageContent}"\n`;
+    })
+    .join('\n');
+}
 
 async function generateRewrittenQuery(state: AssistantChainState) {
-  const rewritten = await rewriteQuery(state.userInput);
-  return { rewrittenQuery: rewritten };
+  const rewrittenQuery = await rewriteQuery(state.userInput);
+  return { rewrittenQuery };
 }
 
 async function assessIntent(state: AssistantChainState) {
-  const formattedChatHistory = state.chatHistory
-    .map((doc) => {
-      const timestamp = doc.metadata.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'User';
-      return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
-    })
-    .join('\n');
-  const intent = await assessUserIntent(state.userInput, formattedChatHistory);
+  const chatHistory = formatChatHistory(state.chatHistory);
+  const intent = await assessUserIntent(state.userInput, chatHistory);
   return { intent };
 }
 
 async function generateNoContextResponse(state: AssistantChainState) {
-  const formattedChatHistory = state.chatHistory
-    .map((doc) => {
-      const timestamp = doc.metadata.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'User';
-      return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
-    })
-    .join('\n');
-  const answer = await generateNoContextAnswer(
+  const chatHistory = formatChatHistory(state.chatHistory);
+  const finalAnswer = await generateNoContextAnswer(
     state.userInput,
-    formattedChatHistory
+    chatHistory
   );
-  return { finalAnswer: answer };
+  return { finalAnswer };
 }
 
 async function fetchContextDocuments(state: AssistantChainState) {
@@ -71,7 +83,6 @@ async function fetchContextDocuments(state: AssistantChainState) {
       state.userId
     ),
   ]);
-
   let databaseResults: Document[] = [];
   if (state.databaseFilters.shouldFilter) {
     const filteredRecords = await Promise.all(
@@ -85,14 +96,12 @@ async function fetchContextDocuments(state: AssistantChainState) {
         const dbNode = await fetchNode(filter.databaseId);
         if (!dbNode || dbNode.type !== 'database') return [];
         return records.map((record) => {
+          const fields = Object.entries((record as any).attributes.fields || {})
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+          const content = `Database Record from ${dbNode.attributes.type === 'database' ? dbNode.attributes.name || 'Database' : 'Database'}:\n${fields}`;
           return new Document({
-            pageContent: `Database Record from ${
-              dbNode.attributes.type === 'database'
-                ? dbNode.attributes.name || 'Database'
-                : 'Database'
-            }:\n${Object.entries((record as any).attributes.fields || {})
-              .map(([key, value]) => `${key}: ${value}`)
-              .join('\n')}`,
+            pageContent: content,
             metadata: {
               id: record.id,
               type: 'record',
@@ -121,50 +130,52 @@ async function fetchChatHistory(state: AssistantChainState) {
     .orderBy('created_at', 'asc')
     .selectAll()
     .execute();
+  const chatHistory = messages.map((message) => {
+    const isAI = message.created_by === 'colanode_ai';
+    const extracted = (message &&
+      message.attributes &&
+      getNodeModel(message.attributes.type)?.extractNodeText(
+        message.id,
+        message.attributes
+      )) || { attributes: '' };
+    const text = extracted.attributes;
+    return new Document({
+      pageContent: text || '',
+      metadata: {
+        id: message.id,
+        type: 'message',
+        createdAt: message.created_at,
+        author: message.created_by,
+        authorName: isAI ? 'Colanode AI' : 'User',
+      },
+    });
+  });
 
-  return {
-    chatHistory: messages.map((message) => {
-      const isAI = message.created_by === 'colanode_ai';
-      const extracted = (message &&
-        message.attributes &&
-        getNodeModel(message.attributes.type)?.extractNodeText(
-          message.id,
-          message.attributes
-        )) || { attributes: '' };
-      const text = extracted.attributes;
-      return new Document({
-        pageContent: text || '',
-        metadata: {
-          id: message.id,
-          type: 'message',
-          createdAt: message.created_at,
-          author: message.created_by,
-          authorName: isAI ? 'Colanode AI' : 'User',
-        },
-      });
-    }),
-  };
+  return { chatHistory };
 }
 
 async function rerankContextDocuments(state: AssistantChainState) {
-  const reranked = await rerankDocuments(
-    state.contextDocuments.map((doc) => ({
-      content: doc.pageContent,
-      type: doc.metadata.type,
-      sourceId: doc.metadata.id,
-    })),
+  const docsForRerank = state.contextDocuments.map((doc) => ({
+    content: doc.pageContent,
+    type: doc.metadata.type,
+    sourceId: doc.metadata.id,
+  }));
+  const rerankedContext = await rerankDocuments(
+    docsForRerank,
     state.rewrittenQuery
   );
-  return { rerankedContext: reranked };
+
+  return { rerankedContext };
 }
 
 async function selectRelevantDocuments(state: AssistantChainState) {
-  const topDocs = selectTopContext(
+  const topContext = selectTopContext(
     state.rerankedContext,
     5,
     state.contextDocuments
   );
-  return { topContext: topDocs };
+
+  return { topContext };
 }
 
 async function fetchWorkspaceDetails(workspaceId: string) {
@@ -177,35 +188,8 @@ async function fetchWorkspaceDetails(workspaceId: string) {
 
 async function generateResponse(state: AssistantChainState) {
   const workspace = await fetchWorkspaceDetails(state.workspaceId);
-
-  const formattedChatHistory = state.chatHistory
-    .map((doc) => {
-      const timestamp = doc.metadata.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const authorName = doc.metadata.authorName || 'User';
-      return `- [${timestamp}] ${authorName}: ${doc.pageContent}`;
-    })
-    .join('\n');
-
-  const formattedContext = state.topContext
-    .map((doc) => {
-      const timestamp = doc.metadata?.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const authorName = doc.metadata?.author?.name || 'Unknown';
-      let contextHeader = `Source ID: ${doc.metadata.id}\nAuthor: ${authorName}\nTime: ${timestamp}`;
-      if (
-        doc.metadata?.type === 'node' &&
-        doc.metadata.nodeType === 'record' &&
-        doc.metadata.parentContext?.name
-      ) {
-        contextHeader += `\nDatabase: ${doc.metadata.parentContext.name}`;
-      }
-      return `${contextHeader}\nContent: "${doc.pageContent}"\n`;
-    })
-    .join('\n');
-
+  const formattedChatHistory = formatChatHistory(state.chatHistory);
+  const formattedContext = formatContextDocuments(state.topContext);
   const result = await generateFinalAnswer({
     currentTimestamp: new Date().toISOString(),
     workspaceName: workspace?.name || state.workspaceId,
@@ -251,6 +235,7 @@ async function fetchDatabaseContext(state: AssistantChainState) {
         }),
         {}
       );
+
       return {
         id: db.id,
         name: dbNode.attributes.name || 'Untitled Database',
@@ -267,11 +252,12 @@ async function generateDatabaseFilterAttributes(state: AssistantChainState) {
   if (state.intent === 'no_context' || !state.databaseContext.length) {
     return { databaseFilters: { shouldFilter: false, filters: [] } };
   }
-  const filters = await generateDatabaseFilters({
+  const databaseFilters = await generateDatabaseFilters({
     query: state.userInput,
     databases: state.databaseContext,
   });
-  return { databaseFilters: filters };
+
+  return { databaseFilters };
 }
 
 function selectTopContext(
@@ -295,8 +281,8 @@ function selectTopContext(
     .map((item) => {
       if (item.index >= 0 && item.index < contextDocuments.length) {
         const doc = contextDocuments[item.index];
-        if (!doc) return undefined;
         if (
+          doc &&
           doc.metadata.id === item.sourceId &&
           doc.metadata.type === item.type
         ) {
@@ -308,9 +294,6 @@ function selectTopContext(
     .filter((doc): doc is Document => doc !== undefined);
 }
 
-/* ---------------------------------------------------------------------
-   Assistant response chain.
---------------------------------------------------------------------- */
 const assistantResponseChain = new StateGraph(ResponseState)
   .addNode('generateRewrittenQuery', generateRewrittenQuery)
   .addNode('fetchContextDocuments', fetchContextDocuments)
@@ -343,9 +326,6 @@ const langfuseCallback = new CallbackHandler({
   baseUrl: configuration.ai.langfuse.baseUrl,
 });
 
-/* ---------------------------------------------------------------------
-   Core orchestration logic.
---------------------------------------------------------------------- */
 export async function runAssistantResponseChain(input: {
   userInput: string;
   workspaceId: string;

@@ -1,6 +1,5 @@
 import { PromptTemplate, ChatPromptTemplate } from '@langchain/core/prompts';
 
-// Existing prompt templates
 export const queryRewritePrompt = PromptTemplate.fromTemplate(
   `You are an expert at rewriting queries for information retrieval within Colanode.
   
@@ -144,20 +143,14 @@ For each filter, use the exact field IDs from the database schema.
 Use appropriate operators based on field types.`
 );
 
-// --- New: Context Enrichment Prompt Templates ---
-
-/**
- * Returns a plain string prompt to generate a contextual prefix for node content.
- * This function embeds metadata into a prompt template.
- */
 export function getNodeContextPrompt(metadata: any): string {
   const metadataLines = [
     metadata.name && `Name: ${metadata.name}`,
     metadata.author?.name &&
-      `Created by: ${metadata.author.name} on ${new Date(metadata.createdAt).toUTCString()}`,
+      `Created by: ${metadata.author.name} on ${new Date(metadata.createdAt)}`,
     metadata.lastAuthor?.name &&
       metadata.updatedAt &&
-      `Last updated: ${new Date(metadata.updatedAt).toUTCString()} by ${metadata.lastAuthor.name}`,
+      `Last updated: ${new Date(metadata.updatedAt)} by ${metadata.lastAuthor.name}`,
     metadata.parentContext?.path && `Path: ${metadata.parentContext.path}`,
     metadata.workspace?.name && `Workspace: ${metadata.workspace.name}`,
   ]

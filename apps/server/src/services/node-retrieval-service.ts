@@ -16,26 +16,24 @@ export class NodeRetrievalService {
     query: string,
     workspaceId: string,
     userId: string,
-    limit = configuration.ai.retrieval.hybridSearch.maxResults
+    limit = configuration.ai.retrieval.hybridSearch.maxResults,
+    contextNodeIds?: string[]
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
     if (!embedding) {
       return [];
     }
 
-    const semanticResults = await this.semanticSearch(
-      embedding,
-      workspaceId,
-      userId,
-      limit
-    );
-
-    const keywordResults = await this.keywordSearch(
-      query,
-      workspaceId,
-      userId,
-      limit
-    );
+    const [semanticResults, keywordResults] = await Promise.all([
+      this.semanticSearch(
+        embedding,
+        workspaceId,
+        userId,
+        limit,
+        contextNodeIds
+      ),
+      this.keywordSearch(query, workspaceId, userId, limit, contextNodeIds),
+    ]);
 
     return this.combineSearchResults(semanticResults, keywordResults);
   }
@@ -44,9 +42,10 @@ export class NodeRetrievalService {
     embedding: number[],
     workspaceId: string,
     userId: string,
-    limit: number
+    limit: number,
+    contextNodeIds?: string[]
   ): Promise<SearchResult[]> {
-    const results = await database
+    let queryBuilder = database
       .selectFrom('node_embeddings')
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
       .innerJoin('collaborations', (join) =>
@@ -65,7 +64,17 @@ export class NodeRetrievalService {
           'similarity'
         ),
       ])
-      .where('node_embeddings.workspace_id', '=', workspaceId)
+      .where('node_embeddings.workspace_id', '=', workspaceId);
+
+    if (contextNodeIds && contextNodeIds.length > 0) {
+      queryBuilder = queryBuilder.where(
+        'node_embeddings.node_id',
+        'in',
+        contextNodeIds
+      );
+    }
+
+    const results = await queryBuilder
       .groupBy([
         'node_embeddings.node_id',
         'node_embeddings.text',
@@ -92,9 +101,10 @@ export class NodeRetrievalService {
     query: string,
     workspaceId: string,
     userId: string,
-    limit: number
+    limit: number,
+    contextNodeIds?: string[]
   ): Promise<SearchResult[]> {
-    const results = await database
+    let queryBuilder = database
       .selectFrom('node_embeddings')
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
       .innerJoin('collaborations', (join) =>
@@ -117,7 +127,17 @@ export class NodeRetrievalService {
       .where(
         (eb) =>
           sql`node_embeddings.search_vector @@ websearch_to_tsquery('english', ${query})`
-      )
+      );
+
+    if (contextNodeIds && contextNodeIds.length > 0) {
+      queryBuilder = queryBuilder.where(
+        'node_embeddings.node_id',
+        'in',
+        contextNodeIds
+      );
+    }
+
+    const results = await queryBuilder
       .groupBy([
         'node_embeddings.node_id',
         'node_embeddings.text',

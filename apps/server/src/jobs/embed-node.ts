@@ -6,7 +6,15 @@ import { CreateNodeEmbedding, SelectNode } from '@/data/schema';
 import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
 import { getNodeModel } from '@colanode/core';
-import { FieldValue, DatabaseAttributes } from '@colanode/core';
+import {
+  FieldValue,
+  DatabaseAttributes,
+  TextFieldValue,
+  NumberFieldValue,
+  BooleanFieldValue,
+  StringArrayFieldValue,
+  StringFieldValue,
+} from '@colanode/core';
 import { enrichChunk } from '@/services/llm-service';
 
 export type EmbedNodeInput = {
@@ -65,19 +73,43 @@ const extractNodeText = async (
         }
 
         let valueText = '';
-        switch (typedField.type) {
-          case 'string':
+        switch (fieldInfo.type) {
           case 'text':
-            valueText = typedField.value.toString();
+          case 'email':
+          case 'phone':
+          case 'url':
+            valueText = (typedField as TextFieldValue).value;
             break;
           case 'number':
-            valueText = typedField.value.toString();
+            valueText = (typedField as NumberFieldValue).value.toString();
             break;
           case 'boolean':
-            valueText = typedField.value ? 'Yes' : 'No';
+            valueText = (typedField as BooleanFieldValue).value ? 'Yes' : 'No';
             break;
-          case 'string_array':
-            valueText = typedField.value.join(', ');
+          case 'multi_select':
+            const multiSelectValue = (typedField as StringArrayFieldValue)
+              .value;
+            valueText = multiSelectValue
+              .map((id) => fieldInfo.options?.[id]?.name || id)
+              .join(', ');
+            break;
+          case 'relation':
+            const relationValue = (typedField as StringArrayFieldValue).value;
+            valueText = `Related records: ${relationValue.join(', ')}`;
+            break;
+          case 'collaborator':
+            const collaboratorValue = (typedField as StringArrayFieldValue)
+              .value;
+            valueText = `Collaborators: ${collaboratorValue.join(', ')}`;
+            break;
+          case 'date':
+            valueText = new Date(
+              (typedField as StringFieldValue).value
+            ).toLocaleString();
+            break;
+          case 'select':
+            const selectValue = (typedField as StringFieldValue).value;
+            valueText = fieldInfo.options?.[selectValue]?.name || selectValue;
             break;
           default:
             break;

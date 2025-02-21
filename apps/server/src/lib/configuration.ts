@@ -91,6 +91,7 @@ export interface AiConfiguration {
     google: AIProviderConfiguration;
   };
   langfuse: {
+    enabled: boolean;
     publicKey: string;
     secretKey: string;
     baseUrl: string;
@@ -225,6 +226,7 @@ export const configuration: Configuration = {
       },
     },
     langfuse: {
+      enabled: getOptionalEnv('LANGFUSE_ENABLED') === 'true',
       publicKey: getOptionalEnv('LANGFUSE_PUBLIC_KEY') || '',
       secretKey: getOptionalEnv('LANGFUSE_SECRET_KEY') || '',
       baseUrl:

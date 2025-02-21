@@ -214,6 +214,8 @@ export const createNode = async (
         type: 'assistant_response',
         messageId: input.nodeId,
         workspaceId: input.workspaceId,
+        selectedContextNodeIds:
+          (attributes as MessageAttributes).selectedContextNodeIds || [],
       });
     }
 
@@ -485,6 +487,19 @@ export const createNodeFromMutation = async (
     }
 
     await scheduleNodeEmbedding(createdNode);
+
+    if (
+      attributes.type === 'message' &&
+      (attributes as MessageAttributes).subtype === 'question'
+    ) {
+      await jobService.addJob({
+        type: 'assistant_response',
+        messageId: mutation.nodeId,
+        workspaceId: user.workspace_id,
+        selectedContextNodeIds:
+          (attributes as MessageAttributes).selectedContextNodeIds || [],
+      });
+    }
 
     return {
       node: createdNode,

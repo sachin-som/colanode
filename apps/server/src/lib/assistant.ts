@@ -3,7 +3,7 @@ import { Document } from '@langchain/core/documents';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CallbackHandler } from 'langfuse-langchain';
-import { fetchNode } from '@/lib/nodes';
+import { fetchNode, fetchNodeDescendants } from '@/lib/nodes';
 import {
   rewriteQuery,
   assessUserIntent,
@@ -75,12 +75,16 @@ async function fetchContextDocuments(state: AssistantChainState) {
     nodeRetrievalService.retrieve(
       state.rewrittenQuery,
       state.workspaceId,
-      state.userId
+      state.userId,
+      configuration.ai.retrieval.hybridSearch.maxResults,
+      state.selectedContextNodeIds
     ),
     documentRetrievalService.retrieve(
       state.rewrittenQuery,
       state.workspaceId,
-      state.userId
+      state.userId,
+      configuration.ai.retrieval.hybridSearch.maxResults,
+      state.selectedContextNodeIds
     ),
   ]);
   let databaseResults: Document[] = [];
@@ -280,14 +284,7 @@ function selectTopContext(
     .slice(0, max)
     .map((item) => {
       if (item.index >= 0 && item.index < contextDocuments.length) {
-        const doc = contextDocuments[item.index];
-        if (
-          doc &&
-          doc.metadata.id === item.sourceId &&
-          doc.metadata.type === item.type
-        ) {
-          return doc;
-        }
+        return contextDocuments[item.index];
       }
       return undefined;
     })
@@ -320,11 +317,29 @@ const assistantResponseChain = new StateGraph(ResponseState)
   .addEdge('generateNoContextResponse', '__end__')
   .compile();
 
-const langfuseCallback = new CallbackHandler({
-  publicKey: configuration.ai.langfuse.publicKey,
-  secretKey: configuration.ai.langfuse.secretKey,
-  baseUrl: configuration.ai.langfuse.baseUrl,
-});
+const langfuseCallback = configuration.ai.langfuse.enabled
+  ? new CallbackHandler({
+      publicKey: configuration.ai.langfuse.publicKey,
+      secretKey: configuration.ai.langfuse.secretKey,
+      baseUrl: configuration.ai.langfuse.baseUrl,
+    })
+  : undefined;
+
+async function getFullContextNodeIds(selectedIds: string[]): Promise<string[]> {
+  const fullSet = new Set<string>();
+  console.log('selectedIds', selectedIds);
+  for (const id of selectedIds) {
+    fullSet.add(id);
+    try {
+      const descendants = await fetchNodeDescendants(id);
+      descendants.forEach((descId) => fullSet.add(descId));
+    } catch (error) {
+      console.error(`Error fetching descendants for node ${id}:`, error);
+    }
+  }
+  console.log('fullSet', fullSet);
+  return Array.from(fullSet);
+}
 
 export async function runAssistantResponseChain(input: {
   userInput: string;
@@ -334,17 +349,31 @@ export async function runAssistantResponseChain(input: {
   parentMessageId: string;
   currentMessageId: string;
   originalMessage: any;
+  selectedContextNodeIds?: string[];
 }): Promise<{
   finalAnswer: string;
   citations: Array<{ sourceId: string; quote: string }>;
 }> {
-  const result = await assistantResponseChain.invoke(
-    {
-      ...input,
-      intent: 'retrieve',
-      databaseFilters: { shouldFilter: false, filters: [] },
-    },
-    { callbacks: [langfuseCallback] }
-  );
+  // Process the selected context node IDs if provided
+  let fullContextNodeIds: string[] = [];
+  if (input.selectedContextNodeIds && input.selectedContextNodeIds.length > 0) {
+    fullContextNodeIds = await getFullContextNodeIds(
+      input.selectedContextNodeIds
+    );
+  }
+
+  // Build the chain input with the new property added into the state.
+  const chainInput = {
+    ...input,
+    selectedContextNodeIds: fullContextNodeIds,
+    intent: 'retrieve' as const,
+    databaseFilters: { shouldFilter: false, filters: [] },
+  };
+
+  const callbacks = langfuseCallback ? [langfuseCallback] : undefined;
+
+  const result = await assistantResponseChain.invoke(chainInput, {
+    callbacks,
+  });
   return { finalAnswer: result.finalAnswer, citations: result.citations };
 }

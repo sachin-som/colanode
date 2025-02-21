@@ -57,6 +57,7 @@ USER QUERY:
 {question}
 
 Based solely on the conversation history and the relevant context above, provide a clear and professional answer to the user's query. In your answer, include exact quotes from the provided context that support your answer.
+If the relevant context does not contain any information that answers the user's query, respond with "No relevant information found."
 
 Return your response as a JSON object with the following structure:
 {{

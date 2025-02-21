@@ -15,26 +15,24 @@ export class DocumentRetrievalService {
     query: string,
     workspaceId: string,
     userId: string,
-    limit = configuration.ai.retrieval.hybridSearch.maxResults
+    limit = configuration.ai.retrieval.hybridSearch.maxResults,
+    contextNodeIds?: string[]
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
     if (!embedding) {
       return [];
     }
 
-    const semanticResults = await this.semanticSearch(
-      embedding,
-      workspaceId,
-      userId,
-      limit
-    );
-
-    const keywordResults = await this.keywordSearch(
-      query,
-      workspaceId,
-      userId,
-      limit
-    );
+    const [semanticResults, keywordResults] = await Promise.all([
+      this.semanticSearch(
+        embedding,
+        workspaceId,
+        userId,
+        limit,
+        contextNodeIds
+      ),
+      this.keywordSearch(query, workspaceId, userId, limit, contextNodeIds),
+    ]);
 
     return this.combineSearchResults(semanticResults, keywordResults);
   }
@@ -43,9 +41,10 @@ export class DocumentRetrievalService {
     embedding: number[],
     workspaceId: string,
     userId: string,
-    limit: number
+    limit: number,
+    contextNodeIds?: string[]
   ): Promise<SearchResult[]> {
-    const results = await database
+    let queryBuilder = database
       .selectFrom('document_embeddings')
       .innerJoin('documents', 'documents.id', 'document_embeddings.document_id')
       .innerJoin('nodes', 'nodes.id', 'documents.id')
@@ -65,7 +64,17 @@ export class DocumentRetrievalService {
           'similarity'
         ),
       ])
-      .where('document_embeddings.workspace_id', '=', workspaceId)
+      .where('document_embeddings.workspace_id', '=', workspaceId);
+
+    if (contextNodeIds && contextNodeIds.length > 0) {
+      queryBuilder = queryBuilder.where(
+        'document_embeddings.document_id',
+        'in',
+        contextNodeIds
+      );
+    }
+
+    const results = await queryBuilder
       .groupBy([
         'document_embeddings.document_id',
         'document_embeddings.text',
@@ -92,9 +101,10 @@ export class DocumentRetrievalService {
     query: string,
     workspaceId: string,
     userId: string,
-    limit: number
+    limit: number,
+    contextNodeIds?: string[]
   ): Promise<SearchResult[]> {
-    const results = await database
+    let queryBuilder = database
       .selectFrom('document_embeddings')
       .innerJoin('documents', 'documents.id', 'document_embeddings.document_id')
       .innerJoin('nodes', 'nodes.id', 'documents.id')
@@ -118,7 +128,17 @@ export class DocumentRetrievalService {
       .where(
         (eb) =>
           sql`document_embeddings.search_vector @@ websearch_to_tsquery('english', ${query})`
-      )
+      );
+
+    if (contextNodeIds && contextNodeIds.length > 0) {
+      queryBuilder = queryBuilder.where(
+        'document_embeddings.document_id',
+        'in',
+        contextNodeIds
+      );
+    }
+
+    const results = await queryBuilder
       .groupBy([
         'document_embeddings.document_id',
         'document_embeddings.text',
@@ -152,11 +172,11 @@ export class DocumentRetrievalService {
       1
     );
     const maxKeywordScore = Math.max(...keywordResults.map((r) => r.score), 1);
-    
+
     const combined = new Map<string, SearchResult & { finalScore: number }>();
     const createKey = (result: SearchResult) =>
       `${result.id}-${result.chunkIndex}`;
-    
+
     const calculateRecencyBoost = (
       createdAt: Date | undefined | null
     ): number => {

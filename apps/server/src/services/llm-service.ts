@@ -24,11 +24,13 @@ import {
 } from '@/lib/llm-prompts';
 import { SystemMessage } from '@langchain/core/messages';
 
-const langfuseCallback = new CallbackHandler({
-  publicKey: configuration.ai.langfuse.publicKey,
-  secretKey: configuration.ai.langfuse.secretKey,
-  baseUrl: configuration.ai.langfuse.baseUrl,
-});
+const langfuseCallback = configuration.ai.langfuse.enabled
+  ? new CallbackHandler({
+      publicKey: configuration.ai.langfuse.publicKey,
+      secretKey: configuration.ai.langfuse.secretKey,
+      baseUrl: configuration.ai.langfuse.baseUrl,
+    })
+  : undefined;
 
 const getChatModel = (
   task: keyof typeof configuration.ai.models
@@ -192,8 +194,9 @@ export async function enrichChunk(
   const task = 'contextEnhancer';
   const model = getChatModel(task);
   const messages = [new SystemMessage({ content: prompt })];
+  const callbacks = langfuseCallback ? [langfuseCallback] : undefined;
   const response = await model.invoke(messages, {
-    callbacks: [langfuseCallback],
+    callbacks,
   });
 
   return (response.content.toString() || '').trim();

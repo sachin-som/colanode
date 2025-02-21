@@ -61,6 +61,7 @@ export const ResponseState = Annotation.Root({
       filters: any[];
     }>;
   }>(),
+  selectedContextNodeIds: Annotation<string[]>(),
 });
 
 export type AssistantChainState = typeof ResponseState.State;

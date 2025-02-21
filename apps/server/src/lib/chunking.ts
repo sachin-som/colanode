@@ -3,7 +3,7 @@ import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
 import { getNodeModel, FieldAttributes } from '@colanode/core';
 import type { SelectNode, SelectDocument } from '@/data/schema';
-import { getNodeContextPrompt, documentContextPrompt } from '@/lib/llm-prompts';
+import { prepareEnrichmentPrompt } from '@/lib/llm-prompts';
 import { BaseMetadata, NodeMetadata, DocumentMetadata } from '@/types/chunking';
 
 async function buildBaseMetadata(
@@ -158,6 +158,31 @@ async function buildDocumentMetadata(
       const parentContext = await buildParentContext(node);
       if (parentContext) baseMetadata.parentContext = parentContext;
     }
+
+    // Add database info for record nodes
+    if (node.attributes.type === 'record') {
+      const databaseNode = await database
+        .selectFrom('nodes')
+        .selectAll()
+        .where('id', '=', node.attributes.databaseId)
+        .executeTakeFirst();
+      if (databaseNode?.attributes.type === 'database') {
+        baseMetadata.databaseInfo = {
+          id: databaseNode.id,
+          name: databaseNode.attributes.name || 'Untitled Database',
+          fields: Object.entries(databaseNode.attributes.fields).reduce(
+            (acc, [fieldId, field]) => ({
+              ...acc,
+              [fieldId]: {
+                type: (field as FieldAttributes).type,
+                name: (field as FieldAttributes).name,
+              },
+            }),
+            {} as Record<string, { type: string; name: string }>
+          ),
+        };
+      }
+    }
   }
   return { type: 'document', ...baseMetadata };
 }
@@ -178,43 +203,6 @@ async function fetchMetadata(metadata?: {
     if (!document) return undefined;
     return buildDocumentMetadata(document, metadata.node);
   }
-}
-
-export async function prepareEnrichmentPrompt(
-  chunk: string,
-  fullText: string,
-  metadata: NodeMetadata | DocumentMetadata
-): Promise<{ prompt: string; baseVars: Record<string, string> }> {
-  const formatDate = (date?: Date) =>
-    date ? new Date(date).toUTCString() : 'unknown';
-
-  const baseVars: Record<string, string> = {
-    nodeType:
-      metadata.type === 'node'
-        ? (metadata as NodeMetadata).nodeType
-        : metadata.type,
-    name: metadata.name ?? 'Untitled',
-    createdAt: formatDate(metadata.createdAt),
-    updatedAt: metadata.updatedAt ? formatDate(metadata.updatedAt) : '',
-    authorName: metadata.author?.name ?? 'Unknown',
-    lastAuthorName: metadata.lastAuthor?.name ?? '',
-    path: metadata.parentContext?.path ?? '',
-    workspaceName: metadata.workspace?.name ?? 'Unknown Workspace',
-    fullText,
-    chunk,
-  };
-
-  let prompt: string;
-  if (metadata.type === 'node') {
-    prompt = getNodeContextPrompt(metadata as NodeMetadata);
-  } else {
-    prompt = documentContextPrompt.template.toString();
-  }
-  Object.entries(baseVars).forEach(([key, value]) => {
-    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
-  });
-
-  return { prompt, baseVars };
 }
 
 export async function chunkText(
@@ -243,13 +231,13 @@ export async function chunkText(
       return chunks;
     }
     for (const chunk of chunks) {
-      const { prompt } = await prepareEnrichmentPrompt(
+      const { prompt, baseVars } = prepareEnrichmentPrompt(
         chunk,
         text,
         enrichedMetadata
       );
 
-      const enrichment = await enrichFn(prompt, {});
+      const enrichment = await enrichFn(prompt, baseVars);
       enriched.push(enrichment + '\n\n' + chunk);
     }
     return enriched;

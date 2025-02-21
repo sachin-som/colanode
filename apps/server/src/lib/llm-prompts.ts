@@ -1,4 +1,5 @@
 import { PromptTemplate, ChatPromptTemplate } from '@langchain/core/prompts';
+import { NodeMetadata, DocumentMetadata } from '@/types/chunking';
 
 export const queryRewritePrompt = PromptTemplate.fromTemplate(
   `You are an expert at rewriting queries for information retrieval within Colanode.
@@ -177,6 +178,7 @@ Location: {path}
 Created by: {authorName} on {createdAt}
 Last updated: {updatedAt} by {lastAuthorName}
 Workspace: {workspaceName}
+{databaseContext}
 
 Full content:
 {fullText}
@@ -185,8 +187,59 @@ Current chunk:
 {chunk}
 
 Generate a brief (50-100 tokens) contextual prefix that:
-1. Explains what this document is.
+1. Explains what this document is{recordInstructions}
 2. Provides relevant context about its location and purpose.
 3. Makes the chunk more understandable in isolation.
 Do not repeat the chunk content. Return only the contextual prefix.`
 );
+
+export function prepareEnrichmentPrompt(
+  chunk: string,
+  fullText: string,
+  metadata: NodeMetadata | DocumentMetadata
+): { prompt: string; baseVars: Record<string, string> } {
+  const formatDate = (date?: Date) =>
+    date ? new Date(date).toUTCString() : 'unknown';
+
+  let databaseContext = '';
+  let recordInstructions = '';
+  if (metadata.type === 'document' && metadata.databaseInfo) {
+    databaseContext = `Database: ${metadata.databaseInfo.name}
+Fields:
+${Object.entries(metadata.databaseInfo.fields)
+  .map(([_, field]) => `- ${field.name} (${field.type})`)
+  .join('\n')}`;
+    recordInstructions =
+      ', including how it relates to the database record and its fields';
+  }
+
+  const baseVars: Record<string, string> = {
+    nodeType:
+      metadata.type === 'node'
+        ? (metadata as NodeMetadata).nodeType
+        : metadata.type,
+    name: metadata.name ?? 'Untitled',
+    createdAt: metadata.createdAt ? formatDate(metadata.createdAt) : '',
+    updatedAt: metadata.updatedAt ? formatDate(metadata.updatedAt) : '',
+    authorName: metadata.author?.name ?? 'Unknown',
+    lastAuthorName: metadata.lastAuthor?.name ?? '',
+    path: metadata.parentContext?.path ?? '',
+    workspaceName: metadata.workspace?.name ?? 'Unknown Workspace',
+    fullText,
+    chunk,
+    databaseContext,
+    recordInstructions,
+  };
+
+  let prompt: string;
+  if (metadata.type === 'node') {
+    prompt = getNodeContextPrompt(metadata as NodeMetadata);
+  } else {
+    prompt = documentContextPrompt.template.toString();
+  }
+  Object.entries(baseVars).forEach(([key, value]) => {
+    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
+  });
+
+  return { prompt, baseVars };
+}

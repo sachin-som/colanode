@@ -145,11 +145,28 @@ async function buildDocumentMetadata(
   node?: SelectNode
 ): Promise<DocumentMetadata | undefined> {
   if (!node) return undefined;
+
+  // Fetch author and workspace info
+  const author = await database
+    .selectFrom('users')
+    .select(['id', 'name'])
+    .where('id', '=', document.created_by)
+    .executeTakeFirst();
+
+  const workspace = await database
+    .selectFrom('workspaces')
+    .select(['id', 'name'])
+    .where('id', '=', node.workspace_id)
+    .executeTakeFirst();
+
   const baseMetadata: BaseMetadata = {
     id: document.id,
     createdAt: document.created_at,
     createdBy: document.created_by,
+    author,
+    workspace,
   };
+
   const nodeModel = getNodeModel(node.attributes.type);
   if (nodeModel) {
     const nodeText = nodeModel.extractNodeText(node.id, node.attributes);

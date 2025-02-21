@@ -175,9 +175,8 @@ export const documentContextPrompt = PromptTemplate.fromTemplate(
 Type: {nodeType}
 Name: {name}
 Location: {path}
-Created by: {authorName} on {createdAt}
-Last updated: {updatedAt} by {lastAuthorName}
-Workspace: {workspaceName}
+Created by: {createdAt}
+{updatedAt}Workspace: {workspaceName}
 {databaseContext}
 
 Full content:
@@ -198,8 +197,11 @@ export function prepareEnrichmentPrompt(
   fullText: string,
   metadata: NodeMetadata | DocumentMetadata
 ): { prompt: string; baseVars: Record<string, string> } {
-  const formatDate = (date?: Date) =>
-    date ? new Date(date).toUTCString() : 'unknown';
+  const formatDate = (date?: Date | string | null) => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleString();
+  };
 
   let databaseContext = '';
   let recordInstructions = '';
@@ -213,18 +215,40 @@ ${Object.entries(metadata.databaseInfo.fields)
       ', including how it relates to the database record and its fields';
   }
 
+  // Format creation info
+  const createdAt = formatDate(metadata.createdAt);
+  const createdBy = metadata.author?.name;
+  const creationInfo =
+    createdAt && createdBy
+      ? `${createdBy} on ${createdAt}`
+      : createdAt
+        ? `Created on ${createdAt}`
+        : createdBy
+          ? `Created by ${createdBy}`
+          : '';
+
+  // Format update info
+  const updatedAt = formatDate(metadata.updatedAt);
+  const updatedBy = metadata.lastAuthor?.name;
+  const updateInfo =
+    updatedAt && updatedBy
+      ? `Last updated on ${updatedAt} by ${updatedBy}\n`
+      : updatedAt
+        ? `Last updated on ${updatedAt}\n`
+        : '';
+
   const baseVars: Record<string, string> = {
     nodeType:
       metadata.type === 'node'
         ? (metadata as NodeMetadata).nodeType
         : metadata.type,
-    name: metadata.name ?? 'Untitled',
-    createdAt: metadata.createdAt ? formatDate(metadata.createdAt) : '',
-    updatedAt: metadata.updatedAt ? formatDate(metadata.updatedAt) : '',
-    authorName: metadata.author?.name ?? 'Unknown',
-    lastAuthorName: metadata.lastAuthor?.name ?? '',
-    path: metadata.parentContext?.path ?? '',
-    workspaceName: metadata.workspace?.name ?? 'Unknown Workspace',
+    name: metadata.name || 'Untitled',
+    createdAt: creationInfo || '',
+    updatedAt: updateInfo || '',
+    authorName: metadata.author?.name || '',
+    lastAuthorName: metadata.lastAuthor?.name || '',
+    path: metadata.parentContext?.path || '',
+    workspaceName: metadata.workspace?.name || '',
     fullText,
     chunk,
     databaseContext,
@@ -237,6 +261,7 @@ ${Object.entries(metadata.databaseInfo.fields)
   } else {
     prompt = documentContextPrompt.template.toString();
   }
+
   Object.entries(baseVars).forEach(([key, value]) => {
     prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
   });

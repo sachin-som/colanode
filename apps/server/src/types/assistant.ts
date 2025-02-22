@@ -1,5 +1,11 @@
 import { Document } from '@langchain/core/documents';
 import { Annotation } from '@langchain/langgraph';
+import {
+  RerankedDocuments,
+  CitedAnswer,
+  DatabaseFilterResult,
+  RewrittenQuery,
+} from './llm';
 
 export type Citation = {
   sourceId: string;
@@ -30,20 +36,13 @@ export const ResponseState = Annotation.Root({
   userDetails: Annotation<{ name: string; email: string }>(),
   parentMessageId: Annotation<string>(),
   currentMessageId: Annotation<string>(),
-  rewrittenQuery: Annotation<string>(),
+  rewrittenQuery: Annotation<RewrittenQuery>(),
   contextDocuments: Annotation<Document[]>(),
   chatHistory: Annotation<Document[]>(),
-  rerankedContext: Annotation<
-    Array<{
-      index: number;
-      score: number;
-      type: string;
-      sourceId: string;
-    }>
-  >(),
+  rerankedContext: Annotation<RerankedDocuments['rankings']>(),
   topContext: Annotation<Document[]>(),
   finalAnswer: Annotation<string>(),
-  citations: Annotation<Array<{ sourceId: string; quote: string }>>(),
+  citations: Annotation<CitedAnswer['citations']>(),
   originalMessage: Annotation<any>(),
   intent: Annotation<'retrieve' | 'no_context'>(),
   databaseContext: Annotation<
@@ -54,13 +53,7 @@ export const ResponseState = Annotation.Root({
       sampleRecords: any[];
     }>
   >(),
-  databaseFilters: Annotation<{
-    shouldFilter: boolean;
-    filters: Array<{
-      databaseId: string;
-      filters: any[];
-    }>;
-  }>(),
+  databaseFilters: Annotation<DatabaseFilterResult>(),
   selectedContextNodeIds: Annotation<string[]>(),
 });
 

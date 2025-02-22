@@ -33,3 +33,10 @@ export const databaseFilterSchema = z.object({
   ),
 });
 export type DatabaseFilterResult = z.infer<typeof databaseFilterSchema>;
+
+export const rewrittenQuerySchema = z.object({
+  semanticQuery: z.string(),
+  keywordQuery: z.string(),
+});
+
+export type RewrittenQuery = z.infer<typeof rewrittenQuerySchema>;

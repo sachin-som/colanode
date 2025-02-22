@@ -11,6 +11,8 @@ import {
   CitedAnswer,
   databaseFilterSchema,
   DatabaseFilterResult,
+  RewrittenQuery,
+  rewrittenQuerySchema,
 } from '@/types/llm';
 
 import {
@@ -61,13 +63,10 @@ const getChatModel = (
   }
 };
 
-export const rewriteQuery = async (query: string): Promise<string> => {
+export const rewriteQuery = async (query: string): Promise<RewrittenQuery> => {
   const task = 'queryRewrite';
-  const model = getChatModel(task);
-  return queryRewritePrompt
-    .pipe(model)
-    .pipe(new StringOutputParser())
-    .invoke({ query });
+  const model = getChatModel(task).withStructuredOutput(rewrittenQuerySchema);
+  return queryRewritePrompt.pipe(model).invoke({ query });
 };
 
 export const summarizeDocument = async (

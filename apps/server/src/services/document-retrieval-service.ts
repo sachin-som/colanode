@@ -4,6 +4,8 @@ import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { sql } from 'kysely';
 import { SearchResult } from '@/types/retrieval';
+import { RewrittenQuery } from '@/types/llm';
+
 export class DocumentRetrievalService {
   private embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,
@@ -12,13 +14,15 @@ export class DocumentRetrievalService {
   });
 
   public async retrieve(
-    query: string,
+    rewrittenQuery: RewrittenQuery,
     workspaceId: string,
     userId: string,
     limit = configuration.ai.retrieval.hybridSearch.maxResults,
     contextNodeIds?: string[]
   ): Promise<Document[]> {
-    const embedding = await this.embeddings.embedQuery(query);
+    const embedding = await this.embeddings.embedQuery(
+      rewrittenQuery.semanticQuery
+    );
     if (!embedding) {
       return [];
     }
@@ -31,7 +35,13 @@ export class DocumentRetrievalService {
         limit,
         contextNodeIds
       ),
-      this.keywordSearch(query, workspaceId, userId, limit, contextNodeIds),
+      this.keywordSearch(
+        rewrittenQuery.keywordQuery,
+        workspaceId,
+        userId,
+        limit,
+        contextNodeIds
+      ),
     ]);
 
     return this.combineSearchResults(semanticResults, keywordResults);
@@ -57,6 +67,7 @@ export class DocumentRetrievalService {
       .select((eb) => [
         'document_embeddings.document_id as id',
         'document_embeddings.text',
+        'document_embeddings.summary',
         'documents.created_at',
         'documents.created_by',
         'document_embeddings.chunk as chunk_index',
@@ -78,6 +89,7 @@ export class DocumentRetrievalService {
       .groupBy([
         'document_embeddings.document_id',
         'document_embeddings.text',
+        'document_embeddings.summary',
         'documents.created_at',
         'documents.created_by',
         'document_embeddings.chunk',
@@ -89,6 +101,7 @@ export class DocumentRetrievalService {
     return results.map((result) => ({
       id: result.id,
       text: result.text,
+      summary: result.summary,
       score: result.similarity,
       type: 'semantic',
       createdAt: result.created_at,
@@ -117,6 +130,7 @@ export class DocumentRetrievalService {
       .select((eb) => [
         'document_embeddings.document_id as id',
         'document_embeddings.text',
+        'document_embeddings.summary',
         'documents.created_at',
         'documents.created_by',
         'document_embeddings.chunk as chunk_index',
@@ -145,6 +159,7 @@ export class DocumentRetrievalService {
         'documents.created_at',
         'documents.created_by',
         'document_embeddings.chunk',
+        'document_embeddings.summary',
       ])
       .orderBy('rank', 'desc')
       .limit(limit)
@@ -153,6 +168,7 @@ export class DocumentRetrievalService {
     return results.map((result) => ({
       id: result.id,
       text: result.text,
+      summary: result.summary,
       score: result.rank,
       type: 'keyword',
       createdAt: result.created_at,
@@ -243,7 +259,7 @@ export class DocumentRetrievalService {
           ? authorMap.get(result.createdBy)
           : null;
         return new Document({
-          pageContent: result.text,
+          pageContent: `${result.summary}\n\n${result.text}`,
           metadata: {
             id: result.id,
             score: result.finalScore,
@@ -253,7 +269,7 @@ export class DocumentRetrievalService {
             author: author
               ? {
                   id: author.id,
-                  name: author.name || 'Anonymous',
+                  name: author.name || 'Unknown',
                 }
               : null,
           },

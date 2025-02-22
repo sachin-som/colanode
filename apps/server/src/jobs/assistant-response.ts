@@ -81,7 +81,7 @@ export const assistantResponseHandler: JobHandler<
       userId: user.id,
       userDetails: {
         name: user.name || 'User',
-        email: user.email || 'unknown@example.com',
+        email: user.email || '',
       },
       parentMessageId: message.parent_id || message.id,
       currentMessageId: message.id,

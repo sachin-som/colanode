@@ -224,12 +224,13 @@ async function fetchMetadata(metadata?: {
 
 export async function chunkText(
   text: string,
+  existingChunks: Array<{ text: string; summary?: string }>,
   metadata?: { type: 'node' | 'document'; node: SelectNode },
   enrichFn?: (
     prompt: string,
     baseVars: Record<string, string>
   ) => Promise<string>
-): Promise<string[]> {
+): Promise<Array<{ text: string; summary?: string }>> {
   const chunkSize = configuration.ai.chunking.defaultChunkSize;
   const chunkOverlap = configuration.ai.chunking.defaultOverlap;
   const splitter = new RecursiveCharacterTextSplitter({
@@ -238,26 +239,38 @@ export async function chunkText(
   });
   const docs = await splitter.createDocuments([text]);
   let chunks = docs
-    .map((doc) => doc.pageContent)
-    .filter((c) => c.trim().length > 5);
+    .map((doc) => ({ text: doc.pageContent }))
+    .filter((c) => c.text.trim().length > 5);
 
   if (configuration.ai.chunking.enhanceWithContext && enrichFn && metadata) {
-    const enriched: string[] = [];
     const enrichedMetadata = await fetchMetadata(metadata);
     if (!enrichedMetadata) {
       return chunks;
     }
+
+    const enrichedChunks: Array<{ text: string; summary: string }> = [];
+
     for (const chunk of chunks) {
+      const existingChunk = existingChunks.find((ec) => ec.text === chunk.text);
+      if (existingChunk?.summary) {
+        enrichedChunks.push({
+          text: chunk.text,
+          summary: existingChunk.summary,
+        });
+
+        continue;
+      }
+
       const { prompt, baseVars } = prepareEnrichmentPrompt(
-        chunk,
+        chunk.text,
         text,
         enrichedMetadata
       );
 
-      const enrichment = await enrichFn(prompt, baseVars);
-      enriched.push(enrichment + '\n\n' + chunk);
+      const summary = await enrichFn(prompt, baseVars);
+      enrichedChunks.push({ text: chunk.text, summary });
     }
-    return enriched;
+    return enrichedChunks;
   }
   return chunks;
 }

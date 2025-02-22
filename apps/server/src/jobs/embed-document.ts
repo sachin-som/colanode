@@ -59,14 +59,6 @@ export const embedDocumentHandler = async (input: {
     return;
   }
 
-  const textChunks = await chunkText(
-    text,
-    {
-      type: 'document',
-      node: node,
-    },
-    enrichChunk
-  );
   const embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,
     modelName: configuration.ai.embedding.modelName,
@@ -75,21 +67,38 @@ export const embedDocumentHandler = async (input: {
 
   const existingEmbeddings = await database
     .selectFrom('document_embeddings')
-    .select(['chunk', 'text'])
+    .select(['chunk', 'text', 'summary'])
     .where('document_id', '=', documentId)
     .execute();
 
+  const textChunks = await chunkText(
+    text,
+    existingEmbeddings.map((e) => ({
+      text: e.text,
+      summary: e.summary ?? undefined,
+    })),
+    { type: 'document', node: node },
+    enrichChunk
+  );
+
   const embeddingsToCreateOrUpdate: CreateDocumentEmbedding[] = [];
   for (let i = 0; i < textChunks.length; i++) {
-    const textChunk = textChunks[i];
-    if (!textChunk) continue;
+    const chunk = textChunks[i];
+    if (!chunk) {
+      continue;
+    }
+
     const existing = existingEmbeddings.find((e) => e.chunk === i);
-    if (existing && existing.text === textChunk) continue;
+    if (existing && existing.text === chunk.text) {
+      continue;
+    }
+
     embeddingsToCreateOrUpdate.push({
       document_id: documentId,
       chunk: i,
       workspace_id: document.workspace_id,
-      text: textChunk,
+      text: chunk.text,
+      summary: chunk.summary,
       embedding_vector: [],
       created_at: new Date(),
     });
@@ -98,7 +107,9 @@ export const embedDocumentHandler = async (input: {
   const batchSize = configuration.ai.embedding.batchSize;
   for (let i = 0; i < embeddingsToCreateOrUpdate.length; i += batchSize) {
     const batch = embeddingsToCreateOrUpdate.slice(i, i + batchSize);
-    const textsToEmbed = batch.map((item) => item.text);
+    const textsToEmbed = batch.map((item) =>
+      item.summary ? `${item.summary}\n\n${item.text}` : item.text
+    );
     const embeddingVectors = await embeddings.embedDocuments(textsToEmbed);
     for (let j = 0; j < batch.length; j++) {
       const vector = embeddingVectors[j];
@@ -121,6 +132,7 @@ export const embedDocumentHandler = async (input: {
         chunk: embedding.chunk,
         workspace_id: embedding.workspace_id,
         text: embedding.text,
+        summary: embedding.summary,
         embedding_vector: sql.raw(
           `'[${embedding.embedding_vector.join(',')}]'::vector`
         ),
@@ -129,6 +141,7 @@ export const embedDocumentHandler = async (input: {
       .onConflict((oc) =>
         oc.columns(['document_id', 'chunk']).doUpdateSet({
           text: sql.ref('excluded.text'),
+          summary: sql.ref('excluded.summary'),
           embedding_vector: sql.ref('excluded.embedding_vector'),
           updated_at: new Date(),
         })

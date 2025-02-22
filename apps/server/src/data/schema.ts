@@ -265,6 +265,7 @@ interface NodeEmbeddingTable {
   root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   text: ColumnType<string, string, string>;
+  summary: ColumnType<string | null, string | null, string | null>;
   embedding_vector: ColumnType<number[], number[], number[]>;
   search_vector: ColumnType<never, never, never>;
   created_at: ColumnType<Date, Date, never>;
@@ -280,6 +281,7 @@ interface DocumentEmbeddingTable {
   chunk: ColumnType<number, number, number>;
   workspace_id: ColumnType<string, string, never>;
   text: ColumnType<string, string, string>;
+  summary: ColumnType<string | null, string | null, string | null>;
   embedding_vector: ColumnType<number[], number[], number[]>;
   search_vector: ColumnType<never, never, never>;
   created_at: ColumnType<Date, Date, never>;

@@ -10,10 +10,14 @@ export const createNodeEmbeddingsTable: Migration = {
       .addColumn('root_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
+      .addColumn('summary', 'text')
       .addColumn('embedding_vector', sql`vector(2000)`, (col) => col.notNull())
       .addColumn(
         'search_vector',
-        sql`tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED`
+        sql`tsvector GENERATED ALWAYS AS (
+          setweight(to_tsvector('english', COALESCE(text, '')), 'A') ||
+          setweight(to_tsvector('english', COALESCE(summary, '')), 'B')
+        ) STORED`
       )
       .addColumn('created_at', 'timestamptz', (col) => col.notNull())
       .addColumn('updated_at', 'timestamptz')

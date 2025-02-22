@@ -166,7 +166,7 @@ async function rerankContextDocuments(state: AssistantChainState) {
   }));
   const rerankedContext = await rerankDocuments(
     docsForRerank,
-    state.rewrittenQuery
+    state.rewrittenQuery.semanticQuery
   );
 
   return { rerankedContext };

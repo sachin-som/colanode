@@ -261,8 +261,6 @@ export type UpdateUpload = Updateable<UploadTable>;
 interface NodeEmbeddingTable {
   node_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
-  parent_id: ColumnType<string | null, string | null, string | null>;
-  root_id: ColumnType<string, string, never>;
   workspace_id: ColumnType<string, string, never>;
   text: ColumnType<string, string, string>;
   summary: ColumnType<string | null, string | null, string | null>;

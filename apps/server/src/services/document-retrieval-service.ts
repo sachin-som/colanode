@@ -1,8 +1,9 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
+import { sql } from 'kysely';
+
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { sql } from 'kysely';
 import { SearchResult } from '@/types/retrieval';
 import { RewrittenQuery } from '@/types/llm';
 
@@ -23,6 +24,7 @@ export class DocumentRetrievalService {
     const embedding = await this.embeddings.embedQuery(
       rewrittenQuery.semanticQuery
     );
+
     if (!embedding) {
       return [];
     }
@@ -64,7 +66,7 @@ export class DocumentRetrievalService {
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
-      .select((eb) => [
+      .select([
         'document_embeddings.document_id as id',
         'document_embeddings.text',
         'document_embeddings.summary',
@@ -127,7 +129,7 @@ export class DocumentRetrievalService {
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
-      .select((eb) => [
+      .select([
         'document_embeddings.document_id as id',
         'document_embeddings.text',
         'document_embeddings.summary',
@@ -140,7 +142,7 @@ export class DocumentRetrievalService {
       ])
       .where('document_embeddings.workspace_id', '=', workspaceId)
       .where(
-        (eb) =>
+        () =>
           sql`document_embeddings.search_vector @@ websearch_to_tsquery('english', ${query})`
       );
 

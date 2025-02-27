@@ -1,14 +1,15 @@
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { getNodeModel, FieldAttributes } from '@colanode/core';
+
 import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
-import { getNodeModel, FieldAttributes } from '@colanode/core';
 import type { SelectNode, SelectDocument } from '@/data/schema';
 import { prepareEnrichmentPrompt } from '@/lib/llm-prompts';
 import { BaseMetadata, NodeMetadata, DocumentMetadata } from '@/types/chunking';
 
-async function buildBaseMetadata(
+const buildBaseMetadata = async (
   node: SelectNode
-): Promise<BaseMetadata | undefined> {
+): Promise<BaseMetadata | undefined> => {
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel) return undefined;
   const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
@@ -19,6 +20,7 @@ async function buildBaseMetadata(
     .select(['id', 'name'])
     .where('id', '=', node.created_by)
     .executeTakeFirst();
+
   const lastAuthor = node.updated_by
     ? await database
         .selectFrom('users')
@@ -26,6 +28,7 @@ async function buildBaseMetadata(
         .where('id', '=', node.updated_by)
         .executeTakeFirst()
     : undefined;
+
   const workspace = await database
     .selectFrom('workspaces')
     .select(['id', 'name'])
@@ -43,20 +46,26 @@ async function buildBaseMetadata(
     lastAuthor,
     workspace,
   };
-}
+};
 
-async function buildParentContext(
+const buildParentContext = async (
   node: SelectNode
-): Promise<BaseMetadata['parentContext'] | undefined> {
+): Promise<BaseMetadata['parentContext'] | undefined> => {
   const parentNode = await database
     .selectFrom('nodes')
     .selectAll()
     .where('id', '=', node.parent_id)
     .executeTakeFirst();
-  if (!parentNode) return undefined;
+
+  if (!parentNode) {
+    return undefined;
+  }
 
   const parentModel = getNodeModel(parentNode.attributes.type);
-  if (!parentModel) return undefined;
+  if (!parentModel) {
+    return undefined;
+  }
+
   const parentText = parentModel.extractNodeText(
     parentNode.id,
     parentNode.attributes
@@ -69,35 +78,38 @@ async function buildParentContext(
     .where('node_paths.descendant_id', '=', node.id)
     .orderBy('node_paths.level', 'desc')
     .execute();
+
   const path = pathNodes
     .map((n) => {
       const model = getNodeModel(n.attributes.type);
       return model?.extractNodeText(n.id, n.attributes)?.name ?? '';
     })
     .join(' / ');
+
   return {
     id: parentNode.id,
     type: parentNode.attributes.type,
     name: parentText?.name ?? undefined,
     path,
   };
-}
+};
 
-async function fetchCollaborators(
+const fetchCollaborators = async (
   collaboratorIds: string[]
-): Promise<Array<{ id: string; name: string }>> {
+): Promise<Array<{ id: string; name: string }>> => {
   if (!collaboratorIds.length) return [];
   const collaborators = await database
     .selectFrom('users')
     .select(['id', 'name'])
     .where('id', 'in', collaboratorIds)
     .execute();
-  return collaborators.map((c) => ({ id: c.id, name: c.name }));
-}
 
-async function buildNodeMetadata(
+  return collaborators.map((c) => ({ id: c.id, name: c.name }));
+};
+
+const buildNodeMetadata = async (
   node: SelectNode
-): Promise<NodeMetadata | undefined> {
+): Promise<NodeMetadata | undefined> => {
   const nodeModel = getNodeModel(node.attributes.type);
   if (!nodeModel) return undefined;
   const baseMetadata = await buildBaseMetadata(node);
@@ -138,12 +150,12 @@ async function buildNodeMetadata(
     fieldInfo,
     ...baseMetadata,
   };
-}
+};
 
-async function buildDocumentMetadata(
+const buildDocumentMetadata = async (
   document: SelectDocument,
   node?: SelectNode
-): Promise<DocumentMetadata | undefined> {
+): Promise<DocumentMetadata | undefined> => {
   if (!node) return undefined;
 
   // Fetch author and workspace info
@@ -202,13 +214,16 @@ async function buildDocumentMetadata(
     }
   }
   return { type: 'document', ...baseMetadata };
-}
+};
 
-async function fetchMetadata(metadata?: {
+const fetchMetadata = async (metadata?: {
   type: 'node' | 'document';
   node: SelectNode;
-}): Promise<NodeMetadata | DocumentMetadata | undefined> {
-  if (!metadata) return undefined;
+}): Promise<NodeMetadata | DocumentMetadata | undefined> => {
+  if (!metadata) {
+    return undefined;
+  }
+
   if (metadata.type === 'node') {
     return buildNodeMetadata(metadata.node);
   } else {
@@ -217,12 +232,15 @@ async function fetchMetadata(metadata?: {
       .selectAll()
       .where('id', '=', metadata.node.id)
       .executeTakeFirst();
-    if (!document) return undefined;
+    if (!document) {
+      return undefined;
+    }
+
     return buildDocumentMetadata(document, metadata.node);
   }
-}
+};
 
-export async function chunkText(
+export const chunkText = async (
   text: string,
   existingChunks: Array<{ text: string; summary?: string }>,
   metadata?: { type: 'node' | 'document'; node: SelectNode },
@@ -230,15 +248,16 @@ export async function chunkText(
     prompt: string,
     baseVars: Record<string, string>
   ) => Promise<string>
-): Promise<Array<{ text: string; summary?: string }>> {
+): Promise<Array<{ text: string; summary?: string }>> => {
   const chunkSize = configuration.ai.chunking.defaultChunkSize;
   const chunkOverlap = configuration.ai.chunking.defaultOverlap;
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize,
     chunkOverlap,
   });
+
   const docs = await splitter.createDocuments([text]);
-  let chunks = docs
+  const chunks = docs
     .map((doc) => ({ text: doc.pageContent }))
     .filter((c) => c.text.trim().length > 5);
 
@@ -272,5 +291,6 @@ export async function chunkText(
     }
     return enrichedChunks;
   }
+
   return chunks;
-}
+};

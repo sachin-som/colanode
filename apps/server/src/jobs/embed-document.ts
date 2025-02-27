@@ -1,12 +1,12 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
+import { sql } from 'kysely';
+import { extractDocumentText, getNodeModel } from '@colanode/core';
+
 import { chunkText } from '@/lib/chunking';
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CreateDocumentEmbedding } from '@/data/schema';
-import { sql } from 'kysely';
 import { fetchNode } from '@/lib/nodes';
-import { extractDocumentText } from '@colanode/core';
-import { getNodeModel } from '@colanode/core';
 import { enrichChunk } from '@/services/llm-service';
 
 export type EmbedDocumentInput = {
@@ -36,6 +36,7 @@ export const embedDocumentHandler = async (input: {
     .select(['id', 'content', 'workspace_id', 'created_at'])
     .where('id', '=', documentId)
     .executeTakeFirst();
+
   if (!document) {
     return;
   }
@@ -56,6 +57,7 @@ export const embedDocumentHandler = async (input: {
       .deleteFrom('document_embeddings')
       .where('document_id', '=', documentId)
       .execute();
+
     return;
   }
 
@@ -81,7 +83,7 @@ export const embedDocumentHandler = async (input: {
     enrichChunk
   );
 
-  const embeddingsToCreateOrUpdate: CreateDocumentEmbedding[] = [];
+  const embeddingsToUpsert: CreateDocumentEmbedding[] = [];
   for (let i = 0; i < textChunks.length; i++) {
     const chunk = textChunks[i];
     if (!chunk) {
@@ -93,7 +95,7 @@ export const embedDocumentHandler = async (input: {
       continue;
     }
 
-    embeddingsToCreateOrUpdate.push({
+    embeddingsToUpsert.push({
       document_id: documentId,
       chunk: i,
       workspace_id: document.workspace_id,
@@ -105,11 +107,12 @@ export const embedDocumentHandler = async (input: {
   }
 
   const batchSize = configuration.ai.embedding.batchSize;
-  for (let i = 0; i < embeddingsToCreateOrUpdate.length; i += batchSize) {
-    const batch = embeddingsToCreateOrUpdate.slice(i, i + batchSize);
+  for (let i = 0; i < embeddingsToUpsert.length; i += batchSize) {
+    const batch = embeddingsToUpsert.slice(i, i + batchSize);
     const textsToEmbed = batch.map((item) =>
       item.summary ? `${item.summary}\n\n${item.text}` : item.text
     );
+
     const embeddingVectors = await embeddings.embedDocuments(textsToEmbed);
     for (let j = 0; j < batch.length; j++) {
       const vector = embeddingVectors[j];
@@ -120,14 +123,14 @@ export const embedDocumentHandler = async (input: {
     }
   }
 
-  if (embeddingsToCreateOrUpdate.length === 0) {
+  if (embeddingsToUpsert.length === 0) {
     return;
   }
 
-  for (const embedding of embeddingsToCreateOrUpdate) {
-    await database
-      .insertInto('document_embeddings')
-      .values({
+  await database
+    .insertInto('document_embeddings')
+    .values(
+      embeddingsToUpsert.map((embedding) => ({
         document_id: embedding.document_id,
         chunk: embedding.chunk,
         workspace_id: embedding.workspace_id,
@@ -137,15 +140,15 @@ export const embedDocumentHandler = async (input: {
           `'[${embedding.embedding_vector.join(',')}]'::vector`
         ),
         created_at: embedding.created_at,
+      }))
+    )
+    .onConflict((oc) =>
+      oc.columns(['document_id', 'chunk']).doUpdateSet({
+        text: sql.ref('excluded.text'),
+        summary: sql.ref('excluded.summary'),
+        embedding_vector: sql.ref('excluded.embedding_vector'),
+        updated_at: new Date(),
       })
-      .onConflict((oc) =>
-        oc.columns(['document_id', 'chunk']).doUpdateSet({
-          text: sql.ref('excluded.text'),
-          summary: sql.ref('excluded.summary'),
-          embedding_vector: sql.ref('excluded.embedding_vector'),
-          updated_at: new Date(),
-        })
-      )
-      .execute();
-  }
+    )
+    .execute();
 };

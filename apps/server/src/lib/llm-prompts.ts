@@ -1,4 +1,5 @@
 import { PromptTemplate, ChatPromptTemplate } from '@langchain/core/prompts';
+
 import { NodeMetadata, DocumentMetadata } from '@/types/chunking';
 
 export const queryRewritePrompt = PromptTemplate.fromTemplate(
@@ -343,11 +344,11 @@ Generate a brief (50-100 tokens) contextual prefix that:
 Do not repeat the chunk content. Return only the contextual prefix.`
 );
 
-export function prepareEnrichmentPrompt(
+export const prepareEnrichmentPrompt = (
   chunk: string,
   fullText: string,
   metadata: NodeMetadata | DocumentMetadata
-): { prompt: string; baseVars: Record<string, string> } {
+): { prompt: string; baseVars: Record<string, string> } => {
   const formatDate = (date?: Date | string | null) => {
     if (!date) return '';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -418,4 +419,4 @@ ${Object.entries(metadata.databaseInfo.fields)
   });
 
   return { prompt, baseVars };
-}
+};

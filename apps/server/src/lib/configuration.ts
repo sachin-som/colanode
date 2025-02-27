@@ -69,15 +69,15 @@ export interface SmtpConfiguration {
   };
 }
 
-export type AIProvider = 'openai' | 'google';
+export type AiProvider = 'openai' | 'google';
 
-export interface AIProviderConfiguration {
+export interface AiProviderConfiguration {
   apiKey: string;
   enabled?: boolean;
 }
 
-export interface AIModelConfiguration {
-  provider: AIProvider;
+export interface AiModelConfiguration {
+  provider: AiProvider;
   modelName: string;
   temperature: number;
 }
@@ -87,8 +87,8 @@ export interface AiConfiguration {
   nodeEmbeddingDelay: number;
   documentEmbeddingDelay: number;
   providers: {
-    openai: AIProviderConfiguration;
-    google: AIProviderConfiguration;
+    openai: AiProviderConfiguration;
+    google: AiProviderConfiguration;
   };
   langfuse: {
     enabled: boolean;
@@ -97,17 +97,17 @@ export interface AiConfiguration {
     baseUrl: string;
   };
   models: {
-    queryRewrite: AIModelConfiguration;
-    response: AIModelConfiguration;
-    rerank: AIModelConfiguration;
-    summarization: AIModelConfiguration;
-    contextEnhancer: AIModelConfiguration;
-    noContext: AIModelConfiguration;
-    intentRecognition: AIModelConfiguration;
-    databaseFilter: AIModelConfiguration;
+    queryRewrite: AiModelConfiguration;
+    response: AiModelConfiguration;
+    rerank: AiModelConfiguration;
+    summarization: AiModelConfiguration;
+    contextEnhancer: AiModelConfiguration;
+    noContext: AiModelConfiguration;
+    intentRecognition: AiModelConfiguration;
+    databaseFilter: AiModelConfiguration;
   };
   embedding: {
-    provider: AIProvider;
+    provider: AiProvider;
     apiKey: string;
     modelName: string;
     dimensions: number;
@@ -235,7 +235,7 @@ export const configuration: Configuration = {
     models: {
       queryRewrite: {
         provider: (getOptionalEnv('QUERY_REWRITE_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('QUERY_REWRITE_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('QUERY_REWRITE_TEMPERATURE') || '0.3'
@@ -243,20 +243,20 @@ export const configuration: Configuration = {
       },
       response: {
         provider: (getOptionalEnv('RESPONSE_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('RESPONSE_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('RESPONSE_TEMPERATURE') || '0.3'
         ),
       },
       rerank: {
-        provider: (getOptionalEnv('RERANK_PROVIDER') || 'openai') as AIProvider,
+        provider: (getOptionalEnv('RERANK_PROVIDER') || 'openai') as AiProvider,
         modelName: getOptionalEnv('RERANK_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(getOptionalEnv('RERANK_TEMPERATURE') || '0.3'),
       },
       summarization: {
         provider: (getOptionalEnv('SUMMARIZATION_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('SUMMARIZATION_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('SUMMARIZATION_TEMPERATURE') || '0.3'
@@ -264,7 +264,7 @@ export const configuration: Configuration = {
       },
       contextEnhancer: {
         provider: (getOptionalEnv('CHUNK_CONTEXT_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('CHUNK_CONTEXT_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('CHUNK_CONTEXT_TEMPERATURE') || '0.3'
@@ -272,7 +272,7 @@ export const configuration: Configuration = {
       },
       noContext: {
         provider: (getOptionalEnv('NO_CONTEXT_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('NO_CONTEXT_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('NO_CONTEXT_TEMPERATURE') || '0.3'
@@ -280,7 +280,7 @@ export const configuration: Configuration = {
       },
       intentRecognition: {
         provider: (getOptionalEnv('INTENT_RECOGNITION_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('INTENT_RECOGNITION_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('INTENT_RECOGNITION_TEMPERATURE') || '0.3'
@@ -288,7 +288,7 @@ export const configuration: Configuration = {
       },
       databaseFilter: {
         provider: (getOptionalEnv('DATABASE_FILTER_PROVIDER') ||
-          'openai') as AIProvider,
+          'openai') as AiProvider,
         modelName: getOptionalEnv('DATABASE_FILTER_MODEL') || 'gpt-4o-mini',
         temperature: parseFloat(
           getOptionalEnv('DATABASE_FILTER_TEMPERATURE') || '0.3'
@@ -297,7 +297,7 @@ export const configuration: Configuration = {
     },
     embedding: {
       provider: (getOptionalEnv('EMBEDDING_PROVIDER') ||
-        'openai') as AIProvider,
+        'openai') as AiProvider,
       modelName: getOptionalEnv('EMBEDDING_MODEL') || 'text-embedding-3-large',
       dimensions: parseInt(getOptionalEnv('EMBEDDING_DIMENSIONS') || '2000'),
       apiKey: getOptionalEnv('EMBEDDING_API_KEY') || '',

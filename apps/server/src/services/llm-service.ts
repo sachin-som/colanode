@@ -1,9 +1,11 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { configuration } from '@/lib/configuration';
 import { Document } from '@langchain/core/documents';
 import { CallbackHandler } from 'langfuse-langchain';
+import { SystemMessage } from '@langchain/core/messages';
+
+import { configuration } from '@/lib/configuration';
 import {
   rerankedDocumentsSchema,
   RerankedDocuments,
@@ -14,7 +16,6 @@ import {
   RewrittenQuery,
   rewrittenQuerySchema,
 } from '@/types/llm';
-
 import {
   queryRewritePrompt,
   summarizationPrompt,
@@ -24,7 +25,6 @@ import {
   noContextPrompt,
   databaseFilterPrompt,
 } from '@/lib/llm-prompts';
-import { SystemMessage } from '@langchain/core/messages';
 
 const langfuseCallback = configuration.ai.langfuse.enabled
   ? new CallbackHandler({
@@ -41,10 +41,12 @@ const getChatModel = (
   if (!configuration.ai.enabled) {
     throw new Error('AI is disabled.');
   }
+
   const providerConfig = configuration.ai.providers[modelConfig.provider];
   if (!providerConfig.enabled) {
     throw new Error(`${modelConfig.provider} provider is disabled.`);
   }
+
   switch (modelConfig.provider) {
     case 'openai':
       return new ChatOpenAI({

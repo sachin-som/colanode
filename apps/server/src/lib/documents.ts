@@ -16,7 +16,7 @@ import { eventBus } from '@/lib/event-bus';
 import { fetchNode, fetchNodeTree, mapNode } from '@/lib/nodes';
 import { CreateDocumentInput, CreateDocumentOutput } from '@/types/documents';
 import { jobService } from '@/services/job-service';
-import { configuration } from './configuration';
+import { configuration } from '@/lib/configuration';
 
 const debug = createDebugger('server:lib:documents');
 

@@ -1,10 +1,12 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
+import { sql } from 'kysely';
+
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { sql } from 'kysely';
 import { SearchResult } from '@/types/retrieval';
 import { RewrittenQuery } from '@/types/llm';
+
 export class NodeRetrievalService {
   private embeddings = new OpenAIEmbeddings({
     apiKey: configuration.ai.embedding.apiKey,
@@ -62,7 +64,7 @@ export class NodeRetrievalService {
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
-      .select((eb) => [
+      .select([
         'node_embeddings.node_id as id',
         'node_embeddings.text',
         'node_embeddings.summary',
@@ -124,7 +126,7 @@ export class NodeRetrievalService {
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
-      .select((eb) => [
+      .select([
         'node_embeddings.node_id as id',
         'node_embeddings.text',
         'node_embeddings.summary',
@@ -137,7 +139,7 @@ export class NodeRetrievalService {
       ])
       .where('node_embeddings.workspace_id', '=', workspaceId)
       .where(
-        (eb) =>
+        () =>
           sql`node_embeddings.search_vector @@ websearch_to_tsquery('english', ${query})`
       );
 

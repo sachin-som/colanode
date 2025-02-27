@@ -1,5 +1,4 @@
 import { sql, Kysely, Expression, SqlBool } from 'kysely';
-import { database } from '@/data/database';
 import {
   BooleanFieldAttributes,
   CreatedAtFieldAttributes,
@@ -18,6 +17,8 @@ import {
   DatabaseViewSortAttributes,
   MultiSelectFieldAttributes,
 } from '@colanode/core';
+
+import { database } from '@/data/database';
 import { DatabaseSchema } from '@/data/schema';
 
 type FilterInput = {

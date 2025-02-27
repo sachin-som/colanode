@@ -1,12 +1,16 @@
-import { generateId, IdType, generateNodeIndex } from '@colanode/core';
+import {
+  generateId,
+  IdType,
+  generateNodeIndex,
+  getNodeModel,
+  MessageAttributes,
+} from '@colanode/core';
+
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { fetchNode } from '@/lib/nodes';
+import { fetchNode, createNode } from '@/lib/nodes';
 import { JobHandler } from '@/types/jobs';
 import { runAssistantResponseChain } from '@/lib/assistant';
-import { getNodeModel } from '@colanode/core';
-import { createNode } from '@/lib/nodes';
-import { MessageAttributes } from '@colanode/core';
 
 export type AssistantResponseInput = {
   type: 'assistant_response';
@@ -61,13 +65,11 @@ export const assistantResponseHandler: JobHandler<
       .where('id', '=', message.created_by)
       .selectAll()
       .executeTakeFirst(),
-    (async () => {
-      return database
-        .selectFrom('workspaces')
-        .where('id', '=', workspaceId)
-        .select(['name', 'id'])
-        .executeTakeFirst();
-    })(),
+    database
+      .selectFrom('workspaces')
+      .where('id', '=', workspaceId)
+      .select(['name', 'id'])
+      .executeTakeFirst(),
   ]);
 
   if (!user || !workspace) {
@@ -117,8 +119,8 @@ const createAndPublishResponse = async (
   const blockId = generateId(IdType.Block);
 
   const messageAttributes: MessageAttributes = {
-    type: 'message' as const,
-    subtype: 'answer' as const,
+    type: 'message',
+    subtype: 'answer',
     parentId: originalMessage.parent_id,
     content: {
       [blockId]: {

@@ -6,6 +6,7 @@ import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { SearchResult } from '@/types/retrieval';
 import { RewrittenQuery } from '@/types/llm';
+import { combineAndScoreSearchResults } from '@/lib/ai-utils';
 
 export class NodeRetrievalService {
   private embeddings = new OpenAIEmbeddings({
@@ -60,7 +61,7 @@ export class NodeRetrievalService {
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
       .innerJoin('collaborations', (join) =>
         join
-          .onRef('collaborations.node_id', '=', 'node_embeddings.root_id')
+          .onRef('collaborations.node_id', '=', 'nodes.root_id')
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
@@ -122,7 +123,7 @@ export class NodeRetrievalService {
       .innerJoin('nodes', 'nodes.id', 'node_embeddings.node_id')
       .innerJoin('collaborations', (join) =>
         join
-          .onRef('collaborations.node_id', '=', 'node_embeddings.root_id')
+          .onRef('collaborations.node_id', '=', 'nodes.root_id')
           .on('collaborations.collaborator_id', '=', sql.lit(userId))
           .on('collaborations.deleted_at', 'is', null)
       )
@@ -182,64 +183,15 @@ export class NodeRetrievalService {
   ): Promise<Document[]> {
     const { semanticSearchWeight, keywordSearchWeight } =
       configuration.ai.retrieval.hybridSearch;
-    const maxSemanticScore = Math.max(
-      ...semanticResults.map((r) => r.score),
-      1
-    );
-    const maxKeywordScore = Math.max(...keywordResults.map((r) => r.score), 1);
 
-    const combined = new Map<string, SearchResult & { finalScore: number }>();
-    const createKey = (result: SearchResult) =>
-      `${result.id}-${result.chunkIndex}`;
-
-    const calculateRecencyBoost = (
-      createdAt: Date | undefined | null
-    ): number => {
-      if (!createdAt) return 1;
-      const now = new Date();
-      const ageInDays =
-        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-      return ageInDays <= 7 ? 1 + (1 - ageInDays / 7) * 0.2 : 1;
-    };
-
-    semanticResults.forEach((result) => {
-      const key = createKey(result);
-      const recencyBoost = calculateRecencyBoost(result.createdAt);
-      const normalizedScore =
-        ((maxSemanticScore - result.score) / maxSemanticScore) *
-        semanticSearchWeight;
-      combined.set(key, {
-        ...result,
-        finalScore: normalizedScore * recencyBoost,
-      });
-    });
-
-    keywordResults.forEach((result) => {
-      const key = createKey(result);
-      const recencyBoost = calculateRecencyBoost(result.createdAt);
-      const normalizedScore =
-        (result.score / maxKeywordScore) * keywordSearchWeight;
-      if (combined.has(key)) {
-        const existing = combined.get(key)!;
-        existing.finalScore += normalizedScore * recencyBoost;
-      } else {
-        combined.set(key, {
-          ...result,
-          finalScore: normalizedScore * recencyBoost,
-        });
-      }
-    });
-
-    // Fetch all unique author IDs from the results
     const authorIds = Array.from(
       new Set(
-        Array.from(combined.values())
+        [...semanticResults, ...keywordResults]
           .map((r) => r.createdBy)
           .filter((id): id is string => id !== undefined && id !== null)
       )
     );
 
-    // Bulk fetch author information
     const authors =
       authorIds.length > 0
         ? await database
@@ -251,29 +203,13 @@ export class NodeRetrievalService {
 
     const authorMap = new Map(authors.map((author) => [author.id, author]));
 
-    return Array.from(combined.values())
-      .sort((a, b) => b.finalScore - a.finalScore)
-      .map((result) => {
-        const author = result.createdBy
-          ? authorMap.get(result.createdBy)
-          : null;
-        return new Document({
-          pageContent: `${result.summary}\n\n${result.text}`,
-          metadata: {
-            id: result.id,
-            score: result.finalScore,
-            createdAt: result.createdAt,
-            type: 'node',
-            chunkIndex: result.chunkIndex,
-            author: author
-              ? {
-                  id: author.id,
-                  name: author.name || 'Unknown',
-                }
-              : null,
-          },
-        });
-      });
+    return combineAndScoreSearchResults(
+      semanticResults,
+      keywordResults,
+      semanticSearchWeight,
+      keywordSearchWeight,
+      authorMap
+    );
   }
 }
 

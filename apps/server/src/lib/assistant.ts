@@ -15,40 +15,27 @@ import {
 import { nodeRetrievalService } from '@/services/node-retrieval-service';
 import { documentRetrievalService } from '@/services/document-retrieval-service';
 import { recordsRetrievalService } from '@/services/records-retrieval-service';
-import { getNodeModel } from '@colanode/core';
-import { AssistantChainState, ResponseState } from '@/types/assistant';
-
-function formatChatHistory(docs: Document[]): string {
-  return docs
-    .map((doc) => {
-      const time = doc.metadata.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const author = doc.metadata.authorName || 'User';
-      return `- [${time}] ${author}: ${doc.pageContent}`;
-    })
-    .join('\n');
-}
-
-function formatContextDocuments(docs: Document[]): string {
-  return docs
-    .map((doc) => {
-      const time = doc.metadata?.createdAt
-        ? new Date(doc.metadata.createdAt).toLocaleString()
-        : 'Unknown time';
-      const author = doc.metadata?.author?.name || 'Unknown';
-      let header = `Source ID: ${doc.metadata.id}\nAuthor: ${author}\nTime: ${time}`;
-      if (
-        doc.metadata?.type === 'node' &&
-        doc.metadata.nodeType === 'record' &&
-        doc.metadata.parentContext?.name
-      ) {
-        header += `\nDatabase: ${doc.metadata.parentContext.name}`;
-      }
-      return `${header}\nContent: "${doc.pageContent}"\n`;
-    })
-    .join('\n');
-}
+import {
+  DatabaseAttributes,
+  getNodeModel,
+  RecordAttributes,
+} from '@colanode/core';
+import {
+  AssistantChainState,
+  ResponseState,
+  DatabaseFilters,
+  DatabaseContextItem,
+  AssistantResponse,
+  AssistantInput,
+} from '@/types/assistant';
+import { fetchMetadataForContextItems } from '@/lib/metadata';
+import { SelectNode } from '@/data/schema';
+import {
+  formatChatHistory,
+  formatContextDocuments,
+  selectTopContext,
+  formatMetadataForPrompt,
+} from '@/lib/ai-utils';
 
 async function generateRewrittenQuery(state: AssistantChainState) {
   const rewrittenQuery = await rewriteQuery(state.userInput);
@@ -100,10 +87,12 @@ async function fetchContextDocuments(state: AssistantChainState) {
         const dbNode = await fetchNode(filter.databaseId);
         if (!dbNode || dbNode.type !== 'database') return [];
         return records.map((record) => {
-          const fields = Object.entries((record as any).attributes.fields || {})
+          const fields = Object.entries(
+            (record.attributes as RecordAttributes).fields || {}
+          )
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
-          const content = `Database Record from ${dbNode.attributes.type === 'database' ? dbNode.attributes.name || 'Database' : 'Database'}:\n${fields}`;
+          const content = `Database Record from ${dbNode.type === 'database' ? (dbNode.attributes as DatabaseAttributes).name || 'Database' : 'Database'}:\n${fields}`;
           return new Document({
             pageContent: content,
             metadata: {
@@ -138,7 +127,7 @@ async function fetchChatHistory(state: AssistantChainState) {
     const isAI = message.created_by === 'colanode_ai';
     const extracted = (message &&
       message.attributes &&
-      getNodeModel(message.attributes.type)?.extractNodeText(
+      getNodeModel(message.type)?.extractNodeText(
         message.id,
         message.attributes
       )) || { attributes: '' };
@@ -173,11 +162,30 @@ async function rerankContextDocuments(state: AssistantChainState) {
 }
 
 async function selectRelevantDocuments(state: AssistantChainState) {
+  if (state.rerankedContext.length === 0) {
+    return { topContext: [] };
+  }
+
+  const maxContext = 10;
   const topContext = selectTopContext(
     state.rerankedContext,
-    5,
+    maxContext,
     state.contextDocuments
   );
+
+  const contextItemsWithType = topContext.map((doc) => ({
+    id: doc.metadata.id,
+    type: doc.metadata.type,
+  }));
+
+  const metadata = await fetchMetadataForContextItems(contextItemsWithType);
+
+  topContext.forEach((doc) => {
+    const id = doc.metadata.id;
+    if (metadata[id]) {
+      doc.metadata.formattedMetadata = formatMetadataForPrompt(metadata[id]);
+    }
+  });
 
   return { topContext };
 }
@@ -194,6 +202,7 @@ async function generateResponse(state: AssistantChainState) {
   const workspace = await fetchWorkspaceDetails(state.workspaceId);
   const formattedChatHistory = formatChatHistory(state.chatHistory);
   const formattedContext = formatContextDocuments(state.topContext);
+
   const result = await generateFinalAnswer({
     currentTimestamp: new Date().toISOString(),
     workspaceName: workspace?.name || state.workspaceId,
@@ -219,16 +228,17 @@ async function fetchDatabaseContext(state: AssistantChainState) {
     .selectAll()
     .execute();
 
-  const databaseContext = await Promise.all(
+  const databaseContext: DatabaseContextItem[] = await Promise.all(
     databases.map(async (db) => {
-      const dbNode = db as any;
+      const dbNode = db as SelectNode;
       const sampleRecords = await recordsRetrievalService.retrieveByFilters(
         db.id,
         state.workspaceId,
         state.userId,
         { filters: [], sorts: [], page: 1, count: 5 }
       );
-      const fields = dbNode.attributes.fields || {};
+      const dbAttrs = dbNode.attributes as DatabaseAttributes;
+      const fields = dbAttrs.fields || {};
       const formattedFields = Object.entries(fields).reduce(
         (acc, [id, field]) => ({
           ...acc,
@@ -242,7 +252,7 @@ async function fetchDatabaseContext(state: AssistantChainState) {
 
       return {
         id: db.id,
-        name: dbNode.attributes.name || 'Untitled Database',
+        name: dbAttrs.name || 'Untitled Database',
         fields: formattedFields,
         sampleRecords,
       };
@@ -254,7 +264,9 @@ async function fetchDatabaseContext(state: AssistantChainState) {
 
 async function generateDatabaseFilterAttributes(state: AssistantChainState) {
   if (state.intent === 'no_context' || !state.databaseContext.length) {
-    return { databaseFilters: { shouldFilter: false, filters: [] } };
+    return {
+      databaseFilters: { shouldFilter: false, filters: [] } as DatabaseFilters,
+    };
   }
   const databaseFilters = await generateDatabaseFilters({
     query: state.userInput,
@@ -262,33 +274,6 @@ async function generateDatabaseFilterAttributes(state: AssistantChainState) {
   });
 
   return { databaseFilters };
-}
-
-function selectTopContext(
-  reranked: Array<{
-    index: number;
-    score: number;
-    type: string;
-    sourceId: string;
-  }>,
-  max: number,
-  contextDocuments: Document[]
-): Document[] {
-  if (reranked.length === 0) return [];
-  const maxScore = Math.max(...reranked.map((item) => item.score));
-  const threshold = maxScore * 0.5;
-
-  return reranked
-    .filter((item) => item.score >= threshold && item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, max)
-    .map((item) => {
-      if (item.index >= 0 && item.index < contextDocuments.length) {
-        return contextDocuments[item.index];
-      }
-      return undefined;
-    })
-    .filter((doc): doc is Document => doc !== undefined);
 }
 
 const assistantResponseChain = new StateGraph(ResponseState)
@@ -327,7 +312,6 @@ const langfuseCallback = configuration.ai.langfuse.enabled
 
 async function getFullContextNodeIds(selectedIds: string[]): Promise<string[]> {
   const fullSet = new Set<string>();
-  console.log('selectedIds', selectedIds);
   for (const id of selectedIds) {
     fullSet.add(id);
     try {
@@ -337,24 +321,13 @@ async function getFullContextNodeIds(selectedIds: string[]): Promise<string[]> {
       console.error(`Error fetching descendants for node ${id}:`, error);
     }
   }
-  console.log('fullSet', fullSet);
+
   return Array.from(fullSet);
 }
 
-export async function runAssistantResponseChain(input: {
-  userInput: string;
-  workspaceId: string;
-  userId: string;
-  userDetails: { name: string; email: string };
-  parentMessageId: string;
-  currentMessageId: string;
-  originalMessage: any;
-  selectedContextNodeIds?: string[];
-}): Promise<{
-  finalAnswer: string;
-  citations: Array<{ sourceId: string; quote: string }>;
-}> {
-  // Process the selected context node IDs if provided
+export async function runAssistantResponseChain(
+  input: AssistantInput
+): Promise<AssistantResponse> {
   let fullContextNodeIds: string[] = [];
   if (input.selectedContextNodeIds && input.selectedContextNodeIds.length > 0) {
     fullContextNodeIds = await getFullContextNodeIds(
@@ -362,7 +335,6 @@ export async function runAssistantResponseChain(input: {
     );
   }
 
-  // Build the chain input with the new property added into the state.
   const chainInput = {
     ...input,
     selectedContextNodeIds: fullContextNodeIds,

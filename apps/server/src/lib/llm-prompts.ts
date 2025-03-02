@@ -1,7 +1,5 @@
 import { PromptTemplate, ChatPromptTemplate } from '@langchain/core/prompts';
 
-import { NodeMetadata, DocumentMetadata } from '@/types/chunking';
-
 export const queryRewritePrompt = PromptTemplate.fromTemplate(
   `<task>
   You are an expert at rewriting search queries to optimize for both semantic similarity and keyword-based search in a document retrieval system.
@@ -150,7 +148,15 @@ export const answerPrompt = ChatPromptTemplate.fromTemplate(
 </user_query>
 
 <task>
-  Based solely on the current conversation history and the relevant context above, provide a clear and professional answer to the user's query. In your answer, include exact quotes from the provided context that support your answer.
+  Based solely on the current conversation history and the relevant context above, provide a clear and professional answer to the user's query. 
+  
+  Pay attention to the metadata provided for each source (like creation date, author, path, document type, etc.) to:
+  - Properly attribute information to its source
+  - Consider the recency and relevance of the information
+  - Understand the relationships between different content pieces
+  - Recognize the context in which content was created or modified
+  
+  In your answer, include exact quotes from the provided context that support your answer.
   If the relevant context does not contain any information that answers the user's query, respond with "No relevant information found." This is a critical step to ensure correct answers.
 </task>
 
@@ -244,179 +250,89 @@ export const noContextPrompt = PromptTemplate.fromTemplate(
 );
 
 export const databaseFilterPrompt = ChatPromptTemplate.fromTemplate(
-  `You are an expert at analyzing natural language queries and converting them into structured database filters.
+  `<task>
+  You are an expert at analyzing natural language queries and converting them into structured database filters.
+  
+  Your task is to:
+  1. Determine if this query is asking or makes sense to answer by filtering/searching databases
+  2. If yes, generate appropriate filter attributes for each relevant database
+  3. If no, return shouldFilter: false
+</task>
 
-Available Databases:
-{databasesInfo}
+<context>
+  Available Databases:
+  {databasesInfo}
+</context>
 
-User Query:
-{query}
+<user_query>
+  {query}
+</user_query>
 
-Your task is to:
-1. Determine if this query is asking or makes sense to answer by filtering/searching databases
-2. If yes, generate appropriate filter attributes for each relevant database
-3. If no, return shouldFilter: false
+<guidelines>
+  Only include databases that are relevant to the query.
+  For each filter, use the exact field IDs from the database schema.
+  Use appropriate operators based on field types.
+</guidelines>
 
-Return a JSON object with:
-- shouldFilter: boolean
-- filters: array of objects with:
-  - databaseId: string
-  - filters: array of DatabaseViewFilterAttributes
-
-Only include databases that are relevant to the query.
-For each filter, use the exact field IDs from the database schema.
-Use appropriate operators based on field types.
-
-Example Response:
-{{
-  "shouldFilter": true,
-  "filters": [
-    {{
-      "databaseId": "db1",
-      "filters": [
-        {{
-          "type": "field",
-          "fieldId": "field1",
-          "operator": "contains",
-          "value": "search term"
-        }}
-      ]
-    }}
-  ]
-}}
-
-Return a JSON object with:
-- shouldFilter: boolean
-- filters: array of objects with:
-  - databaseId: string
-  - filters: array of DatabaseViewFilterAttributes
-
-Only include databases that are relevant to the query.
-For each filter, use the exact field IDs from the database schema.
-Use appropriate operators based on field types.`
+<output_format>
+  Return a JSON object with:
+  - shouldFilter: boolean
+  - filters: array of objects with:
+    - databaseId: string
+    - filters: array of DatabaseViewFilterAttributes
+  
+  Example Response:
+  {{
+    "shouldFilter": true,
+    "filters": [
+      {{
+        "databaseId": "db1",
+        "filters": [
+          {{
+            "type": "field",
+            "fieldId": "field1",
+            "operator": "contains",
+            "value": "search term"
+          }}
+        ]
+      }}
+    ]
+  }}
+</output_format>`
 );
 
-export function getNodeContextPrompt(metadata: any): string {
-  const metadataLines = [
-    metadata.name && `Name: ${metadata.name}`,
-    metadata.author?.name &&
-      `Created by: ${metadata.author.name} on ${new Date(metadata.createdAt)}`,
-    metadata.lastAuthor?.name &&
-      metadata.updatedAt &&
-      `Last updated: ${new Date(metadata.updatedAt)} by ${metadata.lastAuthor.name}`,
-    metadata.parentContext?.path && `Path: ${metadata.parentContext.path}`,
-    metadata.workspace?.name && `Workspace: ${metadata.workspace.name}`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+export const chunkSummarizationPrompt = PromptTemplate.fromTemplate(
+  `<task>
+  Generate a concise summary of the following text chunk that is part of a larger document. 
+  This summary will be used to enhance vector search retrieval by providing additional context about this specific chunk.
+</task>
 
-  const contextHeader = `Given the following context about a ${metadata.nodeType === 'record' ? 'database record' : metadata.nodeType}:\n${metadataLines}\n`;
-  const contentSection =
-    metadata.nodeType === 'record'
-      ? `\n\nContent:\n{chunk}`
-      : `\n\nFull content:\n{fullText}\n\nCurrent chunk:\n{chunk}`;
-  const instructions = `\n\nGenerate a brief (50-100 tokens) contextual prefix that:
-1. Explains what this ${metadata.nodeType === 'record' ? 'record' : 'chunk'} represents.
-2. Highlights key details.
-3. Provides context to make the chunk understandable in isolation.`;
-  return `${contextHeader}${contentSection}${instructions}`;
-}
+<context>
+  Content Type: {nodeType}
+</context>
 
-export const documentContextPrompt = PromptTemplate.fromTemplate(
-  `Given the following context about a document:
-Type: {nodeType}
-Name: {name}
-Location: {path}
-Created by: {createdAt}
-{updatedAt}Workspace: {workspaceName}
-{databaseContext}
+<guidelines>
+  1. Create a brief (30-50 words) summary that captures the key points and main idea of the chunk
+  2. Consider how this chunk fits into the overall document provided
+  3. If the chunk appears to be part of a specific section, identify its role or purpose
+  4. If the chunk contains structured data (like a database record), identify the type of information it represents
+  5. Use neutral, descriptive language
+  6. Consider the content type ("{nodeType}") when creating the summary - different types have different purposes:
+     - "message": Communication content in a conversation
+     - "page": Document-like content with structured information
+     - "record": Database record with specific fields and values
+     - Other types: Adapt your summary accordingly
+</guidelines>
 
-Full content:
-{fullText}
+<complete_document>
+  {fullText}
+</complete_document>
 
-Current chunk:
-{chunk}
+<chunk_to_summarize>
+  {chunk}
+</chunk_to_summarize>
 
-Generate a brief (50-100 tokens) contextual prefix that:
-1. Explains what this document is{recordInstructions}
-2. Provides relevant context about its location and purpose.
-3. Makes the chunk more understandable in isolation.
-Do not repeat the chunk content. Return only the contextual prefix.`
+<output_format>
+  Provide only the summary with no additional commentary or explanations.
+</output_format>`
 );
-
-export const prepareEnrichmentPrompt = (
-  chunk: string,
-  fullText: string,
-  metadata: NodeMetadata | DocumentMetadata
-): { prompt: string; baseVars: Record<string, string> } => {
-  const formatDate = (date?: Date | string | null) => {
-    if (!date) return '';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleString();
-  };
-
-  let databaseContext = '';
-  let recordInstructions = '';
-  if (metadata.type === 'document' && metadata.databaseInfo) {
-    databaseContext = `Database: ${metadata.databaseInfo.name}
-Fields:
-${Object.entries(metadata.databaseInfo.fields)
-  .map(([_, field]) => `- ${field.name} (${field.type})`)
-  .join('\n')}`;
-    recordInstructions =
-      ', including how it relates to the database record and its fields';
-  }
-
-  // Format creation info
-  const createdAt = formatDate(metadata.createdAt);
-  const createdBy = metadata.author?.name;
-  const creationInfo =
-    createdAt && createdBy
-      ? `${createdBy} on ${createdAt}`
-      : createdAt
-        ? `Created on ${createdAt}`
-        : createdBy
-          ? `Created by ${createdBy}`
-          : '';
-
-  // Format update info
-  const updatedAt = formatDate(metadata.updatedAt);
-  const updatedBy = metadata.lastAuthor?.name;
-  const updateInfo =
-    updatedAt && updatedBy
-      ? `Last updated on ${updatedAt} by ${updatedBy}\n`
-      : updatedAt
-        ? `Last updated on ${updatedAt}\n`
-        : '';
-
-  const baseVars: Record<string, string> = {
-    nodeType:
-      metadata.type === 'node'
-        ? (metadata as NodeMetadata).nodeType
-        : metadata.type,
-    name: metadata.name || 'Untitled',
-    createdAt: creationInfo || '',
-    updatedAt: updateInfo || '',
-    authorName: metadata.author?.name || '',
-    lastAuthorName: metadata.lastAuthor?.name || '',
-    path: metadata.parentContext?.path || '',
-    workspaceName: metadata.workspace?.name || '',
-    fullText,
-    chunk,
-    databaseContext,
-    recordInstructions,
-  };
-
-  let prompt: string;
-  if (metadata.type === 'node') {
-    prompt = getNodeContextPrompt(metadata as NodeMetadata);
-  } else {
-    prompt = documentContextPrompt.template.toString();
-  }
-
-  Object.entries(baseVars).forEach(([key, value]) => {
-    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
-  });
-
-  return { prompt, baseVars };
-};

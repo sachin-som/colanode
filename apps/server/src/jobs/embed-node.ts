@@ -7,7 +7,6 @@ import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CreateNodeEmbedding } from '@/data/schema';
 import { fetchNode } from '@/lib/nodes';
-import { enrichChunk } from '@/services/llm-service';
 
 export type EmbedNodeInput = {
   type: 'embed_node';
@@ -51,10 +50,7 @@ export const embedNodeHandler = async (input: {
     return;
   }
 
-  const fullText =
-    `${nodeText.name ?? ''}\n\n${nodeText.attributes ?? ''}`.trim();
-
-  if (fullText === '') {
+  if (!nodeText.attributes || nodeText.attributes.trim() === '') {
     await database
       .deleteFrom('node_embeddings')
       .where('node_id', '=', nodeId)
@@ -75,14 +71,15 @@ export const embedNodeHandler = async (input: {
     .where('node_id', '=', nodeId)
     .execute();
 
+  const fullText =
+    `${nodeText.name ?? ''}\n\n${nodeText.attributes ?? ''}`.trim();
   const textChunks = await chunkText(
     fullText,
     existingEmbeddings.map((e) => ({
       text: e.text,
       summary: e.summary ?? undefined,
     })),
-    { type: 'node', node: node },
-    enrichChunk
+    node.type
   );
 
   const embeddingsToUpsert: CreateNodeEmbedding[] = [];

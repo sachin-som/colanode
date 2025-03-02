@@ -24,7 +24,9 @@ import {
   intentRecognitionPrompt,
   noContextPrompt,
   databaseFilterPrompt,
+  chunkSummarizationPrompt,
 } from '@/lib/llm-prompts';
+import { NodeType } from '@colanode/core';
 
 const langfuseCallback = configuration.ai.langfuse.enabled
   ? new CallbackHandler({
@@ -188,17 +190,20 @@ ${db.sampleRecords
     .invoke({ query: args.query, databasesInfo });
 };
 
-export async function enrichChunk(
-  prompt: string,
-  _baseVars: Record<string, string>
-): Promise<string> {
+export const enrichChunk = async (
+  chunk: string,
+  fullText: string = '',
+  nodeType: NodeType
+): Promise<string> => {
   const task = 'contextEnhancer';
   const model = getChatModel(task);
-  const messages = [new SystemMessage({ content: prompt })];
-  const callbacks = langfuseCallback ? [langfuseCallback] : undefined;
-  const response = await model.invoke(messages, {
-    callbacks,
-  });
 
-  return (response.content.toString() || '').trim();
-}
+  return chunkSummarizationPrompt
+    .pipe(model)
+    .pipe(new StringOutputParser())
+    .invoke({
+      chunk,
+      fullText,
+      nodeType,
+    });
+};

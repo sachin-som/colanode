@@ -6,6 +6,7 @@ import {
   DatabaseFilterResult,
   RewrittenQuery,
 } from './llm';
+import { SelectNode } from '@/data/schema';
 
 export type Citation = {
   sourceId: string;
@@ -29,11 +30,39 @@ export type DatabaseFilters = {
   filters: DatabaseFilter[];
 };
 
+export type DatabaseContextItem = {
+  id: string;
+  name: string;
+  fields: Record<string, { type: string; name: string }>;
+  sampleRecords: any[];
+};
+
+export type UserDetails = {
+  name: string;
+  email: string;
+};
+
+export type AssistantInput = {
+  userInput: string;
+  workspaceId: string;
+  userId: string;
+  userDetails: UserDetails;
+  parentMessageId: string;
+  currentMessageId: string;
+  originalMessage: SelectNode;
+  selectedContextNodeIds?: string[];
+};
+
+export type AssistantResponse = {
+  finalAnswer: string;
+  citations: Citation[];
+};
+
 export const ResponseState = Annotation.Root({
   userInput: Annotation<string>(),
   workspaceId: Annotation<string>(),
   userId: Annotation<string>(),
-  userDetails: Annotation<{ name: string; email: string }>(),
+  userDetails: Annotation<UserDetails>(),
   parentMessageId: Annotation<string>(),
   currentMessageId: Annotation<string>(),
   rewrittenQuery: Annotation<RewrittenQuery>(),
@@ -45,14 +74,7 @@ export const ResponseState = Annotation.Root({
   citations: Annotation<CitedAnswer['citations']>(),
   originalMessage: Annotation<any>(),
   intent: Annotation<'retrieve' | 'no_context'>(),
-  databaseContext: Annotation<
-    Array<{
-      id: string;
-      name: string;
-      fields: Record<string, { type: string; name: string }>;
-      sampleRecords: any[];
-    }>
-  >(),
+  databaseContext: Annotation<DatabaseContextItem[]>(),
   databaseFilters: Annotation<DatabaseFilterResult>(),
   selectedContextNodeIds: Annotation<string[]>(),
 });

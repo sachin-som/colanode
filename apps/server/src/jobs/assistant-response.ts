@@ -11,6 +11,8 @@ import { configuration } from '@/lib/configuration';
 import { fetchNode, createNode } from '@/lib/nodes';
 import { JobHandler } from '@/types/jobs';
 import { runAssistantResponseChain } from '@/lib/assistant';
+import { SelectNode } from '@/data/schema';
+import { Citation } from '@/types/assistant';
 
 export type AssistantResponseInput = {
   type: 'assistant_response';
@@ -111,8 +113,8 @@ export const assistantResponseHandler: JobHandler<
 
 const createAndPublishResponse = async (
   response: string,
-  citations: Array<{ sourceId: string; quote: string }> | undefined,
-  originalMessage: any,
+  citations: Citation[] | undefined,
+  originalMessage: SelectNode,
   workspaceId: string
 ) => {
   const id = generateId(IdType.Message);
@@ -121,7 +123,7 @@ const createAndPublishResponse = async (
   const messageAttributes: MessageAttributes = {
     type: 'message',
     subtype: 'answer',
-    parentId: originalMessage.parent_id,
+    parentId: originalMessage.parent_id || originalMessage.id,
     content: {
       [blockId]: {
         id: blockId,

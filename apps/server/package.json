@@ -36,7 +36,7 @@
     "@colanode/core": "*",
     "@colanode/crdt": "*",
     "@langchain/core": "^0.3.40",
-    "@langchain/google-genai": "^0.1.8",
+    "@langchain/google-genai": "^0.1.10",
     "@langchain/openai": "^0.4.4",
     "@node-rs/argon2": "^2.0.2",
     "axios": "^1.7.8",

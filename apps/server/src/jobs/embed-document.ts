@@ -7,7 +7,6 @@ import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
 import { CreateDocumentEmbedding } from '@/data/schema';
 import { fetchNode } from '@/lib/nodes';
-import { enrichChunk } from '@/services/llm-service';
 
 export type EmbedDocumentInput = {
   type: 'embed_document';
@@ -46,7 +45,7 @@ export const embedDocumentHandler = async (input: {
     return;
   }
 
-  const nodeModel = getNodeModel(node.attributes.type);
+  const nodeModel = getNodeModel(node.type);
   if (!nodeModel?.documentSchema) {
     return;
   }
@@ -79,8 +78,7 @@ export const embedDocumentHandler = async (input: {
       text: e.text,
       summary: e.summary ?? undefined,
     })),
-    { type: 'document', node: node },
-    enrichChunk
+    node.type
   );
 
   const embeddingsToUpsert: CreateDocumentEmbedding[] = [];

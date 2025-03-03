@@ -1,8 +1,14 @@
 import { StateGraph } from '@langchain/langgraph';
 import { Document } from '@langchain/core/documents';
+import { CallbackHandler } from 'langfuse-langchain';
+import {
+  DatabaseAttributes,
+  getNodeModel,
+  RecordAttributes,
+} from '@colanode/core';
+
 import { database } from '@/data/database';
 import { configuration } from '@/lib/configuration';
-import { CallbackHandler } from 'langfuse-langchain';
 import { fetchNode, fetchNodeDescendants } from '@/lib/nodes';
 import {
   rewriteQuery,
@@ -15,11 +21,6 @@ import {
 import { nodeRetrievalService } from '@/services/node-retrieval-service';
 import { documentRetrievalService } from '@/services/document-retrieval-service';
 import { recordsRetrievalService } from '@/services/records-retrieval-service';
-import {
-  DatabaseAttributes,
-  getNodeModel,
-  RecordAttributes,
-} from '@colanode/core';
 import {
   AssistantChainState,
   ResponseState,

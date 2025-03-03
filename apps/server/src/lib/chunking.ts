@@ -1,6 +1,7 @@
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { configuration } from '@/lib/configuration';
 import type { NodeType } from '@colanode/core';
+
+import { configuration } from '@/lib/configuration';
 import { enrichChunk } from '@/services/llm-service';
 import { TextChunk } from '@/types/chunking';
 
@@ -21,24 +22,25 @@ export const chunkText = async (
     .map((doc) => ({ text: doc.pageContent }))
     .filter((c) => c.text.trim().length > 5);
 
-  if (configuration.ai.chunking.enhanceWithContext) {
-    const enrichedChunks: TextChunk[] = [];
-
-    for (const chunk of chunks) {
-      const existingChunk = existingChunks.find((ec) => ec.text === chunk.text);
-      if (existingChunk?.summary) {
-        enrichedChunks.push({
-          text: chunk.text,
-          summary: existingChunk.summary,
-        });
-        continue;
-      }
-
-      const summary = await enrichChunk(chunk.text, text, nodeType);
-      enrichedChunks.push({ text: chunk.text, summary });
-    }
-    return enrichedChunks;
+  if (!configuration.ai.chunking.enhanceWithContext) {
+    return chunks;
   }
 
-  return chunks;
+  const enrichedChunks: TextChunk[] = [];
+  for (const chunk of chunks) {
+    const existingChunk = existingChunks.find((ec) => ec.text === chunk.text);
+    if (existingChunk?.summary) {
+      enrichedChunks.push({
+        text: chunk.text,
+        summary: existingChunk.summary,
+      });
+
+      continue;
+    }
+
+    const summary = await enrichChunk(chunk.text, text, nodeType);
+    enrichedChunks.push({ text: chunk.text, summary });
+  }
+
+  return enrichedChunks;
 };

@@ -32,7 +32,7 @@ export const embedDocumentHandler = async (input: {
   const { documentId } = input;
   const document = await database
     .selectFrom('documents')
-    .select(['id', 'content', 'workspace_id', 'created_at'])
+    .select(['id', 'content', 'workspace_id', 'created_at', 'revision'])
     .where('id', '=', documentId)
     .executeTakeFirst();
 
@@ -68,9 +68,16 @@ export const embedDocumentHandler = async (input: {
 
   const existingEmbeddings = await database
     .selectFrom('document_embeddings')
-    .select(['chunk', 'text', 'summary'])
+    .select(['chunk', 'revision', 'text', 'summary'])
     .where('document_id', '=', documentId)
     .execute();
+
+  const revision =
+    existingEmbeddings.length > 0 ? existingEmbeddings[0]!.revision : 0n;
+
+  if (revision >= document.revision) {
+    return;
+  }
 
   const textChunks = await chunkText(
     text,
@@ -96,6 +103,7 @@ export const embedDocumentHandler = async (input: {
     embeddingsToUpsert.push({
       document_id: documentId,
       chunk: i,
+      revision: document.revision,
       workspace_id: document.workspace_id,
       text: chunk.text,
       summary: chunk.summary,
@@ -131,6 +139,7 @@ export const embedDocumentHandler = async (input: {
       embeddingsToUpsert.map((embedding) => ({
         document_id: embedding.document_id,
         chunk: embedding.chunk,
+        revision: embedding.revision,
         workspace_id: embedding.workspace_id,
         text: embedding.text,
         summary: embedding.summary,

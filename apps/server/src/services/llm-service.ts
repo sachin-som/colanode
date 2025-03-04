@@ -2,8 +2,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
-import { CallbackHandler } from 'langfuse-langchain';
-import { SystemMessage } from '@langchain/core/messages';
+import { NodeType, RecordNode } from '@colanode/core';
 
 import { configuration } from '@/lib/configuration';
 import {
@@ -26,15 +25,6 @@ import {
   databaseFilterPrompt,
   chunkSummarizationPrompt,
 } from '@/lib/llm-prompts';
-import { NodeType } from '@colanode/core';
-
-const langfuseCallback = configuration.ai.langfuse.enabled
-  ? new CallbackHandler({
-      publicKey: configuration.ai.langfuse.publicKey,
-      secretKey: configuration.ai.langfuse.secretKey,
-      baseUrl: configuration.ai.langfuse.baseUrl,
-    })
-  : undefined;
 
 const getChatModel = (
   task: keyof typeof configuration.ai.models
@@ -158,7 +148,7 @@ export const generateDatabaseFilters = async (args: {
     id: string;
     name: string;
     fields: Record<string, { type: string; name: string }>;
-    sampleRecords: any[];
+    sampleRecords: RecordNode[];
   }>;
 }): Promise<DatabaseFilterResult> => {
   const task = 'databaseFilter';

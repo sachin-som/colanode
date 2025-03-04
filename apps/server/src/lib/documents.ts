@@ -15,8 +15,7 @@ import { ConcurrentUpdateResult, UpdateDocumentOutput } from '@/types/nodes';
 import { eventBus } from '@/lib/event-bus';
 import { fetchNode, fetchNodeTree, mapNode } from '@/lib/nodes';
 import { CreateDocumentInput, CreateDocumentOutput } from '@/types/documents';
-import { jobService } from '@/services/job-service';
-import { configuration } from '@/lib/configuration';
+import { scheduleDocumentEmbedding } from '@/lib/embeddings';
 
 const debug = createDebugger('server:lib:documents');
 
@@ -298,17 +297,4 @@ const tryUpdateDocumentFromMutation = async (
     debug(`Failed to update document: ${error}`);
     return { type: 'retry', output: null };
   }
-};
-
-const scheduleDocumentEmbedding = async (documentId: string) => {
-  await jobService.addJob(
-    {
-      type: 'embed_document',
-      documentId,
-    },
-    {
-      jobId: `embed_document:${documentId}`,
-      delay: configuration.ai.documentEmbeddingDelay,
-    }
-  );
 };

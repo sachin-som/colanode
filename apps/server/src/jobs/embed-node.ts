@@ -67,12 +67,20 @@ export const embedNodeHandler = async (input: {
 
   const existingEmbeddings = await database
     .selectFrom('node_embeddings')
-    .select(['chunk', 'text', 'summary'])
+    .select(['chunk', 'revision', 'text', 'summary'])
     .where('node_id', '=', nodeId)
     .execute();
 
+  const revision =
+    existingEmbeddings.length > 0 ? existingEmbeddings[0]!.revision : 0n;
+
+  if (revision >= node.revision) {
+    return;
+  }
+
   const fullText =
     `${nodeText.name ?? ''}\n\n${nodeText.attributes ?? ''}`.trim();
+
   const textChunks = await chunkText(
     fullText,
     existingEmbeddings.map((e) => ({
@@ -97,6 +105,7 @@ export const embedNodeHandler = async (input: {
     embeddingsToUpsert.push({
       node_id: nodeId,
       chunk: i,
+      revision: node.revision,
       workspace_id: node.workspace_id,
       text: chunk.text,
       summary: chunk.summary,
@@ -132,6 +141,7 @@ export const embedNodeHandler = async (input: {
       embeddingsToUpsert.map((embedding) => ({
         node_id: embedding.node_id,
         chunk: embedding.chunk,
+        revision: embedding.revision,
         workspace_id: embedding.workspace_id,
         text: embedding.text,
         summary: embedding.summary,

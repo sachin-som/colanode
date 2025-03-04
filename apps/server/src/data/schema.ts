@@ -261,6 +261,7 @@ export type UpdateUpload = Updateable<UploadTable>;
 interface NodeEmbeddingTable {
   node_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
+  revision: ColumnType<bigint, bigint, bigint>;
   workspace_id: ColumnType<string, string, never>;
   text: ColumnType<string, string, string>;
   summary: ColumnType<string | null, string | null, string | null>;
@@ -277,6 +278,7 @@ export type UpdateNodeEmbedding = Updateable<NodeEmbeddingTable>;
 interface DocumentEmbeddingTable {
   document_id: ColumnType<string, string, never>;
   chunk: ColumnType<number, number, number>;
+  revision: ColumnType<bigint, bigint, bigint>;
   workspace_id: ColumnType<string, string, never>;
   text: ColumnType<string, string, string>;
   summary: ColumnType<string | null, string | null, string | null>;

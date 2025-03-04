@@ -2,7 +2,9 @@ import {
   getNodeModel,
   FieldAttributes,
   RecordAttributes,
+  DatabaseAttributes,
 } from '@colanode/core';
+
 import { database } from '@/data/database';
 import {
   NodeMetadata,
@@ -14,7 +16,6 @@ import {
   DatabaseInfo,
   DatabaseFieldInfo,
 } from '@/types/metadata';
-import { DatabaseAttributes } from '@colanode/core';
 
 const fetchBaseMetadata = async (
   id: string,

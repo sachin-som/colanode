@@ -1,4 +1,5 @@
 import { Document } from '@langchain/core/documents';
+
 import { SearchResult } from '@/types/retrieval';
 import { RerankedContextItem } from '@/types/assistant';
 import { NodeMetadata, DocumentMetadata } from '@/types/metadata';
@@ -151,7 +152,7 @@ const processSearchResult = (
 ) => {
   const key = createKey(result);
   const recencyBoost = calculateRecencyBoost(result.createdAt);
-  let normalizedScore = isKeyword
+  const normalizedScore = isKeyword
     ? (result.score / maxScore) * weight
     : ((maxScore - result.score) / maxScore) * weight;
 

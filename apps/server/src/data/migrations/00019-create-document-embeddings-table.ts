@@ -6,6 +6,7 @@ export const createDocumentEmbeddingsTable: Migration = {
       .createTable('document_embeddings')
       .addColumn('document_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('chunk', 'integer', (col) => col.notNull())
+      .addColumn('revision', 'bigint', (col) => col.notNull())
       .addColumn('workspace_id', 'varchar(30)', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
       .addColumn('summary', 'text')

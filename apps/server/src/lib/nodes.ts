@@ -11,6 +11,7 @@ import {
   Node,
   NodeAttributes,
   UpdateNodeMutationData,
+  MessageAttributes,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { cloneDeep } from 'lodash-es';
@@ -38,6 +39,7 @@ import {
 } from '@/lib/collaborations';
 import { jobService } from '@/services/job-service';
 import { deleteFile } from '@/lib/files';
+import { scheduleNodeEmbedding } from '@/lib/embeddings';
 
 const debug = createDebugger('server:lib:nodes');
 
@@ -202,6 +204,8 @@ export const createNode = async (
       });
     }
 
+    await scheduleNodeEmbedding(createdNode);
+
     return {
       node: createdNode,
     };
@@ -345,6 +349,8 @@ export const tryUpdateNode = async (
       });
     }
 
+    await scheduleNodeEmbedding(updatedNode);
+
     return {
       type: 'success',
       output: {
@@ -466,6 +472,8 @@ export const createNodeFromMutation = async (
         workspaceId: user.workspace_id,
       });
     }
+
+    await scheduleNodeEmbedding(createdNode);
 
     return {
       node: createdNode,
@@ -621,6 +629,8 @@ const tryUpdateNodeFromMutation = async (
         workspaceId: user.workspace_id,
       });
     }
+
+    await scheduleNodeEmbedding(updatedNode);
 
     return {
       type: 'success',

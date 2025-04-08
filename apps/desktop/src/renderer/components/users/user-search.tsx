@@ -40,7 +40,7 @@ export const UserSearch = ({ exclude, onSelect }: UserSearchProps) => {
       />
       <CommandEmpty>No user found.</CommandEmpty>
       <CommandList>
-        <CommandGroup className="h-min max-h-96">
+        <CommandGroup className="h-min">
           {data?.map((user) => (
             <CommandItem
               key={user.id}

@@ -47,7 +47,7 @@ export const ViewFilterAddPopover = ({
           <CommandInput placeholder="Search fields..." className="h-9" />
           <CommandEmpty>No field found.</CommandEmpty>
           <CommandList>
-            <CommandGroup className="h-min max-h-96">
+            <CommandGroup className="h-min">
               {fieldsWithoutFilters.map((field) => (
                 <CommandItem
                   key={field.id}

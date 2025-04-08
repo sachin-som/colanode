@@ -45,7 +45,7 @@ export const ViewSortAddPopover = ({ children }: ViewSortAddPopoverProps) => {
           <CommandInput placeholder="Search fields..." className="h-9" />
           <CommandEmpty>No sortable field found.</CommandEmpty>
           <CommandList>
-            <CommandGroup className="h-min max-h-96">
+            <CommandGroup className="h-min">
               {sortableFields.map((field) => (
                 <CommandItem
                   key={field.id}

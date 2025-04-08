@@ -88,7 +88,7 @@ export const NodeCollaboratorSearch = ({
           />
           <CommandEmpty>No collaborator found.</CommandEmpty>
           <CommandList>
-            <CommandGroup className="h-min max-h-96">
+            <CommandGroup className="h-min">
               {users.map((user) => (
                 <CommandItem
                   key={user.id}

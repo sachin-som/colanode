@@ -46,7 +46,7 @@ export const RecordSearch = ({
       />
       <CommandEmpty>No record found.</CommandEmpty>
       <CommandList>
-        <CommandGroup className="h-min max-h-96">
+        <CommandGroup className="h-min">
           {data?.map((record) => (
             <CommandItem
               key={record.id}

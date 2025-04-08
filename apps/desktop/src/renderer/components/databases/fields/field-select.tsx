@@ -54,7 +54,7 @@ export const FieldSelect = ({ fields, value, onChange }: FieldSelectProps) => {
           <CommandInput placeholder="Search field types..." className="h-9" />
           <CommandEmpty>No field type found.</CommandEmpty>
           <CommandList>
-            <CommandGroup className="h-min max-h-96">
+            <CommandGroup className="h-min">
               {fields.map((field) => (
                 <CommandItem
                   key={field.id}

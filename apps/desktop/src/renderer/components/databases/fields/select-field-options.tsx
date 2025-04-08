@@ -57,7 +57,7 @@ export const SelectFieldOptions = ({
       />
       <CommandEmpty>No options found.</CommandEmpty>
       <CommandList>
-        <CommandGroup className="h-min max-h-96">
+        <CommandGroup className="h-min">
           {selectOptions.map((option) => {
             const isSelected = values.includes(option.id);
             return (

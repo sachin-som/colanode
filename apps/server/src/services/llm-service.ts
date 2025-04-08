@@ -48,7 +48,7 @@ const getChatModel = (
       });
     case 'google':
       return new ChatGoogleGenerativeAI({
-        modelName: modelConfig.modelName,
+        model: modelConfig.modelName,
         temperature: modelConfig.temperature,
         apiKey: providerConfig.apiKey,
       });

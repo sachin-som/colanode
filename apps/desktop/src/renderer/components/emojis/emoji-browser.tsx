@@ -74,10 +74,18 @@ export const EmojiBrowser = () => {
           };
 
           if (row.type === 'category') {
-            return <EmojiBrowserCategory row={row} style={style} />;
+            return (
+              <EmojiBrowserCategory
+                row={row}
+                style={style}
+                key={row.category}
+              />
+            );
           }
 
-          return <EmojiBrowserItems row={row} style={style} />;
+          return (
+            <EmojiBrowserItems row={row} style={style} key={row.category} />
+          );
         })}
       </div>
     </div>

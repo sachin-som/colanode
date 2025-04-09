@@ -29,7 +29,7 @@ export const TableViewRow = ({ index, record }: TableViewRowProps) => {
           {index + 1}
         </span>
         <div
-          className="h-8 border-r"
+          className="h-8 border-r overflow-hidden"
           style={{ width: `${view.nameWidth}px`, minWidth: '300px' }}
         >
           <TableViewNameCell record={record} />
@@ -38,7 +38,7 @@ export const TableViewRow = ({ index, record }: TableViewRowProps) => {
           return (
             <div
               key={`row-${record.id}-${field.field.id}`}
-              className="h-8 border-r p-1"
+              className="h-8 border-r p-1 overflow-hidden"
               style={{ width: `${field.width}px` }}
             >
               <RecordFieldValue field={field.field} />

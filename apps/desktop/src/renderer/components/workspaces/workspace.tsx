@@ -83,7 +83,7 @@ export const Workspace = () => {
         },
       }}
     >
-      <Layout />
+      <Layout key={workspaceId} />
       {openSettings && (
         <WorkspaceSettingsDialog
           open={openSettings}

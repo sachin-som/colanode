@@ -59,6 +59,10 @@ import { UsersInviteMutationHandler } from '@/main/mutations/users/users-invite'
 import { WorkspaceMetadataSaveMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-save';
 import { WorkspaceMetadataDeleteMutationHandler } from '@/main/mutations/workspaces/workspace-metadata-delete';
 import { DocumentUpdateMutationHandler } from '@/main/mutations/documents/document-update';
+import { AppMetadataSaveMutationHandler } from '@/main/mutations/apps/app-metadata-save';
+import { AppMetadataDeleteMutationHandler } from '@/main/mutations/apps/app-metadata-delete';
+import { AccountMetadataSaveMutationHandler } from '@/main/mutations/accounts/account-metadata-save';
+import { AccountMetadataDeleteMutationHandler } from '@/main/mutations/accounts/account-metadata-delete';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -128,4 +132,8 @@ export const mutationHandlerMap: MutationHandlerMap = {
   workspace_metadata_save: new WorkspaceMetadataSaveMutationHandler(),
   workspace_metadata_delete: new WorkspaceMetadataDeleteMutationHandler(),
   document_update: new DocumentUpdateMutationHandler(),
+  app_metadata_save: new AppMetadataSaveMutationHandler(),
+  app_metadata_delete: new AppMetadataDeleteMutationHandler(),
+  account_metadata_save: new AccountMetadataSaveMutationHandler(),
+  account_metadata_delete: new AccountMetadataDeleteMutationHandler(),
 };

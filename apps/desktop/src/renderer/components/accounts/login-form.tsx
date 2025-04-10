@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { useApp } from '@/renderer/contexts/app';
 import { EmailLogin } from '@/renderer/components/accounts/email-login';
 import { EmailRegister } from '@/renderer/components/accounts/email-register';
 import { EmailVerify } from '@/renderer/components/accounts/email-verify';
@@ -31,8 +31,7 @@ type VerifyPanelState = {
 type PanelState = LoginPanelState | RegisterPanelState | VerifyPanelState;
 
 export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
-  const navigate = useNavigate();
-
+  const app = useApp();
   const [server, setServer] = React.useState<Server>(servers[0]!);
   const [panel, setPanel] = React.useState<PanelState>({
     type: 'login',
@@ -52,8 +51,7 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
             server={server}
             onSuccess={(output) => {
               if (output.type === 'success') {
-                const userId = output.workspaces[0]?.id ?? '';
-                navigate(`/${output.account.id}/${userId}`);
+                app.openAccount(output.account.id);
               } else if (output.type === 'verify') {
                 setPanel({
                   type: 'verify',
@@ -81,8 +79,7 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
             server={server}
             onSuccess={(output) => {
               if (output.type === 'success') {
-                const userId = output.workspaces[0]?.id ?? '';
-                navigate(`/${output.account.id}/${userId}`);
+                app.openAccount(output.account.id);
               } else if (output.type === 'verify') {
                 setPanel({
                   type: 'verify',
@@ -113,8 +110,7 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
             expiresAt={panel.expiresAt}
             onSuccess={(output) => {
               if (output.type === 'success') {
-                const userId = output.workspaces[0]?.id ?? '';
-                navigate(`/${output.account.id}/${userId}`);
+                app.openAccount(output.account.id);
               }
             }}
           />
@@ -137,7 +133,7 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
           <p
             className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
             onClick={() => {
-              navigate(-1);
+              app.closeLogin();
             }}
           >
             Cancel

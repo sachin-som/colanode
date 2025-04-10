@@ -1,7 +1,7 @@
 import { Message } from '@colanode/core';
 
 import { AppMetadata } from '@/shared/types/apps';
-import { Account } from '@/shared/types/accounts';
+import { Account, AccountMetadata } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
@@ -169,8 +169,8 @@ export type AccountConnectionMessageEvent = {
   message: Message;
 };
 
-export type AppMetadataUpdatedEvent = {
-  type: 'app_metadata_updated';
+export type AppMetadataSavedEvent = {
+  type: 'app_metadata_saved';
   metadata: AppMetadata;
 };
 
@@ -179,8 +179,20 @@ export type AppMetadataDeletedEvent = {
   metadata: AppMetadata;
 };
 
-export type WorkspaceMetadataUpdatedEvent = {
-  type: 'workspace_metadata_updated';
+export type AccountMetadataSavedEvent = {
+  type: 'account_metadata_saved';
+  accountId: string;
+  metadata: AccountMetadata;
+};
+
+export type AccountMetadataDeletedEvent = {
+  type: 'account_metadata_deleted';
+  accountId: string;
+  metadata: AccountMetadata;
+};
+
+export type WorkspaceMetadataSavedEvent = {
+  type: 'workspace_metadata_saved';
   accountId: string;
   workspaceId: string;
   metadata: WorkspaceMetadata;
@@ -256,9 +268,11 @@ export type Event =
   | AccountConnectionOpenedEvent
   | AccountConnectionClosedEvent
   | AccountConnectionMessageEvent
-  | AppMetadataUpdatedEvent
+  | AppMetadataSavedEvent
   | AppMetadataDeletedEvent
-  | WorkspaceMetadataUpdatedEvent
+  | AccountMetadataSavedEvent
+  | AccountMetadataDeletedEvent
+  | WorkspaceMetadataSavedEvent
   | WorkspaceMetadataDeletedEvent
   | DocumentUpdatedEvent
   | DocumentDeletedEvent

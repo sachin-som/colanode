@@ -20,12 +20,12 @@ export class WorkspaceMetadataSaveMutationHandler
       .returningAll()
       .values({
         key: input.key,
-        value: input.value,
+        value: JSON.stringify(input.value),
         created_at: new Date().toISOString(),
       })
       .onConflict((cb) =>
         cb.columns(['key']).doUpdateSet({
-          value: input.value,
+          value: JSON.stringify(input.value),
           updated_at: new Date().toISOString(),
         })
       )
@@ -38,7 +38,7 @@ export class WorkspaceMetadataSaveMutationHandler
     }
 
     eventBus.publish({
-      type: 'workspace_metadata_updated',
+      type: 'workspace_metadata_saved',
       accountId: input.accountId,
       workspaceId: input.workspaceId,
       metadata: mapWorkspaceMetadata(createdMetadata),

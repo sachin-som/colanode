@@ -7,7 +7,10 @@ import {
 } from '@/main/databases/app';
 import { SelectEmoji } from '@/main/databases/emojis';
 import { SelectIcon } from '@/main/databases/icons';
-import { SelectWorkspace } from '@/main/databases/account';
+import {
+  SelectAccountMetadata,
+  SelectWorkspace,
+} from '@/main/databases/account';
 import {
   SelectFileState,
   SelectMutation,
@@ -20,7 +23,11 @@ import {
   SelectDocumentState,
   SelectDocumentUpdate,
 } from '@/main/databases/workspace';
-import { Account } from '@/shared/types/accounts';
+import {
+  Account,
+  AccountMetadata,
+  AccountMetadataKey,
+} from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
 import { User } from '@/shared/types/users';
 import { FileState } from '@/shared/types/files';
@@ -217,6 +224,17 @@ export const mapIcon = (row: SelectIcon): Icon => {
 export const mapAppMetadata = (row: SelectAppMetadata): AppMetadata => {
   return {
     key: row.key as AppMetadataKey,
+    value: JSON.parse(row.value),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const mapAccountMetadata = (
+  row: SelectAccountMetadata
+): AccountMetadata => {
+  return {
+    key: row.key as AccountMetadataKey,
     value: JSON.parse(row.value),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

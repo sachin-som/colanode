@@ -41,16 +41,14 @@ export class WorkspaceMetadataListQueryHandler
     }
 
     if (
-      event.type === 'workspace_metadata_updated' &&
+      event.type === 'workspace_metadata_saved' &&
       event.accountId === input.accountId &&
       event.workspaceId === input.workspaceId
     ) {
-      const newOutput = output.map((metadata) => {
-        if (metadata.key === event.metadata.key) {
-          return event.metadata;
-        }
-        return metadata;
-      });
+      const newOutput = [
+        ...output.filter((metadata) => metadata.key !== event.metadata.key),
+        event.metadata,
+      ];
 
       return {
         hasChanges: true,

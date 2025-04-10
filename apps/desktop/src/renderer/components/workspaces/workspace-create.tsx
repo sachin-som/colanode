@@ -1,24 +1,19 @@
-import { useNavigate } from 'react-router-dom';
-
 import { WorkspaceForm } from '@/renderer/components/workspaces/workspace-form';
 import { useAccount } from '@/renderer/contexts/account';
 import { useMutation } from '@/renderer/hooks/use-mutation';
-import { useQuery } from '@/renderer/hooks/use-query';
 import { toast } from '@/renderer/hooks/use-toast';
 
-export const WorkspaceCreate = () => {
+interface WorkspaceCreateProps {
+  onSuccess: (id: string) => void;
+  onCancel: (() => void) | undefined;
+}
+
+export const WorkspaceCreate = ({
+  onSuccess,
+  onCancel,
+}: WorkspaceCreateProps) => {
   const account = useAccount();
-  const navigate = useNavigate();
-
   const { mutate, isPending } = useMutation();
-
-  const { data } = useQuery({
-    type: 'workspace_list',
-    accountId: account.id,
-  });
-
-  const workspaces = data ?? [];
-  const handleCancel = workspaces.length > 0 ? () => navigate('/') : undefined;
 
   return (
     <div className="container flex flex-row justify-center">
@@ -39,7 +34,7 @@ export const WorkspaceCreate = () => {
                 avatar: values.avatar ?? null,
               },
               onSuccess(output) {
-                navigate(`/${account.id}/${output.id}`);
+                onSuccess(output.id);
               },
               onError(error) {
                 toast({
@@ -51,7 +46,7 @@ export const WorkspaceCreate = () => {
             });
           }}
           isSaving={isPending}
-          onCancel={handleCancel}
+          onCancel={onCancel}
           saveText="Create"
         />
       </div>

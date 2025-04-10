@@ -1,7 +1,7 @@
 import { Check, LogOut, Plus, Settings } from 'lucide-react';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { useApp } from '@/renderer/contexts/app';
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
 import {
@@ -18,8 +18,8 @@ import { useQuery } from '@/renderer/hooks/use-query';
 import { AccountReadState } from '@/shared/types/radars';
 
 export function SidebarMenuFooter() {
+  const app = useApp();
   const account = useAccount();
-  const navigate = useNavigate();
   const radar = useRadar();
 
   const [open, setOpen] = React.useState(false);
@@ -112,7 +112,7 @@ export function SidebarMenuFooter() {
                   key={accountItem.id}
                   className="p-0"
                   onClick={() => {
-                    navigate(`/${accountItem.id}`);
+                    app.openAccount(accountItem.id);
                   }}
                 >
                   <AccountContext.Provider
@@ -120,6 +120,8 @@ export function SidebarMenuFooter() {
                       ...accountItem,
                       openSettings: () => {},
                       openLogout: () => {},
+                      openWorkspace: () => {},
+                      openWorkspaceCreate: () => {},
                     }}
                   >
                     <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -157,7 +159,7 @@ export function SidebarMenuFooter() {
         <DropdownMenuItem
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => {
-            navigate(`/login`);
+            app.openLogin();
           }}
         >
           <Plus className="size-4" />

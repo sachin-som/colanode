@@ -1,42 +1,86 @@
 import React from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { AccountLogout } from '@/renderer/components/accounts/account-logout';
 import { AccountSettingsDialog } from '@/renderer/components/accounts/account-settings-dialog';
 import { AccountContext } from '@/renderer/contexts/account';
-import { AccountNotFound } from '@/renderer/components/accounts/account-not-found';
+import { Account as AccountType } from '@/shared/types/accounts';
 import { useQuery } from '@/renderer/hooks/use-query';
+import { WorkspaceCreate } from '@/renderer/components/workspaces/workspace-create';
+import { Workspace } from '@/renderer/components/workspaces/workspace';
 
-export const Account = () => {
-  const { accountId } = useParams<{ accountId: string }>();
-  const navigate = useNavigate();
+interface AccountProps {
+  account: AccountType;
+}
 
+export const Account = ({ account }: AccountProps) => {
   const [openSettings, setOpenSettings] = React.useState(false);
   const [openLogout, setOpenLogout] = React.useState(false);
+  const [openCreateWorkspace, setOpenCreateWorkspace] = React.useState(false);
 
-  const { data, isPending } = useQuery({
-    type: 'account_get',
-    accountId: accountId!,
+  const { data: metadata, isPending: isPendingMetadata } = useQuery({
+    type: 'account_metadata_list',
+    accountId: account.id,
   });
 
-  if (isPending) {
+  const { data: workspaces, isPending: isPendingWorkspaces } = useQuery({
+    type: 'workspace_list',
+    accountId: account.id,
+  });
+
+  if (isPendingMetadata || isPendingWorkspaces) {
     return null;
   }
 
-  if (!data) {
-    return <AccountNotFound />;
-  }
+  const workspaceMetadata = metadata?.find(
+    (metadata) => metadata.key === 'workspace'
+  );
 
-  const account = data;
+  const workspace =
+    workspaces?.find(
+      (workspace) => workspace.id === workspaceMetadata?.value
+    ) || workspaces?.[0];
+
+  const handleWorkspaceCreateSuccess = (id: string) => {
+    setOpenCreateWorkspace(false);
+    window.colanode.executeMutation({
+      type: 'account_metadata_save',
+      accountId: account.id,
+      key: 'workspace',
+      value: id,
+    });
+  };
+
+  const handleWorkspaceCreateCancel =
+    (workspaces?.length || 0) > 0
+      ? () => setOpenCreateWorkspace(false)
+      : undefined;
+
   return (
     <AccountContext.Provider
       value={{
         ...account,
         openSettings: () => setOpenSettings(true),
         openLogout: () => setOpenLogout(true),
+        openWorkspaceCreate: () => setOpenCreateWorkspace(true),
+        openWorkspace: (id) => {
+          setOpenCreateWorkspace(false);
+          window.colanode.executeMutation({
+            type: 'account_metadata_save',
+            accountId: account.id,
+            key: 'workspace',
+            value: id,
+          });
+        },
       }}
     >
-      <Outlet />
+      {!openCreateWorkspace && workspace ? (
+        <Workspace workspace={workspace} />
+      ) : (
+        <WorkspaceCreate
+          onSuccess={handleWorkspaceCreateSuccess}
+          onCancel={handleWorkspaceCreateCancel}
+        />
+      )}
       {openSettings && (
         <AccountSettingsDialog
           open={true}
@@ -48,7 +92,6 @@ export const Account = () => {
           onCancel={() => setOpenLogout(false)}
           onLogout={() => {
             setOpenLogout(false);
-            navigate('/');
           }}
         />
       )}

@@ -25,13 +25,11 @@ export class AppMetadataListQueryHandler
     _: AppMetadataListQueryInput,
     output: AppMetadata[]
   ): Promise<ChangeCheckResult<AppMetadataListQueryInput>> {
-    if (event.type === 'app_metadata_updated') {
-      const newOutput = output.map((metadata) => {
-        if (metadata.key === event.metadata.key) {
-          return event.metadata;
-        }
-        return metadata;
-      });
+    if (event.type === 'app_metadata_saved') {
+      const newOutput = [
+        ...output.filter((metadata) => metadata.key !== event.metadata.key),
+        event.metadata,
+      ];
 
       return {
         hasChanges: true,

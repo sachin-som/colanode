@@ -69,7 +69,7 @@ export class MetadataService {
     }
 
     eventBus.publish({
-      type: 'app_metadata_updated',
+      type: 'app_metadata_saved',
       metadata: mapAppMetadata(createdMetadata),
     });
   }

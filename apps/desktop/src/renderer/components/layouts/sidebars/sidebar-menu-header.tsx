@@ -1,6 +1,5 @@
 import { Bell, Check, Plus, Settings } from 'lucide-react';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
 import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
@@ -20,7 +19,6 @@ import { useQuery } from '@/renderer/hooks/use-query';
 export const SidebarMenuHeader = () => {
   const workspace = useWorkspace();
   const account = useAccount();
-  const navigate = useNavigate();
   const radar = useRadar();
 
   const [open, setOpen] = React.useState(false);
@@ -104,7 +102,7 @@ export const SidebarMenuHeader = () => {
                   key={workspaceItem.id}
                   className="p-0"
                   onClick={() => {
-                    navigate(`/${account.id}/${workspaceItem.id}`);
+                    account.openWorkspace(workspaceItem.id);
                   }}
                 >
                   <div className="w-full flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -135,7 +133,7 @@ export const SidebarMenuHeader = () => {
         <DropdownMenuItem
           className="gap-2 p-2 text-muted-foreground hover:text-foreground"
           onClick={() => {
-            navigate(`/${account.id}/create`);
+            account.openWorkspaceCreate();
           }}
         >
           <Plus className="size-4" />

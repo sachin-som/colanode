@@ -5,6 +5,8 @@ import { Account } from '@/shared/types/accounts';
 interface AccountContext extends Account {
   openSettings: () => void;
   openLogout: () => void;
+  openWorkspace: (id: string) => void;
+  openWorkspaceCreate: () => void;
 }
 
 export const AccountContext = createContext<AccountContext>(

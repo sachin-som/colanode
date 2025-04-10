@@ -34,6 +34,7 @@ import { ChatListQueryHandler } from '@/main/queries/chats/chat-list';
 import { DocumentGetQueryHandler } from '@/main/queries/documents/document-get';
 import { DocumentStateGetQueryHandler } from '@/main/queries/documents/document-state-get';
 import { DocumentUpdatesListQueryHandler } from '@/main/queries/documents/document-update-list';
+import { AccountMetadataListQueryHandler } from '@/main/queries/accounts/account-metadata-list';
 import { WorkspaceMetadataListQueryHandler } from '@/main/queries/workspaces/workspace-metadata-list';
 import { QueryHandler } from '@/main/lib/types';
 import { QueryMap } from '@/shared/queries';
@@ -80,4 +81,5 @@ export const queryHandlerMap: QueryHandlerMap = {
   document_get: new DocumentGetQueryHandler(),
   document_state_get: new DocumentStateGetQueryHandler(),
   document_updates_list: new DocumentUpdatesListQueryHandler(),
+  account_metadata_list: new AccountMetadataListQueryHandler(),
 };

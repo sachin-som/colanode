@@ -1,45 +1,32 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
 
 import { Layout } from '@/renderer/components/layouts/layout';
 import { WorkspaceSettingsDialog } from '@/renderer/components/workspaces/workspace-settings-dialog';
-import { WorkspaceNotFound } from '@/renderer/components/workspaces/workspace-not-found';
 import { useAccount } from '@/renderer/contexts/account';
 import { WorkspaceContext } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import {
   WorkspaceMetadataKey,
   WorkspaceMetadataMap,
+  Workspace as WorkspaceType,
 } from '@/shared/types/workspaces';
 
-export const Workspace = () => {
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+interface WorkspaceProps {
+  workspace: WorkspaceType;
+}
 
+export const Workspace = ({ workspace }: WorkspaceProps) => {
   const account = useAccount();
   const [openSettings, setOpenSettings] = React.useState(false);
-
-  const { data: workspace, isPending: isPendingWorkspace } = useQuery({
-    type: 'workspace_get',
-    accountId: account.id,
-    workspaceId: workspaceId!,
-  });
 
   const { data: metadata, isPending: isPendingMetadata } = useQuery({
     type: 'workspace_metadata_list',
     accountId: account.id,
-    workspaceId: workspaceId!,
+    workspaceId: workspace.id,
   });
 
-  if (isPendingWorkspace || isPendingMetadata) {
+  if (isPendingMetadata) {
     return null;
-  }
-
-  if (!workspace) {
-    return <WorkspaceNotFound />;
-  }
-
-  if (!workspace) {
-    return <WorkspaceNotFound />;
   }
 
   return (
@@ -68,22 +55,22 @@ export const Workspace = () => {
           window.colanode.executeMutation({
             type: 'workspace_metadata_save',
             accountId: account.id,
-            workspaceId: workspaceId!,
+            workspaceId: workspace.id,
             key,
-            value: JSON.stringify(value),
+            value,
           });
         },
         deleteMetadata(key: string) {
           window.colanode.executeMutation({
             type: 'workspace_metadata_delete',
             accountId: account.id,
-            workspaceId: workspaceId!,
+            workspaceId: workspace.id,
             key,
           });
         },
       }}
     >
-      <Layout key={workspaceId} />
+      <Layout key={workspace.id} />
       {openSettings && (
         <WorkspaceSettingsDialog
           open={openSettings}

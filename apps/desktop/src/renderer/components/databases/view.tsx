@@ -36,23 +36,21 @@ export const View = ({ view }: ViewProps) => {
   const database = useDatabase();
   const layout = useLayout();
 
-  const fields: ViewField[] = React.useMemo(() => {
-    return database.fields
-      .map((field) => {
-        const viewField = view.attributes.fields?.[field.id];
+  const fields: ViewField[] = database.fields
+    .map((field) => {
+      const viewField = view.attributes.fields?.[field.id];
 
-        return {
-          field,
-          display:
-            viewField?.display ??
-            getDefaultViewFieldDisplay(view.attributes.layout),
-          index: viewField?.index ?? field.index,
-          width: viewField?.width ?? getDefaultFieldWidth(field.type),
-        };
-      })
-      .filter((field) => field.display)
-      .sort((a, b) => compareString(a.index, b.index));
-  }, [view.id, database.fields, view.attributes.fields]);
+      return {
+        field,
+        display:
+          viewField?.display ??
+          getDefaultViewFieldDisplay(view.attributes.layout),
+        index: viewField?.index ?? field.index,
+        width: viewField?.width ?? getDefaultFieldWidth(field.type),
+      };
+    })
+    .filter((field) => field.display)
+    .sort((a, b) => compareString(a.index, b.index));
 
   const [isSearchBarOpened, setIsSearchBarOpened] = React.useState(false);
   const [isSortsOpened, setIsSortsOpened] = React.useState(false);

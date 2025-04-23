@@ -11,7 +11,6 @@ import {
   Node,
   NodeAttributes,
   UpdateNodeMutationData,
-  MessageAttributes,
 } from '@colanode/core';
 import { decodeState, YDoc } from '@colanode/crdt';
 import { cloneDeep } from 'lodash-es';

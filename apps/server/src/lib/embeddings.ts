@@ -28,6 +28,10 @@ export const deleteEmbeddingCursor = async (cursorId: string) => {
 };
 
 export const scheduleNodeEmbedding = async (node: SelectNode) => {
+  if (!configuration.ai.enabled) {
+    return;
+  }
+
   if (node.type === 'message') {
     const attributes = node.attributes as MessageAttributes;
     if (attributes.subtype === 'question' || attributes.subtype === 'answer') {
@@ -54,6 +58,10 @@ export const scheduleNodeEmbedding = async (node: SelectNode) => {
 };
 
 export const scheduleDocumentEmbedding = async (documentId: string) => {
+  if (!configuration.ai.enabled) {
+    return;
+  }
+
   await jobService.addJob(
     {
       type: 'embed_document',

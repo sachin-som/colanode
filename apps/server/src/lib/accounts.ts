@@ -7,6 +7,7 @@ import {
   generateId,
   LoginVerifyOutput,
 } from '@colanode/core';
+import argon2 from '@node-rs/argon2';
 
 import { configuration } from '@/lib/configuration';
 import { database } from '@/data/database';
@@ -14,16 +15,29 @@ import { SelectAccount } from '@/data/schema';
 import { generateToken } from '@/lib/tokens';
 import { createDefaultWorkspace } from '@/lib/workspaces';
 import { jobService } from '@/services/job-service';
-import { emailVerifyTemplate } from '@/templates';
+import { emailPasswordResetTemplate, emailVerifyTemplate } from '@/templates';
 import { emailService } from '@/services/email-service';
 import { deleteOtp, fetchOtp, generateOtpCode, saveOtp } from '@/lib/otps';
-import { Otp, AccountVerifyOtpAttributes } from '@/types/otps';
-
+import {
+  Otp,
+  AccountVerifyOtpAttributes,
+  AccountPasswordResetOtpAttributes,
+} from '@/types/otps';
 interface DeviceMetadata {
   ip: string | undefined;
   platform: string;
   version: string;
 }
+
+export const generatePasswordHash = async (
+  password: string
+): Promise<string> => {
+  return await argon2.hash(password, {
+    memoryCost: 19456,
+    timeCost: 2,
+    parallelism: 1,
+  });
+};
 
 export const buildLoginSuccessOutput = async (
   account: SelectAccount,
@@ -196,6 +210,40 @@ export const sendEmailVerifyEmail = async (otpId: string): Promise<void> => {
 
   await emailService.sendEmail({
     subject: 'Your Colanode email verification code',
+    to: email,
+    html,
+  });
+};
+
+export const sendEmailPasswordResetEmail = async (
+  otpId: string
+): Promise<void> => {
+  const otp = await fetchOtp<AccountPasswordResetOtpAttributes>(otpId);
+  if (!otp) {
+    return;
+  }
+
+  const account = await database
+    .selectFrom('accounts')
+    .where('id', '=', otp.attributes.accountId)
+    .selectAll()
+    .executeTakeFirst();
+
+  if (!account) {
+    return;
+  }
+
+  const email = account.email;
+  const name = account.name;
+  const otpCode = otp.otp;
+
+  const html = emailPasswordResetTemplate({
+    name,
+    otp: otpCode,
+  });
+
+  await emailService.sendEmail({
+    subject: 'Your Colanode password reset code',
     to: email,
     html,
   });

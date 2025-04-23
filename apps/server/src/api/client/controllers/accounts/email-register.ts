@@ -6,7 +6,6 @@ import {
   IdType,
   ApiErrorCode,
 } from '@colanode/core';
-import argon2 from '@node-rs/argon2';
 
 import { database } from '@/data/database';
 import { SelectAccount } from '@/data/schema';
@@ -16,6 +15,7 @@ import { configuration } from '@/lib/configuration';
 import {
   buildLoginSuccessOutput,
   buildLoginVerifyOutput,
+  generatePasswordHash,
 } from '@/lib/accounts';
 
 export const emailRegisterHandler = async (
@@ -49,11 +49,7 @@ export const emailRegisterHandler = async (
     .where('email', '=', email)
     .executeTakeFirst();
 
-  const password = await argon2.hash(input.password, {
-    memoryCost: 19456,
-    timeCost: 2,
-    parallelism: 1,
-  });
+  const password = await generatePasswordHash(input.password);
 
   let account: SelectAccount | null | undefined = null;
 

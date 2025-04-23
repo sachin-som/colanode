@@ -87,3 +87,27 @@ export type EmailVerifyInput = {
   platform: string;
   version: string;
 };
+
+export type EmailPasswordResetInitInput = {
+  email: string;
+  platform: string;
+  version: string;
+};
+
+export type EmailPasswordResetCompleteInput = {
+  id: string;
+  otp: string;
+  email: string;
+  password: string;
+  platform: string;
+  version: string;
+};
+
+export type EmailPasswordResetInitOutput = {
+  id: string;
+  expiresAt: Date;
+};
+
+export type EmailPasswordResetCompleteOutput = {
+  success: boolean;
+};

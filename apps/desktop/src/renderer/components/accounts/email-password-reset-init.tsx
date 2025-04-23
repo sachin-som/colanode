@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { LoginOutput } from '@colanode/core';
+import { EmailPasswordResetInitOutput } from '@colanode/core';
 
 import { Button } from '@/renderer/components/ui/button';
 import {
@@ -20,35 +20,30 @@ import { Server } from '@/shared/types/servers';
 
 const formSchema = z.object({
   email: z.string().min(2).email(),
-  password: z.string().min(8),
 });
 
-interface EmailLoginProps {
+interface EmailPasswordResetInitProps {
   server: Server;
-  onSuccess: (output: LoginOutput) => void;
-  onForgotPassword: () => void;
+  onSuccess: (output: EmailPasswordResetInitOutput) => void;
 }
 
-export const EmailLogin = ({
+export const EmailPasswordResetInit = ({
   server,
   onSuccess,
-  onForgotPassword,
-}: EmailLoginProps) => {
+}: EmailPasswordResetInitProps) => {
   const { mutate, isPending } = useMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     mutate({
       input: {
-        type: 'email_login',
+        type: 'email_password_reset_init',
         email: values.email,
-        password: values.password,
         server: server.domain,
       },
       onSuccess(output) {
@@ -79,24 +74,6 @@ export const EmailLogin = ({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input type="password" placeholder="Password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <p
-          className="text-xs text-muted-foreground hover:cursor-pointer hover:underline w-full text-right"
-          onClick={onForgotPassword}
-        >
-          Forgot password?
-        </p>
         <Button
           type="submit"
           variant="outline"
@@ -108,7 +85,7 @@ export const EmailLogin = ({
           ) : (
             <Mail className="mr-2 size-4" />
           )}
-          Login
+          Reset password
         </Button>
       </form>
     </Form>

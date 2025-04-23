@@ -3,7 +3,6 @@ import { Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { LoginOutput } from '@colanode/core';
-import { useEffect, useState } from 'react';
 
 import { Button } from '@/renderer/components/ui/button';
 import { Input } from '@/renderer/components/ui/input';
@@ -18,6 +17,7 @@ import { Spinner } from '@/renderer/components/ui/spinner';
 import { useMutation } from '@/renderer/hooks/use-mutation';
 import { toast } from '@/renderer/hooks/use-toast';
 import { Server } from '@/shared/types/servers';
+import { useCountdown } from '@/renderer/hooks/use-countdown';
 
 const formSchema = z.object({
   otp: z.string().min(2),
@@ -44,34 +44,7 @@ export const EmailVerify = ({
     },
   });
 
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
-
-  useEffect(() => {
-    const initialSeconds = Math.max(
-      0,
-      Math.floor((expiresAt.getTime() - Date.now()) / 1000)
-    );
-    setRemainingSeconds(initialSeconds);
-
-    const interval = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 0) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [expiresAt]);
-
-  const formatTime = (seconds: number): string => {
-    if (seconds <= 0) return 'This code has expired';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSecs = seconds % 60;
-    return `This code expires in ${minutes}:${remainingSecs.toString().padStart(2, '0')}`;
-  };
+  const [remainingSeconds, formattedTime] = useCountdown(expiresAt);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     if (remainingSeconds <= 0) {
@@ -119,7 +92,7 @@ export const EmailVerify = ({
               </FormControl>
               <FormMessage />
               <p className="text-xs text-muted-foreground w-full text-center">
-                {formatTime(remainingSeconds)}
+                {formattedTime}
               </p>
             </FormItem>
           )}

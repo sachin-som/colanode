@@ -8,6 +8,8 @@ import { ServerDropdown } from '@/renderer/components/servers/server-dropdown';
 import { Separator } from '@/renderer/components/ui/separator';
 import { Account } from '@/shared/types/accounts';
 import { Server } from '@/shared/types/servers';
+import { EmailPasswordResetComplete } from '@/renderer/components/accounts/email-password-reset-complete';
+import { EmailPasswordResetInit } from '@/renderer/components/accounts/email-password-reset-init';
 
 interface LoginFormProps {
   accounts: Account[];
@@ -28,7 +30,22 @@ type VerifyPanelState = {
   expiresAt: Date;
 };
 
-type PanelState = LoginPanelState | RegisterPanelState | VerifyPanelState;
+type PasswordResetInitPanelState = {
+  type: 'password_reset_init';
+};
+
+type PasswordResetCompletePanelState = {
+  type: 'password_reset_complete';
+  id: string;
+  expiresAt: Date;
+};
+
+type PanelState =
+  | LoginPanelState
+  | RegisterPanelState
+  | VerifyPanelState
+  | PasswordResetInitPanelState
+  | PasswordResetCompletePanelState;
 
 export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
   const app = useApp();
@@ -59,6 +76,11 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
                   expiresAt: new Date(output.expiresAt),
                 });
               }
+            }}
+            onForgotPassword={() => {
+              setPanel({
+                type: 'password_reset_init',
+              });
             }}
           />
           <p
@@ -113,6 +135,51 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
                 app.openAccount(output.account.id);
               }
             }}
+          />
+          <p
+            className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
+            onClick={() => {
+              setPanel({
+                type: 'login',
+              });
+            }}
+          >
+            Back to login
+          </p>
+        </React.Fragment>
+      )}
+
+      {panel.type === 'password_reset_init' && (
+        <React.Fragment>
+          <EmailPasswordResetInit
+            server={server}
+            onSuccess={(output) => {
+              setPanel({
+                type: 'password_reset_complete',
+                id: output.id,
+                expiresAt: new Date(output.expiresAt),
+              });
+            }}
+          />
+          <p
+            className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"
+            onClick={() => {
+              setPanel({
+                type: 'login',
+              });
+            }}
+          >
+            Back to login
+          </p>
+        </React.Fragment>
+      )}
+
+      {panel.type === 'password_reset_complete' && (
+        <React.Fragment>
+          <EmailPasswordResetComplete
+            server={server}
+            id={panel.id}
+            expiresAt={panel.expiresAt}
           />
           <p
             className="text-center text-sm text-muted-foreground hover:cursor-pointer hover:underline"

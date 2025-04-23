@@ -63,6 +63,8 @@ import { AppMetadataSaveMutationHandler } from '@/main/mutations/apps/app-metada
 import { AppMetadataDeleteMutationHandler } from '@/main/mutations/apps/app-metadata-delete';
 import { AccountMetadataSaveMutationHandler } from '@/main/mutations/accounts/account-metadata-save';
 import { AccountMetadataDeleteMutationHandler } from '@/main/mutations/accounts/account-metadata-delete';
+import { EmailPasswordResetInitMutationHandler } from '@/main/mutations/accounts/email-password-reset-init';
+import { EmailPasswordResetCompleteMutationHandler } from '@/main/mutations/accounts/email-password-reset-complete';
 import { MutationHandler } from '@/main/lib/types';
 import { MutationMap } from '@/shared/mutations';
 
@@ -136,4 +138,7 @@ export const mutationHandlerMap: MutationHandlerMap = {
   app_metadata_delete: new AppMetadataDeleteMutationHandler(),
   account_metadata_save: new AccountMetadataSaveMutationHandler(),
   account_metadata_delete: new AccountMetadataDeleteMutationHandler(),
+  email_password_reset_init: new EmailPasswordResetInitMutationHandler(),
+  email_password_reset_complete:
+    new EmailPasswordResetCompleteMutationHandler(),
 };

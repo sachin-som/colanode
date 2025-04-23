@@ -21,6 +21,8 @@ import {
   avatarUploadParameter,
   mutationsSyncHandler,
   emailVerifyHandler,
+  emailPasswordResetInitHandler,
+  emailPasswordResetCompleteHandler,
 } from '@/api/client/controllers';
 import { workspaceMiddleware } from '@/api/client/middlewares/workspace';
 import { authMiddleware } from '@/api/client/middlewares/auth';
@@ -34,6 +36,16 @@ clientRouter.post('/v1/accounts/emails/login', emailLoginHandler);
 clientRouter.post('/v1/accounts/emails/register', emailRegisterHandler);
 
 clientRouter.post('/v1/accounts/emails/verify', emailVerifyHandler);
+
+clientRouter.post(
+  '/v1/accounts/emails/passwords/reset/init',
+  emailPasswordResetInitHandler
+);
+
+clientRouter.post(
+  '/v1/accounts/emails/passwords/reset/complete',
+  emailPasswordResetCompleteHandler
+);
 
 clientRouter.delete('/v1/accounts/logout', authMiddleware, logoutHandler);
 

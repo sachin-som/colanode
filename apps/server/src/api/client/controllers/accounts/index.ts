@@ -5,3 +5,5 @@ export * from './logout';
 export * from './email-register';
 export * from './account-update';
 export * from './email-verify';
+export * from './email-password-reset-init';
+export * from './email-password-reset-complete';

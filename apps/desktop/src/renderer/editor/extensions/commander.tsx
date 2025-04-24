@@ -7,7 +7,14 @@ import {
   type SuggestionProps,
 } from '@tiptap/suggestion';
 import React from 'react';
-import tippy from 'tippy.js';
+import {
+  useFloating,
+  offset,
+  flip,
+  shift,
+  autoUpdate,
+  FloatingPortal,
+} from '@floating-ui/react';
 
 import { updateScrollView } from '@/shared/lib/utils';
 import { EditorCommand, EditorContext } from '@/shared/types/editor';
@@ -43,12 +50,27 @@ const CommandList = ({
   items,
   command,
   range,
+  props,
 }: {
   items: EditorCommand[];
   command: (item: EditorCommand, range: Range) => void;
   range: Range;
+  props: SuggestionProps<EditorCommand>;
 }) => {
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  const { refs, floatingStyles } = useFloating({
+    placement: 'bottom-start',
+    middleware: [offset(6), flip(), shift()],
+    whileElementsMounted: autoUpdate,
+    strategy: 'fixed',
+    elements: {
+      reference: {
+        getBoundingClientRect: () => props.clientRect?.() || new DOMRect(),
+        contextElement: document.body,
+      } as unknown as Element,
+    },
+  });
 
   const selectItem = React.useCallback(
     (index: number) => {
@@ -102,70 +124,58 @@ const CommandList = ({
   }, [selectedIndex]);
 
   return items.length > 0 ? (
-    <div
-      id="slash-command"
-      ref={commandListContainer}
-      className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-md border border-stone-200 bg-white px-1 py-2 shadow-md transition-all"
-    >
-      {items.map((item: EditorCommand, index: number) => (
-        <button
-          type="button"
-          className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm text-stone-900 hover:bg-stone-100 ${
-            index === selectedIndex ? 'bg-stone-100 text-stone-900' : ''
-          }`}
-          key={item.key}
-          onClick={() => selectItem(index)}
+    <FloatingPortal>
+      <div ref={refs.setFloating} style={floatingStyles}>
+        <div
+          id="slash-command"
+          ref={commandListContainer}
+          className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-md border border-stone-200 bg-white px-1 py-2 shadow-md transition-all"
         >
-          <div className="flex size-10 items-center justify-center rounded-md border border-stone-200 bg-white">
-            <item.icon className="size-5" />
-          </div>
-          <div>
-            <p className="font-medium">{item.name}</p>
-            <p className="text-xs text-stone-500">{item.description}</p>
-          </div>
-        </button>
-      ))}
-    </div>
+          {items.map((item: EditorCommand, index: number) => (
+            <button
+              type="button"
+              className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm text-stone-900 hover:bg-stone-100 ${
+                index === selectedIndex ? 'bg-stone-100 text-stone-900' : ''
+              }`}
+              key={item.key}
+              onClick={() => selectItem(index)}
+            >
+              <div className="flex size-10 items-center justify-center rounded-md border border-stone-200 bg-white">
+                <item.icon className="size-5" />
+              </div>
+              <div>
+                <p className="font-medium">{item.name}</p>
+                <p className="text-xs text-stone-500">{item.description}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </FloatingPortal>
   ) : null;
 };
 
 const renderItems = () => {
   let component: ReactRenderer | null = null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let popup: any | null = null;
-
   return {
     onStart: (props: SuggestionProps<EditorCommand>) => {
       component = new ReactRenderer(CommandList, {
-        props,
+        props: {
+          ...props,
+          props,
+        },
         editor: props.editor,
-      });
-
-      // @ts-expect-error Tippy instance type is complex, ignoring for simplicity
-      popup = tippy('body', {
-        getReferenceClientRect: props.clientRect,
-        appendTo: () => document.body,
-        content: component.element,
-        showOnCreate: true,
-        interactive: true,
-        trigger: 'manual',
-        placement: 'bottom-start',
       });
     },
     onUpdate: (props: SuggestionProps<EditorCommand>) => {
-      component?.updateProps(props);
-
-      if (popup) {
-        popup[0].setProps({
-          getReferenceClientRect: props.clientRect,
-        });
-      }
+      component?.updateProps({
+        ...props,
+        props,
+      });
     },
     onKeyDown: (props: SuggestionKeyDownProps) => {
       if (props.event.key === 'Escape') {
-        popup?.[0].hide();
-
         return true;
       }
 
@@ -173,11 +183,10 @@ const renderItems = () => {
         return true;
       }
 
-      // @ts-expect-error Tippy instance type is complex, ignoring for simplicity
+      // @ts-expect-error Component ref type is complex
       return component?.ref?.onKeyDown(props);
     },
     onExit: () => {
-      popup?.[0].destroy();
       component?.destroy();
     },
   };

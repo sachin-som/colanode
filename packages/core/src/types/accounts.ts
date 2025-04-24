@@ -97,7 +97,6 @@ export type EmailPasswordResetInitInput = {
 export type EmailPasswordResetCompleteInput = {
   id: string;
   otp: string;
-  email: string;
   password: string;
   platform: string;
   version: string;

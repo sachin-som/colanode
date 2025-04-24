@@ -13,6 +13,7 @@ interface ContainerTabsProps {
   onTabChange: (value: string) => void;
   onFocus: () => void;
   onClose: (value: string) => void;
+  onOpen: (value: string) => void;
   onMove: (tab: string, before: string | null) => void;
 }
 
@@ -21,6 +22,7 @@ export const ContainerTabs = ({
   onTabChange,
   onFocus,
   onClose,
+  onOpen,
   onMove,
 }: ContainerTabsProps) => {
   const activeTab = tabs.find((t) => t.active)?.path;
@@ -54,6 +56,7 @@ export const ContainerTabs = ({
               key={tab.path}
               tab={tab}
               onClose={() => onClose(tab.path)}
+              onOpen={() => onOpen(tab.path)}
               onMove={(before) => onMove(tab.path, before)}
             />
           ))}

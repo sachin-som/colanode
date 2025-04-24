@@ -20,12 +20,14 @@ import { MessageContainerTab } from '@/renderer/components/messages/message-cont
 interface ContainerTabTriggerProps {
   tab: ContainerTab;
   onClose: () => void;
+  onOpen: () => void;
   onMove: (before: string | null) => void;
 }
 
 export const ContainerTabTrigger = ({
   tab,
   onClose,
+  onOpen,
   onMove,
 }: ContainerTabTriggerProps) => {
   const [, dragRef] = useDrag<string>({
@@ -74,6 +76,11 @@ export const ContainerTabTrigger = ({
         if (e.button === 1) {
           e.preventDefault();
           onClose();
+        }
+      }}
+      onDoubleClick={() => {
+        if (tab.preview) {
+          onOpen();
         }
       }}
       ref={dragDropRef as React.LegacyRef<HTMLButtonElement>}

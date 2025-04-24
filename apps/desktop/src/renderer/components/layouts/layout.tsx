@@ -101,6 +101,7 @@ export const Layout = () => {
               onFocus={() => {
                 handleFocus('left');
               }}
+              onOpen={handleOpenLeft}
               onClose={handleCloseLeft}
               onTabChange={handleActivateLeft}
               onMove={handleMoveLeft}
@@ -142,6 +143,7 @@ export const Layout = () => {
               onFocus={() => {
                 handleFocus('right');
               }}
+              onOpen={handleOpenRight}
               onTabChange={handleActivateRight}
               onClose={handleCloseRight}
               onMove={handleMoveRight}

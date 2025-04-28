@@ -63,6 +63,7 @@ export interface SmtpConfiguration {
   port: number;
   user: string;
   password: string;
+  secure: boolean;
   from: {
     email: string;
     name: string;
@@ -200,6 +201,7 @@ export const configuration: Configuration = {
   smtp: {
     host: getOptionalEnv('SMTP_HOST') || '',
     port: parseInt(getOptionalEnv('SMTP_PORT') || '587'),
+    secure: getOptionalEnv('SMTP_SECURE') === 'true',
     user: getOptionalEnv('SMTP_USER') || '',
     password: getOptionalEnv('SMTP_PASSWORD') || '',
     from: {

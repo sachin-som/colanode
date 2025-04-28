@@ -22,5 +22,6 @@ export const defaultClasses = {
   gif: 'max-h-72 my-1',
   emoji: 'max-h-5 max-w-5 h-5 w-5 px-0.5 mb-1 inline-block',
   dropcursor: 'text-primary-foreground bg-blue-500',
-  mention: 'rounded bg-blue-100 px-1',
+  mention:
+    'inline-flex flex-row items-center gap-1 rounded-md bg-blue-50 px-0.5 py-0',
 };

@@ -43,6 +43,24 @@ export type NodeReactionCount = {
   reacted: boolean;
 };
 
+export type NodeReference = {
+  nodeId: string;
+  referenceId: string;
+  innerId: string;
+  type: string;
+};
+
+export type NodeCounterType =
+  | 'unread_mentions'
+  | 'unread_messages'
+  | 'unread_important_messages';
+
+export type NodeCounter = {
+  nodeId: string;
+  type: NodeCounterType;
+  count: number;
+};
+
 export type LocalNodeBase = {
   localRevision: bigint;
   serverRevision: bigint;

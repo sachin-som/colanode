@@ -22,6 +22,7 @@ import { CollaborationService } from '@/main/services/workspaces/collaboration-s
 import { SyncService } from '@/main/services/workspaces/sync-service';
 import { RadarService } from '@/main/services/workspaces/radar-service';
 import { DocumentService } from '@/main/services/workspaces/document-service';
+import { NodeCountersService } from '@/main/services/workspaces/node-counters-service';
 import { eventBus } from '@/shared/lib/event-bus';
 
 export class WorkspaceService {
@@ -40,6 +41,7 @@ export class WorkspaceService {
   public readonly collaborations: CollaborationService;
   public readonly synchronizer: SyncService;
   public readonly radar: RadarService;
+  public readonly nodeCounters: NodeCountersService;
 
   constructor(workspace: Workspace, account: AccountService) {
     this.debug(`Initializing workspace service ${workspace.id}`);
@@ -76,6 +78,7 @@ export class WorkspaceService {
     this.collaborations = new CollaborationService(this);
     this.synchronizer = new SyncService(this);
     this.radar = new RadarService(this);
+    this.nodeCounters = new NodeCountersService(this);
   }
 
   public get id(): string {
@@ -111,6 +114,7 @@ export class WorkspaceService {
 
   public async init() {
     await this.migrate();
+    await this.collaborations.init();
     await this.synchronizer.init();
     await this.radar.init();
   }

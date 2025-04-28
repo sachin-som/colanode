@@ -6,7 +6,13 @@ import { Server } from '@/shared/types/servers';
 import { Workspace, WorkspaceMetadata } from '@/shared/types/workspaces';
 import { User } from '@/shared/types/users';
 import { FileState } from '@/shared/types/files';
-import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
+import {
+  LocalNode,
+  NodeCounter,
+  NodeInteraction,
+  NodeReaction,
+  NodeReference,
+} from '@/shared/types/nodes';
 import {
   Document,
   DocumentState,
@@ -241,6 +247,34 @@ export type DocumentUpdateDeletedEvent = {
   updateId: string;
 };
 
+export type NodeReferenceCreatedEvent = {
+  type: 'node_reference_created';
+  accountId: string;
+  workspaceId: string;
+  nodeReference: NodeReference;
+};
+
+export type NodeReferenceDeletedEvent = {
+  type: 'node_reference_deleted';
+  accountId: string;
+  workspaceId: string;
+  nodeReference: NodeReference;
+};
+
+export type NodeCounterUpdatedEvent = {
+  type: 'node_counter_updated';
+  accountId: string;
+  workspaceId: string;
+  counter: NodeCounter;
+};
+
+export type NodeCounterDeletedEvent = {
+  type: 'node_counter_deleted';
+  accountId: string;
+  workspaceId: string;
+  counter: NodeCounter;
+};
+
 export type Event =
   | UserCreatedEvent
   | UserUpdatedEvent
@@ -278,4 +312,8 @@ export type Event =
   | DocumentDeletedEvent
   | DocumentStateUpdatedEvent
   | DocumentUpdateCreatedEvent
-  | DocumentUpdateDeletedEvent;
+  | DocumentUpdateDeletedEvent
+  | NodeReferenceCreatedEvent
+  | NodeReferenceDeletedEvent
+  | NodeCounterUpdatedEvent
+  | NodeCounterDeletedEvent;

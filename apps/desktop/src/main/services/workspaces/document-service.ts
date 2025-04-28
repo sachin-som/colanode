@@ -2,6 +2,7 @@ import {
   CanUpdateDocumentContext,
   createDebugger,
   DocumentContent,
+  extractBlocksMentions,
   extractDocumentText,
   generateId,
   getNodeModel,
@@ -15,12 +16,20 @@ import { encodeState, YDoc } from '@colanode/crdt';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { eventBus } from '@/shared/lib/event-bus';
 import { fetchNodeTree } from '@/main/lib/utils';
-import { SelectDocument } from '@/main/databases/workspace';
+import {
+  CreateNodeReference,
+  SelectDocument,
+} from '@/main/databases/workspace';
 import {
   mapDocument,
   mapDocumentState,
   mapDocumentUpdate,
+  mapNodeReference,
 } from '@/main/lib/mappers';
+import {
+  applyMentionUpdates,
+  checkMentionChanges,
+} from '@/shared/lib/mentions';
 
 const UPDATE_RETRIES_LIMIT = 10;
 
@@ -115,10 +124,20 @@ export class DocumentService {
     const updateId = generateId(IdType.Update);
     const updatedAt = new Date().toISOString();
     const text = extractDocumentText(id, content);
+    const mentions = extractBlocksMentions(id, content.blocks) ?? [];
+    const nodeReferencesToCreate: CreateNodeReference[] = mentions.map(
+      (mention) => ({
+        node_id: id,
+        reference_id: mention.target,
+        inner_id: mention.id,
+        type: 'mention',
+        created_at: updatedAt,
+        created_by: this.workspace.userId,
+      })
+    );
 
-    const { createdDocument, createdMutation } = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
+    const { createdDocument, createdMutation, createdNodeReferences } =
+      await this.workspace.database.transaction().execute(async (trx) => {
         const createdDocument = await trx
           .insertInto('documents')
           .returningAll()
@@ -162,7 +181,16 @@ export class DocumentService {
           })
           .executeTakeFirst();
 
-        return { createdDocument, createdMutation };
+        let createdNodeReferences: CreateNodeReference[] = [];
+        if (nodeReferencesToCreate.length > 0) {
+          createdNodeReferences = await trx
+            .insertInto('node_references')
+            .returningAll()
+            .values(nodeReferencesToCreate)
+            .execute();
+        }
+
+        return { createdDocument, createdMutation, createdNodeReferences };
       });
 
     if (createdDocument) {
@@ -171,6 +199,15 @@ export class DocumentService {
         accountId: this.workspace.accountId,
         workspaceId: this.workspace.id,
         document: mapDocument(createdDocument),
+      });
+    }
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
       });
     }
 
@@ -204,10 +241,11 @@ export class DocumentService {
       ydoc.applyUpdate(update.data);
     }
 
+    const beforeContent = ydoc.getObject<DocumentContent>();
     ydoc.applyUpdate(update);
 
-    const content = ydoc.getObject<DocumentContent>();
-    if (!model.documentSchema?.safeParse(content).success) {
+    const afterContent = ydoc.getObject<DocumentContent>();
+    if (!model.documentSchema?.safeParse(afterContent).success) {
       throw new Error('Invalid document state');
     }
 
@@ -215,80 +253,102 @@ export class DocumentService {
     const serverRevision = BigInt(document.server_revision) + 1n;
     const updateId = generateId(IdType.Update);
     const updatedAt = new Date().toISOString();
-    const text = extractDocumentText(document.id, content);
+    const text = extractDocumentText(document.id, afterContent);
 
-    const { updatedDocument, createdUpdate, createdMutation } =
-      await this.workspace.database.transaction().execute(async (trx) => {
-        const updatedDocument = await trx
-          .updateTable('documents')
-          .returningAll()
-          .set({
-            content: JSON.stringify(content),
-            local_revision: localRevision,
-            server_revision: serverRevision,
-            updated_at: updatedAt,
-            updated_by: this.workspace.userId,
-          })
-          .where('id', '=', document.id)
-          .where('local_revision', '=', document.local_revision)
-          .executeTakeFirst();
+    const beforeMentions =
+      extractBlocksMentions(document.id, beforeContent.blocks) ?? [];
+    const afterMentions =
+      extractBlocksMentions(document.id, afterContent.blocks) ?? [];
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
 
-        if (!updatedDocument) {
-          throw new Error('Failed to update document');
-        }
+    const {
+      updatedDocument,
+      createdUpdate,
+      createdMutation,
+      createdNodeReferences,
+      deletedNodeReferences,
+    } = await this.workspace.database.transaction().execute(async (trx) => {
+      const updatedDocument = await trx
+        .updateTable('documents')
+        .returningAll()
+        .set({
+          content: JSON.stringify(afterContent),
+          local_revision: localRevision,
+          server_revision: serverRevision,
+          updated_at: updatedAt,
+          updated_by: this.workspace.userId,
+        })
+        .where('id', '=', document.id)
+        .where('local_revision', '=', document.local_revision)
+        .executeTakeFirst();
 
-        const createdUpdate = await trx
-          .insertInto('document_updates')
-          .returningAll()
-          .values({
-            id: updateId,
-            document_id: document.id,
-            data: update,
-            created_at: updatedAt,
-          })
-          .executeTakeFirst();
+      if (!updatedDocument) {
+        throw new Error('Failed to update document');
+      }
 
-        if (!createdUpdate) {
-          throw new Error('Failed to create update');
-        }
+      const createdUpdate = await trx
+        .insertInto('document_updates')
+        .returningAll()
+        .values({
+          id: updateId,
+          document_id: document.id,
+          data: update,
+          created_at: updatedAt,
+        })
+        .executeTakeFirst();
 
-        const mutationData: UpdateDocumentMutationData = {
-          documentId: document.id,
-          updateId: updateId,
-          data: encodeState(update),
-          createdAt: updatedAt,
-        };
+      if (!createdUpdate) {
+        throw new Error('Failed to create update');
+      }
 
-        const createdMutation = await trx
-          .insertInto('mutations')
-          .returningAll()
-          .values({
-            id: generateId(IdType.Mutation),
-            type: 'update_document',
-            data: JSON.stringify(mutationData),
-            created_at: updatedAt,
-            retries: 0,
-          })
-          .executeTakeFirst();
+      const mutationData: UpdateDocumentMutationData = {
+        documentId: document.id,
+        updateId: updateId,
+        data: encodeState(update),
+        createdAt: updatedAt,
+      };
 
-        if (!createdMutation) {
-          throw new Error('Failed to create mutation');
-        }
+      const createdMutation = await trx
+        .insertInto('mutations')
+        .returningAll()
+        .values({
+          id: generateId(IdType.Mutation),
+          type: 'update_document',
+          data: JSON.stringify(mutationData),
+          created_at: updatedAt,
+          retries: 0,
+        })
+        .executeTakeFirst();
 
-        await trx
-          .updateTable('document_texts')
-          .set({
-            text: text,
-          })
-          .where('id', '=', document.id)
-          .executeTakeFirst();
+      if (!createdMutation) {
+        throw new Error('Failed to create mutation');
+      }
 
-        return {
-          updatedDocument,
-          createdMutation,
-          createdUpdate,
-        };
-      });
+      await trx
+        .updateTable('document_texts')
+        .set({
+          text: text,
+        })
+        .where('id', '=', document.id)
+        .executeTakeFirst();
+
+      const { createdNodeReferences, deletedNodeReferences } =
+        await applyMentionUpdates(
+          trx,
+          document.id,
+          this.workspace.userId,
+          updatedAt,
+          mentionChanges
+        );
+
+      return {
+        updatedDocument,
+        createdMutation,
+        createdUpdate,
+        createdNodeReferences,
+        deletedNodeReferences,
+      };
+    });
 
     if (updatedDocument) {
       eventBus.publish({
@@ -305,6 +365,24 @@ export class DocumentService {
         accountId: this.workspace.accountId,
         workspaceId: this.workspace.id,
         documentUpdate: mapDocumentUpdate(createdUpdate),
+      });
+    }
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
+    }
+
+    for (const deletedNodeReference of deletedNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_deleted',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(deletedNodeReference),
       });
     }
 
@@ -415,44 +493,68 @@ export class DocumentService {
     const localRevision = BigInt(document.local_revision) + BigInt(1);
     const text = extractDocumentText(document.id, content);
 
-    const { updatedDocument, deletedUpdate } = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
-        const updatedDocument = await trx
-          .updateTable('documents')
-          .returningAll()
-          .set({
-            content: JSON.stringify(content),
-            local_revision: localRevision,
-          })
-          .where('id', '=', data.documentId)
-          .where('local_revision', '=', node.local_revision)
-          .executeTakeFirst();
+    const beforeContent = JSON.parse(document.content) as DocumentContent;
+    const beforeMentions =
+      extractBlocksMentions(document.id, beforeContent.blocks) ?? [];
+    const afterMentions =
+      extractBlocksMentions(document.id, content.blocks) ?? [];
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
 
-        if (!updatedDocument) {
-          throw new Error('Failed to update document');
-        }
+    const {
+      updatedDocument,
+      deletedUpdate,
+      createdNodeReferences,
+      deletedNodeReferences,
+    } = await this.workspace.database.transaction().execute(async (trx) => {
+      const updatedDocument = await trx
+        .updateTable('documents')
+        .returningAll()
+        .set({
+          content: JSON.stringify(content),
+          local_revision: localRevision,
+        })
+        .where('id', '=', data.documentId)
+        .where('local_revision', '=', node.local_revision)
+        .executeTakeFirst();
 
-        const deletedUpdate = await trx
-          .deleteFrom('document_updates')
-          .returningAll()
-          .where('id', '=', updateToDelete.id)
-          .executeTakeFirst();
+      if (!updatedDocument) {
+        throw new Error('Failed to update document');
+      }
 
-        if (!deletedUpdate) {
-          throw new Error('Failed to delete update');
-        }
+      const deletedUpdate = await trx
+        .deleteFrom('document_updates')
+        .returningAll()
+        .where('id', '=', updateToDelete.id)
+        .executeTakeFirst();
 
-        await trx
-          .updateTable('document_texts')
-          .set({
-            text: text,
-          })
-          .where('id', '=', document.id)
-          .executeTakeFirst();
+      if (!deletedUpdate) {
+        throw new Error('Failed to delete update');
+      }
 
-        return { updatedDocument, deletedUpdate };
-      });
+      await trx
+        .updateTable('document_texts')
+        .set({
+          text: text,
+        })
+        .where('id', '=', document.id)
+        .executeTakeFirst();
+
+      const { createdNodeReferences, deletedNodeReferences } =
+        await applyMentionUpdates(
+          trx,
+          document.id,
+          this.workspace.userId,
+          document.updated_at ?? document.created_at,
+          mentionChanges
+        );
+
+      return {
+        updatedDocument,
+        deletedUpdate,
+        createdNodeReferences,
+        deletedNodeReferences,
+      };
+    });
 
     if (updatedDocument) {
       eventBus.publish({
@@ -470,6 +572,24 @@ export class DocumentService {
         workspaceId: this.workspace.id,
         documentId: data.documentId,
         updateId: updateToDelete.id,
+      });
+    }
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
+    }
+
+    for (const deletedNodeReference of deletedNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_deleted',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(deletedNodeReference),
       });
     }
 
@@ -537,66 +657,95 @@ export class DocumentService {
     const updatesToDelete = [data.id, ...mergedUpdateIds];
     const text = extractDocumentText(data.documentId, content);
 
+    const beforeContent = JSON.parse(
+      document?.content ?? '{}'
+    ) as DocumentContent;
+    const beforeMentions =
+      extractBlocksMentions(data.documentId, beforeContent.blocks) ?? [];
+    const afterMentions =
+      extractBlocksMentions(data.documentId, content.blocks) ?? [];
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
+
     if (document) {
-      const { updatedDocument, upsertedState, deletedUpdates } =
-        await this.workspace.database.transaction().execute(async (trx) => {
-          const updatedDocument = await trx
-            .updateTable('documents')
-            .returningAll()
-            .set({
-              content: JSON.stringify(content),
-              server_revision: serverRevision,
-              local_revision: localRevision,
-              updated_at: data.createdAt,
-              updated_by: data.createdBy,
-            })
-            .where('id', '=', data.documentId)
-            .where('local_revision', '=', document.local_revision)
-            .executeTakeFirst();
+      const {
+        updatedDocument,
+        upsertedState,
+        deletedUpdates,
+        createdNodeReferences,
+        deletedNodeReferences,
+      } = await this.workspace.database.transaction().execute(async (trx) => {
+        const updatedDocument = await trx
+          .updateTable('documents')
+          .returningAll()
+          .set({
+            content: JSON.stringify(content),
+            server_revision: serverRevision,
+            local_revision: localRevision,
+            updated_at: data.createdAt,
+            updated_by: data.createdBy,
+          })
+          .where('id', '=', data.documentId)
+          .where('local_revision', '=', document.local_revision)
+          .executeTakeFirst();
 
-          if (!updatedDocument) {
-            throw new Error('Failed to update document');
-          }
+        if (!updatedDocument) {
+          throw new Error('Failed to update document');
+        }
 
-          const upsertedState = await trx
-            .insertInto('document_states')
-            .returningAll()
-            .values({
-              id: data.documentId,
-              state: serverState,
-              revision: serverRevision,
-            })
-            .onConflict((cb) =>
-              cb
-                .column('id')
-                .doUpdateSet({
-                  state: serverState,
-                  revision: serverRevision,
-                })
-                .where('revision', '=', BigInt(documentState?.revision ?? 0))
-            )
-            .executeTakeFirst();
+        const upsertedState = await trx
+          .insertInto('document_states')
+          .returningAll()
+          .values({
+            id: data.documentId,
+            state: serverState,
+            revision: serverRevision,
+          })
+          .onConflict((cb) =>
+            cb
+              .column('id')
+              .doUpdateSet({
+                state: serverState,
+                revision: serverRevision,
+              })
+              .where('revision', '=', BigInt(documentState?.revision ?? 0))
+          )
+          .executeTakeFirst();
 
-          if (!upsertedState) {
-            throw new Error('Failed to update document state');
-          }
+        if (!upsertedState) {
+          throw new Error('Failed to update document state');
+        }
 
-          const deletedUpdates = await trx
-            .deleteFrom('document_updates')
-            .returningAll()
-            .where('id', 'in', updatesToDelete)
-            .execute();
+        const deletedUpdates = await trx
+          .deleteFrom('document_updates')
+          .returningAll()
+          .where('id', 'in', updatesToDelete)
+          .execute();
 
-          await trx
-            .updateTable('document_texts')
-            .set({
-              text: text,
-            })
-            .where('id', '=', data.documentId)
-            .executeTakeFirst();
+        await trx
+          .updateTable('document_texts')
+          .set({
+            text: text,
+          })
+          .where('id', '=', data.documentId)
+          .executeTakeFirst();
 
-          return { updatedDocument, upsertedState, deletedUpdates };
-        });
+        const { createdNodeReferences, deletedNodeReferences } =
+          await applyMentionUpdates(
+            trx,
+            data.documentId,
+            this.workspace.userId,
+            data.createdAt,
+            mentionChanges
+          );
+
+        return {
+          updatedDocument,
+          upsertedState,
+          deletedUpdates,
+          createdNodeReferences,
+          deletedNodeReferences,
+        };
+      });
 
       if (!updatedDocument) {
         return false;
@@ -629,10 +778,27 @@ export class DocumentService {
           });
         }
       }
+
+      for (const createdNodeReference of createdNodeReferences) {
+        eventBus.publish({
+          type: 'node_reference_created',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          nodeReference: mapNodeReference(createdNodeReference),
+        });
+      }
+
+      for (const deletedNodeReference of deletedNodeReferences) {
+        eventBus.publish({
+          type: 'node_reference_deleted',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          nodeReference: mapNodeReference(deletedNodeReference),
+        });
+      }
     } else {
-      const { createdDocument } = await this.workspace.database
-        .transaction()
-        .execute(async (trx) => {
+      const { createdDocument, createdNodeReferences } =
+        await this.workspace.database.transaction().execute(async (trx) => {
           const createdDocument = await trx
             .insertInto('documents')
             .returningAll()
@@ -674,7 +840,15 @@ export class DocumentService {
             })
             .executeTakeFirst();
 
-          return { createdDocument };
+          const { createdNodeReferences } = await applyMentionUpdates(
+            trx,
+            data.documentId,
+            this.workspace.userId,
+            data.createdAt,
+            mentionChanges
+          );
+
+          return { createdDocument, createdNodeReferences };
         });
 
       if (!createdDocument) {
@@ -687,6 +861,15 @@ export class DocumentService {
         workspaceId: this.workspace.id,
         document: mapDocument(createdDocument),
       });
+
+      for (const createdNodeReference of createdNodeReferences) {
+        eventBus.publish({
+          type: 'node_reference_created',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          nodeReference: mapNodeReference(createdNodeReference),
+        });
+      }
     }
 
     return true;

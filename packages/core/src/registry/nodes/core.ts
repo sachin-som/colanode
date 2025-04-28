@@ -1,6 +1,7 @@
 import { z, ZodSchema } from 'zod';
 
 import { WorkspaceRole } from '../../types/workspaces';
+import { Mention } from '../../types/mentions';
 
 import { Node, NodeAttributes } from '.';
 
@@ -64,5 +65,6 @@ export interface NodeModel {
   canUpdateDocument: (context: CanUpdateDocumentContext) => boolean;
   canDelete: (context: CanDeleteNodeContext) => boolean;
   canReact: (context: CanReactNodeContext) => boolean;
-  extractNodeText: (id: string, attributes: NodeAttributes) => NodeText | null;
+  extractText: (id: string, attributes: NodeAttributes) => NodeText | null;
+  extractMentions: (id: string, attributes: NodeAttributes) => Mention[];
 }

@@ -2,7 +2,7 @@ import { InView } from 'react-intersection-observer';
 
 import { LocalChatNode } from '@/shared/types/nodes';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
@@ -34,14 +34,12 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
     return null;
   }
 
-  const nodeReadState = radar.getChatState(
+  const unreadState = radar.getNodeState(
     workspace.accountId,
     workspace.id,
     chat.id
   );
   const isActive = layout.activeTab === chat.id;
-  const unreadCount =
-    nodeReadState.unseenMessagesCount + nodeReadState.mentionsCount;
 
   return (
     <InView
@@ -65,13 +63,16 @@ export const ChatSidebarItem = ({ chat }: ChatSidebarItemProps) => {
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
-          !isActive && unreadCount > 0 && 'font-semibold'
+          !isActive && unreadState.hasUnread && 'font-semibold'
         )}
       >
         {data.name ?? 'Unnamed'}
       </span>
       {!isActive && (
-        <NotificationBadge count={unreadCount} unseen={unreadCount > 0} />
+        <UnreadBadge
+          count={unreadState.unreadCount}
+          unread={unreadState.hasUnread}
+        />
       )}
     </InView>
   );

@@ -85,7 +85,7 @@ export const recordModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (id, attributes) => {
+  extractText: (id, attributes) => {
     if (attributes.type !== 'record') {
       throw new Error('Invalid node type');
     }
@@ -103,5 +103,8 @@ export const recordModel: NodeModel = {
       name: attributes.name,
       attributes: texts.join('\n'),
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

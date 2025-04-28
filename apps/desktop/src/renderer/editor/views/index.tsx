@@ -4,6 +4,7 @@ import { FilePlaceholderNodeView } from '@/renderer/editor/views/file-placeholde
 import { FolderNodeView } from '@/renderer/editor/views/folder';
 import { PageNodeView } from '@/renderer/editor/views/page';
 import { DatabaseNodeView } from '@/renderer/editor/views/database';
+import { MentionNodeView } from '@/renderer/editor/views/mention';
 
 export {
   CodeBlockNodeView,
@@ -11,5 +12,6 @@ export {
   FileNodeView,
   FilePlaceholderNodeView,
   FolderNodeView,
+  MentionNodeView,
   PageNodeView,
 };

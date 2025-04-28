@@ -53,7 +53,7 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
   if (name) {
     const color = getColorForId(id);
     return (
-      <div
+      <span
         className={cn(
           'inline-flex items-center justify-center overflow-hidden rounded text-white shadow',
           getAvatarSizeClasses(size),
@@ -62,7 +62,7 @@ const AvatarFallback = ({ id, name, size, className }: AvatarProps) => {
         style={{ backgroundColor: color }}
       >
         <span className="font-medium">{name[0]?.toLocaleUpperCase()}</span>
-      </div>
+      </span>
     );
   }
 

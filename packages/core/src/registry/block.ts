@@ -5,6 +5,7 @@ import { ZodText } from './zod';
 export const blockLeafSchema = z.object({
   type: z.string(),
   text: ZodText.create().nullable().optional(),
+  attrs: z.record(z.any()).nullable().optional(),
   marks: z
     .array(
       z.object({

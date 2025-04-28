@@ -17,6 +17,8 @@ import { createMutationsTable } from './00014-create-mutations-table';
 import { createTombstonesTable } from './00015-create-tombstones-table';
 import { createCursorsTable } from './00016-create-cursors-table';
 import { createMetadataTable } from './00017-create-metadata-table';
+import { createNodeReferencesTable } from './00018-create-node-references-table';
+import { createNodeCountersTable } from './00019-create-node-counters-table';
 
 export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00001-create-users-table': createUsersTable,
@@ -36,4 +38,6 @@ export const workspaceDatabaseMigrations: Record<string, Migration> = {
   '00015-create-tombstones-table': createTombstonesTable,
   '00016-create-cursors-table': createCursorsTable,
   '00017-create-metadata-table': createMetadataTable,
+  '00018-create-node-references-table': createNodeReferencesTable,
+  '00019-create-node-counters-table': createNodeCountersTable,
 };

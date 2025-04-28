@@ -35,22 +35,22 @@ export class NotificationService {
       return;
     }
 
-    let importantCount = 0;
-    let hasUnseenChanges = false;
+    let hasUnread = false;
+    let unreadCount = 0;
 
     for (const account of accounts) {
       const workspaces = account.getWorkspaces();
 
       for (const workspace of workspaces) {
         const radarData = workspace.radar.getData();
-        importantCount += radarData.importantCount;
-        hasUnseenChanges = hasUnseenChanges || radarData.hasUnseenChanges;
+        hasUnread = hasUnread || radarData.state.hasUnread;
+        unreadCount = unreadCount + radarData.state.unreadCount;
       }
     }
 
-    if (importantCount > 0) {
-      app.dock.setBadge(importantCount.toString());
-    } else if (hasUnseenChanges) {
+    if (unreadCount > 0) {
+      app.dock.setBadge(unreadCount.toString());
+    } else if (hasUnread) {
       app.dock.setBadge('·');
     } else {
       app.dock.setBadge('');

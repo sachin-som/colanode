@@ -36,6 +36,7 @@ import { TaskListNode } from '@/renderer/editor/extensions/task-list';
 import { TrailingNode } from '@/renderer/editor/extensions/trailing-node';
 import { DatabaseNode } from '@/renderer/editor/extensions/database';
 import { AutoJoiner } from '@/renderer/editor/extensions/auto-joiner';
+import { MentionExtension } from '@/renderer/editor/extensions/mention';
 
 export {
   BlockquoteNode,
@@ -75,4 +76,5 @@ export {
   UnderlineMark,
   DatabaseNode,
   AutoJoiner,
+  MentionExtension,
 };

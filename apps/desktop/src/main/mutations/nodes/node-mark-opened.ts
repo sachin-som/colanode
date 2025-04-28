@@ -109,6 +109,11 @@ export class NodeMarkOpenedMutationHandler
       throw new Error('Failed to create node interaction');
     }
 
+    await workspace.nodeCounters.checkCountersForUpdatedNodeInteraction(
+      createdInteraction,
+      existingInteraction
+    );
+
     workspace.mutations.triggerSync();
 
     eventBus.publish({

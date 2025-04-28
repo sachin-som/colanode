@@ -1,28 +1,18 @@
 import { createContext, useContext } from 'react';
 
-import {
-  AccountReadState,
-  ChannelReadState,
-  ChatReadState,
-  WorkspaceReadState,
-} from '@/shared/types/radars';
+import { WorkspaceRadarData, UnreadState } from '@/shared/types/radars';
 
 interface RadarContext {
-  getAccountState: (accountId: string) => AccountReadState;
+  getAccountState: (accountId: string) => UnreadState;
   getWorkspaceState: (
     accountId: string,
     workspaceId: string
-  ) => WorkspaceReadState;
-  getChatState: (
+  ) => WorkspaceRadarData;
+  getNodeState: (
     accountId: string,
     workspaceId: string,
-    chatId: string
-  ) => ChatReadState;
-  getChannelState: (
-    accountId: string,
-    workspaceId: string,
-    channelId: string
-  ) => ChannelReadState;
+    nodeId: string
+  ) => UnreadState;
   markNodeAsSeen: (
     accountId: string,
     workspaceId: string,

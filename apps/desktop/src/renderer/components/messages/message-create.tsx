@@ -181,6 +181,7 @@ export const MessageCreate = React.forwardRef<MessageCreateRefProps>(
                   workspaceId={workspace.id}
                   ref={messageEditorRef}
                   conversationId={conversation.id}
+                  rootId={conversation.rootId}
                   onChange={setContent}
                   onSubmit={handleSubmit}
                 />

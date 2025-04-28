@@ -61,7 +61,7 @@ export const channelModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (_: string, attributes: NodeAttributes) => {
+  extractText: (_: string, attributes: NodeAttributes) => {
     if (attributes.type !== 'channel') {
       throw new Error('Invalid node type');
     }
@@ -70,5 +70,8 @@ export const channelModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

@@ -134,7 +134,7 @@ export const databaseViewModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (_, attributes) => {
+  extractText: (_, attributes) => {
     if (attributes.type !== 'database_view') {
       throw new Error('Invalid node type');
     }
@@ -143,5 +143,8 @@ export const databaseViewModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

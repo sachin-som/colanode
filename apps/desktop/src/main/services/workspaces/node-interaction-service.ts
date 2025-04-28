@@ -32,7 +32,7 @@ export class NodeInteractionService {
       }
     }
 
-    const createdNodeInteraction = await this.workspace.database
+    const upsertedNodeInteraction = await this.workspace.database
       .insertInto('node_interactions')
       .returningAll()
       .values({
@@ -56,15 +56,22 @@ export class NodeInteractionService {
       )
       .executeTakeFirst();
 
-    if (!createdNodeInteraction) {
+    if (!upsertedNodeInteraction) {
       return;
+    }
+
+    if (upsertedNodeInteraction.collaborator_id === this.workspace.userId) {
+      await this.workspace.nodeCounters.checkCountersForUpdatedNodeInteraction(
+        upsertedNodeInteraction,
+        existingNodeInteraction
+      );
     }
 
     eventBus.publish({
       type: 'node_interaction_updated',
       accountId: this.workspace.accountId,
       workspaceId: this.workspace.id,
-      nodeInteraction: mapNodeInteraction(createdNodeInteraction),
+      nodeInteraction: mapNodeInteraction(upsertedNodeInteraction),
     });
 
     this.debug(

@@ -2,7 +2,7 @@ import { Bell, Check, Plus, Settings } from 'lucide-react';
 import React from 'react';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,11 +32,11 @@ export const SidebarMenuHeader = () => {
   const otherWorkspaceStates = otherWorkspaces.map((w) =>
     radar.getWorkspaceState(w.accountId, w.id)
   );
-  const importantCount = otherWorkspaceStates.reduce(
-    (acc, curr) => acc + curr.importantCount,
+  const unreadCount = otherWorkspaceStates.reduce(
+    (acc, curr) => acc + curr.state.unreadCount,
     0
   );
-  const hasUnseenChanges = otherWorkspaceStates.some((w) => w.hasUnseenChanges);
+  const hasUnread = otherWorkspaceStates.some((w) => w.state.hasUnread);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -48,9 +48,9 @@ export const SidebarMenuHeader = () => {
             name={workspace.name}
             className="size-10 rounded-lg shadow-md"
           />
-          <NotificationBadge
-            count={importantCount}
-            unseen={hasUnseenChanges}
+          <UnreadBadge
+            count={unreadCount}
+            unread={hasUnread}
             className="absolute -top-1 right-0"
           />
         </button>
@@ -93,7 +93,7 @@ export const SidebarMenuHeader = () => {
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="mb-1">Workspaces</DropdownMenuLabel>
             {workspaces.map((workspaceItem) => {
-              const workspaceState = radar.getWorkspaceState(
+              const workspaceUnreadState = radar.getWorkspaceState(
                 workspaceItem.accountId,
                 workspaceItem.id
               );
@@ -118,9 +118,9 @@ export const SidebarMenuHeader = () => {
                     {workspaceItem.id === workspace.id ? (
                       <Check className="size-4" />
                     ) : (
-                      <NotificationBadge
-                        count={workspaceState.importantCount}
-                        unseen={workspaceState.hasUnseenChanges}
+                      <UnreadBadge
+                        count={workspaceUnreadState.state.unreadCount}
+                        unread={workspaceUnreadState.state.hasUnread}
                       />
                     )}
                   </div>

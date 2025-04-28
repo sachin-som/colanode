@@ -7,6 +7,7 @@ import {
 import { ColumnType, Insertable, Selectable, Updateable } from 'kysely';
 
 import { DownloadStatus, UploadStatus } from '@/shared/types/files';
+import { NodeCounterType } from '@/shared/types/nodes';
 
 interface UserTable {
   id: ColumnType<string, string, never>;
@@ -92,6 +93,31 @@ interface NodeReactionTable {
 export type SelectNodeReaction = Selectable<NodeReactionTable>;
 export type CreateNodeReaction = Insertable<NodeReactionTable>;
 export type UpdateNodeReaction = Updateable<NodeReactionTable>;
+
+interface NodeReferenceTable {
+  node_id: ColumnType<string, string, never>;
+  reference_id: ColumnType<string, string, never>;
+  inner_id: ColumnType<string, string, never>;
+  type: ColumnType<string, string, string>;
+  created_at: ColumnType<string, string, never>;
+  created_by: ColumnType<string, string, never>;
+}
+
+export type SelectNodeReference = Selectable<NodeReferenceTable>;
+export type CreateNodeReference = Insertable<NodeReferenceTable>;
+export type UpdateNodeReference = Updateable<NodeReferenceTable>;
+
+interface NodeCounterTable {
+  node_id: ColumnType<string, string, never>;
+  type: ColumnType<NodeCounterType, NodeCounterType, never>;
+  count: ColumnType<number, number, number>;
+  created_at: ColumnType<string, string, never>;
+  updated_at: ColumnType<string | null, string | null, string | null>;
+}
+
+export type SelectNodeCounter = Selectable<NodeCounterTable>;
+export type CreateNodeCounter = Insertable<NodeCounterTable>;
+export type UpdateNodeCounter = Updateable<NodeCounterTable>;
 
 interface NodeTextTable {
   id: ColumnType<string, string, never>;
@@ -244,6 +270,8 @@ export interface WorkspaceDatabaseSchema {
   node_interactions: NodeInteractionTable;
   node_updates: NodeUpdateTable;
   node_reactions: NodeReactionTable;
+  node_references: NodeReferenceTable;
+  node_counters: NodeCounterTable;
   node_texts: NodeTextTable;
   documents: DocumentTable;
   document_states: DocumentStateTable;

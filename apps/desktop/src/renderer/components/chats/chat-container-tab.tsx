@@ -2,7 +2,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useRadar } from '@/renderer/contexts/radar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 
 interface ChatContainerTabProps {
   chatId: string;
@@ -45,20 +45,21 @@ export const ChatContainerTab = ({
     return <p className="text-sm text-muted-foreground">Not found</p>;
   }
 
-  const chatState = radar.getChatState(
+  const unreadState = radar.getNodeState(
     workspace.accountId,
     workspace.id,
     chat.id
   );
-  const unreadCount = chatState.unseenMessagesCount;
-  const mentionsCount = chatState.mentionsCount;
 
   return (
     <div className="flex items-center space-x-2">
       <Avatar size="small" id={user.id} name={user.name} avatar={user.avatar} />
       <span>{user.name}</span>
       {!isActive && (
-        <NotificationBadge count={mentionsCount} unseen={unreadCount > 0} />
+        <UnreadBadge
+          count={unreadState.unreadCount}
+          unread={unreadState.hasUnread}
+        />
       )}
     </div>
   );

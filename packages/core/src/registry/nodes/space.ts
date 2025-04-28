@@ -73,7 +73,7 @@ export const spaceModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (_, attributes) => {
+  extractText: (_, attributes) => {
     if (attributes.type !== 'space') {
       throw new Error('Invalid node type');
     }
@@ -82,5 +82,8 @@ export const spaceModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

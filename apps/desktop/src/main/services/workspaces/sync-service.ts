@@ -122,10 +122,8 @@ export class SyncService {
       await this.collaborationSynchronizer.init();
     }
 
-    const collaborations = await this.workspace.database
-      .selectFrom('collaborations')
-      .selectAll()
-      .execute();
+    const collaborations =
+      this.workspace.collaborations.getActiveCollaborations();
 
     for (const collaboration of collaborations) {
       await this.initRootSynchronizers(collaboration.node_id);

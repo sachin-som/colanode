@@ -128,7 +128,7 @@ async function fetchChatHistory(state: AssistantChainState) {
     const isAI = message.created_by === 'colanode_ai';
     const extracted = (message &&
       message.attributes &&
-      getNodeModel(message.type)?.extractNodeText(
+      getNodeModel(message.type)?.extractText(
         message.id,
         message.attributes
       )) || { attributes: '' };

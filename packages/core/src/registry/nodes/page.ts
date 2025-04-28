@@ -70,7 +70,7 @@ export const pageModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (id, attributes) => {
+  extractText: (id, attributes) => {
     if (attributes.type !== 'page') {
       throw new Error('Invalid node type');
     }
@@ -79,5 +79,8 @@ export const pageModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

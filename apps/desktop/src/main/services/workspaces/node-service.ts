@@ -16,10 +16,18 @@ import {
 import { decodeState, encodeState, YDoc } from '@colanode/crdt';
 
 import { fetchNodeTree } from '@/main/lib/utils';
-import { mapNode } from '@/main/lib/mappers';
+import { mapNode, mapNodeReference } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
-import { SelectNode } from '@/main/databases/workspace';
+import {
+  CreateNodeReference,
+  SelectNode,
+  SelectNodeReference,
+} from '@/main/databases/workspace';
+import {
+  applyMentionUpdates,
+  checkMentionChanges,
+} from '@/shared/lib/mentions';
 
 const UPDATE_RETRIES_LIMIT = 20;
 
@@ -77,11 +85,21 @@ export class NodeService {
     const updateId = generateId(IdType.Update);
     const createdAt = new Date().toISOString();
     const rootId = tree[0]?.id ?? input.id;
-    const nodeText = model.extractNodeText(input.id, input.attributes);
+    const nodeText = model.extractText(input.id, input.attributes);
+    const mentions = model.extractMentions(input.id, input.attributes);
+    const nodeReferencesToCreate: CreateNodeReference[] = mentions.map(
+      (mention) => ({
+        node_id: input.id,
+        reference_id: mention.target,
+        inner_id: mention.id,
+        type: 'mention',
+        created_at: createdAt,
+        created_by: this.workspace.userId,
+      })
+    );
 
-    const { createdNode, createdMutation } = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
+    const { createdNode, createdMutation, createdNodeReferences } =
+      await this.workspace.database.transaction().execute(async (trx) => {
         const createdNode = await trx
           .insertInto('nodes')
           .returningAll()
@@ -149,14 +167,28 @@ export class NodeService {
             .execute();
         }
 
+        let createdNodeReferences: SelectNodeReference[] = [];
+        if (nodeReferencesToCreate.length > 0) {
+          createdNodeReferences = await trx
+            .insertInto('node_references')
+            .values(nodeReferencesToCreate)
+            .returningAll()
+            .execute();
+        }
+
         return {
           createdNode,
           createdMutation,
+          createdNodeReferences,
         };
       });
 
     if (!createdNode) {
       throw new Error('Failed to create node');
+    }
+
+    if (!createdMutation) {
+      throw new Error('Failed to create mutation');
     }
 
     this.debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
@@ -168,8 +200,13 @@ export class NodeService {
       node: mapNode(createdNode),
     });
 
-    if (!createdMutation) {
-      throw new Error('Failed to create mutation');
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
     }
 
     this.workspace.mutations.triggerSync();
@@ -248,82 +285,100 @@ export class NodeService {
 
     const attributes = ydoc.getObject<NodeAttributes>();
     const localRevision = BigInt(node.localRevision) + BigInt(1);
-    const nodeText = model.extractNodeText(nodeId, node.attributes);
+    const nodeText = model.extractText(nodeId, attributes);
 
-    const { updatedNode, createdMutation } = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
-        const updatedNode = await trx
-          .updateTable('nodes')
-          .returningAll()
-          .set({
-            attributes: JSON.stringify(attributes),
-            updated_at: updatedAt,
-            updated_by: this.workspace.userId,
-            local_revision: localRevision,
-          })
-          .where('id', '=', nodeId)
-          .where('local_revision', '=', node.localRevision)
-          .executeTakeFirst();
+    const beforeMentions = model.extractMentions(nodeId, node.attributes);
+    const afterMentions = model.extractMentions(nodeId, attributes);
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
 
-        if (!updatedNode) {
-          throw new Error('Failed to update node');
-        }
+    const {
+      updatedNode,
+      createdMutation,
+      createdNodeReferences,
+      deletedNodeReferences,
+    } = await this.workspace.database.transaction().execute(async (trx) => {
+      const updatedNode = await trx
+        .updateTable('nodes')
+        .returningAll()
+        .set({
+          attributes: JSON.stringify(attributes),
+          updated_at: updatedAt,
+          updated_by: this.workspace.userId,
+          local_revision: localRevision,
+        })
+        .where('id', '=', nodeId)
+        .where('local_revision', '=', node.localRevision)
+        .executeTakeFirst();
 
-        const createdUpdate = await trx
-          .insertInto('node_updates')
-          .returningAll()
+      if (!updatedNode) {
+        throw new Error('Failed to update node');
+      }
+
+      const createdUpdate = await trx
+        .insertInto('node_updates')
+        .returningAll()
+        .values({
+          id: updateId,
+          node_id: nodeId,
+          data: update,
+          created_at: updatedAt,
+        })
+        .executeTakeFirst();
+
+      if (!createdUpdate) {
+        throw new Error('Failed to create update');
+      }
+
+      const mutationData: UpdateNodeMutationData = {
+        nodeId: nodeId,
+        updateId: updateId,
+        data: encodeState(update),
+        createdAt: updatedAt,
+      };
+
+      const createdMutation = await trx
+        .insertInto('mutations')
+        .returningAll()
+        .values({
+          id: generateId(IdType.Mutation),
+          type: 'update_node',
+          data: JSON.stringify(mutationData),
+          created_at: updatedAt,
+          retries: 0,
+        })
+        .executeTakeFirst();
+
+      if (!createdMutation) {
+        throw new Error('Failed to create mutation');
+      }
+
+      if (nodeText) {
+        await trx
+          .insertInto('node_texts')
           .values({
-            id: updateId,
-            node_id: nodeId,
-            data: update,
-            created_at: updatedAt,
+            id: nodeId,
+            name: nodeText.name,
+            attributes: nodeText.attributes,
           })
-          .executeTakeFirst();
+          .execute();
+      }
 
-        if (!createdUpdate) {
-          throw new Error('Failed to create update');
-        }
+      const { createdNodeReferences, deletedNodeReferences } =
+        await applyMentionUpdates(
+          trx,
+          nodeId,
+          this.workspace.userId,
+          updatedAt,
+          mentionChanges
+        );
 
-        const mutationData: UpdateNodeMutationData = {
-          nodeId: nodeId,
-          updateId: updateId,
-          data: encodeState(update),
-          createdAt: updatedAt,
-        };
-
-        const createdMutation = await trx
-          .insertInto('mutations')
-          .returningAll()
-          .values({
-            id: generateId(IdType.Mutation),
-            type: 'update_node',
-            data: JSON.stringify(mutationData),
-            created_at: updatedAt,
-            retries: 0,
-          })
-          .executeTakeFirst();
-
-        if (!createdMutation) {
-          throw new Error('Failed to create mutation');
-        }
-
-        if (nodeText) {
-          await trx
-            .insertInto('node_texts')
-            .values({
-              id: nodeId,
-              name: nodeText.name,
-              attributes: nodeText.attributes,
-            })
-            .execute();
-        }
-
-        return {
-          updatedNode,
-          createdMutation,
-        };
-      });
+      return {
+        updatedNode,
+        createdMutation,
+        createdNodeReferences,
+        deletedNodeReferences,
+      };
+    });
 
     if (updatedNode) {
       this.debug(
@@ -342,6 +397,24 @@ export class NodeService {
 
     if (createdMutation) {
       this.workspace.mutations.triggerSync();
+    }
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
+    }
+
+    for (const deletedNodeReference of deletedNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_deleted',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(deletedNodeReference),
+      });
     }
 
     if (updatedNode) {
@@ -472,9 +545,18 @@ export class NodeService {
     const attributes = ydoc.getObject<NodeAttributes>();
 
     const model = getNodeModel(attributes.type);
-    const nodeText = model.extractNodeText(update.id, attributes);
+    const nodeText = model.extractText(update.nodeId, attributes);
+    const mentions = model.extractMentions(update.nodeId, attributes);
+    const nodeReferencesToCreate = mentions.map((mention) => ({
+      node_id: update.nodeId,
+      reference_id: mention.target,
+      inner_id: mention.id,
+      type: 'mention',
+      created_at: update.createdAt,
+      created_by: update.createdBy,
+    }));
 
-    const { createdNode } = await this.workspace.database
+    const { createdNode, createdNodeReferences } = await this.workspace.database
       .transaction()
       .execute(async (trx) => {
         const createdNode = await trx
@@ -516,7 +598,16 @@ export class NodeService {
             .execute();
         }
 
-        return { createdNode };
+        let createdNodeReferences: SelectNodeReference[] = [];
+        if (nodeReferencesToCreate.length > 0) {
+          createdNodeReferences = await trx
+            .insertInto('node_references')
+            .values(nodeReferencesToCreate)
+            .returningAll()
+            .execute();
+        }
+
+        return { createdNode, createdNodeReferences };
       });
 
     if (!createdNode) {
@@ -532,6 +623,20 @@ export class NodeService {
       workspaceId: this.workspace.id,
       node: mapNode(createdNode),
     });
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
+    }
+
+    await this.workspace.nodeCounters.checkCountersForCreatedNode(
+      createdNode,
+      createdNodeReferences
+    );
 
     return true;
   }
@@ -571,14 +676,21 @@ export class NodeService {
     const localRevision = BigInt(existingNode.local_revision) + BigInt(1);
 
     const model = getNodeModel(attributes.type);
-    const nodeText = model.extractNodeText(existingNode.id, attributes);
+    const nodeText = model.extractText(existingNode.id, attributes);
+
+    const beforeAttributes = JSON.parse(existingNode.attributes);
+    const beforeMentions = model.extractMentions(
+      existingNode.id,
+      beforeAttributes
+    );
+    const afterMentions = model.extractMentions(existingNode.id, attributes);
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
 
     const mergedUpdateIds = update.mergedUpdates?.map((u) => u.id) ?? [];
     const updatesToDelete = [update.id, ...mergedUpdateIds];
 
-    const { updatedNode } = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
+    const { updatedNode, createdNodeReferences, deletedNodeReferences } =
+      await this.workspace.database.transaction().execute(async (trx) => {
         const updatedNode = await trx
           .updateTable('nodes')
           .returningAll()
@@ -637,7 +749,16 @@ export class NodeService {
             .execute();
         }
 
-        return { updatedNode };
+        const { createdNodeReferences, deletedNodeReferences } =
+          await applyMentionUpdates(
+            trx,
+            existingNode.id,
+            update.createdBy,
+            update.createdAt,
+            mentionChanges
+          );
+
+        return { updatedNode, createdNodeReferences, deletedNodeReferences };
       });
 
     if (!updatedNode) {
@@ -653,6 +774,24 @@ export class NodeService {
       workspaceId: this.workspace.id,
       node: mapNode(updatedNode),
     });
+
+    for (const createdNodeReference of createdNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_created',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(createdNodeReference),
+      });
+    }
+
+    for (const deletedNodeReference of deletedNodeReferences) {
+      eventBus.publish({
+        type: 'node_reference_deleted',
+        accountId: this.workspace.accountId,
+        workspaceId: this.workspace.id,
+        nodeReference: mapNodeReference(deletedNodeReference),
+      });
+    }
 
     return true;
   }
@@ -692,6 +831,11 @@ export class NodeService {
           .execute();
 
         await trx
+          .deleteFrom('node_references')
+          .where('node_id', '=', tombstone.id)
+          .execute();
+
+        await trx
           .deleteFrom('tombstones')
           .where('id', '=', tombstone.id)
           .execute();
@@ -714,14 +858,18 @@ export class NodeService {
         return { deletedNode };
       });
 
-    if (deletedNode) {
-      eventBus.publish({
-        type: 'node_deleted',
-        accountId: this.workspace.accountId,
-        workspaceId: this.workspace.id,
-        node: mapNode(deletedNode),
-      });
+    if (!deletedNode) {
+      return;
     }
+
+    await this.workspace.nodeCounters.checkCountersForDeletedNode(deletedNode);
+
+    eventBus.publish({
+      type: 'node_deleted',
+      accountId: this.workspace.accountId,
+      workspaceId: this.workspace.id,
+      node: mapNode(deletedNode),
+    });
   }
 
   public async revertNodeCreate(mutation: CreateNodeMutationData) {
@@ -756,6 +904,11 @@ export class NodeService {
       await tx
         .deleteFrom('node_states')
         .where('id', '=', mutation.nodeId)
+        .execute();
+
+      await tx
+        .deleteFrom('node_references')
+        .where('node_id', '=', mutation.nodeId)
         .execute();
 
       await tx
@@ -823,6 +976,11 @@ export class NodeService {
         .execute();
 
       await this.workspace.database
+        .deleteFrom('node_references')
+        .where('node_id', '=', mutation.nodeId)
+        .execute();
+
+      await this.workspace.database
         .deleteFrom('documents')
         .where('id', '=', mutation.nodeId)
         .execute();
@@ -871,12 +1029,16 @@ export class NodeService {
 
     const attributes = ydoc.getObject<NodeAttributes>();
     const model = getNodeModel(attributes.type);
-    const nodeText = model.extractNodeText(node.id, attributes);
+    const nodeText = model.extractText(node.id, attributes);
     const localRevision = BigInt(node.local_revision) + BigInt(1);
 
-    const updatedNode = await this.workspace.database
-      .transaction()
-      .execute(async (trx) => {
+    const beforeAttributes = JSON.parse(node.attributes);
+    const beforeMentions = model.extractMentions(node.id, beforeAttributes);
+    const afterMentions = model.extractMentions(node.id, attributes);
+    const mentionChanges = checkMentionChanges(beforeMentions, afterMentions);
+
+    const { updatedNode, createdNodeReferences, deletedNodeReferences } =
+      await this.workspace.database.transaction().execute(async (trx) => {
         const updatedNode = await trx
           .updateTable('nodes')
           .returningAll()
@@ -889,7 +1051,7 @@ export class NodeService {
           .executeTakeFirst();
 
         if (!updatedNode) {
-          return undefined;
+          throw new Error('Failed to update node');
         }
 
         await trx
@@ -907,6 +1069,17 @@ export class NodeService {
             })
             .execute();
         }
+
+        const { createdNodeReferences, deletedNodeReferences } =
+          await applyMentionUpdates(
+            trx,
+            node.id,
+            this.workspace.userId,
+            mutation.createdAt,
+            mentionChanges
+          );
+
+        return { updatedNode, createdNodeReferences, deletedNodeReferences };
       });
 
     if (updatedNode) {
@@ -916,6 +1089,24 @@ export class NodeService {
         workspaceId: this.workspace.id,
         node: mapNode(updatedNode),
       });
+
+      for (const createdNodeReference of createdNodeReferences) {
+        eventBus.publish({
+          type: 'node_reference_created',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          nodeReference: mapNodeReference(createdNodeReference),
+        });
+      }
+
+      for (const deletedNodeReference of deletedNodeReferences) {
+        eventBus.publish({
+          type: 'node_reference_deleted',
+          accountId: this.workspace.accountId,
+          workspaceId: this.workspace.id,
+          nodeReference: mapNodeReference(deletedNodeReference),
+        });
+      }
 
       return true;
     }

@@ -46,7 +46,10 @@ export const chatModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: () => {
+  extractText: () => {
     return null;
+  },
+  extractMentions: () => {
+    return [];
   },
 };

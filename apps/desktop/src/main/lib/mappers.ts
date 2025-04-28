@@ -22,6 +22,7 @@ import {
   SelectDocument,
   SelectDocumentState,
   SelectDocumentUpdate,
+  SelectNodeReference,
 } from '@/main/databases/workspace';
 import {
   Account,
@@ -36,7 +37,12 @@ import {
   WorkspaceMetadata,
   WorkspaceMetadataKey,
 } from '@/shared/types/workspaces';
-import { LocalNode, NodeInteraction, NodeReaction } from '@/shared/types/nodes';
+import {
+  LocalNode,
+  NodeInteraction,
+  NodeReaction,
+  NodeReference,
+} from '@/shared/types/nodes';
 import { Emoji } from '@/shared/types/emojis';
 import { Icon } from '@/shared/types/icons';
 import { AppMetadata, AppMetadataKey } from '@/shared/types/apps';
@@ -249,5 +255,14 @@ export const mapWorkspaceMetadata = (
     value: JSON.parse(row.value),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+};
+
+export const mapNodeReference = (row: SelectNodeReference): NodeReference => {
+  return {
+    nodeId: row.node_id,
+    referenceId: row.reference_id,
+    innerId: row.inner_id,
+    type: row.type,
   };
 };

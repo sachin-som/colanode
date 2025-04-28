@@ -108,6 +108,7 @@ const mapContentsToBlockLeafs = (
     nodeBlocks.push({
       type: content.type,
       text: content.text,
+      attrs: content.attrs,
       marks: content.marks?.map((mark) => {
         return {
           type: mark.type,
@@ -189,6 +190,7 @@ const mapBlockLeafsToContents = (
     contents.push({
       type: leaf.type,
       ...(leaf.text && { text: leaf.text }),
+      ...(leaf.attrs && { attrs: leaf.attrs }),
       ...(leaf.marks?.length && {
         marks: leaf.marks.map((mark) => ({
           type: mark.type,

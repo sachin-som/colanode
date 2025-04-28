@@ -2,7 +2,7 @@ import { Avatar } from '@/renderer/components/avatars/avatar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useQuery } from '@/renderer/hooks/use-query';
 import { useRadar } from '@/renderer/contexts/radar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 import { LocalChannelNode } from '@/shared/types/nodes';
 
 interface ChannelContainerTabProps {
@@ -38,13 +38,11 @@ export const ChannelContainerTab = ({
       ? channel.attributes.name
       : 'Unnamed';
 
-  const channelState = radar.getChannelState(
+  const unreadState = radar.getNodeState(
     workspace.accountId,
     workspace.id,
     channel.id
   );
-  const unreadCount = channelState.unseenMessagesCount;
-  const mentionsCount = channelState.mentionsCount;
 
   return (
     <div className="flex items-center space-x-2">
@@ -56,7 +54,10 @@ export const ChannelContainerTab = ({
       />
       <span>{name}</span>
       {!isActive && (
-        <NotificationBadge count={mentionsCount} unseen={unreadCount > 0} />
+        <UnreadBadge
+          count={unreadState.unreadCount}
+          unread={unreadState.hasUnread}
+        />
       )}
     </div>
   );

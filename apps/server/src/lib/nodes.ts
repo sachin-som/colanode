@@ -18,6 +18,7 @@ import { cloneDeep } from 'lodash-es';
 import { database } from '@/data/database';
 import {
   CreateCollaboration,
+  SelectCollaboration,
   SelectNode,
   SelectNodeUpdate,
   SelectUser,
@@ -174,17 +175,17 @@ export const createNode = async (
           throw new Error('Failed to create node');
         }
 
+        let createdCollaborations: SelectCollaboration[] = [];
+
         if (collaborationsToCreate.length > 0) {
-          const createdCollaborations = await trx
+          createdCollaborations = await trx
             .insertInto('collaborations')
             .returningAll()
             .values(collaborationsToCreate)
             .execute();
-
-          return { createdNode, createdCollaborations };
         }
 
-        return { createdNode, createdCollaborations: [] };
+        return { createdNode, createdCollaborations };
       });
 
     eventBus.publish({
@@ -443,17 +444,17 @@ export const createNodeFromMutation = async (
           throw new Error('Failed to create node');
         }
 
+        let createdCollaborations: SelectCollaboration[] = [];
+
         if (collaborationsToCreate.length > 0) {
-          const createdCollaborations = await trx
+          createdCollaborations = await trx
             .insertInto('collaborations')
             .returningAll()
             .values(collaborationsToCreate)
             .execute();
-
-          return { createdNode, createdCollaborations };
         }
 
-        return { createdNode, createdCollaborations: [] };
+        return { createdNode, createdCollaborations };
       });
 
     eventBus.publish({

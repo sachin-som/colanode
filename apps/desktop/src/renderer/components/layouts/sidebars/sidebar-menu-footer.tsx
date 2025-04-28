@@ -3,7 +3,7 @@ import React from 'react';
 
 import { useApp } from '@/renderer/contexts/app';
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
 import { AccountContext, useAccount } from '@/renderer/contexts/account';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useQuery } from '@/renderer/hooks/use-query';
-import { AccountReadState } from '@/shared/types/radars';
+import { UnreadState } from '@/shared/types/radars';
 
 export function SidebarMenuFooter() {
   const app = useApp();
@@ -29,16 +29,18 @@ export function SidebarMenuFooter() {
 
   const accounts = data ?? [];
   const otherAccounts = accounts.filter((a) => a.id !== account.id);
-  const accountStates: Record<string, AccountReadState> = {};
+  const accountUnreadStates: Record<string, UnreadState> = {};
   for (const accountItem of otherAccounts) {
-    accountStates[accountItem.id] = radar.getAccountState(accountItem.id);
+    accountUnreadStates[accountItem.id] = radar.getAccountState(accountItem.id);
   }
-  const importantCount = Object.values(accountStates).reduce(
-    (acc, curr) => acc + curr.importantCount,
-    0
+
+  const hasUnread = Object.values(accountUnreadStates).some(
+    (state) => state.hasUnread
   );
-  const hasUnseenChanges = Object.values(accountStates).some(
-    (state) => state.hasUnseenChanges
+
+  const unreadCount = Object.values(accountUnreadStates).reduce(
+    (acc, curr) => acc + curr.unreadCount,
+    0
   );
 
   return (
@@ -51,9 +53,9 @@ export function SidebarMenuFooter() {
             avatar={account.avatar}
             className="size-10 rounded-lg shadow-md"
           />
-          <NotificationBadge
-            count={importantCount}
-            unseen={hasUnseenChanges}
+          <UnreadBadge
+            count={unreadCount}
+            unread={hasUnread}
             className="absolute -top-1 right-0"
           />
         </button>
@@ -102,9 +104,9 @@ export function SidebarMenuFooter() {
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="mb-1">Accounts</DropdownMenuLabel>
             {accounts.map((accountItem) => {
-              const state = accountStates[accountItem.id] ?? {
-                importantCount: 0,
-                hasUnseenChanges: false,
+              const state = accountUnreadStates[accountItem.id] ?? {
+                unreadCount: 0,
+                hasUnread: false,
               };
 
               return (
@@ -142,9 +144,9 @@ export function SidebarMenuFooter() {
                       {accountItem.id === account.id ? (
                         <Check className="size-4" />
                       ) : (
-                        <NotificationBadge
-                          count={state.importantCount}
-                          unseen={state.hasUnseenChanges}
+                        <UnreadBadge
+                          count={state.unreadCount}
+                          unread={state.hasUnread}
                         />
                       )}
                     </div>

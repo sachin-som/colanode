@@ -33,3 +33,5 @@ export * from './lib/permissions';
 export * from './types/api';
 export * from './lib/debugger';
 export * from './types/crdt';
+export * from './lib/mentions';
+export * from './types/mentions';

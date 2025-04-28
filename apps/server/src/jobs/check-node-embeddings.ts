@@ -51,7 +51,7 @@ export const checkNodeEmbeddingsHandler = async () => {
         continue;
       }
 
-      const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+      const nodeText = nodeModel.extractText(node.id, node.attributes);
       if (!nodeText) {
         continue;
       }

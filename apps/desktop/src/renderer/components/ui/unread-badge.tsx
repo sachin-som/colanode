@@ -1,17 +1,13 @@
 import { cn } from '@/shared/lib/utils';
 
-interface NotificationBadgeProps {
+interface UnreadBadgeProps {
   count: number;
-  unseen: boolean;
+  unread: boolean;
   className?: string;
 }
 
-export const NotificationBadge = ({
-  count,
-  unseen,
-  className,
-}: NotificationBadgeProps) => {
-  if (count === 0 && !unseen) {
+export const UnreadBadge = ({ count, unread, className }: UnreadBadgeProps) => {
+  if (count === 0 && !unread) {
     return null;
   }
 

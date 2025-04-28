@@ -2,13 +2,36 @@ import { SyncCollaborationData, createDebugger } from '@colanode/core';
 
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
+import { SelectCollaboration } from '@/main/databases/workspace';
 
 export class CollaborationService {
   private readonly debug = createDebugger('desktop:service:collaboration');
   private readonly workspace: WorkspaceService;
+  private readonly collaborations = new Map<string, SelectCollaboration>();
 
   constructor(workspace: WorkspaceService) {
     this.workspace = workspace;
+  }
+
+  public async init() {
+    const collaborations = await this.workspace.database
+      .selectFrom('collaborations')
+      .selectAll()
+      .execute();
+
+    for (const collaboration of collaborations) {
+      this.collaborations.set(collaboration.node_id, collaboration);
+    }
+  }
+
+  public getActiveCollaborations() {
+    return Array.from(this.collaborations.values()).filter(
+      (collaboration) => !collaboration.deleted_at
+    );
+  }
+
+  public getCollaboration(nodeId: string) {
+    return this.collaborations.get(nodeId);
   }
 
   public async syncServerCollaboration(collaboration: SyncCollaborationData) {
@@ -16,8 +39,9 @@ export class CollaborationService {
       `Applying server collaboration: ${collaboration.nodeId} for workspace ${this.workspace.id}`
     );
 
-    await this.workspace.database
+    const upsertedCollaboration = await this.workspace.database
       .insertInto('collaborations')
+      .returningAll()
       .values({
         node_id: collaboration.nodeId,
         role: collaboration.role,
@@ -37,9 +61,16 @@ export class CollaborationService {
           })
           .where('revision', '<', BigInt(collaboration.revision))
       )
-      .execute();
+      .executeTakeFirst();
+
+    this.collaborations.set(
+      collaboration.nodeId,
+      upsertedCollaboration as SelectCollaboration
+    );
 
     if (collaboration.deletedAt) {
+      this.collaborations.delete(collaboration.nodeId);
+
       await this.workspace.database
         .deleteFrom('nodes')
         .where('root_id', '=', collaboration.nodeId)
@@ -51,7 +82,7 @@ export class CollaborationService {
         .execute();
 
       await this.workspace.database
-        .deleteFrom('node_interactions')
+        .deleteFrom('node_reactions')
         .where('root_id', '=', collaboration.nodeId)
         .execute();
 

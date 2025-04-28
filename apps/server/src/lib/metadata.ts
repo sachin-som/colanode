@@ -84,7 +84,7 @@ const fetchParentContext = async (
     return undefined;
   }
 
-  const parentText = parentModel.extractNodeText(
+  const parentText = parentModel.extractText(
     parentNode.id,
     parentNode.attributes
   );
@@ -100,7 +100,7 @@ const fetchParentContext = async (
   const path = pathNodes
     .map((n) => {
       const model = getNodeModel(n.attributes.type);
-      return model?.extractNodeText(n.id, n.attributes)?.name ?? '';
+      return model?.extractText(n.id, n.attributes)?.name ?? '';
     })
     .join(' / ');
 
@@ -173,7 +173,7 @@ export const fetchNodeMetadata = async (
     return undefined;
   }
 
-  const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+  const nodeText = nodeModel.extractText(node.id, node.attributes);
   if (!nodeText) {
     return undefined;
   }
@@ -251,7 +251,7 @@ export const fetchDocumentMetadata = async (
 
   const nodeModel = getNodeModel(node.type);
   if (nodeModel) {
-    const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+    const nodeText = nodeModel.extractText(node.id, node.attributes);
     if (nodeText) {
       baseMetadata.name = nodeText.name;
     }
@@ -354,7 +354,7 @@ export const fetchNodesMetadata = async (
       continue;
     }
 
-    const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+    const nodeText = nodeModel.extractText(node.id, node.attributes);
     if (!nodeText) {
       continue;
     }
@@ -388,7 +388,7 @@ export const fetchNodesMetadata = async (
       if (parentNode) {
         const parentModel = getNodeModel(parentNode.type);
         if (parentModel) {
-          const parentText = parentModel.extractNodeText(
+          const parentText = parentModel.extractText(
             parentNode.id,
             parentNode.attributes
           );
@@ -525,7 +525,7 @@ export const fetchDocumentsMetadata = async (
     let name: string | undefined;
     const nodeModel = getNodeModel(node.type);
     if (nodeModel) {
-      const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+      const nodeText = nodeModel.extractText(node.id, node.attributes);
       if (nodeText) {
         name = nodeText.name ?? '';
       }
@@ -553,7 +553,7 @@ export const fetchDocumentsMetadata = async (
       if (parentNode) {
         const parentModel = getNodeModel(parentNode.type);
         if (parentModel) {
-          const parentText = parentModel.extractNodeText(
+          const parentText = parentModel.extractText(
             parentNode.id,
             parentNode.attributes
           );

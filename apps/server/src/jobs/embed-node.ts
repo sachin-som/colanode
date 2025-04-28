@@ -41,7 +41,7 @@ export const embedNodeHandler = async (input: {
     return;
   }
 
-  const nodeText = nodeModel.extractNodeText(node.id, node.attributes);
+  const nodeText = nodeModel.extractText(node.id, node.attributes);
   if (!nodeText) {
     return;
   }

@@ -24,6 +24,7 @@ import {
   TextNode,
   TrailingNode,
   UnderlineMark,
+  MentionExtension,
 } from '@/renderer/editor/extensions';
 import { ToolbarMenu } from '@/renderer/editor/menus';
 import { FileMetadata } from '@/shared/types/files';
@@ -32,6 +33,7 @@ interface MessageEditorProps {
   accountId: string;
   workspaceId: string;
   conversationId: string;
+  rootId: string;
   onChange?: (content: JSONContent) => void;
   onSubmit: () => void;
 }
@@ -74,6 +76,14 @@ export const MessageEditor = React.forwardRef<
           workspaceId: props.workspaceId,
         }),
         FileNode,
+        MentionExtension.configure({
+          context: {
+            accountId: props.accountId,
+            workspaceId: props.workspaceId,
+            documentId: props.conversationId,
+            rootId: props.rootId,
+          },
+        }),
       ],
       editorProps: {
         attributes: {

@@ -6,6 +6,7 @@ import { blockSchema } from '../block';
 import { extractBlockTexts } from '../../lib/texts';
 import { extractNodeRole } from '../../lib/nodes';
 import { hasNodeRole } from '../../lib/permissions';
+import { extractBlocksMentions } from '../../lib/mentions';
 
 export const messageAttributesSchema = z.object({
   type: z.literal('message'),
@@ -75,7 +76,7 @@ export const messageModel: NodeModel = {
 
     return hasNodeRole(role, 'viewer');
   },
-  extractNodeText: (id, attributes) => {
+  extractText: (id, attributes) => {
     if (attributes.type !== 'message') {
       throw new Error('Invalid node type');
     }
@@ -86,5 +87,12 @@ export const messageModel: NodeModel = {
       name: attributes.name,
       attributes: attributesText,
     };
+  },
+  extractMentions: (id, attributes) => {
+    if (attributes.type !== 'message') {
+      throw new Error('Invalid node type');
+    }
+
+    return extractBlocksMentions(id, attributes.content);
   },
 };

@@ -37,6 +37,7 @@ export enum IdType {
   Host = 'ht',
   Block = 'bl',
   OtpCode = 'ot',
+  Mention = 'me',
 }
 
 export const generateId = (type: IdType): string => {

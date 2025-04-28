@@ -18,6 +18,7 @@ import { ParagraphRenderer } from '@/renderer/editor/renderers/paragraph';
 import { TaskItemRenderer } from '@/renderer/editor/renderers/task-item';
 import { TaskListRenderer } from '@/renderer/editor/renderers/task-list';
 import { TextRenderer } from '@/renderer/editor/renderers/text';
+import { MentionRenderer } from '@/renderer/editor/renderers/mention';
 
 interface NodeRendererProps {
   node: JSONContent;
@@ -72,6 +73,9 @@ export const NodeRenderer = ({
           <CodeBlockRenderer node={node} keyPrefix={keyPrefix} />
         ))
         .with('file', () => <FileRenderer node={node} keyPrefix={keyPrefix} />)
+        .with('mention', () => (
+          <MentionRenderer node={node} keyPrefix={keyPrefix} />
+        ))
         .otherwise(() => null)}
     </MarkRenderer>
   );

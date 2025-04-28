@@ -8,14 +8,14 @@ export const createNodeInteractionsTable: Migration = {
       .addColumn('collaborator_id', 'text', (col) => col.notNull())
       .addColumn('root_id', 'text', (col) => col.notNull())
       .addColumn('revision', 'integer', (col) => col.notNull())
-      .addPrimaryKeyConstraint('node_interactions_pkey', [
-        'node_id',
-        'collaborator_id',
-      ])
       .addColumn('first_seen_at', 'text')
       .addColumn('last_seen_at', 'text')
       .addColumn('first_opened_at', 'text')
       .addColumn('last_opened_at', 'text')
+      .addPrimaryKeyConstraint('node_interactions_pkey', [
+        'node_id',
+        'collaborator_id',
+      ])
       .execute();
   },
   down: async (db) => {

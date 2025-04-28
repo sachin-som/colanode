@@ -59,7 +59,7 @@ export const folderModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (_, attributes) => {
+  extractText: (_, attributes) => {
     if (attributes.type !== 'folder') {
       throw new Error('Invalid node type');
     }
@@ -68,5 +68,8 @@ export const folderModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

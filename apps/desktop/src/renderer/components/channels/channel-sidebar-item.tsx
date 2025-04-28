@@ -1,7 +1,7 @@
 import { InView } from 'react-intersection-observer';
 
 import { Avatar } from '@/renderer/components/avatars/avatar';
-import { NotificationBadge } from '@/renderer/components/ui/notification-badge';
+import { UnreadBadge } from '@/renderer/components/ui/unread-badge';
 import { useRadar } from '@/renderer/contexts/radar';
 import { useWorkspace } from '@/renderer/contexts/workspace';
 import { useLayout } from '@/renderer/contexts/layout';
@@ -18,13 +18,11 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
   const radar = useRadar();
 
   const isActive = layout.activeTab === channel.id;
-  const channelState = radar.getChannelState(
+  const unreadState = radar.getNodeState(
     workspace.accountId,
     workspace.id,
     channel.id
   );
-  const unreadCount = channelState.unseenMessagesCount;
-  const mentionsCount = channelState.mentionsCount;
 
   return (
     <InView
@@ -48,13 +46,16 @@ export const ChannelSidebarItem = ({ channel }: ChannelSidebarItemProps) => {
       <span
         className={cn(
           'line-clamp-1 w-full flex-grow pl-2 text-left',
-          !isActive && unreadCount > 0 && 'font-semibold'
+          !isActive && unreadState.hasUnread && 'font-semibold'
         )}
       >
         {channel.attributes.name ?? 'Unnamed'}
       </span>
       {!isActive && (
-        <NotificationBadge count={mentionsCount} unseen={unreadCount > 0} />
+        <UnreadBadge
+          count={unreadState.unreadCount}
+          unread={unreadState.hasUnread}
+        />
       )}
     </InView>
   );

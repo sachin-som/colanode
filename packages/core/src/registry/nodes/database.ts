@@ -61,7 +61,7 @@ export const databaseModel: NodeModel = {
   canReact: () => {
     return false;
   },
-  extractNodeText: (_, attributes) => {
+  extractText: (_, attributes) => {
     if (attributes.type !== 'database') {
       throw new Error('Invalid node type');
     }
@@ -70,5 +70,8 @@ export const databaseModel: NodeModel = {
       name: attributes.name,
       attributes: null,
     };
+  },
+  extractMentions: () => {
+    return [];
   },
 };

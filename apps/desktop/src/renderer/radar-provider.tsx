@@ -18,70 +18,54 @@ export const RadarProvider = ({ children }: RadarProviderProps) => {
           const accountState = radarData[accountId];
           if (!accountState) {
             return {
-              importantCount: 0,
-              hasUnseenChanges: false,
+              hasUnread: false,
+              unreadCount: 0,
             };
           }
 
-          const importantCount = Object.values(accountState).reduce(
-            (acc, state) => acc + state.importantCount,
+          const hasUnread = Object.values(accountState).some(
+            (state) => state.state.hasUnread
+          );
+
+          const unreadCount = Object.values(accountState).reduce(
+            (acc, state) => acc + state.state.unreadCount,
             0
           );
 
-          const hasUnseenChanges = Object.values(accountState).some(
-            (state) => state.hasUnseenChanges
-          );
-
           return {
-            importantCount,
-            hasUnseenChanges,
+            hasUnread,
+            unreadCount,
           };
         },
         getWorkspaceState: (accountId, workspaceId) => {
           const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
-            return {
-              hasUnseenChanges: workspaceState.hasUnseenChanges,
-              importantCount: workspaceState.importantCount,
-            };
+            return workspaceState;
           }
 
           return {
+            userId: '',
+            workspaceId: workspaceId,
+            accountId: accountId,
+            state: {
+              hasUnread: false,
+              unreadCount: 0,
+            },
             nodeStates: {},
-            importantCount: 0,
-            hasUnseenChanges: false,
           };
         },
-        getChatState: (accountId, workspaceId, chatId) => {
+        getNodeState: (accountId, workspaceId, nodeId) => {
           const workspaceState = radarData[accountId]?.[workspaceId];
           if (workspaceState) {
-            const chatState = workspaceState.nodeStates[chatId];
-            if (chatState && chatState.type === 'chat') {
-              return chatState;
+            const nodeState = workspaceState.nodeStates[nodeId];
+            if (nodeState) {
+              return nodeState;
             }
           }
 
           return {
-            type: 'chat',
-            chatId: chatId,
-            unseenMessagesCount: 0,
-            mentionsCount: 0,
-          };
-        },
-        getChannelState: (accountId, workspaceId, channelId) => {
-          const workspaceState = radarData[accountId]?.[workspaceId];
-          if (workspaceState) {
-            const channelState = workspaceState.nodeStates[channelId];
-            if (channelState && channelState.type === 'channel') {
-              return channelState;
-            }
-          }
-
-          return {
-            type: 'channel',
-            channelId: channelId,
-            unseenMessagesCount: 0,
-            mentionsCount: 0,
+            hasUnread: false,
+            unreadCount: 0,
           };
         },
         markNodeAsSeen: (accountId, workspaceId, nodeId) => {

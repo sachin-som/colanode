@@ -53,7 +53,7 @@ export const assistantResponseHandler: JobHandler<
     return;
   }
 
-  const messageText = messageModel.extractNodeText(
+  const messageText = messageModel.extractText(
     message.id,
     message.attributes
   )?.attributes;

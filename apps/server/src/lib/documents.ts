@@ -41,6 +41,7 @@ export const createDocument = async (
   }
 
   const content = ydoc.getObject<DocumentContent>();
+
   const { createdDocument, createdDocumentUpdate } = await database
     .transaction()
     .execute(async (trx) => {
@@ -188,46 +189,6 @@ const tryUpdateDocumentFromMutation = async (
     const { updatedDocument, createdDocumentUpdate } = await database
       .transaction()
       .execute(async (trx) => {
-        if (document) {
-          const createdDocumentUpdate = await trx
-            .insertInto('document_updates')
-            .returningAll()
-            .values({
-              id: mutation.updateId,
-              document_id: mutation.documentId,
-              workspace_id: user.workspace_id,
-              root_id: node.root_id,
-              data: decodeState(mutation.data),
-              created_at: new Date(mutation.createdAt),
-              created_by: user.id,
-              merged_updates: null,
-            })
-            .executeTakeFirst();
-
-          if (!createdDocumentUpdate) {
-            throw new Error('Failed to create document update');
-          }
-
-          const updatedDocument = await trx
-            .updateTable('documents')
-            .returningAll()
-            .set({
-              content: JSON.stringify(content),
-              updated_at: new Date(mutation.createdAt),
-              updated_by: user.id,
-              revision: createdDocumentUpdate.revision,
-            })
-            .where('id', '=', mutation.documentId)
-            .where('revision', '=', document.revision)
-            .executeTakeFirst();
-
-          if (!updatedDocument) {
-            throw new Error('Failed to update document');
-          }
-
-          return { updatedDocument, createdDocumentUpdate };
-        }
-
         const createdDocumentUpdate = await trx
           .insertInto('document_updates')
           .returningAll()
@@ -247,25 +208,41 @@ const tryUpdateDocumentFromMutation = async (
           throw new Error('Failed to create document update');
         }
 
-        const updatedDocument = await trx
-          .insertInto('documents')
-          .returningAll()
-          .values({
-            id: mutation.documentId,
-            workspace_id: user.workspace_id,
-            content: JSON.stringify(content),
-            created_at: new Date(mutation.createdAt),
-            created_by: user.id,
-            revision: createdDocumentUpdate.revision,
-          })
-          .onConflict((cb) => cb.doNothing())
-          .executeTakeFirst();
+        const updatedDocument = document
+          ? await trx
+              .updateTable('documents')
+              .returningAll()
+              .set({
+                content: JSON.stringify(content),
+                updated_at: new Date(mutation.createdAt),
+                updated_by: user.id,
+                revision: createdDocumentUpdate.revision,
+              })
+              .where('id', '=', mutation.documentId)
+              .where('revision', '=', document.revision)
+              .executeTakeFirst()
+          : await trx
+              .insertInto('documents')
+              .returningAll()
+              .values({
+                id: mutation.documentId,
+                workspace_id: user.workspace_id,
+                content: JSON.stringify(content),
+                created_at: new Date(mutation.createdAt),
+                created_by: user.id,
+                revision: createdDocumentUpdate.revision,
+              })
+              .onConflict((cb) => cb.doNothing())
+              .executeTakeFirst();
 
         if (!updatedDocument) {
           throw new Error('Failed to create document');
         }
 
-        return { updatedDocument, createdDocumentUpdate };
+        return {
+          updatedDocument,
+          createdDocumentUpdate,
+        };
       });
 
     if (!updatedDocument || !createdDocumentUpdate) {

@@ -18,8 +18,9 @@ import { SelectNodeReaction } from '@/main/databases/workspace';
 import { MutationErrorCode, MutationError } from '@/shared/mutations';
 import { fetchNodeTree } from '@/main/lib/utils';
 
+const debug = createDebugger('desktop:service:node-reaction');
+
 export class NodeReactionService {
-  private readonly debug = createDebugger('desktop:service:node-reaction');
   private readonly workspace: WorkspaceService;
 
   constructor(workspaceService: WorkspaceService) {
@@ -252,7 +253,7 @@ export class NodeReactionService {
         });
       }
 
-      this.debug(
+      debug(
         `Server node reaction for node ${nodeReaction.nodeId} has been synced`
       );
       return;
@@ -269,7 +270,7 @@ export class NodeReactionService {
     const revision = BigInt(nodeReaction.revision);
     if (existingNodeReaction) {
       if (existingNodeReaction.revision === revision) {
-        this.debug(
+        debug(
           `Server node reaction for node ${nodeReaction.nodeId} is already synced`
         );
         return;
@@ -290,7 +291,7 @@ export class NodeReactionService {
         return;
       }
 
-      this.debug(
+      debug(
         `Server node reaction for node ${nodeReaction.nodeId} has been synced`
       );
       return;
@@ -325,7 +326,7 @@ export class NodeReactionService {
       nodeReaction: mapNodeReaction(createdNodeReaction),
     });
 
-    this.debug(
+    debug(
       `Server node reaction for node ${nodeReaction.nodeId} has been synced`
     );
   }

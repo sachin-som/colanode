@@ -39,8 +39,9 @@ type SyncHandlers = {
   documentUpdates: (data: SyncDocumentUpdateData) => Promise<void>;
 };
 
+const debug = createDebugger('desktop:service:sync');
+
 export class SyncService {
-  private readonly debug = createDebugger('desktop:service:sync');
   private readonly workspace: WorkspaceService;
 
   private readonly rootSynchronizers: Map<string, RootSynchronizers> =
@@ -98,7 +99,7 @@ export class SyncService {
   }
 
   public async init() {
-    this.debug(`Initializing sync service for workspace ${this.workspace.id}`);
+    debug(`Initializing sync service for workspace ${this.workspace.id}`);
 
     if (!this.userSynchronizer) {
       this.userSynchronizer = new Synchronizer(
@@ -152,7 +153,7 @@ export class SyncService {
       return;
     }
 
-    this.debug(
+    debug(
       `Initializing root synchronizers for root ${rootId} in workspace ${this.workspace.id}`
     );
 

@@ -16,8 +16,9 @@ import { eventBus } from '@/shared/lib/event-bus';
 
 export type SynchronizerStatus = 'idle' | 'waiting' | 'processing';
 
+const debug = createDebugger('desktop:synchronizer');
+
 export class Synchronizer<TInput extends SynchronizerInput> {
-  private readonly debug = createDebugger('desktop:synchronizer');
   private readonly id: string;
   private readonly input: TInput;
   private readonly workspace: WorkspaceService;
@@ -112,7 +113,7 @@ export class Synchronizer<TInput extends SynchronizerInput> {
         lastCursor = BigInt(item.cursor);
       }
     } catch (error) {
-      this.debug(`Error consuming items: ${error}`);
+      debug(`Error consuming items: ${error}`);
     } finally {
       if (lastCursor !== null) {
         this.cursor = lastCursor;
@@ -133,7 +134,7 @@ export class Synchronizer<TInput extends SynchronizerInput> {
       return;
     }
 
-    this.debug(`Initializing consumer for ${this.input.type}`);
+    debug(`Initializing consumer for ${this.input.type}`);
 
     const message: SynchronizerInputMessage = {
       id: this.id,

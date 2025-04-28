@@ -8,8 +8,9 @@ import { EventLoop } from '@/main/lib/event-loop';
 const READ_SIZE = 500;
 const BATCH_SIZE = 50;
 
+const debug = createDebugger('desktop:service:mutation');
+
 export class MutationService {
-  private readonly debug = createDebugger('desktop:service:mutation');
   private readonly workspace: WorkspaceService;
   private readonly eventLoop: EventLoop;
 
@@ -41,7 +42,7 @@ export class MutationService {
 
       await this.revertInvalidMutations();
     } catch (error) {
-      this.debug(`Error syncing mutations: ${error}`);
+      debug(`Error syncing mutations: ${error}`);
     }
   }
 
@@ -72,7 +73,7 @@ export class MutationService {
       );
     }
 
-    this.debug(
+    debug(
       `Sending ${pendingMutations.length} local pending mutations for user ${this.workspace.id}`
     );
 
@@ -83,7 +84,7 @@ export class MutationService {
       while (validMutations.length > 0) {
         const batch = validMutations.splice(0, BATCH_SIZE);
 
-        this.debug(
+        debug(
           `Sending batch ${currentBatch++} of ${totalBatches} mutations for user ${this.workspace.id}`
         );
 
@@ -115,7 +116,7 @@ export class MutationService {
         }
       }
     } catch (error) {
-      this.debug(
+      debug(
         `Failed to send local pending mutations for user ${this.workspace.id}: ${error}`
       );
 
@@ -136,7 +137,7 @@ export class MutationService {
       return;
     }
 
-    this.debug(
+    debug(
       `Reverting ${invalidMutations.length} invalid mutations for workspace ${this.workspace.id}`
     );
 
@@ -170,7 +171,7 @@ export class MutationService {
     mutationIds: string[],
     reason: string
   ): Promise<void> {
-    this.debug(
+    debug(
       `Deleting ${mutationIds.length} local mutations for user ${this.workspace.id}. Reason: ${reason}`
     );
 
@@ -181,7 +182,7 @@ export class MutationService {
   }
 
   private async markMutationsAsFailed(mutationIds: string[]): Promise<void> {
-    this.debug(
+    debug(
       `Marking ${mutationIds.length} local pending mutations as failed for user ${this.workspace.id}`
     );
 

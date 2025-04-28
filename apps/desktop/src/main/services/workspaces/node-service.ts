@@ -44,8 +44,9 @@ export type UpdateNodeResult =
   | 'failed'
   | 'invalid_attributes';
 
+const debug = createDebugger('desktop:service:node');
+
 export class NodeService {
-  private readonly debug = createDebugger('desktop:service:node');
   private readonly workspace: WorkspaceService;
 
   constructor(workspaceService: WorkspaceService) {
@@ -53,7 +54,7 @@ export class NodeService {
   }
 
   public async createNode(input: CreateNodeInput): Promise<SelectNode> {
-    this.debug(`Creating ${Array.isArray(input) ? 'nodes' : 'node'}`);
+    debug(`Creating ${Array.isArray(input) ? 'nodes' : 'node'}`);
 
     const tree = input.parentId
       ? await fetchNodeTree(this.workspace.database, input.parentId)
@@ -191,7 +192,7 @@ export class NodeService {
       throw new Error('Failed to create mutation');
     }
 
-    this.debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
+    debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
 
     eventBus.publish({
       type: 'node_created',
@@ -231,7 +232,7 @@ export class NodeService {
     nodeId: string,
     updater: (attributes: T) => T
   ): Promise<UpdateNodeResult | null> {
-    this.debug(`Updating node ${nodeId}`);
+    debug(`Updating node ${nodeId}`);
 
     const tree = await fetchNodeTree(this.workspace.database, nodeId);
     const node = tree[tree.length - 1];
@@ -381,9 +382,7 @@ export class NodeService {
     });
 
     if (updatedNode) {
-      this.debug(
-        `Updated node ${updatedNode.id} with type ${updatedNode.type}`
-      );
+      debug(`Updated node ${updatedNode.id} with type ${updatedNode.type}`);
 
       eventBus.publish({
         type: 'node_updated',
@@ -392,7 +391,7 @@ export class NodeService {
         node: mapNode(updatedNode),
       });
     } else {
-      this.debug(`Failed to update node ${nodeId}`);
+      debug(`Failed to update node ${nodeId}`);
     }
 
     if (createdMutation) {
@@ -491,9 +490,7 @@ export class NodeService {
       });
 
     if (deletedNode) {
-      this.debug(
-        `Deleted node ${deletedNode.id} with type ${deletedNode.type}`
-      );
+      debug(`Deleted node ${deletedNode.id} with type ${deletedNode.type}`);
 
       eventBus.publish({
         type: 'node_deleted',
@@ -502,7 +499,7 @@ export class NodeService {
         node: mapNode(deletedNode),
       });
     } else {
-      this.debug(`Failed to delete node ${nodeId}`);
+      debug(`Failed to delete node ${nodeId}`);
     }
 
     if (createdMutation) {
@@ -531,7 +528,7 @@ export class NodeService {
           }
         }
       } catch (error) {
-        this.debug(`Failed to update node ${update.id}: ${error}`);
+        debug(`Failed to update node ${update.id}: ${error}`);
       }
     }
   }
@@ -611,11 +608,11 @@ export class NodeService {
       });
 
     if (!createdNode) {
-      this.debug(`Failed to create node ${update.nodeId}`);
+      debug(`Failed to create node ${update.nodeId}`);
       return false;
     }
 
-    this.debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
+    debug(`Created node ${createdNode.id} with type ${createdNode.type}`);
 
     eventBus.publish({
       type: 'node_created',
@@ -762,11 +759,11 @@ export class NodeService {
       });
 
     if (!updatedNode) {
-      this.debug(`Failed to update node ${existingNode.id}`);
+      debug(`Failed to update node ${existingNode.id}`);
       return false;
     }
 
-    this.debug(`Updated node ${updatedNode.id} with type ${updatedNode.type}`);
+    debug(`Updated node ${updatedNode.id} with type ${updatedNode.type}`);
 
     eventBus.publish({
       type: 'node_updated',
@@ -797,7 +794,7 @@ export class NodeService {
   }
 
   public async syncServerNodeDelete(tombstone: SyncNodeTombstoneData) {
-    this.debug(
+    debug(
       `Applying server delete transaction ${tombstone.id} for node ${tombstone.id}`
     );
 

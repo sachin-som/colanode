@@ -21,9 +21,9 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { QueryInput, QueryMap } from '@/shared/queries';
 import { Event } from '@/shared/types/events';
 
-class Mediator {
-  private readonly debug = createDebugger('desktop:mediator');
+const debug = createDebugger('desktop:mediator');
 
+class Mediator {
   private readonly subscribedQueries: Map<string, SubscribedQuery<QueryInput>> =
     new Map();
 
@@ -44,7 +44,7 @@ class Mediator {
   public async executeQuery<T extends QueryInput>(
     input: T
   ): Promise<QueryMap[T['type']]['output']> {
-    this.debug(`Executing query: ${input.type}`);
+    debug(`Executing query: ${input.type}`);
 
     const handler = queryHandlerMap[input.type] as unknown as QueryHandler<T>;
 
@@ -60,7 +60,7 @@ class Mediator {
     id: string,
     input: T
   ): Promise<QueryMap[T['type']]['output']> {
-    this.debug(`Executing query and subscribing: ${input.type}`);
+    debug(`Executing query and subscribing: ${input.type}`);
 
     if (this.subscribedQueries.has(id)) {
       return this.subscribedQueries.get(id)!.result;
@@ -80,7 +80,7 @@ class Mediator {
   }
 
   public unsubscribeQuery(id: string) {
-    this.debug(`Unsubscribing query: ${id}`);
+    debug(`Unsubscribing query: ${id}`);
     this.subscribedQueries.delete(id);
   }
 
@@ -150,7 +150,7 @@ class Mediator {
       input.type
     ] as unknown as MutationHandler<T>;
 
-    this.debug(`Executing mutation: ${input.type}`);
+    debug(`Executing mutation: ${input.type}`);
 
     try {
       if (!handler) {
@@ -160,7 +160,7 @@ class Mediator {
       const output = await handler.handleMutation(input);
       return { success: true, output };
     } catch (error) {
-      this.debug(`Error executing mutation: ${input.type}`, error);
+      debug(`Error executing mutation: ${input.type}`, error);
       if (error instanceof MutationError) {
         return {
           success: false,
@@ -184,7 +184,7 @@ class Mediator {
   public async executeCommand<T extends CommandInput>(
     input: T
   ): Promise<CommandMap[T['type']]['output']> {
-    this.debug(`Executing command: ${input.type}`);
+    debug(`Executing command: ${input.type}`);
 
     const handler = commandHandlerMap[
       input.type

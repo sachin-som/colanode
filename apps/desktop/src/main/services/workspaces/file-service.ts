@@ -35,8 +35,9 @@ import { LocalFileNode } from '@/shared/types/nodes';
 const UPLOAD_RETRIES_LIMIT = 10;
 const DOWNLOAD_RETRIES_LIMIT = 10;
 
+const debug = createDebugger('desktop:service:file');
+
 export class FileService {
-  private readonly debug = createDebugger('desktop:service:file');
   private readonly workspace: WorkspaceService;
   private readonly filesDir: string;
   private readonly tempFilesDir: string;
@@ -217,7 +218,7 @@ export class FileService {
       fs.mkdirSync(this.filesDir, { recursive: true });
     }
 
-    this.debug(`Copying file ${filePath} to ${destinationFilePath}`);
+    debug(`Copying file ${filePath} to ${destinationFilePath}`);
     fs.copyFileSync(filePath, destinationFilePath);
 
     // check if the file is in the temp files directory. If it is in
@@ -248,7 +249,7 @@ export class FileService {
       return;
     }
 
-    this.debug(`Uploading files for workspace ${this.workspace.id}`);
+    debug(`Uploading files for workspace ${this.workspace.id}`);
 
     const uploads = await this.workspace.database
       .selectFrom('file_states')
@@ -267,9 +268,7 @@ export class FileService {
 
   private async uploadFile(state: SelectFileState): Promise<void> {
     if (state.upload_retries && state.upload_retries >= UPLOAD_RETRIES_LIMIT) {
-      this.debug(
-        `File ${state.id} upload retries limit reached, marking as failed`
-      );
+      debug(`File ${state.id} upload retries limit reached, marking as failed`);
 
       const updatedFileState = await this.workspace.database
         .updateTable('file_states')
@@ -336,7 +335,7 @@ export class FileService {
     const filePath = this.buildFilePath(file.id, file.attributes.extension);
 
     if (!fs.existsSync(filePath)) {
-      this.debug(`File ${file.id} not found, deleting from database`);
+      debug(`File ${file.id} not found, deleting from database`);
       return;
     }
 
@@ -418,7 +417,7 @@ export class FileService {
         });
       }
 
-      this.debug(`File ${file.id} uploaded successfully`);
+      debug(`File ${file.id} uploaded successfully`);
     } catch {
       const updatedFileState = await this.workspace.database
         .updateTable('file_states')
@@ -443,7 +442,7 @@ export class FileService {
       return;
     }
 
-    this.debug(`Downloading files for workspace ${this.workspace.id}`);
+    debug(`Downloading files for workspace ${this.workspace.id}`);
 
     const downloads = await this.workspace.database
       .selectFrom('file_states')
@@ -465,7 +464,7 @@ export class FileService {
       fileState.download_retries &&
       fileState.download_retries >= DOWNLOAD_RETRIES_LIMIT
     ) {
-      this.debug(
+      debug(
         `File ${fileState.id} download retries limit reached, marking as failed`
       );
 
@@ -620,7 +619,7 @@ export class FileService {
   }
 
   public async cleanDeletedFiles(): Promise<void> {
-    this.debug(`Checking deleted files for workspace ${this.workspace.id}`);
+    debug(`Checking deleted files for workspace ${this.workspace.id}`);
 
     const fsFiles = fs.readdirSync(this.filesDir);
     while (fsFiles.length > 0) {
@@ -652,7 +651,7 @@ export class FileService {
   }
 
   public async cleanTempFiles(): Promise<void> {
-    this.debug(`Checking temp files for workspace ${this.workspace.id}`);
+    debug(`Checking temp files for workspace ${this.workspace.id}`);
 
     if (!fs.existsSync(this.tempFilesDir)) {
       return;
@@ -668,9 +667,9 @@ export class FileService {
       if (stats.mtimeMs < oneDayAgo) {
         try {
           fs.unlinkSync(filePath);
-          this.debug(`Deleted old temp file: ${filePath}`);
+          debug(`Deleted old temp file: ${filePath}`);
         } catch (error) {
-          this.debug(`Failed to delete temp file: ${filePath}`, error);
+          debug(`Failed to delete temp file: ${filePath}`, error);
         }
       }
     }

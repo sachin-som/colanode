@@ -4,8 +4,9 @@ import { mapUser } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 
+const debug = createDebugger('desktop:service:user');
+
 export class UserService {
-  private readonly debug = createDebugger('desktop:service:user');
   private readonly workspace: WorkspaceService;
 
   constructor(workspaceService: WorkspaceService) {
@@ -13,9 +14,7 @@ export class UserService {
   }
 
   public async syncServerUser(user: SyncUserData) {
-    this.debug(
-      `Syncing server user ${user.id} in workspace ${this.workspace.id}`
-    );
+    debug(`Syncing server user ${user.id} in workspace ${this.workspace.id}`);
 
     const createdUser = await this.workspace.database
       .insertInto('users')

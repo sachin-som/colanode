@@ -1,5 +1,5 @@
 import { createDebugger, ServerConfig } from '@colanode/core';
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import ms from 'ms';
 
 import { eventBus } from '@/shared/lib/event-bus';
@@ -15,8 +15,9 @@ type ServerState = {
   count: number;
 };
 
+const debug = createDebugger('desktop:service:server');
+
 export class ServerService {
-  private readonly debug = createDebugger('desktop:service:server');
   private readonly appService: AppService;
 
   private state: ServerState | null = null;
@@ -69,7 +70,7 @@ export class ServerService {
       });
     }
 
-    this.debug(
+    debug(
       `Server ${this.server.domain} is ${isAvailable ? 'available' : 'unavailable'}`
     );
 
@@ -105,11 +106,19 @@ export class ServerService {
     const baseUrl = this.buildApiBaseUrl(domain);
     const configUrl = `${baseUrl}/v1/config`;
     try {
-      const { status, data } = await axios.get<ServerConfig>(configUrl);
-      return status === 200 ? data : null;
-    } catch {
-      return null;
+      const { data } = await axios.get<ServerConfig>(configUrl);
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        debug(
+          `Server ${domain} is unavailable. Code: ${error.code}, Message: ${error.message}`
+        );
+      } else {
+        debug(`Server ${domain} is unavailable. Unknown error: ${error}`);
+      }
     }
+
+    return null;
   }
 
   private static buildApiBaseUrl(domain: string) {

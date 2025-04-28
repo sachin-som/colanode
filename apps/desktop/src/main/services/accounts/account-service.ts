@@ -29,8 +29,9 @@ import { Account } from '@/shared/types/accounts';
 import { Workspace } from '@/shared/types/workspaces';
 import { EventLoop } from '@/main/lib/event-loop';
 
+const debug = createDebugger('desktop:service:account');
+
 export class AccountService {
-  private readonly debug = createDebugger('desktop:service:account');
   private readonly workspaces: Map<string, WorkspaceService> = new Map();
   private readonly eventLoop: EventLoop;
   private readonly account: Account;
@@ -44,7 +45,7 @@ export class AccountService {
   private readonly eventSubscriptionId: string;
 
   constructor(account: Account, server: ServerService, app: AppService) {
-    this.debug(`Initializing account service for account ${account.id}`);
+    debug(`Initializing account service for account ${account.id}`);
 
     this.account = account;
     this.server = server;
@@ -171,12 +172,12 @@ export class AccountService {
         account: this.account,
       });
     } catch (error) {
-      this.debug(`Error logging out of account ${this.account.id}: ${error}`);
+      debug(`Error logging out of account ${this.account.id}: ${error}`);
     }
   }
 
   private async migrate(): Promise<void> {
-    this.debug(`Migrating account database for account ${this.account.id}`);
+    debug(`Migrating account database for account ${this.account.id}`);
     const migrator = new Migrator({
       db: this.database,
       provider: {
@@ -234,10 +235,10 @@ export class AccountService {
   }
 
   private async sync(): Promise<void> {
-    this.debug(`Syncing account ${this.account.id}`);
+    debug(`Syncing account ${this.account.id}`);
 
     if (!this.server.isAvailable) {
-      this.debug(
+      debug(
         `Server ${this.server.domain} is not available for syncing account ${this.account.email}`
       );
       return;
@@ -271,12 +272,11 @@ export class AccountService {
         .executeTakeFirst();
 
       if (!updatedAccount) {
-        this.debug(`Failed to update account ${this.account.email} after sync`);
+        debug(`Failed to update account ${this.account.email} after sync`);
         return;
-      } else {
-        this.debug(`Updated account ${this.account.email} after sync`);
       }
 
+      debug(`Updated account ${this.account.email} after sync`);
       const account = mapAccount(updatedAccount);
       this.updateAccount(account);
 
@@ -306,7 +306,7 @@ export class AccountService {
             .executeTakeFirst();
 
           if (!createdWorkspace) {
-            this.debug(`Failed to create workspace ${workspace.id}`);
+            debug(`Failed to create workspace ${workspace.id}`);
             continue;
           }
 
@@ -357,14 +357,12 @@ export class AccountService {
     } catch (error) {
       const parsedError = parseApiError(error);
       if (this.isSyncInvalid(parsedError)) {
-        this.debug(
-          `Account ${this.account.email} is not valid, logging out...`
-        );
+        debug(`Account ${this.account.email} is not valid, logging out...`);
         await this.logout();
         return;
       }
 
-      this.debug(`Failed to sync account ${this.account.email}: ${error}`);
+      debug(`Failed to sync account ${this.account.email}: ${error}`);
     }
   }
 

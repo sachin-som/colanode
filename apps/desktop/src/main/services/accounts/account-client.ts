@@ -10,8 +10,9 @@ import { createDebugger } from '@colanode/core';
 import { AccountService } from '@/main/services/accounts/account-service';
 import { BackoffCalculator } from '@/main/lib/backoff-calculator';
 
+const debug = createDebugger('desktop:service:account');
+
 export class AccountClient {
-  private readonly debug = createDebugger('desktop:service:account');
   private readonly backoff: BackoffCalculator = new BackoffCalculator();
   private readonly axiosInstance: AxiosInstance;
   private readonly account: AccountService;
@@ -33,7 +34,7 @@ export class AccountClient {
     }
 
     try {
-      this.debug(`Requesting ${method} ${path} for account ${this.account.id}`);
+      debug(`Requesting ${method} ${path} for account ${this.account.id}`);
 
       const headers = {
         ...config.headers,
@@ -50,7 +51,7 @@ export class AccountClient {
       this.backoff.reset();
       return response;
     } catch (error) {
-      this.debug(`Error in request for account ${this.account.id}: ${error}`);
+      debug(`Error in request for account ${this.account.id}: ${error}`);
       if (isAxiosError(error) && this.shouldBackoff(error)) {
         this.backoff.increaseError();
       }

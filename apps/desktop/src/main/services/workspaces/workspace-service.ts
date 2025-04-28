@@ -25,8 +25,9 @@ import { DocumentService } from '@/main/services/workspaces/document-service';
 import { NodeCountersService } from '@/main/services/workspaces/node-counters-service';
 import { eventBus } from '@/shared/lib/event-bus';
 
+const debug = createDebugger('desktop:service:workspace');
+
 export class WorkspaceService {
-  private readonly debug = createDebugger('desktop:service:workspace');
   private readonly workspace: Workspace;
 
   public readonly database: Kysely<WorkspaceDatabaseSchema>;
@@ -44,7 +45,7 @@ export class WorkspaceService {
   public readonly nodeCounters: NodeCountersService;
 
   constructor(workspace: Workspace, account: AccountService) {
-    this.debug(`Initializing workspace service ${workspace.id}`);
+    debug(`Initializing workspace service ${workspace.id}`);
 
     this.workspace = workspace;
     this.account = account;
@@ -120,9 +121,7 @@ export class WorkspaceService {
   }
 
   private async migrate(): Promise<void> {
-    this.debug(
-      `Migrating workspace database for workspace ${this.workspace.id}`
-    );
+    debug(`Migrating workspace database for workspace ${this.workspace.id}`);
 
     const migrator = new Migrator({
       db: this.database,
@@ -169,7 +168,7 @@ export class WorkspaceService {
         workspace: this.workspace,
       });
     } catch (error) {
-      this.debug(`Error deleting workspace ${this.workspace.id}: ${error}`);
+      debug(`Error deleting workspace ${this.workspace.id}: ${error}`);
     }
   }
 }

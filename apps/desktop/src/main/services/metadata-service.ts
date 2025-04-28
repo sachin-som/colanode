@@ -9,8 +9,9 @@ import {
 import { mapAppMetadata } from '@/main/lib/mappers';
 import { eventBus } from '@/shared/lib/event-bus';
 
+const debug = createDebugger('desktop:service:metadata');
+
 export class MetadataService {
-  private readonly debug = createDebugger('desktop:service:metadata');
   private readonly app: AppService;
 
   constructor(app: AppService) {
@@ -46,7 +47,7 @@ export class MetadataService {
     key: K,
     value: AppMetadataMap[K]['value']
   ) {
-    this.debug(`Setting metadata key ${key} to value ${value}`);
+    debug(`Setting metadata key ${key} to value ${value}`);
 
     const createdMetadata = await this.app.database
       .insertInto('metadata')
@@ -75,7 +76,7 @@ export class MetadataService {
   }
 
   public async delete(key: string) {
-    this.debug(`Deleting metadata key ${key}`);
+    debug(`Deleting metadata key ${key}`);
 
     const deletedMetadata = await this.app.database
       .deleteFrom('metadata')

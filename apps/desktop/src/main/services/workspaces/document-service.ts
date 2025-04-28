@@ -33,8 +33,9 @@ import {
 
 const UPDATE_RETRIES_LIMIT = 10;
 
+const debug = createDebugger('desktop:service:document');
+
 export class DocumentService {
-  private readonly debug = createDebugger('desktop:service:document');
   private readonly workspace: WorkspaceService;
 
   constructor(workspaceService: WorkspaceService) {
@@ -92,7 +93,7 @@ export class DocumentService {
           }
         }
       } catch (error) {
-        this.debug(`Failed to update document ${node.id}: ${error}`);
+        debug(`Failed to update document ${node.id}: ${error}`);
       }
     }
   }
@@ -401,9 +402,7 @@ export class DocumentService {
           return;
         }
       } catch (error) {
-        this.debug(
-          `Failed to revert document update ${data.documentId}: ${error}`
-        );
+        debug(`Failed to revert document update ${data.documentId}: ${error}`);
       }
     }
   }
@@ -604,7 +603,7 @@ export class DocumentService {
           return;
         }
       } catch (error) {
-        this.debug(`Failed to sync document update ${data.id}: ${error}`);
+        debug(`Failed to sync document update ${data.id}: ${error}`);
       }
     }
   }

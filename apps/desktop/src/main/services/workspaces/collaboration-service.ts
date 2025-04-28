@@ -4,8 +4,9 @@ import { eventBus } from '@/shared/lib/event-bus';
 import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { SelectCollaboration } from '@/main/databases/workspace';
 
+const debug = createDebugger('desktop:service:collaboration');
+
 export class CollaborationService {
-  private readonly debug = createDebugger('desktop:service:collaboration');
   private readonly workspace: WorkspaceService;
   private readonly collaborations = new Map<string, SelectCollaboration>();
 
@@ -35,7 +36,7 @@ export class CollaborationService {
   }
 
   public async syncServerCollaboration(collaboration: SyncCollaborationData) {
-    this.debug(
+    debug(
       `Applying server collaboration: ${collaboration.nodeId} for workspace ${this.workspace.id}`
     );
 

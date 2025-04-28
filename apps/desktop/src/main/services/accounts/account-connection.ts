@@ -7,8 +7,9 @@ import { AccountService } from '@/main/services/accounts/account-service';
 import { EventLoop } from '@/main/lib/event-loop';
 import { eventBus } from '@/shared/lib/event-bus';
 
+const debug = createDebugger('desktop:service:account-connection');
+
 export class AccountConnection {
-  private readonly debug = createDebugger('service:account-connection');
   private readonly account: AccountService;
   private readonly eventLoop: EventLoop;
 
@@ -45,7 +46,7 @@ export class AccountConnection {
       return;
     }
 
-    this.debug(`Initializing socket connection for account ${this.account.id}`);
+    debug(`Initializing socket connection for account ${this.account.id}`);
 
     if (this.socket && this.isConnected()) {
       this.socket.ping();
@@ -66,7 +67,7 @@ export class AccountConnection {
       const data: string = event.data.toString();
       const message: Message = JSON.parse(data);
 
-      this.debug(
+      debug(
         `Received message of type ${message.type} for account ${this.account.id}`
       );
 
@@ -78,7 +79,7 @@ export class AccountConnection {
     };
 
     this.socket.onopen = () => {
-      this.debug(`Socket connection for account ${this.account.id} opened`);
+      debug(`Socket connection for account ${this.account.id} opened`);
 
       this.backoffCalculator.reset();
       eventBus.publish({
@@ -88,7 +89,7 @@ export class AccountConnection {
     };
 
     this.socket.onerror = () => {
-      this.debug(`Socket connection for account ${this.account.id} errored`);
+      debug(`Socket connection for account ${this.account.id} errored`);
       this.backoffCalculator.increaseError();
       eventBus.publish({
         type: 'account_connection_closed',
@@ -97,7 +98,7 @@ export class AccountConnection {
     };
 
     this.socket.onclose = () => {
-      this.debug(`Socket connection for account ${this.account.id} closed`);
+      debug(`Socket connection for account ${this.account.id} closed`);
       this.backoffCalculator.increaseError();
       eventBus.publish({
         type: 'account_connection_closed',
@@ -112,7 +113,7 @@ export class AccountConnection {
 
   public send(message: Message): boolean {
     if (this.socket && this.isConnected()) {
-      this.debug(
+      debug(
         `Sending message of type ${message.type} for account ${this.account.id}`
       );
 
@@ -125,7 +126,7 @@ export class AccountConnection {
 
   public close(): void {
     if (this.socket) {
-      this.debug(`Closing socket connection for account ${this.account.id}`);
+      debug(`Closing socket connection for account ${this.account.id}`);
       this.socket.close();
       this.socket = null;
     }
@@ -135,7 +136,7 @@ export class AccountConnection {
   }
 
   private checkConnection(): void {
-    this.debug(`Checking connection for account ${this.account.id}`);
+    debug(`Checking connection for account ${this.account.id}`);
     if (!this.account.server.isAvailable) {
       return;
     }

@@ -4,8 +4,9 @@ import { WorkspaceService } from '@/main/services/workspaces/workspace-service';
 import { eventBus } from '@/shared/lib/event-bus';
 import { mapNodeInteraction } from '@/main/lib/mappers';
 
+const debug = createDebugger('desktop:service:node-interaction');
+
 export class NodeInteractionService {
-  private readonly debug = createDebugger('desktop:service:node-interaction');
   private readonly workspace: WorkspaceService;
 
   constructor(workspaceService: WorkspaceService) {
@@ -25,7 +26,7 @@ export class NodeInteractionService {
     const revision = BigInt(nodeInteraction.revision);
     if (existingNodeInteraction) {
       if (existingNodeInteraction.revision === revision) {
-        this.debug(
+        debug(
           `Server node interaction for node ${nodeInteraction.nodeId} is already synced`
         );
         return;
@@ -74,7 +75,7 @@ export class NodeInteractionService {
       nodeInteraction: mapNodeInteraction(upsertedNodeInteraction),
     });
 
-    this.debug(
+    debug(
       `Server node interaction for node ${nodeInteraction.nodeId} has been synced`
     );
   }

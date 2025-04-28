@@ -22,8 +22,9 @@ import { NotificationService } from '@/main/services/notification-service';
 import { eventBus } from '@/shared/lib/event-bus';
 import { AppPlatform } from '@/shared/types/apps';
 
+const debug = createDebugger('desktop:service:app');
+
 export class AppService {
-  private readonly debug = createDebugger('desktop:service:app');
   private readonly servers: Map<string, ServerService> = new Map();
   private readonly accounts: Map<string, AccountService> = new Map();
   private readonly cleanupEventLoop: EventLoop;
@@ -65,7 +66,7 @@ export class AppService {
   }
 
   public async migrate(): Promise<void> {
-    this.debug('Migrating app database');
+    debug('Migrating app database');
 
     const migrator = new Migrator({
       db: this.database,
@@ -202,7 +203,7 @@ export class AppService {
   }
 
   private async syncDeletedTokens(): Promise<void> {
-    this.debug('Syncing deleted tokens');
+    debug('Syncing deleted tokens');
 
     const deletedTokens = await this.database
       .selectFrom('deleted_tokens')
@@ -216,14 +217,14 @@ export class AppService {
       .execute();
 
     if (deletedTokens.length === 0) {
-      this.debug('No deleted tokens found');
+      debug('No deleted tokens found');
       return;
     }
 
     for (const deletedToken of deletedTokens) {
       const serverService = this.servers.get(deletedToken.domain);
       if (!serverService || !serverService.isAvailable) {
-        this.debug(
+        debug(
           `Server ${deletedToken.domain} is not available for logging out account ${deletedToken.account_id}`
         );
         continue;
@@ -242,7 +243,7 @@ export class AppService {
           .where('account_id', '=', deletedToken.account_id)
           .execute();
 
-        this.debug(
+        debug(
           `Logged out account ${deletedToken.account_id} from server ${deletedToken.domain}`
         );
       } catch (error) {
@@ -252,7 +253,7 @@ export class AppService {
           parsedError.code === ApiErrorCode.AccountNotFound ||
           parsedError.code === ApiErrorCode.DeviceNotFound
         ) {
-          this.debug(
+          debug(
             `Account ${deletedToken.account_id} is already logged out, skipping...`
           );
 
@@ -265,7 +266,7 @@ export class AppService {
           continue;
         }
 
-        this.debug(
+        debug(
           `Failed to logout account ${deletedToken.account_id} from server ${deletedToken.domain}`,
           error
         );

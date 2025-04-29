@@ -29,6 +29,17 @@ export class AccountMetadataListQueryHandler
       event.type === 'account_created' &&
       event.account.id === input.accountId
     ) {
+      const result = await this.handleQuery(input);
+      return {
+        hasChanges: true,
+        result,
+      };
+    }
+
+    if (
+      event.type === 'account_deleted' &&
+      event.account.id === input.accountId
+    ) {
       return {
         hasChanges: true,
         result: [],

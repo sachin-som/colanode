@@ -34,6 +34,18 @@ export class WorkspaceMetadataListQueryHandler
       event.workspace.accountId === input.accountId &&
       event.workspace.id === input.workspaceId
     ) {
+      const result = await this.handleQuery(input);
+      return {
+        hasChanges: true,
+        result,
+      };
+    }
+
+    if (
+      event.type === 'workspace_deleted' &&
+      event.workspace.accountId === input.accountId &&
+      event.workspace.id === input.workspaceId
+    ) {
       return {
         hasChanges: true,
         result: [],

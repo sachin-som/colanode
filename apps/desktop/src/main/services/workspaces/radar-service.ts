@@ -104,7 +104,7 @@ export class RadarService {
     }
 
     if (!this.counters.has(event.counter.nodeId)) {
-      return;
+      this.counters.set(event.counter.nodeId, new Map());
     }
 
     const nodeCounters = this.counters.get(event.counter.nodeId);

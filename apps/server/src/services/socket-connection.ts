@@ -35,8 +35,9 @@ type SocketUser = {
   synchronizers: Map<string, BaseSynchronizer<SynchronizerInput>>;
 };
 
+const debug = createDebugger('server:service:socket-connection');
+
 export class SocketConnection {
-  private readonly debug = createDebugger('server:service:socket-connection');
   private readonly account: RequestAccount;
   private readonly socket: WebSocket;
 
@@ -45,9 +46,7 @@ export class SocketConnection {
     new Map();
 
   constructor(account: RequestAccount, socket: WebSocket) {
-    this.debug(
-      `New connection, account:${account.id}, device:${account.deviceId}`
-    );
+    debug(`New connection, account:${account.id}, device:${account.deviceId}`);
 
     this.account = account;
     this.socket = socket;
@@ -75,7 +74,7 @@ export class SocketConnection {
   }
 
   private async handleMessage(message: Message) {
-    this.debug(
+    debug(
       `Socket message, account:${this.account.id}, device:${this.account.deviceId}, type:${message.type}`
     );
 
@@ -136,7 +135,7 @@ export class SocketConnection {
     message: SynchronizerInputMessage,
     user: SocketUser
   ): BaseSynchronizer<SynchronizerInput> | null {
-    const cursor = BigInt(message.cursor);
+    const cursor = message.cursor;
     if (message.input.type === 'users') {
       return new UserSynchronizer(message.id, user.user, message.input, cursor);
     } else if (message.input.type === 'collaborations') {

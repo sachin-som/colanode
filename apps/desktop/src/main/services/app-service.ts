@@ -1,6 +1,6 @@
 import { Kysely, Migration, Migrator, SqliteDialect } from 'kysely';
 import SQLite from 'better-sqlite3';
-import { ApiErrorCode, createDebugger } from '@colanode/core';
+import { ApiErrorCode, ApiHeader, createDebugger } from '@colanode/core';
 import ms from 'ms';
 import axios from 'axios';
 import semver from 'semver';
@@ -34,9 +34,11 @@ export class AppService {
   public readonly metadata: MetadataService;
   public readonly notifications: NotificationService;
   public readonly version: string;
+  public readonly platform: AppPlatform;
 
   constructor() {
     this.version = app.getVersion();
+    this.platform = process.platform as AppPlatform;
 
     const database = new SQLite(appDatabasePath);
     database.pragma('journal_mode = WAL');
@@ -45,6 +47,14 @@ export class AppService {
       dialect: new SqliteDialect({
         database,
       }),
+    });
+
+    // register interceptor to add client headers to all requests
+    axios.interceptors.request.use((config) => {
+      config.headers[ApiHeader.ClientType] = 'desktop';
+      config.headers[ApiHeader.ClientPlatform] = this.platform;
+      config.headers[ApiHeader.ClientVersion] = this.version;
+      return config;
     });
 
     this.metadata = new MetadataService(this);
@@ -85,7 +95,7 @@ export class AppService {
     }
 
     await this.metadata.set('version', this.version);
-    await this.metadata.set('platform', process.platform as AppPlatform);
+    await this.metadata.set('platform', this.platform);
   }
 
   public getAccount(id: string): AccountService | null {

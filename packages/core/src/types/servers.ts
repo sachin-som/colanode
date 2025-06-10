@@ -1,8 +1,4 @@
-import { z } from 'zod';
-
-export const serverAttributesSchema = z.record(z.string(), z.unknown());
-
-export type ServerAttributes = z.infer<typeof serverAttributesSchema>;
+import { z } from 'zod/v4';
 
 export const serverConfigSchema = z.object({
   name: z.string(),
@@ -10,7 +6,7 @@ export const serverConfigSchema = z.object({
   version: z.string(),
   sha: z.string(),
   ip: z.string().nullable().optional(),
-  attributes: serverAttributesSchema,
+  pathPrefix: z.string().nullable().optional(),
 });
 
 export type ServerConfig = z.infer<typeof serverConfigSchema>;

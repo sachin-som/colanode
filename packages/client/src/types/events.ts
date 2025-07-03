@@ -5,7 +5,7 @@ import {
   DocumentState,
   DocumentUpdate,
 } from '@colanode/client/types/documents';
-import { FileState } from '@colanode/client/types/files';
+import { FileSaveState, FileState } from '@colanode/client/types/files';
 import {
   LocalNode,
   NodeCounter,
@@ -89,6 +89,20 @@ export type FileStateUpdatedEvent = {
   accountId: string;
   workspaceId: string;
   fileState: FileState;
+};
+
+export type FileStateDeletedEvent = {
+  type: 'file.state.deleted';
+  accountId: string;
+  workspaceId: string;
+  fileId: string;
+};
+
+export type FileSaveUpdatedEvent = {
+  type: 'file.save.updated';
+  accountId: string;
+  workspaceId: string;
+  fileSave: FileSaveState;
 };
 
 export type AccountCreatedEvent = {
@@ -309,6 +323,8 @@ export type Event =
   | ServerDeletedEvent
   | ServerAvailabilityChangedEvent
   | FileStateUpdatedEvent
+  | FileStateDeletedEvent
+  | FileSaveUpdatedEvent
   | QueryResultUpdatedEvent
   | RadarDataUpdatedEvent
   | CollaborationCreatedEvent

@@ -10,25 +10,32 @@ export const AvatarImage = (props: AvatarProps) => {
   const account = useAccount();
   const [failed, setFailed] = useState(false);
 
-  const { data, isPending } = useLiveQuery(
-    {
-      type: 'avatar.url.get',
-      accountId: account.id,
-      avatarId: props.avatar!,
-    },
-    {
-      enabled: !!props.avatar,
-    }
-  );
+  const avatarQuery = useLiveQuery({
+    type: 'avatar.get',
+    accountId: account.id,
+    avatarId: props.avatar!,
+  });
 
-  const url = data?.url;
-  if (failed || !url || isPending) {
+  if (avatarQuery.isPending) {
+    return (
+      <div
+        className={cn(
+          getAvatarSizeClasses(props.size),
+          'object-cover rounded bg-gray-200',
+          props.className
+        )}
+      />
+    );
+  }
+
+  const avatar = avatarQuery.data;
+  if (!avatar || failed) {
     return <AvatarFallback {...props} />;
   }
 
   return (
     <img
-      src={url}
+      src={avatar.url}
       className={cn(
         getAvatarSizeClasses(props.size),
         'object-cover rounded',

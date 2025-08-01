@@ -276,28 +276,58 @@ const api: ColanodeWorkerApi = {
   },
   async saveTempFile(file) {
     const id = generateId(IdType.TempFile);
-    const name = path.filename(file.name);
     const extension = path.extension(file.name);
     const mimeType = file.type;
-    const type = extractFileSubtype(mimeType);
-    const fileName = `${name}.${id}${extension}`;
+    const subtype = extractFileSubtype(mimeType);
+    const filePath = path.tempFile(file.name);
 
     const arrayBuffer = await file.arrayBuffer();
     const fileData = new Uint8Array(arrayBuffer);
 
-    const filePath = path.tempFile(fileName);
     await fs.writeFile(filePath, fileData);
+    if (app) {
+      await app.database
+        .insertInto('temp_files')
+        .values({
+          id,
+          name: file.name,
+          size: file.size,
+          mime_type: mimeType,
+          subtype,
+          path: filePath,
+          extension,
+          created_at: new Date().toISOString(),
+          opened_at: new Date().toISOString(),
+        })
+        .execute();
+    } else {
+      const message: BroadcastMutationMessage = {
+        type: 'mutation',
+        mutationId: generateId(IdType.Mutation),
+        input: {
+          type: 'temp.file.create',
+          id,
+          name: file.name,
+          size: file.size,
+          mimeType,
+          subtype,
+          extension,
+          path: filePath,
+        },
+      };
+
+      broadcastMessage(message);
+    }
 
     const url = await fs.url(filePath);
-
     return {
       id,
       name: file.name,
       size: file.size,
-      type,
+      mimeType,
+      subtype,
       path: filePath,
       extension,
-      mimeType,
       url,
     };
   },

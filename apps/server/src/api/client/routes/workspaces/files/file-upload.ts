@@ -5,7 +5,6 @@ import { z } from 'zod/v4';
 import {
   ApiErrorCode,
   FileStatus,
-  fileUploadOutputSchema,
   apiErrorOutputSchema,
   generateId,
   IdType,
@@ -37,7 +36,9 @@ export const fileUploadRoute: FastifyPluginCallbackZod = (
         fileId: z.string(),
       }),
       response: {
-        200: fileUploadOutputSchema,
+        200: z.object({
+          uploadId: z.string(),
+        }),
         400: apiErrorOutputSchema,
         404: apiErrorOutputSchema,
       },
@@ -215,7 +216,9 @@ export const fileUploadRoute: FastifyPluginCallbackZod = (
         });
       }
 
-      return { success: true, uploadId: upsertedUpload.upload_id };
+      return {
+        uploadId: upsertedUpload.upload_id,
+      };
     },
   });
 

@@ -37,6 +37,7 @@ import {
   OrderedListCommand,
   PageCommand,
   ParagraphCommand,
+  TableCommand,
   TodoCommand,
   DatabaseCommand,
   DatabaseInlineCommand,
@@ -70,6 +71,10 @@ import {
   PlaceholderExtension,
   StrikethroughMark,
   TabKeymapExtension,
+  TableNode,
+  TableRowNode,
+  TableHeaderNode,
+  TableCellNode,
   TaskItemNode,
   TaskListNode,
   TextNode,
@@ -196,6 +201,10 @@ export const DocumentEditor = ({
         }),
         TaskListNode,
         TaskItemNode,
+        TableNode,
+        TableRowNode,
+        TableCellNode,
+        TableHeaderNode,
         DividerNode,
         TrailingNode,
         LinkMark,
@@ -214,6 +223,7 @@ export const DocumentEditor = ({
             BulletListCommand,
             CodeBlockCommand,
             OrderedListCommand,
+            TableCommand,
             DatabaseInlineCommand,
             DatabaseCommand,
             DividerCommand,
@@ -388,7 +398,7 @@ export const DocumentEditor = ({
   }, [node.id, editor]);
 
   return (
-    <div className="min-h-[500px]">
+    <>
       {editor && canEdit && (
         <Fragment>
           <ToolbarMenu editor={editor} />
@@ -396,6 +406,6 @@ export const DocumentEditor = ({
         </Fragment>
       )}
       <EditorContent editor={editor} />
-    </div>
+    </>
   );
 };

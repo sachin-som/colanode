@@ -1,3 +1,5 @@
+import { ThemeColor, ThemeMode } from '@colanode/client/types';
+
 export type AppType = 'desktop' | 'web';
 
 export type WindowSize = {
@@ -34,11 +36,27 @@ export type AppAccountMetadata = {
   updatedAt: string | null;
 };
 
+export type AppThemeModeMetadata = {
+  key: 'theme.mode';
+  value: ThemeMode;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type AppThemeColorMetadata = {
+  key: 'theme.color';
+  value: ThemeColor;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
 export type AppMetadata =
   | AppPlatformMetadata
   | AppVersionMetadata
   | AppWindowSizeMetadata
-  | AppAccountMetadata;
+  | AppAccountMetadata
+  | AppThemeModeMetadata
+  | AppThemeColorMetadata;
 
 export type AppMetadataKey = AppMetadata['key'];
 
@@ -47,4 +65,6 @@ export type AppMetadataMap = {
   version: AppVersionMetadata;
   'window.size': AppWindowSizeMetadata;
   account: AppAccountMetadata;
+  'theme.mode': AppThemeModeMetadata;
+  'theme.color': AppThemeColorMetadata;
 };

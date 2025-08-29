@@ -31,7 +31,7 @@ export const FileBlock = ({ id }: FileBlockProps) => {
   if (canPreview) {
     return (
       <div
-        className="flex h-72 max-h-72 max-w-128 w-full cursor-pointer overflow-hidden rounded-md p-2 hover:bg-gray-100"
+        className="flex h-72 max-h-72 max-w-128 w-full cursor-pointer overflow-hidden rounded-md p-2 hover:bg-muted/50"
         onClick={() => {
           layout.previewLeft(id, true);
         }}
@@ -43,7 +43,7 @@ export const FileBlock = ({ id }: FileBlockProps) => {
 
   return (
     <div
-      className="flex flex-row gap-4 items-center w-full cursor-pointer overflow-hidden rounded-md p-2 pl-0 hover:bg-gray-100"
+      className="flex flex-row gap-4 items-center w-full cursor-pointer overflow-hidden rounded-md p-2 pl-0 hover:bg-accent"
       onClick={() => {
         layout.previewLeft(id, true);
       }}
@@ -51,7 +51,9 @@ export const FileBlock = ({ id }: FileBlockProps) => {
       <FileIcon mimeType={file.attributes.mimeType} className="size-10" />
       <div className="flex flex-col gap-1">
         <div className="text-sm font-medium">{file.attributes.name}</div>
-        <div className="text-xs text-gray-500">{file.attributes.mimeType}</div>
+        <div className="text-xs text-muted-foreground">
+          {file.attributes.mimeType}
+        </div>
       </div>
     </div>
   );

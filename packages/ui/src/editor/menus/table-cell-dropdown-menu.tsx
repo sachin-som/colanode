@@ -41,7 +41,7 @@ export const TableCellDropdownMenu = ({
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'absolute top-1/2 -right-2 transform -translate-y-1/2 bg-white hover:bg-gray-100 py-1 cursor-pointer border border-gray-200 rounded z-10'
+            'absolute top-1/2 -right-2 transform -translate-y-1/2 bg-secondary py-1 cursor-pointer border border-border rounded z-10'
           )}
         >
           <EllipsisVertical className="size-3 text-muted-foreground" />
@@ -106,7 +106,7 @@ export const TableCellDropdownMenu = ({
                 <div className="flex items-center gap-2">
                   <div
                     className={cn(
-                      'w-4 h-4 rounded border border-gray-300',
+                      'w-4 h-4 rounded border border-border',
                       color.bgClass
                     )}
                   />

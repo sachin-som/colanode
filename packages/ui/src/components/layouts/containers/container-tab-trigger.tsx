@@ -7,6 +7,7 @@ import { ContainerTab, SpecialContainerTabPath } from '@colanode/client/types';
 import { getIdType, IdType } from '@colanode/core';
 import { AccountLogoutTab } from '@colanode/ui/components/accounts/account-logout-tab';
 import { AccountSettingsTab } from '@colanode/ui/components/accounts/account-settings-tab';
+import { AppAppearanceSettingsTab } from '@colanode/ui/components/app/app-appearance-settings-tab';
 import { ChannelContainerTab } from '@colanode/ui/components/channels/channel-container-tab';
 import { ChatContainerTab } from '@colanode/ui/components/chats/chat-container-tab';
 import { DatabaseContainerTab } from '@colanode/ui/components/databases/database-container-tab';
@@ -58,6 +59,10 @@ const getContainerTabTriggerContent = (tab: ContainerTab) => {
 
   if (tab.path === SpecialContainerTabPath.WorkspaceDownloads) {
     return <WorkspaceDownloadsTab />;
+  }
+
+  if (tab.path === SpecialContainerTabPath.AppAppearance) {
+    return <AppAppearanceSettingsTab />;
   }
 
   return match(getIdType(tab.path))
@@ -151,7 +156,7 @@ export const ContainerTabTrigger = ({
         className="opacity-0 group-hover/tab:opacity-100 group-data-[state=active]/tab:opacity-100 transition-opacity duration-200 flex-shrink-0 cursor-pointer"
         onClick={() => onClose()}
       >
-        <X className="size-4 text-muted-foreground hover:text-primary" />
+        <X className="size-4 text-muted-foreground hover:text-foreground" />
       </div>
     </TabsTrigger>
   );

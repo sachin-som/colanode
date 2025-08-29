@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { EmojiElement } from '@colanode/ui/components/emojis/emoji-element';
+import { Button } from '@colanode/ui/components/ui/button';
 import {
   Popover,
   PopoverContent,
@@ -38,28 +39,24 @@ export const EmojiSkinToneSelector = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className={`flex h-[32px] w-6 items-center justify-center p-1 hover:bg-gray-50 ${
-            open && 'bg-gray-100'
-          }`}
-        >
+        <Button size="icon" variant="outline" className="p-2">
           <EmojiElement
             id={emoji.skins[skinTone || 0]?.id ?? ''}
             className="h-full w-full"
           />
-        </button>
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-2 w-50">
+      <PopoverContent className="flex flex-row gap-1 p-1 w-60">
         {emoji.skins.map((skin, idx) => (
-          <button
-            key={`skin-selector-${skin}`}
-            className={`h-6 w-6 p-1 hover:bg-gray-100 ${
-              idx === skinTone && 'bg-gray-100'
-            }`}
+          <Button
+            key={`skin-selector-${skin.id}`}
+            size="icon"
+            variant="ghost"
             onClick={() => handleSkinToneSelection(idx)}
+            className="size-8 p-1"
           >
             <EmojiElement id={skin.id} className="h-full w-full" />
-          </button>
+          </Button>
         ))}
       </PopoverContent>
     </Popover>

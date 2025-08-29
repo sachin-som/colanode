@@ -62,11 +62,11 @@ export const Layout = () => {
             : rightContainerMetadata.tabs.find((t) => t.active)?.path,
       }}
     >
-      <div className="w-screen min-w-screen h-screen min-h-screen flex flex-row">
+      <div className="w-screen min-w-screen h-screen min-h-screen flex flex-row bg-background">
         <Resizable
           as="aside"
           size={{ width: sidebarMetadata.width, height: '100vh' }}
-          className="border-r border-gray-200"
+          className="border-r border-sidebar-border"
           minWidth={200}
           maxWidth={500}
           enable={{
@@ -99,7 +99,7 @@ export const Layout = () => {
         </Resizable>
 
         {shouldDisplayLeft && (
-          <div className="h-full max-h-screen w-full flex-grow overflow-hidden bg-white">
+          <div className="h-full max-h-screen w-full flex-grow overflow-hidden">
             <ContainerTabs
               tabs={leftContainerMetadata.tabs}
               onFocus={() => {
@@ -115,7 +115,7 @@ export const Layout = () => {
         {shouldDisplayLeft && shouldDisplayRight && (
           <Resizable
             as="div"
-            className="h-full max-h-full min-h-full overflow-hidden border-l border-gray-200 bg-white"
+            className="h-full max-h-full min-h-full overflow-hidden"
             size={{ width: rightContainerMetadata.width, height: '100%' }}
             minWidth={percentToNumber(windowSize.width, 20)}
             maxWidth={percentToNumber(windowSize.width, 50)}

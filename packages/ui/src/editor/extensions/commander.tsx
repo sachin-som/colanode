@@ -5,6 +5,7 @@ import {
   shift,
   autoUpdate,
   FloatingPortal,
+  VirtualElement,
 } from '@floating-ui/react';
 import type { Range } from '@tiptap/core';
 import { Editor, Extension } from '@tiptap/core';
@@ -70,18 +71,25 @@ const CommandList = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { refs, floatingStyles } = useFloating({
+  const { refs, floatingStyles, update } = useFloating({
     placement: 'bottom-start',
     middleware: [offset(6), flip(), shift()],
     whileElementsMounted: autoUpdate,
     strategy: 'fixed',
-    elements: {
-      reference: {
-        getBoundingClientRect: () => props.clientRect?.() || new DOMRect(),
-        contextElement: document.body,
-      } as unknown as Element,
-    },
   });
+
+  useLayoutEffect(() => {
+    const rect = props.clientRect?.();
+    if (!rect) return;
+
+    const virtualEl = {
+      getBoundingClientRect: () => rect,
+      contextElement: props.editor.view.dom as Element,
+    };
+
+    refs.setPositionReference(virtualEl as VirtualElement);
+    update();
+  }, [props.clientRect, props.editor.view.dom, refs, update]);
 
   const selectItem = useCallback(
     (index: number) => {
@@ -155,6 +163,12 @@ const CommandList = ({
                     }`}
                     key={item.key}
                     onClick={() => selectItem(index)}
+                    onPointerDownCapture={(e) => {
+                      // Added this event handler because the onClick handler was not working
+                      e.preventDefault();
+                      e.stopPropagation();
+                      selectItem(index);
+                    }}
                   >
                     <div className="flex size-10 min-w-10 items-center justify-center rounded-md border bg-background">
                       <item.icon className="size-4 text-foreground" />

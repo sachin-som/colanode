@@ -20,5 +20,6 @@
     "paths": {
       "@colanode/ui/*": ["src/*"]
     },
-  }
+  },
+  "include": ["vite-env.d.ts"]
 }

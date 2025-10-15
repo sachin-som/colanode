@@ -53,7 +53,6 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
   const app = useApp();
   
   // Read server domain from environment variable
-  // Only use import.meta.env for browser builds; process.env is not available in browser.
   const serverDomain = import.meta.env.VITE_SERVER_DOMAIN || null;
   
   const [panel, setPanel] = useState<PanelState>({

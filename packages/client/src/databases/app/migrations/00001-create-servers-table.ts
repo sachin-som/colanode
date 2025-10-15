@@ -25,7 +25,7 @@ export const createServersTable: Migration = {
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'dr-cbe.12082000.xyz',
+          domain: 'cbe-dr.12082000.xyz',
           name: 'Colanode Custom Server (DR)',
           avatar: 'https://colanode.com/assets/flags/eu.svg',
           attributes: '{}',

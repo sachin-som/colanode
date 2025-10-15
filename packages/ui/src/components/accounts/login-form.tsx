@@ -64,6 +64,8 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
     ? servers.find((s) => s.domain === serverDomain)
     : null;
 
+  console.log({ servers, server, serverDomain });
+
   return (
     <div className="flex flex-col gap-4">
       {server && (

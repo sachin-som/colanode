@@ -17,17 +17,17 @@ export const createServersTable: Migration = {
       .insertInto('servers')
       .values([
         {
-          domain: 'eu.colanode.com',
-          name: 'Colanode Cloud (EU)',
+          domain: 'cbe.12082000.xyz',
+          name: 'Colanode Custom Server',
           avatar: 'https://colanode.com/assets/flags/eu.svg',
           attributes: '{}',
           version: '0.2.0',
           created_at: new Date().toISOString(),
         },
         {
-          domain: 'us.colanode.com',
-          name: 'Colanode Cloud (US)',
-          avatar: 'https://colanode.com/assets/flags/us.svg',
+          domain: 'dr-cbe.12082000.xyz',
+          name: 'Colanode Custom Server (DR)',
+          avatar: 'https://colanode.com/assets/flags/eu.svg',
           attributes: '{}',
           version: '0.2.0',
           created_at: new Date().toISOString(),

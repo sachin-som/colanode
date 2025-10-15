@@ -1,7 +1,6 @@
 import { HouseIcon } from 'lucide-react';
 import { useState, Fragment, useEffect } from 'react';
 import { match } from 'ts-pattern';
-
 import { isFeatureSupported } from '@colanode/client/lib';
 import { Account, ServerDetails } from '@colanode/client/types';
 import { EmailLogin } from '@colanode/ui/components/accounts/email-login';
@@ -9,7 +8,6 @@ import { EmailPasswordResetComplete } from '@colanode/ui/components/accounts/ema
 import { EmailPasswordResetInit } from '@colanode/ui/components/accounts/email-password-reset-init';
 import { EmailRegister } from '@colanode/ui/components/accounts/email-register';
 import { EmailVerify } from '@colanode/ui/components/accounts/email-verify';
-import { ServerDropdown } from '@colanode/ui/components/servers/server-dropdown';
 import { Button } from '@colanode/ui/components/ui/button';
 import { Separator } from '@colanode/ui/components/ui/separator';
 import { useApp } from '@colanode/ui/contexts/app';
@@ -53,21 +51,13 @@ type PanelState =
 
 export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
   const app = useApp();
-
-  const [serverDomain, setServerDomain] = useState<string | null>(
-    servers[0]?.domain ?? null
-  );
+  
+  // Read server domain from environment variable
+  const serverDomain = import.meta.env.VITE_SERVER_DOMAIN || process.env.REACT_APP_SERVER_DOMAIN || null;
+  
   const [panel, setPanel] = useState<PanelState>({
     type: 'login',
   });
-
-  useEffect(() => {
-    const serverExists =
-      serverDomain !== null && servers.some((s) => s.domain === serverDomain);
-    if (!serverExists && servers.length > 0) {
-      setServerDomain(servers[0]!.domain);
-    }
-  }, [serverDomain, servers]);
 
   const server = serverDomain
     ? servers.find((s) => s.domain === serverDomain)
@@ -75,14 +65,6 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <ServerDropdown
-        value={serverDomain}
-        onChange={(serverDomain) => {
-          setServerDomain(serverDomain);
-        }}
-        servers={servers}
-        readonly={panel.type === 'verify'}
-      />
       {server && (
         <ServerContext.Provider
           value={{
@@ -186,7 +168,6 @@ export const LoginForm = ({ accounts, servers }: LoginFormProps) => {
           </div>
         </ServerContext.Provider>
       )}
-
       {accounts.length > 0 && (
         <Fragment>
           <Separator className="w-full" />

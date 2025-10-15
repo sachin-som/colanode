@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import { Server } from '@colanode/client/types';
 import { Button } from '@colanode/ui/components/ui/button';
 import {
@@ -40,12 +39,14 @@ export const ServerCreateDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a server</DialogTitle>
-          <DialogDescription>Add a custom server to login to</DialogDescription>
+          <DialogDescription>
+            Add a custom server to login to
+          </DialogDescription>
         </DialogHeader>
         <div className="flex-grow space-y-2 py-2 pb-4">
           <Label>Server URL</Label>
           <Input
-            placeholder="https://us.colanode.com/config"
+            placeholder="https://your-server.com/config"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />

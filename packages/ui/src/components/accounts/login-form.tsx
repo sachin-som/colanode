@@ -1,6 +1,7 @@
 import { HouseIcon } from 'lucide-react';
-import { useState, Fragment, useEffect } from 'react';
+import { useState, Fragment } from 'react';
 import { match } from 'ts-pattern';
+
 import { isFeatureSupported } from '@colanode/client/lib';
 import { Account, ServerDetails } from '@colanode/client/types';
 import { EmailLogin } from '@colanode/ui/components/accounts/email-login';

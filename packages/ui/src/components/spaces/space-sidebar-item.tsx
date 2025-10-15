@@ -3,7 +3,7 @@ import { RefAttributes, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 import { toast } from 'sonner';
 
-import { LocalSpaceNode } from '@colanode/client/types';
+import { LocalNode, LocalSpaceNode } from '@colanode/client/types';
 import { extractNodeRole } from '@colanode/core';
 import { Avatar } from '@colanode/ui/components/avatars/avatar';
 import { SidebarItem } from '@colanode/ui/components/layouts/sidebars/sidebar-item';
@@ -103,7 +103,7 @@ export const SpaceSidebarItem = ({ space }: SpaceSidebarItemProps) => {
       </div>
       <CollapsibleContent>
         <ul className="mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5 mr-0 pr-0">
-          {children.map((child) => (
+          {children.map((child: LocalNode) => (
             <li
               key={child.id}
               onClick={() => {
